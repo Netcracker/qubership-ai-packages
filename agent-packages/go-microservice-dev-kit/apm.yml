@@ -1,0 +1,11 @@
+name: go-microservice-dev-kit
+version: 1.0.0
+description: APM project for go-microservice-dev-kit
+author: Roman Kichasov
+dependencies:
+  apm:
+    - Netcracker/qubership-core-lib-go/logging/agent-packages/usage-guide#feat/agent-packages
+    - Netcracker/qubership-core-lib-go/memlimit/agent-packages/usage-guide#feat/agent-packages
+  mcp: []
+includes: auto
+scripts: {}
