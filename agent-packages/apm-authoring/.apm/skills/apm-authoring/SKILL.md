@@ -72,20 +72,41 @@ Everything an APM package ships lands in one of two contexts:
 When you author a new package, decide for each piece of guidance
 which side it belongs on:
 
-- **Persistent (instruction)** — short rules that are always relevant
-  to the file scope, conventions a reviewer would otherwise have to
-  memorize, and the trigger phrase that names a skill. Examples:
-  "use `mvn --batch --quiet` when launching Maven", "log via
-  `logger.InfoC(ctx, …)` in `*.go` handlers", "Dockerfiles use
-  `USER 10001:10001`".
-- **On-demand (`SKILL.md`)** — setup checklists, multi-step how-tos,
-  code templates, failure-mode catalogues, anything that would bloat
-  every consumer's context if always loaded.
+- **Persistent (instruction)** — rules the agent should follow on
+  **every turn regardless of which files are open**, plus the
+  trigger phrase that names a skill. The best instructions are
+  *nudges*: cases where the LLM already knows how to do the task
+  but defaults to a sub-optimal flavour of it.
+    - "Pass `--batch --quiet` when invoking Maven" — saves tokens
+      by suppressing chatty output. The LLM already knows Maven; the
+      instruction only steers the flag.
+    - "Place new ADRs under `docs/adr/<NNNN>-<slug>.md`" — repo-wide
+      directory convention the LLM cannot guess.
+    - "Use the `gh` CLI for all GitHub operations" — picks the right
+      tool regardless of what file the agent is touching.
+- **On-demand (`SKILL.md`)** — anything tied to a specific file
+  type, library, or task: setup checklists, multi-step how-tos,
+  code templates, library-specific call patterns, failure-mode
+  catalogues. The paired instruction-trigger fires only when the
+  agent reaches a relevant file, so the body never pollutes
+  unrelated turns (codebase exploration, bug triage, CI debugging
+  on another stack). Counter-examples — these look like instruction
+  material but belong in a skill:
+    - "Use `logger.InfoC(ctx, …)` in `*.go` handlers" → ships in a
+      `go-authoring` (or logging-specific) skill, triggered on
+      `**/*.go`. Loading it on every turn would pay tokens for it
+      while reading SQL, editing YAML, or reviewing CI logs.
+    - "Dockerfiles use `USER 10001:10001` and `--chown=10001:0`"
+      → ships in `qubership-dockerfile-usage`, triggered on
+      `**/{Dockerfile,Dockerfile.*,*.Dockerfile}`.
 
-Heuristic: "always true and short" is an instruction; "true when X,
-and long" is a skill activated by X. If you find an instructions file
-growing past a paragraph, the overflow probably wants to move into a
-`SKILL.md` and be replaced by a one-line trigger.
+Heuristic: an instruction earns its place only if the agent
+benefits from it on **every** turn, not just when working on a
+specific stack. "Always true, short, *and* cross-cutting" is an
+instruction; "true when working on X" is a skill triggered by X.
+If an instructions file grows past a paragraph, or starts referring
+to a specific language or file type, the overflow probably wants
+to move into a `SKILL.md` and be replaced by a one-line trigger.
 
 ## What an instructions file is for
 
