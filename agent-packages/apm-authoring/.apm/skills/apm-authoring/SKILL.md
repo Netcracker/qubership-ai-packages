@@ -1,6 +1,6 @@
 ---
 name: apm-authoring
-description: How to author APM packages — instructions, skills, prompts, agents, hooks — for the Qubership platform. Use when creating a new agent-package, editing an existing primitive under `.apm/`, or reviewing changes under `agent-packages/`.
+description: How to author APM packages — instructions, skills, prompts, agents, hooks — for the Qubership platform. Use when editing APM primitives (`apm.yml`, `*.instructions.md`, `SKILL.md`, `*.prompt.md`, `*.agent.md`, hooks) or laying out a new `agent-packages/<name>/`.
 ---
 
 # Authoring APM packages for Qubership

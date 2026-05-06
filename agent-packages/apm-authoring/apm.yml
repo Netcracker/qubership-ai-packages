@@ -1,4 +1,4 @@
 name: apm-authoring
 version: 1.0.0
-description: Guidelines for authoring and maintaining APM packages (instructions, skills, prompts, agents, hooks) in the Qubership agent-packages monorepo and in companion library repositories.
+description: Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks) in the Qubership agent-packages monorepo and in companion library repositories.
 author: Qubership
