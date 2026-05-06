@@ -324,6 +324,27 @@ dependency list and a near-empty instructions file. Don't duplicate
 library content in the umbrella; transitive resolution is what makes the
 model work.
 
+## Editing a skill that came from a dependency
+
+Local primitives — files under your repo's own `.apm/` — are free to
+edit and recompile. Deployed primitives that arrived via
+`apm install` (under `.github/skills/`, `.cursor/rules/`, or wherever
+the runtime expects them) are **not** the source of truth: a local
+edit will be overwritten the next time anyone runs `apm install`
+against the lockfile.
+
+If the user asks to fix or extend a skill that came from a
+dependency:
+
+1. Identify the upstream package from `apm.yml` `dependencies.apm`
+   (or from the resolved source URL in `apm.lock`).
+2. File a PR against that repo's `.apm/skills/<name>/SKILL.md`.
+3. Once the upstream change is released, bump the version in this
+   repo's `apm.yml` and run `apm install` followed by `apm compile`.
+
+This is the rare case — most authoring work touches primitives in
+the current repo's `.apm/` and stays local.
+
 ## Common authoring pitfalls
 
 - **Trigger sentence is a feature list.** Replace with a one-verb
