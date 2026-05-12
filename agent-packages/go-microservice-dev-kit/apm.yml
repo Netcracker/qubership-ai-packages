@@ -1,6 +1,6 @@
 name: go-microservice-dev-kit
 version: 1.0.0
-description: APM project for go-microservice-dev-kit
+description: Umbrella package for Qubership Go microservices.
 author: Qubership
 dependencies:
   apm:
