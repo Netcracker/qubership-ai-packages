@@ -5,7 +5,7 @@ description: How to author APM packages — instructions, skills, prompts, agent
 
 # Authoring APM packages
 
-APM (https://github.com/microsoft/apm) is a package manager for AI-agent
+[APM](https://github.com/microsoft/apm) is a package manager for AI-agent
 primitives: **instructions** (always-on rules), **skills** (on-demand
 how-to guides), **prompts** (user-invoked slash-commands), **agents**
 (sub-agent personas with tool boundaries) and **hooks** (lifecycle
@@ -22,7 +22,7 @@ under a `.apm/` tree, or set up a new `agent-packages/<name>/`.
 A library repo can host one or more APM packages. Each one lives under
 `agent-packages/<package-name>/` so the path itself is the disambiguator:
 
-```
+```text
 agent-packages/
 └── <package-name>/                  # = `name:` in apm.yml
     ├── apm.yml
@@ -107,13 +107,13 @@ for each piece of guidance:
   trigger phrase that names a skill. The best instructions are
   *nudges*: cases where the LLM already knows how to do the task
   but defaults to a sub-optimal flavour of it.
-    - "Pass `--batch --quiet` when invoking Maven" — saves tokens
-      by suppressing chatty output. The LLM already knows Maven; the
-      instruction only steers the flag.
-    - "Place new ADRs under `docs/adr/<NNNN>-<slug>.md`" — repo-wide
-      directory convention the LLM cannot guess.
-    - "Use the `gh` CLI for all GitHub operations" — picks the right
-      tool regardless of what file the agent is touching.
+  - "Pass `--batch --quiet` when invoking Maven" — saves tokens
+    by suppressing chatty output. The LLM already knows Maven; the
+    instruction only steers the flag.
+  - "Place new ADRs under `docs/adr/<NNNN>-<slug>.md`" — repo-wide
+    directory convention the LLM cannot guess.
+  - "Use the `gh` CLI for all GitHub operations" — picks the right
+    tool regardless of what file the agent is touching.
 - **On-demand (`SKILL.md`)** — anything tied to a specific file
   type, library, or task: setup checklists, multi-step how-tos,
   code templates, library-specific call patterns, failure-mode
@@ -122,13 +122,13 @@ for each piece of guidance:
   unrelated turns (codebase exploration, bug triage, CI debugging
   on another stack). Counter-examples — these look like instruction
   material but belong in a skill:
-    - "Use `logger.InfoC(ctx, …)` in `*.go` handlers" → ships in a
-      `go-authoring` (or logging-specific) skill, triggered on
-      `**/*.go`. Loading it on every turn would pay tokens for it
-      while reading SQL, editing YAML, or reviewing CI logs.
-    - "Dockerfiles use `USER 10001:10001` and `--chown=10001:0`"
-      → ships in a `hardened-dockerfile-usage` skill, triggered on
-      `**/{Dockerfile,Dockerfile.*,*.Dockerfile}`.
+  - "Use `logger.InfoC(ctx, …)` in `*.go` handlers" → ships in a
+    `go-authoring` (or logging-specific) skill, triggered on
+    `**/*.go`. Loading it on every turn would pay tokens for it
+    while reading SQL, editing YAML, or reviewing CI logs.
+  - "Dockerfiles use `USER 10001:10001` and `--chown=10001:0`"
+    → ships in a `hardened-dockerfile-usage` skill, triggered on
+    `**/{Dockerfile,Dockerfile.*,*.Dockerfile}`.
 
 Heuristic: an instruction earns its place only if the agent
 benefits from it on **every** turn, not just when working on a
@@ -185,8 +185,6 @@ description: Go coding standards for cross-service context propagation.
 applyTo: "**/*.go"
 ---
 
-## Skill trigger: `context-propagation-go-usage`
-
 When editing `*.go` and propagating request context (X-Request-Id,
 X-Version, headers, etc.) between microservices, apply the
 `context-propagation-go-usage` skill.
@@ -194,7 +192,9 @@ X-Version, headers, etc.) between microservices, apply the
 
 Avoid in the trigger:
 
-- `When the user works with github.com/.../<long-import-path> library — registering providers, initializing context, propagating headers, writing custom providers, working with snapshots …`
+- `When the user works with github.com/.../<long-import-path>
+  library — registering providers, initializing context,
+  propagating headers, writing custom providers, working with snapshots …`
   This is the skill body, not a trigger. Pick the user-facing verb.
 - Negative scope (`Do NOT use for the X operator`). If a different repo
   must not pick up your skill, that repo's own scope handles it. Don't
@@ -268,8 +268,8 @@ once, in active voice, and let them apply to both directions.
 `apm` supports these three primitives in addition to instructions
 and skills, but day-to-day authoring on a library-usage package
 rarely needs them. This skill does not restate their file formats —
-fetch the upstream `apm` documentation
-(https://github.com/microsoft/apm) when you reach for one.
+fetch the [upstream `apm` documentation](https://github.com/microsoft/apm)
+when you reach for one.
 
 The rule that does belong here is about *when* to reach for them:
 **the user decides whether to introduce an agent, a hook, or a
@@ -323,25 +323,15 @@ changes (new required step, breaking rename), not on every prose edit.
 
 ## apm.yml
 
-Minimal valid manifest for a leaf package:
+Minimal valid manifest:
 
 ```yaml
 name: <package-name>           # matches agent-packages/<package-name>/
 version: 1.0.0
 description: One-sentence purpose.
 author: <your-org>
-```
 
-Umbrella / aggregator packages declare dependencies and nothing else
-substantive — the umbrella's instructions file should be a one-line
-"all platform rules apply" pointer, like
-[go-microservice-dev-kit.instructions.md](agent-packages/go-microservice-dev-kit/.apm/instructions/go-microservice-dev-kit.instructions.md).
-
-```yaml
-name: go-microservice-dev-kit
-version: 1.0.0
-description: Umbrella package for the Go microservice dev kit.
-author: <your-org>
+# Optional: list other APM packages this one depends on.
 dependencies:
   apm:
     - <owner>/<repo>/<path>/agent-packages/<package>#<ref>
@@ -386,9 +376,9 @@ dependency:
    The matching `apm_modules/<owner>/<repo>/.../` path tells you
    the source repo; cross-check with `apm.yml` / `apm.lock` for the
    pinned version.
-2. File a PR against that repo's `.apm/<primitive-folder>/<name>/`
+1. File a PR against that repo's `.apm/<primitive-folder>/<name>/`
    (e.g. `.apm/skills/<name>/SKILL.md`).
-3. Once the upstream change is released, bump the version in this
+1. Once the upstream change is released, bump the version in this
    repo's `apm.yml` and run `apm install` followed by `apm compile`.
 
 ## Common authoring pitfalls
