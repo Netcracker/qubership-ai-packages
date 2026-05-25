@@ -1,34 +1,43 @@
 # qubership-ai-packages
 
-# APM Quick Start Guide
+## APM Quick Start Guide
 
-**Agent Package Manager (APM)** is a package manager for AI agents. It lets you install, create, and share instructions, skills, prompts, and MCP servers for agents like GitHub Copilot, Claude Code, and Cursor.
+**Agent Package Manager (APM)** is a package manager for AI agents. It lets you install, create, and share
+instructions, skills, prompts, and MCP servers for agents like GitHub Copilot, Claude Code, and Cursor.
+
+**Why APM?** See the [package-manager evaluation](research/apm-research/) for the comparison against other
+open-source skill / MCP / AGENTS.md managers.
 
 ---
 
 ## Installation
 
 **macOS / Linux:**
+
 ```bash
 curl -sSL https://aka.ms/apm-unix | sh
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 irm https://aka.ms/apm-windows | iex
 ```
 
 **Homebrew:**
+
 ```bash
 brew install microsoft/apm/apm
 ```
 
 **pip:**
+
 ```bash
 pip install apm-cli
 ```
 
 Verify installation:
+
 ```bash
 apm --version
 ```
@@ -52,7 +61,7 @@ version: 1.0.0
 
 ## Package Structure
 
-```
+```text
 my-package/
 ├── apm.yml                          # Manifest (required)
 └── .apm/
@@ -115,21 +124,25 @@ Review the following code: $SELECTION
 ## Installing Packages
 
 Install a package from GitHub:
+
 ```bash
 apm install owner/repo
 ```
 
 Install a specific version:
+
 ```bash
 apm install owner/repo@v1.2.0
 ```
 
 Install a skill from a monorepo subdirectory:
+
 ```bash
 apm install owner/repo/path/to/skill
 ```
 
 Install all dependencies declared in `apm.yml`:
+
 ```bash
 apm install
 ```
@@ -139,6 +152,7 @@ apm install
 ## Managing Dependencies
 
 Add a dependency to `apm.yml` manually:
+
 ```yaml
 dependencies:
   apm:
@@ -151,26 +165,31 @@ dependencies:
 Then run `apm install` to apply.
 
 Show installed dependencies:
+
 ```bash
 apm deps list
 ```
 
 Show full dependency tree:
+
 ```bash
 apm deps tree
 ```
 
 Check for outdated dependencies:
+
 ```bash
 apm outdated
 ```
 
 Update dependencies:
+
 ```bash
 apm deps update
 ```
 
 Remove a package:
+
 ```bash
 apm uninstall owner/repo
 ```
@@ -192,17 +211,20 @@ Agents like GitHub Copilot, Claude Code, and Cursor read deployed files natively
 ## Creating and Publishing a Package
 
 Pack your package into a portable bundle:
+
 ```bash
 apm pack
 ```
 
 Publish by pushing to a GitHub repository and tagging a version:
+
 ```bash
 git tag v1.0.0
 git push origin main --tags
 ```
 
 Others can then install it with:
+
 ```bash
 apm install your-org/your-package@v1.0.0
 ```
@@ -212,7 +234,7 @@ apm install your-org/your-package@v1.0.0
 ## Key CLI Commands
 
 | Command | Description |
-|---|---|
+| --- | --- |
 | `apm init` | Initialize a new APM project |
 | `apm install` | Install all dependencies and deploy local content |
 | `apm install owner/repo` | Install a specific package |
