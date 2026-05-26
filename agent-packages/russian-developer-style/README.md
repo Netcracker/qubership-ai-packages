@@ -1,22 +1,23 @@
 # russian-developer-style
 
-Стилевые рекомендации для русскоязычного текста, обращённого к разработчикам
-и пользователям программ: README и документация в Markdown, комментарии
-в коде, docstring/Javadoc/KDoc, сообщения коммитов, описания PR, changelog,
-UI-строки, сообщения об ошибках и логи, файлы локализации (`.po`,
-`.properties`, JSON i18n). Длина не важна: однострочный `msgstr` в `.po`
-покрывается скиллом так же, как страница README.
+Style guidance for Russian-language developer-facing text: README and
+Markdown docs, code comments, docstrings (Javadoc, KDoc), commit messages,
+PR descriptions, changelogs, UI strings, error and log messages, and
+localisation files (`.po`, `.properties`, JSON i18n). Length does not
+matter: a one-line `msgstr` in a `.po` file goes through the same checklist
+as a README page.
 
-Скилл срабатывает на любые задачи с русским developer-текстом — написание,
-правку, перевод, локализацию, ревью, проверку, сверку, аудит. Триггерные
-русские глаголы: «напиши», «переведи», «локализуй», «проверь»,
-«перепроверь», «сверь», «отревью». Если запрос затрагивает русский текст,
-скилл подключается *до* ответа агента.
+The skill fires on any task involving Russian developer text: authoring,
+editing, translation, localisation, review, proofreading, verification, or
+audit. Russian trigger verbs include «напиши», «переведи», «локализуй»,
+«проверь», «перепроверь», «сверь», «отревью». If a request touches Russian
+text, the skill loads *before* the agent answers.
 
-Скилл кодирует то, что плохо ловится линтерами: голос, структуру жанров,
-борьбу с канцеляритом и LLM-почерком, тон сообщений об ошибках, выбор
-терминологии. Механические проверки (орфография, кавычки, тире, неразрывные
-пробелы, ё/е) остаются за LanguageTool, yaspeller и typograf.js.
+The skill covers what linters handle poorly: voice, genre structure,
+defending against канцелярит (bureaucratic officialese) and LLM tells,
+error-message tone, and terminology choices. Mechanical checks (spelling,
+quotation marks, dashes, non-breaking spaces, ё/е) stay with LanguageTool,
+yaspeller, and typograf.js.
 
 ## Install
 
@@ -24,7 +25,7 @@ UI-строки, сообщения об ошибках и логи, файлы 
 apm install Netcracker/qubership-ai-packages/agent-packages/russian-developer-style
 ```
 
-Или вручную в `apm.yml`:
+Or manually in `apm.yml`:
 
 ```yaml
 dependencies:
@@ -32,57 +33,57 @@ dependencies:
     - Netcracker/qubership-ai-packages/agent-packages/russian-developer-style@v1.0.0
 ```
 
-Затем `apm install` и `apm compile`, чтобы триггер скилла попал в локальные
-`AGENTS.md` / `CLAUDE.md`.
+Then run `apm install` and `apm compile` so the skill trigger lands in your
+local `AGENTS.md` / `CLAUDE.md`.
 
-## Что внутри
+## What's inside
 
-- Короткая инструкция-триггер, которая срабатывает на любые задачи
-  с русским developer-текстом (Markdown, комментарии, коммиты, PR,
-  changelog, ошибки, логи, UI, файлы локализации). Перечисляет триггерные
-  глаголы на русском и английском, чтобы покрыть и «напиши», и «перепроверь
-  перевод».
-- Основной файл скилла
-  ([`SKILL.md`](.apm/skills/russian-developer-style/SKILL.md)) — голос,
-  жанровые настройки, редактура LLM-черновиков, политика канцелярита и
-  длинного тире, терминология, чеклист, исключения.
-- Модули:
+- A short trigger instruction that fires on any task involving Russian
+  developer text (Markdown, comments, commits, PRs, changelog, errors,
+  logs, UI, localisation files). Lists trigger verbs in both Russian and
+  English, so both «напиши» and 'double-check the translation' are
+  covered.
+- The main skill file
+  ([`SKILL.md`](.apm/skills/russian-developer-style/SKILL.md)): voice,
+  per-genre settings, editing LLM drafts, канцелярит and em-dash policy,
+  terminology, checklist, exceptions.
+- Modules:
   [`ui-strings.md`](.apm/skills/russian-developer-style/modules/ui-strings.md),
   [`errors-logs.md`](.apm/skills/russian-developer-style/modules/errors-logs.md),
   [`code-comments.md`](.apm/skills/russian-developer-style/modules/code-comments.md).
-- Стартовый глоссарий
-  ([`glossary.md`](.apm/skills/russian-developer-style/glossary.md)) с
-  ~50 ИТ-терминами и пометками «переводить / не переводить».
-- Сборник примеров «до / после»
+- A starter glossary
+  ([`glossary.md`](.apm/skills/russian-developer-style/glossary.md)) with
+  about 50 IT terms marked translate / keep.
+- A before / after example collection
   ([`examples/before-after.md`](.apm/skills/russian-developer-style/examples/before-after.md)).
-- Стартовые конфиги линтеров под Markdown и русский текст
+- Starter linter configs for Markdown and Russian prose
   ([`lint/`](.apm/skills/russian-developer-style/lint/)).
 
-## Пара к линтерам
+## Companion linters
 
-Скилл сознательно молчит про то, что лучше делают инструменты. Используйте
-рядом:
+The skill deliberately stays quiet on what tools do better. Use it
+alongside:
 
-- **LanguageTool** с профилем `ru-RU` — грамматика, повторы, согласования.
-  Ожидайте false-positive на коде в прозе; настройте игнор-блок для
-  inline-кода и fenced code blocks.
-- **yaspeller** — орфография с пользовательским словарём. Апстрим
-  заархивирован, держите свой форк/пин и расширяйте словарь продуктовых
-  терминов.
-- **typograf.js** — кавычки-«ёлочки», длинное тире, неразрывные пробелы,
-  пробелы между числом и единицей измерения. Не пропускайте через него код.
-- Собственные проверки на placeholders в ICU MessageFormat / Fluent и на
-  словарь запрещённых терминов из глоссария.
+- **LanguageTool** with the `ru-RU` profile for grammar, repetition, and
+  agreement. Expect false positives on code embedded in prose; configure an
+  ignore block for inline code and fenced code blocks.
+- **yaspeller** for spelling with a custom dictionary. Upstream is
+  archived, so keep your own fork or version pin and grow the dictionary
+  with product-specific terms.
+- **typograf.js** for guillemet quotation marks («…»), em-dashes,
+  non-breaking spaces, and the space between a number and its unit. Do not
+  run code through it.
+- Project-specific checks for placeholders in ICU MessageFormat / Fluent,
+  and for the banned-terms list from the glossary.
 
-## Обновление
+## Updates
 
-`apm outdated` показывает новые версии, `apm deps update` обновляет.
+`apm outdated` shows new versions; `apm deps update` upgrades them.
 
-## Источники и история
+## Sources and history
 
-Скилл синтезирован из четырёхэтапного исследования русских стилевых
-гайдов и LLM-почерка (Контур.Гайды, Microsoft RU L10n, Ozon Tech
-styleguide, Mozilla L10n, Нора Галь, академические работы про tells
-LLM). Промпты и заметки лежат в
-[`research/russian-developer-style/`](../../research/russian-developer-style/),
-если их вынесут туда в дальнейшем.
+The skill is synthesised from a four-stage study of Russian style guides
+and LLM tells (Контур.Гайды, Microsoft RU L10n, Ozon Tech styleguide,
+Mozilla L10n, Нора Галь, academic work on LLM tells). Prompts and notes
+live under
+[`research/russian-developer-style/`](../../research/russian-developer-style/).
