@@ -1,0 +1,19 @@
+extends: existence
+message: "Typographie : « %s » ressemble à une forme anglaise ou incorrecte en français."
+level: warning
+ignorecase: false
+# Conservative typography checks. Vale cannot detect missing non-breaking spaces reliably across all renderers,
+# so we focus on patterns where the source byte is wrong: unaccented capitals at the start of common words,
+# straight quotes around French phrases, ASCII ellipsis instead of `…`.
+tokens:
+  # Common unaccented capitals at the start of a word. Pair with project allowlist (proper nouns).
+  - '\bA propos\b'
+  - '\bEtat\b'
+  - '\bEchec\b'
+  - '\bEvolution\b'
+  - '\bEvenement\b'
+  - '\bElement\b'
+  # Three ASCII dots used as ellipsis.
+  - '(?<![.\d])\.{3}(?!\.)'
+  # English-style quoted phrase (heuristic: straight quotes around 1-40 chars of French letters).
+  - '"[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ\s’''-]{1,40}"'

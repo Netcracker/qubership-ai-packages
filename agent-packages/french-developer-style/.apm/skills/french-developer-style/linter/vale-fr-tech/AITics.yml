@@ -1,0 +1,27 @@
+extends: existence
+message: "Patron LLM courant : « %s ». Reformuler ou supprimer si la phrase tient sans."
+level: suggestion
+ignorecase: true
+# Patterns that often signal a LLM draft. Single occurrence is OK; multiple occurrences in the same paragraph
+# justify a rewrite. The rule is intentionally noisy — keep it at `suggestion` level and review in batch.
+tokens:
+  - "il est important de noter que"
+  - "il convient de noter que"
+  - "il est à noter que"
+  - "force est de constater"
+  - "il faut souligner que"
+  - "dans cette optique"
+  - "à l['’]aune de"
+  - "joue un rôle clé"
+  - "s['’]inscrit dans"
+  - "se positionne comme"
+  - "n['’]est pas sans rappeler"
+  - "permet de prendre des décisions éclairées"
+  - "expérience fluide et sans accroc"
+  - "intégration transparente"
+  - "performance optimale"
+  - "à l['’]échelle planétaire"
+  - "dans cet article, nous allons"
+  - "comme nous l['’]avons mentionné"
+  - "en conclusion"
+  - "pour résumer"

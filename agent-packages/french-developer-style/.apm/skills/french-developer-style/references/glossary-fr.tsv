@@ -1,0 +1,170 @@
+term_en	fr-FR	fr-CA	leave_as_english	note
+API	API	API	true	Sigle non traduit ; pas d’explicitation requise.
+endpoint	point de terminaison / endpoint	point de terminaison / endpoint	false	`endpoint` reste fréquent dans la pratique. À fixer par projet.
+request	requête	requête	false	Glossaire HTTP. `demande` accepté en contexte UX.
+response	réponse	réponse	false
+payload	corps / charge utile	corps / charge utile	false	`corps de requête` pour HTTP ; `charge utile` pour messagerie.
+header	en-tête	en-tête	false	Le nom de l’en-tête (`Content-Type`) reste non traduit.
+cookie	cookie	cookie	false	`témoin` (fr-CA, OQLF) seulement si déjà adopté.
+token	jeton	jeton	false	Préférer `jeton` au calque `token` dans la prose.
+session	session	session	false
+cache	cache	cache	true	Garder en anglais ; verbe : `mettre en cache`.
+queue	file / file d’attente	file / file d’attente	false
+topic	topic / sujet	topic / sujet	false	`topic` reste majoritaire dans la pratique (Kafka, Pub/Sub).
+partition	partition	partition	false
+broker	broker / courtier	broker / courtier	false	`courtier` officiel mais peu utilisé.
+cluster	cluster / grappe	cluster / grappe	false	`grappe` officiel mais minoritaire.
+node	nœud	nœud	false
+replica	réplique	réplique	false
+primary	principal·e / primaire	principal·e / primaire	false	Éviter le calque `maître/esclave` ; suivre la convention du projet.
+standby	secours / en attente	secours / en attente	false
+failover	bascule / reprise	bascule / reprise	false	`reprise sur panne` complet.
+rollback	retour arrière / rollback	retour arrière / rollback	false	`rollback` reste compris ; `retour arrière` lisible.
+migration	migration	migration	false	Verbe : `migrer`.
+feature flag	indicateur de fonctionnalité / feature flag	indicateur de fonctionnalité / feature flag	false	`feature flag` reste majoritaire dans le code.
+configuration	configuration	configuration	false
+setting	paramètre / réglage	paramètre / réglage	false	En UI, préférer `paramètres`.
+option	option	option	false
+property	propriété	propriété	false
+parameter	paramètre	paramètre	false	`argument` = la valeur passée ; `paramètre` = la déclaration.
+argument	argument	argument	false
+environment variable	variable d’environnement	variable d’environnement	false	Le nom (`KAFKA_BROKERS`) reste non traduit.
+log	journal	journal	false	Verbe : `journaliser` ; en jargon, `logger`.
+trace	trace	trace	false	Verbe : `tracer`.
+span	span	span	true	Garder en anglais dans le contexte OpenTelemetry.
+metric	métrique	métrique	false
+timeout	délai d’attente / timeout	délai d’attente / timeout	false
+retry	nouvelle tentative / retry	nouvelle tentative / retry	false	Verbe : `réessayer`.
+backoff	temporisation / backoff	temporisation / backoff	false	`backoff exponentiel` reste courant.
+transaction	transaction	transaction	false
+connection pool	pool de connexions	pool de connexions	false
+driver	pilote / driver	pilote / driver	false
+plugin	greffon / plugin	greffon / plugin	false	`greffon` officiel ; `plugin` reste majoritaire.
+extension	extension	extension	false
+build	build / compilation	build / compilation	false	Selon contexte ; `build` reste courant.
+release	version / release	version / release	false	`version` pour le nom ; `livrer` pour le verbe.
+changelog	journal des modifications / changelog	journal des modifications / changelog	false	Le fichier reste `CHANGELOG.md`.
+pull request	pull request / PR	pull request / demande de tirage	false	`demande de tirage` (OQLF) ; suivre l’usage du dépôt.
+merge request	merge request / MR	merge request / demande de fusion	false	`demande de fusion` lisible en fr-FR aussi.
+issue	ticket / issue	billet / ticket / issue	false	`issue` reste utilisé sur GitHub.
+branch	branche	branche	false
+commit	commit	commit	true	Verbe : `committer` (jargon) ou `valider`.
+rebase	rebase	rebase	true
+cherry-pick	cherry-pick	cherry-pick	true
+backend	back-end / backend	back-end / backend	false	Trait d’union recommandé en fr-FR.
+frontend	front-end / frontend	front-end / frontend	false
+framework	framework / cadriciel	framework / cadriciel	false	`cadriciel` officiel mais minoritaire.
+middleware	middleware / intergiciel	middleware / intergiciel	false	`intergiciel` officiel mais peu utilisé.
+linter	linter	linter	true
+parser	analyseur syntaxique / parser	analyseur syntaxique / parser	false
+runtime	runtime / environnement d’exécution	runtime / environnement d’exécution	false
+tooling	outillage	outillage	false
+serialization	sérialisation	sérialisation	false
+deserialization	désérialisation	désérialisation	false
+authentication	authentification	authentification	false	Ne pas confondre avec autorisation.
+authorization	autorisation	autorisation	false
+permission	autorisation / permission	autorisation / permission	false	`droit d’accès` en contexte sécurité.
+rate limit	limite de débit / rate limit	limite de débit / rate limit	false
+throttling	limitation / throttling	limitation / throttling	false
+latency	latence	latence	false
+throughput	débit	débit	false
+crash	plantage / crash	plantage / crash	false
+panic	panic	panic	true	Contexte Go ; garder l’anglais.
+stack trace	trace de pile / stack trace	trace de pile / stack trace	false
+garbage collection	ramasse-miettes / garbage collection	ramasse-miettes / garbage collection	false
+heap	tas	tas	false
+stack	pile	pile	false
+debug	débogage / debug	débogage / debug	false	Verbe : `déboguer`.
+pipeline	pipeline / chaîne	pipeline / chaîne	false	`chaîne de production` admis.
+job	tâche / job	tâche / job	false	En CI, `job` reste fréquent.
+runner	exécuteur / runner	exécuteur / runner	false	`runner` reste utilisé dans GitLab CI.
+schema	schéma	schéma	false
+index	index	index	false
+query	requête	requête	false	En contexte BD.
+connection	connexion	connexion	false
+pool	pool	pool	true	Garder en anglais ; éviter `réservoir`.
+backup	sauvegarde	copie de sauvegarde / sauvegarde	false	En fr-CA, `copie de sauvegarde` plus fréquent.
+restore	restauration	restauration	false
+sandbox	bac à sable / sandbox	bac à sable / sandbox	false
+dashboard	tableau de bord	tableau de bord	false
+deployment	déploiement	déploiement	false
+rollout	déploiement progressif / rollout	déploiement progressif / rollout	false
+canary	canary / déploiement canari	canary / déploiement canari	false	`canari` est compréhensible mais minoritaire.
+release notes	notes de version	notes de version	false
+release branch	branche de version	branche de version	false
+hotfix	correctif d’urgence / hotfix	correctif d’urgence / hotfix	false
+patch	correctif	correctif	false
+upgrade	mise à niveau	mise à niveau	false
+downgrade	rétrogradation	rétrogradation	false
+update	mise à jour	mise à jour	false
+install	installer	installer	false
+uninstall	désinstaller	désinstaller	false
+upload	téléverser / envoyer	téléverser	false	`téléverser` désormais courant en fr-FR.
+download	télécharger	télécharger	false
+file attachment	pièce jointe	pièce jointe	false
+email	e-mail / courriel	courriel	false	Éviter `mél`.
+spam	spam	pourriel / spam	false	`pourriel` en fr-CA si déjà adopté.
+inbox	boîte de réception	boîte de réception	false
+login (verb)	se connecter	ouvrir une session / se connecter	false
+logout (verb)	se déconnecter	fermer la session / se déconnecter	false
+sign in	se connecter	ouvrir une session	false
+sign out	se déconnecter	fermer la session	false
+sign up	s’inscrire	créer un compte	false
+account	compte	compte	false
+profile	profil	profil	false
+preferences	préférences	préférences	false
+notification	notification	notification	false
+search	recherche	recherche	false
+filter	filtre	filtre	false
+sort	tri	tri	false
+browser	navigateur	navigateur	false	`fureteur` (OQLF) peu utilisé.
+chat	chat	clavardage	false
+chatbot	chatbot / agent conversationnel	agent conversationnel / chatbot	false
+podcast	podcast	balado	false
+shopping	achats	magasinage	false	Verbe en fr-CA : `magasiner`.
+machine learning	apprentissage automatique	apprentissage automatique	false	`ML` reste fréquent à l’oral.
+AI	IA	IA	false	`intelligence artificielle` à la première mention.
+cloud	cloud / infonuagique	infonuagique / cloud	false	`infonuagique` officiel fr-CA ; `cloud` reste majoritaire.
+serverless	sans serveur / serverless	sans serveur / serverless	false
+webhook	webhook	webhook	true
+callback	rappel / callback	rappel / callback	false
+workspace	espace de travail	espace de travail	false
+repository	dépôt	dépôt	false	`repo` admis en jargon.
+fork	fork	fork	true	Verbe : `forker`.
+tag	étiquette / tag	étiquette / tag	false	En Git, `tag` reste courant.
+review	revue / relecture	revue / relecture	false	En contexte Git, `revue de code`.
+deploy	déployer	déployer	false
+configure	configurer	configurer	false
+override	remplacer / surcharger	remplacer / surcharger	false	`surcharger` en POO ; `remplacer` en config.
+default	par défaut	par défaut	false
+fallback	repli / valeur de secours	repli / valeur de secours	false
+flag	drapeau / option	drapeau / option	false	Drapeau CLI = drapeau.
+dry run	exécution à blanc / dry run	exécution à blanc / dry run	false
+idempotent	idempotent	idempotent	false
+race condition	situation de compétition / race condition	situation de compétition / race condition	false	`race condition` reste courant.
+deadlock	interblocage	interblocage	false
+livelock	verrou actif	verrou actif	false
+mutex	mutex	mutex	true
+thread	thread / fil	thread / fil	false	`fil d’exécution` complet.
+process	processus	processus	false
+buffer	tampon / buffer	tampon / buffer	false
+encoding	encodage	encodage	false
+checksum	somme de contrôle	somme de contrôle	false
+hash	hachage	hachage	false	Verbe : `hacher`.
+encryption	chiffrement	chiffrement	false	Ne pas dire `encryption` ni `cryptage`.
+decryption	déchiffrement	déchiffrement	false	`décryptage` = casser sans la clé.
+key	clé	clé	false
+signature	signature	signature	false
+certificate	certificat	certificat	false
+public key	clé publique	clé publique	false
+private key	clé privée	clé privée	false
+form	formulaire	formulaire	false
+button	bouton	bouton	false
+checkbox	case à cocher	case à cocher	false
+dropdown	menu déroulant	menu déroulant	false
+toggle	bascule / interrupteur	bascule / interrupteur	false
+tab	onglet	onglet	false
+modal	fenêtre modale / modale	fenêtre modale / modale	false
+toast	notification éphémère / toast	notification éphémère / toast	false	`toast` reste fréquent.
+tooltip	infobulle	infobulle	false
+placeholder	texte indicatif / placeholder	texte indicatif / placeholder	false	Pas le placeholder de format (variable).
