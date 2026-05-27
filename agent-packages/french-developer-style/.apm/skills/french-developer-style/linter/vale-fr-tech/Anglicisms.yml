@@ -1,0 +1,18 @@
+extends: substitution
+message: "Anglicisme : préférer « %s » à « %s »."
+level: warning
+ignorecase: true
+# Substitutions: "anglicism": "preferred French form".
+# Conservative list — only includes anglicisms with no ambiguous French use.
+swap:
+  "faire du sens": "avoir du sens"
+  "adresser un problème": "traiter un problème"
+  "adresser une question": "répondre à une question"
+  "supporter": "prendre en charge"
+  "définitivement": "certainement"
+  "digital": "numérique"
+  "basé sur": "fondé sur"
+  "en termes de": "pour"
+  "instancier": "créer une instance de"
+  "implémenter": "mettre en œuvre"
+  "initier": "lancer"

@@ -1,0 +1,18 @@
+extends: substitution
+message: "Terminologie : préférer « %s » à « %s » (sauf décision contraire du glossaire de projet)."
+level: suggestion
+ignorecase: true
+# Soft terminology nudges. The list intentionally stays small — a fuller project glossary belongs to a
+# repository-specific Vale rule built from `references/glossary-fr.tsv`. Treat each entry as overridable per
+# project.
+swap:
+  "librairie de code": "bibliothèque"
+  "cryptage": "chiffrement"
+  "encryption": "chiffrement"
+  "décryptage": "déchiffrement"
+  "sauvegarder": "enregistrer"
+  "soumettre": "envoyer"
+  "cliquez ici": "consultez la documentation"
+  "cliquez pour": "pour [verb], "
+  "mél": "e-mail"
+  "courriel électronique": "courriel"

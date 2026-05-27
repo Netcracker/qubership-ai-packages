@@ -46,6 +46,8 @@ jobs:
             ./build/*
             ./*/build/*
             ./profiler-ui/node_modules/*
+            ./agent-packages/french-developer-style/*
+            ./research/french-developer-style/*
           pattern: |
             *.java
             *.kt
