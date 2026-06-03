@@ -176,9 +176,10 @@ non-obvious (migration risk, perf trade-off, related incident). Reference issues
 
 ### PR descriptions
 
-Three short sections, in order: **What** (one paragraph or bulleted change list), **Why** (the user-visible problem or
-constraint that forced the change), **How to verify** (commands, screenshots, or test names). Call out breaking changes,
-migrations, and follow-up work explicitly. A reviewer should not have to read the diff to know whether to engage.
+Three short sections, in order: **Why** (the user-visible problem or constraint that forced the change), **What** (one
+paragraph or bulleted change list), **How to verify** (commands, screenshots, or test names). Lead with the motivation:
+a reviewer reads the change list and verification in light of it. Call out breaking changes, migrations, and follow-up
+work explicitly. A reviewer should not have to read the diff to know whether to engage.
 
 ### Changelog and release notes
 

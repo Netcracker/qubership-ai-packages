@@ -1,4 +1,4 @@
 name: english-developer-style
-version: 1.0.0
+version: 1.0.1
 description: British-English-first style guidance for developer-facing text of any length — Markdown docs, code comments and docstrings inside source files (.go, .js, .ts, .py, .java, .rs, .kt, .cs, ...), commit messages, PR descriptions, changelog entries, UI strings, error and log messages, and English-side localisation files (.po, .properties, JSON i18n). Triggered by writing, editing, translating, reviewing, proofreading, or verifying English text.
 author: Qubership

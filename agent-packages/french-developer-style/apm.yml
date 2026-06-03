@@ -1,4 +1,4 @@
 name: french-developer-style
-version: 1.0.0
+version: 1.0.1
 description: French technical-prose conventions for developer-facing text — Markdown docs, README, code comments and docstrings, commit messages, PR descriptions, changelog entries, UI strings, error and log messages, and French-side localisation files (.po, .properties, JSON i18n, .ftl, .arb). Defaults to fr-FR, supports fr-CA mode. Triggered by writing, editing, translating, reviewing, or proofreading French developer text.
 author: Qubership

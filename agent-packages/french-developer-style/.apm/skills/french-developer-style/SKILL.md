@@ -136,7 +136,7 @@ existant prime toujours sur la compétence.
 
 ## 6. Typographie française à préserver
 
-L’intention reste dans la compétence ; l’application mécanique revient aux outils (voir section 10).
+L’intention reste dans la compétence ; l’application mécanique revient aux outils (voir section 11).
 
 - Espace insécable avant `;`, `:`, `!`, `?`, `%`, et entre le chiffre et son unité (`3 Go`, `10 ms`).
 - Guillemets français en prose : `« … »`, avec espaces insécables à l’intérieur.
@@ -224,7 +224,21 @@ HTTP, variables d’environnement. En prose française, mettez-les en `code inli
 **Documentation API** : présent neutre, vocabulaire précis. Ne reformulez pas un terme technique pour faire
 « plus naturel » si vous perdez la précision.
 
-## 10. Ce qui relève des linters ou du glossaire
+## 10. Messages de commit et descriptions de PR
+
+**Message de commit** : suivez Conventional Commits, au format `type(scope): résumé`. Le résumé reste court
+(≤ 72 caractères), sans point final, et garde un mode verbal cohérent dans tout le dépôt (souvent l’infinitif en
+français : `ajouter`, `corriger`, `supprimer`). Après une ligne vide, le corps explique *pourquoi* le changement était
+nécessaire et signale ce qui n’est pas évident : risque de migration, compromis de performance, incident lié.
+Référencez les tickets par identifiant ; ne paraphrasez pas le diff.
+
+**Description de PR** : trois sections courtes, dans cet ordre : **Pourquoi** (le problème ou la contrainte qui a imposé
+le changement), **Quoi** (le changement, en un paragraphe ou une liste), **Comment vérifier** (commandes, captures, noms
+de tests). Commencez par la motivation : le reste se lit à la lumière de la cause. Signalez explicitement les
+ruptures de compatibilité, les migrations et le travail restant. Le relecteur ne devrait pas avoir à lire le diff pour
+décider s’il doit s’y plonger.
+
+## 11. Ce qui relève des linters ou du glossaire
 
 La compétence porte le jugement. Les outils portent la mécanique.
 
@@ -239,7 +253,7 @@ La compétence porte le jugement. Les outils portent la mécanique.
 Pack Vale de démarrage : [`linter/`](linter/). Détails :
 [`linter/vale-fr-tech/README.md`](linter/vale-fr-tech/README.md).
 
-## 11. Checklist finale
+## 12. Checklist finale
 
 À passer en quelques secondes avant le commit.
 
@@ -256,7 +270,7 @@ Pack Vale de démarrage : [`linter/`](linter/). Détails :
 - Pluriel ICU/Fluent en `one` / `other` (pas de `zero/two/few/many` inventés) ?
 - Typographie absente du code, des URL, du JSON, du YAML, des regex ?
 
-## 12. Quand enfreindre une règle
+## 13. Quand enfreindre une règle
 
 Une règle qui dégrade le texte ne s’applique pas. En particulier :
 

@@ -1,4 +1,4 @@
 name: russian-developer-style
-version: 1.0.0
+version: 1.0.1
 description: Russian-language style guidance for developer-facing text of any length — UI strings, error and log messages, code comments, README and docs, commit messages, PR descriptions, changelog entries, and Russian localisation (.po, .properties, JSON i18n). Triggered by writing, editing, translating, reviewing, proofreading, or verifying Russian text.
 author: Qubership
