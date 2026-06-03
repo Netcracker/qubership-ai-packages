@@ -1,0 +1,35 @@
+name: Release marketplace
+
+# A marketplace release is a git tag `vX.Y.Z` that consumers pin. Pushing the
+# tag runs this workflow, which validates the index and publishes a GitHub
+# Release. Package authors never run these steps -- they only open pull requests.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: false
+      - name: Validate the index
+        run: uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha256sum .claude-plugin/marketplace.json > .claude-plugin/marketplace.json.sha256
+          gh release create "$GITHUB_REF_NAME" \
+            .claude-plugin/marketplace.json \
+            .claude-plugin/marketplace.json.sha256 \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

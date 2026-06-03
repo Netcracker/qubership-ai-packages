@@ -1,0 +1,105 @@
+name: Validate marketplace
+
+on:
+  pull_request:
+    paths:
+      - apm.yml
+      - .claude-plugin/marketplace.json
+      - agent-packages/**
+      - docs/**
+      - scripts/**
+      - tests/**
+      - requirements.txt
+      - .github/workflows/marketplace.yml
+  push:
+    branches: [main]
+    paths:
+      - apm.yml
+      - .claude-plugin/marketplace.json
+      - agent-packages/**
+      - docs/**
+      - scripts/**
+      - tests/**
+      - requirements.txt
+      - .github/workflows/marketplace.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      # --check-versions: every package declares a version consistent with the strategy.
+      # --check-clean: the committed marketplace.json matches what apm.yml would produce.
+      # --dry-run is required: without it, pack rewrites the file first and the drift check always passes.
+      - name: Check versions aligned and index in sync
+        run: uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
+
+  verify-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      # Extract the "verify" group from the consumer guide with doccmd and run those
+      # commands against this revision, in a scratch directory so the checkout stays clean.
+      - name: Run consumer guide commands against this revision
+        working-directory: ${{ runner.temp }}
+        env:
+          DOC_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          DOC_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          APM_REQUIREMENTS: ${{ github.workspace }}/requirements.txt
+          # Authenticate apm's GitHub API calls (marketplace fetch + install). The
+          # unauthenticated REST limit is shared per runner IP and 403s on busy runners.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .claude  # a harness marker so `apm install` has a deploy target
+          uvx --python 3.12 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      # Network-free producer -> consumer round-trip: build, release gate (clean + drift),
+      # install/uninstall, and a version bump. See tests/marketplace_roundtrip.sh.
+      - name: Run the marketplace round-trip test
+        run: bash tests/marketplace_roundtrip.sh
+
+  install-smoke:
+    # Real installs catch what the index gate cannot: pack only resolves refs,
+    # it never deploys a package. Runs after validate so a broken index fails first.
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # need the base commit to diff changed packages on a PR
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      # Pull request: install only packages whose entry or source changed.
+      # Push to main: install every package. See scripts/install-smoke.sh.
+      - name: Install changed (PR) or all (main) packages
+        env:
+          APM_REQUIREMENTS: ${{ github.workspace }}/requirements.txt
+          MODE: ${{ github.event_name == 'pull_request' && 'diff' || 'all' }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          TARGETS: claude,codex,cursor
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash scripts/install-smoke.sh
