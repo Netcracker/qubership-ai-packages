@@ -31,6 +31,18 @@
     },
     {
       "name": "english-developer-style",
+      "description": "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English.",
+      "version": "2.0.0",
+      "tags": [
+        "topic:documentation",
+        "lang:en",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/english-developer-style"
+    },
+    {
+      "name": "english-uk-developer-style",
       "description": "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files.",
       "version": "1.0.1",
       "tags": [
@@ -39,7 +51,19 @@
         "activity:authoring",
         "audience:public"
       ],
-      "source": "./agent-packages/english-developer-style"
+      "source": "./agent-packages/english-uk-developer-style"
+    },
+    {
+      "name": "english-us-developer-style",
+      "description": "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files.",
+      "version": "1.0.1",
+      "tags": [
+        "topic:documentation",
+        "lang:en",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/english-us-developer-style"
     },
     {
       "name": "french-developer-style",
