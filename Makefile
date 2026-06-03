@@ -8,7 +8,7 @@
 # verify-docs runs the documented consumer flow against a *published* revision,
 # so DOC_REF must be reachable on DOC_REPO. Both default to the current commit
 # on `origin`, so push first, or override:
-#   make verify-docs DOC_REF=v0.1.0
+#   make verify-docs DOC_REF=v1.1.0
 #   make verify-docs DOC_REPO=Netcracker/qubership-ai-packages DOC_REF=main
 
 APM    := uvx --python 3.12 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm

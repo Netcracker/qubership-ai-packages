@@ -8,7 +8,7 @@ This repository is an APM marketplace of Qubership agent packages. Two guides co
 Quick start for consumers:
 
 ```bash
-apm marketplace add Netcracker/qubership-ai-packages --ref v0.1.0
+apm marketplace add Netcracker/qubership-ai-packages --ref v1.1.0
 apm marketplace browse qubership-ai-packages
 apm install apm-authoring@qubership-ai-packages
 ```

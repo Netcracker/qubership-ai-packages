@@ -15,7 +15,7 @@ once, then install packages by name.
 ## Register the marketplace
 
 ```bash
-apm marketplace add Netcracker/qubership-ai-packages --ref v0.1.0
+apm marketplace add Netcracker/qubership-ai-packages --ref v1.1.0
 ```
 
 `--ref` pins the whole marketplace, and every package in it, to a release tag, so every machine and CI run resolves
