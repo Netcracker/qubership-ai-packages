@@ -9,7 +9,7 @@
 #     in $APM_REQUIREMENTS (required), so no global install.
 #   * The canonical marketplace coordinates in the docs are rewritten to the
 #     revision under test: `Netcracker/qubership-ai-packages` -> $DOC_REPO and
-#     the example tag `v0.1.0` -> $DOC_REF.
+#     the example tag `v1.1.0` -> $DOC_REF.
 #
 # Run the consumer guide locally with, for example:
 #   DOC_REPO=vlsi/qubership-ai-packages DOC_REF=<sha> APM_REQUIREMENTS="$PWD/requirements.txt" \
@@ -26,6 +26,6 @@ req="${APM_REQUIREMENTS:?APM_REQUIREMENTS must point to a requirements.txt}"
 {
   printf 'apm() { uvx --python 3.12 --from apm-cli --with-requirements %q apm "$@"; }\n' "$req"
   sed -e "s#Netcracker/qubership-ai-packages#${repo}#g" \
-      -e "s#v0.1.0#${ref}#g" \
+      -e "s#v1.1.0#${ref}#g" \
       "$block"
 } | bash -euo pipefail
