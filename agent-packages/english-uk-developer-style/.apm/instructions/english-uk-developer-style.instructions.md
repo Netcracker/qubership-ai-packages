@@ -3,9 +3,9 @@ description: British-English-first style rules for developer-facing text of any 
 applyTo: "**"
 ---
 
-## Skill trigger: `english-developer-style`
+## Skill trigger: `english-uk-developer-style`
 
-**You MUST invoke the `english-developer-style` skill BEFORE producing, modifying, translating, or critiquing any
+**You MUST invoke the `english-uk-developer-style` skill BEFORE producing, modifying, translating, or critiquing any
 English developer-facing text.** The skill applies regardless of text length — a one-line error message and a multi-page
 README go through the same checklist.
 

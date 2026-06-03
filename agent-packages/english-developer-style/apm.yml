@@ -1,4 +1,15 @@
 name: english-developer-style
-version: 1.0.1
-description: British-English-first style guidance for developer-facing text of any length — Markdown docs, code comments and docstrings inside source files (.go, .js, .ts, .py, .java, .rs, .kt, .cs, ...), commit messages, PR descriptions, changelog entries, UI strings, error and log messages, and English-side localisation files (.po, .properties, JSON i18n). Triggered by writing, editing, translating, reviewing, proofreading, or verifying English text.
+version: 2.0.0
+description: Compatibility alias for the original package name. Resolves to english-us-developer-style, so the bare name now defaults to American English; depend on english-uk-developer-style for British English. Carries no skill of its own.
 author: Qubership
+
+# Backward-compatibility shim: keep the old name resolvable and point it
+# at a concrete dialect. The default moved from British to American with
+# the dialect split, hence the major-version bump.
+#
+# The dependency is a repo-relative path to the sibling package, so it
+# resolves to english-us-developer-style at whatever ref the alias is
+# installed from — no tag, branch, or commit pin to keep in sync.
+dependencies:
+  apm:
+    - ../english-us-developer-style
