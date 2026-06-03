@@ -1,0 +1,14 @@
+# APM-generated, never committed
+apm_modules/
+build/
+
+# Python / uv
+.venv/
+__pycache__/
+
+# macOS
+.DS_Store
+
+# Note: do NOT ignore .claude-plugin/marketplace.json (the committed index)
+# or .github/ (the workflows). The tests create their git repos under the
+# system temp dir (mktemp), so nothing test-related needs to be ignored here.

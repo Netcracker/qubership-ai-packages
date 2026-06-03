@@ -1,0 +1,172 @@
+{
+  "name": "qubership-ai-packages",
+  "owner": {
+    "name": "Netcracker",
+    "url": "https://github.com/Netcracker"
+  },
+  "plugins": [
+    {
+      "name": "apm-authoring",
+      "description": "Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/apm-authoring"
+    },
+    {
+      "name": "go-microservice-dev-kit",
+      "description": "Umbrella package for Qubership Go microservices.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "stack:go",
+        "stack:kubernetes",
+        "activity:coding",
+        "audience:public"
+      ],
+      "source": "./agent-packages/go-microservice-dev-kit"
+    },
+    {
+      "name": "english-developer-style",
+      "description": "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files.",
+      "version": "1.0.1",
+      "tags": [
+        "topic:documentation",
+        "lang:en",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/english-developer-style"
+    },
+    {
+      "name": "french-developer-style",
+      "description": "French technical-prose conventions for developer-facing text; defaults to fr-FR, with an fr-CA mode.",
+      "version": "1.0.1",
+      "tags": [
+        "topic:documentation",
+        "lang:fr",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/french-developer-style"
+    },
+    {
+      "name": "russian-developer-style",
+      "description": "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files.",
+      "version": "1.0.1",
+      "tags": [
+        "topic:documentation",
+        "lang:ru",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/russian-developer-style"
+    },
+    {
+      "name": "markdown-line-length-120",
+      "description": "Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "stack:markdown",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/markdown-line-length-120"
+    },
+    {
+      "name": "adapt-nifi-flows-to-2-x",
+      "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:integration",
+        "stack:nifi",
+        "activity:migration",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-nifi",
+        "path": "agent-packages/adapt-nifi-flows-to-2-x",
+        "ref": "531ac0f9f7606c2156f767af72f474f41c2ebdc6",
+        "sha": "531ac0f9f7606c2156f767af72f474f41c2ebdc6"
+      }
+    },
+    {
+      "name": "api-diff-authoring",
+      "description": "Authoring classify rules, response-scope handling, adapters, and tests for the api-diff library.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:api",
+        "stack:typescript",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-apihub-api-diff",
+        "path": "agent-packages/api-diff-authoring",
+        "ref": "d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4",
+        "sha": "d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4"
+      }
+    },
+    {
+      "name": "api-unifier-authoring",
+      "description": "Conventions for extending the api-unifier normalization engine (rules, unify functions, validators).",
+      "version": "1.0.0",
+      "tags": [
+        "topic:api",
+        "stack:typescript",
+        "activity:authoring",
+        "audience:internal"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-apihub-api-unifier",
+        "path": "agent-packages/api-unifier-authoring",
+        "ref": "392794444be0f6bf49c477b00e51add7d3c0c444",
+        "sha": "392794444be0f6bf49c477b00e51add7d3c0c444"
+      }
+    },
+    {
+      "name": "api-unifier-testing",
+      "description": "Conventions for writing api-unifier tests across OpenAPI, AsyncAPI, JSON Schema, and GraphAPI.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:api",
+        "stack:typescript",
+        "activity:testing",
+        "audience:internal"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-apihub-api-unifier",
+        "path": "agent-packages/api-unifier-testing",
+        "ref": "392794444be0f6bf49c477b00e51add7d3c0c444",
+        "sha": "392794444be0f6bf49c477b00e51add7d3c0c444"
+      }
+    },
+    {
+      "name": "qubership-workflow-hub-usage",
+      "description": "Skills for designing, writing, reviewing, and debugging GitHub Actions workflows that consume netcracker/qubership-workflow-hub actions and Netcracker/.github templates.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "stack:github-actions",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-workflow-hub",
+        "path": "agent-packages/qubership-workflow-hub-usage",
+        "ref": "161a0752db07017d43739ddd621ee7193cfbc625",
+        "sha": "161a0752db07017d43739ddd621ee7193cfbc625"
+      }
+    }
+  ]
+}

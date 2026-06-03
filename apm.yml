@@ -1,0 +1,86 @@
+name: qubership-ai-packages
+version: 0.1.0
+description: Netcracker Qubership APM package marketplace
+
+marketplace:
+  owner:
+    name: Netcracker
+    url: https://github.com/Netcracker
+
+  outputs:
+    claude: {}
+
+  versioning:
+    strategy: per_package
+
+  packages:
+    # --- packages in this repository (local-path) ---
+    - name: apm-authoring
+      description: Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).
+      source: ./agent-packages/apm-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "activity:authoring", "audience:public"]
+
+    - name: go-microservice-dev-kit
+      description: Umbrella package for Qubership Go microservices.
+      source: ./agent-packages/go-microservice-dev-kit
+      version: 1.0.0
+      tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
+
+    - name: english-developer-style
+      description: "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files."
+      source: ./agent-packages/english-developer-style
+      version: 1.0.1
+      tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
+
+    - name: french-developer-style
+      description: French technical-prose conventions for developer-facing text; defaults to fr-FR, with an fr-CA mode.
+      source: ./agent-packages/french-developer-style
+      version: 1.0.1
+      tags: ["topic:documentation", "lang:fr", "activity:authoring", "audience:public"]
+
+    - name: russian-developer-style
+      description: "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files."
+      source: ./agent-packages/russian-developer-style
+      version: 1.0.1
+      tags: ["topic:documentation", "lang:ru", "activity:authoring", "audience:public"]
+
+    - name: markdown-line-length-120
+      description: Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.
+      source: ./agent-packages/markdown-line-length-120
+      version: 1.0.0
+      tags: ["topic:documentation", "stack:markdown", "activity:authoring", "audience:public"]
+
+    # --- packages curated from other repositories (remote, pinned to a commit) ---
+    # description and version are inherited from each package's own apm.yml.
+    # ref is a commit SHA (branches are mutable and rejected); the trailing
+    # comment records the source ref the SHA was taken from.
+    - name: adapt-nifi-flows-to-2-x
+      source: Netcracker/qubership-nifi
+      subdir: agent-packages/adapt-nifi-flows-to-2-x
+      ref: 531ac0f9f7606c2156f767af72f474f41c2ebdc6  # main
+      tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
+
+    - name: api-diff-authoring
+      source: Netcracker/qubership-apihub-api-diff
+      subdir: agent-packages/api-diff-authoring
+      ref: d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4  # develop
+      tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:public"]
+
+    - name: api-unifier-authoring
+      source: Netcracker/qubership-apihub-api-unifier
+      subdir: agent-packages/api-unifier-authoring
+      ref: 392794444be0f6bf49c477b00e51add7d3c0c444  # develop
+      tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:internal"]
+
+    - name: api-unifier-testing
+      source: Netcracker/qubership-apihub-api-unifier
+      subdir: agent-packages/api-unifier-testing
+      ref: 392794444be0f6bf49c477b00e51add7d3c0c444  # develop
+      tags: ["topic:api", "stack:typescript", "activity:testing", "audience:internal"]
+
+    - name: qubership-workflow-hub-usage
+      source: Netcracker/qubership-workflow-hub
+      subdir: agent-packages/qubership-workflow-hub-usage
+      ref: 161a0752db07017d43739ddd621ee7193cfbc625  # main
+      tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
