@@ -63,6 +63,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "stack:markdown", "activity:authoring", "audience:public"]
 
+    - name: triage-dependency-prs
+      description: Slash-command that triages failing checks on dependency-update PRs (Renovate and Dependabot) and drives them back to green.
+      source: ./agent-packages/triage-dependency-prs
+      version: 1.0.0
+      tags: ["topic:devops", "topic:dependencies", "activity:maintenance", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing
