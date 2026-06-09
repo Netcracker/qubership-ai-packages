@@ -36,13 +36,13 @@ marketplace:
     - name: english-uk-developer-style
       description: "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files."
       source: ./agent-packages/english-uk-developer-style
-      version: 1.0.1
+      version: 1.0.2
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-us-developer-style
       description: "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files."
       source: ./agent-packages/english-us-developer-style
-      version: 1.0.1
+      version: 1.0.2
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: french-developer-style
