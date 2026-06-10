@@ -1,9 +1,10 @@
 # Local equivalents of the CI checks in .github/workflows/.
 # `apm` and `doccmd` run through uv, so nothing needs a global install.
 #
-#   make check         # the marketplace gate (.github/workflows/marketplace.yml, validate job)
-#   make verify-docs   # run the consumer guide's commands (verify-docs job)
-#   make pack          # regenerate .claude-plugin/marketplace.json
+#   make check               # the marketplace gate (.github/workflows/marketplace.yml, validate job)
+#   make check-descriptions  # verify all skill description fields are <= 1020 chars
+#   make verify-docs         # run the consumer guide's commands (verify-docs job)
+#   make pack                # regenerate .claude-plugin/marketplace.json
 #
 # verify-docs runs the documented consumer flow against a *published* revision,
 # so DOC_REF must be reachable on DOC_REPO. Both default to the current commit
@@ -19,20 +20,24 @@ DOC_REF  ?= $(shell git rev-parse HEAD)
 MODE     ?= all
 TARGETS  ?= claude,codex,cursor
 
-.PHONY: help pack check verify-docs test install-smoke
+.PHONY: help pack check check-descriptions verify-docs test install-smoke
 
 help:
-	@echo "pack         Regenerate .claude-plugin/marketplace.json"
-	@echo "check        Validate the index: versions aligned + in sync (no writes)"
-	@echo "verify-docs  Run the consumer guide commands (DOC_REPO=$(DOC_REPO) DOC_REF=<ref>, must be pushed)"
-	@echo "test         Network-free producer/consumer round-trip (tests/marketplace_roundtrip.sh)"
-	@echo "install-smoke  Install each package into a fresh project (MODE=all|diff, needs network)"
+	@echo "pack                Regenerate .claude-plugin/marketplace.json"
+	@echo "check               Validate the index: versions aligned + in sync (no writes)"
+	@echo "check-descriptions  Verify all skill descriptions are <= 1020 chars"
+	@echo "verify-docs         Run the consumer guide commands (DOC_REPO=$(DOC_REPO) DOC_REF=<ref>, must be pushed)"
+	@echo "test                Network-free producer/consumer round-trip (tests/marketplace_roundtrip.sh)"
+	@echo "install-smoke       Install each package into a fresh project (MODE=all|diff, needs network)"
 
 pack:
 	$(APM) pack
 
 check:
 	$(APM) pack --check-versions --check-clean --dry-run
+
+check-descriptions:
+	python3 scripts/check-skill-descriptions.py
 
 verify-docs:
 	@tmp=$$(mktemp -d) && mkdir -p "$$tmp/.claude" && cd "$$tmp" && \

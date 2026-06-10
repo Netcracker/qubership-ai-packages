@@ -36,6 +36,10 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
+      # Claude truncates a skill's description at 1024 chars, silently dropping
+      # the trigger phrases at the end. Fail fast when one would ship over-long.
+      - name: Check skill description lengths
+        run: python3 scripts/check-skill-descriptions.py
       # --check-versions: every package declares a version consistent with the strategy.
       # --check-clean: the committed marketplace.json matches what apm.yml would produce.
       # --dry-run is required: without it, pack rewrites the file first and the drift check always passes.
