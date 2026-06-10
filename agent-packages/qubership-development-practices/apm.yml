@@ -1,0 +1,4 @@
+name: qubership-development-practices
+version: 1.0.0
+description: Qubership development workflow defaults for commits, docs, tests, and pre-commit validation.
+author: Qubership

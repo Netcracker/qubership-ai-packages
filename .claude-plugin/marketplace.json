@@ -102,6 +102,18 @@
       "source": "./agent-packages/markdown-line-length-120"
     },
     {
+      "name": "qubership-development-practices",
+      "description": "Qubership development workflow defaults for commits, docs, tests, and pre-commit validation.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "activity:coding",
+        "activity:maintenance",
+        "audience:public"
+      ],
+      "source": "./agent-packages/qubership-development-practices"
+    },
+    {
       "name": "triage-dependency-prs",
       "description": "Slash-command that triages failing checks on dependency-update PRs (Renovate and Dependabot) and drives them back to green.",
       "version": "1.0.0",
