@@ -69,6 +69,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:devops", "topic:dependencies", "activity:maintenance", "audience:public"]
 
+    - name: istio-dashboard-migrate
+      description: Adapts Grafana/Istio dashboard JSON to overlay CPU and memory resource limits on the usage panels.
+      source: ./agent-packages/istio-dashboard-migrate
+      version: 1.0.0
+      tags: ["topic:observability", "stack:grafana", "stack:istio", "activity:migration", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing

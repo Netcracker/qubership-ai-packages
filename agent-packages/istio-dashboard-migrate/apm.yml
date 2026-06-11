@@ -1,0 +1,4 @@
+name: istio-dashboard-migrate
+version: 1.0.0
+description: Adapts Grafana/Istio dashboard JSON to overlay CPU and memory resource limits on the usage panels.
+author: Qubership
