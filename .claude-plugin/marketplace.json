@@ -114,6 +114,19 @@
       "source": "./agent-packages/triage-dependency-prs"
     },
     {
+      "name": "enable-renovate-automerge",
+      "description": "Skill that enables Renovate automerge on a repository behind a real test/style required check.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "topic:dependencies",
+        "stack:github-actions",
+        "activity:maintenance",
+        "audience:public"
+      ],
+      "source": "./agent-packages/enable-renovate-automerge"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",

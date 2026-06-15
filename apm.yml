@@ -69,6 +69,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:devops", "topic:dependencies", "activity:maintenance", "audience:public"]
 
+    - name: enable-renovate-automerge
+      description: Skill that enables Renovate automerge on a repository behind a real test/style required check.
+      source: ./agent-packages/enable-renovate-automerge
+      version: 1.0.0
+      tags: ["topic:devops", "topic:dependencies", "stack:github-actions", "activity:maintenance", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing

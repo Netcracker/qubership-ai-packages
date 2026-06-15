@@ -1,0 +1,4 @@
+name: enable-renovate-automerge
+version: 1.0.0
+description: Skill that enables Renovate automerge on a repository behind a real test/style required check.
+author: Qubership
