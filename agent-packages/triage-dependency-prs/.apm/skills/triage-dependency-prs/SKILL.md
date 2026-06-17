@@ -1,15 +1,14 @@
 ---
-description: "Triage failing checks on dependency-update PRs (Renovate or Dependabot): classify each failure, fix the clear ones, ask about the rest."
-argument-hint: "[PR number | empty = all open dependency-update PRs with failing checks]"
-input:
-  - pr: "PR number to triage; empty processes every open dependency-update PR that has a failing check"
+name: triage-dependency-prs
+description: "Triage failing checks on dependency-update PRs (Renovate or Dependabot) and drive them back to green: classify each failure, fix the clear ones, ask about the rest. Use only when the user asks to triage, fix, or sweep failing checks on dependency-update PRs — pass a PR number for one PR, or none to process every open dependency-update PR with a failing check."
 ---
 
 # Triage dependency-update PRs
 
 Work out why checks are failing on dependency-update PRs and get them
-back to green. `${input:pr}` is a single PR number; when it is empty,
-process every open dependency-update PR that has a failing check.
+back to green. When the user names a PR number, triage that PR; with no
+number, process every open dependency-update PR that has a failing
+check.
 
 This covers Renovate (hosted and self-hosted, including fork mode) and
 Dependabot. The bot determines how you push a fix and how you request a

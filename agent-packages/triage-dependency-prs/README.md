@@ -1,13 +1,16 @@
 # triage-dependency-prs
 
-A slash-command that triages failing checks on dependency-update PRs from
+A skill that triages failing checks on dependency-update PRs from
 Renovate (hosted and self-hosted, including fork mode) and Dependabot,
 and drives them back to green: classify each failure, fix the clear ones,
 and ask about the rest rather than guessing.
 
-The command is `/triage-dependency-prs`. Pass a PR number to triage one
-PR, or run it with no argument to sweep every open dependency-update PR
-that has a failing check.
+The skill is user-invoked: ask the agent to triage dependency PRs, or
+invoke it by name. Name a PR number to triage one PR, or invoke it with
+no number to sweep every open dependency-update PR that has a failing
+check. It ships as a skill rather than a slash-command so it reaches
+every target, including Codex, which does not deploy
+[APM prompts](https://github.com/microsoft/apm/issues/1781).
 
 ## What it does
 
@@ -37,11 +40,11 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/triage-dependency-prs@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/triage-dependency-prs@v2.0.0
 ```
 
-Then run `apm install` and `apm compile`. The command deploys to the
-location your agent reads (`.claude/commands/`, `.cursor/`, ...).
+Then run `apm install` and `apm compile`. The skill deploys to the
+location your agent reads (`.claude/skills/`, `.cursor/`, ...).
 
 ## Requirements
 
