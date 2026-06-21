@@ -127,6 +127,17 @@
       "source": "./agent-packages/enable-renovate-automerge"
     },
     {
+      "name": "codex-review",
+      "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:code-review",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/codex-review"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",

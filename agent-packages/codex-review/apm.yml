@@ -1,0 +1,4 @@
+name: codex-review
+version: 1.0.0
+description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
+author: Qubership
