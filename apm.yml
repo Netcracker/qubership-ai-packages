@@ -114,3 +114,10 @@ marketplace:
       subdir: agent-packages/qubership-workflow-hub-usage
       ref: 161a0752db07017d43739ddd621ee7193cfbc625  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: core-mesh-to-istio-migration
+      source: Netcracker/qubership-core-control-plane
+      subdir: agent-packages/core-mesh-to-istio-migration
+      ref: 0497e8233bddc287b68c68395b3b303aed998ef9  # main
+      tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
+
