@@ -127,6 +127,17 @@
       "source": "./agent-packages/enable-renovate-automerge"
     },
     {
+      "name": "adr-authoring",
+      "description": "Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/adr-authoring"
+    },
+    {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
       "version": "1.0.0",

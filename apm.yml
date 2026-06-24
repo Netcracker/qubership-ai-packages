@@ -75,6 +75,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:devops", "topic:dependencies", "stack:github-actions", "activity:maintenance", "audience:public"]
 
+    - name: adr-authoring
+      description: Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.
+      source: ./agent-packages/adr-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "activity:authoring", "audience:public"]
+
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review
