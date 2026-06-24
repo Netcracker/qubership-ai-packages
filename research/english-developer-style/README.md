@@ -14,7 +14,7 @@ skill. It now ships as two dialect packages —
 | Seed | `seed_SKILL.md` | LLM-distilled from ~20 native-speaker PR-review samples. |
 | Phase 1: shortlist | `phase1_prompt.md`, `phase1_result.md` | Deep-research prompt asks for candidate style sources. Cheap, broad, no synthesis. |
 | Phase 2: deep evaluation | `phase2_prompt.md`, `phase2_result.md` | Re-evaluate the shortlist on adoption, dialect, false-positive risk, and overlap. Conclusion: synthesise, no single source wins. |
-| Phase 3: synthesis | `phase3_prompt.md` → [`SKILL.md`](../../agent-packages/english-uk-developer-style/.apm/skills/english-uk-developer-style/SKILL.md) | Compose the skill from the phase-2 findings. The output is the APM package skill — kept canonical there, not duplicated here. |
+| Phase 3: synthesis | `phase3_prompt.md` → [`SKILL.md`](../../agent-packages/english-uk-developer-style/.apm/skills/english-developer-style/SKILL.md) | Compose the skill from the phase-2 findings. The output is the APM package skill — kept canonical there, not duplicated here. |
 
 The two-phase split keeps deep evaluation cheap by filtering candidates
 first, and leaves a reusable shortlist if the brief changes later.
@@ -31,8 +31,8 @@ phase3_prompt.md                       prompt that produced the skill
 The phase-3 output lives in the APM package, not here, to avoid
 drift. The research files in this folder are frozen as the audit
 trail; edit the skill at its package home
-([British](../../agent-packages/english-uk-developer-style/.apm/skills/english-uk-developer-style/SKILL.md),
-[American](../../agent-packages/english-us-developer-style/.apm/skills/english-us-developer-style/SKILL.md)).
+([British](../../agent-packages/english-uk-developer-style/.apm/skills/english-developer-style/SKILL.md),
+[American](../../agent-packages/english-us-developer-style/.apm/skills/english-developer-style/SKILL.md)).
 
 ## Naming history
 
