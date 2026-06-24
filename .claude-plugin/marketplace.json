@@ -138,6 +138,17 @@
       "source": "./agent-packages/codex-review"
     },
     {
+      "name": "skills-telemetry",
+      "description": "Hooks that call the skills-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).",
+      "version": "1.0.0",
+      "tags": [
+        "topic:observability",
+        "activity:telemetry",
+        "audience:public"
+      ],
+      "source": "./agent-packages/skills-telemetry"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",
