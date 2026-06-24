@@ -1,6 +1,6 @@
 ---
 name: markdown-line-length-120
-description: Apply Markdown drafting and validation rules for Qubership repositories that pin markdownlint `MD013.line_length` to 120. Use when editing `*.md`, checking Markdown CI failures, or touching docs in repositories with Qubership markdownlint configuration.
+description: Apply Markdown drafting and validation rules for repositories that pin markdownlint `MD013.line_length` to 120. Use when editing `*.md`, checking Markdown CI failures, or touching docs in repositories with markdownlint configuration.
 ---
 
 # Markdown drafting and validation rules
