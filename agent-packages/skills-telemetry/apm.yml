@@ -1,0 +1,4 @@
+name: skills-telemetry
+version: 1.0.0
+description: Hooks that call the skills-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).
+author: Netcracker

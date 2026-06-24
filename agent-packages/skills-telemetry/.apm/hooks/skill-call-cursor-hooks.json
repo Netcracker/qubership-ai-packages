@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterAgentResponse": [
+      { "command": "skills-telemetry ingest --agent=cursor" }
+    ]
+  }
+}
