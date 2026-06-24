@@ -2,5 +2,5 @@
 # Single source of truth for their versions; consumed via
 # `uvx --from <tool> --with-requirements requirements.txt <tool> ...`.
 # Updated automatically by Renovate (pip_requirements) or Dependabot (pip).
-apm-cli==0.16.0
+apm-cli==0.20.0
 doccmd==2026.5.25

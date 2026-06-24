@@ -45,7 +45,7 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/english-uk-developer-style@v1.0.1
+    - Netcracker/qubership-ai-packages/agent-packages/english-uk-developer-style@v2.0.0
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger into your
@@ -56,9 +56,9 @@ local `AGENTS.md` / `CLAUDE.md`.
 - A short instruction that fires on any task touching English
   developer text — writing, editing, translating, reviewing,
   proofreading, verifying. It tells the agent to load the
-  `english-uk-developer-style` skill instead of guessing.
+  `english-developer-style` skill instead of guessing.
 - The skill itself
-  ([`SKILL.md`](.apm/skills/english-uk-developer-style/SKILL.md)) — voice,
+  ([`SKILL.md`](.apm/skills/english-developer-style/SKILL.md)) — voice,
   dialect policy, sentence craft, punctuation and AI-tell catalogue,
   hedging rules, per-surface modules for docs/comments/commits/PRs/
   changelogs/errors, a final-pass checklist, and an explicit
@@ -76,6 +76,22 @@ Pair it with:
 - **commitlint** with the Conventional Commits config.
 - **alex.js** behind a per-project allowlist if you want inclusive-
   language hints; expect noise on technical vocabulary without one.
+
+## Migrating to 2.0
+
+Version 2.0 renames the skill from `english-uk-developer-style` to
+`english-developer-style`. The package name is unchanged. The British
+and American packages now expose the same skill name, so installing one
+globally and the other in a project resolves to a single skill rather
+than two competing ones.
+
+APM 0.19 and later remove the old skill when you update. If your current
+install was created with APM 0.18 or earlier, the rename leaves the old
+files in place even after you upgrade APM. Remove them by hand:
+
+```sh
+rm -rf .claude/skills/english-uk-developer-style .claude/rules/english-uk-developer-style.md
+```
 
 ## Updating
 

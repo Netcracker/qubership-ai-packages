@@ -1,17 +1,17 @@
 ---
-name: english-uk-developer-style
-description: 'British-English-first style guidance for developer-facing text of any length — README and docs, code comments and docstrings, Javadoc / KDoc / TSDoc / JSDoc, commit messages, PR descriptions and review replies, design docs, changelog entries, UI strings (buttons, labels, placeholders, tooltips), error and log messages, and English-side localisation files (.po, .properties, JSON i18n). Use whenever the task involves English developer text — writing, editing, rewriting, translating, localising, reviewing, proofreading, verifying, auditing, double-checking, or cross-checking. Length does not matter: a one-line `msgstr`, a `// FIXME` comment, or a three-word button label is in scope. Also covers choice of English identifier names (methods, variables, classes, files, tests) read by humans. Covers em-dash usage, hyphen stacking, sentence structure, that/which, gerunds after rather than, hedging, inclusive language, and British/American dialect consistency. Do not use for casual chat replies to the user.'
+name: english-developer-style
+description: 'American-English-first style guidance for developer-facing text of any length — README and docs, code comments and docstrings, Javadoc / KDoc / TSDoc / JSDoc, commit messages, PR descriptions and review replies, design docs, changelog entries, UI strings (buttons, labels, placeholders, tooltips), error and log messages, and English-side localization files (.po, .properties, JSON i18n). Use whenever the task involves English developer text — writing, editing, rewriting, translating, localizing, reviewing, proofreading, verifying, auditing, double-checking, or cross-checking. Length does not matter: a one-line `msgstr`, a `// FIXME` comment, or a three-word button label is in scope. Also covers choice of English identifier names (methods, variables, classes, files, tests) read by humans. Covers em-dash usage, hyphen stacking, sentence structure, that/which, gerunds after rather than, hedging, inclusive language, and British/American dialect consistency. Do not use for casual chat replies to the user.'
 ---
 
-# English developer style (British)
+# English developer style (American)
 
 This skill governs natural-language text written for developers and for users of developer tools: README and reference
 pages, code comments and docstrings, commit messages, PR descriptions, changelogs, UI strings, error and log messages,
-and localisation files. Length does not matter — a one-line `msgstr` or a three-word button label goes through the same
+and localization files. Length does not matter — a one-line `msgstr` or a three-word button label goes through the same
 checklist as a multi-page README. It does not govern code itself, marketing copy, or general end-user product copy
 outside developer surfaces.
 
-Defaults: British English, second person, present tense, sentence-case headings, Oxford serial comma. Voice model: a
+Defaults: American English, second person, present tense, sentence-case headings, serial (Oxford) comma. Voice model: a
 knowledgeable colleague who has done this before.
 
 ## 1. When to apply
@@ -23,7 +23,7 @@ Trigger actions:
 
 - **Authoring:** writing new pages, comments, commit messages, PR descriptions, release notes, UI strings, or error and
   log messages.
-- **Translation and localisation:** translating to or from English; editing `.po`, `.pot`, `.properties`, `.resx`, JSON
+- **Translation and localization:** translating to or from English; editing `.po`, `.pot`, `.properties`, `.resx`, JSON
   i18n, Fluent, or ARB files.
 - **Editing:** rewriting an LLM-generated draft before commit (primary use), polishing someone else's prose.
 - **Review and verification:** "check the wording", "does this read well", "is this English natural", "make this sound
@@ -37,43 +37,43 @@ Covered surfaces:
   ...): all English text inside them — code comments (`//`, `/* … */`, `#`, `--`), docstrings (Javadoc, KDoc, TSDoc,
   JSDoc, Python docstrings, Rust doc-comments), and the English identifier names you choose for new functions, types,
   fields, files, and tests. A one-line `// TODO: handle retry` belongs here just as much as a multi-line Javadoc block.
-- Localisation files (English source or English target): `.po`, `.pot`, `.properties`, `.resx`, JSON i18n, `.ftl`,
+- Localization files (English source or English target): `.po`, `.pot`, `.properties`, `.resx`, JSON i18n, `.ftl`,
   `.arb`. A one-line `msgstr` is in scope.
 - UI strings: buttons, labels, placeholders, tooltips, empty states, confirmations.
 - Error, validation, warning, and log messages.
 - Commit messages, PR / MR descriptions, code-review replies.
 
-Skip *existing* code identifiers, generated API references, third-party quotes, vendor product names, and licence text —
+Skip *existing* code identifiers, generated API references, third-party quotes, vendor product names, and license text —
 do not translate or rename them. (When you choose a *new* identifier, the choice itself is in scope; see the bullet on
 source files.) Yield to a more specific style guide if the repository already has one and existing prose is consistent
 with it.
 
-Anti-pattern: "I'm a fluent English speaker, I do not need the skill." Dialect policy, AI-tell catalogue, em-dash and
+Anti-pattern: "I'm a fluent English speaker, I do not need the skill." Dialect policy, AI-tell catalog, em-dash and
 hyphen rules, hedging policy, and per-surface templates live here — not in general fluency. If the request touches
 English developer text and the skill is not loaded, stop and load it before answering.
 
 Mechanical checks belong in tooling, not in this skill body:
 
-- spelling and dialect substitutions (Vale plus Hunspell `en_GB` / `en_US`);
+- spelling and dialect substitutions (Vale plus Hunspell `en_US` / `en_GB`);
 - terminology lists, future-tense, `currently`, `please`/`sorry`, sentence-length warnings (Vale: `Google`, `Microsoft`,
   GitLab-derived rules);
 - inclusive-language substitutions with per-project allowlists (alex.js or Vale, not in prompts);
 - commit-message grammar (commitlint with Conventional Commits).
 
-Use this skill for the judgement-based work — tone, structure, AI tells, hedging, error-message empathy — that tooling
+Use this skill for the judgment-based work — tone, structure, AI tells, hedging, error-message empathy — that tooling
 cannot enforce reliably.
 
 ## 2. Dialect policy
 
-Default to British English: `-ise`, `colour`, `organisation`, `behaviour`; single quotation marks in body prose;
-`DD Month YYYY` dates; `while` not `whilst` unless quoting. Keep the Oxford serial comma in both dialects — it is OUP
-house style as well.
+Default to American English: `-ize`, `color`, `organization`, `behavior`; double quotation marks in body prose;
+`Month DD, YYYY` dates; `while` not `whilst` unless quoting. Keep the serial (Oxford) comma in both dialects — the
+Chicago Manual of Style mandates it too.
 
-Detect and yield. If a repository's existing prose is more than roughly 5% US-spelled, treat it as `en-US` and match.
+Detect and yield. If a repository's existing prose is more than roughly 5% UK-spelled, treat it as `en-GB` and match.
 Never mix dialects within a file. If a project pins a dialect in `CONTRIBUTING.md` or a Vale config, that wins.
 
-Do not import the GOV.UK no-contractions rule. Contractions (`don't`, `it's`, `you'll`) are welcome and reduce
-stiffness.
+Contractions (`don't`, `it's`, `you'll`) are welcome and reduce stiffness. Do not ban them, whatever a stricter house
+style says.
 
 ## 3. Voice and tone
 
@@ -112,7 +112,7 @@ Before / after:
 
 ## 5. Punctuation and AI-tell avoidance
 
-LLM drafts have recognisable habits. Treat the list below as patterns to *reduce*, not tokens to ban — any one signal in
+LLM drafts have recognizable habits. Treat the list below as patterns to *reduce*, not tokens to ban — any one signal in
 isolation is weak. Scan for them on every editing pass.
 
 - **Em-dashes.** Use sparingly, and only when a comma, colon, or parenthesis genuinely will not do. Never as a paragraph
@@ -137,7 +137,7 @@ compound modifiers take hyphens (`high-throughput pipeline`).
 ## 6. Hedging and certainty
 
 - **One hedge per sentence at most.** `May possibly sometimes fail` carries no information; pick one.
-- **Present tense for current behaviour.** `The handler retries three times`, not `The handler will retry`.
+- **Present tense for current behavior.** `The handler retries three times`, not `The handler will retry`.
 - **Reserve `will` for the actual future.** `The build will fail if the secret is missing` is fine because the future is
   the subject.
 - **Avoid `currently`.** It dates the sentence the moment it is written. Either give a version, or drop it.
@@ -145,7 +145,7 @@ compound modifiers take hyphens (`high-throughput pipeline`).
 
 Before / after:
 
-- *Before:* "This document currently describes how you can potentially configure the optional retry behaviour, which may
+- *Before:* "This document currently describes how you can potentially configure the optional retry behavior, which may
   sometimes be useful."
 - *After:* "Configure retries with `retry.max_attempts`. The default is three."
 
@@ -167,7 +167,7 @@ write it.
 ### Commit messages
 
 Follow Conventional Commits: `type(scope): summary`. Summary is imperative present (`add`, `fix`, `remove`), ≤ 72
-characters, no trailing full stop. Body, after a blank line, explains *why* the change was needed and notes anything
+characters, no trailing period. Body, after a blank line, explains *why* the change was needed and notes anything
 non-obvious (migration risk, perf trade-off, related incident). Reference issues by ID; do not paraphrase the diff.
 
 - *Before:* `Updated some files to fix the thing that was broken sometimes.`
@@ -183,7 +183,7 @@ work explicitly. A reviewer should not have to read the diff to know whether to 
 
 ### Changelog and release notes
 
-User-facing voice: name the change in terms of what the reader can now do, or what behaviour has changed. Group under
+User-facing voice: name the change in terms of what the reader can now do, or what behavior has changed. Group under
 `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security` (Keep a Changelog). One sentence per entry; link to the
 PR or commit for detail. Breaking changes get their own block at the top of the version.
 
@@ -230,7 +230,7 @@ exist to make prose clearer; if applying one in a specific spot makes prose wors
 - Passive voice is correct when the actor is unknown or uninteresting.
 - A long sentence is fine when the idea genuinely is long and splitting it would obscure the logic.
 - An em-dash is the right punctuation when a comma would mis-bind and parentheses would interrupt.
-- A hedge is honest when the underlying behaviour really is conditional.
+- A hedge is honest when the underlying behavior really is conditional.
 - `We` is appropriate for a team decision; `I` is appropriate in a personal release note.
 
 Reach for a deliberate exception consciously, in service of the reader. Drift into a habitual one and the prose stops

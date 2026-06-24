@@ -1,11 +1,11 @@
 ---
-description: American-English-first style rules for developer-facing text of any length — docs, code comments and docstrings inside source files (.go, .js, .ts, .py, .java, .rs, .kt, .cs, ...), commits, PR descriptions, changelogs, UI strings, error and log messages, and English-side localization files (.po, .properties, JSON i18n). Triggered by review/translate/verify/proofread, not only writing.
+description: British-English-first style rules for developer-facing text of any length — docs, code comments and docstrings inside source files (.go, .js, .ts, .py, .java, .rs, .kt, .cs, ...), commits, PR descriptions, changelogs, UI strings, error and log messages, and English-side localisation files (.po, .properties, JSON i18n). Triggered by review/translate/verify/proofread, not only writing.
 applyTo: "**"
 ---
 
-## Skill trigger: `english-us-developer-style`
+## Skill trigger: `english-developer-style`
 
-**You MUST invoke the `english-us-developer-style` skill BEFORE producing, modifying, translating, or critiquing any
+**You MUST invoke the `english-developer-style` skill BEFORE producing, modifying, translating, or critiquing any
 English developer-facing text.** The skill applies regardless of text length — a one-line error message and a multi-page
 README go through the same checklist.
 
@@ -15,7 +15,7 @@ The skill fires on any of these tasks. The verb in the user request, not the fil
 
 - write, draft, author, compose
 - edit, rewrite, revise, polish, copy-edit
-- translate, localize (to or from English)
+- translate, localise (to or from English)
 - review, proofread, verify, audit, double-check, sanity-check, cross-check
 - "check the wording", "does this read well", "is this English natural", "make this sound less AI"
 
@@ -28,7 +28,7 @@ button label — invoke the skill before answering.
 - Source files (`.go`, `.js`, `.ts`, `.py`, `.java`, `.rs`, `.kt`, `.cs`, `.cpp`, `.rb`, `.swift`, `.scala`, `.php`,
   ...): all English text inside them — code comments, docstrings (Javadoc, KDoc, TSDoc, JSDoc, Python docstrings, Rust
   doc-comments), and the English identifier names you choose for new functions, types, fields, files, and tests.
-- Localization files (English source or English target): `.po`, `.pot`, `.properties`, `.resx`, `.json` (i18n), `.ftl`,
+- Localisation files (English source or English target): `.po`, `.pot`, `.properties`, `.resx`, `.json` (i18n), `.ftl`,
   `.arb`.
 - UI strings: buttons, labels, placeholders, tooltips, empty states, confirmations.
 - Error, validation, warning, and log messages (including one-line `msgid` / `msgstr`).
@@ -48,5 +48,5 @@ three-word button label is in scope.
 ### Failure mode to avoid
 
 If the request touches English text and the skill has not been invoked, stop and invoke it before continuing.
-Native-speaker intuition is not a substitute: the dialect policy, AI-tell catalog, em-dash and hyphen rules, hedging
+Native-speaker intuition is not a substitute: the dialect policy, AI-tell catalogue, em-dash and hyphen rules, hedging
 policy, and per-surface templates live in the skill, not in general fluency.
