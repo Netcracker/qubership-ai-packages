@@ -4,4 +4,4 @@ applyTo: "**/*.md"
 ---
 
 When creating/updating/editing/reviewing `*.md` in a repository that wraps Markdown at 120 characters or uses
-Qubership markdownlint rules, apply the `markdown-line-length-120` skill.
+markdownlint rules, apply the `markdown-line-length-120` skill.
