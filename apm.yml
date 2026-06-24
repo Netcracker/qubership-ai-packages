@@ -27,6 +27,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
+    - name: qubership-essentials
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, workflow-hub usage, and skill telemetry."
+      source: ./agent-packages/qubership-essentials
+      version: 1.0.0
+      tags: ["topic:meta", "activity:setup", "audience:public"]
+
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
