@@ -91,8 +91,8 @@
     },
     {
       "name": "markdown-line-length-120",
-      "description": "Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.",
-      "version": "1.0.0",
+      "description": "Markdown drafting and validation rules for repositories pinning markdownlint MD013.line_length to 120.",
+      "version": "1.0.1",
       "tags": [
         "topic:documentation",
         "stack:markdown",

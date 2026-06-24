@@ -58,9 +58,9 @@ marketplace:
       tags: ["topic:documentation", "lang:ru", "activity:authoring", "audience:public"]
 
     - name: markdown-line-length-120
-      description: Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.
+      description: Markdown drafting and validation rules for repositories pinning markdownlint MD013.line_length to 120.
       source: ./agent-packages/markdown-line-length-120
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:documentation", "stack:markdown", "activity:authoring", "audience:public"]
 
     - name: triage-dependency-prs
@@ -120,4 +120,3 @@ marketplace:
       subdir: agent-packages/core-mesh-to-istio-migration
       ref: 0497e8233bddc287b68c68395b3b303aed998ef9  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
-

@@ -15,9 +15,9 @@ markdownlint configuration that CI uses:
 - `MD060` — pipe table column style, especially when cells contain escaped pipes
 
 Everything else (`MD022`, `MD032`, `MD029`, `MD026`, `MD047`, trailing
-whitespace, ...) can go through `markdownlint-cli2 --fix` in a pre-commit
-hook, but the agent must still run markdownlint with the repository config
-on the files it changed.
+whitespace, ...) can usually go through `markdownlint-cli2 --fix` in a
+pre-commit hook, but the agent must still run markdownlint with the repository
+config on the files it changed.
 
 ## Install
 
