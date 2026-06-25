@@ -121,3 +121,15 @@ marketplace:
       ref: 0497e8233bddc287b68c68395b3b303aed998ef9  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
+    - name: ai-agent-telemetry
+      source: Netcracker/qubership-ai-agent-telemetry
+      subdir: agent-packages/ai-agent-telemetry
+      ref: c9ab85efe02149166e385f5962e1735d531e64d7  # main
+      tags: ["topic:observability", "activity:telemetry", "audience:public"]
+
+    - name: ai-agent-telemetry-configure
+      source: Netcracker/qubership-ai-agent-telemetry
+      subdir: agent-packages/ai-agent-telemetry-configure
+      ref: c9ab85efe02149166e385f5962e1735d531e64d7  # main
+      tags: ["topic:observability", "activity:telemetry", "audience:public"]
+
