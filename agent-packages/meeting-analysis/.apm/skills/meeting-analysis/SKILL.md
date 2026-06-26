@@ -190,7 +190,7 @@ inside.
 
 **Argument / trade-off** (positions side by side plus outcome):
 
-```
+```text
 ### <short name of the fork>
 
 > **Status: UNRESOLVED** — <where it was deferred>   (or drop this line if resolved)
@@ -207,7 +207,7 @@ inside.
 
 **Decision / task:**
 
-```
+```text
 ### <name>
 - <compressed core of the decision or task>. [timecode]
   (opt.) <Name> [timecode]: "quote — only if it reveals the substance, not a duplicate of the claim"
@@ -215,7 +215,7 @@ inside.
 
 **Cross-check against theory:**
 
-```
+```text
 ### Cross-check against <theory>
 - **Matches:** <what from the conversation maps onto the theory>
 - **Diverges:** <where the conversation departs from the theory and why>
@@ -234,7 +234,7 @@ with metadata — it is the first thing a person sees, and readability here matt
 than compression. Give participants as a list, not one line: the first impression of
 the document matters more than saving lines.
 
-```
+```text
 # Meeting breakdown <with whom> — <date>
 
 **What the meeting was about.** <one paragraph: the topic, why you met, and the main outcome.>
@@ -252,7 +252,7 @@ the document matters more than saving lines.
 If the breakdown is assembled from several files, add a **"Sources"** block to the
 header with the labels you cite in the timecodes:
 
-```
+```text
 **Sources:**
 - `SP` — 2026-06-01 Sprint Planning.md (~3 h)
 - `BR` — 2026-06-02 AI Branding.md (~20 min)
