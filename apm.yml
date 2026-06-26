@@ -93,6 +93,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
+    - name: meeting-analysis
+      description: Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.
+      source: ./agent-packages/meeting-analysis
+      version: 1.0.0
+      tags: ["topic:documentation", "activity:authoring", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing
