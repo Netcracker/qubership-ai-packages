@@ -257,6 +257,40 @@
         "ref": "0497e8233bddc287b68c68395b3b303aed998ef9",
         "sha": "0497e8233bddc287b68c68395b3b303aed998ef9"
       }
+    },
+    {
+      "name": "ai-agent-telemetry",
+      "description": "Hooks that call the ai-agent-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).",
+      "version": "1.0.0",
+      "tags": [
+        "topic:observability",
+        "activity:telemetry",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-ai-agent-telemetry",
+        "path": "agent-packages/ai-agent-telemetry",
+        "ref": "c9ab85efe02149166e385f5962e1735d531e64d7",
+        "sha": "c9ab85efe02149166e385f5962e1735d531e64d7"
+      }
+    },
+    {
+      "name": "ai-agent-telemetry-configure",
+      "description": "Configure skill and bootstrap scripts for the ai-agent-telemetry CLI (endpoint, token, CA, selftest).",
+      "version": "2.0.0",
+      "tags": [
+        "topic:observability",
+        "activity:telemetry",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-ai-agent-telemetry",
+        "path": "agent-packages/ai-agent-telemetry-configure",
+        "ref": "c9ab85efe02149166e385f5962e1735d531e64d7",
+        "sha": "c9ab85efe02149166e385f5962e1735d531e64d7"
+      }
     }
   ]
 }
