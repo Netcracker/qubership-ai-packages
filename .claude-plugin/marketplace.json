@@ -138,6 +138,17 @@
       "source": "./agent-packages/codex-review"
     },
     {
+      "name": "meeting-analysis",
+      "description": "Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/meeting-analysis"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",
