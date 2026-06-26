@@ -1,0 +1,4 @@
+name: qubership-agent-support-pr
+version: 1.0.0
+description: Prepare a repository PR that installs qubership-essentials and the generated agent assets for supported harnesses.
+author: Qubership

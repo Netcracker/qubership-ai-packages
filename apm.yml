@@ -33,6 +33,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
+    - name: qubership-agent-support-pr
+      description: Prepare a repository PR that installs qubership-essentials and generated agent assets.
+      source: ./agent-packages/qubership-agent-support-pr
+      version: 1.0.0
+      tags: ["topic:meta", "activity:setup", "activity:maintenance", "audience:public"]
+
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
@@ -144,4 +150,3 @@ marketplace:
       subdir: agent-packages/ai-agent-telemetry-configure
       ref: c9ab85efe02149166e385f5962e1735d531e64d7  # main
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
-
