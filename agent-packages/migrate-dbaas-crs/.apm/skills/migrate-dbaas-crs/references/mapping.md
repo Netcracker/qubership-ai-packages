@@ -17,7 +17,8 @@ Old generic YAML CR:
 - `kind: DBaaS`
 - `subKind: DatabaseDeclaration` or `subKind: DbPolicy`
 - declaration body under `spec`
-- Helm-template YAML may not parse as raw YAML because of unquoted `{{ ... }}` expressions or include lines under labels. Quote template scalar values or use the converter's Helm fallback, then review the output.
+- Helm-template YAML may not parse as raw YAML because of unquoted `{{ ... }}` expressions or include lines under
+  labels. Quote template scalar values or use the converter's Helm fallback, then review the output.
 
 Target CRDs:
 
@@ -30,7 +31,7 @@ Target CRDs:
 Each old database declaration becomes one `InternalDatabase`.
 
 | Old field | New field | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `declarations[]` | one CR per item | JSON list must be split into separate Kubernetes manifests |
 | `kind: DatabaseDeclaration` | `kind: InternalDatabase` | remove old `kind` and `subKind` |
 | `spec.classifierConfig.classifier` or `classifierConfig.classifier` | `spec.classifier` | unwrap `classifierConfig` |
@@ -48,14 +49,15 @@ Each old database declaration becomes one `InternalDatabase`.
 | `initialInstantiation` | `spec.initialInstantiation` | optional |
 | `initialInstantiation.sourceClassifier` | `spec.initialInstantiation.sourceClassifier` | convert reserved/extra keys by the same classifier rule |
 
-Do not keep old `spec.classifierConfig`. The dbaas-operator controller re-wraps `spec.classifier` into the aggregator wire shape.
+Do not keep old `spec.classifierConfig`. The dbaas-operator controller re-wraps `spec.classifier` into the aggregator
+wire shape.
 
 ## DbPolicy To DatabaseAccessPolicy
 
 Each old DB policy becomes one `DatabaseAccessPolicy`.
 
 | Old field | New field | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `kind: DbPolicy` or `kind: dbPolicy` | `kind: DatabaseAccessPolicy` | remove old `kind` and `subKind` |
 | `services` | `spec.services` | preserve list order |
 | `policy` | `spec.policy` | preserve roles and database types |
