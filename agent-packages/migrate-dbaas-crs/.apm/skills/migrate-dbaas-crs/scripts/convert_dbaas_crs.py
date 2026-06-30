@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -53,10 +54,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Legacy JSON/YAML file")
     parser.add_argument("--output", required=True, help="Output YAML file")
-    parser.add_argument("--service-name", default="{{ .Values.SERVICE_NAME }}")
+    parser.add_argument("--service-name")
     parser.add_argument("--namespace", default="{{ .Values.NAMESPACE }}")
     parser.add_argument("--name-prefix", default="")
     args = parser.parse_args()
+    args.service_name_explicit = args.service_name is not None
+    args.service_name = args.service_name or "{{ .Values.SERVICE_NAME }}"
 
     source = Path(args.input)
     warnings: list[str] = []
@@ -287,11 +290,14 @@ def convert_db_policy(
     warnings: list[str],
 ) -> dict[str, Any]:
     warn_unknown_fields(body, DB_POLICY_FIELDS, "DatabaseAccessPolicy", warnings)
-    explicit_microservice_name = body.get("microserviceName") or label_value(
+    source_microservice_name = body.get("microserviceName") or label_value(
         old_metadata, "app.kubernetes.io/instance"
     )
-    microservice_name = explicit_microservice_name or args.service_name
-    if not explicit_microservice_name and microservice_name:
+    if getattr(args, "service_name_explicit", False):
+        microservice_name = args.service_name
+    else:
+        microservice_name = source_microservice_name or args.service_name
+    if not source_microservice_name and not getattr(args, "service_name_explicit", False):
         warnings.append(
             "DatabaseAccessPolicy.spec.microserviceName uses the --service-name fallback; "
             "verify it against the owning service"
@@ -453,18 +459,27 @@ def dump_yaml(value: Any, indent: int = 0) -> str:
     if isinstance(value, dict):
         lines: list[str] = []
         for key, nested in value.items():
+            formatted_key = json.dumps(str(key))
             if isinstance(nested, (dict, list)):
-                lines.append(f"{spaces}{key}:")
-                lines.append(dump_yaml(nested, indent + 2))
+                if nested:
+                    lines.append(f"{spaces}{formatted_key}:")
+                    lines.append(dump_yaml(nested, indent + 2).rstrip("\n"))
+                else:
+                    empty_value = "{}" if isinstance(nested, dict) else "[]"
+                    lines.append(f"{spaces}{formatted_key}: {empty_value}")
             else:
-                lines.append(f"{spaces}{key}: {format_scalar(nested)}")
+                lines.append(f"{spaces}{formatted_key}: {format_scalar(nested)}")
         return "\n".join(lines) + "\n"
     if isinstance(value, list):
         lines = []
         for item in value:
-            if isinstance(item, dict):
-                lines.append(f"{spaces}-")
-                lines.append(dump_yaml(item, indent + 2).rstrip("\n"))
+            if isinstance(item, (dict, list)):
+                if item:
+                    lines.append(f"{spaces}-")
+                    lines.append(dump_yaml(item, indent + 2).rstrip("\n"))
+                else:
+                    empty_value = "{}" if isinstance(item, dict) else "[]"
+                    lines.append(f"{spaces}- {empty_value}")
             else:
                 lines.append(f"{spaces}- {format_scalar(item)}")
         return "\n".join(lines) + "\n"
@@ -478,16 +493,21 @@ def format_scalar(value: Any) -> str:
         return "false"
     if value is None:
         return "null"
-    if isinstance(value, (int, float)):
+    if isinstance(value, int):
         return str(value)
-    text = str(value)
-    if not text:
-        return '""'
-    if "{{" in text or "}}" in text or text.startswith(("[", "{", "*", "&", "!", "@", "`")):
-        return json.dumps(text)
-    if re.search(r"[:#\n\r\t]", text):
-        return json.dumps(text)
-    return text
+    if isinstance(value, float):
+        if math.isnan(value):
+            return ".nan"
+        if math.isinf(value):
+            return ".inf" if value > 0 else "-.inf"
+        text = repr(value)
+        if "e" in text.lower():
+            mantissa, exponent = re.split(r"[eE]", text, maxsplit=1)
+            if "." not in mantissa:
+                mantissa += ".0"
+            return f"{mantissa}e{exponent}"
+        return text
+    return json.dumps(str(value))
 
 
 if __name__ == "__main__":
