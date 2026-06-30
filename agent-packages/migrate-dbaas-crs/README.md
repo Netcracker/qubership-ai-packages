@@ -7,8 +7,8 @@ resources:
 - `DatabaseDeclaration` to `InternalDatabase`
 - `DbPolicy` to `DatabaseAccessPolicy`
 
-It handles legacy `deployments/dbaas-configuration.json` files and generic
-DBaaS YAML resources used by Cloud Core components.
+It handles legacy DBaaS JSON and YAML resources regardless of directory layout,
+including `deployments/`, `<service-name>-deployments/`, and Helm chart folders.
 
 ## Contents
 
@@ -33,8 +33,8 @@ against the target CRDs.
 apm install migrate-dbaas-crs@qubership-ai-packages
 ```
 
-Then invoke the `migrate-dbaas-crs` skill by name or ask the agent to migrate
-legacy DBaaS declarations or policies.
+Then invoke the `migrate-dbaas-crs` skill by name and optionally provide one or
+more manifest file or directory paths to define the migration scope.
 
 ## Requirements
 

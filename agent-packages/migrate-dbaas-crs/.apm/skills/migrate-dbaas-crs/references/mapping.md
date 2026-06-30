@@ -6,7 +6,7 @@ Use this reference to convert old DBaaS declarative formats to the dedicated dba
 
 Legacy JSON:
 
-- file: `deployments/dbaas-configuration.json`
+- common filename: `dbaas-configuration.json`; locate it by content regardless of its parent directory
 - database declarations: `{"apiVersion":"nc.core.dbaas/v3","kind":"DatabaseDeclaration","declarations":[...]}`
 - policies: `{"apiVersion":"nc.core.dbaas/v3","kind":"DbPolicy"}` or `{"kind":"dbPolicy"}`
 - files may also contain a top-level JSON array mixing both declaration types
