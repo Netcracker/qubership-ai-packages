@@ -1,6 +1,6 @@
 ---
 name: migrate-core-operator-dbaas-declarations
-description: "Migrate legacy Core Operator DBaaS declarative configuration to dbaas-operator CRDs. Use when converting legacy JSON or YAML resources found anywhere in a repository, including when the user supplies file or directory paths, from DatabaseDeclaration, DbPolicy, dbPolicy, or generic DBaaS resources with those subKind values into dbaas.netcracker.com/v1 InternalDatabase and DatabaseAccessPolicy manifests."
+description: "Migrate legacy Core Operator DBaaS declarations to dbaas-operator resources (DatabaseDeclaration/DbPolicy to InternalDatabase/DatabaseAccessPolicy). Use when converting legacy JSON or generic DBaaS YAML wrappers from user-provided paths or repository discovery."
 ---
 
 # Migrate Core Operator DBaaS Declarations
