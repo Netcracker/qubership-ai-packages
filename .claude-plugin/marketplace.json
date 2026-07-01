@@ -160,6 +160,19 @@
       "source": "./agent-packages/codex-review"
     },
     {
+      "name": "dbaas-declarative-transform",
+      "description": "Migrate Go DBaaS datasource provisioning to InternalDatabase and DatabaseSecretClaim resources with mounted credentials.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:database",
+        "stack:go",
+        "stack:kubernetes",
+        "activity:migration",
+        "audience:public"
+      ],
+      "source": "./agent-packages/dbaas-declarative-transform"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",

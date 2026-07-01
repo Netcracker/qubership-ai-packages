@@ -1,0 +1,4 @@
+name: dbaas-declarative-transform
+version: 1.0.0
+description: Migrate Go DBaaS datasource provisioning to InternalDatabase and DatabaseSecretClaim resources with mounted credentials.
+author: Netcracker
