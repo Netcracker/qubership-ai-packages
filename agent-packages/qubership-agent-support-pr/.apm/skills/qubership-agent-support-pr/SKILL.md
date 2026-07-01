@@ -45,23 +45,45 @@ Before editing, inspect the target repository:
 ```bash
 git status --short --branch
 git remote -v
-rg --files \
-  -g 'apm.yml' \
-  -g 'apm.lock.yaml' \
-  -g '.apm/**' \
-  -g '.agents/**' \
-  -g '.claude/**' \
-  -g '.codex/**' \
-  -g '.cursor/**'
-rg --files \
-  -g '.gitattributes' \
-  -g '.github/super-linter.env' \
-  -g '.github/linters/**' \
-  -g '.github/workflows/**'
+if command -v rg >/dev/null 2>&1; then
+  rg --files --hidden \
+    -g '!.git/**' \
+    -g '!node_modules/**' \
+    -g 'apm.yml' \
+    -g 'apm.lock.yaml' \
+    -g '.gitattributes' \
+    -g '.apm/**' \
+    -g '.agents/**' \
+    -g '.claude/**' \
+    -g '.codex/**' \
+    -g '.cursor/**' \
+    -g '.github/super-linter.env' \
+    -g '.github/linters/**' \
+    -g '.github/workflows/**'
+else
+  find . \
+    \( -path './.git' -o -path './node_modules' \) -prune -o \
+    \( \
+      -name 'apm.yml' -o \
+      -name 'apm.lock.yaml' -o \
+      -name '.gitattributes' -o \
+      -path './.apm/*' -o \
+      -path './.agents/*' -o \
+      -path './.claude/*' -o \
+      -path './.codex/*' -o \
+      -path './.cursor/*' -o \
+      -path './.github/super-linter.env' -o \
+      -path './.github/linters/*' -o \
+      -path './.github/workflows/*' \
+    \) -print
+fi
 ```
 
 Also read readme files, validation docs, and repository-specific layout before
 choosing checks. Preserve unrelated user edits and stage only onboarding files.
+Pay attention to all repository checks and workflows. Do not assume a setting
+for one tool affects another check unless the repository configuration shows
+that connection.
 
 ## Branch
 
@@ -98,11 +120,13 @@ The script updates:
   does not have APM metadata yet;
 - `apm.yml` `targets`;
 - `.gitattributes` entries for generated APM install assets;
-- `.github/super-linter.env` `FILTER_REGEX_EXCLUDE`, which applies to
-  Markdown, codespell, natural-language, and other Super-Linter checks.
+- `.github/super-linter.env` `FILTER_REGEX_EXCLUDE` for Super-Linter
+  checks, including Markdown and natural-language linters.
 
 Do not exclude `.apm/**`, docs, source code, roles, playbooks, workflows, or
 handwritten repository configuration.
+Do not automatically edit unrelated workflow or linter configuration. Inspect
+failures first and choose the smallest repository-appropriate fix.
 
 ## Install
 
@@ -163,11 +187,34 @@ hooks.
 
 For Markdown changes, run the repository's markdownlint configuration when
 available. For Super-Linter repositories, confirm `FILTER_REGEX_EXCLUDE` covers
-generated APM install files.
+generated APM install files. `FILTER_REGEX_EXCLUDE` only configures
+Super-Linter. It does not configure independent repository checks unless those
+checks explicitly load the same environment file. Inspect each failing check's
+workflow, configuration, and logs before changing anything. If a check fails on
+generated APM install files, decide whether the right fix is a
+repository-specific exclude, a generated-file marker, a targeted content change,
+or an issue against the linter or shared workflow.
 
 Run repository-specific syntax or test commands discovered from workflows and
 docs. Examples: Ansible syntax checks, Helm template checks, unit tests, or
 workflow linting.
+
+After creating or updating the pull request, wait for GitHub checks and inspect
+failures before handing the PR back:
+
+```bash
+gh pr checks --watch
+```
+
+If `gh pr checks --watch` is unavailable, use the repository's GitHub checks UI
+or the GitHub API. Do not report the PR as ready while any required or relevant
+check is still pending or failing. If a check fails for a pre-existing or
+unrelated reason, document the exact check name, failure reason, and evidence in
+the PR body or final response.
+If the failure looks like a tool or shared workflow bug, create or propose a
+focused issue with the failing file path, check name, tool version, expected
+behavior, actual behavior, and a minimal reproduction from the generated APM
+file.
 
 ## PR
 
@@ -178,6 +225,8 @@ Before committing:
 - Confirm `.github/instructions/**` exists only when Copilot is enabled.
 - Confirm `apm.lock.yaml` keeps transitive dependencies.
 - Confirm generated-file exclusions do not hide source files.
+- Confirm all relevant PR checks and repository workflows have been inspected
+  when they match generated APM install files.
 
 Commit with a conventional message such as:
 

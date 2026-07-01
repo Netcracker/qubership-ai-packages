@@ -21,7 +21,11 @@ USAGE
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --targets)
-      TARGETS="${2:-}"
+      if [ "$#" -lt 2 ]; then
+        echo "--targets requires a value" >&2
+        exit 2
+      fi
+      TARGETS="$2"
       shift 2
       ;;
     --help|-h)
@@ -62,6 +66,10 @@ has_target() {
   return 1
 }
 
+make_tmp_file() {
+  mktemp "${TMPDIR:-/tmp}/configure-apm-agent-support.XXXXXX"
+}
+
 ensure_line() {
   local file="$1"
   local line="$2"
@@ -84,31 +92,43 @@ initialize_apm_project() {
 
 update_targets() {
   local tmp
-  tmp="$(mktemp)"
+  tmp="$(make_tmp_file)"
 
+  local output_lines=()
   if [ -f apm.yml ]; then
-    awk '
-      BEGIN { skip = 0 }
-      /^# Which agent platforms to deploy to\./ { next }
-      /^# Resolution order: --target flag > this field > auto-detect from filesystem\./ { next }
-      /^# Accepted values:/ { next }
-      /^# gemini, antigravity,/ { next }
-      /^[^[:space:]#][^:]*:/ {
-        if ($0 ~ /^targets:[[:space:]]*$/) {
-          skip = 1
-          next
-        }
-        skip = 0
-      }
-      skip == 0 { print }
-    ' apm.yml > "$tmp"
+    local skip_targets_block=0
+    local line
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        '# Which agent platforms to deploy to.') continue ;;
+        '# Resolution order: --target flag > this field > auto-detect from filesystem.') continue ;;
+        '# Accepted values:') continue ;;
+        '# gemini, antigravity,'*) continue ;;
+      esac
+
+      if [[ "$line" =~ ^targets:[[:space:]]*$ ]]; then
+        skip_targets_block=1
+        continue
+      fi
+
+      if [[ "$line" =~ ^[^[:space:]#][^:]*: ]]; then
+        skip_targets_block=0
+      fi
+
+      if [ "$skip_targets_block" -eq 0 ]; then
+        output_lines[${#output_lines[@]}]="$line"
+      fi
+    done < apm.yml
   fi
 
-  while [ -s "$tmp" ] && [ "$(tail -c 1 "$tmp")" != "" ]; do
-    printf '\n' >> "$tmp"
+  while [ "${#output_lines[@]}" -gt 0 ]; do
+    local last_index=$((${#output_lines[@]} - 1))
+    [ -n "${output_lines[$last_index]}" ] && break
+    unset "output_lines[$last_index]"
   done
 
-  if [ -s "$tmp" ]; then
+  if [ "${#output_lines[@]}" -gt 0 ]; then
+    printf '%s\n' "${output_lines[@]}" >> "$tmp"
     printf '\n' >> "$tmp"
   fi
   printf 'targets:\n' >> "$tmp"
@@ -159,27 +179,24 @@ update_super_linter() {
 
   local file=".github/super-linter.env"
   local tmp
-  tmp="$(mktemp)"
+  tmp="$(make_tmp_file)"
 
   if [ -f "$file" ] && grep -q '^FILTER_REGEX_EXCLUDE=' "$file"; then
-    awk -v regex="$regex" '
-      BEGIN { updated = 0 }
-      /^FILTER_REGEX_EXCLUDE=/ {
-        if ($0 !~ /\\.agents\\//) {
-          print $0 "|" regex
-        } else {
-          print
-        }
-        updated = 1
-        next
-      }
-      { print }
-      END {
-        if (updated == 0) {
-          print "FILTER_REGEX_EXCLUDE=" regex
-        }
-      }
-    ' "$file" > "$tmp"
+    local line
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        FILTER_REGEX_EXCLUDE=*)
+          if [[ "$line" == *'.agents/'* ]]; then
+            printf '%s\n' "$line" >> "$tmp"
+          else
+            printf '%s|%s\n' "$line" "$regex" >> "$tmp"
+          fi
+          ;;
+        *)
+          printf '%s\n' "$line" >> "$tmp"
+          ;;
+      esac
+    done < "$file"
   else
     [ -f "$file" ] && cat "$file" > "$tmp"
     [ -s "$tmp" ] && printf '\n' >> "$tmp"
