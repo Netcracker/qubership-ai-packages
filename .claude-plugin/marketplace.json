@@ -17,6 +17,18 @@
       "source": "./agent-packages/apm-authoring"
     },
     {
+      "name": "migrate-core-operator-dbaas-declarations",
+      "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:cloud-core",
+        "stack:kubernetes",
+        "activity:migration",
+        "audience:public"
+      ],
+      "source": "./agent-packages/migrate-core-operator-dbaas-declarations"
+    },
+    {
       "name": "go-microservice-dev-kit",
       "description": "Umbrella package for Qubership Go microservices.",
       "version": "1.0.0",
