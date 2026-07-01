@@ -21,9 +21,9 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
-    - name: migrate-dbaas-crs
-      description: Convert legacy DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.
-      source: ./agent-packages/migrate-dbaas-crs
+    - name: migrate-core-operator-dbaas-declarations
+      description: Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.
+      source: ./agent-packages/migrate-core-operator-dbaas-declarations
       version: 1.0.0
       tags: ["topic:cloud-core", "stack:kubernetes", "activity:migration", "audience:public"]
 

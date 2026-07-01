@@ -37,8 +37,8 @@ Each old database declaration becomes one `InternalDatabase`.
 | `spec.classifierConfig.classifier` or `classifierConfig.classifier` | `spec.classifier` | unwrap `classifierConfig` |
 | `classifier.microserviceName` | `spec.classifier.microserviceName` | preserve Helm templates |
 | `classifier.scope` | `spec.classifier.scope` | required |
-| `classifier.namespace` | `spec.classifier.namespace` | usually omit; if present it must match metadata.namespace |
-| `classifier.tenantId` | `spec.classifier.tenantId` | keep only when source uses tenant scope |
+| `classifier.namespace` | omit | the operator derives it from `metadata.namespace`; preserve `sourceClassifier.namespace` separately |
+| `classifier.tenantId` | `spec.classifier.tenantId` | a concrete tenant triggers eager materialization; omission leaves only the tenant-agnostic template |
 | `classifier.customKeys` | `spec.classifier.customKeys` | preserve nested JSON/YAML values |
 | other top-level classifier keys | `spec.classifier.extraKeys` | use for legacy open classifier keys such as `transactional` |
 | `type` | `spec.type` | required |
@@ -47,7 +47,7 @@ Each old database declaration becomes one `InternalDatabase`.
 | `namePrefix` | `spec.namePrefix` | optional |
 | `versioningConfig` | `spec.versioningConfig` | marks configuration/versioned database |
 | `initialInstantiation` | `spec.initialInstantiation` | optional |
-| `initialInstantiation.sourceClassifier` | `spec.initialInstantiation.sourceClassifier` | convert reserved/extra keys by the same classifier rule |
+| `initialInstantiation.sourceClassifier` | `spec.initialInstantiation.sourceClassifier` | convert classifier keys; its `microserviceName` must equal the target classifier owner |
 
 Do not keep old `spec.classifierConfig`. The dbaas-operator controller re-wraps `spec.classifier` into the aggregator
 wire shape.
@@ -91,9 +91,12 @@ Do not copy status blocks. Do not copy old generic CR labels unless the target d
 
 - Ensure no output manifest has `kind: DBaaS`.
 - Ensure no `InternalDatabase` has `spec.classifierConfig`.
+- Omit target `spec.classifier.namespace`; the operator derives it from `metadata.namespace`.
 - Ensure every `InternalDatabase` has `spec.classifier.microserviceName`, `spec.classifier.scope`, and `spec.type`.
 - Ensure every `DatabaseAccessPolicy` has `spec.microserviceName` and at least one of `spec.services` or `spec.policy`.
 - Flag `lazy: true` combined with `initialInstantiation.approach: clone`.
 - Flag `initialInstantiation.approach: clone` without `sourceClassifier`.
+- Fill a missing `sourceClassifier.microserviceName` from the target classifier and flag any explicit mismatch.
+- Reject cross-service clones: source and target `microserviceName` values must be identical.
 - Flag `settings` values that are not strings when the target CRD schema is `map[string]string`.
 - Preserve `versioningConfig.approach: clone` or `new`; this is what marks configuration/versioned databases.

@@ -1,0 +1,4 @@
+name: migrate-core-operator-dbaas-declarations
+version: 1.0.0
+description: Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.
+author: Qubership

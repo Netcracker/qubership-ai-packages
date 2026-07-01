@@ -1,9 +1,9 @@
 ---
-name: migrate-dbaas-crs
-description: "Migrate legacy DBaaS declarative configuration to dbaas-operator CRDs. Use when converting legacy JSON or YAML resources found anywhere in a repository, including when the user supplies file or directory paths, from DatabaseDeclaration, DbPolicy, dbPolicy, or generic DBaaS resources with those subKind values into dbaas.netcracker.com/v1 InternalDatabase and DatabaseAccessPolicy manifests."
+name: migrate-core-operator-dbaas-declarations
+description: "Migrate legacy Core Operator DBaaS declarative configuration to dbaas-operator CRDs. Use when converting legacy JSON or YAML resources found anywhere in a repository, including when the user supplies file or directory paths, from DatabaseDeclaration, DbPolicy, dbPolicy, or generic DBaaS resources with those subKind values into dbaas.netcracker.com/v1 InternalDatabase and DatabaseAccessPolicy manifests."
 ---
 
-# Migrate DBaaS CRs
+# Migrate Core Operator DBaaS Declarations
 
 Convert legacy DBaaS declarations into dedicated Kubernetes resources:
 
@@ -76,6 +76,10 @@ duplicate resources require manual review.
   unambiguous; otherwise ask the user.
 - Move old classifier keys outside `microserviceName`, `scope`, `namespace`, `tenantId`, and `customKeys` to
   `spec.classifier.extraKeys`.
+- Omit the target `spec.classifier.namespace` so the operator derives it from `metadata.namespace`. Preserve
+  `initialInstantiation.sourceClassifier.namespace` because a clone source may live in another namespace.
+- Require `initialInstantiation.sourceClassifier.microserviceName` to equal the target classifier owner. Fill it from
+  the target when absent, and require manual correction when an explicit source owner differs.
 - Check `spec.settings` against the current CRD. Flag arrays, booleans, numbers, or objects when the schema accepts only
   string values; do not silently alter their meaning.
 - Choose stable, DNS-compatible resource names and check for duplicate kind/name pairs across all generated files.
@@ -88,7 +92,7 @@ Always perform these offline checks; they do not require a Kubernetes cluster:
    `DatabaseAccessPolicy`.
 2. Compare every migrated field with the source and resolve every converter warning.
 3. Confirm no legacy wrapper or `spec.classifierConfig` fields remain.
-4. Confirm every target-required field is present and check for duplicate kind/name pairs.
+4. Confirm every target-required field is present, source and target clone owners match, and kind/name pairs are unique.
 5. Render Helm templates before treating the manifests as deployable YAML.
 
 When current CRD files are available, validate the rendered manifests against their OpenAPI schemas. When a suitable

@@ -17,8 +17,8 @@
       "source": "./agent-packages/apm-authoring"
     },
     {
-      "name": "migrate-dbaas-crs",
-      "description": "Convert legacy DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
+      "name": "migrate-core-operator-dbaas-declarations",
+      "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
       "version": "1.0.0",
       "tags": [
         "topic:cloud-core",
@@ -26,7 +26,7 @@
         "activity:migration",
         "audience:public"
       ],
-      "source": "./agent-packages/migrate-dbaas-crs"
+      "source": "./agent-packages/migrate-core-operator-dbaas-declarations"
     },
     {
       "name": "go-microservice-dev-kit",

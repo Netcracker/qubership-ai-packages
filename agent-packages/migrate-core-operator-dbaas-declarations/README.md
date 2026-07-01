@@ -1,6 +1,6 @@
-# migrate-dbaas-crs
+# migrate-core-operator-dbaas-declarations
 
-An APM package that helps coding agents migrate legacy DBaaS database
+An APM package that helps coding agents migrate legacy Core Operator DBaaS database
 declarations and database policies to the dedicated `dbaas-operator` custom
 resources:
 
@@ -12,13 +12,13 @@ including `deployments/`, `<service-name>-deployments/`, and Helm chart folders.
 
 ## Contents
 
-- `.apm/skills/migrate-dbaas-crs/SKILL.md` - the migration workflow and
+- `.apm/skills/migrate-core-operator-dbaas-declarations/SKILL.md` - the migration workflow and
   validation contract.
-- `.apm/skills/migrate-dbaas-crs/references/mapping.md` - field-by-field
+- `.apm/skills/migrate-core-operator-dbaas-declarations/references/mapping.md` - field-by-field
   mappings and validation rules.
-- `.apm/skills/migrate-dbaas-crs/references/examples.md` - representative
+- `.apm/skills/migrate-core-operator-dbaas-declarations/references/examples.md` - representative
   before-and-after manifests.
-- `.apm/skills/migrate-dbaas-crs/scripts/convert_dbaas_crs.py` - an optional
+- `.apm/skills/migrate-core-operator-dbaas-declarations/scripts/convert_dbaas_crs.py` - an optional
   bundled bulk converter for repetitive JSON and YAML inputs.
 
 The converter is deliberately optional. Agents can migrate small inputs from
@@ -30,10 +30,10 @@ against the target CRDs.
 ## Install
 
 ```sh
-apm install migrate-dbaas-crs@qubership-ai-packages
+apm install migrate-core-operator-dbaas-declarations@qubership-ai-packages
 ```
 
-Then invoke the `migrate-dbaas-crs` skill by name and optionally provide one or
+Then invoke the `migrate-core-operator-dbaas-declarations` skill by name and optionally provide one or
 more manifest file or directory paths to define the migration scope.
 
 ## Requirements

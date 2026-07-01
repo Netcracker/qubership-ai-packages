@@ -47,7 +47,10 @@ spec:
     approach: clone
 ```
 
-## Generic YAML DatabaseDeclaration To InternalDatabase
+## YAML DBaaS Wrapper Variant
+
+This repeats the same field conversion for generic YAML CR input. Drop the `kind: DBaaS`/`subKind` wrapper and
+its wrapper-only Core labels.
 
 Before:
 
@@ -71,7 +74,9 @@ spec:
     approach: clone
     sourceClassifier:
       scope: service
-      microserviceName: source-microservice
+      microserviceName: "{{ .Values.SERVICE_NAME }}"
+      customKeys:
+        logicalDbName: source-db
 ```
 
 After:
@@ -91,7 +96,9 @@ spec:
     approach: clone
     sourceClassifier:
       scope: service
-      microserviceName: source-microservice
+      microserviceName: "{{ .Values.SERVICE_NAME }}"
+      customKeys:
+        logicalDbName: source-db
 ```
 
 ## Extra Classifier Keys

@@ -208,9 +208,17 @@ def convert_database_declaration(
         classifier = {}
         warnings.append(f"DatabaseDeclaration #{declaration_index}: missing classifierConfig.classifier")
     default_name = database_name_hint(declaration, classifier, doc_index, declaration_index)
+    metadata = target_metadata(old_metadata, args, default_name, doc_index, declaration_index)
+    target_classifier = convert_classifier(classifier, args.service_name)
+    legacy_namespace = target_classifier.pop("namespace", None)
+    if legacy_namespace not in (None, "", metadata["namespace"]):
+        warnings.append(
+            f"InternalDatabase {metadata['name']} classifier.namespace {legacy_namespace!r} differs from "
+            f"metadata.namespace {metadata['namespace']!r}; omitted classifier.namespace so the operator derives it"
+        )
 
     spec: dict[str, Any] = {
-        "classifier": convert_classifier(classifier, args.service_name),
+        "classifier": target_classifier,
     }
 
     for field in ("type", "lazy", "namePrefix", "versioningConfig", "initialInstantiation"):
@@ -247,13 +255,44 @@ def convert_database_declaration(
     initial = spec.get("initialInstantiation")
     if isinstance(initial, dict) and initial.get("approach") == "clone" and "sourceClassifier" not in initial:
         warnings.append("initialInstantiation.approach=clone requires sourceClassifier")
+    validate_source_classifier_owner(spec, default_name, warnings)
 
     return {
         "apiVersion": "dbaas.netcracker.com/v1",
         "kind": "InternalDatabase",
-        "metadata": target_metadata(old_metadata, args, default_name, doc_index, declaration_index),
+        "metadata": metadata,
         "spec": spec,
     }
+
+
+def validate_source_classifier_owner(
+    spec: dict[str, Any],
+    resource_name_hint: str,
+    warnings: list[str],
+) -> None:
+    initial = spec.get("initialInstantiation")
+    if not isinstance(initial, dict):
+        return
+    source_classifier = initial.get("sourceClassifier")
+    if not isinstance(source_classifier, dict):
+        return
+
+    target_classifier = spec.get("classifier")
+    if not isinstance(target_classifier, dict):
+        return
+    target_owner = target_classifier.get("microserviceName")
+    source_owner = source_classifier.get("microserviceName")
+    if not source_owner and target_owner:
+        source_classifier["microserviceName"] = target_owner
+        warnings.append(
+            f"InternalDatabase {resource_name_hint} sourceClassifier.microserviceName was missing; "
+            "filled it from classifier.microserviceName"
+        )
+    elif target_owner and source_owner != target_owner:
+        warnings.append(
+            f"InternalDatabase {resource_name_hint} sourceClassifier.microserviceName must match "
+            "classifier.microserviceName; cross-service clones are invalid"
+        )
 
 
 def database_name_hint(

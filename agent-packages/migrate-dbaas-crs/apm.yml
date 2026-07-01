@@ -1,4 +1,0 @@
-name: migrate-dbaas-crs
-version: 1.0.0
-description: Convert legacy DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.
-author: Qubership
