@@ -185,6 +185,13 @@ a target and `.github/` exists, check microsoft/apm#1924 before working around
 it. Do not fix this by deleting transitive lockfile entries or allowed harness
 hooks.
 
+`apm audit --ci` can also report transitive packages from an umbrella package
+such as `qubership-essentials` as orphaned (`no-orphaned-packages`). Treat this
+as expected only when the reported packages are transitive dependencies of the
+umbrella package. Do not trim `apm.lock.yaml` or run `apm install` only to remove
+those transitive entries. If an orphaned package is not a transitive umbrella
+dependency, treat it as a real audit finding.
+
 For Markdown changes, run the repository's markdownlint configuration when
 available. For Super-Linter repositories, confirm `FILTER_REGEX_EXCLUDE` covers
 generated APM install files. `FILTER_REGEX_EXCLUDE` only configures

@@ -163,8 +163,21 @@ update_gitattributes() {
   fi
 }
 
+has_super_linter() {
+  [ -f .github/super-linter.env ] && return 0
+  [ -d .github/workflows ] || return 1
+
+  local file
+  for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+    [ -f "$file" ] || continue
+    grep -Eq 'super-linter/super-linter|github/super-linter' "$file" && return 0
+  done
+
+  return 1
+}
+
 update_super_linter() {
-  [ -d .github ] || [ -f .github/super-linter.env ] || return 0
+  has_super_linter || return 0
 
   mkdir -p .github
 
