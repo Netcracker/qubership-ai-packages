@@ -15,12 +15,11 @@ once, then install packages by name.
 ## Register the marketplace
 
 ```bash
-apm marketplace add Netcracker/qubership-ai-packages --ref v1.1.0
+apm marketplace add Netcracker/qubership-ai-packages
 ```
 
-`--ref` pins the whole marketplace, and every package in it, to a release tag, so every machine and CI run resolves
-the same bytes. Omit `--ref` to track `main` and always resolve the latest
-(`apm marketplace add Netcracker/qubership-ai-packages`).
+This tracks `main`, which is the default for this marketplace. If you need reproducible bytes for CI, add `--ref` with
+a release tag.
 
 Confirm the registration:
 

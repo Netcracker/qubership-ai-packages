@@ -1,0 +1,15 @@
+name: qubership-global-essentials
+version: 1.0.0
+description: "Umbrella package with the Qubership agent setup that is useful in a global user workspace: APM authoring, code review, developer style, Markdown rules, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
+dependencies:
+  apm:
+    # Sibling packages in this repository. Published manifests cannot use
+    # local-path deps, so each one is pinned to a commit SHA on this repo.
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/qubership-agent-support-pr#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/triage-dependency-prs#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/enable-renovate-automerge#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring#0ce60887d9c585522cfb58b1d9647ebe595fe569  # main
