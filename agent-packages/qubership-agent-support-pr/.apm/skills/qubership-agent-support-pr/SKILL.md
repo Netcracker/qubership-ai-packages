@@ -119,6 +119,7 @@ The script updates:
 - creates `apm.yml` with `apm init -y --target <targets>` when the repository
   does not have APM metadata yet;
 - `apm.yml` `targets`;
+- removes `apm.yml` `author`;
 - `.gitattributes` entries for generated APM install assets;
 - `.github/super-linter.env` `FILTER_REGEX_EXCLUDE` for Super-Linter
   checks, including Markdown and natural-language linters.

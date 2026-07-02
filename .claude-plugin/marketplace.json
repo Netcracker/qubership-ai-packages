@@ -43,7 +43,7 @@
     {
       "name": "qubership-agent-support-pr",
       "description": "Prepare a repository PR that installs qubership-essentials and generated agent assets.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:meta",
         "activity:setup",

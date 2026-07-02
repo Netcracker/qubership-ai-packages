@@ -14,7 +14,7 @@ PR.
 1. Reads the target repository layout, workflows, linters, APM files, and
    existing generated agent assets.
 1. Creates or updates `apm.yml`, including `apm init -y --target <targets>` for
-   repositories that do not have APM metadata yet.
+   repositories that do not have APM metadata yet, and removes `author`.
 1. Installs `qubership-essentials` with `apm install`, relying on
    `apm.lock.yaml` for the resolved revision.
 1. Keeps generated assets for the selected harnesses and marks them as

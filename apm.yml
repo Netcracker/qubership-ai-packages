@@ -36,7 +36,7 @@ marketplace:
     - name: qubership-agent-support-pr
       description: Prepare a repository PR that installs qubership-essentials and generated agent assets.
       source: ./agent-packages/qubership-agent-support-pr
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:meta", "activity:setup", "activity:maintenance", "audience:public"]
 
     - name: english-developer-style
