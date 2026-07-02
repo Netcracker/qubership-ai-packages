@@ -41,6 +41,18 @@
       "source": "./agent-packages/qubership-essentials"
     },
     {
+      "name": "qubership-agent-support-pr",
+      "description": "Prepare a repository PR that installs qubership-essentials and generated agent assets.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:meta",
+        "activity:setup",
+        "activity:maintenance",
+        "audience:public"
+      ],
+      "source": "./agent-packages/qubership-agent-support-pr"
+    },
+    {
       "name": "english-developer-style",
       "description": "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English.",
       "version": "2.0.0",
