@@ -97,14 +97,27 @@ update_targets() {
   local output_lines=()
   if [ -f apm.yml ]; then
     local skip_targets_block=0
+    local skip_targets_comment=0
     local line
     while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in
-        '# Which agent platforms to deploy to.') continue ;;
-        '# Resolution order: --target flag > this field > auto-detect from filesystem.') continue ;;
-        '# Accepted values:') continue ;;
-        '# gemini, antigravity,'*) continue ;;
-      esac
+      if [[ "$line" =~ ^[[:space:]]*#\ Which\ agent\ platforms\ to\ deploy\ to\. ]] ||
+        [[ "$line" =~ ^[[:space:]]*#\ Resolution\ order: ]] ||
+        [[ "$line" =~ ^[[:space:]]*#\ Accepted\ values: ]]; then
+        skip_targets_comment=1
+        continue
+      fi
+
+      if [ "$skip_targets_comment" -eq 1 ]; then
+        if [[ "$line" =~ ^[[:space:]]*# ]]; then
+          continue
+        fi
+        if [[ "$line" =~ ^targets:[[:space:]]*$ ]]; then
+          skip_targets_comment=0
+          skip_targets_block=1
+          continue
+        fi
+        skip_targets_comment=0
+      fi
 
       if [[ "$line" =~ ^targets:[[:space:]]*$ ]]; then
         skip_targets_block=1

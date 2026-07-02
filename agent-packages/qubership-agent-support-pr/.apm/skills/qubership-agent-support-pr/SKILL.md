@@ -202,6 +202,17 @@ generated APM install files, decide whether the right fix is a
 repository-specific exclude, a generated-file marker, a targeted content change,
 or an issue against the linter or shared workflow.
 
+After `apm install`, inspect independent word, spelling, and link checkers that
+match Markdown, YAML, or text files. Generated APM content can contain package
+documentation, examples, or dialect choices that are valid upstream but fail a
+target repository's local checker. If the checker supports native path excludes
+and is failing only on generated APM install assets, add the generated target
+directories (`.agents/`, `.claude/`, `.codex/`, `.cursor/`, and Copilot output
+when enabled) to that checker's exclude list. Do not add source files, `.apm/`,
+handwritten docs, or workflows to those excludes. If the failure points to an
+upstream package inconsistency, create or propose an issue against the source
+package instead of patching generated files by hand.
+
 Run repository-specific syntax or test commands discovered from workflows and
 docs. Examples: Ansible syntax checks, Helm template checks, unit tests, or
 workflow linting.
@@ -218,6 +229,8 @@ or the GitHub API. Do not report the PR as ready while any required or relevant
 check is still pending or failing. If a check fails for a pre-existing or
 unrelated reason, document the exact check name, failure reason, and evidence in
 the PR body or final response.
+After every push that changes onboarding files, wait for PR checks again and
+inspect any new failures before reporting completion.
 If the failure looks like a tool or shared workflow bug, create or propose a
 focused issue with the failing file path, check name, tool version, expected
 behavior, actual behavior, and a minimal reproduction from the generated APM
