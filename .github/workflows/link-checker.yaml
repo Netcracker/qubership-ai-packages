@@ -36,6 +36,10 @@ jobs:
         with:
           args: >-
             './**/*.md'
+            --exclude-path '.agents/'
+            --exclude-path '.claude/'
+            --exclude-path '.codex/'
+            --exclude-path '.cursor/'
             --exclude-path 'backend/'
             --verbose
             --no-progress
