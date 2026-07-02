@@ -1,7 +1,6 @@
 name: go-microservice-dev-kit
 version: 1.0.0
 description: Umbrella package for Qubership Go microservices.
-author: Qubership
 dependencies:
   apm:
     - Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage#feat/agent-packages

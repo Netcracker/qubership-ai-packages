@@ -268,7 +268,8 @@ name: my-package          # Required — package identifier
 version: 1.0.0            # Required — semver
 
 description: ""           # Optional — short human-readable description
-author: ""                # Optional — author or organization
+# Optional for APM. Include it only when the package needs an explicit author or organization.
+author: ""
 license: MIT              # Optional — SPDX license identifier
 
 dependencies:
