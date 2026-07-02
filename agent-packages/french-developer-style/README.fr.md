@@ -89,11 +89,13 @@ Ou à la main dans `apm.yml` :
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/french-developer-style@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/french-developer-style@<ref>
 ```
 
-Puis `apm install` et `apm compile` pour fusionner le déclencheur dans les fichiers `AGENTS.md` / `CLAUDE.md`
-locaux.
+Remplacez `<ref>` par le tag de release, la branche ou le commit SHA à
+épingler, par exemple `v1.0.0`.
+
+Puis lancez `apm install` pour déployer la compétence et les sorties d’instructions générées.
 
 ## Exemples d’invocation
 

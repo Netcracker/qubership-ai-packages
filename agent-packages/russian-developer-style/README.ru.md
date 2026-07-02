@@ -31,11 +31,14 @@ apm install Netcracker/qubership-ai-packages/agent-packages/russian-developer-st
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/russian-developer-style@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/russian-developer-style@<ref>
 ```
 
-Затем `apm install` и `apm compile`, чтобы триггер скилла попал в локальные
-`AGENTS.md` / `CLAUDE.md`.
+Замените `<ref>` на нужный release tag, ветку или commit SHA, например
+`v1.0.0`.
+
+Затем выполните `apm install`, чтобы установить скилл и сгенерированные
+instruction outputs.
 
 ## Что внутри
 

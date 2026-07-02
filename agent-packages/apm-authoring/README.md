@@ -21,11 +21,14 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 devDependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring@<ref>
 ```
 
-Then run `apm install` and `apm compile` to merge the trigger into your
-local `AGENTS.md` / `CLAUDE.md`.
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+Then run `apm install`. It deploys the package and runs compile internally
+for generated root context files and harness rules.
 
 ## What you get
 
@@ -40,8 +43,7 @@ local `AGENTS.md` / `CLAUDE.md`.
 ## Typical use
 
 1. `apm install --dev …` once per repo.
-2. `apm compile` to refresh `AGENTS.md` / `CLAUDE.md`.
-3. Open a `SKILL.md` (or create a new `agent-packages/<name>/`) and
+2. Open a `SKILL.md` (or create a new `agent-packages/<name>/`) and
    the agent picks up the rules automatically — no manual prompting
    needed.
 

@@ -8,8 +8,9 @@ immutable accepted records superseded by new ones.
 
 ## Contents
 
-- `.apm/instructions/adr-authoring.instructions.md` — the trigger merged into
-  `AGENTS.md` / `CLAUDE.md` by `apm compile`.
+- `.apm/instructions/adr-authoring.instructions.md` — the trigger deployed by
+  `apm install` and compiled into generated root context files or harness
+  rules.
 - `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions
   plus the ADR template.
 
@@ -24,8 +25,10 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v1.1.0
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@<ref>
 ```
 
-Then run `apm install` and `apm compile` to merge the trigger into your local
-`AGENTS.md` / `CLAUDE.md`.
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+Then run `apm install` to deploy the skill and generated instruction outputs.

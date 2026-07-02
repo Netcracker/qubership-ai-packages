@@ -41,8 +41,11 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/english-developer-style@v2.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/english-developer-style@<ref>
 ```
 
-`apm install` then resolves `english-us-developer-style` transitively, and
-`apm compile` merges its trigger into your local `AGENTS.md` / `CLAUDE.md`.
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+`apm install` then resolves `english-us-developer-style` transitively and
+deploys its skill and generated instruction outputs.

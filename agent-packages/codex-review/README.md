@@ -33,11 +33,14 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/codex-review@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review@<ref>
 ```
 
-Then run `apm install` and `apm compile`. The skill deploys to the location your agent reads
-(`.claude/skills/`, `.cursor/`, ...).
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+Then run `apm install`. The skill deploys to the location your agent reads
+(`.agents/skills/`, `.claude/skills/`, `.cursor/`, ...).
 
 ## Requirements
 

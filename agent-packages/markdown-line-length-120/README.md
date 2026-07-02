@@ -28,13 +28,15 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120@<ref>
 ```
 
-Then run `apm install` and `apm compile` to merge the trigger
-instruction into your local `AGENTS.md` / `CLAUDE.md` and deploy the
-skill body to the location your agent reads (`.github/skills/...`,
-`.cursor/rules/...`, etc.).
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+Then run `apm install` to deploy the skill and generated instruction
+outputs to the location your agent reads (`.agents/skills/...`,
+`.github/instructions/...`, `.cursor/rules/...`, etc.).
 
 ## Pair with autofix
 

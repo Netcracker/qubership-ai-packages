@@ -62,27 +62,29 @@ Rules:
   own `description:`, so the user invokes it by name and no paired
   instruction is needed (see "Agents, hooks, and prompts").
 
-The host repo itself is also an APM project: its own AGENTS.md / CLAUDE.md
-must be **rendered by `apm compile`** from a local `.apm/` package plus
-declared dependencies. Do not hand-author AGENTS.md / CLAUDE.md — `apm
-compile` overwrites it.
+The host repo itself is also an APM project: its own root context files
+(`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and harness rules) are generated
+from a local `.apm/` package plus declared dependencies. `apm install`
+runs the integrate phase for normal dependency installs. Use `apm compile`
+directly only when iterating on local `instructions/*.instructions.md` or
+when you need compile-specific flags such as `--dry-run`, `--validate`,
+`--clean`, or `--global`. Do not hand-author generated root context files.
 
 ## Choosing the right primitive
 
 APM ships five kinds of primitives. Pick the one that matches *when*
 the rule needs to fire and *who* invokes it:
 
-- **Instructions** (`*.instructions.md`) — rules merged into the
-  agent's root file (`AGENTS.md` / `CLAUDE.md`) by `apm compile` and
-  living in session context on every turn. Cost: tokens × every
-  consumer × every turn.
+- **Instructions** (`*.instructions.md`) — rules deployed by `apm install`
+  and compiled into the agent's root context files or per-harness rules.
+  They live in session context whenever the harness loads them. Cost:
+  tokens × every consumer × every turn.
 - **Skills** (`SKILL.md`) — on-demand how-to guides loaded only after
   the agent decides a skill is relevant (steered by the trigger
   phrase in a paired instruction). Cost paid only when activated.
 - **Prompts** (`*.prompt.md`) — slash-commands the **user** invokes
-  explicitly (`/review-pr`). The primitive exists, but `apm compile`
-  does not deploy it to the Codex target, so a prompt silently
-  vanishes there
+  explicitly (`/review-pr`). The primitive exists, but Codex does not
+  consume APM prompts, so a prompt silently vanishes there
   ([microsoft/apm#1781](https://github.com/microsoft/apm/issues/1781)).
   For a user-invoked workflow, ship a **skill without a paired
   instruction** instead (see below): it deploys to every target, and
@@ -154,28 +156,25 @@ land in the merged `AGENTS.md` / `CLAUDE.md`, so every byte costs
 tokens on every turn for every consumer.
 
 `applyTo:` is **not a reliable runtime gate**, because what it does
-depends on the compile target:
+depends on the deployment target:
 
-- **`apm compile` to `AGENTS.md` / `CLAUDE.md`** (the dominant
-  target for Claude Code, Codex, etc.) — the target format has no
-  concept of per-file scoping, so once an instruction lands in the
-  merged file it loads on every turn regardless of the path the
-  agent is touching. APM uses `applyTo:` here only as a *placement
-  heuristic*: it picks which subdirectory's root file an
-  instruction goes into (e.g. `applyTo: "frontend/**/*.tsx"` may
-  land in `frontend/CLAUDE.md` instead of the repo root). Best
-  effort, no guarantee.
+- **Root context outputs such as `AGENTS.md` / `CLAUDE.md`** — the target
+  format has no native per-file scope, so once an instruction lands in a
+  root file it can load on every turn regardless of the path the agent is
+  touching. APM uses `applyTo:` here as a placement heuristic: it picks
+  which subdirectory's root file an instruction goes into (for example,
+  `applyTo: "frontend/**/*.tsx"` may land in `frontend/CLAUDE.md` instead
+  of the repo root). Best effort, no guarantee.
 - **Native deployment to agents that read primitives directly**
   (Cursor `.cursor/rules/*.mdc`, Copilot custom-instructions) —
   `applyTo:` (or its target-native equivalent) survives into the
   deployed file and the agent runtime treats it as a real scope
   filter.
 
-Because at least one major target cannot honour `applyTo:` as a
-runtime gate, **state the file scope in the trigger sentence
-itself** — "When editing `*.go` …" — so the rule fires correctly
-whatever target `apm compile` produces. Don't rely on `applyTo:`
-alone to gate behaviour.
+Because at least one major target cannot honor `applyTo:` as a runtime
+gate, **state the file scope in the trigger sentence itself** — "When
+editing `*.go` …" — so the rule fires correctly across generated outputs.
+Don't rely on `applyTo:` alone to gate behavior.
 
 Rules for the file:
 
@@ -295,8 +294,8 @@ at all; use a user-invoked skill (the Prompts bullet explains why).**
   secret scanners, log filters) when prose advice has demonstrably
   failed. Don't pre-emptively wire a hook for "good hygiene".
 - **Prompts** (`*.prompt.md`) run only when the user types the
-  slash-command. Don't ship one: `apm compile` does not deploy prompts
-  to the Codex target, so a package that relies on a prompt breaks
+  slash-command. Don't ship one for a cross-harness workflow: Codex does
+  not consume APM prompts, so a package that relies on a prompt breaks
   silently for Codex users
   ([microsoft/apm#1781](https://github.com/microsoft/apm/issues/1781),
   closed as not planned). For a single-use workflow the user would
@@ -374,7 +373,7 @@ model work.
 ## Editing a skill that came from a dependency
 
 Local primitives — files under your repo's own `.apm/` — are free to
-edit and recompile. Deployed primitives that arrived via
+edit and reinstall or recompile. Deployed primitives that arrived via
 `apm install` (under `.github/skills/`, `.cursor/rules/`, or wherever
 the runtime expects them) are **not** the source of truth: a local
 edit will be overwritten the next time anyone runs `apm install`
@@ -386,9 +385,7 @@ dependency:
 1. Locate the upstream package via `apm_modules/`:
    - **Skills, agents, prompts** — search for the folder/file by
      its name under `apm_modules/`.
-   - **Instructions** — grep `apm_modules/` for the rule's text
-     (instructions get merged on compile, so name-matching does not
-     help).
+   - **Instructions** — grep `apm_modules/` for the rule's text.
 
    The matching `apm_modules/<owner>/<repo>/.../` path tells you
    the source repo; cross-check with `apm.yml` / `apm.lock` for the
@@ -396,7 +393,8 @@ dependency:
 1. File a PR against that repo's `.apm/<primitive-folder>/<name>/`
    (e.g. `.apm/skills/<name>/SKILL.md`).
 1. Once the upstream change is released, bump the version in this
-   repo's `apm.yml` and run `apm install` followed by `apm compile`.
+   repo's `apm.yml` and run `apm install`. It deploys primitives and
+   runs compile internally as part of the integrate phase.
 
 ## Common authoring pitfalls
 
@@ -416,8 +414,9 @@ dependency:
   flow, or replace with a one-line rule plus reason.
 - **`agent-packages/user-guide/` as a directory name.** Use the
   package's actual name; multiple packages collide otherwise.
-- **Hand-edited AGENTS.md / CLAUDE.md in a repo that already uses
-  APM.** Edit the local `.apm/` package and re-run `apm compile`.
-- **Shipping a workflow as a prompt.** `apm compile` skips prompts for
-  the Codex target, so the slash-command silently disappears there.
+- **Hand-edited generated root context files in a repo that already uses
+  APM.** Edit the local `.apm/` package and re-run `apm install` or
+  `apm compile` for instruction-only changes.
+- **Shipping a workflow as a prompt.** Codex does not consume APM
+  prompts, so the slash-command silently disappears there.
   Write a user-invoked skill (no paired instruction) instead.

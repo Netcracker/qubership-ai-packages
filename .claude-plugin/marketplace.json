@@ -8,7 +8,7 @@
     {
       "name": "apm-authoring",
       "description": "Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:documentation",
         "activity:authoring",
@@ -55,7 +55,7 @@
     {
       "name": "english-developer-style",
       "description": "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -67,7 +67,7 @@
     {
       "name": "english-uk-developer-style",
       "description": "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -79,7 +79,7 @@
     {
       "name": "english-us-developer-style",
       "description": "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -91,7 +91,7 @@
     {
       "name": "french-developer-style",
       "description": "French technical-prose conventions for developer-facing text; defaults to fr-FR, with an fr-CA mode.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "topic:documentation",
         "lang:fr",
@@ -103,7 +103,7 @@
     {
       "name": "russian-developer-style",
       "description": "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "topic:documentation",
         "lang:ru",
@@ -115,7 +115,7 @@
     {
       "name": "markdown-line-length-120",
       "description": "Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:documentation",
         "stack:markdown",
@@ -127,7 +127,7 @@
     {
       "name": "triage-dependency-prs",
       "description": "Skill that triages failing checks on dependency-update PRs (Renovate and Dependabot) and drives them back to green.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "topic:devops",
         "topic:dependencies",
@@ -139,7 +139,7 @@
     {
       "name": "enable-renovate-automerge",
       "description": "Skill that enables Renovate automerge on a repository behind a real test/style required check.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:devops",
         "topic:dependencies",
@@ -152,7 +152,7 @@
     {
       "name": "adr-authoring",
       "description": "Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:documentation",
         "activity:authoring",
@@ -163,7 +163,7 @@
     {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:code-review",
         "activity:code-review",

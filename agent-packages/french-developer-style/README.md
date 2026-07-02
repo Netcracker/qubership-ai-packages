@@ -85,10 +85,13 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/french-developer-style@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/french-developer-style@<ref>
 ```
 
-Then run `apm install` and `apm compile` to merge the trigger into your local `AGENTS.md` / `CLAUDE.md`.
+Replace `<ref>` with the release tag, branch, or commit SHA you want to
+pin, for example `v1.0.0`.
+
+Then run `apm install` to deploy the skill and generated instruction outputs.
 
 ## How to invoke
 

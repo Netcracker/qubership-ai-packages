@@ -1,3 +1,3 @@
 name: apm-authoring
-version: 1.0.0
+version: 1.0.1
 description: Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks) in an agent-packages monorepo and in companion library repositories.
