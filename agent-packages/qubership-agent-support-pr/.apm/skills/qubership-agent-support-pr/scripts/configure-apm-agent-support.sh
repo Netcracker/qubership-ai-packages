@@ -10,6 +10,7 @@ Usage: configure-apm-agent-support.sh [--targets claude,codex,cursor]
 Updates repository-local configuration for generated APM install assets:
 - initializes apm.yml when the repository does not have one;
 - ensures apm.yml contains the requested targets;
+- removes the legacy author field from apm.yml;
 - marks generated agent assets as linguist-generated in .gitattributes;
 - excludes generated agent assets from Super-Linter through FILTER_REGEX_EXCLUDE.
 
@@ -121,6 +122,10 @@ update_targets() {
 
       if [[ "$line" =~ ^targets:[[:space:]]*$ ]]; then
         skip_targets_block=1
+        continue
+      fi
+
+      if [[ "$line" =~ ^author:[[:space:]]* ]]; then
         continue
       fi
 
