@@ -1,4 +1,3 @@
 name: triage-dependency-prs
 version: 2.0.0
 description: Skill that triages failing checks on dependency-update PRs (Renovate and Dependabot) and drives them back to green.
-author: Qubership

@@ -1,7 +1,6 @@
 name: qubership-essentials
 version: 1.0.0
 description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, workflow-hub usage, and skill telemetry."
-author: Qubership
 dependencies:
   apm:
     # Sibling packages in this repository. Published manifests cannot use
