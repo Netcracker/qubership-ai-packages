@@ -2,8 +2,8 @@
 
 A skill that turns a meeting transcript or recording into a dense, verifiable report. Instead of a chronological
 retelling, it runs a multi-axis breakdown: several narrow passes over the text, each through a single lens, pulling out
-only what that lens is about. Decisions, tasks, open questions, arguments, and trade-offs each land in their own section,
-with timecodes and verbatim quotes that point back to the source.
+only what that lens is about. Decisions, tasks, open questions, arguments, and trade-offs each land in their own
+section, with timecodes and verbatim quotes that point back to the source.
 
 The skill is user-invoked: hand the agent a transcript and ask it to analyze the meeting, break down the call, pull out
 the tasks, or lay out who argued for what.
@@ -35,10 +35,12 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/meeting-analysis@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/meeting-analysis@<ref>
 ```
 
-Then run `apm install` and `apm compile`. The skill deploys to the location your agent reads (`.claude/skills/`,
+Replace `<ref>` with the release tag, branch, or commit SHA you want to pin, for example `v1.0.0`.
+
+Then run `apm install`. The skill deploys to the location your agent reads (`.agents/skills/`, `.claude/skills/`,
 `.cursor/`, ...).
 
 ## Requirements
