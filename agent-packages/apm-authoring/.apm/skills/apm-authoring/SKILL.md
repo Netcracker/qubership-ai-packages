@@ -65,10 +65,11 @@ Rules:
 The host repo itself is also an APM project: its own root context files
 (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and harness rules) are generated
 from a local `.apm/` package plus declared dependencies. `apm install`
-runs the integrate phase for normal dependency installs. Use `apm compile`
-directly only when iterating on local `instructions/*.instructions.md` or
-when you need compile-specific flags such as `--dry-run`, `--validate`,
-`--clean`, or `--global`. Do not hand-author generated root context files.
+runs the integrate phase for normal dependency installs and compiles both
+local and dependency instructions. Use `apm compile` directly only when
+iterating on the repo's own `instructions/*.instructions.md` or when you
+need compile-specific flags such as `--dry-run`, `--validate`, `--clean`,
+or `--global`. Do not hand-author generated root context files.
 
 ## Choosing the right primitive
 
