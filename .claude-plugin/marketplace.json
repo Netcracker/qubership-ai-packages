@@ -41,6 +41,17 @@
       "source": "./agent-packages/qubership-essentials"
     },
     {
+      "name": "qubership-global-essentials",
+      "description": "Umbrella package with the Qubership agent setup that is useful in a global user workspace.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:meta",
+        "activity:setup",
+        "audience:public"
+      ],
+      "source": "./agent-packages/qubership-global-essentials"
+    },
+    {
       "name": "qubership-agent-support-pr",
       "description": "Prepare a repository PR that installs qubership-essentials and generated agent assets.",
       "version": "1.0.1",

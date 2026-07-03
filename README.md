@@ -1,283 +1,182 @@
 # qubership-ai-packages
 
-This repository is an APM marketplace of Qubership agent packages. Two guides cover the workflow:
+This repository is an APM marketplace of Qubership agent packages. Use it to install shared skills, instructions, and
+umbrella packages for agents such as Claude Code, Codex, Cursor, and GitHub Copilot.
 
-- [Publishing packages](docs/publishing-packages.md) — add a package and release a new version.
-- [Consuming packages](docs/consuming-packages.md) — register the marketplace, then install, update, and remove packages.
+## Contents
 
-Quick start for consumers:
+- [Quick start](#quick-start)
+- [APM quick start](#apm-quick-start)
+- [APM CLI installation](#apm-cli-installation)
+- [Repository onboarding](#repository-onboarding)
+- [User workspace onboarding](#user-workspace-onboarding)
+- [Guides](#guides)
+
+## Quick start
+
+Install the `apm` CLI first. See [APM CLI installation](#apm-cli-installation) below.
+
+Register the marketplace and install the global Qubership baseline into the agent harnesses you use:
 
 ```bash
-apm marketplace add Netcracker/qubership-ai-packages --ref v1.1.0
+apm marketplace add Netcracker/qubership-ai-packages
 apm marketplace browse qubership-ai-packages
-apm install apm-authoring@qubership-ai-packages
+apm install qubership-global-essentials@qubership-ai-packages --target claude,codex,cursor -g
+apm compile -g
 ```
 
-## APM Quick Start Guide
+The `--target` value is your local harness list. The example uses the default Qubership targets.
 
-**Agent Package Manager (APM)** is a package manager for AI agents. It lets you install, create, and share
-instructions, skills, prompts, and MCP servers for agents like GitHub Copilot, Claude Code, and Cursor.
-
-**Why APM?** See the [package-manager evaluation](research/apm-research/) for the comparison against other
-open-source skill / MCP / AGENTS.md managers.
-
----
-
-## Installation
-
-**macOS / Linux:**
+The default marketplace registration tracks `main`. To pin the marketplace for reproducible installs, pass `--ref`
+with a release tag, branch, or commit SHA:
 
 ```bash
-curl -sSL https://aka.ms/apm-unix | sh
+apm marketplace add Netcracker/qubership-ai-packages --ref <tag-or-sha>
 ```
 
-**Windows (PowerShell):**
+## APM quick start
 
-```powershell
-irm https://aka.ms/apm-windows | iex
-```
+[Agent Package Manager (APM)](https://github.com/microsoft/apm) installs and deploys AI-agent primitives:
+instructions, skills, prompts, agents, hooks, plugins, and MCP servers.
 
-**Homebrew:**
+Use the official Microsoft APM docs for the full workflow:
+
+- [APM quick start](https://microsoft.github.io/apm/quickstart/)
+- [APM installation guide](https://microsoft.github.io/apm/getting-started/installation/)
+- [APM CLI reference](https://microsoft.github.io/apm/reference/cli/install/)
+- [APM package anatomy](https://microsoft.github.io/apm/concepts/package-anatomy/)
+- [Primitives and targets](https://microsoft.github.io/apm/concepts/primitives-and-targets/)
+- [apm.yml Manifest Schema](https://microsoft.github.io/apm/reference/manifest-schema/)
+
+See the [package-manager evaluation](research/apm-research/) for the comparison against other open-source skill, MCP,
+and agent-context managers.
+
+### When to run `apm compile`
+
+For project installs, `apm install` deploys primitives and runs compile internally during its integrate phase. Run
+`apm compile` directly when you are iterating on local `.apm/instructions/*.instructions.md`, need flags such as
+`--dry-run`, `--validate`, or `--clean`, or need to refresh generated root context files without changing
+dependencies.
+
+For global installs, run `apm compile -g` after `apm install -g` when the installed packages include instructions.
+Global install fetches and deploys the package, but global compilation is explicit and writes user-scope root context
+files such as `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`.
+
+See the official [APM compile guide](https://microsoft.github.io/apm/producer/compile/). The Claude-specific
+discussion in [microsoft/apm#1807](https://github.com/microsoft/apm/issues/1807) explains why always-on or
+read-only-session guidance may need native context-file placement instead of only path-scoped rules.
+
+## APM CLI installation
+
+Install APM with the package manager for your platform when one is available.
+
+### Homebrew
 
 ```bash
 brew install microsoft/apm/apm
 ```
 
-**pip:**
+### Scoop
+
+```powershell
+scoop bucket add apm https://github.com/microsoft/scoop-apm
+scoop install apm
+```
+
+### pip
 
 ```bash
 pip install apm-cli
 ```
 
-Verify installation:
+### Arch Linux
+
+APM is available from the Arch User Repository as the community-maintained `apm-bin` package:
+
+```bash
+yay -S apm-bin
+```
+
+### Install script
+
+Use the official install script if your package manager is not listed above.
+
+Linux and macOS:
+
+```bash
+curl -sSL https://aka.ms/apm-unix | sh
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://aka.ms/apm-windows | iex
+```
+
+### Verify the installation
 
 ```bash
 apm --version
 ```
 
----
+### Stay up to date
 
-## Initialize a Project
+Use the latest available `apm` CLI for your installation method:
 
 ```bash
-apm init
+brew upgrade apm
+pip install --upgrade apm-cli
+apm self-update
 ```
 
-Creates a minimal `apm.yml` in the current directory:
+For Scoop, run:
 
-```yaml
-name: my-project
-version: 1.0.0
+```powershell
+scoop update apm
 ```
 
----
+For Arch Linux AUR installs, update `apm-bin` through your AUR helper:
 
-## Package Structure
+```bash
+yay -Syu apm-bin
+```
+
+## Repository onboarding
+
+- [Qubership repository onboarding skill](agent-packages/qubership-agent-support-pr/) — create an onboarding PR for a
+  repository.
+
+To add the Qubership repository baseline, install the marketplace and the onboarding skill globally, then ask your
+agent to prepare the PR from inside the target Git repository:
+
+```bash
+apm marketplace add Netcracker/qubership-ai-packages
+apm install qubership-agent-support-pr@qubership-ai-packages --target codex,claude -g
+```
 
 ```text
-my-package/
-├── apm.yml                          # Manifest (required)
-└── .apm/
-    ├── instructions/
-    │   └── go.instructions.md       # Rules applied automatically by the agent
-    ├── skills/
-    │   └── my-skill/
-    │       └── SKILL.md             # Skill / how-to guide for the agent
-    └── prompts/
-        └── my-prompt.prompt.md      # Slash command / prompt template
+Use qubership-agent-support-pr to create a PR that adds Qubership agent support
+to this repository.
 ```
 
----
+The skill installs [`qubership-essentials`](agent-packages/qubership-essentials/) in the repository and prepares the
+generated agent assets for the selected harnesses.
 
-## Primitives
+## User workspace onboarding
 
-### Instructions (`.instructions.md`)
+- [Qubership global essentials](agent-packages/qubership-global-essentials/) — the global baseline package.
 
-Rules the agent applies automatically to matching files via `applyTo` glob.
+Choose the agent harnesses you use and install the package globally. This example uses the default Qubership
+targets; replace `--target` with the harnesses you use:
 
-```markdown
----
-description: Go coding standards
-applyTo: "**/*.go"
----
-
-Only use github.com/my-org/logger. Never use fmt.Println or log.
+```sh
+apm marketplace add Netcracker/qubership-ai-packages
+apm install qubership-global-essentials@qubership-ai-packages --target claude,codex,cursor -g
+apm compile -g
 ```
 
-### Skills (`SKILL.md`)
+## Guides
 
-A guide that tells the agent what a package does and how to use it.
-
-```markdown
----
-name: my-skill
-description: When to invoke and what this skill does
----
-
-## Steps
-1. Do this first
-2. Then do that
-```
-
-### Prompts (`.prompt.md`)
-
-Slash commands available in the agent chat.
-
-```markdown
----
-name: review-pr
-description: Review a pull request for style and correctness
----
-
-Review the following code: $SELECTION
-```
-
----
-
-## Installing Packages
-
-Install a package from GitHub:
-
-```bash
-apm install owner/repo
-```
-
-Install a specific version:
-
-```bash
-apm install owner/repo@v1.2.0
-```
-
-Install a skill from a monorepo subdirectory:
-
-```bash
-apm install owner/repo/path/to/skill
-```
-
-Install all dependencies declared in `apm.yml`:
-
-```bash
-apm install
-```
-
----
-
-## Managing Dependencies
-
-Add a dependency to `apm.yml` manually:
-
-```yaml
-dependencies:
-  apm:
-    - owner/coding-standards@v1.0.0
-    - owner/security-rules@v2.1.0
-  mcp:
-    - https://mcp.example.com/sse
-```
-
-Then run `apm install` to apply.
-
-Show installed dependencies:
-
-```bash
-apm deps list
-```
-
-Show full dependency tree:
-
-```bash
-apm deps tree
-```
-
-Check for outdated dependencies:
-
-```bash
-apm outdated
-```
-
-Update dependencies:
-
-```bash
-apm deps update
-```
-
-Remove a package:
-
-```bash
-apm uninstall owner/repo
-```
-
----
-
-## Compilation
-
-For agents that read a single root file (`AGENTS.md`, `CLAUDE.md`), compile all primitives into one file:
-
-```bash
-apm compile
-```
-
-Agents like GitHub Copilot, Claude Code, and Cursor read deployed files natively — no compilation needed for them.
-
----
-
-## Creating and Publishing a Package
-
-Pack your package into a portable bundle:
-
-```bash
-apm pack
-```
-
-Publish by pushing to a GitHub repository and tagging a version:
-
-```bash
-git tag v1.0.0
-git push origin main --tags
-```
-
-Others can then install it with:
-
-```bash
-apm install your-org/your-package@v1.0.0
-```
-
----
-
-## Key CLI Commands
-
-| Command | Description |
-| --- | --- |
-| `apm init` | Initialize a new APM project |
-| `apm install` | Install all dependencies and deploy local content |
-| `apm install owner/repo` | Install a specific package |
-| `apm uninstall owner/repo` | Remove a package |
-| `apm deps list` | List installed dependencies |
-| `apm deps tree` | Show dependency tree |
-| `apm outdated` | Check for available updates |
-| `apm compile` | Compile all primitives into AGENTS.md / CLAUDE.md |
-| `apm pack` | Bundle the package for distribution |
-| `apm audit` | Scan for hidden or malicious Unicode characters |
-
----
-
-## `apm.yml` Reference
-
-```yaml
-name: my-package          # Required — package identifier
-version: 1.0.0            # Required — semver
-
-description: ""           # Optional — short human-readable description
-# Optional for APM. Include it only when the package needs an explicit author or organization.
-author: ""
-license: MIT              # Optional — SPDX license identifier
-
-dependencies:
-  apm:                    # APM packages (instructions, skills, agents)
-    - owner/repo@v1.0.0
-  mcp:                    # MCP servers
-    - https://mcp.example.com/sse
-
-scripts:                  # Named shell commands, run via `apm run <name>`
-  lint: "eslint ."
-```
+- [Consuming packages](docs/consuming-packages.md) — register the marketplace, then install, update, and remove
+  packages.
+- [Publishing packages](docs/publishing-packages.md) — add a package and release a new marketplace version.
