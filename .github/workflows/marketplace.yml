@@ -2,15 +2,8 @@ name: Validate marketplace
 
 on:
   pull_request:
-    paths:
-      - apm.yml
-      - .claude-plugin/marketplace.json
-      - agent-packages/**
-      - docs/**
-      - scripts/**
-      - tests/**
-      - requirements.txt
-      - .github/workflows/marketplace.yml
+    branches:
+      - '**'
   push:
     branches: [main]
     paths:
@@ -27,7 +20,37 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect marketplace changes
+    runs-on: ubuntu-latest
+    outputs:
+      marketplace: ${{ steps.filter.outputs.marketplace }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: filter
+        name: Detect whether marketplace validation is required
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+            echo "marketplace=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
+          if grep -Eq '^(apm\.yml|\.claude-plugin/marketplace\.json|agent-packages/|docs/|scripts/|tests/|requirements\.txt|\.github/workflows/marketplace\.yml)$' changed-files.txt; then
+            echo "marketplace=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "marketplace=false" >> "$GITHUB_OUTPUT"
+          fi
+
   validate:
+    needs: changes
+    if: ${{ needs.changes.outputs.marketplace == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -47,6 +70,8 @@ jobs:
         run: uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
 
   verify-docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.marketplace == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -71,6 +96,8 @@ jobs:
           uvx --python 3.12 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
 
   test:
+    needs: changes
+    if: ${{ needs.changes.outputs.marketplace == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -87,7 +114,8 @@ jobs:
   install-smoke:
     # Real installs catch what the index gate cannot: pack only resolves refs,
     # it never deploys a package. Runs after validate so a broken index fails first.
-    needs: validate
+    needs: [changes, validate]
+    if: ${{ needs.changes.outputs.marketplace == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -107,3 +135,40 @@ jobs:
           TARGETS: claude,codex,cursor
           GITHUB_TOKEN: ${{ github.token }}
         run: bash scripts/install-smoke.sh
+
+  marketplace-gate:
+    name: Marketplace Gate
+    needs: [changes, validate, verify-docs, test, install-smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check marketplace validation result
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          MARKETPLACE_REQUIRED: ${{ needs.changes.outputs.marketplace }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+          VERIFY_DOCS_RESULT: ${{ needs.verify-docs.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          INSTALL_SMOKE_RESULT: ${{ needs.install-smoke.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+            echo "Change detection failed or did not complete."
+            exit 1
+          fi
+
+          if [[ "$MARKETPLACE_REQUIRED" != "true" ]]; then
+            echo "Marketplace validation is not required for this change."
+            exit 0
+          fi
+
+          failed=0
+          for result in "$VALIDATE_RESULT" "$VERIFY_DOCS_RESULT" "$TEST_RESULT" "$INSTALL_SMOKE_RESULT"; do
+            if [[ "$result" != "success" ]]; then
+              failed=1
+            fi
+          done
+
+          if [[ "$failed" -ne 0 ]]; then
+            echo "Marketplace validation failed or did not complete."
+            exit 1
+          fi
