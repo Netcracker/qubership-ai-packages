@@ -255,6 +255,42 @@
       }
     },
     {
+      "name": "dbaas-mounted-secret-migration",
+      "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:database",
+        "stack:kubernetes",
+        "activity:migration",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-dbaas",
+        "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
+        "ref": "372a8f0d17248ef78c2859a918904ef32fa1d82d",
+        "sha": "372a8f0d17248ef78c2859a918904ef32fa1d82d"
+      }
+    },
+    {
+      "name": "migrate-core-operator-dbaas-declarations",
+      "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:database",
+        "stack:kubernetes",
+        "activity:migration",
+        "audience:public"
+      ],
+      "source": {
+        "source": "git-subdir",
+        "url": "Netcracker/qubership-dbaas",
+        "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
+        "ref": "372a8f0d17248ef78c2859a918904ef32fa1d82d",
+        "sha": "372a8f0d17248ef78c2859a918904ef32fa1d82d"
+      }
+    },
+    {
       "name": "qubership-workflow-hub-usage",
       "description": "Skills for designing, writing, reviewing, and debugging GitHub Actions workflows that consume netcracker/qubership-workflow-hub actions and Netcracker/.github templates.",
       "version": "1.0.0",
