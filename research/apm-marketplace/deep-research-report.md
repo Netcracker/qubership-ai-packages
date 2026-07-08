@@ -167,9 +167,8 @@ The research left these open; the local run confirmed them:
    `/artifactory/`, with the content as the body, and no package-type-specific endpoint. A generic
    repository plus a sidecar/Worker can accept a `PUT` at any path — technically compatible with the `PUT`
    part of the APM Registry API. But `GET …/versions` with the right JSON does not come for free — it needs
-   a code layer. Sources:
-   [deploy-artifact](https://jfrog.com/help/r/jfrog-rest-apis/deploy-artifact),
-   [deployartifact](https://docs.jfrog.com/artifactory/reference/deployartifact).
+   a code layer. Source:
+   [deployArtifact](https://docs.jfrog.com/artifactory/reference/deployArtifact).
 
 1. **A GitHub source with a subpath** (high, 3-0). `source: github` is first-class and supports a subpath
     (`repo` plus `path` plus a pinned `ref`). The `github/awesome-copilot` manifest (86 plugins): 67
@@ -288,7 +287,7 @@ These matter for decisions: the wordings below did not survive the adversarial v
 | [executePluginCode](https://docs.jfrog.com/integrations/reference/executePluginCode) | primary | Artifactory | 4 |
 | [artifactory-user-plugins](https://github.com/jfrog/artifactory-user-plugins) | primary | Artifactory | 5 |
 | [archiveEntryDownload](https://docs.jfrog.com/artifactory/reference/archiveEntryDownload) | primary | Artifactory | 5 |
-| [deploy-artifact](https://jfrog.com/help/r/jfrog-rest-apis/deploy-artifact) | primary | Artifactory | 5 |
+| [deployArtifact](https://docs.jfrog.com/artifactory/reference/deployArtifact) | primary | Artifactory | 5 |
 | [awesome-copilot/marketplace.json](https://github.com/github/awesome-copilot/blob/main/.github/plugin/marketplace.json) | primary | ecosystem | 5 |
 | [awesome-copilot.github.com/skills](https://awesome-copilot.github.com/skills/) | primary | ecosystem | 5 |
 | [Netcracker/qubership-ai-packages](https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages) | primary | ecosystem | 5 |
