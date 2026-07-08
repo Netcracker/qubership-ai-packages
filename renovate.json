@@ -1,0 +1,61 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices"
+  ],
+  "configMigration": true,
+  "dependencyDashboard": true,
+  "labels": [
+    "dependencies"
+  ],
+  "internalChecksFilter": "strict",
+  "platformAutomerge": true,
+  "prCreation": "not-pending",
+  "customManagers": [
+    {
+      "description": "Update the Python runtime used by uvx commands.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)Makefile$/",
+        "/\\.sh$/"
+      ],
+      "matchStrings": [
+        "uvx --python (?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "python",
+      "datasourceTemplate": "python-version",
+      "versioningTemplate": "python"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge low-risk dependency maintenance after CI is green.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "Keep GitHub Actions grouped and pinned to immutable SHAs.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions",
+      "pinDigests": true
+    },
+    {
+      "description": "Keep CI Python tools from requirements.txt grouped together.",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "matchFileNames": [
+        "requirements.txt"
+      ],
+      "groupName": "python ci tools"
+    }
+  ]
+}
