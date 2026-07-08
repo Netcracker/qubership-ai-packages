@@ -12,22 +12,24 @@ on:
       - '**'
     types:
       [opened, reopened, synchronize]
-permissions:
-  contents: read
+permissions: {}
+
 jobs:
   linkChecker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Restore lychee cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: restore-cache
         with:
           path: .lycheecache
-          key: cache-lychee-${{ github.sha }}
+          key: cache-lychee-${{ github.run_id }}
           restore-keys: cache-lychee-
 
       - name: Link Checker
@@ -44,6 +46,7 @@ jobs:
             --verbose
             --no-progress
             --user-agent 'Mozilla/5.0 (X11; Linux x86_64) Chrome/134.0.0.0'
+            --timeout 60
             --retry-wait-time 60
             --max-retries 8
             --accept 100..=103,200..=299,429
@@ -51,7 +54,14 @@ jobs:
             --exclude-all-private
             --max-concurrency 4
             --cache
-            --cache-exclude-status '429, 500..502'
+            --cache-exclude-status '403, 429, 500..502'
             --max-cache-age 1d
           format: markdown
           fail: true
+
+      - name: Save lychee cache
+        if: ${{ always() && steps.restore-cache.outputs.cache-hit != 'true' && hashFiles('.lycheecache/**') != '' }}
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.run_id }}
