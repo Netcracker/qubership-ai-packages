@@ -142,6 +142,18 @@ marketplace:
       ref: 392794444be0f6bf49c477b00e51add7d3c0c444  # develop
       tags: ["topic:api", "stack:typescript", "activity:testing", "audience:internal"]
 
+    - name: dbaas-mounted-secret-migration
+      source: Netcracker/qubership-dbaas
+      subdir: dbaas-operator/agent-packages/dbaas-mounted-secret-migration
+      ref: 372a8f0d17248ef78c2859a918904ef32fa1d82d  # feat/operator-dev
+      tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
+
+    - name: migrate-core-operator-dbaas-declarations
+      source: Netcracker/qubership-dbaas
+      subdir: dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations
+      ref: 372a8f0d17248ef78c2859a918904ef32fa1d82d  # feat/operator-dev
+      tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
+
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
