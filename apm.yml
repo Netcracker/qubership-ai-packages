@@ -1,5 +1,5 @@
 name: qubership-ai-packages
-version: 1.1.0
+version: 1.2.0
 description: Netcracker Qubership APM package marketplace
 
 targets:
@@ -33,19 +33,19 @@ marketplace:
     - name: go-microservice-dev-kit
       description: Umbrella package for Qubership Go microservices.
       source: ./agent-packages/go-microservice-dev-kit
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-essentials
-      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, workflow-hub usage, and skill telemetry."
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage."
       source: ./agent-packages/qubership-essentials
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
       description: "Umbrella package with the Qubership agent setup that is useful in a global user workspace."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
@@ -57,7 +57,7 @@ marketplace:
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
-      version: 2.0.0
+      version: 2.0.1
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-uk-developer-style
@@ -169,11 +169,11 @@ marketplace:
     - name: ai-agent-telemetry
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry
-      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # main
+      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # v1.0.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
 
     - name: ai-agent-telemetry-configure
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry-configure
-      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # main
+      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # v1.0.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]

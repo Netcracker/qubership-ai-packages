@@ -146,13 +146,14 @@ yay -Syu apm-bin
 - [Qubership repository onboarding skill](agent-packages/qubership-agent-support-pr/) — create an onboarding PR for a
   repository.
 
-To add the Qubership repository baseline, install the marketplace and the onboarding skill globally, then ask your
-agent to prepare the PR from inside the target Git repository:
+To add the Qubership repository baseline, install the marketplace and the onboarding skill globally:
 
 ```bash
 apm marketplace add Netcracker/qubership-ai-packages
 apm install qubership-agent-support-pr@qubership-ai-packages --target codex,claude -g
 ```
+
+Then ask your agent to prepare the PR from inside the target Git repository:
 
 ```text
 Use qubership-agent-support-pr to create a PR that adds Qubership agent support

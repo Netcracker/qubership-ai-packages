@@ -1,5 +1,5 @@
 name: english-developer-style
-version: 2.0.0
+version: 2.0.1
 description: Compatibility alias for the original package name. Resolves to english-us-developer-style, so the bare name now defaults to American English; depend on english-uk-developer-style for British English. Carries no skill of its own.
 
 # Backward-compatibility shim: keep the old name resolvable and point it
@@ -11,4 +11,4 @@ description: Compatibility alias for the original package name. Resolves to engl
 # pinned to a commit with the trimmed english-us-developer-style description.
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#cb31b6ce4d9457d2638b40590500a5229c230d99 # main

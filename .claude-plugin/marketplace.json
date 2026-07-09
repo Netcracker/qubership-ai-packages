@@ -19,7 +19,7 @@
     {
       "name": "go-microservice-dev-kit",
       "description": "Umbrella package for Qubership Go microservices.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:devops",
         "stack:go",
@@ -31,8 +31,8 @@
     },
     {
       "name": "qubership-essentials",
-      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, workflow-hub usage, and skill telemetry.",
-      "version": "1.0.0",
+      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage.",
+      "version": "1.0.1",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -43,7 +43,7 @@
     {
       "name": "qubership-global-essentials",
       "description": "Umbrella package with the Qubership agent setup that is useful in a global user workspace.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -66,7 +66,7 @@
     {
       "name": "english-developer-style",
       "description": "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "topic:documentation",
         "lang:en",
