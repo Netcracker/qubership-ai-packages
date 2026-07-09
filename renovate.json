@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices"
+    "config:best-practices",
+    "github>Netcracker/renovate-config:apm"
   ],
   "configMigration": true,
   "dependencyDashboard": true,
@@ -56,6 +57,13 @@
         "requirements.txt"
       ],
       "groupName": "python ci tools"
+    },
+    {
+      "description": "Do not automerge APM package updates because marketplace.json is generated separately.",
+      "matchDepTypes": [
+        "apm"
+      ],
+      "automerge": false
     }
   ]
 }
