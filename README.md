@@ -180,3 +180,5 @@ apm compile -g
 - [Consuming packages](docs/consuming-packages.md) — register the marketplace, then install, update, and remove
   packages.
 - [Publishing packages](docs/publishing-packages.md) — add a package and release a new marketplace version.
+- [Renovate APM dependency updates](docs/renovate-apm-dependencies.md) — understand Renovate APM PRs and the manual
+  marketplace index refresh.
