@@ -1,6 +1,6 @@
 ---
 description: Trigger the broad PR QA review workflow when the user asks for evidence-backed defect discovery.
-applyTo: "**/*"
+applyTo: "**"
 ---
 
 When the user asks to perform a broad QA review of a pull request, branch, commit, or local changes
