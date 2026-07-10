@@ -183,6 +183,19 @@
       "source": "./agent-packages/codex-review"
     },
     {
+      "name": "pr-qa-review",
+      "description": "Orchestrated QA review workflow for PRs and code changes, with evidence-backed defect reports.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:qa",
+        "topic:code-review",
+        "activity:testing",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/pr-qa-review"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.0.0",

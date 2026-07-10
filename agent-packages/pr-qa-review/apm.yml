@@ -1,0 +1,3 @@
+name: pr-qa-review
+version: 1.0.0
+description: Orchestrated QA review workflow for pull requests and code changes, with evidence-backed defect reports.
