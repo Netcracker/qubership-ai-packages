@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices"
+    "config:best-practices",
+    "github>Netcracker/renovate-config:apm"
   ],
   "configMigration": true,
   "dependencyDashboard": true,
@@ -12,47 +13,6 @@
   "platformAutomerge": true,
   "prCreation": "not-pending",
   "customManagers": [
-    {
-      "description": "Update APM dependencies pinned to GitHub release tags.",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)apm\\.yml$/"
-      ],
-      "matchStrings": [
-        "(?<depPrefix>-\\s+)(?<depName>(?<packageName>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(?<apmSubdir>[^\\s#@]+))@(?<currentValue>v?\\d+\\.\\d+\\.\\d+(?:[-+][A-Za-z0-9_.-]+)?)(?<depSuffix>\\s*(?:#.*)?)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "depTypeTemplate": "apm"
-    },
-    {
-      "description": "Pin and update APM dependencies that reference Git refs.",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)apm\\.yml$/"
-      ],
-      "matchStrings": [
-        "(?<indentation>[\\t ]*)-\\s+(?<depName>(?<packageName>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(?<apmSubdir>[^\\s#@]+))#(?:(?<currentDigest>[0-9a-f]{40})\\s+#\\s+)?(?<currentValue>[A-Za-z_./-][A-Za-z0-9_./-]*)"
-      ],
-      "datasourceTemplate": "git-refs",
-      "packageNameTemplate": "https://github.com/{{{packageName}}}.git",
-      "depTypeTemplate": "apm",
-      "autoReplaceStringTemplate": "{{{indentation}}}- {{{depName}}}#{{{newDigest}}}  # {{{currentValue}}}"
-    },
-    {
-      "description": "Update marketplace APM package entries pinned to immutable Git refs.",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)apm\\.yml$/"
-      ],
-      "matchStrings": [
-        "(?<depPrefix>-[^\\S\\n]+name:[^\\S\\n]+[^\\n]+\\n[^\\S\\n]+source:[^\\S\\n]+(?<packageName>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)\\n[^\\S\\n]+subdir:[^\\S\\n]+(?<apmSubdir>[^\\n]+)\\n[^\\S\\n]+ref:[^\\S\\n]+)(?<currentDigest>[0-9a-f]{40})\\s+#\\s+(?<currentValue>[^\\s#]+)"
-      ],
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "{{{packageName}}}/{{{apmSubdir}}}",
-      "packageNameTemplate": "https://github.com/{{{packageName}}}.git",
-      "depTypeTemplate": "apm"
-    },
     {
       "description": "Update the Python runtime used by uvx commands.",
       "customType": "regex",
@@ -70,18 +30,6 @@
   ],
   "packageRules": [
     {
-      "description": "Group APM package updates together.",
-      "groupName": "apm packages",
-      "matchDepTypes": [
-        "apm"
-      ],
-      "labels": [
-        "dependencies",
-        "apm"
-      ],
-      "pinDigests": true
-    },
-    {
       "description": "Automerge low-risk dependency maintenance after CI is green.",
       "matchUpdateTypes": [
         "minor",
@@ -89,8 +37,18 @@
         "pin",
         "digest"
       ],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "1 day",
       "automerge": true
+    },
+    {
+      "description": "Do not delay APM Git ref updates that have no release timestamp.",
+      "matchDepTypes": [
+        "apm"
+      ],
+      "matchDatasources": [
+        "git-refs"
+      ],
+      "minimumReleaseAge": null
     },
     {
       "description": "Keep GitHub Actions grouped and pinned to immutable SHAs.",
