@@ -12,10 +12,44 @@ It does not modify product code unless the user explicitly asks for fixes.
 Invoke the `pr-qa-review` skill as the single entry point. The package also ships specialist agents for bounded review
 tracks. These agents are optional: the skill uses a matching named agent when the harness exposes it, falls back to a
 generic sub-agent when available, and otherwise reviews the track in the main thread. The workflow never creates agent
-definition files at runtime.
+definition files at runtime. Specialists are leaf agents and never orchestrate or delegate further work.
+
+The specialists declare a tool whitelist that excludes direct file-editing tools. This reduces accidental writes where
+the harness honors tool metadata, but it is not a replacement for the harness sandbox: shell commands can still change
+state. The skill therefore keeps delegated tasks explicitly read-only and inherits stronger sandbox and permission
+boundaries from the root agent when the harness provides them.
 
 The package does not include an always-on instruction or a separate prompt. Installing it does not affect unrelated
 conversations; the workflow starts when the user invokes the skill.
+
+## Workflow
+
+```mermaid
+flowchart TD
+    U[User invokes pr-qa-review] --> R[Root agent loads the skill]
+    R --> I[Collect target, constraints, tools, and runtime access]
+    I --> D[Read the diff and requirements]
+    D --> C[Build Required-By-Diff Coverage table]
+    C --> P[Plan independent review tracks]
+    P --> B[Start a batch of up to three leaf reviewers]
+    B --> N{For each track: matching named specialist available?}
+    N -- Yes --> S[Run package specialist]
+    N -- No --> G{Generic sub-agent available?}
+    G -- Yes --> A[Run generic sub-agent with the same contract]
+    G -- No --> M[Review track in the root thread]
+    S --> X[Return findings, negative checks, and blockers]
+    A --> X
+    M --> X
+    X --> Q{Required tracks remain?}
+    Q -- Yes --> B
+    Q -- No --> V[Root validates evidence and deduplicates findings]
+    V --> O[Save the report and artifacts]
+    O --> H[Hand off a self-contained report to the fixing agent]
+```
+
+The root agent owns planning, user questions, permission decisions, evidence validation, and the final report. Batching
+limits resource use without dropping coverage: additional required tracks run in later batches. A failed or unavailable
+sub-agent changes the execution mode, not the required coverage.
 
 ## What it produces
 
@@ -50,6 +84,7 @@ Use pr-qa-review to review PR #123:
 https://github.com/example/project/pull/123
 
 Save the report to reports/pr-123-qa-review.md.
+Use parallel sub-agents for independent tracks when available, with pr-qa-review remaining the root orchestrator.
 
 Focus on backend/API, UI, deployment, runtime logs, and security.
 Do not modify source code, deployment state, or test data; only investigate and report bugs.
@@ -64,6 +99,7 @@ Use pr-qa-review to review PR #123:
 https://github.com/example/project/pull/123
 
 Save the report to reports/pr-123-qa-review.md.
+Use parallel sub-agents for independent tracks when available, with pr-qa-review remaining the root orchestrator.
 Do not modify source code, deployment state, or test data; only investigate and report bugs.
 ```
 

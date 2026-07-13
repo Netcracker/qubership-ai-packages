@@ -14,9 +14,10 @@ scope when permitted.
 
 ## Operating model
 
-Use this skill as the user-facing entry point and act as the orchestrator. Build a review plan, divide the investigation
-into independent tracks, and keep the master report. The package-provided specialist agents are optional execution
-roles, not a runtime dependency. Never create or edit agent definition files during a review.
+Use this skill as the user-facing entry point and remain the root orchestrator for the entire review. Do not delegate
+orchestration to another agent. Build a review plan, divide the investigation into independent tracks, and keep the
+master report. The package-provided specialist agents are optional leaf execution roles, not a runtime dependency.
+They must not delegate to other agents. Never create or edit agent definition files during a review.
 
 Check whether sub-agent tools and package-provided named roles are available, including lazy-loaded tool discovery when
 the harness supports it. The user's request to use this skill permits read-only delegation unless they explicitly forbid
@@ -26,11 +27,21 @@ sub-agents. Select the first available execution mode for each independent track
 2. Delegate to a generic sub-agent with the same bounded track and response contract.
 3. Review the track in the main thread.
 
+Keep delegation bounded. Start no more than three specialist or generic sub-agents concurrently, or fewer when the
+harness has a lower limit. Group only independent tracks in the same batch. Wait for and close every started sub-agent,
+integrate its result, and then start the next batch until every required track is covered. Do not spawn every available
+specialist merely because it exists; select tracks from the diff and review plan.
+
 Use this order for requirements, design, backend/API, UI/UX, runtime/observability, deployment/config, docs, security,
 and diff-required tracks such as protocol compatibility or data lifecycle/retention. Do not let sub-agents write the
 final report directly; integrate and deduplicate their findings. Record the orchestration mode in the report: which
 named or generic sub-agents were used, which spawn attempts failed, which tracks fell back to the main thread, and any
 coverage impact. Agent unavailability alone is not a reason to skip a required track.
+
+Package specialists have a source-level tool whitelist that omits direct file-editing tools. Treat this as defense in
+depth, not a complete read-only sandbox: harnesses translate tool metadata differently, and shell tools can still
+change state. Keep every delegated task explicitly read-only and rely on the parent harness sandbox and permission mode
+when they provide stronger enforcement.
 
 Keep moving until the planned coverage is meaningful. Do not stop after the first few bugs. If you hit a blocker, try a
 reasonable alternative, then ask the user for the missing environment detail or tool.
