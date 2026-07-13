@@ -11,8 +11,9 @@ The shared preset scans every `apm.yml` file and handles these APM reference for
 
 - Package dependencies pinned to release tags, such as
   `Netcracker/qubership-ai-packages/agent-packages/codex-review@v1.0.0`.
-- Package dependencies pinned to immutable commits with a mutable source-ref comment, such as
-  `Netcracker/qubership-ai-packages/agent-packages/codex-review#<sha>  # main`.
+- Package dependencies pinned to immutable commits with a tracked branch or release-tag comment, such as
+  `Netcracker/qubership-ai-packages/agent-packages/codex-review#<sha>  # main` or
+  `Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry#<sha>  # v0.2.0`.
 - Package dependencies that still reference a mutable branch directly, such as
   `Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage#feat/agent-packages`.
 - Marketplace entries that use `source`, `subdir`, and `ref` fields in the root `apm.yml`.
@@ -30,6 +31,10 @@ For that reason, repository-local `renovate.json` sets `automerge: false` for `d
 manual even when the change looks like a low-risk `digest` update. The marketplace validation workflow also runs
 `apm pack --check-clean --dry-run` and fails when `apm.yml` and the committed marketplace index drift.
 
+The first marketplace validation run on an APM Renovate PR is therefore expected to fail when Renovate changes the
+root `apm.yml`. The `validate` job reports the marketplace drift, and `Marketplace Gate` propagates that failure until
+the generated index is committed.
+
 ## How to finish a Renovate APM PR
 
 1. Review the changed APM references in `apm.yml` files.
@@ -37,7 +42,7 @@ manual even when the change looks like a low-risk `digest` update. The marketpla
 1. Regenerate the marketplace index:
 
    ```bash
-   uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack
+   apm pack
    ```
 
 1. Commit the regenerated `.claude-plugin/marketplace.json` with the Renovate branch.
