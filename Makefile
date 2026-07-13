@@ -12,8 +12,8 @@
 #   make verify-docs DOC_REF=v1.1.0
 #   make verify-docs DOC_REPO=Netcracker/qubership-ai-packages DOC_REF=main
 
-APM    := uvx --python 3.12 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm
-DOCCMD := uvx --python 3.12 --from doccmd --with-requirements $(CURDIR)/requirements.txt doccmd
+APM    := uvx --python 3.14 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm
+DOCCMD := uvx --python 3.14 --from doccmd --with-requirements $(CURDIR)/requirements.txt doccmd
 
 DOC_REPO ?= $(shell git remote get-url origin | sed -E -e 's|^.*github\.com[:/]||' -e 's|\.git$$||')
 DOC_REF  ?= $(shell git rev-parse HEAD)

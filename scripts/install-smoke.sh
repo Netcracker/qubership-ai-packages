@@ -86,7 +86,7 @@ git config -f "$state/gitconfig" user.name "apm install-smoke"
 git config -f "$state/gitconfig" --add safe.directory "$workspace"
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$real_home/.cache/uv}"
 
-apm() { uvx --python 3.12 --from apm-cli --with-requirements "$req" apm "$@"; }
+apm() { uvx --python 3.14 --from apm-cli --with-requirements "$req" apm "$@"; }
 
 if ! apm marketplace add "$workspace" --ref "$ref" --name "$mkt_name" >/dev/null; then
   echo "Failed to register marketplace from $workspace at $ref" >&2
