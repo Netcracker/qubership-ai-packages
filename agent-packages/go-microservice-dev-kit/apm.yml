@@ -1,11 +1,11 @@
 name: go-microservice-dev-kit
-version: 1.0.0
+version: 1.0.1
 description: Umbrella package for Qubership Go microservices.
 dependencies:
   apm:
-    - Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage#feat/agent-packages
-    - Netcracker/qubership-core-lib-go/memlimit/agent-packages/memlimit-go-usage#feat/agent-packages
-    - Netcracker/qubership-core-lib-go/context-propagation/agent-packages/context-propagation-go-usage#feat/agent-packages
-    - Netcracker/qubership-core-lib-go/security/agent-packages/security-go-usage#feat/agent-packages
-    - Netcracker/qubership-core-lib-go-fiber-server-utils/agent-packages/fiber-server-utils-go-usage#feat/agent-packages
-    - Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage#feat/agent-packages
+    - Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
+    - Netcracker/qubership-core-lib-go/memlimit/agent-packages/memlimit-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
+    - Netcracker/qubership-core-lib-go/context-propagation/agent-packages/context-propagation-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
+    - Netcracker/qubership-core-lib-go/security/agent-packages/security-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
+    - Netcracker/qubership-core-lib-go-fiber-server-utils/agent-packages/fiber-server-utils-go-usage#ed9ccea9ca4cc0adf309e4876e9dfa81c7c77316  # feat/agent-packages
+    - Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage#4594b3b9d09c066ec549f4b6cee2eb1266c7f948  # feat/agent-packages

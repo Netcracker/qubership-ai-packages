@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices"
+    "config:best-practices",
+    "github>Netcracker/renovate-config:apm"
   ],
   "configMigration": true,
   "dependencyDashboard": true,
@@ -36,8 +37,23 @@
         "pin",
         "digest"
       ],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "1 day",
       "automerge": true
+    },
+    {
+      "description": "Require manual review for major dependency updates.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Do not delay APM Git ref updates that have no release timestamp.",
+      "matchDepTypes": [
+        "apm"
+      ],
+      "matchDatasources": [
+        "git-refs"
+      ],
+      "minimumReleaseAge": null
     },
     {
       "description": "Keep GitHub Actions grouped and pinned to immutable SHAs.",
@@ -56,6 +72,13 @@
         "requirements.txt"
       ],
       "groupName": "python ci tools"
+    },
+    {
+      "description": "Do not automerge APM package updates because marketplace.json is generated separately.",
+      "matchDepTypes": [
+        "apm"
+      ],
+      "automerge": false
     }
   ]
 }

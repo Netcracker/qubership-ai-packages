@@ -1,14 +1,13 @@
 name: qubership-essentials
-version: 1.0.0
-description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, workflow-hub usage, and skill telemetry."
+version: 1.0.1
+description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage."
 dependencies:
   apm:
     # Sibling packages in this repository. Published manifests cannot use
     # local-path deps, so each one is pinned to a commit SHA on this repo.
-    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#19cc77159b03efdcfc51ad251c74c3f5bfe514ef  # main
-    - Netcracker/qubership-ai-packages/agent-packages/codex-review#19cc77159b03efdcfc51ad251c74c3f5bfe514ef  # main
-    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#19cc77159b03efdcfc51ad251c74c3f5bfe514ef  # main
-    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#19cc77159b03efdcfc51ad251c74c3f5bfe514ef  # main
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
     # Packages hosted in other repositories.
-    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#a8ea50cc3be94c8c95f61dfca2fa8423ee6a252f  # main
-    - Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry#96f42e9a2a694632f3ef355ce45ad33c13906220  # v0.1.0
+    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#768c088ef2adf0081dd97cff19dae2ef3ccab9b1  # main
