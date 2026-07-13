@@ -41,6 +41,11 @@
       "automerge": true
     },
     {
+      "description": "Require manual review for major dependency updates.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
       "description": "Do not delay APM Git ref updates that have no release timestamp.",
       "matchDepTypes": [
         "apm"
