@@ -11,8 +11,11 @@ Use this checklist as coverage guidance, not as a rigid script.
 - Capture runtime URLs, namespace, credentials, known constraints, and user focus areas.
 - Treat user focus as emphasis, not a limit; it does not remove required-by-diff tracks.
 - Check for sub-agent tooling, including lazy-loaded tool discovery when available.
-- Record orchestration mode: which sub-agents were used, or why sub-agents were unavailable or not used,
-  and what coverage impact that creates.
+- Do not create or edit agent definitions during the review.
+- For each independent track, prefer a package-provided named specialist, then a generic sub-agent, then main-thread
+  review.
+- Record orchestration mode: named or generic sub-agents used, failed spawn attempts, main-thread fallbacks, and any
+  coverage impact.
 - If the user provides a previous report or defect list, or prior findings are already known from the current review
   context, plan explicit reconciliation before starting deep checks.
 - After reading the PR diff, create a Required-By-Diff Coverage table before delegating or deep-testing.
@@ -22,6 +25,8 @@ Use this checklist as coverage guidance, not as a rigid script.
 - If a dedicated specialist exists but is not used for a required track, explain why.
 - Record any required track that is skipped or only partially covered. Mark a track partial unless the report shows
   equivalent evidence for that track.
+- Make every confirmed finding self-contained for a fixing agent, with affected scope, supported fix direction, and
+  retest criteria.
 
 ## Environment and tools
 
@@ -136,8 +141,8 @@ Use this checklist as coverage guidance, not as a rigid script.
 
 ## Report quality
 
-- Each finding has severity, classification, code/design links, reproduction, actual result, expected result,
-  and evidence.
+- Each finding has severity, classification, code/design links, reproduction, actual result, expected result, evidence,
+  affected scope, supported fix direction, and retest criteria.
 - Pre-existing issues are marked as existing.
 - Unconfirmed risks are either omitted or clearly marked as not fully reproduced.
 - Screenshots and log snippets are saved next to the report.

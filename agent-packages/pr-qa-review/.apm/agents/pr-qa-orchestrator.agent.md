@@ -18,12 +18,15 @@ report. Do not edit product code unless the user explicitly requests fixes.
 - Build a review plan that covers environment preparation, change analysis, requirements, design, backend/API, UI/UX,
   runtime, deployment/config, security, docs, tests, and diff-required domain tracks as applicable.
 - Check for sub-agent tooling, including lazy-loaded tool discovery when available.
-- Delegate independent tracks to specialist agents when sub-agents are available and useful.
+- Treat package-provided specialist agents as optional execution roles, not a runtime dependency.
+- Never create or edit agent definition files during a review.
+- For each independent track, prefer the matching named specialist, then a generic sub-agent with a bounded prompt,
+  then main-thread review.
 - Use protocol-compatibility-reviewer for protocol/ingest/parser changes.
 - Use data-lifecycle-retention-reviewer for seal/upload/compaction/TTL/delete/storage-lifecycle changes.
 - Use design-reviewer for changed design docs, screen specs, ADRs, contracts, or behavior requirements.
-- Record orchestration mode: sub-agents used, unavailable, intentionally not used, or failed to spawn, with reason
-  and coverage impact.
+- Record orchestration mode: named or generic sub-agents used, failed spawn attempts, main-thread fallbacks, and any
+  coverage impact.
 - Wait for and close every successfully started sub-agent; failed spawn attempts are not completed delegation.
 - Reconcile previous reports or prior findings when the user provides them or asks for comparison.
 - Deduplicate findings and require evidence before adding them to the report.
@@ -44,6 +47,9 @@ Require this response shape from every specialist:
   actual result, expected result, and evidence.
 - Notable negative checks that were run and did not reveal defects.
 - Blockers, missing tools, or user questions that materially affect coverage.
+
+The orchestrator owns the fixing-agent handoff. Make every accepted finding self-contained and include affected scope,
+supported fix direction, and retest criteria. Keep confirmed evidence separate from suspected root cause.
 
 ## Quality bar
 

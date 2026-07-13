@@ -11,7 +11,7 @@ Setup mutations before review: <none / commands / rollout actions / failed attem
 Read-only review began at: <timestamp / after command / not applicable>
 Coverage limitations:
 <missing UI tooling / degraded traffic / scanners not run / access limits / skipped disruptive checks / none>
-Orchestration: <sub-agents used / sub-agents unavailable / not used with reason and coverage impact>
+Orchestration: <named or generic sub-agents used / failed spawns / main-thread fallbacks / coverage impact>
 Previous-run reconciliation:
 <not applicable only when no prior findings are available / reproduced / not reproduced / superseded / not rechecked>
 Required-by-diff coverage: <tracks run / partially covered / skipped with owner and reason>
@@ -71,6 +71,10 @@ Expected Result:
 
 <Expected behavior.>
 
+Affected Scope:
+
+<Users, components, configurations, data, or workflows affected by the defect.>
+
 Evidence:
 
 ```text
@@ -79,6 +83,15 @@ Evidence:
 
 Screenshot or artifact: <path, not captured with reason, or not applicable>
 
+Fix Direction:
+
+<Evidence-supported remediation direction, or unknown. Do not present an unverified patch as fact.>
+
+Retest Criteria:
+
+<Checks the fixing agent should run to prove the defect is resolved and avoid regression.>
+
 Notes:
 
-<Optional uncertainty, suspected root cause, whether this is pre-existing, or follow-up test ideas.>
+<Optional uncertainty, suspected root cause, whether this is pre-existing, or follow-up test ideas. Separate suspected
+root cause from confirmed evidence.>

@@ -1,6 +1,6 @@
 ---
 name: pr-qa-review
-description: Broad QA review of PRs, branches, commits, or code changes with evidence-backed defect reports.
+description: Use only when the user explicitly asks to run pr-qa-review for a PR, branch, commit, or code change.
 ---
 
 # PR QA review
@@ -14,14 +14,23 @@ scope when permitted.
 
 ## Operating model
 
-Act as the orchestrator. Build a review plan, divide the investigation into independent tracks, and keep the master
-report. Check whether sub-agent tools are available, including lazy-loaded tool discovery when the harness supports it.
-If sub-agent tools are available and the user has allowed orchestration, delegate bounded tracks to sub-agents:
-requirements, design, backend/API, UI/UX, runtime/observability, deployment/config, docs, security, and any
-diff-required domain tracks such as protocol compatibility or data lifecycle/retention. Do not let sub-agents write the
+Use this skill as the user-facing entry point and act as the orchestrator. Build a review plan, divide the investigation
+into independent tracks, and keep the master report. The package-provided specialist agents are optional execution
+roles, not a runtime dependency. Never create or edit agent definition files during a review.
+
+Check whether sub-agent tools and package-provided named roles are available, including lazy-loaded tool discovery when
+the harness supports it. The user's request to use this skill permits read-only delegation unless they explicitly forbid
+sub-agents. Select the first available execution mode for each independent track:
+
+1. Delegate to the matching package-provided specialist agent.
+2. Delegate to a generic sub-agent with the same bounded track and response contract.
+3. Review the track in the main thread.
+
+Use this order for requirements, design, backend/API, UI/UX, runtime/observability, deployment/config, docs, security,
+and diff-required tracks such as protocol compatibility or data lifecycle/retention. Do not let sub-agents write the
 final report directly; integrate and deduplicate their findings. Record the orchestration mode in the report: which
-sub-agents were used, which spawn attempts failed, or why sub-agents were unavailable or intentionally not used, and any
-coverage impact.
+named or generic sub-agents were used, which spawn attempts failed, which tracks fell back to the main thread, and any
+coverage impact. Agent unavailability alone is not a reason to skip a required track.
 
 Keep moving until the planned coverage is meaningful. Do not stop after the first few bugs. If you hit a blocker, try a
 reasonable alternative, then ask the user for the missing environment detail or tool.
@@ -236,6 +245,13 @@ Every confirmed finding should include:
 - Actual result.
 - Expected result.
 - Evidence: logs, screenshots, command output, metrics, rendered manifests, or API responses.
+- Affected behavior or scope.
+- A fix direction when the evidence supports one, without presenting an unverified patch as fact.
+- Retest criteria that let a fixing agent verify the defect is resolved.
+
+Treat the report as the handoff contract for the next fixing agent. Make each finding self-contained and actionable
+without requiring access to the review conversation. Separate confirmed facts from suspected root cause and suggested
+remediation.
 
 Save the report and artifacts incrementally. Preserve user edits in an existing report: append new findings to the end
 unless the user asks for restructuring.

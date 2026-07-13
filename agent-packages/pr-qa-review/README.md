@@ -7,11 +7,22 @@ evidence-backed defect report.
 The skill is intentionally user-invoked. Use it when you want a broad QA-style review rather than a narrow code review.
 It does not modify product code unless the user explicitly asks for fixes.
 
+## Package organization
+
+Invoke the `pr-qa-review` skill as the single entry point. The package also ships specialist agents for bounded review
+tracks. These agents are optional: the skill uses a matching named agent when the harness exposes it, falls back to a
+generic sub-agent when available, and otherwise reviews the track in the main thread. The workflow never creates agent
+definition files at runtime.
+
+The package does not include an always-on instruction or a separate prompt. Installing it does not affect unrelated
+conversations; the workflow starts when the user invokes the skill.
+
 ## What it produces
 
 A Markdown report under a user-selected path, usually `reports/<topic>.md`, with screenshots, logs, command output, and
 links to relevant code. Each finding includes severity, classification, reproduction steps, actual and expected results,
-and evidence.
+evidence, affected scope, a supported fix direction, and retest criteria. The report is designed as a self-contained
+handoff to an agent that will fix the confirmed defects.
 
 ## Install
 
