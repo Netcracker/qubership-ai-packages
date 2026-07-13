@@ -121,25 +121,25 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: 531ac0f9f7606c2156f767af72f474f41c2ebdc6  # main
+      ref: 93e76a9f27554a416e9af85a6fe10ff08132f0f0  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
       source: Netcracker/qubership-apihub-api-diff
       subdir: agent-packages/api-diff-authoring
-      ref: d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4  # develop
+      ref: 47e14b19508880af6a099c6e7da7819215379d15  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:public"]
 
     - name: api-unifier-authoring
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-authoring
-      ref: 392794444be0f6bf49c477b00e51add7d3c0c444  # develop
+      ref: 0752a2905671a0f08ac810613ec77d64e21fcb9f  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:internal"]
 
     - name: api-unifier-testing
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-testing
-      ref: 392794444be0f6bf49c477b00e51add7d3c0c444  # develop
+      ref: 0752a2905671a0f08ac810613ec77d64e21fcb9f  # develop
       tags: ["topic:api", "stack:typescript", "activity:testing", "audience:internal"]
 
     - name: dbaas-mounted-secret-migration
@@ -157,23 +157,23 @@ marketplace:
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: 161a0752db07017d43739ddd621ee7193cfbc625  # main
+      ref: 768c088ef2adf0081dd97cff19dae2ef3ccab9b1  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: 0497e8233bddc287b68c68395b3b303aed998ef9  # main
+      ref: 1d8ba5fc9bb010f6063ffc89527acb99e4f097e8  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry
-      ref: c9ab85efe02149166e385f5962e1735d531e64d7  # main
+      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # main
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
 
     - name: ai-agent-telemetry-configure
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry-configure
-      ref: c9ab85efe02149166e385f5962e1735d531e64d7  # main
+      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # main
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
