@@ -11,4 +11,4 @@ dependencies:
     - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#19cc77159b03efdcfc51ad251c74c3f5bfe514ef  # main
     # Packages hosted in other repositories.
     - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#a8ea50cc3be94c8c95f61dfca2fa8423ee6a252f  # main
-    - Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry#96f42e9a2a694632f3ef355ce45ad33c13906220  # v0.1.0
+    - Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry#6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # v1.0.0
