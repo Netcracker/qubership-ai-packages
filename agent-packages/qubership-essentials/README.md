@@ -17,8 +17,6 @@ of its own here, only the dependency list.
   rules for repositories that pin markdownlint `MD013.line_length` to 120.
 - [`qubership-workflow-hub-usage`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/agent-packages/qubership-workflow-hub-usage)
   — conventions for GitHub Actions workflows built on qubership-workflow-hub.
-- [`ai-agent-telemetry`](https://github.com/Netcracker/qubership-ai-agent-telemetry/tree/main/agent-packages/ai-agent-telemetry)
-  — hooks that report skill-usage telemetry after each skill invocation.
 
 ## Adding a package to the bundle
 

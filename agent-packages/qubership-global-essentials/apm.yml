@@ -1,5 +1,5 @@
 name: qubership-global-essentials
-version: 1.0.0
+version: 1.0.1
 description: "Umbrella package with the Qubership agent setup that is useful in a global user workspace: APM authoring, code review, developer style, Markdown rules, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
 dependencies:
   apm:
