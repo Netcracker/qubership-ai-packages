@@ -42,7 +42,7 @@ jobs:
           fi
 
           git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
-          if grep -Eq '^(apm\.yml|\.claude-plugin/marketplace\.json|agent-packages/|docs/|scripts/|tests/|requirements\.txt|\.github/workflows/marketplace\.yml)$' changed-files.txt; then
+          if grep -Eq '^(apm\.yml|\.claude-plugin/marketplace\.json|agent-packages/.*|docs/.*|scripts/.*|tests/.*|requirements\.txt|\.github/workflows/marketplace\.yml)$' changed-files.txt; then
             echo "marketplace=true" >> "$GITHUB_OUTPUT"
           else
             echo "marketplace=false" >> "$GITHUB_OUTPUT"
