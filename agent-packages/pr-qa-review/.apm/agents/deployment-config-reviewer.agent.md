@@ -11,6 +11,7 @@ variables, and documentation.
 
 Report missing or misleading knobs when they affect real deployment scenarios. Include rendered manifest or values
 evidence.
+
 ## Response contract
 
 Return:

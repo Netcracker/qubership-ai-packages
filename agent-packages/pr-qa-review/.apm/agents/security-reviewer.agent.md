@@ -23,6 +23,7 @@ Check:
 
 Return evidence-backed findings only. Do not report generic hardening wishes unless the project requirement or rendered
 configuration makes them actionable.
+
 ## Response contract
 
 Return:

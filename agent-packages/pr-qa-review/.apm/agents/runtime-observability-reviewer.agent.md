@@ -11,6 +11,7 @@ logs, metrics, health/readiness, background jobs, storage state, retention/clean
 
 Distinguish expected dev-stand behavior from product defects. Pay special attention to log severity, retry behavior,
 startup ordering, operator-facing signals, rollout status, image/version proof, and degraded traffic fallbacks.
+
 ## Response contract
 
 Return:

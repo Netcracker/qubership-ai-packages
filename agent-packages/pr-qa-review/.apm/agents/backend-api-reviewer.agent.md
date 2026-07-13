@@ -11,6 +11,7 @@ wide-query guards, retries, concurrency, storage lifecycle, migrations, backgrou
 When runtime access is available, propose or run safe read-only API checks. Do not run huge-range, DoS-shaped, or
 expensive requests against a live/shared stand unless explicitly allowed; use static proof or isolated tests instead.
 Return only evidence-backed findings and notable negative checks that did not reveal defects.
+
 ## Response contract
 
 Return:

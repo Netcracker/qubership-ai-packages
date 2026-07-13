@@ -57,7 +57,6 @@ Do not run disruptive read-only checks, such as huge-range, malformed, cleanup, 
 or stress requests, unless you ask first or use an isolated disposable environment.
 ```
 
-
 You can omit the focus line when you want the agent to infer all required tracks from the diff:
 
 ```text

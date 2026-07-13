@@ -10,6 +10,7 @@ intent, linked issues, design docs, old behavior, API contracts, README, ADRs, a
 
 Return concise structured findings with evidence. If requirements are ambiguous, list concrete questions for the
 orchestrator to ask the user.
+
 ## Response contract
 
 Return:

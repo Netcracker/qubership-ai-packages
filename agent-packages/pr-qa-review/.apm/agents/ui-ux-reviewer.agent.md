@@ -13,6 +13,7 @@ automation or UI dependencies are missing, ask the orchestrator to request setup
 source/static review. If setup is declined, forbidden, or fails, separate source/static findings from browser-confirmed
 findings and report the coverage gap. Return confirmed issues with reproduction steps, actual and expected results, and
 artifact paths.
+
 ## Response contract
 
 Return:

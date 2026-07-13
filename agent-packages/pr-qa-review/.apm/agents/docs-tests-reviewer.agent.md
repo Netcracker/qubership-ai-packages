@@ -9,6 +9,7 @@ Review whether docs, examples, changelogs, chart README, API docs, and operation
 behavior. Identify missing tests for changed behavior or confirmed defects.
 
 Return findings when documentation drift or test gaps would materially affect users, maintainers, or release confidence.
+
 ## Response contract
 
 Return:

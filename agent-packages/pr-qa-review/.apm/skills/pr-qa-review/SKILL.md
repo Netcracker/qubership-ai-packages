@@ -178,8 +178,8 @@ important tracks in the report or final summary.
    - Report evidence-backed security defects, not generic hardening wishes.
 
 10. Documentation and tests
-   - Identify documentation drift and missing operational instructions.
-   - Identify missing tests for behavior that changed or defects found during review.
+    - Identify documentation drift and missing operational instructions.
+    - Identify missing tests for behavior that changed or defects found during review.
 
 ## Previous-run reconciliation
 
