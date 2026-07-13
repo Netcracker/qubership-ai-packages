@@ -196,8 +196,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "531ac0f9f7606c2156f767af72f474f41c2ebdc6",
-        "sha": "531ac0f9f7606c2156f767af72f474f41c2ebdc6"
+        "ref": "93e76a9f27554a416e9af85a6fe10ff08132f0f0",
+        "sha": "93e76a9f27554a416e9af85a6fe10ff08132f0f0"
       }
     },
     {
@@ -214,8 +214,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
-        "ref": "d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4",
-        "sha": "d0a0394fd808ae66f2f06c0f6c6d06315ea0b8f4"
+        "ref": "47e14b19508880af6a099c6e7da7819215379d15",
+        "sha": "47e14b19508880af6a099c6e7da7819215379d15"
       }
     },
     {
@@ -232,8 +232,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
-        "ref": "392794444be0f6bf49c477b00e51add7d3c0c444",
-        "sha": "392794444be0f6bf49c477b00e51add7d3c0c444"
+        "ref": "0752a2905671a0f08ac810613ec77d64e21fcb9f",
+        "sha": "0752a2905671a0f08ac810613ec77d64e21fcb9f"
       }
     },
     {
@@ -250,8 +250,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
-        "ref": "392794444be0f6bf49c477b00e51add7d3c0c444",
-        "sha": "392794444be0f6bf49c477b00e51add7d3c0c444"
+        "ref": "0752a2905671a0f08ac810613ec77d64e21fcb9f",
+        "sha": "0752a2905671a0f08ac810613ec77d64e21fcb9f"
       }
     },
     {
@@ -305,8 +305,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "161a0752db07017d43739ddd621ee7193cfbc625",
-        "sha": "161a0752db07017d43739ddd621ee7193cfbc625"
+        "ref": "768c088ef2adf0081dd97cff19dae2ef3ccab9b1",
+        "sha": "768c088ef2adf0081dd97cff19dae2ef3ccab9b1"
       }
     },
     {
@@ -324,14 +324,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "0497e8233bddc287b68c68395b3b303aed998ef9",
-        "sha": "0497e8233bddc287b68c68395b3b303aed998ef9"
+        "ref": "1d8ba5fc9bb010f6063ffc89527acb99e4f097e8",
+        "sha": "1d8ba5fc9bb010f6063ffc89527acb99e4f097e8"
       }
     },
     {
       "name": "ai-agent-telemetry",
       "description": "Hooks that call the ai-agent-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -341,14 +341,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
-        "ref": "c9ab85efe02149166e385f5962e1735d531e64d7",
-        "sha": "c9ab85efe02149166e385f5962e1735d531e64d7"
+        "ref": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55",
+        "sha": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55"
       }
     },
     {
       "name": "ai-agent-telemetry-configure",
-      "description": "Configure skill and bootstrap scripts for the ai-agent-telemetry CLI (endpoint, token, CA, selftest).",
-      "version": "2.0.0",
+      "description": "Setup, repair, and verification skill for the ai-agent-telemetry CLI (endpoint, token, CA, selftest).",
+      "version": "2.1.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -358,8 +358,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
-        "ref": "c9ab85efe02149166e385f5962e1735d531e64d7",
-        "sha": "c9ab85efe02149166e385f5962e1735d531e64d7"
+        "ref": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55",
+        "sha": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55"
       }
     }
   ]
