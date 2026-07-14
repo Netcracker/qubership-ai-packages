@@ -30,7 +30,12 @@ flowchart TD
     R --> I[Collect target, constraints, tools, and runtime access]
     I --> D[Read the diff and requirements]
     D --> C[Build Required-By-Diff Coverage table]
-    C --> P[Plan independent review tracks]
+    C --> E{Material setup, access, restart, or mutation needed?}
+    E -- Yes --> K[Request blocking approval]
+    K --> L{Resolved?}
+    L -- No --> T[Save preliminary report and ask user]
+    L -- Yes --> P[Plan independent review tracks]
+    E -- No --> P
     P --> B[Start a batch of up to three leaf reviewers]
     B --> N{For each track: matching named specialist available?}
     N -- Yes --> S[Run package specialist]
@@ -42,14 +47,28 @@ flowchart TD
     M --> X
     X --> Q{Required tracks remain?}
     Q -- Yes --> B
-    Q -- No --> V[Root validates evidence and deduplicates findings]
-    V --> O[Save the report and artifacts]
+    Q -- No --> V[Root challenges candidates against evidence and accepted risks]
+    V --> Z[Classify evidence status and deduplicate findings]
+    Z --> O[Save the report and artifacts]
     O --> H[Hand off a self-contained report to the fixing agent]
 ```
 
 The root agent owns planning, user questions, permission decisions, evidence validation, and the final report. Batching
 limits resource use without dropping coverage: additional required tracks run in later batches. A failed or unavailable
 sub-agent changes the execution mode, not the required coverage.
+
+Setup permission that materially affects a required track is a blocking checkpoint. A progress update does not count as
+approval. The root uses a harness approval mechanism when available; otherwise, it saves a preliminary report and ends
+the turn with the question instead of finalizing weakened coverage.
+
+The same checkpoint applies when an important scenario requires restarting services or mutating Docker Compose, Kind,
+a deployment, test data, object storage, or cluster state. The request identifies the target, expected impact, cleanup,
+and evidence unlocked. Approved actions and their side effects are recorded; declined actions leave the affected track
+partial rather than being represented as runtime-tested.
+
+Every confirmed finding records whether its evidence is runtime, browser, test, static, or mixed. Before confirmation,
+the root checks nearby design decisions, tests, explicit deferrals, and accepted risks. Useful rejected candidates stay
+in a separate section and do not inflate the confirmed count.
 
 ## What it produces
 

@@ -39,7 +39,18 @@ Use this checklist as coverage guidance, not as a rigid script.
   rollout status, and rendered values. Use equivalent proof for Docker Compose or local-process stands.
 - Ask before updating a stale stand unless the user explicitly allowed setup/update work.
 - Record setup mutations, failed setup attempts, and the exact point where read-only review mode begins.
+- Treat permission for setup that materially affects a required track as a blocking checkpoint. A progress-update
+  question is not approval. Use a blocking approval mechanism, or save a preliminary report and end the turn with the
+  question. Do not finalize the review while it is unanswered.
 - After setup/update, return to the requested review mode and avoid further runtime changes unless allowed.
+- For important scenarios that require a mutation or restart, request explicit permission even after setup is complete.
+  Examples include Docker Compose or Kind startup, service restarts, agent deployment, MinIO test data, integration
+  tags, Docker tool fallbacks, and cluster changes needed to verify logs or metrics.
+- In the request, identify the target, action or commands, expected impact, cleanup or rollback, and evidence unlocked.
+  Group related actions when they share the same scope and risk.
+- Treat unresolved permission for a material mutation as blocking. If declined, mark the scenario skipped and the track
+  partial; do not substitute a predicted static result for runtime evidence.
+- Record approved mutation commands, affected resources, side effects, cleanup, and when read-only review resumes.
 - Do not run checks that may create excessive load, trigger lifecycle transitions, send malformed traffic, exercise
   TTL/cleanup/compaction, or simulate DoS conditions without explicit permission or an isolated disposable environment.
 - If traffic generation is degraded, use existing runtime data only when relevant and record the confidence limit.
@@ -70,6 +81,9 @@ Use this checklist as coverage guidance, not as a rigid script.
 - Read PR description, linked issues, and comments when available.
 - Identify generated files, migrations, dependencies, charts, docs, and tests.
 - Compare changed behavior with old code and design docs.
+- Challenge every candidate against nearby ADRs, tests, comments, explicit deferrals, accepted risks, and out-of-scope
+  decisions before counting it as a defect.
+- Record useful rejected candidates and accepted risks separately from confirmed findings.
 
 ## Design
 
@@ -106,6 +120,8 @@ Use this checklist as coverage guidance, not as a rigid script.
 - Exercise main workflows, filters, tables, detail pages, modals, downloads, back/forward/reload, empty/loading/error
   states, responsiveness, accessibility, and keyboard use.
 - Capture screenshots for confirmed visual/UX issues.
+- Use browser actions plus matching DOM, network, console, keyboard, or accessibility evidence for browser-confirmed
+  behavior. A screenshot alone confirms only the visible state.
 - Inspect browser console, page errors, failed requests, and duplicate/expensive requests.
 - If UI is in scope and browser automation or UI dependencies are unavailable, ask whether to install or enable them
   before falling back to source/API-only review.
@@ -141,8 +157,17 @@ Use this checklist as coverage guidance, not as a rigid script.
 
 ## Report quality
 
-- Each finding has severity, classification, code/design links, reproduction, actual result, expected result, evidence,
-  affected scope, supported fix direction, and retest criteria.
+- Each finding has severity, classification, evidence status, code/design links, reproduction, actual result, expected
+  result, evidence, affected scope, supported fix direction, and retest criteria.
+- Evidence status is runtime-confirmed, browser-confirmed, test-confirmed, static-confirmed, or mixed. Unconfirmed items
+  stay outside the confirmed count.
+- Mixed findings are split when their claims can be fixed or retested independently. Otherwise, each claim has its own
+  evidence status.
+- Static analysis is not described as an observed result. Browser findings identify the action and observed outcome.
+- Explicitly deferred behavior and accepted risks are excluded from the confirmed defect count unless the diff violates
+  their documented boundary.
+- Accessibility findings distinguish standards violations from automated-tool best-practice rules.
+- Timing findings include environment, repetition, timeout, and control-run evidence.
 - Pre-existing issues are marked as existing.
 - Unconfirmed risks are either omitted or clearly marked as not fully reproduced.
 - Screenshots and log snippets are saved next to the report.

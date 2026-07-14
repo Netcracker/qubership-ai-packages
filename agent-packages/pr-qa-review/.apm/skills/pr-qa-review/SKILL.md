@@ -90,6 +90,22 @@ send malformed traffic, exercise TTL/cleanup/compaction, or simulate DoS conditi
 use an isolated disposable environment. Otherwise record the check as skipped or needs-confirmation. Prefer static
 proof, tests, fixtures, rendered manifests, logs, metrics, or safe object counts for these scenarios.
 
+Some required scenarios need an intentional environment mutation even when initial setup is already complete. Examples
+include starting or restarting services, running Docker Compose or Kind, deploying a real or legacy agent, loading test
+data into MinIO, exercising integration-test tags, using a Docker-based tool fallback, or changing cluster objects so
+logs and metrics can be verified. When such a scenario would materially improve a required track:
+
+- Ask for explicit permission before the mutation or restart unless the prompt already grants permission for that
+  action and target.
+- Group related actions into one concise request. State the target environment, commands or action types, expected
+  impact, cleanup or rollback plan, and the evidence the scenario can produce.
+- Treat the permission as the same blocking checkpoint used for material setup. Do not finalize the review or silently
+  replace the scenario with static analysis while the answer is unresolved.
+- Run only the approved scope. Record the commands, affected resources, observed side effects, cleanup, and the point
+  at which read-only review resumes.
+- If permission is declined, record the scenario as skipped and the affected track as partial. Do not infer runtime
+  behavior from source analysis.
+
 If a useful tool or access path is missing:
 
 - Explain what additional evidence that tool would unlock for this specific review.
@@ -100,6 +116,17 @@ If a useful tool or access path is missing:
 - Continue with static analysis, rendered manifests, API calls, logs, or manual browser checks when possible only after
   the user declines setup, setup fails, the tool is nonessential, or the user has already forbidden environment changes.
 - Record skipped or weakened coverage in the report when the missing tool materially affects confidence.
+
+Treat setup permission as a blocking checkpoint when the missing tool materially weakens a required track. A question
+in a progress update is not approval. Use the harness's blocking approval or user-input mechanism when available. If
+the harness has no blocking mechanism, finish the safe work already in progress, save the report as preliminary, and
+end the turn with the permission question. Do not mark the review complete, downgrade the track, or finalize the
+confirmed count while the question is unanswered.
+
+The checkpoint resolves only when the user approves or declines, the user has already stated the applicable policy, or
+the approved setup fails with recorded evidence. After approval, use the harness's normal execution approval when the
+command still requires it. Continue unrelated safe tracks while waiting only when the harness can still deliver the
+user's response during the same turn.
 
 Handle degraded test traffic explicitly. If generated traffic fails, use existing runtime data only when it is still
 relevant to the target and record the limitation. Do not silently treat stale or unrelated data as reproduction
@@ -221,6 +248,31 @@ evidence includes:
 Do not include long raw logs or full copyrighted material. Quote only short relevant excerpts. Store larger artifacts as
 files and link them.
 
+Assign one evidence status to every candidate and confirmed finding:
+
+- **Runtime-confirmed:** observed against a version-aligned service, deployment, or process.
+- **Browser-confirmed:** observed in a real browser with the relevant state, action, and result captured.
+- **Test-confirmed:** reproduced by an executed automated test or deterministic executable check.
+- **Static-confirmed:** proven by a deterministic code/configuration path plus an authoritative expected-behavior
+  anchor.
+- **Mixed:** one finding contains claims with different evidence statuses. Split it when the claims can be fixed or
+  retested independently; otherwise state the status of each claim.
+- **Unconfirmed:** plausible but missing enough evidence to establish the behavior. Keep it out of the confirmed count
+  and put it in a follow-up section only when it helps the next reviewer.
+
+Do not describe a predicted static path as an observed actual result. For static-confirmed findings, label the
+reproduction as a deterministic analysis or a proposed executable check. Browser-confirmed findings require an
+observed browser action and result; a screenshot alone does not prove network, console, keyboard, or state behavior.
+
+Before confirming a candidate, challenge it against nearby design decisions, ADRs, progress records, tests, comments,
+and documented deferrals or accepted risks. When the implementation matches an explicit accepted limitation, exclude
+it from the confirmed defect count unless the diff violates the documented boundary or invalidates the assumption.
+Record useful rejected candidates and accepted risks separately, with the evidence and decision that rejected them.
+
+Treat automated accessibility output precisely. Distinguish standards violations from tool-specific best-practice
+rules. For timing failures, record the environment, repetition count, default timeout, and successful control run before
+classifying the result as a product or test-reliability defect.
+
 ## Finding classification
 
 Use classifications that help triage. Suggested values:
@@ -250,6 +302,7 @@ Every confirmed finding should include:
 - Short title.
 - Severity.
 - Classification.
+- Evidence status.
 - Problem description.
 - Relevant code/design links.
 - Reproduction steps.
@@ -263,6 +316,9 @@ Every confirmed finding should include:
 Treat the report as the handoff contract for the next fixing agent. Make each finding self-contained and actionable
 without requiring access to the review conversation. Separate confirmed facts from suspected root cause and suggested
 remediation.
+
+Keep rejected candidates and accepted risks outside the confirmed count. Preserve stable finding identifiers when a
+later pass rejects or reclassifies an item; move it to a separate section instead of silently deleting its history.
 
 Save the report and artifacts incrementally. Preserve user edits in an existing report: append new findings to the end
 unless the user asks for restructuring.

@@ -8,9 +8,13 @@ User focus areas: {{none / list; focus is emphasis and does not remove required-
 Environment: {{local / Kubernetes namespace / URLs / versions}}
 Runtime version proof: {{commit / image digest / chart version / endpoint / limitation}}
 Setup mutations before review: {{none / commands / rollout actions / failed attempts}}
+Approved scenario mutations: {{none / permission, commands, affected resources, cleanup and outcome}}
 Read-only review began at: {{timestamp / after command / not applicable}}
 Coverage limitations:
 {{missing UI tooling / degraded traffic / scanners not run / access limits / skipped disruptive checks / none}}
+Pending permissions:
+{{none / unresolved setup, restart, or scenario-mutation question; unresolved material permissions mean the report is
+preliminary}}
 Orchestration: {{named or generic sub-agents used / failed spawns / main-thread fallbacks / coverage impact}}
 Previous-run reconciliation:
 {{not applicable only when no prior findings are available / reproduced / not reproduced / superseded / not rechecked}}
@@ -38,6 +42,19 @@ Required-by-diff coverage: {{tracks run / partially covered / skipped with owner
 | --- | --- | --- |
 | {{title}} | {{reproduced / not reproduced / superseded / accepted / not rechecked}} | {{short reason}} |
 
+## Rejected Candidates and Accepted Risks
+
+### {{Original finding ID or candidate title}}
+
+Status: Rejected | Accepted risk | Deferred control
+
+Evidence status: Runtime-confirmed | Browser-confirmed | Test-confirmed | Static-confirmed | Mixed | Unconfirmed
+
+Decision basis:
+
+{{The ADR, design decision, test, documented boundary, or contradictory evidence that excludes this item from the
+confirmed count.}}
+
 ## Finding Template
 
 ## N. {{Short Bug Title}}
@@ -48,6 +65,10 @@ Classification:
 
 {{One or more of: PR regression, Existing issue, Design mismatch, Backend, API, UI/UX,
 Accessibility, Runtime, Observability, Deployment/config, Security, Documentation, Test gap}}
+
+Evidence Status:
+
+Runtime-confirmed | Browser-confirmed | Test-confirmed | Static-confirmed | Mixed
 
 Problem:
 
@@ -62,6 +83,9 @@ Reproduction:
 
 1. {{Step, command, URL, UI path, or API request.}}
 1. {{Next step.}}
+
+For static-confirmed findings, label this as deterministic analysis or as a proposed executable check. Do not present a
+predicted result as an observation.
 
 Actual Result:
 
@@ -82,6 +106,11 @@ Evidence:
 ```
 
 Screenshot or artifact: {{path, not captured with reason, or not applicable}}
+
+Evidence Boundary:
+
+{{For mixed evidence, map each claim to its status. For browser checks, state whether the run used mocks or a real
+version-aligned backend. For timing or accessibility tools, state environment and rule category.}}
 
 Fix Direction:
 
