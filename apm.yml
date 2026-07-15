@@ -90,6 +90,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "stack:markdown", "activity:authoring", "audience:public"]
 
+    - name: qubership-development-practices
+      description: Qubership development workflow defaults for commits, docs, tests, and pre-commit validation.
+      source: ./agent-packages/qubership-development-practices
+      version: 1.0.0
+      tags: ["topic:devops", "activity:coding", "activity:maintenance", "audience:public"]
+
     - name: triage-dependency-prs
       description: Skill that triages failing checks on dependency-update PRs (Renovate and Dependabot) and drives them back to green.
       source: ./agent-packages/triage-dependency-prs
