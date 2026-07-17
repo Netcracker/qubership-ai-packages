@@ -5,8 +5,9 @@
 Classify each retained candidate independently on these axes:
 
 - Finding confidence: `Confirmed` for directly reproduced behavior with decisive evidence; `Strong static evidence`
-  for a defect demonstrated by exact code or configuration paths without runtime reproduction; `Suspected` for a
-  plausible risk that still needs decisive evidence.
+  for a defect demonstrated without runtime reproduction by independent implementation and consumer or contract
+  anchors. One anchor is sufficient only when it proves both cause and impact. Use `Suspected` for a plausible risk
+  that still needs decisive evidence.
 - Evidence source: `Runtime`, `Browser`, `Test or executable check`, `Static`, or `Mixed`. Use `Mixed` only when the
   claim materially depends on more than one source.
 - Check outcome: `Reproduced` when the check observed the candidate, `Not reproduced` when an aligned and adequate

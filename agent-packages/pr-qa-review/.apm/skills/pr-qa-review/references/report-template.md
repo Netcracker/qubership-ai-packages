@@ -59,8 +59,13 @@ Problem:
 
 Code or design anchors:
 
-- [`path/to/file.ext:123`](../path/to/file.ext#L123): {{defective implementation or configuration}}.
-- [`docs/design.md:45`](../docs/design.md#L45): {{affected consumer, contract, test, or observable result}}.
+Resolve each link relative to the actual saved report location, or use a target-OID-pinned permalink.
+Use both anchors below unless the first deterministically proves both cause and impact; in that case, delete the second.
+
+- [`path/to/file.ext:123`]({{report-relative-or-target-OID-pinned-URL}}):
+  {{defective implementation or configuration}}.
+- [`docs/design.md:45`]({{report-relative-or-target-OID-pinned-URL}}):
+  {{affected consumer, contract, test, or observable result}}.
 
 Reproduction or deterministic analysis:
 

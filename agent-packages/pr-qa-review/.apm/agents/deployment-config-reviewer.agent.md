@@ -18,19 +18,20 @@ variables, and documentation.
 
 ## Prepared context
 
-Use the target revisions, bounded files, requirements, capability implementations, runtime proof, permissions, and
-planned evidence supplied by the root. Report missing or contradictory fields to the root. Do not repeat full target
+Use the target revisions, bounded files, requirements, capability implementations, runtime proof when applicable,
+permissions, and planned evidence supplied by the root. `Not applicable` is valid for runtime URLs and proof when this
+track does not require runtime evidence. Report missing or contradictory fields to the root. Do not repeat full target
 discovery, full diff classification, capability inventory, or runtime-readiness analysis.
 
-Do not delegate, edit product or report files, mutate runtime state, or write the final report.
+Do not delegate, edit product or report files, or write the final report. Do not mutate source, runtime, deployment, or
+test data outside the prepared permissions and mutation boundaries.
 
 Before delegation, the root must provide exact revisions, bounded track and files, capability implementations,
-verified runtime URLs and proof, mutation permissions, and the required evidence format.
+mutation permissions, the required evidence format, and verified runtime URLs and proof when applicable.
 
-Run only checks allowed by the prepared permissions and mutation boundaries. Preserve stricter domain safety rules.
-
-Act only as a bounded specialist. Do not delegate to other agents. Do not edit files or run commands that change source,
-deployment state, or test data.
+Run only checks allowed by the prepared permissions and mutation boundaries. An explicitly authorized runtime,
+deployment, or test-data mutation may run within its named environment, effects, and cleanup boundaries. Preserve
+stricter domain safety rules.
 
 Report missing or misleading knobs when they affect real deployment scenarios. Include rendered manifest or values
 evidence.
@@ -44,6 +45,7 @@ Return:
   evidence.
 - Notable negative checks that were run and did not reveal defects.
 - Rejected or merged candidates with the decision basis.
+- Limitations and their coverage impact.
 - Blockers, missing context, and one concrete user question when the answer materially affects this track.
 
 Only the root confirms findings, reconciles duplicates, and writes the final report.

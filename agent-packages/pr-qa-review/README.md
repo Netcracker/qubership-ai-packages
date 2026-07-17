@@ -33,10 +33,10 @@ The workflow discovers capabilities before choosing implementations. Capabilitie
 inspection, build and compilation, tests, browser automation, API invocation, runtime startup or deployment, logs and
 metrics, configuration rendering, and dependency or security scanning.
 
-The agent searches repository-native setup paths and every available implementation before declaring a capability
-unavailable. A repository harness, local program, language binding, remote service, or existing environment may provide
-the same capability. If a required capability still needs installation, configuration, access, or deployment, the
-agent explains the evidence it would unlock and asks the user before reducing coverage.
+The agent checks repository-native setup paths, harness-native implementations, existing runtime access, and reasonable
+visible alternatives, in that order, before declaring a capability unavailable. This search is bounded; it does not
+inventory every possible tool or service. If a required capability still needs installation, configuration, access,
+or deployment, the agent explains the evidence it would unlock and asks the user before reducing coverage.
 
 ## Runtime strategy
 
@@ -57,9 +57,9 @@ implementation, owner, planned evidence, terminal status, and the impact of part
 not finish while a required track lacks a terminal status.
 
 Before delegation, the root gives each leaf exact revisions, a bounded track and file set, relevant requirements,
-selected capability implementations, verified runtime URLs and proof, mutation permissions, and the required evidence
-format. Leaves do not repeat target discovery, full diff classification, capability inventory, or runtime-readiness
-analysis.
+selected capability implementations, mutation permissions, the required evidence format, and, when applicable,
+verified runtime URLs and proof. No-runtime tracks record those runtime details as `Not applicable`. Leaves do not
+repeat target discovery, full diff classification, capability inventory, or runtime-readiness analysis.
 
 Package agents are optional. Generic agents or the main thread can preserve the same coverage contract when named
 agents are unavailable. Backward compatibility runs only when a public or persisted contract changes. It is a
@@ -68,9 +68,10 @@ lower-priority conditional track, and intended PR behavior remains primary.
 ## Findings and report
 
 Finding confidence, evidence source, severity, and check outcome are independent axes. `Confirmed` findings have
-executable evidence. `Strong static evidence` follows from multiple independent code or contract anchors. Suspected
-items remain in limitations or follow-ups rather than the main defect list. Severity measures impact and recoverability,
-not how the evidence was collected.
+executable evidence. `Strong static evidence` normally requires independent implementation and consumer or contract
+anchors; one anchor is sufficient only when it proves both cause and impact. Suspected items remain in limitations or
+follow-ups rather than the main defect list. Severity measures impact and recoverability, not how the evidence was
+collected.
 
 The agent records whether evidence came from runtime behavior, a browser, tests, static analysis, or a mixture. It
 reconciles duplicates and rejected candidates before writing a report based on the
