@@ -113,6 +113,7 @@ the same turn. Otherwise save a preliminary report and return the question.
 
 ## Phase 9: Reconcile candidates
 
+Read [report quality](references/report-quality.md) before classifying any candidate or admitting it to main findings.
 Challenge each candidate against intended requirements, contracts, old behavior, tests, ADRs, documented limitations,
 accepted risks, and contradictory evidence. Merge duplicates and split independently fixable claims. Reconcile prior
 findings as reproduced, not reproduced, superseded, accepted or out of scope, or not rechecked with the constraint.
@@ -133,11 +134,11 @@ delta cannot be reviewed, mark the report stale or preliminary and include both 
 
 ## Phase 11: Write and validate the report
 
-Read [report quality](references/report-quality.md). Include exact target revisions and recheck result; permissions;
-runtime strategy and proof; the coverage table; orchestration; main findings; suspected follow-ups and limitations;
-useful rejected or merged candidates; previous-run reconciliation; negative results; and artifact and code links.
-Make every finding self-contained with severity, classification, confidence, evidence source, problem, anchors,
-reproduction, actual and expected behavior, scope, supported fix direction, and retest criteria.
+Reuse [report quality](references/report-quality.md) to validate the report. Include exact target revisions and recheck
+result; permissions; runtime strategy and proof; the coverage table; orchestration; main findings; suspected follow-ups
+and limitations; useful rejected or merged candidates; previous-run reconciliation; negative results; and artifact and
+code links. Make every finding self-contained with severity, classification, confidence, evidence source, problem,
+anchors, reproduction, actual and expected behavior, scope, supported fix direction, and retest criteria.
 
 Validate report counts, required fields, links, and coverage statuses. Do not silently finalize while a material
 permission or runtime decision remains unresolved.
