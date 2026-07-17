@@ -15,13 +15,14 @@ Classify each retained candidate independently on these axes:
 
 Apply this severity rubric:
 
-- `Critical`: catastrophic or broadly exploitable security, integrity, availability, or irreversible data impact with
-  no practical containment or recovery path.
-- `High`: major impact to core or broad use, security, or data integrity; recovery is difficult, risky, or unavailable
-  to affected users, and no practical workaround exists.
-- `Medium`: meaningful functional, operational, compatibility, or security impact with limited scope, a practical
-  workaround, or reliable recovery.
-- `Low`: localized or minor impact that is easy to avoid or recover from and does not compromise a core contract.
+- `Critical`: broad outage, irreversible data loss, compromise, or no safe workaround.
+- `High`: core workflow broken, confirmed data loss, incompatibility, or inability to release or deploy.
+- `Medium`: meaningful limited-scope defect or practical workaround, or a substantial contract, accessibility, or
+  observability violation.
+- `Low`: limited edge case, polish, or test or documentation gap without meaningful runtime impact.
+
+Severity measures impact and recoverability. Confidence and evidence remain independent: static evidence does not lower
+severity, and a high-severity hypothesis must not be presented as confirmed.
 
 ## Candidate decisions
 
