@@ -3,124 +3,141 @@
 Review target: {{PR / branch / commit / local changes}}
 Date: {{date}}
 Reviewer: {{agent / user}}
-Scope: {{read-only / runtime / UI / API / deployment / docs / security}}
-User focus areas: {{none / list; focus is emphasis and does not remove required-by-diff tracks}}
-Environment: {{local / Kubernetes namespace / URLs / versions}}
-Runtime version proof: {{commit / image digest / chart version / endpoint / limitation}}
-Setup mutations before review: {{none / commands / rollout actions / failed attempts}}
-Approved scenario mutations: {{none / permission, commands, affected resources, cleanup and outcome}}
-Read-only review began at: {{timestamp / after command / not applicable}}
-Coverage limitations:
-{{missing UI tooling / degraded traffic / scanners not run / access limits / skipped disruptive checks / none}}
-Pending permissions:
-{{none / unresolved setup, restart, or scenario-mutation question; unresolved material permissions mean the report is
-preliminary}}
-Orchestration: {{named or generic sub-agents used / failed spawns / main-thread fallbacks / coverage impact}}
-Previous-run reconciliation:
-{{not applicable only when no prior findings are available / reproduced / not reproduced / superseded / not rechecked}}
-Required-by-diff coverage: {{tracks run / partially covered / skipped with owner and reason}}
+Initial base OID: {{complete OID / stable patch identity}}
+Initial head OID: {{complete OID / stable patch identity}}
+Final head OID: {{complete rechecked OID / stable patch identity}}
+Target status: {{Current / Updated and delta reviewed / Stale / Preliminary}}
+Permission boundaries: {{allowed, denied, and unresolved actions by mutation class}}
+Runtime strategy: {{not required / existing aligned runtime / in-place update / clean deployment / limited evidence}}
+Runtime alignment proof:
+{{complete OID, artifact digest, configuration, migrations, external dependencies / limitation}}
+Direct and indirect mutations: {{none / commands, affected resources, side effects, cleanup, and outcome}}
+Pending permissions: {{none / bounded unresolved question; a material unresolved decision requires Preliminary status}}
+Orchestration: {{owners, named or generic sub-agents, main-thread fallbacks, and ownership impact}}
+Coverage limitations: {{none / unavailable evidence, partial or skipped tracks, reason, and impact}}
 
 ## Summary
 
-- Findings: {{count}}
+- Findings: {{count; excludes suspected candidates}}
+- Critical: {{count}}
 - High: {{count}}
 - Medium: {{count}}
 - Low: {{count}}
+- Confirmed: {{count}}
+- Strong static evidence: {{count}}
 - Existing issues: {{count}}
-- Checks with no confirmed findings: {{short list}}
-- Weakened or skipped coverage: {{short list and reason}}
+- Negative checks: {{count and short list}}
+- Weakened or skipped coverage: {{count and short list with reason and impact}}
 
 ## Required-By-Diff Coverage
 
-| Required track | Owner | Status | Reason / evidence |
-| --- | --- | --- | --- |
-| {{track}} | {{sub-agent / main thread / skipped}} | {{run / partial / skipped}} | {{short reason}} |
+| Track | Why required | Capability | Implementation | Owner | Planned evidence | Status | Coverage impact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| {{track}} | {{diff trigger}} | {{required capability}} | {{selected implementation}} | {{owner}} | {{evidence}} | {{complete / partial / skipped}} | {{none / reason and impact}} |
 
-## Previous-Run Reconciliation
+Every required row must be terminal. A `partial` or `skipped` row must state its reason and impact in Coverage impact.
 
-| Prior item | Status | Reason / evidence |
-| --- | --- | --- |
-| {{title}} | {{reproduced / not reproduced / superseded / accepted / not rechecked}} | {{short reason}} |
+## Main Findings
 
-## Rejected Candidates and Accepted Risks
+Include only `Confirmed` and `Strong static evidence` candidates in this section and in finding counts.
 
-### {{Original finding ID or candidate title}}
+### N. {{Short Bug Title}}
 
-Status: Rejected | Accepted risk | Deferred control
+Severity: {{Critical / High / Medium / Low}}
 
-Evidence status: Runtime-confirmed | Browser-confirmed | Test-confirmed | Static-confirmed | Mixed | Unconfirmed
+Finding confidence: {{Confirmed / Strong static evidence}}
 
-Decision basis:
+Evidence source: {{Runtime / Browser / Test or executable check / Static / Mixed}}
 
-{{The ADR, design decision, test, documented boundary, or contradictory evidence that excludes this item from the
-confirmed count.}}
+Check outcome: {{Reproduced / Not reproduced / Not checked}}
 
-## Finding Template
-
-## N. {{Short Bug Title}}
-
-Severity: High | Medium | Low
-
-Classification:
-
-{{One or more of: PR regression, Existing issue, Design mismatch, Backend, API, UI/UX,
-Accessibility, Runtime, Observability, Deployment/config, Security, Documentation, Test gap}}
-
-Evidence Status:
-
-Runtime-confirmed | Browser-confirmed | Test-confirmed | Static-confirmed | Mixed
+Classification: {{PR regression / Existing issue / Design mismatch / domain}}
 
 Problem:
 
-{{Explain the problem and why it matters.}}
+{{Explain the violated requirement, impact, and why it matters.}}
 
-Code / Design:
+Code or design anchors:
 
-- [`path/to/file.ext:123`](../path/to/file.ext#L123): {{why this line matters}}.
-- [`docs/design.md:45`](../docs/design.md#L45): {{requirement or expected behavior}}.
+- [`path/to/file.ext:123`](../path/to/file.ext#L123): {{defective implementation or configuration}}.
+- [`docs/design.md:45`](../docs/design.md#L45): {{affected consumer, contract, test, or observable result}}.
 
-Reproduction:
+Reproduction or deterministic analysis:
 
-1. {{Step, command, URL, UI path, or API request.}}
-1. {{Next step.}}
+1. {{Step, command, request, UI path, or exact static reasoning.}}
+1. {{Next step or decisive code path.}}
 
-For static-confirmed findings, label this as deterministic analysis or as a proposed executable check. Do not present a
-predicted result as an observation.
+Actual result:
 
-Actual Result:
+{{Observed result, or the behavior proved by deterministic static analysis.}}
 
-{{Observed behavior.}}
+Expected result:
 
-Expected Result:
+{{Behavior required by the applicable contract.}}
 
-{{Expected behavior.}}
+Affected scope:
 
-Affected Scope:
-
-{{Users, components, configurations, data, or workflows affected by the defect.}}
+{{Users, components, configurations, data, or workflows supported by the evidence.}}
 
 Evidence:
 
 ```text
-{{Short relevant log, API response, metric, browser console output, network error, or command output.}}
+{{Short log, response, metric, console output, network error, command output, or exact code path.}}
 ```
 
-Screenshot or artifact: {{path, not captured with reason, or not applicable}}
+Screenshot or artifact: {{link / not captured with reason / not applicable}}
 
-Evidence Boundary:
+Evidence boundary:
 
-{{For mixed evidence, map each claim to its status. For browser checks, state whether the run used mocks or a real
-version-aligned backend. For timing or accessibility tools, state environment and rule category.}}
+{{Map claims to sources, distinguish observation from analysis, and state runtime, mock, and environment limits.}}
 
-Fix Direction:
+Fix direction:
 
 {{Evidence-supported remediation direction, or unknown. Do not present an unverified patch as fact.}}
 
-Retest Criteria:
+Retest criteria:
 
-{{Checks the fixing agent should run to prove the defect is resolved and avoid regression.}}
+{{Checks that prove the defect is resolved without regression.}}
 
-Notes:
+## Suspected Follow-Ups
 
-{{Optional uncertainty, suspected root cause, whether this is pre-existing, or follow-up test ideas. Separate suspected
-root cause from confirmed evidence.}}
+Suspected candidates are not findings and are excluded from all finding, severity, and confidence counts above.
+
+### {{Candidate title}}
+
+Finding confidence: Suspected
+
+Evidence source: {{Runtime / Browser / Test or executable check / Static / Mixed}}
+
+Check outcome: {{Reproduced / Not reproduced / Not checked}}
+
+Follow-up evidence needed: {{decisive check, capability, permission, or aligned runtime needed}}
+
+Current evidence and limitation: {{anchors, observations, uncertainty, and coverage impact}}
+
+## Previous-Run Reconciliation
+
+| Prior item | Decision | Evidence or constraint |
+| --- | --- | --- |
+| {{title}} | {{Reproduced / Not reproduced / Superseded / Accepted or out of scope / Not checked}} | {{evidence or blocking constraint}} |
+
+Use `Not applicable` only when no previous review findings are available.
+
+## Rejected, Accepted-Risk, and Merged Candidates
+
+| Candidate | Source | Decision | Evidence or basis |
+| --- | --- | --- | --- |
+| {{title or ID}} | {{track or prior review}} | {{Rejected / Accepted risk / Merged into finding N}} | {{contract, ADR, test, duplicate root cause, or contradictory evidence}} |
+
+## Negative Checks
+
+| Check | Result | Evidence | Scope boundary |
+| --- | --- | --- | --- |
+| {{check}} | {{no defect observed}} | {{command, output, artifact, or link}} | {{what the result does and does not prove}} |
+
+## Artifacts and Validation
+
+- Report validation: {{structure, counts, statuses, and links checked}}
+- Artifacts: {{links / none}}
+- Cleanup: {{completed actions and outcome / none required}}
+- Final target recheck: {{complete final OID and comparison result / patch identity comparison}}
