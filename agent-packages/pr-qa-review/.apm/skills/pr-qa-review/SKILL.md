@@ -129,7 +129,8 @@ appears in the main finding list.
 
 Re-resolve the complete target head. If it still equals the initial `head_oid`, record the verification. If it changed,
 record the new complete OID, compute the exact delta, identify affected tracks, and review or rerun them. If the new
-delta cannot be reviewed, mark the report stale or preliminary and include both complete old and new head OIDs.
+delta is fully reviewed, set `Target status` to `Updated and delta reviewed`. If the new delta cannot be reviewed, mark
+the report stale or preliminary and include both complete old and new head OIDs.
 
 **Exit:** The report either covers the rechecked head or explicitly identifies its stale or preliminary target delta.
 
