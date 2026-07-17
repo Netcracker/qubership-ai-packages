@@ -91,10 +91,11 @@ thread. Use no more than three concurrent leaf agents and respect lower harness 
 `ready` tracks. Leaf agents do not delegate, rediscover the full target, mutate state outside granted permissions, or
 write the final report.
 
-Each delegated context contains complete exact revisions, bounded files and directories, authoritative requirements,
-capability implementations, runtime proof, permissions, planned evidence, and the response contract. The response
-contract requires findings and negative results with evidence, limitations and impact, candidate confidence, and any
-missing or contradictory context.
+Each delegated context packet must contain complete exact revisions; one bounded track and its relevant bounded files
+or directories; authoritative requirements and contracts; required capabilities and selected implementations;
+verified runtime URLs and version or revision proof when applicable; mutation permissions; planned evidence; and the
+required response contract. The response contract requires findings and negative results with evidence, limitations
+and impact, candidate confidence, and any missing or contradictory context.
 
 **Exit:** Every ready track has a prepared owner and context packet, and every non-ready track retains its blocking
 condition in the coverage table.
