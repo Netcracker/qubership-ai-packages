@@ -32,6 +32,14 @@ base revision, tests, ADRs, documented limitations, explicit deferrals, accepted
 Reject candidates that do not violate an applicable requirement. Record useful rejection reasons when they prevent
 repeated work.
 
+Reconcile review questions separately. A question does not need to prove a defect, but it must identify an unresolved
+requirement or a material correctness, compatibility, or maintenance concern with concrete anchors. Classify it by
+type and review priority, not by severity or finding confidence.
+
+Use `Requirement question`, `Lifecycle gap`, `Design concern`, or `Implementation alternative` as the type and
+`Blocking`, `Important`, or `Optional` as the priority. Priority indicates reviewer attention; `Blocking` does not set
+the coverage status to `blocked` unless the unanswered question also prevents required evidence.
+
 Merge candidates that share one cause, impact, fix, and retest. Split claims that can fail, be fixed, or be retested
 independently. Reclassify rather than inflate confidence when evidence supports only part of a claim. `Suspected`
 candidates stay in follow-ups or limitations and outside the main finding count.
@@ -53,6 +61,8 @@ Before finalizing, verify that:
 - the target revisions and final recheck are complete and internally consistent;
 - every required coverage row has a terminal status and records the impact of partial or skipped work;
 - finding counts match the listed confidence and severity classifications, excluding suspected candidates;
+- review question counts match the separate question list and remain excluded from finding counts;
+- each retained review question uses the report template's four-column type, priority, question, and evidence table;
 - each main finding includes severity, confidence, evidence source, check outcome, problem, anchors, reproduction,
   actual and expected behavior, affected scope, supported fix direction, and retest criteria;
 - negative results, limitations, permissions, runtime alignment, mutations, cleanup, and previous-run decisions are

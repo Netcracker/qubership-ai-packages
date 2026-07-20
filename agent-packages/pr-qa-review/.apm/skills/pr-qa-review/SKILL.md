@@ -52,8 +52,9 @@ status and scope.
 
 Read [change analysis](references/change-analysis.md). Classify the exact diff and add every triggered track to the
 coverage table before deep checks or runtime-dependent delegation. Include intended behavior before compatibility
-checks. Add baseline smoke for each changed user-reachable surface. Mark a track not applicable only when the diff does
-not trigger it.
+checks. When the conditional scope and design challenge applies, record its triggers and planned evidence in the
+existing `Requirements and design` row. Add baseline smoke for each changed user-reachable surface. Mark a track not
+applicable only when the diff does not trigger it.
 
 **Exit:** Every changed domain, public or persisted contract, focus area, and baseline smoke need maps to a coverage
 row with all required fields.
@@ -95,7 +96,9 @@ Each delegated context packet must contain complete exact revisions; one bounded
 or directories; authoritative requirements and contracts; required capabilities and selected implementations;
 verified runtime URLs and version or revision proof when applicable; mutation permissions; planned evidence; and the
 required response contract. The response contract requires findings and negative results with evidence, limitations
-and impact, candidate confidence, and any missing or contradictory context.
+and impact, candidate confidence, and any missing or contradictory context. When the prepared scope and design
+triggers apply, it also requires review questions with type, priority, a bounded question or suggested direction,
+concrete anchors, and why the issue matters or offers a material benefit.
 
 **Exit:** Every ready track has a prepared owner and context packet, and every non-ready track retains its blocking
 condition in the coverage table.
@@ -122,6 +125,10 @@ findings as reproduced, not reproduced, superseded, accepted or out of scope, or
 Classify retained candidates as `Confirmed`, `Strong static evidence`, or `Suspected`. Only the first two enter main
 findings. Preserve useful rejected and merged decisions outside the main count.
 
+Reconcile review questions separately from defect candidates. Retain only questions that have concrete anchors and an
+unresolved requirement or a material correctness, compatibility, or maintenance concern. Do not assign finding
+confidence or severity to them.
+
 **Exit:** Every candidate and applicable previous finding has an evidence-backed decision and no suspected candidate
 appears in the main finding list.
 
@@ -138,9 +145,10 @@ the report stale or preliminary and include both complete old and new head OIDs.
 
 Reuse [report quality](references/report-quality.md) to validate the report. Include exact target revisions and recheck
 result; permissions; runtime strategy and proof; the coverage table; orchestration; main findings; suspected follow-ups
-and limitations; useful rejected or merged candidates; previous-run reconciliation; negative results; and artifact and
-code links. Make every finding self-contained with severity, classification, confidence, evidence source, problem,
-anchors, reproduction, actual and expected behavior, scope, supported fix direction, and retest criteria.
+and limitations; review questions and design opportunities; useful rejected or merged candidates; previous-run
+reconciliation; negative results; and artifact and code links. Make every finding self-contained with severity,
+classification, confidence, evidence source, problem, anchors, reproduction, actual and expected behavior, scope,
+supported fix direction, and retest criteria. Use the report template's four-column table for review questions.
 
 Validate report counts, required fields, links, and coverage statuses. Do not silently finalize while a material
 permission or runtime decision remains unresolved.

@@ -40,8 +40,14 @@ Check:
 - Places where implementation chose behavior not documented by the design.
 - Design gaps that make correct implementation or QA ambiguous.
 
+When the prepared context records conditional scope and design triggers, also check:
+
+- Applicable inverse or adjacent operations over the same managed entity.
+- Policy duplicated across entry points or placed outside the component that owns canonical state.
+
 Return evidence-backed mismatch candidates and actionable design gaps. Do not report subjective preferences unless a
-design, contract, old behavior, or user requirement supports them.
+design, contract, old behavior, user requirement, or concrete correctness, compatibility, or maintenance risk supports
+them.
 
 ## Response contract
 
@@ -52,6 +58,8 @@ Return:
   evidence.
 - Notable negative checks that were run and did not reveal defects.
 - Rejected or merged candidates with the decision basis.
+- Review questions with type, priority, concrete anchors, why the issue matters, and the bounded question or suggested
+  direction.
 - Limitations and their coverage impact.
 - Blockers, missing context, and one concrete user question when the answer materially affects this track.
 

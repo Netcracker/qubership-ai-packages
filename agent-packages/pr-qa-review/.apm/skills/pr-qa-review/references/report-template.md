@@ -19,6 +19,7 @@ Coverage limitations: {{none / unavailable evidence, partial or skipped tracks, 
 ## Summary
 
 - Findings: {{count; excludes suspected candidates}}
+- Review questions: {{count; excluded from finding counts}}
 - Critical: {{count}}
 - High: {{count}}
 - Medium: {{count}}
@@ -119,6 +120,17 @@ Check outcome: {{Reproduced / Not reproduced / Not checked}}
 Follow-up evidence needed: {{decisive check, capability, permission, or aligned runtime needed}}
 
 Current evidence and limitation: {{anchors, observations, uncertainty, and coverage impact}}
+
+## Review Questions and Design Opportunities
+
+Review questions are not findings and are excluded from finding, severity, and confidence counts.
+
+| Type | Priority | Question or suggested direction | Evidence and why it matters |
+| --- | --- | --- | --- |
+| {{Requirement question / Lifecycle gap / Design concern / Implementation alternative}} | {{Blocking / Important / Optional}} | {{bounded question or direction}} | {{anchors, concrete risk, and material benefit}} |
+
+Use `Not applicable` when no conditional scope and design trigger applies. When a trigger applies but no question is
+retained, record the checked operation family or ownership boundary and the negative result.
 
 ## Previous-Run Reconciliation
 

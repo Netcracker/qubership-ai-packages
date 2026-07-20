@@ -13,8 +13,9 @@ when practical.
 
 Classify changed files and behavior against these track triggers:
 
-- Requirements and design: specifications, ADRs, issue acceptance criteria, behavior docs, screen designs, or a diff
-  whose intended behavior is otherwise ambiguous.
+- Requirements and design: specifications, ADRs, issue acceptance criteria, behavior docs, screen designs, a diff
+  whose intended behavior is otherwise ambiguous, or a change that triggers the conditional scope and design
+  challenge below.
 - Backend and API: server logic, requests, responses, validation, error mapping, background processing, concurrency,
   or an API contract.
 - UI and user surfaces: screens, routes, navigation, CLI commands, output, downloadable content, or other
@@ -69,6 +70,25 @@ assumptions that need confirmation.
 
 Validate intended new behavior before or alongside compatibility. Old behavior cannot override an explicit new
 requirement, but a promised compatibility window requires preservation, an adapter, or a documented migration path.
+
+## Conditional scope and design challenge
+
+Run this challenge within the `Requirements and design` track when the exact diff:
+
+- changes how one operation creates, transitions, migrates, or removes managed state while an inverse or adjacent
+  operation controls the same state;
+- changes handling of a previously supported state in only part of the entity's lifecycle;
+- implements the same policy independently in multiple entry points or implementations; or
+- moves policy across a component boundary or bypasses the component that owns canonical state.
+
+Inspect the applicable neighboring operations and identify the component that owns the state or policy. Consider an
+alternative only when it materially reduces duplicated policy, divergence risk, or misplaced ownership. Retain a
+review question only when concrete code, contract, or behavior anchors show an unresolved requirement or a material
+correctness, compatibility, or maintenance risk. Do not retain a preference that merely describes another valid
+implementation.
+
+Record retained questions separately from findings. When a trigger applies but no question survives reconciliation,
+record the checked operation family or ownership boundary as a meaningful negative result.
 
 ## Candidate reconciliation
 
