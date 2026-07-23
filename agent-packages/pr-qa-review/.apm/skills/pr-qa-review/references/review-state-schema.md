@@ -92,11 +92,19 @@ implementation, status, and retained artifacts.
       "implementation": "browser-adapter-name",
       "owner": "root",
       "owner_can_invoke": true,
+      "execution_surface": "browser",
+      "owner_boundary": "main-thread",
       "artifacts": ["screenshots/entry-wide.png"]
     }
   ]
 }
 ```
+
+Use `static-read`, `shell`, `network`, `browser`, `scanner`, `runtime`, `deployment`, or `mutation` for
+`execution_surface`. When a check crosses several surfaces, record the most privileged surface it requires. Use
+`main-thread` for a root-owned check, `enforced` for a leaf whose active harness preserves and enforces its tool
+boundary, or `inherited` for a leaf that receives the parent tool surface. A leaf with an `inherited` boundary may own
+only `static-read` checks. All other execution surfaces require an `enforced` leaf boundary or main-thread ownership.
 
 Use `planned`, `running`, `satisfied`, `denied`, `unavailable`, or `not_applicable` for checks. `denied` and
 `unavailable` require an impact. `not_applicable` requires an observable reason. Artifact paths are non-empty,

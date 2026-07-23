@@ -18,7 +18,7 @@ def png(width=1280, height=720):
 
 
 def valid_state():
-    return {
+    state = {
         "schema_version": 1,
         "review_status": "complete",
         "capability_discovery": [
@@ -173,6 +173,9 @@ def valid_state():
             },
         ],
     }
+    for check in state["checks"]:
+        check.update(execution_surface="browser", owner_boundary="main-thread")
+    return state
 
 
 class ReviewPackageValidatorTest(unittest.TestCase):
@@ -269,6 +272,16 @@ class ReviewPackageValidatorTest(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("cannot invoke implementation", result.stdout)
 
+    def test_rejects_sensitive_check_owned_by_unrestricted_leaf(self):
+        result = self.run_validator(
+            lambda state: state["checks"][0].update(
+                owner="ui-ux-reviewer",
+                owner_boundary="inherited",
+            )
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("requires an enforced leaf boundary or main-thread ownership", result.stdout)
+
     def run_discovery_validator(self, mutate=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -328,6 +341,16 @@ class ReviewPackageValidatorTest(unittest.TestCase):
         result = self.run_discovery_validator(mutate)
         self.assertNotEqual(0, result.returncode)
         self.assertIn("web-ui profile is missing required slot", result.stdout)
+
+    def test_discovery_gate_rejects_sensitive_check_owned_by_unrestricted_leaf(self):
+        result = self.run_discovery_validator(
+            lambda state: state["checks"][0].update(
+                owner="ui-ux-reviewer",
+                owner_boundary="inherited",
+            )
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("requires an enforced leaf boundary or main-thread ownership", result.stdout)
 
 
 if __name__ == "__main__":

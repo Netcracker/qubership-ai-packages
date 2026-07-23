@@ -92,6 +92,19 @@ class SkillStateMachineContractTest(unittest.TestCase):
         self.assertIn("does not authorize executing", install_gap)
         self.assertIn("Do not invent an installation command", install_gap)
 
+    def test_unrestricted_leaf_cannot_own_sensitive_executable_checks(self):
+        text = SKILL.read_text(encoding="utf-8")
+        ready = text.split("## State 4: READY", 1)[1].split(
+            "## State 5: EXECUTE", 1
+        )[0]
+        ready = " ".join(ready.split())
+
+        self.assertIn("preserves and enforces the leaf tool boundary", ready)
+        self.assertIn("inherited or unrestricted tool surface", ready)
+        self.assertIn("keep the check in the main thread", ready)
+        self.assertIn("shell, network, browser, scanner, runtime, deployment, or mutation", ready)
+        self.assertIn("bounded static reasoning", ready)
+
 
 if __name__ == "__main__":
     unittest.main()

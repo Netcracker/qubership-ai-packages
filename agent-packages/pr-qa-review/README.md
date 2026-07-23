@@ -65,6 +65,10 @@ Package agents are optional. Generic agents or the main thread can preserve the 
 agents are unavailable. Backward compatibility runs only when a public or persisted contract changes. It is a
 lower-priority conditional track, and intended PR behavior remains primary.
 
+Some targets do not preserve a per-agent tool allowlist when compiling package agents. For those targets, leaf agents
+perform bounded static reasoning only. The main thread retains checks that require shell, network, browser, scanner,
+runtime, deployment, or mutation capabilities unless the active harness enforces the leaf boundary.
+
 ## Findings and report
 
 Finding confidence, evidence source, severity, and check outcome are independent axes. `Confirmed` findings have

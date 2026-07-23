@@ -19,6 +19,17 @@ CAPABILITY_DISCOVERY_SOURCES = {
     "local-executables",
     "local-runtimes",
 }
+EXECUTION_SURFACES = {
+    "static-read",
+    "shell",
+    "network",
+    "browser",
+    "scanner",
+    "runtime",
+    "deployment",
+    "mutation",
+}
+OWNER_BOUNDARIES = {"main-thread", "enforced", "inherited"}
 EVIDENCE_PROFILES = {
     "web-ui": {
         "entry-wide",
@@ -31,6 +42,27 @@ EVIDENCE_PROFILES = {
         "keyboard",
     }
 }
+
+
+def validate_owner_binding(check, errors):
+    check_id = check.get("id", "<unnamed>")
+    execution_surface = check.get("execution_surface")
+    owner_boundary = check.get("owner_boundary")
+    owner = check.get("owner")
+
+    if execution_surface not in EXECUTION_SURFACES:
+        errors.append(f"check {check_id} has invalid execution surface: {execution_surface!r}")
+    if owner_boundary not in OWNER_BOUNDARIES:
+        errors.append(f"check {check_id} has invalid owner boundary: {owner_boundary!r}")
+        return
+    if owner == "root":
+        if owner_boundary != "main-thread":
+            errors.append(f"root-owned check {check_id} must use the main-thread boundary")
+        return
+    if owner_boundary == "main-thread":
+        errors.append(f"leaf-owned check {check_id} cannot use the main-thread boundary")
+    if execution_surface != "static-read" and owner_boundary != "enforced":
+        errors.append(f"check {check_id} requires an enforced leaf boundary or main-thread ownership")
 
 
 def load_state(root, errors):
@@ -120,6 +152,7 @@ def validate_checks(state, root, permissions, errors):
 
     for check in state.get("checks", []):
         check_id = check.get("id", "<unnamed>")
+        validate_owner_binding(check, errors)
         coverage_id = check.get("coverage_id")
         if coverage_id not in coverage:
             errors.append(f"check {check_id} names unknown coverage: {coverage_id}")
@@ -227,6 +260,7 @@ def validate_discovery_checks(state, permissions, errors):
     checks_by_coverage = {coverage_id: [] for coverage_id in coverage}
     for check in state.get("checks", []):
         check_id = check.get("id", "<unnamed>")
+        validate_owner_binding(check, errors)
         coverage_id = check.get("coverage_id")
         if coverage_id not in coverage:
             errors.append(f"check {check_id} names unknown coverage: {coverage_id}")

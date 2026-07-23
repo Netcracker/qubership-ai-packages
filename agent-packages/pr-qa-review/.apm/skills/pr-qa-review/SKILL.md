@@ -102,9 +102,9 @@ Do not invoke a runtime CLI during passive discovery when it may contact a daemo
 Extract configured names from local metadata instead. A command advertised as `list`, `context`, or `get` is not
 automatically offline.
 
-For every candidate implementation, record its capability, owner binding, target, access mode, expected side effects,
-fallback order, and permission as `unresolved`. Tool presence is not permission and is not proof that the selected owner
-can invoke it.
+For every candidate implementation, record its capability, execution surface, owner binding, owner-boundary mode,
+target, access mode, expected side effects, fallback order, and permission as `unresolved`. Tool presence is not
+permission and is not proof that the selected owner can invoke it.
 
 STOP passive discovery as soon as the required coverage rows, one repository-native implementation, reasonable
 fallbacks, configured environment names, owner bindings, and permission candidates are recorded. Do not perform defect
@@ -198,6 +198,13 @@ or limited by an explicit denial or demonstrated unavailability. No unresolved r
 Assign each check to the first owner that can invoke its approved implementation: matching package specialist, generic
 agent, or main thread. Runtime-dependent checks also require verified runtime URLs and alignment proof. Do not delegate
 a browser implementation merely because it is available to the root; prove it is callable in the leaf context.
+
+Treat a declared leaf tool allowlist as an enforceable boundary only when the active harness preserves and enforces the
+leaf tool boundary in the spawned context. When a leaf has an inherited or unrestricted tool surface, keep the check in
+the main thread if it requires shell, network, browser, scanner, runtime, deployment, or mutation capabilities. Such a
+leaf may own bounded static reasoning under approved source access, but its instructions are not proof of tool
+isolation. Record `owner_boundary` and `execution_surface` as defined by
+[review state](references/review-state-schema.md).
 
 Each delegated packet contains exact revisions; one bounded track and file set; relevant requirements; check IDs and
 evidence slots; approved implementations and targets; runtime proof; permission and action budgets; artifact paths;
