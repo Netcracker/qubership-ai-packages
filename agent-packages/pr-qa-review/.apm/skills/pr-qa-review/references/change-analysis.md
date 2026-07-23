@@ -40,13 +40,14 @@ determine whether existing consumers still work or have an explicit migration pa
 
 ## Required-by-diff coverage
 
-Create a row for every triggered track before deep checks. Each row contains track, reason, required capability,
-implementation, owner, planned evidence, status, and impact. Add user focus areas as rows or explicit priorities, but
-do not remove diff-triggered rows.
+Create a row for every triggered track before execution. Each row contains track, reason, required capability,
+required evidence slots, owner, derived status, and impact. Record candidate implementations and their permission in
+the capability ledger rather than treating discovery as authorization. Add user focus areas as rows or explicit
+priorities, but do not remove diff-triggered rows.
 
-Use these working statuses: `planned`, `ready`, `in progress`, `complete`, `partial`, `skipped`, and `blocked`. A track
-becomes `ready` only when its target, inputs, capability implementation, permissions, and runtime decision are ready.
-At completion, every required row must be `complete`, `partial`, or `skipped`, with impact recorded.
+Use `planned`, `running`, `satisfied`, `denied`, `unavailable`, and `not_applicable` for checks. Derive coverage status:
+all required checks satisfied or justified as not applicable means `complete`; any denied or unavailable required check
+means `limited`; any planned or running required check means `blocked`. Do not use `skipped`.
 
 ## Baseline smoke selection
 
@@ -57,6 +58,10 @@ Add a smoke check for each changed user-reachable surface before feature-specifi
 - CLI: invocation, help, representative command, output, and exit code.
 - Library: import or link, minimal consumer, changed behavior, and compatibility.
 - Deployment: render or install, startup, readiness, and configured external entry points.
+
+For a changed browser UI, set `evidence_profile` to `web-ui`. The discovery validator expands this profile into the
+mandatory wide and narrow entry and changed-flow screenshots, console, network, accessibility, and keyboard slots.
+These slots describe evidence capabilities; they do not select a browser or automation product.
 
 Use the repository's normal entry point when documentation is absent, and record the documentation gap separately.
 Do not invent a runtime requirement for a library when build, tests, and an executable minimal consumer provide the

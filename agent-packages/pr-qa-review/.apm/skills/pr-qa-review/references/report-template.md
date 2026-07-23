@@ -3,18 +3,20 @@
 Review target: {{PR / branch / commit / local changes}}
 Date: {{date}}
 Reviewer: {{agent / user}}
+Review state: {{COMPLETE / LIMITED / BLOCKED / STALE}}
+State ledger: {{link to review-state.json}}
 Initial base OID: {{complete OID / stable patch identity}}
 Initial head OID: {{complete OID / stable patch identity}}
 Final head OID: {{complete rechecked OID / stable patch identity}}
 Target status: {{Current / Updated and delta reviewed / Stale / Preliminary}}
-Permission boundaries: {{allowed, denied, and unresolved actions by mutation class}}
+Permission boundaries: {{approved, denied, and unresolved implementations, targets, modes, and action budgets}}
 Runtime strategy: {{not required / existing aligned runtime / in-place update / clean deployment / limited evidence}}
 Runtime alignment proof:
 {{complete OID, artifact digest, configuration, migrations, external dependencies / limitation}}
 Direct and indirect mutations: {{none / commands, affected resources, side effects, cleanup, and outcome}}
 Pending permissions: {{none / bounded unresolved question; a material unresolved decision requires Preliminary status}}
 Orchestration: {{owners, named or generic sub-agents, main-thread fallbacks, and ownership impact}}
-Coverage limitations: {{none / unavailable evidence, partial or skipped tracks, reason, and impact}}
+Coverage limitations: {{none / denied or unavailable evidence, limited tracks, reason, and impact}}
 
 ## Summary
 
@@ -28,15 +30,28 @@ Coverage limitations: {{none / unavailable evidence, partial or skipped tracks, 
 - Strong static evidence: {{count}}
 - Existing issues: {{count}}
 - Negative checks: {{count and short list}}
-- Weakened or skipped coverage: {{count and short list with reason and impact}}
+- Limited coverage: {{count and short list with reason and impact}}
 
 ## Required-By-Diff Coverage
 
-| Track | Why required | Capability | Implementation | Owner | Planned evidence | Status | Coverage impact |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| {{track}} | {{diff trigger}} | {{required capability}} | {{selected implementation}} | {{owner}} | {{evidence}} | {{complete / partial / skipped}} | {{none / reason and impact}} |
+| Track | Why required | Required slots | Owner | Status | Coverage impact |
+| --- | --- | --- | --- | --- | --- |
+| {{track}} | {{diff trigger}} | {{evidence slot IDs}} | {{owner}} | {{complete / limited / blocked}} | {{none / reason and impact}} |
 
-Every required row must be terminal. A `partial` or `skipped` row must state its reason and impact in Coverage impact.
+Derive status from the required checks. Do not assign it independently. A `limited` row identifies every denied or
+unavailable slot and its impact. A `blocked` row prevents a finished review.
+
+## Capability and Permission Ledger
+
+| Capability | Implementation | Owner binding | Target | Access mode | Allowed actions | Permission | Fallback order |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| {{capability}} | {{implementation}} | {{callable owner / unavailable}} | {{target}} | {{mode}} | {{actions}} | {{approved / denied / unresolved}} | {{order}} |
+
+## Check Ledger
+
+| Check ID | Coverage | Evidence slot | Implementation | Status | Artifacts | Impact |
+| --- | --- | --- | --- | --- | --- | --- |
+| {{check}} | {{track}} | {{slot}} | {{implementation}} | {{satisfied / denied / unavailable / not applicable}} | {{links}} | {{none / impact}} |
 
 ## Main Findings
 
@@ -154,7 +169,9 @@ Use `Not applicable` only when no previous review findings are available.
 
 ## Artifacts and Validation
 
-- Report validation: {{structure, counts, statuses, and links checked}}
+- Review-state validation: {{validator command, timestamp, exit code, and concise result}}
+- Permission-budget validation: {{all recorded actions matched approved budgets / discrepancy}}
+- UI evidence slots: {{complete / list denied, unavailable, or not applicable slots with impact}}
 - Artifacts: {{links / none}}
 - Cleanup: {{completed actions and outcome / none required}}
 - Final target recheck: {{complete final OID and comparison result / patch identity comparison}}

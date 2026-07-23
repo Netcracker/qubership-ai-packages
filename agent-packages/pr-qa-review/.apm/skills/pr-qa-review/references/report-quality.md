@@ -56,10 +56,11 @@ drop a prior item silently.
 
 ## Report validation
 
-Before finalizing, verify that:
+Generate the report from `review-state.json`; never reconstruct permissions, checks, or mutations from memory. Before
+finalizing, verify that:
 
 - the target revisions and final recheck are complete and internally consistent;
-- every required coverage row has a terminal status and records the impact of partial or skipped work;
+- every required coverage row has a derived terminal status and records the impact of denied or unavailable evidence;
 - finding counts match the listed confidence and severity classifications, excluding suspected candidates;
 - review question counts match the separate question list and remain excluded from finding counts;
 - each retained review question uses the report template's four-column type, priority, question, and evidence table;
@@ -72,5 +73,9 @@ Before finalizing, verify that:
 - screenshots, logs, command output, and other artifacts exist at the recorded paths and support the claims that cite
   them.
 
-Keep unavailable evidence explicit. Never promote predicted behavior to an observed result or finalize while a
-material permission or runtime decision remains unresolved.
+Run the bundled validator against the final artifact directory and read its complete output and exit code. Validation
+must be fresh: an earlier successful run does not cover later report, state, artifact, action, or target changes.
+
+Keep unavailable evidence explicit. Never promote predicted behavior to an observed result, replace a missing artifact
+with prose, or finalize while permission remains unresolved. A nonzero validator result reopens the relevant execution,
+permission, reconciliation, or target-discovery state.

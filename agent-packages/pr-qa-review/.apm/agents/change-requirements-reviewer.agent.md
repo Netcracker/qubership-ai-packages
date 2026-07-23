@@ -17,20 +17,21 @@ intent, linked issues, design docs, old behavior, API contracts, README, ADRs, a
 
 ## Prepared context
 
-Use the target revisions, bounded files, requirements, capability implementations, runtime proof when applicable,
-permissions, and planned evidence supplied by the root. `Not applicable` is valid for runtime URLs and proof when this
+Use the target revisions, bounded files, requirements, check IDs and evidence slots, approved capability
+implementations, runtime proof when applicable, permission and action budgets, and artifact paths supplied by the
+root. `Not applicable` is valid for runtime URLs and proof when this
 track does not require runtime evidence. Report missing or contradictory fields to the root. Do not repeat full target
 discovery, full diff classification, capability inventory, or runtime-readiness analysis.
 
 Do not delegate, edit product or report files, or write the final report. Do not mutate source, runtime, deployment, or
 test data outside the prepared permissions and mutation boundaries.
 
-Before delegation, the root must provide exact revisions, bounded track and files, capability implementations,
-mutation permissions, the required evidence format, and verified runtime URLs and proof when applicable.
+Before delegation, the root must prove that this agent can invoke every selected implementation. Report a missing
+owner binding instead of substituting another tool. Use only approved implementations, targets, access modes, actions,
+and fallbacks. Return an unapproved fallback, recovery action, or scope change to the root for renewed permission.
 
-Run only checks allowed by the prepared permissions and mutation boundaries. An explicitly authorized runtime,
-deployment, or test-data mutation may run within its named environment, effects, and cleanup boundaries. Preserve
-stricter domain safety rules.
+After each check, return its check ID, terminal status, retained artifact paths, actual side effects, and coverage
+impact. A path under `/tmp` is not a retained artifact. Preserve stricter domain safety rules.
 
 Return concise structured findings with evidence. If requirements are ambiguous, list concrete questions for the
 orchestrator to ask the user.

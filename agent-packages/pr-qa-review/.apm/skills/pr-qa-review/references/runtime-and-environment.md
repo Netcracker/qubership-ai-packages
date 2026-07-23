@@ -1,94 +1,146 @@
 # Runtime and environment
 
-## Capability definitions
+## Capability model
 
-- Tool: an external program or service used to perform a check.
-- Project dependency: a dependency installed through the repository's normal setup or build process.
-- Runtime access: access to an existing application, cluster, virtual machine, namespace, or remote environment.
-- Adapter or binding: the interface used to call a capability implementation.
+- Capability: evidence the review needs, such as browser interaction, build, API invocation, or runtime logs.
+- Implementation: a repository command, harness tool, MCP adapter, installed executable, or service that provides it.
+- Runtime: an application, cluster, virtual machine, namespace, container, or remote environment.
+- Owner binding: proof that the assigned root or leaf agent can invoke the selected implementation.
 
-Derive capabilities from required coverage. A named tool is one possible implementation, not the capability itself.
+Derive capabilities from required coverage. A familiar tool is one possible implementation, not the requirement.
 
-## Discovery order
+## Passive discovery
 
-For each required capability, check these sources in order and record the selected implementation:
+Passive discovery may inspect only:
 
-1. Repository-native commands, setup paths, dependencies, test harnesses, and documented workflows.
-2. Harness-native tools, services, adapters, and bindings.
-3. Existing local or remote runtime access, including URLs, credentials, logs, and metrics.
-4. Reasonable alternative tools, adapters, or bindings visible in the environment.
+1. repository instructions, dependencies, scripts, test configuration, and documented workflows;
+2. harness and MCP tool metadata;
+3. executable presence and version metadata that does not execute a review check; and
+4. configured runtime, kube-context, and local cluster names without contacting workloads.
 
-Do not perform an unbounded search. Do not declare a capability unavailable because one familiar tool is absent. For
-example, a harness-native remote browser can implement browser interaction when Playwright and local browser binaries
-are absent.
+Do not run tests, builds, browsers, scanners, deployment commands, API requests, cluster resource queries, logs, or
+metrics during passive discovery. Do not install or enable anything.
 
-## User question gate
+For every required capability, record reasonable candidate implementations in this order:
 
-Ask one bounded user question only when missing evidence materially changes a required track or explicit focus area.
-First state the evidence the capability or decision unlocks, repository-native and reasonable visible alternatives,
-side effects, scope, and coverage impact.
+1. repository-native implementation;
+2. harness-native tool or adapter;
+3. implementation exposed by an approved existing runtime; and
+4. another visible local implementation.
 
-Group related choices into one question. Keep the affected track `blocked` until the user approves, declines, or an
-approved setup fails with recorded evidence. Continue independent safe tracks when the harness can receive the answer
-in the same turn. Otherwise save a preliminary report and return the question.
+Inventory reasonable alternatives, not every program on the machine. Record whether the intended owner can invoke each
+candidate. Tool absence is not capability absence; root access is not leaf access.
 
-Do not ask for a runtime when the target has no runtime-dependent track. Do not ask to install a familiar tool when an
-available implementation already provides the required evidence.
+## Access-permission gate
 
-## Runtime alignment strategies
+After passive discovery, present candidate implementations and environments in one bounded question. Ask before
+executing any candidate or contacting any environment, including local development environments and read-only access.
+
+This first question is an access gate, not an action budget. Do not include deployment, cleanup, rollback, recovery,
+Compose-stack creation, namespace creation, or cluster creation before the approved runtime inventory has completed.
+
+For each requested permission, state:
+
+- capability and implementation;
+- exact target and access mode;
+- allowed action names;
+- expected local writes, service effects, and indirect work;
+- approved fallback implementations;
+- evidence unlocked; and
+- coverage impact if denied.
+
+Record `approved`, `denied`, or `unresolved`. Silence remains unresolved. An unresolved permission blocks execution; it
+cannot be converted into a limitation merely to finish the review.
+
+## Capability gap
+
+When a required capability has no viable available implementation, propose an optional installation plan instead of
+silently dropping the evidence or choosing a familiar product by default. Prefer a repository-declared implementation,
+then an implementation documented by the active harness, and then a locally appropriate alternative.
+
+The proposal names:
+
+- the capability and evidence it unlocks;
+- the implementation, authoritative source and version selection rule;
+- the exact install or enable command and target location;
+- required network access and filesystem writes;
+- trust, credential, service, and other side effects;
+- cleanup or uninstall actions;
+- owner binding after installation; and
+- the alternatives: choose another available implementation or keep the affected coverage limited.
+
+Do not invent an installation command. Derive it from repository documentation, harness metadata, or authoritative
+tool documentation. If no verified installation path is available, report that constraint and keep the permission
+unresolved or the evidence unavailable as appropriate.
+
+Installation requires explicit user approval for the exact plan. Approval to install does not authorize executing the
+installed implementation as a review check or contacting a runtime. After installation, rediscover availability and
+owner binding, then request execution and access permission through the normal gate.
+
+## Approved runtime inspection
+
+After read-only runtime access is approved, inspect existing runtimes before proposing a new namespace, release, or
+environment. Record releases, namespaces, workloads, storage, routes, URLs, image identities, configuration, Helm
+history, and relevant state only within the approved target and action list.
+
+Present existing local developer releases and their alignment before proposing a new namespace, Compose project, or
+cluster. Recommend the existing runtime first when it provides the best upgrade or persisted-data evidence. If a clean
+runtime is preferable, state the evidence gap that it covers and the existing runtime does not.
 
 Prove alignment with the complete `head_oid` using the strongest available evidence: build metadata, image digest,
-chart or application version, container labels, rendered values, process command line, a version endpoint, or
-deployment timestamps.
+chart or application version, container labels, rendered values, process command line, version endpoint, or deployment
+timestamps. Cover every changed layer that affects the scenario:
 
-Choose one strategy for each runtime-dependent track:
+- application artifact or image;
+- effective configuration and values;
+- deployment descriptor, chart, manifest, or process definition;
+- schema, storage, initialization, or data migration;
+- generated asset; and
+- relevant external dependency version or contract.
 
-- Use an aligned runtime without changes.
-- Update through the repository's documented path when the runtime is stale and the user permits the effects.
-- Use an isolated disposable deployment for destructive, disruptive, or state-sensitive checks.
-- Limit evidence and mark the track `partial` or `skipped` when alignment or permission is unavailable.
+Do not use an unaligned or unproven runtime as regression evidence.
 
-Do not use an unaligned or unproven runtime as regression evidence. Runtime-dependent delegation waits until strategy,
-permissions, execution, and version proof are resolved. Independent static-ready tracks may start earlier.
+## Runtime strategy
 
-## In-place update and clean deployment
+Select the strategy that proves the required behavior:
 
-When a stale runtime contains important state, compare both strategies before asking the user:
+- Use an existing aligned runtime without mutation.
+- Use an in-place update for upgrade, migration, recovery, rolling compatibility, or persisted-state evidence.
+- Use a clean deployment for installability, defaults, isolation, or destructive checks.
+- Use both when the diff requires both upgrade and clean-install evidence.
+- Limit coverage when the user denies the required access or mutation.
 
-- In-place update preserves state but may trigger migrations, cleanup, recovery, retries, or background jobs. It can
-  hide clean-install and setup defects and needs a verified snapshot and rollback plan when state is at risk.
-- Clean deployment tests setup from scratch and isolates existing state, but it may require copied fixtures, new
-  resources, more time, and explicit cleanup. Never remove or replace shared state without permission.
+Never propose a new namespace or release before discovering and presenting relevant existing local development
+runtimes. Locality does not grant read-only or mutation permission.
 
-Ask one strategy question that names the target environment, changed layers, expected state effects, snapshot or copy
-plan, rollback and cleanup, and evidence each choice produces. Do not perform either strategy before approval when its
-effects exceed existing permission.
+## Action-budget gate
 
-## Changed deployment layers
+Before mutation, prepare one exact action budget. It names:
 
-Alignment covers every changed layer that affects deployed behavior: application artifacts, configuration, deployment
-descriptors, migrations, generated assets, and relevant external dependency versions or contracts. Record proof for
-each layer. Treat a layer that cannot be aligned as an explicit coverage limitation.
+- environment, namespace, release, workloads, storage, and other affected resources;
+- commands or action types;
+- images, configuration, migrations, and generated assets to align;
+- direct and indirect effects, including recovery and background jobs;
+- rollback and cleanup commands or actions;
+- evidence each action produces; and
+- actions explicitly outside the budget.
 
-## Direct and indirect mutations
+An approval applies only to this budget. A failed check does not expand it. Return to the gate before:
 
-Direct mutations include source edits, dependency or tool installation, service startup or restart, deployment
-changes, cluster writes, and test-data changes. Material indirect mutations include actions that can trigger migrations,
-recovery, cleanup, compaction, retention, lifecycle transitions, uploads, retries, background jobs, persistent cache or
-index rebuilds, shared-state changes, or irreversible effects.
+- an unplanned rollback or additional upgrade;
+- changing resource requests, limits, configuration, or replicas;
+- deleting Helm history, Secrets, releases, namespaces, workloads, or storage;
+- replacing or modifying PVCs or persistent data;
+- running recovery, repair, cleanup, retention, compaction, stress, or malformed traffic; or
+- using another implementation, target, or access mode.
 
-Require permission for the affected action and environment unless the user already granted it. State expected impact,
-commands or action types, rollback or cleanup, and evidence unlocked. After setup, declare when the review returns to
-read-only mode. Record actual mutations, side effects, failed attempts, and cleanup.
-
-Normal local build caches, temporary files, report artifacts, and safe read-only requests do not need an extra gate
-unless repository instructions say otherwise.
+Record every actual action, effect, failure, rollback, and cleanup in `review-state.json` immediately.
 
 ## Safe degradation
 
-When the user declines, setup fails, credentials are unavailable, or mutation is forbidden, use the strongest safe
-evidence that remains: exact static analysis, tests, executable examples, fixtures, rendered manifests, logs, metrics,
-API calls, or safe object counts. Never describe static evidence as an observed runtime result.
+When permission is denied or an approved implementation fails, use only remaining approved evidence. Static analysis,
+fixtures, rendered manifests, or existing retained logs may support limited conclusions, but never describe them as
+observed runtime behavior.
 
-Set the affected row to `partial` or `skipped` and record the missing evidence and impact. Capability, runtime, or agent
-unavailability never removes a required track; assign safe work to another implementation or the main thread.
+Set the affected checks to `denied` or `unavailable` with impact. Do not delete their evidence slots. If a fallback is
+visible but not approved, return to the access-permission gate before invoking it.
