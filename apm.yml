@@ -114,6 +114,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
+    - name: pr-qa-review
+      description: Orchestrated QA review workflow for PRs and code changes, with evidence-backed defect reports.
+      source: ./agent-packages/pr-qa-review
+      version: 1.1.0
+      tags: ["topic:qa", "topic:code-review", "activity:testing", "activity:code-review", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing
