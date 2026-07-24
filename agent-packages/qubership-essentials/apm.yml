@@ -5,9 +5,9 @@ dependencies:
   apm:
     # Sibling packages in this repository. Published manifests cannot use
     # local-path deps, so each one is pinned to a commit SHA on this repo.
-    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
-    - Netcracker/qubership-ai-packages/agent-packages/codex-review#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
-    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
-    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#cb31b6ce4d9457d2638b40590500a5229c230d99  # main
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
     # Packages hosted in other repositories.
-    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#768c088ef2adf0081dd97cff19dae2ef3ccab9b1  # main
+    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#3511065e91edef101ca84ed1c88cfef7120dface  # main
