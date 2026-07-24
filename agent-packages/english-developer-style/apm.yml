@@ -11,4 +11,4 @@ description: Compatibility alias for the original package name. Resolves to engl
 # pinned to a commit with the trimmed english-us-developer-style description.
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#cb31b6ce4d9457d2638b40590500a5229c230d99 # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main

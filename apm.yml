@@ -121,59 +121,59 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: 93e76a9f27554a416e9af85a6fe10ff08132f0f0  # main
+      ref: d5c583b6c7358050343bb3fbb3147e9be2dc4b4b  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
       source: Netcracker/qubership-apihub-api-diff
       subdir: agent-packages/api-diff-authoring
-      ref: 47e14b19508880af6a099c6e7da7819215379d15  # develop
+      ref: 7b0bf733df7288bf051ec2e5719d7ffc2753566f  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:public"]
 
     - name: api-unifier-authoring
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-authoring
-      ref: 0752a2905671a0f08ac810613ec77d64e21fcb9f  # develop
+      ref: 8cb90b7069bce81b429db60b9e3c2ade86d0b215  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:internal"]
 
     - name: api-unifier-testing
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-testing
-      ref: 0752a2905671a0f08ac810613ec77d64e21fcb9f  # develop
+      ref: 8cb90b7069bce81b429db60b9e3c2ade86d0b215  # develop
       tags: ["topic:api", "stack:typescript", "activity:testing", "audience:internal"]
 
     - name: dbaas-mounted-secret-migration
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/dbaas-mounted-secret-migration
-      ref: 372a8f0d17248ef78c2859a918904ef32fa1d82d  # feat/operator-dev
+      ref: 73a0245770bb24f0fcf5013ff10cd22130ec58be  # feat/operator-dev
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: migrate-core-operator-dbaas-declarations
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations
-      ref: 372a8f0d17248ef78c2859a918904ef32fa1d82d  # feat/operator-dev
+      ref: 73a0245770bb24f0fcf5013ff10cd22130ec58be  # feat/operator-dev
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: 768c088ef2adf0081dd97cff19dae2ef3ccab9b1  # main
+      ref: 3511065e91edef101ca84ed1c88cfef7120dface  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: 1d8ba5fc9bb010f6063ffc89527acb99e4f097e8  # main
+      ref: a05119275085d002a3ea6c16f271ef597bf8bd60  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry
-      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # v1.0.0
+      ref: ffffc0e8e26eb7c62808649ea6170423c0ef6d6e  # v1.2.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
 
     - name: ai-agent-telemetry-configure
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry-configure
-      ref: 6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55  # v1.0.0
+      ref: ffffc0e8e26eb7c62808649ea6170423c0ef6d6e  # v1.2.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
