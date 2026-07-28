@@ -47,6 +47,7 @@ verify-docs:
 		'$(CURDIR)/docs/consuming-packages.md'
 
 test:
+	python3 -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	bash tests/marketplace_roundtrip.sh
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).

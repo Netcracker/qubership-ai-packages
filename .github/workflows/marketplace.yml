@@ -106,10 +106,10 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
-      # Network-free producer -> consumer round-trip: build, release gate (clean + drift),
-      # install/uninstall, and a version bump. See tests/marketplace_roundtrip.sh.
-      - name: Run the marketplace round-trip test
-        run: bash tests/marketplace_roundtrip.sh
+      # Run the skill unit tests and the network-free producer -> consumer
+      # marketplace round-trip through the same entry point used locally.
+      - name: Run repository tests
+        run: make test
 
   install-smoke:
     # Real installs catch what the index gate cannot: pack only resolves refs,

@@ -17,6 +17,17 @@
       "source": "./agent-packages/apm-authoring"
     },
     {
+      "name": "troubleshooting-skill-creator",
+      "description": "Build a repository's own troubleshooting-skill APM package — scan the repository, harvest its existing troubleshooting material, research the failure modes of the technologies it ships, and compile a symptom-indexed reference plus the skill that reads it.",
+      "version": "1.4.0",
+      "tags": [
+        "topic:observability",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/troubleshooting-skill-creator"
+    },
+    {
       "name": "go-microservice-dev-kit",
       "description": "Umbrella package for Qubership Go microservices.",
       "version": "1.0.1",
