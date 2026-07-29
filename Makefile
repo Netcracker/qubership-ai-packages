@@ -49,6 +49,7 @@ verify-docs:
 test:
 	python3 -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	bash tests/marketplace_roundtrip.sh
+	python3 -m unittest discover -s agent-packages/pr-qa-review/tests -v
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).
 # MODE=all installs everything; MODE=diff BASE_SHA=<sha> installs only changed packages.
