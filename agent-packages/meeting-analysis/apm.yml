@@ -1,0 +1,4 @@
+name: meeting-analysis
+version: 1.0.0
+description: Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.
+author: Qubership
