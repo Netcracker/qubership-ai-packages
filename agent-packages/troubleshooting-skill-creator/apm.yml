@@ -1,0 +1,3 @@
+name: troubleshooting-skill-creator
+version: 1.4.0
+description: Build a repository's own troubleshooting-skill APM package — scan the repository, harvest its existing troubleshooting material, research the failure modes of the technologies it ships, and compile a symptom-indexed reference plus the skill that reads it.
