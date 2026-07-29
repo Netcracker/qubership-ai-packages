@@ -17,6 +17,17 @@
       "source": "./agent-packages/apm-authoring"
     },
     {
+      "name": "troubleshooting-skill-creator",
+      "description": "Build a repository's own troubleshooting-skill APM package — scan the repository, harvest its existing troubleshooting material, research the failure modes of the technologies it ships, and compile a symptom-indexed reference plus the skill that reads it.",
+      "version": "1.4.0",
+      "tags": [
+        "topic:observability",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/troubleshooting-skill-creator"
+    },
+    {
       "name": "go-microservice-dev-kit",
       "description": "Umbrella package for Qubership Go microservices.",
       "version": "1.0.1",
@@ -181,6 +192,17 @@
         "audience:public"
       ],
       "source": "./agent-packages/codex-review"
+    },
+    {
+      "name": "meeting-analysis",
+      "description": "Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/meeting-analysis"
     },
     {
       "name": "adapt-nifi-flows-to-2-x",
