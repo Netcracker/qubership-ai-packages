@@ -185,7 +185,7 @@
     {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "tags": [
         "topic:integration",
         "stack:nifi",
@@ -196,8 +196,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "93e76a9f27554a416e9af85a6fe10ff08132f0f0",
-        "sha": "93e76a9f27554a416e9af85a6fe10ff08132f0f0"
+        "ref": "09c4bf708d787eba45046904ab5b40b9ac597c6b",
+        "sha": "09c4bf708d787eba45046904ab5b40b9ac597c6b"
       }
     },
     {
@@ -214,8 +214,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
-        "ref": "47e14b19508880af6a099c6e7da7819215379d15",
-        "sha": "47e14b19508880af6a099c6e7da7819215379d15"
+        "ref": "7b0bf733df7288bf051ec2e5719d7ffc2753566f",
+        "sha": "7b0bf733df7288bf051ec2e5719d7ffc2753566f"
       }
     },
     {
@@ -232,8 +232,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
-        "ref": "0752a2905671a0f08ac810613ec77d64e21fcb9f",
-        "sha": "0752a2905671a0f08ac810613ec77d64e21fcb9f"
+        "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
+        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
       }
     },
     {
@@ -250,8 +250,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
-        "ref": "0752a2905671a0f08ac810613ec77d64e21fcb9f",
-        "sha": "0752a2905671a0f08ac810613ec77d64e21fcb9f"
+        "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
+        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
       }
     },
     {
@@ -268,8 +268,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "372a8f0d17248ef78c2859a918904ef32fa1d82d",
-        "sha": "372a8f0d17248ef78c2859a918904ef32fa1d82d"
+        "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
+        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
       }
     },
     {
@@ -286,8 +286,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "372a8f0d17248ef78c2859a918904ef32fa1d82d",
-        "sha": "372a8f0d17248ef78c2859a918904ef32fa1d82d"
+        "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
+        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
       }
     },
     {
@@ -305,8 +305,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "768c088ef2adf0081dd97cff19dae2ef3ccab9b1",
-        "sha": "768c088ef2adf0081dd97cff19dae2ef3ccab9b1"
+        "ref": "3511065e91edef101ca84ed1c88cfef7120dface",
+        "sha": "3511065e91edef101ca84ed1c88cfef7120dface"
       }
     },
     {
@@ -324,8 +324,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "1d8ba5fc9bb010f6063ffc89527acb99e4f097e8",
-        "sha": "1d8ba5fc9bb010f6063ffc89527acb99e4f097e8"
+        "ref": "b025768c3c5fa42af04941d06b7e3aa0dcd2b26d",
+        "sha": "b025768c3c5fa42af04941d06b7e3aa0dcd2b26d"
       }
     },
     {
@@ -341,14 +341,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
-        "ref": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55",
-        "sha": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55"
+        "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
+        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
       }
     },
     {
       "name": "ai-agent-telemetry-configure",
-      "description": "Setup, repair, and verification skill for the ai-agent-telemetry CLI (endpoint, token, CA, selftest).",
-      "version": "2.1.0",
+      "description": "Agent-guided setup, testing, repair, and delivery verification.",
+      "version": "3.0.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -358,8 +358,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
-        "ref": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55",
-        "sha": "6ec9a71177fd9dd1a9d0dc134fdccbf255d26a55"
+        "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
+        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
       }
     }
   ]
