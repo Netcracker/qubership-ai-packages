@@ -145,18 +145,4 @@ notes when the user authorized cleanup; never alter a pre-existing draft review.
 Return the MR Changes URL and every created draft-note ID. Draft Notes responses can omit a per-note `web_url`; in that
 case use `<mr.web_url>/diffs` as the inspection link. Keep the drafts until the user reviews them or asks for cleanup.
 
-## Tested behavior
-
-On 2026-08-03, GitLab.com with `glab 1.111.0` passed metadata, commits, diff versions, paginated diffs, notes,
-discussions, replies, resolved state, approvals, unpublished multi-paragraph summary, added-line draft, removed-line
-draft, multiline draft, summary update, read-back, and test-object cleanup. Other hosts and versions may differ; if an
-actual Draft Notes operation fails or returns unexpected fields, keep the review chat-only and report the unsupported
-behavior. A stale REST discussion remained readable after a new commit, but its former line position was no longer
-returned.
-
-## Official references
-
-- [Merge Requests API](https://docs.gitlab.com/api/merge_requests/)
-- [Draft Notes API](https://docs.gitlab.com/api/draft_notes/)
-- [Discussions API](https://docs.gitlab.com/api/discussions/)
-- [Merge request reviews](https://docs.gitlab.com/user/project/merge_requests/reviews/)
+If an API call documented in this reference does not work, tell the user.
