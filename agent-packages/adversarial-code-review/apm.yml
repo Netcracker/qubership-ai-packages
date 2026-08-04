@@ -1,0 +1,3 @@
+name: adversarial-code-review
+version: 1.0.0
+description: Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.
