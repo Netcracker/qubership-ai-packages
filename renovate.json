@@ -1,15 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices",
+    "github>Netcracker/renovate-config:base",
+    "github>Netcracker/renovate-config:github-actions",
     "github>Netcracker/renovate-config:apm"
   ],
-  "configMigration": true,
-  "dependencyDashboard": true,
-  "labels": [
-    "dependencies"
-  ],
-  "internalChecksFilter": "strict",
   "platformAutomerge": true,
   "prCreation": "not-pending",
   "customManagers": [
@@ -54,14 +49,6 @@
         "git-refs"
       ],
       "minimumReleaseAge": null
-    },
-    {
-      "description": "Keep GitHub Actions grouped and pinned to immutable SHAs.",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "groupName": "github-actions",
-      "pinDigests": true
     },
     {
       "description": "Keep CI Python tools from requirements.txt grouped together.",
