@@ -291,9 +291,9 @@ These matter for decisions: the wordings below did not survive the adversarial v
 | [awesome-copilot/marketplace.json](https://github.com/github/awesome-copilot/blob/main/.github/plugin/marketplace.json) | primary | ecosystem | 5 |
 | [awesome-copilot.github.com/skills](https://awesome-copilot.github.com/skills/) | primary | ecosystem | 5 |
 | [Netcracker/qubership-ai-packages](https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages) | primary | ecosystem | 5 |
-| [VS Code: agent plugins](https://code.visualstudio.com/docs/copilot/customization/agent-plugins) | primary | runtimes | 5 |
+| [VS Code: agent plugins](https://code.visualstudio.com/docs/agent-customization/agent-plugins) | primary | runtimes | 5 |
 | [GitHub Copilot CLI plugins](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-cli-plugins) | primary | runtimes | 4 |
-| [VS Code: custom instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions) | primary | runtimes | 4 |
+| [VS Code: custom instructions](https://code.visualstudio.com/docs/agent-customization/custom-instructions) | primary | runtimes | 4 |
 | [Cursor: plugins](https://cursor.com/docs/plugins) | primary | runtimes | 5 |
 | [microsoft/apm#1134](https://github.com/microsoft/apm/issues/1134) | primary | versions and topology | 5 |
 | [microsoft/apm-action](https://github.com/microsoft/apm-action) | primary | versions and topology | 5 |
