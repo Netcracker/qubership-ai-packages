@@ -3,10 +3,12 @@
 Read this reference only when the review target is a GitLab merge request. Use it in two phases:
 
 1. Prepare `glab` and collect GitLab context, then return to the main skill.
-2. After the user chooses a publication mode, return here to publish the review or create GitLab Draft Notes.
+2. For a publication operation routed by the main skill, return here for published-note or Draft Note mechanics.
 
-The main skill remains authoritative for the Git workspace, review checks, finding model, report, authorization,
-signature, and cleanup. Do not assume that a self-managed instance behaves like the current GitLab.com release.
+The main skill remains authoritative for the Git workspace, review checks, finding model, report, language, review
+communication, publication authorization, signature, verification, and cleanup. This reference owns only GitLab access
+setup, data collection, and write or read mechanics. Do not assume that a self-managed instance behaves like the current
+GitLab.com release.
 
 ## Prepare glab
 
@@ -48,10 +50,20 @@ Approvals         glab api projects/<id>/merge_requests/<iid>/approvals
 Published summary glab mr note create <iid> --repo <namespace/project> < /path/to/summary.md
 Published inline  glab mr note create <iid> --repo <namespace/project> --file <path> --line <line> -m '<comment>'
 Removed-line note glab mr note create <iid> --repo <namespace/project> --file <path> --old-line <line> -m '<comment>'
+Published notes   glab api 'projects/<id>/merge_requests/<iid>/notes?per_page=100' --paginate
+Published note    glab api projects/<id>/merge_requests/<iid>/notes/<note-id>
+Published thread  glab api projects/<id>/merge_requests/<iid>/discussions/<discussion-id>
 Draft Notes       glab api projects/<id>/merge_requests/<iid>/draft_notes
 ```
 
-Use the published-note commands for an immediate review or the Draft Notes flow below for a draft review.
+For an immediate-publication operation, capture the create response and use its note or discussion ID for read-back. If
+a high-level command returns only a URL, resolve the ID from that URL. As a fallback, snapshot IDs before creation and
+match new entries by the publishing account, exact body, position, and creation interval. Treat zero or multiple matches
+as an ambiguous write result and make no further mutations. Return the created IDs, bodies, positions, paths, sides,
+lines, and revision tuple to the main skill.
+
+Use the published-note commands for an immediate-publication operation or the Draft Notes flow below for a draft
+operation.
 
 Do not pick a diff version by array position. Select the version whose base, start, and head SHAs match the MR's current
 `diff_refs`. Paginate every list that can exceed one page.
@@ -65,17 +77,15 @@ Use the merge request's `diff_refs` for initial revision pinning. During collect
 and confirm its `base_commit_sha`, `start_commit_sha`, and `head_commit_sha` against those refs. The matching version's
 base, start, and head SHAs are the platform-authoritative revision tuple. Use them for every inline position. Paginate
 through all merge request diffs and reconcile their count with the local Git inventory.
-Account for `collapsed`, `too_large`, and overflow indicators; record a coverage gap when neither the API nor Git
-workspace can supply material content or a reliable inline position. If discussions are absent from every available
-GitLab surface, report that gap and do not claim complete coverage. If the latest diff version is inaccessible, keep a
-chat-only review pinned to matching `diff_refs` and local commits, but do not attempt draft publication. GitLab can
-retain a stale discussion while omitting its former line position from the API. Preserve the thread body, replies, and
-resolution state, but report the location gap instead of reconstructing or inventing a line.
+Return every `collapsed`, `too_large`, and overflow indicator, whether the API or Git workspace supplied the content and
+position, and which GitLab discussion surfaces were available. If the latest matching diff version is inaccessible,
+return the exact error or revision mismatch to the main skill. GitLab can retain a stale discussion while omitting its
+former line position from the API. Return its body, replies, resolution state, and a location-unavailable marker.
 
 ## Create an unpublished draft review
 
-After the main skill applies its authorization, user-verification question, signature, and revision guard, use GitLab
-Draft Notes. Do not use regular notes or the Discussions API because they publish immediately.
+For a draft operation routed by the main skill, use GitLab Draft Notes. Do not use regular notes or the Discussions API
+because they publish immediately.
 
 `glab mr note create` does not support draft mode and publishes the discussion immediately. Do not use it for a draft
 review. Create every unpublished summary and inline comment through `glab api` and the GitLab Draft Notes API.
@@ -136,13 +146,9 @@ Send an inline `position` as a structured JSON object through `glab api --input`
 unrelated keys, and GitLab can return success while silently creating an unpositioned draft. A successful create is not
 enough; require non-null expected SHAs, paths, side and line, and `line_code` in the response and subsequent read-back.
 
-List the draft notes after creation and verify the summary, signature, inline bodies, paths, sides, lines, and SHAs.
-Draft Notes do not appear in the regular Discussions list until publication, so verify them through the Draft Notes
-endpoint. Leave every note unpublished. Never bulk-publish the draft notes or set a final reviewer state without a
-separate, explicit user request. If creation fails partway through, report the exact notes created and remove only those
-notes when the user authorized cleanup; never alter a pre-existing draft review.
+List and read the draft notes after creation. Draft Notes do not appear in the regular Discussions list until
+publication, so use the Draft Notes endpoint. Return every created ID, response body, position, path, side, line, SHA,
+and API error to the main skill. Do not mutate anything else from this reference after a partial failure.
 
-Return the MR Changes URL and every created draft-note ID. Draft Notes responses can omit a per-note `web_url`; in that
-case use `<mr.web_url>/diffs` as the inspection link. Keep the drafts until the user reviews them or asks for cleanup.
-
-If an API call documented in this reference does not work, tell the user.
+Draft Notes responses can omit a per-note `web_url`; expose `<mr.web_url>/diffs` as the inspection URL when that occurs.
+If a documented API call fails, return the exact command, endpoint, status, and error to the main skill.
