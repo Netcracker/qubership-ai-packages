@@ -146,9 +146,9 @@ Research оставил это открытым, а локальный прог�
 | [awesome-copilot/marketplace.json](https://github.com/github/awesome-copilot/blob/main/.github/plugin/marketplace.json) | primary | экосистема | 5 |
 | [awesome-copilot.github.com/skills](https://awesome-copilot.github.com/skills/) | primary | экосистема | 5 |
 | [Netcracker/qubership-ai-packages](https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages) | primary | экосистема | 5 |
-| [VS Code: agent plugins](https://code.visualstudio.com/docs/copilot/customization/agent-plugins) | primary | рантаймы | 5 |
+| [VS Code: agent plugins](https://code.visualstudio.com/docs/agent-customization/agent-plugins) | primary | рантаймы | 5 |
 | [GitHub Copilot CLI plugins](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-cli-plugins) | primary | рантаймы | 4 |
-| [VS Code: custom instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions) | primary | рантаймы | 4 |
+| [VS Code: custom instructions](https://code.visualstudio.com/docs/agent-customization/custom-instructions) | primary | рантаймы | 4 |
 | [Cursor: plugins](https://cursor.com/docs/plugins) | primary | рантаймы | 5 |
 | [microsoft/apm#1134](https://github.com/microsoft/apm/issues/1134) | primary | версии и топология | 5 |
 | [microsoft/apm-action](https://github.com/microsoft/apm-action) | primary | версии и топология | 5 |

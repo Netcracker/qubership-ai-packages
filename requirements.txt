@@ -1,6 +1,6 @@
 # uvx tools used by the Makefile, the CI workflows, and tests/.
 # Single source of truth for their versions; consumed via
 # `uvx --from <tool> --with-requirements requirements.txt <tool> ...`.
-# Updated automatically by Renovate (pip_requirements) or Dependabot (pip).
+# Updated automatically by Renovate's pip_requirements manager.
 apm-cli==0.24.1
 doccmd==2026.5.25
