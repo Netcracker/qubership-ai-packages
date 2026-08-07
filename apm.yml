@@ -114,6 +114,18 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
+    - name: javadoc-authoring
+      description: "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow."
+      source: ./agent-packages/javadoc-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "stack:java", "stack:kotlin", "stack:groovy", "stack:scala", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: godoc-authoring
+      description: "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
+      source: ./agent-packages/godoc-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "stack:go", "activity:authoring", "activity:code-review", "audience:public"]
+
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review
