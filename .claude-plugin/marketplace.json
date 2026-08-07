@@ -183,6 +183,35 @@
       "source": "./agent-packages/adr-authoring"
     },
     {
+      "name": "javadoc-authoring",
+      "description": "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "stack:java",
+        "stack:kotlin",
+        "stack:groovy",
+        "stack:scala",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/javadoc-authoring"
+    },
+    {
+      "name": "godoc-authoring",
+      "description": "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "stack:go",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/godoc-authoring"
+    },
+    {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
       "version": "1.0.0",
