@@ -15,13 +15,15 @@ two agent definitions to their native formats.
 | `.apm/skills/doc-comment-sweep/scripts/sweep_targets.py` | Java and Go target survey, comment pairs, and resume ledger. |
 | `.apm/skills/doc-comment-sweep/scripts/make_batches.py` | Language-safe batching bounded by files, targets, and estimated prompt cost. |
 | `.apm/skills/doc-comment-sweep/scripts/strip_*_comments.py` | Comment-only oracles for Java and Go. |
-| `.apm/skills/javadoc-authoring/SKILL.md` | Content and structure rules for Javadoc and related doc-comment formats. |
-| `.apm/skills/godoc-authoring/SKILL.md` | Content and structure rules for Go comments. |
 | `.apm/agents/doc-comment-sweeper.agent.md` | Comment editor that may change only assigned targets. |
 | `.apm/agents/doc-comment-judge.agent.md` | Read-only adversarial reviewer that reconstructs the old comment's facts first. |
 
-The runtime scripts require only the Python standard library. The package depends on `english-us-developer-style` for
-developer-facing prose rules.
+The runtime scripts require only the Python standard library.
+
+Three sibling packages arrive as APM dependencies and install alongside this one: `javadoc-authoring` and
+`godoc-authoring` supply the rules a comment is written and graded against, and `english-us-developer-style` supplies
+the prose rules. The sweeper and the judge both read the authoring skill by name, so the rubric has one definition and
+a fix to it reaches both agents at once.
 
 ## Requirements
 
