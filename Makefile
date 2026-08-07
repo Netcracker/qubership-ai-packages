@@ -23,7 +23,7 @@ DOC_REF  ?= $(shell git rev-parse HEAD)
 MODE     ?= all
 TARGETS  ?= claude,codex,cursor
 
-.PHONY: help pack check check-descriptions verify-docs test install-smoke
+.PHONY: help pack check check-descriptions verify-docs test test-doc-comment-sweep install-smoke
 
 help:
 	@echo "pack                Regenerate .claude-plugin/marketplace.json"
@@ -31,6 +31,7 @@ help:
 	@echo "check-descriptions  Verify all skill descriptions are <= 1020 chars"
 	@echo "verify-docs         Run the consumer guide commands (DOC_REPO=$(DOC_REPO) DOC_REF=<ref>, must be pushed)"
 	@echo "test                Network-free producer/consumer round-trip (tests/marketplace_roundtrip.sh)"
+	@echo "test-doc-comment-sweep  Run all doc-comment-sweep tests (requires sb)"
 	@echo "install-smoke       Install each package into a fresh project (MODE=all|diff, needs network)"
 
 pack:
@@ -52,7 +53,12 @@ verify-docs:
 test:
 	$(PYTHON) -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
+	$(MAKE) test-doc-comment-sweep
 	bash tests/marketplace_roundtrip.sh
+
+test-doc-comment-sweep:
+	@cd agent-packages/doc-comment-sweep/.apm/skills/doc-comment-sweep/scripts && \
+		for test_file in test_*.py; do PYTHONDONTWRITEBYTECODE=1 python3 "$$test_file" || exit 1; done
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).
 # MODE=all installs everything; MODE=diff BASE_SHA=<sha> installs only changed packages.

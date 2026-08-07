@@ -1,0 +1,7 @@
+name: doc-comment-sweep
+version: 1.0.0
+description: Sweep changed Java and Go comments with independent writer and judge agents plus a comment-only source oracle.
+
+dependencies:
+  apm:
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#a8c2016f423e4ecd172eb7763f9851ed365f7bc8  # main

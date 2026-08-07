@@ -30,6 +30,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
+    - name: doc-comment-sweep
+      description: Sweep changed Java and Go comments with independent writer and judge agents plus a comment-only source oracle.
+      source: ./agent-packages/doc-comment-sweep
+      version: 1.0.0
+      tags: ["topic:documentation", "stack:go", "stack:java", "activity:authoring", "activity:code-review", "audience:public"]
+
     - name: troubleshooting-skill-creator
       description: Build a repository's own troubleshooting-skill APM package — scan the repository, harvest its existing troubleshooting material, research the failure modes of the technologies it ships, and compile a symptom-indexed reference plus the skill that reads it.
       source: ./agent-packages/troubleshooting-skill-creator
