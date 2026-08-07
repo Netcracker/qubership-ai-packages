@@ -54,9 +54,9 @@ wide audit scope after seeing the selected-file count.
 Use the following fallback order separately for each batch:
 
 1. Invoke the package's `doc-comment-sweeper` and `doc-comment-judge` named agents.
-2. If named agents are unavailable, invoke two generic isolated subagents with the corresponding agent file as their
+1. If named agents are unavailable, invoke two generic isolated subagents with the corresponding agent file as their
    complete role contract.
-3. If the harness cannot provide two isolated contexts, stop after survey and batching. Report that an independent
+1. If the harness cannot provide two isolated contexts, stop after survey and batching. Report that an independent
    judge is unavailable and give the exact commands and artifacts needed to continue in another session.
 
 Never substitute a review in the root context for step 3. Specialist agents are leaf workers and must not delegate.
@@ -64,11 +64,11 @@ Never substitute a review in the root context for step 3. Specialist agents are 
 ## Phase 1: Establish state
 
 1. Resolve the repository root with `git rev-parse --show-toplevel`.
-2. Refuse a dirty working tree. Do not stash, reset, or overwrite existing work.
-3. Record `HEAD` as `preSweepRef` and compute the merge base against `base`.
-4. Create an artifact directory under the path returned by `git rev-parse --git-path doc-comment-sweep`. Keep
+1. Refuse a dirty working tree. Do not stash, reset, or overwrite existing work.
+1. Record `HEAD` as `preSweepRef` and compute the merge base against `base`.
+1. Create an artifact directory under the path returned by `git rev-parse --git-path doc-comment-sweep`. Keep
    `targets.json`, `batches.json`, per-batch agent results, and `ledger.json` there so the working tree stays clean.
-5. Run every `test_*.py` in `<skill-directory>/scripts` with `PYTHONDONTWRITEBYTECODE=1`. Stop if any test fails.
+1. Run every `test_*.py` in `<skill-directory>/scripts` with `PYTHONDONTWRITEBYTECODE=1`. Stop if any test fails.
 
 ## Phase 2: Survey and batch
 
@@ -150,9 +150,9 @@ the artifact paths so the judge reconstructs evidence from Git and the working t
 The judge must:
 
 1. Build a fact ledger from `before` before evaluating `after`.
-2. Identify lost facts, invented claims, stale identifiers, narration, and growth without a new fact.
-3. Run the oracle independently.
-4. Return `verdict`, `factLedger`, `findings`, `staleIdentifiers`, `codeUnchanged`, and `artifactMissing`.
+1. Identify lost facts, invented claims, stale identifiers, narration, and growth without a new fact.
+1. Run the oracle independently.
+1. Return `verdict`, `factLedger`, `findings`, `staleIdentifiers`, `codeUnchanged`, and `artifactMissing`.
 
 `approve` means no blocker or major finding remains. Persist the result. If the verdict is `revise` and the round
 budget remains, send only the findings and evidence back to the sweeper, then repeat the oracle and judge phases. Mark
@@ -163,10 +163,10 @@ the batch `stuck` after `maxRounds`; never describe it as approved.
 After all non-overlapping batches in a wave converge:
 
 1. Run each language oracle over every edited file in the wave.
-2. Run repository format checks without allowing them to rewrite source automatically.
-3. Run required generators when comments feed generated documentation, then inspect all generated diffs.
-4. Run the repository-specific build and test commands from `gate`.
-5. Compare failures with the recorded baseline and treat every new failure as a gate failure.
+1. Run repository format checks without allowing them to rewrite source automatically.
+1. Run required generators when comments feed generated documentation, then inspect all generated diffs.
+1. Run the repository-specific build and test commands from `gate`.
+1. Compare failures with the recorded baseline and treat every new failure as a gate failure.
 
 On failure, halt later waves and report all deferred batches. On success, update the ledger:
 

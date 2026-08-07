@@ -88,13 +88,13 @@ unless a repository-wide audit is intentional.
 ## Workflow
 
 1. Refuse a dirty working tree and record the rollback commit.
-2. Survey changed declarations and inline comments with `sb map --json`.
-3. Partition targets by language, file count, target count, and estimated prompt cost.
-4. Run the sweeper on one batch.
-5. Prove the source is unchanged after stripping comments.
-6. Run the judge in a separate context and build a fact ledger from the old comments.
-7. Retry blocker and major findings up to two rounds.
-8. Run repository-specific checks and return an evidence-backed report.
+1. Survey changed declarations and inline comments with `sb map --json`.
+1. Partition targets by language, file count, target count, and estimated prompt cost.
+1. Run the sweeper on one batch.
+1. Prove the source is unchanged after stripping comments.
+1. Run the judge in a separate context and build a fact ledger from the old comments.
+1. Retry blocker and major findings up to two rounds.
+1. Run repository-specific checks and return an evidence-backed report.
 
 Large files can appear in multiple ordered batches. Those batches share a `serialGroup` and never run concurrently,
 which avoids both context exhaustion and conflicting edits to one file.
