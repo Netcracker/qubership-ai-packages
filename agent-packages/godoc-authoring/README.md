@@ -36,6 +36,8 @@ bracket syntax, and has no tags at all.
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and dialect. This
   package picks the slots; that one writes the sentences. Install both.
 - [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
+- [`pythondoc-authoring`](../pythondoc-authoring/) covers Python, where the docstring is a runtime object and two
+  style guides disagree about the mood of its first line.
 - [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust, where doc examples compile and run as tests.
 - [`jsdoc-authoring`](../jsdoc-authoring/) covers JavaScript and TypeScript, where a type in a tag is noise in one and
   code in the other.

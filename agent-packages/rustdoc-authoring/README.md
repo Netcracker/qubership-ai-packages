@@ -44,6 +44,8 @@ Every mechanical claim in the skill was measured on rustc / cargo 1.92.0, clippy
   package picks the slots; that one writes the sentences. Install both.
 - [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
 - [`godoc-authoring`](../godoc-authoring/) covers Go.
+- [`pythondoc-authoring`](../pythondoc-authoring/) covers Python, where the docstring is a runtime object and two style
+  guides disagree about the mood of its first line.
 - [`jsdoc-authoring`](../jsdoc-authoring/) covers JavaScript and TypeScript, where a type in a tag is noise in one and
   code in the other.
 
