@@ -6,7 +6,7 @@ description: >-
   reviewing or critiquing one, deciding whether a declaration needs one at all, or comparing two
   competing versions. Covers the four content slots and their order, why the first sentence names
   the thing it documents, the exception Kubernetes API types make to that rule, doc links versus
-  bare names, what replaces Javadoc's tags, why a list of members should usually be the rule that
+  bare names, what stands in for tags Go does not have, why a list of members should usually be the rule that
   defines them, how far a rewrite may grow, comments that a tool rather than a human reads
   (//go:, //nolint, +kubebuilder), and the extra rules for tests, package comments, and CRD field
   descriptions that ship to users. Applies to a one-line comment as much as to a twenty-line block.
@@ -84,8 +84,8 @@ commit message.
 
 ## 3. The first sentence names the thing it documents
 
-Go's convention is unusually specific, and it is the rule most often lost when Javadoc habits are
-carried across: **a doc comment begins with the name being declared.**
+Go's convention is unusually specific, and it is the rule most often lost when a comment is written
+from habit: **a doc comment begins with the name being declared.**
 
 ```go
 // SetCredentials atomically replaces the Basic Auth credentials used for all
@@ -93,8 +93,8 @@ carried across: **a doc comment begins with the name being declared.**
 func (c *AggregatorClient) SetCredentials(username, password string) { … }
 ```
 
-Not `Atomically replaces…` (the Javadoc form) and not `This method replaces…`. The name leads,
-followed by a present-tense third-person verb.
+Not `Atomically replaces…` and not `This method replaces…`. The name leads, followed by a
+present-tense third-person verb.
 
 - **Package comment**: `// Package client provides an HTTP client for the dbaas-aggregator REST API.`
 - **Command** (`package main`): the binary's name leads — `// Aggregator-mock emulates the
@@ -102,7 +102,7 @@ followed by a present-tense third-person verb.
 - **Test function**: the exception — see the test genre note in §4.
 - **Blank identifier** (`var _ Interface = (*T)(nil)`): nothing to lead with; state the assertion.
 
-The rest of the summary rule carries over from Javadoc unchanged:
+The rest of the summary rule:
 
 - **No term this comment invents.** `Guards the inventory of backend messages` fails, because
   "inventory" means nothing until paragraph two defines it. A summary must be readable by someone who
@@ -111,8 +111,8 @@ The rest of the summary rule carries over from Javadoc unchanged:
 - **Watch the terminating period — on a package-level declaration.** Tooling extracts the first
   sentence of a package, func, type, const, or var as a one-line summary: package listings,
   `go list -f {{.Doc}}`, pkg.go.dev search results. `go/doc.Synopsis` ends that sentence at the first
-  `.` followed by a space, so `e.g.`, `i.e.`, and `vs.` truncate it, and Go has no `{@summary}` escape
-  hatch — rewrite instead.
+  `.` followed by a space, so `e.g.`, `i.e.`, and `vs.` truncate it. Nothing lets you pin the
+  boundary — rewrite instead.
 
   **A struct field is exempt.** Nothing extracts a synopsis from one: `go doc` prints a field comment
   whole, and so do pkg.go.dev and a generated CRD description. Moving an `e.g.` out of a field
@@ -194,11 +194,11 @@ Slot 2 is where the work is. Reach for these, and only when the signature does n
 - which errors a caller is expected to match with `errors.Is` / `errors.As`, and which are
   programmer errors that panic.
 
-Go has no `@param`. Name a parameter in prose, spelled exactly as in the signature, at the point where
-its contract matters: `body is marshaled as JSON when non-nil`. Do not walk the parameter list in
-order restating types — that is the signature, transcribed.
+There is no tag for a parameter. Name it in prose, spelled exactly as in the signature, at the point
+where its contract matters: `body is marshaled as JSON when non-nil`. Do not walk the parameter list
+in order restating types — that is the signature, transcribed.
 
-Go has no `@return` either. Named results are the closest equivalent and often do the job outright:
+Nor is there one for a result. Named results are the closest equivalent and often do the job outright:
 `func CreateDatabase(…) (pending bool, err error)` needs one clause about what `pending` means, not a
 paragraph. Reach for named results when a bare `(bool, error)` would force the comment to explain
 which is which.
@@ -310,9 +310,8 @@ Go 1.19 and later support **doc links**, which render as hyperlinks on pkg.go.de
 
 A doc link only resolves if the target exists and, for another package, that package is imported by
 the file. **Nothing fails the build when it does not.** An unresolved `[Foo]` renders as the literal
-text `[Foo]`, and neither `go vet` nor a stock `golangci-lint` run reports it. Javadoc at least has
-doclint, which catches a broken `{@link}` wherever it is switched on; Go has no equivalent to switch
-on, so the verification burden of §7a sits entirely on you.
+text `[Foo]`, and neither `go vet` nor a stock `golangci-lint` run reports it. Nothing you can switch
+on will, so the verification burden of §7a sits entirely on you.
 
 Use a doc link for a reference the reader may want to follow. For an identifier they will not
 navigate to — a JSON field name, a literal, a shell command, a symbol in a service you do not import
@@ -322,10 +321,9 @@ backticks. Set off a longer snippet as an indented block instead.
 Cite an issue only alongside the name of the phenomenon: `the desync class of bug that #4015 fixed`
 survives the tracker; a bare `see #4015` does not.
 
-## 6. Structure, where Javadoc has tags
+## 6. Structure
 
-Go has no `@param`, `@return`, `@throws`, `@since`, or `@see`. §4 covers what replaces the first two.
-The rest:
+Go has no tags at all. §4 covers what stands in for documenting a parameter and a result. The rest:
 
 - **`Deprecated:`** starts its own paragraph, at the end of the comment, and must name the
   replacement. Tooling reads it: `staticcheck` SA1019 and editors flag callers. Nothing else in a Go

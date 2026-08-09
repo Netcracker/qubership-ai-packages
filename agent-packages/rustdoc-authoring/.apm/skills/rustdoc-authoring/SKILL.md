@@ -5,8 +5,8 @@ description: >-
   involves a comment in Rust source — writing a new one, editing or rewriting an existing one,
   reviewing one, deciding whether an item needs one, or comparing two versions. Covers the four
   content slots and their order, why the first paragraph rather than the first sentence is the
-  summary, what the signature already says so the comment need not, the headings that replace
-  Javadoc's tags (# Errors, # Panics, # Safety, # Examples), intra-doc links and the lints that
+  summary, what the signature already says so the comment need not, the headings that stand in for
+  tags (# Errors, # Panics, # Safety, # Examples), intra-doc links and the lints that
   check them, doc examples that compile and run as tests and the blocks that become one by
   accident, // SAFETY: comments, how far a rewrite may grow, and the extra rules for traits, unsafe
   code, tests, module and crate comments, and docs that ship to docs.rs. Applies to a one-line
@@ -31,8 +31,7 @@ in three specific places, so do not translate them in your head:
 - **Nothing formats a doc comment for you.** Measured on rustfmt 1.8.0, stable rustfmt leaves doc
   comments byte for byte alone: it does not reflow a 180-column line, does not normalize a list
   marker, does not fix indentation. `wrap_comments` and `format_code_in_doc_comments` are
-  nightly-only and off. Where `gofmt` lets a Go author write content and forget layout, you own the
-  layout here — match the wrapping width the file already uses.
+  nightly-only and off. You own the layout — match the wrapping width the file already uses.
 
 Everything measured below was measured on rustc, cargo 1.92.0, clippy 0.1.92, and rustfmt 1.8.0.
 
@@ -114,17 +113,17 @@ number.
 Rustdoc lifts the opening of a doc comment into the item table on the parent module's page and into
 the search index, where it appears with **no surrounding context**. Write it to stand alone there.
 
-The boundary is a **blank `///` line, not a period** — and this is where Javadoc habits mislead.
-Measured on rustc 1.92, a comment opening `/// Returns a thing, e.g. a widget. Second sentence stays
-on the same line.` puts *both* sentences in the item table, and the paragraph after the blank line
-in neither. So `e.g.` costs nothing here, and a second sentence you meant as detail costs the whole
-table row.
+The boundary is a **blank `///` line, not a period**, which is the opposite of what a sentence-based
+convention would lead you to expect. Measured on rustc 1.92, a comment opening `/// Returns a thing,
+e.g. a widget. Second sentence stays on the same line.` puts *both* sentences in the item table, and
+the paragraph after the blank line in neither. So `e.g.` costs nothing here, and a second sentence
+you meant as detail costs the whole table row.
 
 - **One sentence, then a blank `///` line.** If the summary takes two sentences, the first one is
   not the summary.
 - **Third person, subject omitted.** `Returns the backing map.` Not `Return…`, not `This function
-  returns…`. Unlike Go, the item's own name does **not** lead: rustdoc prints the name beside the
-  summary already, so `parse parses the input` is a stutter.
+  returns…`. The item's own name does **not** lead: rustdoc prints the name beside the summary
+  already, so `parse parses the input` is a stutter.
 - **No term this comment invents.** `Guards the inventory of backend messages` fails, because
   "inventory" means nothing until paragraph two defines it. A summary must be readable by someone
   who will never read paragraph two.
@@ -140,8 +139,8 @@ table row.
 
 ### What the signature already says
 
-Rust encodes in types what Java and Go leave to prose. Before you write slot 2, cross off everything
-the reader can see:
+Rust encodes in types much of what elsewhere goes in prose. Before you write slot 2, cross off
+everything the reader can see:
 
 | The signature already says | So do not write |
 | --- | --- |
@@ -231,8 +230,8 @@ A trait comment has two audiences at once, and it is the genre most often writte
 - **Callers**, who hold only the bound `T: Trait`, need to know what that bound buys them. Anything
   a caller may rely on has to be a law, or it is not there.
 
-A provided method's comment says what an override must preserve — the Rust equivalent of Javadoc's
-`@implSpec`. A required method's comment is the obligation itself.
+A provided method's comment says what an override must preserve. A required method's comment is the
+obligation itself.
 
 An `unsafe trait` gets a `# Safety` section, and it points the opposite way from an `unsafe fn`
 (§6): it states what an **implementer** guarantees, because that is who writes `unsafe impl`.
@@ -267,9 +266,8 @@ is *correct*, or that it is complete.
 
 ### `// SAFETY:` comments
 
-The inverse of the section above, and a genre with no equivalent in Java or Go. An `unsafe` block
-consumes someone else's `# Safety` contract, and the `// SAFETY:` comment above it is the argument
-that this call site satisfies it.
+The inverse of the section above. An `unsafe` block consumes someone else's `# Safety` contract, and
+the `// SAFETY:` comment above it is the argument that this call site satisfies it.
 
 ```rust
     // SAFETY: `idx < self.len` was checked above, and `self.ptr` is valid for
@@ -309,9 +307,8 @@ Three Rust-specific hazards, all of them compile errors or silent behavior chang
 
 - **A doc comment must be followed by an item.** `///` is sugar for `#[doc = "…"]`, so a doc comment
   with nothing after it is `error: expected item after doc comment` — a hard build failure, not a
-  lint. This is the one place Rust is kinder than Go or Java: a comment orphaned by a deleted item
-  cannot survive into the repository. It also means a "comment-only" edit can fail the build, so
-  compile before you claim the sweep was harmless.
+  lint. A comment orphaned by a deleted item therefore cannot survive into the repository, and a
+  "comment-only" edit can fail the build — compile before you claim the sweep was harmless.
 - **`//!` may only appear before items.** Moving an inner doc comment below the first item in a file
   is `error[E0753]: expected outer doc comment`, plus the error above. A module comment stays at the
   top.
@@ -392,12 +389,12 @@ Rust has **intra-doc links**, which render as hyperlinks on docs.rs and in edito
 The disambiguators matter more in Rust than the table suggests: a struct and a function may share a
 name in the same module, and `[frame]` then resolves to whichever the resolver reaches first.
 
-**Unlike Go, a broken link is caught.** `rustdoc::broken_intra_doc_links` is warn-by-default
+**A broken link is caught.** `rustdoc::broken_intra_doc_links` is warn-by-default
 (verified on rustc 1.92): `cargo doc` reports `unresolved link to 'NoSuchItem'` and points at the
 column. Two limits on that guarantee. It is a warning, so it fails nothing unless the crate denies
 it or CI runs with `RUSTDOCFLAGS="-D warnings"`; and it only fires where `cargo doc` runs at all.
-The unresolved link still renders as the literal text `[NoSuchItem]`, exactly as in Go — so the
-reader's experience of a broken link is the same, and only your build tells you.
+The unresolved link still renders as the literal text `[NoSuchItem]`, so the reader sees nothing
+unusual and only your build tells you.
 
 Two more lints worth knowing, both warn-by-default:
 
@@ -427,11 +424,10 @@ resolves for you and points nowhere on docs.rs (§6a).
 Cite an issue only alongside the name of the phenomenon: `the desync class of bug that #4015 fixed`
 survives the tracker; a bare `see #4015` does not.
 
-## 6. Sections and examples, where Javadoc has tags
+## 6. Sections and examples
 
-Rust has no `@param`, `@return`, `@throws`, `@since`, or `@see`. §4 covers what replaces the first
-two. The rest is conventional Markdown headings, written as `#` and rendered by rustdoc as
-subheadings of the item:
+Rust has no tags. §4 covers what stands in for documenting a parameter and a result. The rest is
+conventional Markdown headings, written as `#` and rendered by rustdoc as subheadings of the item:
 
 | Heading | Carries | Lint behind it |
 | --- | --- | --- |
@@ -465,10 +461,10 @@ comment — and what makes several ordinary formatting habits into build failure
 build --release` fails with `expected one of '!' or '::', found 'build'`. Tag every non-Rust block:
 `text`, `console`, `sh`, `toml`, `json`.
 
-**A four-space-indented block is also an untagged code block**, because the comment is Markdown. This
-is the trap for anyone carrying the Go convention across: in a Go doc comment an indented block is
-how you show a command, and in Rust it is how you get `this is not rust` handed to the compiler.
-Verified — the failure is identical to the untagged-fence one. Use a tagged fence, always.
+**A four-space-indented block is also an untagged code block**, because the comment is Markdown.
+Indentation is how you show a command in some other languages' doc comments; here it is how you hand
+`this is not rust` to the compiler. Verified — the failure is identical to the untagged-fence one.
+Use a tagged fence, always.
 
 **`?` does not work in a bare example.** The block is wrapped in a `fn main()` returning `()`, so
 `let n: u32 = "42".parse()?;` fails to compile. Wrap it with hidden lines:
@@ -591,8 +587,8 @@ takes one away.
   check for the next reader (§5).
 - **A doc-comment edit can break the build.** Adding or editing an example changes code the test
   suite runs, and a stray indent or an untagged fence turns prose into a failing test (§6). Run
-  `cargo test --doc` on any comment edit that touches a fenced or indented block. This is the rule
-  with no counterpart in Java or Go, and the one most often skipped.
+  `cargo test --doc` on any comment edit that touches a fenced or indented block. It is the rule
+  most often skipped, because nothing about the edit looks like a code change.
 - **When you lift a rule into the type or trait comment, go and cut it from the member.** The member
   keeps the one sentence that specializes the rule, plus the link. Two full statements of the same
   rule is the most common outcome of a good structural edit and the easiest to miss, because each of
