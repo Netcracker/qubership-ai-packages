@@ -57,7 +57,8 @@ that does not know the difference is unreviewable.
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and
   dialect. This package picks the slots; that one writes the sentences. Install both.
 - [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family, [`godoc-authoring`](../godoc-authoring/) covers
-  Go, and [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust. All four share the section numbering.
+  Go, [`pythondoc-authoring`](../pythondoc-authoring/) covers Python, and
+  [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust. All five share the section numbering.
 
 ## Install
 

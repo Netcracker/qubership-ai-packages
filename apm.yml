@@ -138,6 +138,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "stack:javascript", "stack:typescript", "activity:authoring", "activity:code-review", "audience:public"]
 
+    - name: pythondoc-authoring
+      description: "Structure and content rules for Python docstrings and inline comments: what a comment says, in what order, and how far a rewrite may grow."
+      source: ./agent-packages/pythondoc-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "stack:python", "activity:authoring", "activity:code-review", "audience:public"]
+
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review
