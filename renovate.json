@@ -9,14 +9,15 @@
   "prCreation": "not-pending",
   "customManagers": [
     {
-      "description": "Update the Python runtime used by uvx commands.",
+      "description": "Update the Python runtime used by uv commands.",
       "customType": "regex",
       "managerFilePatterns": [
         "/(^|/)Makefile$/",
         "/\\.sh$/"
       ],
       "matchStrings": [
-        "uvx --python (?<currentValue>\\d+\\.\\d+)"
+        "uvx --python (?<currentValue>\\d+\\.\\d+)",
+        "uv run --python (?<currentValue>\\d+\\.\\d+)"
       ],
       "depNameTemplate": "python",
       "datasourceTemplate": "python-version",
