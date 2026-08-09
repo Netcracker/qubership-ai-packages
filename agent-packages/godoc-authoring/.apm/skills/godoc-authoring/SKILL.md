@@ -20,11 +20,10 @@ This skill governs **what a comment says and in what order**. Wording, tone, sen
 dialect are the province of `english-developer-style` — load it too, and let it own the prose. The
 two compose: this skill picks the slots, that one writes the sentences.
 
-It is the Go sibling of `javadoc-authoring` and keeps its section numbering, so a review that cites
-"§7b" means the same rubric in either language. Read this one for Go; do not translate the Java one
-in your head. The slot model transfers unchanged, but §3, §5, and §6 do not — Go puts the
-identifier's name in the first sentence, replaces `{@link}` with an unchecked bracket syntax, and
-has no tags at all.
+Everything here is written for Go. Conventions carried in from another language's doc comments go
+wrong in three specific places, so do not translate them in your head: Go puts the identifier's name
+in the first sentence (§3), its references are an unchecked bracket syntax (§5), and it has no tags
+at all (§6).
 
 `gofmt` owns the *layout* of a doc comment (indentation of code blocks, list markers, blank-line
 normalization) and rewrites it on every save. Never hand-align a doc comment; write the content and

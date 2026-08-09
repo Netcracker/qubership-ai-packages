@@ -1,0 +1,3 @@
+name: rustdoc-authoring
+version: 1.0.0
+description: "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."

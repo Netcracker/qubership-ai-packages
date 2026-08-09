@@ -36,6 +36,7 @@ bracket syntax, and has no tags at all.
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and dialect. This
   package picks the slots; that one writes the sentences. Install both.
 - [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
+- [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust, where doc examples compile and run as tests.
 
 ## Install
 
