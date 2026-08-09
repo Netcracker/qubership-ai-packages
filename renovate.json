@@ -13,11 +13,11 @@
       "customType": "regex",
       "managerFilePatterns": [
         "/(^|/)Makefile$/",
-        "/\\.sh$/"
+        "/\\.sh$/",
+        "/^\\.github/workflows/.*\\.ya?ml$/"
       ],
       "matchStrings": [
-        "uvx --python (?<currentValue>\\d+\\.\\d+)",
-        "uv run --python (?<currentValue>\\d+\\.\\d+)"
+        "\\buvx?\\s+(?:[^\\s|;&]+\\s+)*?(?:--python|-p)[\\s=]+(?<currentValue>\\d+(?:\\.\\d+)+)"
       ],
       "depNameTemplate": "python",
       "datasourceTemplate": "python-version",
