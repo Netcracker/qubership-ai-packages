@@ -37,6 +37,8 @@ bracket syntax, and has no tags at all.
   package picks the slots; that one writes the sentences. Install both.
 - [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
 - [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust, where doc examples compile and run as tests.
+- [`jsdoc-authoring`](../jsdoc-authoring/) covers JavaScript and TypeScript, where a type in a tag is noise in one and
+  code in the other.
 
 ## Install
 

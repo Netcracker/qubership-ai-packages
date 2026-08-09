@@ -225,6 +225,20 @@
       "source": "./agent-packages/rustdoc-authoring"
     },
     {
+      "name": "jsdoc-authoring",
+      "description": "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "stack:javascript",
+        "stack:typescript",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/jsdoc-authoring"
+    },
+    {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
       "version": "1.0.0",
