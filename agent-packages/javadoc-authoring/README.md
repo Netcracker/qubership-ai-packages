@@ -29,7 +29,8 @@ owes, what holds before and after.
 
 The JVM family only. Other languages need their own rules rather than a translation of these — Python inverts the
 first-sentence rule outright (PEP 257 asks for the imperative `Return that`), and Rust, TypeScript, and JavaScript
-each have reference and tag machinery this skill does not describe.
+each have reference and tag machinery this skill does not describe. Rust has its own package,
+[`rustdoc-authoring`](../rustdoc-authoring/).
 
 ## Contents
 
@@ -42,8 +43,9 @@ each have reference and tag machinery this skill does not describe.
 
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and dialect. This
   package picks the slots; that one writes the sentences. Install both.
-- [`godoc-authoring`](../godoc-authoring/) is the Go equivalent. It keeps the same section numbering, so a review that
-  cites "§7b" means the same rubric in either language.
+- [`godoc-authoring`](../godoc-authoring/) and [`rustdoc-authoring`](../rustdoc-authoring/) are the Go and Rust
+  equivalents. Both keep the same section numbering, so a review that cites "§7b" means the same rubric in any of the
+  three.
 
 ## Install
 
