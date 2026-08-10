@@ -263,6 +263,17 @@
       "source": "./agent-packages/codex-review"
     },
     {
+      "name": "cross-review",
+      "description": "Skill that reviews a change with two independent reviewers — the Codex CLI and a Claude subagent — merges their findings, and repeats rounds until the review converges.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:code-review",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/cross-review"
+    },
+    {
       "name": "meeting-analysis",
       "description": "Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.",
       "version": "1.0.0",
