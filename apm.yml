@@ -43,15 +43,15 @@ marketplace:
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-essentials
-      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage."
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, and workflow-hub usage."
       source: ./agent-packages/qubership-essentials
-      version: 1.0.1
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
       description: "Umbrella package with the Qubership agent setup that is useful in a global user workspace."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.0.1
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
@@ -147,6 +147,12 @@ marketplace:
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review
+      version: 1.0.0
+      tags: ["topic:code-review", "activity:code-review", "audience:public"]
+
+    - name: cross-review
+      description: Skill that reviews a change with two independent reviewers — the Codex CLI and a Claude subagent — merges their findings, and repeats rounds until the review converges.
+      source: ./agent-packages/cross-review
       version: 1.0.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 

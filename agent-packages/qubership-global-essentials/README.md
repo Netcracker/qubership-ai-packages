@@ -32,7 +32,6 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 ## What it pulls in
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages.
-- [`codex-review`](../codex-review/) — Codex CLI code review with auto-fix, repeated until the review is clean.
 - [`english-us-developer-style`](../english-us-developer-style/) — American-English style for developer-facing text.
 - [`markdown-line-length-120`](../markdown-line-length-120/) — Markdown drafting rules for repositories that pin
   markdownlint `MD013.line_length` to 120.
@@ -42,6 +41,12 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 - [`enable-renovate-automerge`](../enable-renovate-automerge/) — enable Renovate automerge behind a real required
   check.
 - [`adr-authoring`](../adr-authoring/) — write Architecture Decision Records that follow the Qubership ADR contract.
+
+## What it leaves out
+
+The review skills — [`codex-review`](../codex-review/) and [`cross-review`](../cross-review/) — are not part of the
+bundle. Both drive the Codex CLI, which needs an account of its own, and a skill that fails the moment it is invoked is
+worse than no skill. Install them explicitly on a machine that has `codex` on the `PATH`.
 
 ## Adding a package to the bundle
 

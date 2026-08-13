@@ -42,8 +42,8 @@
     },
     {
       "name": "qubership-essentials",
-      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage.",
-      "version": "1.0.1",
+      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, and workflow-hub usage.",
+      "version": "2.0.0",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -54,7 +54,7 @@
     {
       "name": "qubership-global-essentials",
       "description": "Umbrella package with the Qubership agent setup that is useful in a global user workspace.",
-      "version": "1.0.1",
+      "version": "2.0.0",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -261,6 +261,17 @@
         "audience:public"
       ],
       "source": "./agent-packages/codex-review"
+    },
+    {
+      "name": "cross-review",
+      "description": "Skill that reviews a change with two independent reviewers — the Codex CLI and a Claude subagent — merges their findings, and repeats rounds until the review converges.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:code-review",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/cross-review"
     },
     {
       "name": "meeting-analysis",

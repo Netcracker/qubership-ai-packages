@@ -9,14 +9,20 @@ of its own here, only the dependency list.
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages
   (instructions, skills, prompts, agents, hooks).
-- [`codex-review`](../codex-review/) — Codex CLI code review with auto-fix,
-  repeated until the review is clean.
 - [`english-us-developer-style`](../english-us-developer-style/) —
   American-English style for developer-facing text.
 - [`markdown-line-length-120`](../markdown-line-length-120/) — Markdown drafting
   rules for repositories that pin markdownlint `MD013.line_length` to 120.
 - [`qubership-workflow-hub-usage`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/agent-packages/qubership-workflow-hub-usage)
   — conventions for GitHub Actions workflows built on qubership-workflow-hub.
+
+## What it leaves out
+
+The review skills — [`codex-review`](../codex-review/) and
+[`cross-review`](../cross-review/) — are not part of the bundle. Both drive the
+Codex CLI, which needs an account of its own, and a skill that fails the moment
+it is invoked is worse than no skill. Install them explicitly on a machine that
+has `codex` on the `PATH`.
 
 ## Adding a package to the bundle
 
