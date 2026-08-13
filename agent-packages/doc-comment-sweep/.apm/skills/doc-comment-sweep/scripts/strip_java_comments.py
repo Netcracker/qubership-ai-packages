@@ -37,6 +37,7 @@ from typing import Callable
 _PRE_LEX_ESCAPE = re.compile(r"(?<!\\)(?:\\\\)*\\u+00(?:0[aAdD]|22|27|2[aAfF]|5[cC])")
 
 _WS_RUN = re.compile(r"[ \t\f\r]+")
+_LITERAL_TOKEN = re.compile(r"<literal:([0-9a-f-]+)>")
 
 
 class ParseError(Exception):
@@ -91,7 +92,8 @@ def _scan(src: str, include_literals: bool) -> list[Span]:
     """
     if _PRE_LEX_ESCAPE.search(src):
         raise Unverifiable(
-            "the file contains a unicode escape that could encode a quote, a slash, or a backslash; "
+            "the file contains a unicode escape that could encode a quote, a slash, a backslash, "
+            "or a line terminator; "
             "Java resolves those before lexing, so this lexer cannot see the real token stream"
         )
 
@@ -260,6 +262,30 @@ class Diff:
     after: str
 
 
+def _literal_diagnostic(before: str, after: str) -> tuple[str, str]:
+    """Replace an opaque changed literal token with its first readable differing offset."""
+    old_tokens = list(_LITERAL_TOKEN.finditer(before))
+    new_tokens = list(_LITERAL_TOKEN.finditer(after))
+    for old_match, new_match in zip(old_tokens, new_tokens):
+        if old_match.group(1) == new_match.group(1):
+            continue
+        old_chars = [int(part, 16) for part in old_match.group(1).split("-")]
+        new_chars = [int(part, 16) for part in new_match.group(1).split("-")]
+        offset = next(
+            (i for i, (old, new) in enumerate(zip(old_chars, new_chars)) if old != new),
+            min(len(old_chars), len(new_chars)),
+        )
+        old_value = chr(old_chars[offset]) if offset < len(old_chars) else "<end>"
+        new_value = chr(new_chars[offset]) if offset < len(new_chars) else "<end>"
+        old_note = f"<literal offset {offset}: {old_value!r}>"
+        new_note = f"<literal offset {offset}: {new_value!r}>"
+        return (
+            before[:old_match.start()] + old_note + before[old_match.end():],
+            after[:new_match.start()] + new_note + after[new_match.end():],
+        )
+    return before, after
+
+
 def first_difference(
     before: str,
     after: str,
@@ -272,6 +298,7 @@ def first_difference(
         old = a.lines[i] if i < len(a.lines) else "<end of file>"
         new = b.lines[i] if i < len(b.lines) else "<end of file>"
         if old != new:
+            old, new = _literal_diagnostic(old, new)
             return Diff(b.source_lines[i] if i < len(b.source_lines) else 0, old, new)
     return None
 

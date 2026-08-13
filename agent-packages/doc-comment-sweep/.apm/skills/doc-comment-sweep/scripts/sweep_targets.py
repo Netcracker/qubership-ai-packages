@@ -272,7 +272,9 @@ def flatten(payload: dict, src: str) -> list[Decl]:
     return out
 
 
-def attach_package_doc(decls: list[Decl], spans: list[Span], src: str) -> None:
+def attach_package_doc(
+    decls: list[Decl], spans: list[Span], src: str, path: str, lang: Language
+) -> dict | None:
     """Materialize a package declaration and its leading package comment.
 
     ast-bro 3.x/4.x omits package docs and `flatten` normally discards the namespace node. The
@@ -281,13 +283,28 @@ def attach_package_doc(decls: list[Decl], spans: list[Span], src: str) -> None:
     """
     package_line = _package_line(src)
     if package_line == 0:
-        return
+        return None
     package_match = re.search(r"^\s*package\s+([\w.]+)", src, re.MULTILINE)
     package_name = package_match.group(1) if package_match else "<package>"
     by_end = {span.end_line: span for span in merge_comment_blocks(src, spans)}
     span = by_end.get(package_line - 1)
     if span is None:
-        return
+        return None
+    if lang.name == "java" and os.path.basename(path) != "package-info.java":
+        return {
+            "line": span.start_line,
+            "endLine": span.end_line,
+            "reason": "comment before the package declaration in a regular Java file",
+        }
+    if _all_markers(span.text):
+        return {
+            "line": span.start_line,
+            "endLine": span.end_line,
+            "reason": "a marker block, read by a generator",
+        }
+    reason = _no_touch_reason(span.text)
+    if reason:
+        return {"line": span.start_line, "endLine": span.end_line, "reason": reason}
     decls.insert(
         0,
         Decl(
@@ -303,6 +320,7 @@ def attach_package_doc(decls: list[Decl], spans: list[Span], src: str) -> None:
             depth=0,
         ),
     )
+    return None
 
 
 # ---------------------------------------------------------------- the diff
@@ -653,7 +671,7 @@ def build_file_report(
 
     try:
         decls = flatten(sb_map(abs_path), src)
-        attach_package_doc(decls, spans, src)
+        package_skip = attach_package_doc(decls, spans, src, path, lang)
         if lang.docs_by_position:
             attach_positional_docs(decls, spans, src)
     except Failed as exc:
@@ -672,7 +690,7 @@ def build_file_report(
                 Path(mirror).write_text(base_src, encoding="utf-8", errors="surrogateescape")
                 base_decls = flatten(sb_map(mirror), base_src)
                 base_spans = lang.scan(base_src)
-                attach_package_doc(base_decls, base_spans, base_src)
+                attach_package_doc(base_decls, base_spans, base_src, path, lang)
                 if lang.docs_by_position:
                     attach_positional_docs(base_decls, base_spans, base_src)
                 base_by_name = _decl_index(base_decls)
@@ -731,6 +749,11 @@ def build_file_report(
     header_end = _package_line(src)
     suppress = _suppress_lines(src)
     doc_lines = {ln for s in spans if s.kind == "doc" for ln in range(s.start_line, s.end_line + 1)}
+    if package_skip:
+        report.skipped_comments.append(
+            {"line": package_skip["line"], "reason": package_skip["reason"]}
+        )
+        doc_lines.update(range(package_skip["line"], package_skip["endLine"] + 1))
 
     merged = merge_comment_blocks(src, spans)
     current_anchors = {_comment_anchor(span, merged): span for span in merged}
@@ -1110,7 +1133,7 @@ def decls_of(src: str, mapped: dict, path: str) -> list[Decl]:
     if lang:
         try:
             spans = lang.scan(src)
-            attach_package_doc(decls, spans, src)
+            attach_package_doc(decls, spans, src, path, lang)
         except (ParseError, Unverifiable):
             spans = []
     if lang and lang.docs_by_position:

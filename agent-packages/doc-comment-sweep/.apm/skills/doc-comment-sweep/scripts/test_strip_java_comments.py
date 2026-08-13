@@ -108,6 +108,10 @@ raises("a line feed spelled as a unicode escape is refused", Unverifiable,
        lambda: scan("// hidden " + java_escape("u000a") + " int code = 1;"))
 raises("a carriage return spelled as a unicode escape is refused", Unverifiable,
        lambda: scan("// hidden " + java_escape("u000d") + " int code = 1;"))
+try:
+    scan("// hidden " + java_escape("u000a") + " int code = 1;")
+except Unverifiable as exc:
+    check("the unicode refusal names line terminators", "line terminator" in str(exc), True)
 check("a backslash that is itself escaped does not make an escape",
       kinds('String s = "a' + chr(92) * 2 + 'u002f"; // real'), ["line"])
 
@@ -159,6 +163,11 @@ text_block_space = first_difference(
     'String s = """\nvalue here\n""";\n',
 )
 check("whitespace inside a text block is code", text_block_space is not None, True)
+check(
+    "a text-block difference reports a readable literal offset",
+    "literal offset" in (text_block_space.before if text_block_space else ""),
+    True,
+)
 
 renamed = first_difference("int count;\nint f() { return count; }\n", "int total;\nint f() { return total; }\n")
 check("a rename is a difference", renamed is not None, True)

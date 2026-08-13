@@ -23,7 +23,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from sweep_targets import _GROUP_DECL, LANGUAGES, git, language_for  # noqa: E402
+from sweep_targets import (  # noqa: E402
+    _GROUP_DECL,
+    LANGUAGES,
+    attach_package_doc,
+    git,
+    language_for,
+    scan_java,
+)
 
 SCRIPT = str(Path(__file__).parent / "sweep_targets.py")
 FAILURES: list[str] = []
@@ -96,6 +103,15 @@ GO_UNTOUCHED = '''package api
 func Untouched() {}
 '''
 
+GO_LICENSE = '''/*
+Copyright 2026 Example Corp.
+https://www.apache.org/licenses/LICENSE-2.0
+*/
+package api
+
+func Licensed() {}
+'''
+
 GO_TEST = '''package api
 
 // A widget must keep the name it was built with.
@@ -164,6 +180,15 @@ JAVA_PACKAGE_EDITED = """/** Provides fixture APIs in package p. */
 package p;
 """
 
+JAVA_LICENSE = """/*
+ * Copyright 2026 Example Corp.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+package p;
+
+public class Licensed {}
+"""
+
 
 def run(root, *args, expect_ok=True):
     proc = subprocess.run(
@@ -215,6 +240,13 @@ check("java test by name", language_for("FooTest.java").is_test("FooTest.java"),
 check("java test by path", language_for("x.java").is_test("src/test/java/x.java"), True)
 check("registry covers both languages", sorted(l.name for l in LANGUAGES), ["go", "java"])
 
+java_license_decls = []
+java_license_skip = attach_package_doc(
+    java_license_decls, scan_java(JAVA_LICENSE), JAVA_LICENSE, "java/Licensed.java", language_for("X.java")
+)
+check("a regular Java file has no package-doc declaration", java_license_decls, [])
+check_true("a regular Java package-adjacent comment has a skip reason", java_license_skip)
+
 check_true("group decl at column 0", _GROUP_DECL.match("const ("))
 check_true("var group at column 0", _GROUP_DECL.match("var ("))
 check("indented group is not package level", _GROUP_DECL.match("\tvar ("), None)
@@ -236,8 +268,10 @@ with tempfile.TemporaryDirectory() as tmp:
 
     write("go/api/types.go", GO_TYPES)
     write("go/api/untouched.go", GO_UNTOUCHED)
+    write("go/api/licensed.go", GO_LICENSE)
     write("go/api/widget_test.go", GO_TEST)
     write("java/A.java", JAVA)
+    write("java/Licensed.java", JAVA_LICENSE)
     write("java/DeleteMe.java", JAVA_DELETIONS)
     write("java/package-info.java", JAVA_PACKAGE)
     write("notes.md", "# not source\n")
@@ -301,7 +335,7 @@ with tempfile.TemporaryDirectory() as tmp:
     check(
         "path scope selects every tracked file under the pathspec",
         path_paths,
-        ["go/api/types.go", "go/api/untouched.go", "go/api/widget_test.go"],
+        ["go/api/licensed.go", "go/api/types.go", "go/api/untouched.go", "go/api/widget_test.go"],
     )
     check("path scope records the pathspec it ran with", path_payload["pathspecs"], ["go/api"])
     check_true("path scope yields unchanged targets", "unchanged" in classes(path_payload))
@@ -345,6 +379,16 @@ with tempfile.TemporaryDirectory() as tmp:
     check_true(
         "the Go package comment is a doc target",
         any(t.get("qualifiedName") == "api" for t in types_file["targets"]),
+    )
+    licensed_go = targets_of(path_payload, "go/api/licensed.go")
+    check(
+        "a Go license header is not a package doc target",
+        any(t.get("declKind") == "package" for t in licensed_go["targets"]),
+        False,
+    )
+    check_true(
+        "a skipped Go license header is reported once",
+        len(licensed_go["skippedComments"]) == 1,
     )
     inline = inline_texts(path_payload, "go/api/types.go")
     joined = "\n---\n".join(inline)
@@ -488,6 +532,12 @@ with tempfile.TemporaryDirectory() as tmp:
 
     package_file = targets_of(java_payload, "java/package-info.java")
     check_true("package-info Javadoc is a doc target", package_file["targets"])
+    licensed_java = targets_of(java_payload, "java/Licensed.java")
+    check(
+        "a regular Java file never treats its license as package documentation",
+        any(t.get("declKind") == "package" for t in licensed_java["targets"]),
+        False,
+    )
     overloads = [
         t for t in jf["targets"] if t["kind"] == "doc" and t["qualifiedName"].endswith("answer")
     ]
