@@ -87,9 +87,26 @@ jobs:
             exit "$renovate_status"
           fi
 
+  # This job and monitor-renovate are the Renovate health check. A repository
+  # owner turns them off by adding an Actions variable RENOVATE_HEALTH_CHECK
+  # set to false — no workflow edit, and no repository is opted out by default.
+  # String comparison in an expression ignores case, so False and FALSE work
+  # too.
+  #
+  # Opting out does not silence the workflow: validate-renovate-config carries
+  # no gate, so the Monday cron still runs it, as do pushes and pull requests
+  # that touch renovate.json. That is deliberate — a repository that stopped
+  # monitoring Renovate still learns when its config or a shared preset breaks
+  # — but it does mean a scheduled run can go red after an opt-out, with the
+  # reason in the validation job rather than in an issue.
+  #
+  # Only a passing check closes a renovate-health issue, so close any open one
+  # before opting out; otherwise it stays open with nothing left to close it.
   lookup-renovate-dependencies:
     name: Look up Renovate dependencies
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: >-
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && vars.RENOVATE_HEALTH_CHECK != 'false'
     runs-on: ubuntu-latest
     outputs:
       reason: ${{ steps.lookup.outputs.reason }}
@@ -234,7 +251,10 @@ jobs:
 
   monitor-renovate:
     name: Monitor Renovate health
-    if: ${{ !cancelled() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    if: >-
+      ${{ !cancelled()
+      && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && vars.RENOVATE_HEALTH_CHECK != 'false' }}
     needs:
       - validate-renovate-config
       - lookup-renovate-dependencies
@@ -262,6 +282,18 @@ jobs:
           health_title='Renovate health check failed'
           health_marker='<!-- renovate-health-check -->'
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          # Three artifacts carry the escape hatch: the note a repository with
+          # issues disabled reads in the summary, a new health issue, and a
+          # repeat comment on an open one. No reader sees more than one of the
+          # three, so keep the wording in one place — a partial edit would
+          # strand whichever audience it missed, silently. The recovery
+          # comment carries none on purpose: a check that just passed has
+          # nothing to opt out of, and telling someone to close an issue that
+          # is closing itself would only confuse them.
+          # The backticks are Markdown, and escaping them keeps shellcheck from
+          # reading them as a command substitution that single quotes swallow.
+          opt_out_hint="If this repository is not meant to run Renovate, set the Actions variable \`RENOVATE_HEALTH_CHECK\` to \`false\` to stop the health check. Config validation keeps running, on push and on the weekly schedule."
+          opt_out_hint_issue="$opt_out_hint Close this issue by hand after you set the variable, since only a passing check closes it."
           dashboard_url=''
           reasons=()
           notes=()
@@ -290,7 +322,7 @@ jobs:
               '[.[] | select(.title == $title and .author.login == $author)] | first // empty' \
               <<< "$dashboard_issues_json")"
           else
-            notes+=("Issues are disabled here, so Renovate has nowhere to publish a Dependency Dashboard and this job cannot file a health issue. Dashboard inspection is skipped; the validation and lookup jobs are still reported.")
+            notes+=("Issues are disabled here, so Renovate has nowhere to publish a Dependency Dashboard and this job cannot file a health issue. Dashboard inspection is skipped; the validation and lookup jobs are still reported. $opt_out_hint")
           fi
 
           if [[ -n "$dashboard_json" ]]; then
@@ -310,7 +342,8 @@ jobs:
             # Wherever this monitor runs, a missing dashboard is a problem:
             # it is what an incomplete Renovate onboarding looks like, and no
             # signal reachable from GITHUB_TOKEN separates that from an app
-            # that was never installed.
+            # that was never installed. A repository that should not be
+            # monitored says so through RENOVATE_HEALTH_CHECK instead.
             reasons+=('Renovate Dependency Dashboard was not found')
           fi
 
@@ -396,6 +429,8 @@ jobs:
               fi
               echo
               echo 'This issue remains open and will close automatically after a successful check.'
+              echo
+              echo "$opt_out_hint_issue"
             } > "$report_file"
           else
             {
@@ -407,6 +442,8 @@ jobs:
               printf -- '- %s\n' "${reasons[@]}"
               echo
               echo 'Review the details below, fix the listed problems, and rerun the health check. This issue updates after repeated failures and closes automatically after a successful check.'
+              echo
+              echo "$opt_out_hint_issue"
               echo
               echo '### Details'
               echo
