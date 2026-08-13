@@ -91,6 +91,41 @@ examples. State it positively, in one place, first.
 **When only one slot fits, keep the contract.** Rationale is the first thing to cut, not the last. A
 reader who knows the rule and not the reason can still write correct code; the reverse is false.
 
+**Make the obligated party the subject.** Obligations come in two shapes.
+
+*Stated* — the sentence carries a *must*, *has to*, *may not*, or *should*. Whoever has to comply
+belongs in the subject: not the thing acted on (`The guard must be held for the whole write`, which
+names no one), not the act (`aliasing the buffer must not be reachable from safe code`), and not an
+item that merely performs the act for someone else (`drop must still run` obliges the caller). A
+named item in the subject is right only where that item is itself what must comply: `try_reserve
+must leave the capacity untouched when it fails`. The party need not be human, but it must be
+something that acts — the caller, the allocator, an implementor; a variant or a configured limit
+complies with nothing.
+
+*Census* — a rule for the next maintainer, written instead as a report on today's call sites:
+`Called from poll_next once the waker is registered`, `Vec is the only implementor`. Flat
+indicative, no modal, so ask: **if a second such caller appeared tomorrow, would this paragraph tell
+it that it is obliged?** Judge the paragraph, not the sentence — an example is allowed to follow a
+law that is already correctly stated. Write the law, not the roll call.
+
+`# Safety` is where this matters most: the whole section is one obligation, and the party is the
+caller of the `unsafe fn`, never the function itself. `The pointer must be valid for reads` leaves
+the reader to infer who guarantees it; `The caller must guarantee that ptr is valid for reads of
+len bytes` is the contract `unsafe` actually rests on. The same goes for the `# Panics` and
+`# Errors` sections when they state what a caller has to avoid rather than what the function does.
+
+Watch the intransitive modal, where the party hides best: `every variant has to appear in
+FROM_STR`, `an unknown value must fall back to Mode::Fail`. Nothing appears or falls back of its own
+accord; name what does it.
+
+Out of reach: an imperative, which already addresses the party (`Call this before the first poll`),
+including one carrying rationale (`so mirror the std behaviour here`); a constraint on a *value*
+(`must be ≤ isize::MAX`), which bounds a number rather than behaviour; a doc comment naming who
+writes or reads a field, which is the membership rule §4 asks for; and an inline comment whose next
+statement is the actor — a `// SAFETY:` note above the `unsafe` block it justifies, but check that
+the next line really is the actor and not test setup standing between the comment and the call it
+constrains.
+
 Slot 4 has a Rust-specific form: the `# Examples` block. It is the Use slot written as code the
 build runs, which makes it the only slot that cannot silently go stale. Prefer it to a prose
 paragraph describing how to call the thing (§6).

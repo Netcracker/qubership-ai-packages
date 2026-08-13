@@ -73,6 +73,34 @@ examples. State it positively, in one place, first.
 **When only one slot fits, keep the contract.** Rationale is the first thing to cut, not the last. A
 reader who knows the rule and not the reason can still write correct code; the reverse is false.
 
+**Make the obligated party the subject.** Obligations come in two shapes.
+
+*Stated* — the sentence carries a *must*, *has to*, *may not*, or *should*. Whoever has to comply
+belongs in the subject: not the thing acted on (`The response body must be closed`, which names no
+one), not the act (`retrying must not be reachable from a cancelled context`), and not a member that
+merely performs the act for someone else (`Close must still run` obliges the caller). A named member
+in the subject is right only where that member is itself what must comply: `Close must be safe to
+call twice`. The party need not be human, but it must be something that acts — the caller, the
+server, a handler; a mode constant or a configured limit complies with nothing.
+
+*Census* — a rule for the next maintainer, written instead as a report on today's call sites:
+`Called from ServeHTTP before the handler runs`, `NewClient is the only caller`. Flat indicative, no
+modal, so ask: **if a second such caller appeared tomorrow, would this paragraph tell it that it is
+obliged?** Judge the paragraph, not the sentence — an example is allowed to follow a law that is
+already correctly stated. Write the law, not the roll call.
+
+Watch the intransitive modal, where the party hides best: `every codec has to appear in
+defaultCodecs`, `an unknown value must fall back to ModeFail`. Nothing appears or falls back of its
+own accord; name what does it.
+
+Out of reach: an imperative, which already addresses the party (`Call Close when the caller is done
+with the response`), including one carrying rationale (`so mirror the net/http behaviour here`); a
+constraint on a *value* (`must be ≤ math.MaxInt32`), which bounds a number rather than behaviour; a
+doc comment naming who writes or reads a field, which is the membership rule §4 asks for; and an
+inline comment whose next statement is the actor — `// Buffer must be fully drained` above the
+`drain()` that drains it, but check that the next line really is the actor and not test setup
+standing between the comment and the call it constrains.
+
 Most declarations need slots 1 and 2 only. A getter needs slot 1. Do not manufacture the other slots
 to fill a template — an absent slot is not a gap.
 

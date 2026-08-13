@@ -71,6 +71,36 @@ examples. State it positively, in one place, first.
 **When only one slot fits, keep the contract.** Rationale is the first thing to cut, not the last.
 A reader who knows the rule and not the reason can still write correct code; the reverse is false.
 
+**Make the obligated party the subject.** Obligations come in two shapes.
+
+*Stated* — the sentence carries a *must*, *has to*, *may not*, or *should*. Whoever has to comply
+belongs in the subject: not the thing acted on (`Every backend message must be read through
+readMessageLength`, which names no one and lets `it` drift to the reader by the next clause), not
+the act (`relaxing a protocol check must not be reachable`), and not a member that merely performs
+the act for someone else (`markBroken must still fire` obliges `PGStream`). A named member in the
+subject is right only where that member is itself what must comply: `readUntrackedLength must leave
+no envelope behind`. The party need not be human, but it must be something that acts — a driver, a
+check, a reader; a mode constant or a configured number complies with nothing.
+
+*Census* — a rule for the next maintainer, written instead as a report on today's call sites:
+`Every site that dispatches on a message type reads the tag through this method`, `CopyData is the
+one such site`. Flat indicative, no modal, so ask: **if a second such caller appeared tomorrow,
+would this paragraph tell it that it is obliged?** Judge the paragraph, not the sentence — an
+example is allowed to follow a law that is already correctly stated. Write the law, not the roll
+call.
+
+Watch the intransitive modal, where the party hides best: `every constant has to appear in
+HARDENED`, `an unknown value must fall back to FAIL`. Nothing appears or falls back of its own
+accord; name what does it.
+
+Out of reach: an imperative, which already addresses the party (`Call it where the framed dialogue
+resumes`), including one carrying rationale (`so mirror that here`); a constraint on a *value*
+(`must be ≤ MAX_MESSAGE_SIZE`), which bounds a number rather than behaviour; a field comment naming
+who writes or reads the field, which is the membership list §4 asks for; and an inline comment whose
+next statement is the actor — `// Envelope must be fully consumed` above the `endMessage()` that
+consumes it, but check that the next line really is the actor and not test setup standing between
+the comment and the call it constrains.
+
 Most members need slots 1 and 2 only. A getter needs slot 1. Do not manufacture the other slots to
 fill a template — an absent slot is not a gap.
 

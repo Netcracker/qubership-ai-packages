@@ -78,6 +78,39 @@ examples. State it positively, in one place, first.
 **When only one slot fits, keep the contract.** Rationale is the first thing to cut, not the last. A
 reader who knows the rule and not the reason can still write correct code; the reverse is false.
 
+**Make the obligated party the subject.** Obligations come in two shapes.
+
+*Stated* — the sentence carries a *must*, *has to*, *may not*, or *should*. Whoever has to comply
+belongs in the subject: not the thing acted on (`The lock must be released before returning`, which
+names no one), not the act (`reopening the session must not be reachable after close`), and not an
+object that merely performs the act for someone else (`close must still run` obliges the caller). A
+named object in the subject is right only where that object is itself what must comply: `close must
+be safe to call twice`. The party need not be human, but it must be something that acts — the
+caller, the loop, a subclass; an enum member or a configured limit complies with nothing.
+
+This does not touch the summary line, which PEP 257 fixes as an imperative (`Return the decoded
+payload.`) — that form addresses the reader directly and so already names the party. The rule
+applies to the body, where an obligation stated without a subject is easy to write and impossible
+to act on.
+
+*Census* — a rule for the next maintainer, written instead as a report on today's call sites:
+`Called from __aexit__ once the transport is idle`, `connect is the only caller`. Flat indicative,
+no modal, so ask: **if a second such caller appeared tomorrow, would this paragraph tell it that it
+is obliged?** Judge the paragraph, not the sentence — an example is allowed to follow a law that is
+already correctly stated. Write the law, not the roll call.
+
+Watch the intransitive modal, where the party hides best: `every codec has to appear in
+_REGISTRY`, `an unknown value must fall back to Mode.FAIL`. Nothing appears or falls back of its own
+accord; name what does it.
+
+Out of reach: an imperative in the body that addresses the reader (`Call this before the first
+await`), including one carrying rationale (`so mirror the asyncio behaviour here`); a constraint on
+a *value* (`must be ≤ sys.maxsize`), which bounds a number rather than behaviour; a docstring naming
+who writes or reads an attribute, which is the membership rule §4 asks for; and a `#` comment whose
+next statement is the actor — `# Buffer must be drained` above the `drain()` that drains it, but
+check that the next line really is the actor and not test setup standing between the comment and the
+call it constrains.
+
 Most objects need slots 1 and 2 only. A property needs slot 1. Do not manufacture the other slots to
 fill a template — an absent slot is not a gap, and a `Returns:` section that repeats the summary is
 the commonest way one gets manufactured.
