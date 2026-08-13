@@ -142,11 +142,16 @@ publish low-confidence findings.
 
 ## Finding content
 
-Write each finding as a short title, an explicit `Confidence: <high | medium>` line, and three compact fields:
+Write each finding as a short title, an explicit `Confidence: <high | medium>` line, and two compact fields:
 
-- `Observation`: the relevant condition and the observed or inferred problem.
-- `Impact`: the concrete consequence and only the evidence needed to establish it.
-- `Resolution`: the expected outcome, without prescribing an unnecessary rewrite.
+- `Problem`: the relevant condition, the defect or unanswered question, its concrete impact, and only the decisive
+  evidence.
+- `Proposed solution`: the smallest expected outcome that resolves the problem, without prescribing an unnecessary
+  rewrite.
+
+Keep the two fields to three short sentences in total unless a longer explanation is required to make the finding
+unambiguous. Do not omit the triggering condition, impact, or required outcome to save words. Use a direct, strict,
+neutral tone. Do not praise, thank, apologize, add greetings or friendly closers, or soften an established defect.
 
 In the chat report, include the exact changed file and line or range. Merge findings with the same root cause. Existing
 review threads are context, not proof; do not repeat an already resolved or equivalent active comment.
@@ -166,19 +171,31 @@ Choose one result in this order:
 `Non-blocking` findings do not produce `REQUEST_CHANGES`. State partial coverage precisely; never turn missing evidence
 into a finding.
 
+Format the result line identically in the chat report and the platform publication. For `APPROVE` and
+`REQUEST_CHANGES`, count every finding and show both categories even when one count is zero:
+
+```markdown
+Result: APPROVE (0 blocking, 1 non-blocking)
+Result: REQUEST_CHANGES (2 blocking, 1 non-blocking)
+```
+
+Use `Result: REVIEW_INCOMPLETE` without counts because the finding totals may be incomplete. Add a `Coverage` line only
+for `REVIEW_INCOMPLETE`, and state the exact material gap. Never output `Coverage: complete`.
+
 ## Report
 
 Immediately before reporting, reread the platform-authoritative revision tuple. If any SHA changed, discard the stale
 analysis and review the new revision. If a stable replacement cannot be reviewed, return `REVIEW_INCOMPLETE`.
 
 Write the report in the request language while preserving exact identifiers, paths, and result labels.
+Keep the report direct, strict, and neutral. Do not add praise, thanks, a positive recap, or conversational framing.
 
 ```markdown
 # PR/MR review
 
-Result: APPROVE | REQUEST_CHANGES | REVIEW_INCOMPLETE
+Result: APPROVE (0 blocking, 1 non-blocking) | REQUEST_CHANGES (2 blocking, 1 non-blocking) | REVIEW_INCOMPLETE
 Revision: <GitHub: base...head | GitLab: base=<sha>, start=<sha>, head=<sha>>
-Coverage: <complete, or the exact material gap>
+Coverage: <only for REVIEW_INCOMPLETE: exact material gap>
 
 ## Findings
 
@@ -188,9 +205,8 @@ Confidence: high
 
 `path/to/file:42`
 
-- Observation: <condition and observed or inferred problem>
-- Impact: <consequence and decisive evidence>
-- Resolution: <expected outcome>
+- Problem: <condition, defect or question, concrete impact, and decisive evidence>
+- Proposed solution: <smallest expected outcome that resolves the problem>
 
 ## Needed to complete the review
 
@@ -210,8 +226,8 @@ If the publication mode is not already selected, ask one closing question in the
 `APPROVE` or `REQUEST_CHANGES` report. Offer immediate publication or a draft, ask the user to choose one, and explain
 the explicit confirmation required for `Assessed by`. Use concise wording equivalent to:
 
-> Ready to publish the review now or prepare a draft. Tell me which option to use. If you personally reviewed the report
-> and agree with its findings, say so explicitly, and I'll add `Assessed by: <your name>`.
+> Choose a publication mode: publish now or prepare a draft. To add `Assessed by: <your name>`, state explicitly that
+> you personally reviewed the report and agree with its findings.
 
 If the user already selected immediate publication or a draft, do not ask the closing question again. Do not ask it
 after `REVIEW_INCOMPLETE`. This is the only publication question; never ask a follow-up if the response is incomplete
@@ -229,7 +245,7 @@ Read the exact model identifier and any exposed thinking or reasoning level from
 value. Put all exposed parts on one `Model` line, for example `Model: Opus 5` or `Model: Sol Medium`. Omit an
 unavailable thinking or reasoning level; use `Model: not exposed` only when the model identifier itself is unavailable.
 Resolve the account selected to publish on the target GitHub or GitLab host. Prefer its display name and use its exact
-login when no display name is available. Add this compact signature to the review summary:
+login when no display name is available. Add this compact signature to the general comment:
 
 ```markdown
 Model: <model identifier [thinking or reasoning level] | not exposed>
@@ -247,13 +263,24 @@ review and review the new revision before publication.
 
 ### Shared publication content and verification
 
-Apply these rules identically to GitHub and GitLab. Put the report summary and signature in the publication summary or
-body. Attach each finding to the smallest useful changed line or range. Keep an entry in the summary with its exact
-location when the platform cannot attach it to the current diff. Merge duplicates and preserve the blocking status,
-confidence, observation, impact, and resolution.
+Apply these rules identically to GitHub and GitLab. Inline publication is the default. Publish each finding exactly once
+and attach it to the smallest useful changed line or range.
+
+The general comment contains only the result line defined above, the platform-authoritative revision tuple, the
+signature, and complete findings that the platform cannot attach to the current diff. Include `Coverage` only for
+`REVIEW_INCOMPLETE`. Do not add a positive recap, section placeholders, or other review metadata.
+
+Omit every finding published inline from the rest of the general comment. Do not include its title, ordinal number,
+status, path, summary, or paraphrase. Do not write `See inline comment` or any equivalent pointer. Do not add `Blocking`
+or `Non-blocking` sections for findings that exist only as inline comments.
+
+When the platform cannot attach a finding to the current diff, put that complete finding in the summary once with its
+exact location and the positioning limitation. Binary files and unchanged lines outside the diff are common cases.
+These are general findings, not references to inline comments. Do not create a second copy. Merge findings with the
+same root cause and preserve the blocking status, confidence, problem, and proposed solution.
 
 Leave a draft pending or unpublished unless the user explicitly asks to submit or publish it. After every platform
-write, read the created content back and verify its state, revision, summary, signature, bodies, paths, sides, and line
+write, read the created content back and verify its state, revision, general comment, bodies, paths, sides, and line
 locations. Report the created review, note, or discussion identifiers and inspection URLs.
 
 If a write fails partway through, report the exact entries that were created. Remove only those entries when the user
@@ -267,7 +294,7 @@ to the pinned head.
 ### GitLab review
 
 Follow [the GitLab reference](references/gitlab.md) to create published notes or unpublished Draft Notes and read them
-back. Apply only the shared authorization, content, signature, revision, verification, and cleanup rules above.
+back. Apply only the shared authorization, content, revision, verification, and cleanup rules above.
 
 ### Clean up
 
