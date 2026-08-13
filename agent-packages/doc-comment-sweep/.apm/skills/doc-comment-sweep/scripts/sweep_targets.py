@@ -166,10 +166,11 @@ class Failed(Exception):
 
 
 def git(root: str, *args: str, check: bool = True) -> str:
-    proc = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
+    proc = subprocess.run(["git", "-C", root, *args], capture_output=True)
     if check and proc.returncode != 0:
-        raise Failed(f"git {' '.join(args)}: {proc.stderr.strip()}")
-    return proc.stdout
+        stderr = proc.stderr.decode("utf-8", errors="surrogateescape").strip()
+        raise Failed(f"git {' '.join(args)}: {stderr}")
+    return proc.stdout.decode("utf-8", errors="surrogateescape")
 
 
 def sb_map(path: str) -> dict:
@@ -232,6 +233,21 @@ def flatten(payload: dict, src: str) -> list[Decl]:
             kind = node.get("kind", "")
             children = node.get("children") or []
             if kind in _SKIP_KINDS:
+                if kind == "namespace" and node.get("docs"):
+                    out.append(
+                        Decl(
+                            qualified_name=node.get("name") or "<package>",
+                            name=node.get("name") or "<package>",
+                            kind="package",
+                            signature=node.get("signature", ""),
+                            visibility=node.get("visibility") or "public",
+                            start_line=node["start_line"],
+                            end_line=node["end_line"],
+                            doc_start_line=_doc_start_line(src, node),
+                            docs="\n".join(node.get("docs") or []),
+                            depth=depth,
+                        )
+                    )
                 walk(children, prefix, depth)
                 continue
             name = node.get("name") or "<anonymous>"
@@ -254,6 +270,39 @@ def flatten(payload: dict, src: str) -> list[Decl]:
 
     walk(files[0].get("declarations") or [], [], 0)
     return out
+
+
+def attach_package_doc(decls: list[Decl], spans: list[Span], src: str) -> None:
+    """Materialize a package declaration and its leading package comment.
+
+    ast-bro 3.x/4.x omits package docs and `flatten` normally discards the namespace node. The
+    source position is unambiguous: package documentation is the comment group immediately before
+    the package declaration.
+    """
+    package_line = _package_line(src)
+    if package_line == 0:
+        return
+    package_match = re.search(r"^\s*package\s+([\w.]+)", src, re.MULTILINE)
+    package_name = package_match.group(1) if package_match else "<package>"
+    by_end = {span.end_line: span for span in merge_comment_blocks(src, spans)}
+    span = by_end.get(package_line - 1)
+    if span is None:
+        return
+    decls.insert(
+        0,
+        Decl(
+            qualified_name=package_name,
+            name=package_name,
+            kind="package",
+            signature=f"package {package_name}",
+            visibility="public",
+            start_line=package_line,
+            end_line=package_line,
+            doc_start_line=span.start_line,
+            docs=span.text,
+            depth=0,
+        ),
+    )
 
 
 # ---------------------------------------------------------------- the diff
@@ -604,6 +653,7 @@ def build_file_report(
 
     try:
         decls = flatten(sb_map(abs_path), src)
+        attach_package_doc(decls, spans, src)
         if lang.docs_by_position:
             attach_positional_docs(decls, spans, src)
     except Failed as exc:
@@ -622,6 +672,7 @@ def build_file_report(
                 Path(mirror).write_text(base_src, encoding="utf-8", errors="surrogateescape")
                 base_decls = flatten(sb_map(mirror), base_src)
                 base_spans = lang.scan(base_src)
+                attach_package_doc(base_decls, base_spans, base_src)
                 if lang.docs_by_position:
                     attach_positional_docs(base_decls, base_spans, base_src)
                 base_by_name = _decl_index(base_decls)
@@ -704,12 +755,12 @@ def build_file_report(
             continue
         if not overlaps(ranges, span.start_line, span.end_line):
             continue
+        if span.start_line in doc_lines:
+            continue
         if span.start_line <= header_end:
             report.skipped_comments.append(
-                {"line": span.start_line, "reason": "license header or import region"}
+                {"line": span.start_line, "reason": "license header before the package declaration"}
             )
-            continue
-        if span.start_line in doc_lines:
             continue
         if span.start_line in suppress:
             report.skipped_comments.append(
@@ -729,7 +780,7 @@ def build_file_report(
         enclosing = _innermost(decls, span.start_line)
         report.targets.append(
             {
-                "id": f'{path}#{enclosing}@"{_head_words(span)}"',
+                "id": f'{path}#{enclosing}@{_comment_anchor(span, merged)}:"{_head_words(span)}"',
                 "kind": "inline",
                 "enclosing": enclosing,
                 "commentKind": span.kind,
@@ -772,7 +823,7 @@ def build_file_report(
             enclosing = _innermost(base_decls, span.start_line)
             report.targets.append(
                 {
-                    "id": f'{path}#{enclosing}@"{_head_words(span)}"',
+                    "id": f'{path}#{enclosing}@{anchor}:"{_head_words(span)}"',
                     "kind": "inline",
                     "enclosing": enclosing,
                     "commentKind": span.kind,
@@ -904,6 +955,7 @@ def cmd_survey(args: argparse.Namespace) -> int:
     branch = git(root, "rev-parse", "--abbrev-ref", "HEAD").strip()
 
     paths = getattr(args, "paths", None)
+    mode = "path" if paths else "diff"
     if paths and args.files:
         raise Failed("--files restricts the branch diff and --paths replaces it; pass one, not both")
     if paths:
@@ -920,7 +972,12 @@ def cmd_survey(args: argparse.Namespace) -> int:
         keep: list[tuple[str, bool, Language]] = []
         for path, base_exists, lang in files:
             entry = ledger.get(path)
-            if entry and entry.get("sha1") and entry["sha1"] == _content_hash(root, path):
+            if (
+                entry
+                and entry.get("sha1") == _content_hash(root, path)
+                and entry.get("mode") == mode
+                and entry.get("base") == base
+            ):
                 resumed.append({"path": path, "wave": entry.get("wave")})
             else:
                 keep.append((path, base_exists, lang))
@@ -941,7 +998,7 @@ def cmd_survey(args: argparse.Namespace) -> int:
         # The mode is in the payload because it changes what the numbers below mean: under "path" a
         # target is a comment somebody asked to have read, not one the branch changed, and every
         # ledger, report and commit message downstream should say which of the two it was.
-        "mode": "path" if paths else "diff",
+        "mode": mode,
         "pathspecs": paths or [],
         "selectedFiles": selected,
         "files": [
@@ -970,7 +1027,7 @@ def cmd_survey(args: argparse.Namespace) -> int:
         "ok": True,
         "base": base,
         "branch": branch,
-        "mode": "path" if paths else "diff",
+        "mode": mode,
         "pathspecs": paths or [],
         # Under --paths nothing else bounds the run, so the agent reading this summary is the last
         # place a surprising number can be noticed before a fan-out spends on it.
@@ -1013,12 +1070,19 @@ def cmd_ledger(args: argparse.Namespace) -> int:
             pass
 
     written, missing = [], []
+    base = git(root, "merge-base", "HEAD", args.base).strip()
     for rel in args.files:
         sha1 = _content_hash(root, rel)
         if sha1 is None:
             missing.append(rel)
             continue
-        payload["entries"][rel] = {"sha1": sha1, "wave": args.wave, "outcome": args.outcome}
+        payload["entries"][rel] = {
+            "sha1": sha1,
+            "wave": args.wave,
+            "outcome": args.outcome,
+            "mode": args.mode,
+            "base": base,
+        }
         written.append(rel)
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1043,9 +1107,15 @@ def decls_of(src: str, mapped: dict, path: str) -> list[Decl]:
     """
     decls = flatten(mapped, src)
     lang = language_for(path)
+    if lang:
+        try:
+            spans = lang.scan(src)
+            attach_package_doc(decls, spans, src)
+        except (ParseError, Unverifiable):
+            spans = []
     if lang and lang.docs_by_position:
         try:
-            attach_positional_docs(decls, lang.scan(src), src)
+            attach_positional_docs(decls, spans, src)
         except (ParseError, Unverifiable):
             pass  # an unlexable revision keeps whatever the mapper reported
     return decls
@@ -1167,7 +1237,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("survey", help="build the target list for the branch")
     p.add_argument("--root", required=True)
-    p.add_argument("--base", default="master", help="branch to take the merge base against")
+    p.add_argument("--base", default="main", help="branch to take the merge base against")
     p.add_argument("--files", nargs="*", help="restrict the survey to these paths")
     p.add_argument(
         "--paths",
@@ -1187,6 +1257,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("ledger", help="record files as finished for a later resume")
     p.add_argument("--root", required=True)
     p.add_argument("--ledger", required=True, help="path to ledger.json; created when absent")
+    p.add_argument("--mode", choices=["diff", "path"], required=True, help="survey mode being recorded")
+    p.add_argument("--base", required=True, help="survey base ref being recorded")
     p.add_argument("--files", nargs="+", required=True, help="repository-relative paths")
     p.add_argument("--wave", type=int, default=0, help="which wave finished them, for the report")
     p.add_argument("--outcome", default="approved", choices=["approved", "unchanged"])

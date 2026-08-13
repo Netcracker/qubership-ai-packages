@@ -20,11 +20,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from strip_go_comments import (  # noqa: E402
     ParseError,
-    resolve_under_root,
     first_difference,
     normalize,
     scan,
 )
+from strip_java_comments import resolve_under_root  # noqa: E402
 
 FAILURES: list[str] = []
 
@@ -162,6 +162,16 @@ check(
     code("x := a /* mid */ + b\n"),
     ["x := a + b"],
 )
+check(
+    "whitespace inside an interpreted string is code",
+    first_difference('const s = "a  b"\n', 'const s = "a b"\n') is None,
+    False,
+)
+check(
+    "whitespace inside a raw string is code",
+    first_difference("const s = `a  b`\n", "const s = `a b`\n") is None,
+    False,
+)
 
 # ---------------------------------------------------------------- the CLI
 
@@ -204,19 +214,27 @@ with tempfile.TemporaryDirectory() as tmp:
             capture_output=True, text=True,
         )
         try:
-            return json.loads(proc.stdout)["results"][0]["status"], proc.returncode
+            report = json.loads(proc.stdout)
+            return report["files"][0]["status"], proc.returncode, report
         except (ValueError, KeyError, IndexError):
-            return f"no parsable result: {proc.stderr.strip()[:120]}", proc.returncode
+            return f"no parsable result: {proc.stderr.strip()[:120]}", proc.returncode, {}
 
     check("a relative path verifies", verify("f.go")[0], "pass")
     check("an absolute path verifies the same file", verify(str(target))[0], "pass")
     check("an absolute path does not exit non-zero", verify(str(target))[1], 0)
-    missing, code = verify("nope.go")
+    missing, code, report = verify("nope.go")
     check("a path that is not on disk is missing, not new", missing, "missing")
     check("…and it fails the run", code != 0, True)
-    outside, code = verify("/etc/hosts")
+    check("Go verify uses the shared top-level verdict", bool(report.get("verdict")), True)
+    outside, code, _ = verify("/etc/hosts")
     check("a path outside the root is refused", outside, "outside-root")
     check("…and that fails the run too", code != 0, True)
+
+    created = root / "new.go"
+    created.write_text("package p\n", encoding="utf-8")
+    new, code, _ = verify("new.go")
+    check("a file created after the rollback ref is new", new, "new")
+    check("…and a new file fails the run", code != 0, True)
 
 check("resolve_under_root leaves a relative path alone", resolve_under_root("/a/b", "c/d.go"), "c/d.go")
 check("resolve_under_root makes an absolute path relative", resolve_under_root("/a/b", "/a/b/c/d.go"), "c/d.go")

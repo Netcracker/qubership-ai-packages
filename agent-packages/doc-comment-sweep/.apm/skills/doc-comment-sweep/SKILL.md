@@ -81,7 +81,8 @@ python3 <skill-directory>/scripts/sweep_targets.py survey \
 
 ```bash
 python3 <skill-directory>/scripts/sweep_targets.py survey \
-  --root <root> --base <base> --out <artifacts>/targets.json --paths <bounded-paths>
+  --root <root> --base <base> --out <artifacts>/targets.json --ledger <artifacts>/ledger.json \
+  --paths <bounded-paths>
 ```
 
 Add `--files <files>` only for an explicit file allowlist. Show the user `selectedFiles`, target count, excluded files,
@@ -139,8 +140,9 @@ python3 <skill-directory>/scripts/strip_go_comments.py verify \
   --root <root> --ref <preSweepRef> --files <go-files>
 ```
 
-Any `fail`, `missing`, `outside-root`, `unverifiable`, or parse error is a blocker. Do not ask the judge to excuse it.
-Have the sweeper undo only the accidental code edit, rerun the oracle, and stop the batch if it still fails.
+Any `fail`, `new`, `missing`, `outside-root`, `unverifiable`, `blocked`, or parse error is a blocker. Under
+`preSweepRef`, `new` means the sweeper created a source file. Do not ask the judge to excuse it. Have the sweeper undo
+only the accidental code edit, rerun the oracle, and stop the batch if it still fails.
 
 ## Phase 5: Independent judge
 
@@ -173,7 +175,7 @@ On failure, halt later waves and report all deferred batches. On success, update
 ```bash
 python3 <skill-directory>/scripts/sweep_targets.py ledger \
   --root <root> --ledger <artifacts>/ledger.json --wave <wave> \
-  --outcome approved --files <approved-files>
+  --mode <diff-or-path> --base <base> --outcome approved --files <approved-files>
 ```
 
 In `commit` mode, stage only approved comment and required generated-documentation changes. Review the staged diff and

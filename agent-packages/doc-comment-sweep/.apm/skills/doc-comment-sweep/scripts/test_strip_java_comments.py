@@ -104,6 +104,10 @@ raises("a quote spelled as a unicode escape is refused", Unverifiable,
        lambda: scan("String s = " + java_escape("u0022") + "x" + java_escape("u0022") + ";"))
 raises("a doubled-u escape is refused too", Unverifiable,
        lambda: scan("int x; " + java_escape("uuuu002f") + java_escape("uuuu002f") + " no"))
+raises("a line feed spelled as a unicode escape is refused", Unverifiable,
+       lambda: scan("// hidden " + java_escape("u000a") + " int code = 1;"))
+raises("a carriage return spelled as a unicode escape is refused", Unverifiable,
+       lambda: scan("// hidden " + java_escape("u000d") + " int code = 1;"))
 check("a backslash that is itself escaped does not make an escape",
       kinds('String s = "a' + chr(92) * 2 + 'u002f"; // real'), ["line"])
 
@@ -147,6 +151,15 @@ swapped = first_difference('log("a");\n', 'log("b");\n')
 check("a changed string literal is a difference", swapped is not None, True)
 check("the report names the after-version line", swapped.line if swapped else None, 1)
 
+literal_space = first_difference('String s = "a  b";\n', 'String s = "a b";\n')
+check("whitespace inside a string literal is code", literal_space is not None, True)
+
+text_block_space = first_difference(
+    'String s = """\nvalue  here\n""";\n',
+    'String s = """\nvalue here\n""";\n',
+)
+check("whitespace inside a text block is code", text_block_space is not None, True)
+
 renamed = first_difference("int count;\nint f() { return count; }\n", "int total;\nint f() { return total; }\n")
 check("a rename is a difference", renamed is not None, True)
 check("the report points at the first changed line", renamed.line if renamed else None, 1)
@@ -189,7 +202,7 @@ with tempfile.TemporaryDirectory() as tmp:
     run("add", "-A")
     run("commit", "-qm", "base")
 
-    # A: comments only. B: a real code edit. C: added by the sweep, so it has no before-version.
+    # A: comments only. B: a real code edit. C: created by the sweep after the rollback ref.
     (root / "A.java").write_text('class A {\n  /**\n   * New wording, two lines.\n   */\n  void f() { log("x"); }\n}\n')
     (root / "B.java").write_text("class B {\n  void h() {}\n}\n")
     (root / "C.java").write_text("class C {}\n")
@@ -201,17 +214,34 @@ with tempfile.TemporaryDirectory() as tmp:
         capture_output=True,
         text=True,
     )
-    check("verify exits 1 when any file changed code", proc.returncode, 1)
+    check("verify exits with the blocker code when any file is new", proc.returncode, 2)
 
     import json
 
     report = json.loads(proc.stdout)
     by_file = {f["file"]: f for f in report["files"]}
-    check("verify reports the overall verdict", report["verdict"], "fail")
+    check("verify reports a blocker when a rollback-ref file is missing", report["verdict"], "blocked")
     check("a comment-only rewrite passes", by_file["A.java"]["status"], "pass")
     check("a code edit fails", by_file["B.java"]["status"], "fail")
-    check("a file the branch added is not judged", by_file["C.java"]["status"], "new")
+    check("a file created after the rollback ref is blocked", by_file["C.java"]["status"], "new")
     check("the failure names a line", by_file["B.java"]["line"], 2)
+
+    proc = subprocess.run(
+        [sys.executable, script, "verify", "--root", str(root), "--ref", "HEAD", "--files", "C.java"],
+        capture_output=True,
+        text=True,
+    )
+    check("a new file fails verification", proc.returncode != 0, True)
+
+    latin = root / "Latin.java"
+    latin.write_bytes(b'class Latin { // caf\xe9\n int x; }\n')
+    run("add", "Latin.java")
+    run("commit", "-qm", "latin-1")
+    proc = subprocess.run(
+        [sys.executable, script, "verify", "--root", str(root), "--ref", "HEAD", "--files", "Latin.java"],
+        capture_output=True,
+    )
+    check("non-UTF-8 input does not crash verify", b"Traceback" in proc.stderr, False)
 
     (root / "B.java").write_text("class B {\n  void g() {}\n}\n")
     proc = subprocess.run(

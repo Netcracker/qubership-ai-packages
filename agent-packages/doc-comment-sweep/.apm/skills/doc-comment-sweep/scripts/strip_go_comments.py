@@ -26,8 +26,6 @@ The caller decides, in `sweep_targets.py`, where the declaration line numbers ar
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import sys
 from pathlib import Path
 
@@ -38,12 +36,10 @@ from strip_java_comments import (  # noqa: E402
     Normalized,
     ParseError,
     Span,
-    Unverifiable,
-    _git_show,
-    resolve_under_root,
     _line_of,
     _line_starts,
     _read,
+    verify_files,
     first_difference as _first_difference,
     normalize as _normalize,
 )
@@ -53,7 +49,7 @@ from strip_java_comments import (  # noqa: E402
 # first; when a third language lands, move them to a neutral module rather than copying them.
 
 
-def scan(src: str) -> list[Span]:
+def _scan(src: str, include_literals: bool) -> list[Span]:
     """Every comment in a Go source file, in source order.
 
     Raises ParseError on an unterminated string, rune, or block comment. Never raises Unverifiable:
@@ -93,14 +89,21 @@ def scan(src: str) -> list[Span]:
             # Raw string literal: no escapes, runs across lines, and anything inside it — including
             # //, /*, and a lone " — is data. This is the one construct that makes a naive
             # line-oriented comment stripper wrong on Go.
+            literal_start = i
             end = src.find("`", i + 1)
             if end == -1:
                 raise ParseError(f"unterminated raw string literal at line {_line_of(starts, i)}")
             i = end + 1
+            if include_literals:
+                spans.append(
+                    Span("literal", literal_start, i, _line_of(starts, literal_start),
+                         _line_of(starts, i - 1), src[literal_start:i])
+                )
             continue
 
         if ch in ('"', "'"):
             kind = "string" if ch == '"' else "rune"
+            literal_start = i
             i += 1
             while True:
                 if i >= n or src[i] == "\n":
@@ -112,6 +115,11 @@ def scan(src: str) -> list[Span]:
                     i += 1
                     break
                 i += 1
+            if include_literals:
+                spans.append(
+                    Span("literal", literal_start, i, _line_of(starts, literal_start),
+                         _line_of(starts, i - 1), src[literal_start:i])
+                )
             continue
 
         i += 1
@@ -119,14 +127,24 @@ def scan(src: str) -> list[Span]:
     return spans
 
 
+def scan(src: str) -> list[Span]:
+    """Every comment in a Go source file, in source order."""
+    return _scan(src, False)
+
+
+def scan_literals(src: str) -> list[Span]:
+    """Literal spans whose contents must remain byte-for-byte significant."""
+    return [span for span in _scan(src, True) if span.kind == "literal"]
+
+
 def normalize(src: str) -> Normalized:
     """The comment-free, whitespace-collapsed form of a Go file."""
-    return _normalize(src, scan)
+    return _normalize(src, scan, scan_literals)
 
 
 def first_difference(before: str, after: str) -> Diff | None:
     """The first code line that differs between two revisions, or None when only comments moved."""
-    return _first_difference(before, after, scan)
+    return _first_difference(before, after, scan, scan_literals)
 
 
 def cmd_strip(args: argparse.Namespace) -> int:
@@ -137,58 +155,7 @@ def cmd_strip(args: argparse.Namespace) -> int:
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
-    results: list[dict[str, object]] = []
-    worst = 0
-    for path in args.files:
-        entry: dict[str, object] = {"file": path}
-        try:
-            rel = resolve_under_root(args.root, path)
-        except ValueError as exc:
-            entry.update(status="outside-root", reason=str(exc))
-            worst = max(worst, 2)
-            results.append(entry)
-            continue
-        entry["file"] = rel
-
-        # "new" has to mean "the branch adds this file", nothing else. A path that is not on disk is
-        # a caller mistake — a typo, a stale list — and reporting it as new would let a gate pass on
-        # a file nobody verified.
-        if not os.path.exists(os.path.join(args.root, rel)):
-            entry.update(status="missing", reason="no such file under the root")
-            worst = max(worst, 2)
-            results.append(entry)
-            continue
-
-        try:
-            before = _git_show(args.root, args.ref, rel)
-        except FileNotFoundError:
-            entry["status"] = "new"
-            results.append(entry)
-            continue
-
-        after = _read(os.path.join(args.root, rel))
-        try:
-            diff = first_difference(before, after)
-        except Unverifiable as exc:  # pragma: no cover - Go never raises this
-            entry.update(status="unverifiable", reason=str(exc))
-            worst = max(worst, 3)
-            results.append(entry)
-            continue
-        except ParseError as exc:
-            entry.update(status="unparseable", reason=str(exc))
-            worst = max(worst, 2)
-            results.append(entry)
-            continue
-
-        if diff is None:
-            entry["status"] = "pass"
-        else:
-            entry.update(status="fail", line=diff.line, expected=diff.before, actual=diff.after)
-            worst = max(worst, 4)
-        results.append(entry)
-
-    print(json.dumps({"results": results}, indent=2))
-    return 0 if worst == 0 else worst
+    return verify_files(args, first_difference)
 
 
 def main(argv: list[str] | None = None) -> int:

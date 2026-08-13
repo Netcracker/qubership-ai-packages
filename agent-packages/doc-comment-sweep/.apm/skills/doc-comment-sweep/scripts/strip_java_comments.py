@@ -34,7 +34,7 @@ from typing import Callable
 # string. A lexer working on the raw text cannot see either. Rather than half-implement the rule and
 # hand back a confident wrong answer, refuse the file: a false "the code is untouched" is worse than
 # no answer at all. Matches an even-length backslash run followed by u+ and the hex for " ' * / \.
-_PRE_LEX_ESCAPE = re.compile(r"(?<!\\)(?:\\\\)*\\u+00(?:22|27|2[aAfF]|5[cC])")
+_PRE_LEX_ESCAPE = re.compile(r"(?<!\\)(?:\\\\)*\\u+00(?:0[aAdD]|22|27|2[aAfF]|5[cC])")
 
 _WS_RUN = re.compile(r"[ \t\f\r]+")
 
@@ -83,7 +83,7 @@ def _opens_text_block(src: str, i: int) -> bool:
     return j < len(src) and src[j] in "\r\n"
 
 
-def scan(src: str) -> list[Span]:
+def _scan(src: str, include_literals: bool) -> list[Span]:
     """Return every comment span in source order.
 
     Raises ParseError on an unterminated literal or block comment, and Unverifiable on a pre-lex
@@ -124,6 +124,7 @@ def scan(src: str) -> list[Span]:
                 continue
 
         if _opens_text_block(src, i):
+            literal_start = i
             j = i + 3
             while True:
                 if j >= n:
@@ -135,10 +136,16 @@ def scan(src: str) -> list[Span]:
                     j += 3
                     break
                 j += 1
+            if include_literals:
+                spans.append(
+                    Span("literal", literal_start, j, _line_of(starts, literal_start), _line_of(starts, j - 1),
+                         src[literal_start:j])
+                )
             i = j
             continue
 
         if ch in "\"'":
+            literal_start = i
             j = i + 1
             while True:
                 if j >= n:
@@ -154,6 +161,11 @@ def scan(src: str) -> list[Span]:
                     j += 1
                     break
                 j += 1
+            if include_literals:
+                spans.append(
+                    Span("literal", literal_start, j, _line_of(starts, literal_start), _line_of(starts, j - 1),
+                         src[literal_start:j])
+                )
             i = j
             continue
 
@@ -162,13 +174,27 @@ def scan(src: str) -> list[Span]:
     return spans
 
 
+def scan(src: str) -> list[Span]:
+    """Return every comment span in source order."""
+    return _scan(src, False)
+
+
+def scan_literals(src: str) -> list[Span]:
+    """Return literal spans whose contents must remain byte-for-byte significant."""
+    return [span for span in _scan(src, True) if span.kind == "literal"]
+
+
 @dataclass(frozen=True)
 class Normalized:
     lines: list[str]  # comment-free code lines, whitespace-collapsed, blanks dropped
     source_lines: list[int]  # source line each entry came from, same length as `lines`
 
 
-def normalize(src: str, scanner: Callable[[str], list[Span]] = scan) -> Normalized:
+def normalize(
+    src: str,
+    scanner: Callable[[str], list[Span]] = scan,
+    literal_scanner: Callable[[str], list[Span]] = scan_literals,
+) -> Normalized:
     """Strip comments and reduce what is left to the form the comparison uses.
 
     A comment becomes a single space, never a newline. That is the whole reason deleting a multi-line
@@ -180,16 +206,28 @@ def normalize(src: str, scanner: Callable[[str], list[Span]] = scan) -> Normaliz
     would let two sweeps be held to two different definitions of "the code moved".
     """
     spans = scanner(src)
+    literals = literal_scanner(src)
     out: list[str] = []
     src_idx: list[int] = []
 
     cursor = 0
-    for span in spans:
+    events = sorted([(span.start, "comment", span) for span in spans] +
+                    [(span.start, "literal", span) for span in literals])
+    for _, event_kind, span in events:
+        if span.start < cursor:
+            continue
         for k in range(cursor, span.start):
             out.append(src[k])
             src_idx.append(k)
-        out.append(" ")
-        src_idx.append(span.start)
+        if event_kind == "comment":
+            out.append(" ")
+            src_idx.append(span.start)
+        else:
+            # Encode the complete literal as a whitespace-free token. This preserves spaces and
+            # newlines inside strings while allowing whitespace outside literals to normalize.
+            encoded = "<literal:" + "-".join(f"{ord(char):x}" for char in span.text) + ">"
+            out.extend(encoded)
+            src_idx.extend([span.start] * len(encoded))
         cursor = span.end
     for k in range(cursor, len(src)):
         out.append(src[k])
@@ -223,9 +261,13 @@ class Diff:
 
 
 def first_difference(
-    before: str, after: str, scanner: Callable[[str], list[Span]] = scan
+    before: str,
+    after: str,
+    scanner: Callable[[str], list[Span]] = scan,
+    literal_scanner: Callable[[str], list[Span]] = scan_literals,
 ) -> Diff | None:
-    a, b = normalize(before, scanner), normalize(after, scanner)
+    a = normalize(before, scanner, literal_scanner)
+    b = normalize(after, scanner, literal_scanner)
     for i in range(max(len(a.lines), len(b.lines))):
         old = a.lines[i] if i < len(a.lines) else "<end of file>"
         new = b.lines[i] if i < len(b.lines) else "<end of file>"
@@ -257,11 +299,10 @@ def _git_show(root: str, ref: str, path: str) -> str:
     proc = subprocess.run(
         ["git", "-C", root, "show", f"{ref}:{path}"],
         capture_output=True,
-        text=True,
     )
     if proc.returncode != 0:
         raise FileNotFoundError(f"{path} does not exist at {ref}")
-    return proc.stdout
+    return proc.stdout.decode("utf-8", errors="surrogateescape")
 
 
 def _read(path: str) -> str:
@@ -316,7 +357,11 @@ def cmd_classify(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_verify(args: argparse.Namespace) -> int:
+def verify_files(
+    args: argparse.Namespace,
+    difference: Callable[[str, str], Diff | None] = first_difference,
+) -> int:
+    """Run the shared Java/Go verify protocol."""
     results = []
     worst = 0
     for path in args.files:
@@ -343,12 +388,13 @@ def cmd_verify(args: argparse.Namespace) -> int:
             before = _git_show(args.root, args.ref, rel)
         except FileNotFoundError:
             entry["status"] = "new"
+            worst = max(worst, 2)
             results.append(entry)
             continue
 
         after = _read(os.path.join(args.root, rel))
         try:
-            diff = first_difference(before, after)
+            diff = difference(before, after)
         except Unverifiable as exc:
             entry.update(status="unverifiable", reason=str(exc))
             worst = max(worst, 3)
@@ -372,7 +418,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
             worst = max(worst, 1)
         results.append(entry)
 
-    verdict = {0: "pass", 1: "fail", 2: "unparseable", 3: "unverifiable"}[worst]
+    verdict = {0: "pass", 1: "fail", 2: "blocked", 3: "unverifiable"}[worst]
     json.dump({"verdict": verdict, "ref": args.ref, "files": results}, sys.stdout, indent=2)
     print()
 
@@ -385,6 +431,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
     return worst
+
+
+def cmd_verify(args: argparse.Namespace) -> int:
+    return verify_files(args)
 
 
 def main(argv: list[str] | None = None) -> int:

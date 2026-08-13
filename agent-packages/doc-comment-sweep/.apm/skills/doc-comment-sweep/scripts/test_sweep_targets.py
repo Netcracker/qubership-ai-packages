@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from sweep_targets import _GROUP_DECL, LANGUAGES, language_for  # noqa: E402
+from sweep_targets import _GROUP_DECL, LANGUAGES, git, language_for  # noqa: E402
 
 SCRIPT = str(Path(__file__).parent / "sweep_targets.py")
 FAILURES: list[str] = []
@@ -40,7 +40,8 @@ def check_true(name: str, actual) -> None:
 
 # ---------------------------------------------------------------- the fixture
 
-GO_TYPES = '''package api
+GO_TYPES = '''// Package api provides widget fixtures.
+package api
 
 // Colors are the palette the renderer accepts.
 const (
@@ -107,6 +108,9 @@ public class A {
     /** Returns the answer. */
     public int answer() {
         // why forty-two
+        // Copy the array so the caller cannot mutate our state.
+        int first = 1;
+        // Copy the array so the caller never sees the update.
         return 42;
     }
 
@@ -152,13 +156,23 @@ public class DeleteMe {
 }
 """
 
+JAVA_PACKAGE = """/** Provides the p fixtures. */
+package p;
+"""
+
+JAVA_PACKAGE_EDITED = """/** Provides fixture APIs in package p. */
+package p;
+"""
+
 
 def run(root, *args, expect_ok=True):
     proc = subprocess.run(
         [sys.executable, SCRIPT, *args], capture_output=True, text=True, cwd=root
     )
     if expect_ok and proc.returncode != 0:
-        FAILURES.append(f"CLI failed: {' '.join(args)}\n      {proc.stderr.strip()[:400]}")
+        raise RuntimeError(
+            f"CLI failed ({proc.returncode}): {' '.join(args)}\n{proc.stderr.strip()}"
+        )
     return proc
 
 
@@ -225,6 +239,7 @@ with tempfile.TemporaryDirectory() as tmp:
     write("go/api/widget_test.go", GO_TEST)
     write("java/A.java", JAVA)
     write("java/DeleteMe.java", JAVA_DELETIONS)
+    write("java/package-info.java", JAVA_PACKAGE)
     write("notes.md", "# not source\n")
 
     for cmd in (
@@ -246,6 +261,7 @@ with tempfile.TemporaryDirectory() as tmp:
     write("notes.md", "# not source, and edited\n")
     write("java/DeleteMe.java", JAVA_DELETIONS_EDITED)
     write("java/A.java", JAVA_EDITED)
+    write("java/package-info.java", JAVA_PACKAGE_EDITED)
 
     out = str(Path(root) / "t.json")
 
@@ -256,7 +272,7 @@ with tempfile.TemporaryDirectory() as tmp:
     check(
         "diff scope selects the edited and comment-deletion files",
         diff_paths,
-        ["go/api/types.go", "java/A.java", "java/DeleteMe.java"],
+        ["go/api/types.go", "java/A.java", "java/DeleteMe.java", "java/package-info.java"],
     )
     check(
         "a file with no scanner is excluded, and the reason names the suffixes",
@@ -325,6 +341,11 @@ with tempfile.TemporaryDirectory() as tmp:
 
     # ------------------------------------------------------------ Go doc comments are positional
 
+    types_file = targets_of(path_payload, "go/api/types.go")
+    check_true(
+        "the Go package comment is a doc target",
+        any(t.get("qualifiedName") == "api" for t in types_file["targets"]),
+    )
     inline = inline_texts(path_payload, "go/api/types.go")
     joined = "\n---\n".join(inline)
     check(
@@ -346,6 +367,11 @@ with tempfile.TemporaryDirectory() as tmp:
         "a comment inside a function body is an inline target",
         any("zero size is deliberate" in t for t in inline),
     )
+    check(
+        "inline target IDs remain unique when opening words collide",
+        len({t["id"] for t in types_file["targets"] if t["kind"] == "inline"}),
+        len([t for t in types_file["targets"] if t["kind"] == "inline"]),
+    )
     check_true(
         "a comment above a function-local group is an inline target",
         any("grouped declaration inside a function" in t for t in inline),
@@ -363,7 +389,6 @@ with tempfile.TemporaryDirectory() as tmp:
 
     # ------------------------------------------------------------ a documented struct field
 
-    types_file = targets_of(path_payload, "go/api/types.go")
     name_field = [
         t for t in types_file["targets"] if t["kind"] == "doc" and t["qualifiedName"].endswith("Name")
     ]
@@ -458,6 +483,11 @@ with tempfile.TemporaryDirectory() as tmp:
         "a Java // comment inside a method is an inline target",
         any("why forty-two" in t for t in j_inline),
     )
+    inline_ids = [t["id"] for t in jf["targets"] if t["kind"] == "inline"]
+    check("Java inline target IDs are unique", len(set(inline_ids)), len(inline_ids))
+
+    package_file = targets_of(java_payload, "java/package-info.java")
+    check_true("package-info Javadoc is a doc target", package_file["targets"])
     overloads = [
         t for t in jf["targets"] if t["kind"] == "doc" and t["qualifiedName"].endswith("answer")
     ]
@@ -493,7 +523,10 @@ with tempfile.TemporaryDirectory() as tmp:
     inline_pairs = json.loads(
         run(root, "pairs", "--targets", out, "--file", "java/A.java", "--pre-sweep-ref", "HEAD").stdout
     )["targets"]
-    rewritten_inline = [p for p in inline_pairs if p["kind"] == "inline"]
+    rewritten_inline = [
+        p for p in inline_pairs
+        if p["kind"] == "inline" and "fixed answer is intentional" in (p.get("after") or "")
+    ]
     check("pairs keeps one rewritten inline target", len(rewritten_inline), 1)
     if rewritten_inline:
         check_true(
@@ -526,6 +559,40 @@ with tempfile.TemporaryDirectory() as tmp:
     if deleted_inline_pair:
         check_true("pairs retains a deleted inline comment as before", deleted_inline_pair[0].get("before"))
         check("pairs reports a deleted inline comment as absent after", deleted_inline_pair[0].get("after"), None)
+
+    # ------------------------------------------------------------ ledger scope
+
+    ledger = str(Path(root) / "ledger.json")
+    run(
+        root,
+        "ledger",
+        "--root", root,
+        "--ledger", ledger,
+        "--mode", "diff",
+        "--base", git(root, "merge-base", "HEAD", "HEAD").strip(),
+        "--files", "java/A.java",
+    )
+    resumed_diff = survey(root, out, "--ledger", ledger)
+    check(
+        "a matching diff ledger resumes the file",
+        any(item["path"] == "java/A.java" for item in resumed_diff["files"]),
+        False,
+    )
+    path_after_diff = survey(root, out, "--paths", "java", "--ledger", ledger)
+    check_true(
+        "a diff ledger does not suppress a path audit",
+        targets_of(path_after_diff, "java/A.java")["targets"],
+    )
+
+    latin = Path(root) / "java/Latin.java"
+    latin.write_bytes(b"package p; // caf\xe9\nclass Latin {}\n")
+    subprocess.run(["git", "-C", root, "add", "java/Latin.java"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", root, "commit", "-qm", "latin-1"], check=True, capture_output=True)
+    try:
+        shown = git(root, "show", "HEAD:java/Latin.java")
+        check_true("Git text preserves non-UTF-8 bytes with surrogateescape", shown)
+    except UnicodeDecodeError:
+        check("Git text preserves non-UTF-8 bytes with surrogateescape", "UnicodeDecodeError", "text")
 
     # ------------------------------------------------------------ a file the scanner cannot read
 

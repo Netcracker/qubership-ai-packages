@@ -31,7 +31,7 @@ help:
 	@echo "check-descriptions  Verify all skill descriptions are <= 1020 chars"
 	@echo "verify-docs         Run the consumer guide commands (DOC_REPO=$(DOC_REPO) DOC_REF=<ref>, must be pushed)"
 	@echo "test                Network-free producer/consumer round-trip (tests/marketplace_roundtrip.sh)"
-	@echo "test-doc-comment-sweep  Run all doc-comment-sweep tests (requires sb)"
+	@echo "test-doc-comment-sweep Run all doc-comment-sweep tests (requires sb)"
 	@echo "install-smoke       Install each package into a fresh project (MODE=all|diff, needs network)"
 
 pack:
