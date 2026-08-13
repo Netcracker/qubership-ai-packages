@@ -264,25 +264,36 @@ jobs:
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           dashboard_url=''
           reasons=()
+          notes=()
 
-          # The server-side author filter uses the raw renovate[bot] login,
-          # while the returned JSON uses app/renovate. The shared presets use
-          # Renovate's default title. Update all three values together.
-          dashboard_issues_json="$(gh issue list \
-            --state open \
-            --author 'renovate[bot]' \
-            --limit 1000 \
-            --json author,body,number,title,url)"
+          # Renovate publishes the dashboard as an issue, and this job reports
+          # failures as an issue, so both halves need issues turned on. Forks
+          # get them off by default. Read the flag before any issue call: on a
+          # repository with issues disabled `gh issue list` exits 1, which is
+          # what killed this job on the fork.
+          issues_enabled="$(gh api "repos/$GH_REPO" --jq '.has_issues')"
 
-          dashboard_json="$(jq -c \
-            --arg author 'app/renovate' \
-            --arg title "$dashboard_title" \
-            '[.[] | select(.title == $title and .author.login == $author)] | first // empty' \
-            <<< "$dashboard_issues_json")"
+          dashboard_json=''
+          if [[ "$issues_enabled" == 'true' ]]; then
+            # The server-side author filter uses the raw renovate[bot] login,
+            # while the returned JSON uses app/renovate. The shared presets use
+            # Renovate's default title. Update all three values together.
+            dashboard_issues_json="$(gh issue list \
+              --state open \
+              --author 'renovate[bot]' \
+              --limit 1000 \
+              --json author,body,number,title,url)"
 
-          if [[ -z "$dashboard_json" ]]; then
-            reasons+=('Renovate Dependency Dashboard was not found')
+            dashboard_json="$(jq -c \
+              --arg author 'app/renovate' \
+              --arg title "$dashboard_title" \
+              '[.[] | select(.title == $title and .author.login == $author)] | first // empty' \
+              <<< "$dashboard_issues_json")"
           else
+            notes+=("Issues are disabled here, so Renovate has nowhere to publish a Dependency Dashboard and this job cannot file a health issue. Dashboard inspection is skipped; the validation and lookup jobs are still reported.")
+          fi
+
+          if [[ -n "$dashboard_json" ]]; then
             dashboard_body="$(jq -r '.body' <<< "$dashboard_json")"
             dashboard_url="$(jq -r '.url' <<< "$dashboard_json")"
 
@@ -295,6 +306,12 @@ jobs:
             if grep -q 'Renovate failed to look up' <<< "$dashboard_body"; then
               reasons+=('Dependency Dashboard reports lookup failures')
             fi
+          elif [[ "$issues_enabled" == 'true' ]]; then
+            # Wherever this monitor runs, a missing dashboard is a problem:
+            # it is what an incomplete Renovate onboarding looks like, and no
+            # signal reachable from GITHUB_TOKEN separates that from an app
+            # that was never installed.
+            reasons+=('Renovate Dependency Dashboard was not found')
           fi
 
           if [[ "$VALIDATION_RESULT" != 'success' ]]; then
@@ -312,17 +329,20 @@ jobs:
             fi
           fi
 
-          health_issues_json="$(gh issue list \
-            --state open \
-            --label "$health_label" \
-            --limit 1000 \
-            --json body,number,title,url)"
+          health_number=''
+          if [[ "$issues_enabled" == 'true' ]]; then
+            health_issues_json="$(gh issue list \
+              --state open \
+              --label "$health_label" \
+              --limit 1000 \
+              --json body,number,title,url)"
 
-          health_number="$(jq -r \
-            --arg marker "$health_marker" \
-            --arg title "$health_title" \
-            '[.[] | select(.title == $title and ((.body // "") | contains($marker)))] | first | .number // empty' \
-            <<< "$health_issues_json")"
+            health_number="$(jq -r \
+              --arg marker "$health_marker" \
+              --arg title "$health_title" \
+              '[.[] | select(.title == $title and ((.body // "") | contains($marker)))] | first | .number // empty' \
+              <<< "$health_issues_json")"
+          fi
 
           if ((${#reasons[@]} == 0)); then
             {
@@ -330,15 +350,28 @@ jobs:
               echo
               echo 'Healthy'
               echo
-              echo "- [Renovate Dependency Dashboard]($dashboard_url)"
+              if ((${#notes[@]} != 0)); then
+                printf -- '- %s\n' "${notes[@]}"
+              fi
+              if [[ -n "$dashboard_url" ]]; then
+                echo "- [Renovate Dependency Dashboard]($dashboard_url)"
+              fi
               echo "- [Renovate health-check run]($run_url)"
             } >> "$GITHUB_STEP_SUMMARY"
 
             if [[ -n "$health_number" ]]; then
               recovery_file="$(mktemp)"
               trap 'rm -f "$recovery_file"' EXIT
-              printf 'The Renovate health check passed. This issue is closing automatically.\n\n### Details\n\n- [Successful Renovate health-check run](%s)\n- [Renovate Dependency Dashboard](%s)\n' \
-                "$run_url" "$dashboard_url" > "$recovery_file"
+              {
+                echo 'The Renovate health check passed. This issue is closing automatically.'
+                echo
+                echo '### Details'
+                echo
+                echo "- [Successful Renovate health-check run]($run_url)"
+                if [[ -n "$dashboard_url" ]]; then
+                  echo "- [Renovate Dependency Dashboard]($dashboard_url)"
+                fi
+              } > "$recovery_file"
               gh issue comment "$health_number" --body-file "$recovery_file"
               gh issue close "$health_number" --reason completed
             fi
@@ -391,20 +424,28 @@ jobs:
             echo
             printf -- '- %s\n' "${reasons[@]}"
             echo
+            if ((${#notes[@]} != 0)); then
+              printf -- '- %s\n' "${notes[@]}"
+              echo
+            fi
             if [[ -n "$dashboard_url" ]]; then
               echo "- [Renovate Dependency Dashboard]($dashboard_url)"
             fi
             echo "- [Renovate health-check run]($run_url)"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [[ -n "$health_number" ]]; then
-            gh issue comment "$health_number" --body-file "$report_file"
-          else
-            gh label create "$health_label" \
-              --color D73A4A \
-              --description 'Automated Renovate health incident' \
-              --force
-            gh issue create --title "$health_title" --label "$health_label" --body-file "$report_file"
+          # Without issues the run itself is the only report, so it still has
+          # to fail — the problems above are real wherever they were found.
+          if [[ "$issues_enabled" == 'true' ]]; then
+            if [[ -n "$health_number" ]]; then
+              gh issue comment "$health_number" --body-file "$report_file"
+            else
+              gh label create "$health_label" \
+                --color D73A4A \
+                --description 'Automated Renovate health incident' \
+                --force
+              gh issue create --title "$health_title" --label "$health_label" --body-file "$report_file"
+            fi
           fi
 
           echo '::error::Renovate health check failed'
