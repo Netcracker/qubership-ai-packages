@@ -107,7 +107,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install ast-bro for doc-comment survey tests
-        run: uv tool install ast-bro==4.2.0
+        run: cargo install ast-bro --version 4.2.0 --locked
       # Run the skill unit tests and the network-free producer -> consumer
       # marketplace round-trip through the same entry point used locally.
       - name: Run repository tests
