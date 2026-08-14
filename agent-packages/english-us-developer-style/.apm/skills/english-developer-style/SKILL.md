@@ -130,6 +130,10 @@ isolation is weak. Scan for them on every editing pass.
   section headings the content needs.
 - **Bullet lists with a bold inline header plus colon on every item.** Fine for genuine term/definition pairs; an AI
   tell when used to format ordinary prose.
+- **Gapped verbs.** `…which governs the direction this ceiling does not` makes the reader reconstruct `govern` from the
+  first half. Repeat the verb, or split the sentence.
+- **Personified data.** Bytes do not *travel*, *ride along*, or *run to* a size. Name the sender and use a plain verb:
+  `the client sends the ticket`, `the salt is a few bytes`.
 
 Hyphens, en-dashes, and em-dashes are three different characters. Number ranges take en-dashes (`10–20 requests`);
 compound modifiers take hyphens (`high-throughput pipeline`).

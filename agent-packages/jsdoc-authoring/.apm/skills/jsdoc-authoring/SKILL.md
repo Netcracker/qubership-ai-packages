@@ -253,6 +253,13 @@ one sentence plus a link, rather than repeating it.
 State a default with `@defaultValue` (`@default` in JSDoc) rather than in prose, so the tooling can
 render it in the same table as the type.
 
+A limit, ceiling, or timeout documents **what it bounds**, in its own sentence. Say it positively
+and say it first, before any neighbouring limit comes up: `This ceiling bounds only what the server
+sends.` A comment that leaves the scope to be inferred from a contrast — `…which governs the
+direction this ceiling does not` — asks the reader to subtract one limit from another and to
+reconstruct the verb it left out. Both halves are facts worth stating; state them separately, this
+one first.
+
 ### Inline comment
 
 Answers "why this line", for a reader who can already see the line. Three failure modes beyond
@@ -359,8 +366,25 @@ None of these runs unless your build runs it. Find out which of the three your p
 you treat a green build as proof, and prefer a `{@link}` to a bare backticked name either way,
 because a reference something *can* check beats one nothing can.
 
-Cite an issue only alongside the name of the phenomenon: `the desync class of bug that #4015 fixed`
-survives the tracker; a bare `see #4015` does not.
+**An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
+give the number so a reader can find the history: `a length taken straight off the wire sizes the
+allocation (issue #4015)`. The number must not carry the meaning — `the shape of issue #4015`, `the
+same format as #1231`, `the bug #4015 fixed` all read as content to someone who already knows the
+ticket and as nothing to everyone else. The test: cover the number and read the sentence. If what
+remains states no fact, the comment has none. A bare `see #4015` fails the same test from the other
+end, and a TypeDoc page reaches readers with no access to the tracker at all.
+
+The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
+from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+covering the number leaves the failure named. It is the number's role that the rule is about, not
+its position.
+
+The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
+for a normative source — an RFC, a protocol specification, a vendor's published documentation — which
+may define a format the comment then need not restate.
+
+**A ticket number is not a name.** `a #4015 hardening check` names nothing, and the check has a name
+in the code. Use that name, and cite the number once, where the history belongs.
 
 ## 6. Tags
 
@@ -623,7 +647,9 @@ Run this over a comment you wrote or one you are reviewing.
 - Is any rationale here actually commit-message material?
 - Any sentence describing a previous version of the code — `now`, `no longer`, `used to`?
 - Does the comment explain another module's internals instead of linking to it?
-- Any positional reference — `below`, `above`, `the following`?
+- Any positional reference — `below`, `above`, `the following`, `the other way`?
+- Does a limit say what it bounds, rather than only what some neighbouring limit bounds?
+- Cover every issue, PR, or commit number: does each surrounding sentence still state a fact?
 - Any backticked name that should be a `{@link}`, and does anything in this build check the links?
 - Does every tag add something the signature does not — and in a `.ts` file, does any tag carry a
   type that the signature already states?

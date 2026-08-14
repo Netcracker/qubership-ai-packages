@@ -281,6 +281,13 @@ a link, rather than repeating it.
 A run of constants with a shared rule takes one comment on the enclosing module or block and short
 ones on each, not the same sentence eight times.
 
+A limit, ceiling, or timeout documents **what it bounds**, in its own sentence. Say it positively
+and say it first, before any neighbouring limit comes up: `This ceiling bounds only what the server
+sends.` A comment that leaves the scope to be inferred from a contrast — `…which governs the
+direction this ceiling does not` — asks the reader to subtract one limit from another and to
+reconstruct the verb it left out. Both halves are facts worth stating; state them separately, this
+one first.
+
 ### `unsafe fn` and `# Safety`
 
 An `unsafe fn` moves an obligation from the compiler to the caller, and the `# Safety` section is
@@ -456,8 +463,25 @@ readable:
 `rustdoc::private_intra_doc_links` warns when a public item's docs link to a private one: the link
 resolves for you and points nowhere on docs.rs (§6a).
 
-Cite an issue only alongside the name of the phenomenon: `the desync class of bug that #4015 fixed`
-survives the tracker; a bare `see #4015` does not.
+**An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
+give the number so a reader can find the history: `a length taken straight off the wire sizes the
+allocation (issue #4015)`. The number must not carry the meaning — `the shape of issue #4015`, `the
+same format as #1231`, `the bug #4015 fixed` all read as content to someone who already knows the
+ticket and as nothing to everyone else. The test: cover the number and read the sentence. If what
+remains states no fact, the comment has none. A bare `see #4015` fails the same test from the other
+end, and a docs.rs page reaches readers with no access to the tracker at all.
+
+The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
+from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+covering the number leaves the failure named. It is the number's role that the rule is about, not
+its position.
+
+The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
+for a normative source — an RFC, a protocol specification, a vendor's published documentation — which
+may define a format the comment then need not restate.
+
+**A ticket number is not a name.** `a #4015 hardening check` names nothing, and the check has a name
+in the code. Use that name, and cite the number once, where the history belongs.
 
 ## 6. Sections and examples
 
@@ -798,7 +822,9 @@ Run this over a comment you wrote or one you are reviewing.
 - Does the example assert what the prose claims, and does it compile without a hidden line the reader
   needs?
 - Any `ignore` attribute that should be `no_run` or `text`?
-- Any positional reference — `below`, `above`, `the following`?
+- Any positional reference — `below`, `above`, `the following`, `the other way`?
+- Does a limit say what it bounds, rather than only what some neighbouring limit bounds?
+- Cover every issue, PR, or commit number: does each surrounding sentence still state a fact?
 - Any bare name that should be an intra-doc link, and does `cargo doc` report no unresolved link?
 - Any type with angle brackets outside backticks?
 - Is any rationale here actually commit-message material?
