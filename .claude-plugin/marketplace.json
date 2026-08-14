@@ -357,6 +357,18 @@
       "source": "./agent-packages/adversarial-code-review"
     },
     {
+      "name": "deep-review",
+      "description": "Review a whole repository along independent axes, refute every finding, and consolidate the survivors into one ranked report.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:code-review",
+        "topic:architecture",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/deep-review"
+    },
+    {
       "name": "meeting-analysis",
       "description": "Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.",
       "version": "1.0.0",
