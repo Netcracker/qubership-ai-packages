@@ -1,5 +1,6 @@
 # Local equivalents of the CI checks in .github/workflows/.
-# `apm` and `doccmd` run through uv, so nothing needs a global install.
+# `apm`, `doccmd`, and the Python under scripts/ and tests/ all run through uv,
+# so nothing needs a global install.
 #
 #   make check               # the marketplace gate (.github/workflows/marketplace.yml, validate job)
 #   make check-descriptions  # verify all skill description fields are <= 1020 chars
@@ -14,6 +15,8 @@
 
 APM    := uvx --python 3.12 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm
 DOCCMD := uvx --python 3.12 --from doccmd --with-requirements $(CURDIR)/requirements.txt doccmd
+# scripts/check-skill-descriptions.py imports PyYAML, pinned in requirements.txt.
+PYTHON := uv run --python 3.12 --with-requirements $(CURDIR)/requirements.txt --no-project python
 
 DOC_REPO ?= $(shell git remote get-url origin | sed -E -e 's|^.*github\.com[:/]||' -e 's|\.git$$||')
 DOC_REF  ?= $(shell git rev-parse HEAD)
@@ -37,7 +40,7 @@ check:
 	$(APM) pack --check-versions --check-clean --dry-run
 
 check-descriptions:
-	python3 scripts/check-skill-descriptions.py
+	$(PYTHON) scripts/check-skill-descriptions.py
 
 verify-docs:
 	@tmp=$$(mktemp -d) && mkdir -p "$$tmp/.claude" && cd "$$tmp" && \
@@ -47,7 +50,8 @@ verify-docs:
 		'$(CURDIR)/docs/consuming-packages.md'
 
 test:
-	python3 -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
+	$(PYTHON) -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
+	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
 	bash tests/marketplace_roundtrip.sh
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).

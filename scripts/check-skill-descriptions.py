@@ -7,13 +7,24 @@ very trigger phrases that make a skill fire, so we cap every SKILL.md a
 little under that hard limit and fail the build before a clipped one ships.
 
 Length is measured in Unicode code points (so an em-dash counts as one),
-which matches how the limit is applied.
+which matches how the limit is applied. Leading and trailing whitespace is
+stripped first, including the newline a clipped block scalar ends with.
 
-Run via the Makefile (`make check-descriptions`) or directly:
+The frontmatter goes through a real YAML parse, because the `description`
+values in these files use every scalar style: plain, single- and
+double-quoted, and folded or literal block scalars (`>`, `>-`, `|`, `|-`).
+An earlier version pattern-matched the single-line styles instead, captured
+the literal `>-` of a block scalar as the value, and reported the five
+longest descriptions in the repository as 2 characters each.
 
-    python3 scripts/check-skill-descriptions.py
+Run via the Makefile, which supplies PyYAML through uv:
 
-No third-party libraries required.
+    make check-descriptions
+
+PyYAML is pinned in requirements.txt. Nothing needs a global install, but
+the script does need an interpreter that can import it, so a bare
+`python3 scripts/check-skill-descriptions.py` works only where PyYAML
+already exists.
 """
 
 from __future__ import annotations
@@ -23,23 +34,26 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    import yaml
+except ModuleNotFoundError:
+    sys.exit(
+        "error: PyYAML is missing. Run `make check-descriptions`, which supplies "
+        "it through uv, or install the pins in requirements.txt."
+    )
+
 LIMIT = 1020
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_DIR = ROOT / "agent-packages"
 
-# Matches the YAML frontmatter block at the top of a Markdown file.
+# Matches the YAML frontmatter block at the top of a Markdown file. Finding the
+# block is Markdown structure, not YAML, so it stays a pattern match; what the
+# block contains is then parsed.
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
-# Matches the description value, including common YAML quoting styles:
-#   description: unquoted text
-#   description: 'single-quoted text'
-#   description: "double-quoted text"
-# Multi-line YAML block scalars (| or >) are not used in these files.
-_DESC_RE = re.compile(
-    r"^description:[ \t]*"
-    r"(?:'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\"|(.*?))\s*$",
-    re.MULTILINE,
-)
+
+class DescriptionError(Exception):
+    """The frontmatter parses to something this check cannot measure."""
 
 
 def iter_skill_files() -> list[Path]:
@@ -52,17 +66,32 @@ def iter_skill_files() -> list[Path]:
 
 
 def read_description(path: Path) -> str | None:
-    """Return the `description` value from a SKILL.md frontmatter, or None."""
+    """Return the `description` value from a SKILL.md frontmatter, or None.
+
+    None means the file has no frontmatter, or none with a `description`.
+    A frontmatter that will not parse, or whose `description` is not text,
+    raises DescriptionError rather than being measured as something else.
+    """
     text = path.read_text(encoding="utf-8")
     fm_match = _FRONTMATTER_RE.match(text)
     if fm_match is None:
         return None
-    desc_match = _DESC_RE.search(fm_match.group(1))
-    if desc_match is None:
+    try:
+        frontmatter = yaml.safe_load(fm_match.group(1))
+    except yaml.YAMLError as error:
+        raise DescriptionError(f"the frontmatter is not valid YAML: {error}") from error
+    if frontmatter is None:
         return None
-    # Groups: 1 = single-quoted, 2 = double-quoted, 3 = unquoted
-    value = desc_match.group(1) or desc_match.group(2) or desc_match.group(3) or ""
-    return value.strip()
+    if not isinstance(frontmatter, dict):
+        raise DescriptionError("the frontmatter is not a YAML mapping")
+    if "description" not in frontmatter:
+        return None
+    description = frontmatter["description"]
+    if not isinstance(description, str):
+        raise DescriptionError(
+            f"`description` holds {type(description).__name__}, not text"
+        )
+    return description.strip()
 
 
 def main() -> int:
@@ -73,7 +102,15 @@ def main() -> int:
 
     violations: list[tuple[Path, int]] = []
     for path in skill_files:
-        description = read_description(path)
+        try:
+            description = read_description(path)
+        except DescriptionError as error:
+            print(
+                f"error: cannot measure the `description` in "
+                f"{path.relative_to(ROOT)}: {error}",
+                file=sys.stderr,
+            )
+            return 1
         if description is None:
             print(
                 f"error: {path.relative_to(ROOT)} has no frontmatter `description`",
