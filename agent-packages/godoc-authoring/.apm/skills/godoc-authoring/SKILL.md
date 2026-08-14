@@ -243,6 +243,13 @@ shrinks to one sentence plus a link, rather than repeating it.
 A `const` block with a shared rule takes one comment above the block and short ones inside it, not
 the same sentence eight times.
 
+A limit, ceiling, or timeout documents **what it bounds**, in its own sentence. Say it positively
+and say it first, before any neighbouring limit comes up: `This ceiling bounds only what the server
+sends.` A comment that leaves the scope to be inferred from a contrast — `…which governs the
+direction this ceiling does not` — asks the reader to subtract one limit from another and to
+reconstruct the verb it left out. Both halves are facts worth stating; state them separately, this
+one first.
+
 ### Inline comment
 
 Answers "why this line", for a reader who can already see the line. Three failure modes beyond
@@ -346,8 +353,29 @@ navigate to — a JSON field name, a literal, a shell command, a symbol in a ser
 — plain text is correct; Go doc comments have no inline code markup, and backticks render as
 backticks. Set off a longer snippet as an indented block instead.
 
-Cite an issue only alongside the name of the phenomenon: `the desync class of bug that #4015 fixed`
-survives the tracker; a bare `see #4015` does not.
+**An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
+give the number so a reader can find the history: `a length taken straight off the wire sizes the
+allocation (issue #4015)`. The number must not carry the meaning — `the shape of issue #4015`, `the
+same format as #1231`, `the bug #4015 fixed` all read as content to someone who already knows the
+ticket and as nothing to everyone else. The test: cover the number and read the sentence. If what
+remains states no fact, the comment has none. A bare `see #4015` fails the same test from the other
+end, and a pkg.go.dev page reaches readers with no access to the tracker at all.
+
+Go writes that address as a full URL — `https://go.dev/issue/12345` — which pkg.go.dev renders as
+a link rather than as `#12345`. The form does not change the rule: the URL is the address, and the
+sentence still has to carry the fact.
+
+The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
+from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+covering the number leaves the failure named. It is the number's role that the rule is about, not
+its position.
+
+The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
+for a normative source — an RFC, a protocol specification, a vendor's published documentation — which
+may define a format the comment then need not restate.
+
+**A ticket number is not a name.** `a #4015 hardening check` names nothing, and the check has a name
+in the code. Use that name, and cite the number once, where the history belongs.
 
 ## 6. Structure
 
@@ -561,7 +589,9 @@ Run this over a comment you wrote or one you are reviewing.
 - Is any rationale here actually commit-message material?
 - Any sentence describing a previous version of the code — `now`, `no longer`, `used to`?
 - Does the comment explain another package's internals instead of naming it?
-- Any positional reference — `below`, `above`, `the following`?
+- Any positional reference — `below`, `above`, `the following`, `the other way`?
+- Does a limit say what it bounds, rather than only what some neighbouring limit bounds?
+- Cover every issue, PR, or commit number: does each surrounding sentence still state a fact?
 - Any bare name that should be a doc link, and does every doc link still resolve?
 - Does every parameter named in prose still exist, spelled that way?
 - Would deleting the whole comment lose anything?
