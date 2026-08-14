@@ -25,8 +25,11 @@ share its tag vocabulary and its summary-table rendering. KDoc differs in one pl
 before you reach §5: it links with `[Foo]` and `[Foo.bar]` rather than `{@link}`, and it has no
 `{@code}` — backticks do that job.
 
-That family is the whole scope. Outside it the summary rule of §3 and the reference and tag
-machinery of §5 and §6 do not hold, so do not carry these rules across.
+Do not carry these rules into a language outside that family. §3 is the reason: Python's own
+PEP 257 asks for the imperative `Return that` where this file asks for `Returns that`, and which
+mood wins there is a project decision rather than a given. Rust, TypeScript, and JavaScript each
+have reference and tag machinery that §5 and §6 do not describe, and Rust's doc comments compile
+and run as tests. Those languages need their own rules, not a translation of these.
 
 ## 1. The correction that matters most
 
