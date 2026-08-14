@@ -150,6 +150,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
+    - name: adversarial-code-review
+      description: Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.
+      source: ./agent-packages/adversarial-code-review
+      version: 1.0.0
+      tags: ["topic:code-review", "activity:code-review", "audience:public"]
+
     - name: meeting-analysis
       description: Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.
       source: ./agent-packages/meeting-analysis
