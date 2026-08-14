@@ -30,6 +30,12 @@ deletes it outright. Every one of those is a surface an edit reaches.
 trailing whitespace, but they never rewrap it — measured on ruff 0.14. The line breaks are yours to
 place, and `E501` counts them.
 
+Conventions carried in from another language's doc comments go wrong in three specific places, so do
+not translate them in your head: the summary is one physical line whose mood the project picks,
+rather than a first sentence fixed in the third person (§3); references have no syntax of their own,
+so the form depends on the renderer and nothing checks it by default (§5); and the section headings
+belong to a dialect the project has already chosen, not to the language (§6).
+
 ## 1. The correction that matters most
 
 The advice you have absorbed is "document the why, not the what". For a docstring that is half
