@@ -17,6 +17,18 @@
       "source": "./agent-packages/apm-authoring"
     },
     {
+      "name": "agents-md-authoring",
+      "description": "Create or improve minimal AGENTS.md and CLAUDE.md instructions from verified checkout evidence.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "activity:setup",
+        "audience:public"
+      ],
+      "source": "./agent-packages/agents-md-authoring"
+    },
+    {
       "name": "troubleshooting-skill-creator",
       "description": "Build a repository's own troubleshooting-skill APM package — scan the repository, harvest its existing troubleshooting material, research the failure modes of the technologies it ships, and compile a symptom-indexed reference plus the skill that reads it.",
       "version": "1.4.0",
