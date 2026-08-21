@@ -21,7 +21,7 @@ Register the marketplace and install the global Qubership baseline into the agen
 ```bash
 apm marketplace add Netcracker/qubership-ai-packages
 apm marketplace browse qubership-ai-packages
-apm install qubership-global-essentials@qubership-ai-packages --target claude,codex,cursor -g
+apm install qubership-user-essentials@qubership-ai-packages --target claude,codex,cursor -g
 apm compile -g
 ```
 
@@ -160,19 +160,19 @@ Use qubership-agent-support-pr to create a PR that adds Qubership agent support
 to this repository.
 ```
 
-The skill installs [`qubership-essentials`](agent-packages/qubership-essentials/) in the repository and prepares the
+The skill installs [`qubership-repo-essentials`](agent-packages/qubership-repo-essentials/) in the repository and prepares the
 generated agent assets for the selected harnesses.
 
 ## User workspace onboarding
 
-- [Qubership global essentials](agent-packages/qubership-global-essentials/) — the global baseline package.
+- [Qubership user essentials](agent-packages/qubership-user-essentials/) — the global baseline package.
 
 Choose the agent harnesses you use and install the package globally. This example uses the default Qubership
 targets; replace `--target` with the harnesses you use:
 
 ```sh
 apm marketplace add Netcracker/qubership-ai-packages
-apm install qubership-global-essentials@qubership-ai-packages --target claude,codex,cursor -g
+apm install qubership-user-essentials@qubership-ai-packages --target claude,codex,cursor -g
 apm compile -g
 ```
 

@@ -1,7 +1,7 @@
 # qubership-agent-support-pr
 
 A skill that prepares a repository PR for Qubership baseline agent support. It
-adds `qubership-essentials`, installs generated APM assets for the selected
+adds `qubership-repo-essentials`, installs generated APM assets for the selected
 agent harnesses, and configures generated-file handling for review and
 Super-Linter.
 
@@ -15,7 +15,7 @@ PR.
    existing generated agent assets.
 1. Creates or updates `apm.yml`, including `apm init -y --target <targets>` for
    repositories that do not have APM metadata yet, and removes `author`.
-1. Installs `qubership-essentials` with `apm install`, relying on
+1. Installs `qubership-repo-essentials` with `apm install`, relying on
    `apm.lock.yaml` for the resolved revision.
 1. Keeps generated assets for the selected harnesses and marks them as
    generated in `.gitattributes`.
