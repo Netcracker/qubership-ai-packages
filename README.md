@@ -160,8 +160,8 @@ Use qubership-agent-support-pr to create a PR that adds Qubership agent support
 to this repository.
 ```
 
-The skill installs [`qubership-repo-essentials`](agent-packages/qubership-repo-essentials/) in the repository and prepares the
-generated agent assets for the selected harnesses.
+The skill installs [`qubership-repo-essentials`](agent-packages/qubership-repo-essentials/) in the repository and
+prepares the generated agent assets for the selected harnesses.
 
 ## User workspace onboarding
 
