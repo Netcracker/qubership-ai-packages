@@ -77,7 +77,7 @@ using that dashboard as the starting point.
 
 ### 4. Design
 
-Choose panels from the data shape, using the decision table in `references/panel-selection.md`. Defaulting
+Choose panels from the data shape, following `references/panel-selection.md`. Defaulting
 everything to `timeseries` and `stat` is the most common way a dashboard ends up correct and useless.
 
 Structure the layout by urgency: headline numbers, then trends, then detail. Apply RED to services (rate,
@@ -136,15 +136,13 @@ Never add alert rules to a dashboard.
 
 ## Reference files
 
-| File | Read when |
-|---|---|
-| `references/conventions.md` | Always, before building. |
-| `references/panel-selection.md` | Choosing panel types. |
-| `references/panels/*.json` | Copying a panel. |
-| `references/signals/*.md` | Per signal in scope. |
-| `references/dashboard-skeleton.json` | Starting a new dashboard. |
-| `references/grafana-operator.md` | The user wants a manifest. |
-| `assets/*.json` | A worked example of a full production dashboard is needed. |
+- `references/conventions.md`: always, before building.
+- `references/panel-selection.md`: when choosing panel types.
+- `references/panels/*.json`: when copying a panel.
+- `references/signals/*.md`: one per signal in scope.
+- `references/dashboard-skeleton.json`: when starting a new dashboard.
+- `references/grafana-operator.md`: when the user wants a manifest.
+- `assets/*.json`: when a worked example of a full production dashboard is needed.
 
 The `assets/` dashboards are real and useful for layout and row structure, but they predate this skill's
 conventions and do not pass validation. Read them for shape, not as templates.

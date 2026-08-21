@@ -2,10 +2,8 @@
 
 ## Datasource
 
-| Backend | Plugin type | Query language |
-|---|---|---|
-| VictoriaLogs | `victoriametrics-logs-datasource` | LogsQL |
-| Loki | `loki` | LogQL |
+- VictoriaLogs: plugin type `victoriametrics-logs-datasource`, query language LogsQL.
+- Loki: plugin type `loki`, query language LogQL.
 
 LogsQL and LogQL are different languages that look similar. Confirm which backend the datasource points at
 before writing a query; a LogQL pipeline pasted into VictoriaLogs fails at query time, not at build time.

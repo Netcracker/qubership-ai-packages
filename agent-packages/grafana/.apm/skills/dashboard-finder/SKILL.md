@@ -54,14 +54,14 @@ Search the subject, not the phrasing. A request about "our Java service memory" 
 
 ### 3. Score each candidate
 
-| Criterion | Weight | Check |
-|---|---|---|
-| Datasource type | hard gate | The dashboard's datasource type matches the signal. A miss disqualifies. |
-| Metrics present | 0.4 | Fraction of the dashboard's metric names that exist in the user's datasource. |
-| Scope variables | 0.2 | Carries the cluster, namespace, or pod variables the request needs. |
-| View coverage | 0.2 | Covers the required views from step 1. |
-| Freshness | 0.1 | `schemaVersion` 39 or newer, and no `graph`, `singlestat`, or `table-old` panels. |
-| Version fit | 0.1 | Panel types used are available on the target Grafana. |
+Datasource type is a hard gate: the candidate's datasource type must match the signal, and a miss
+disqualifies it outright. Score whatever clears the gate on five weighted criteria:
+
+- Metrics present, weight 0.4: fraction of the dashboard's metric names that exist in the user's datasource.
+- Scope variables, weight 0.2: carries the cluster, namespace, or pod variables the request needs.
+- View coverage, weight 0.2: covers the required views from step 1.
+- Freshness, weight 0.1: `schemaVersion` 39 or newer, and no `graph`, `singlestat`, or `table-old` panels.
+- Version fit, weight 0.1: the panel types it uses are available on the target Grafana.
 
 The metrics check carries the most weight because it is the one that decides whether the dashboard works.
 A community dashboard can read perfectly and reference an exporter the user does not run. Extract the metric

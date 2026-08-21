@@ -2,11 +2,10 @@
 
 ## Datasource
 
-| Backend | Plugin type | Query language |
-|---|---|---|
-| Prometheus | `prometheus` | PromQL |
-| VictoriaMetrics via the Prometheus API | `prometheus` | PromQL |
-| VictoriaMetrics native plugin | `victoriametrics-metrics-datasource` | MetricsQL |
+- Prometheus: plugin type `prometheus`, query language PromQL.
+- VictoriaMetrics through the Prometheus API: plugin type `prometheus`, query language PromQL.
+- VictoriaMetrics through its native plugin: plugin type `victoriametrics-metrics-datasource`, query
+  language MetricsQL.
 
 Read the real type from `GET /api/datasources` rather than assuming. The native VictoriaMetrics plugin has
 shipped under more than one id, and `dashboard-linter` only parses targets whose datasource type is

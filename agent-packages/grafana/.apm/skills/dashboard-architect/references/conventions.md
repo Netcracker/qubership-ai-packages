@@ -7,13 +7,11 @@ calls the agent applies while building.
 
 Every dashboard declares these, in this order:
 
-| Name | Type | Notes |
-|---|---|---|
-| `datasource` | `datasource` | Required. Set `label: "Data source"` or the linter warns. |
-| `cluster` | `query` | Required. |
-| `namespace` | `query` | Skip for cluster-wide dashboards. |
-| `pod` | `query` | Skip for cluster-wide and namespace-wide dashboards. |
-| `filter` | `adhoc` | Required. Lets the user add matchers without editing the dashboard. |
+1. `datasource`, of type `datasource`. Required. Set `label: "Data source"` or the linter warns.
+2. `cluster`, of type `query`. Required.
+3. `namespace`, of type `query`. Skip for cluster-wide dashboards.
+4. `pod`, of type `query`. Skip for cluster-wide and namespace-wide dashboards.
+5. `filter`, of type `adhoc`. Required. Lets the reader add matchers without editing the dashboard.
 
 Add `container` or `endpoint` when the metrics carry those labels and the user needs to break down by them.
 
@@ -112,11 +110,9 @@ Common tags: `k8s`, `java`, `go`, `cloud`, `application`.
 
 Add drill-down links on table columns that name a resource:
 
-| Column | Target dashboard |
-|---|---|
-| `node` | `Kubernetes / Node Resources` |
-| `namespace` | `Kubernetes / Namespace Resources` |
-| `pod` | `Kubernetes / Pod Resources` |
+- `node` links to `Kubernetes / Node Resources`.
+- `namespace` links to `Kubernetes / Namespace Resources`.
+- `pod` links to `Kubernetes / Pod Resources`.
 
 ```text
 /d/<uid>?var-datasource=$datasource&var-cluster=$cluster&var-namespace=$__cell_1

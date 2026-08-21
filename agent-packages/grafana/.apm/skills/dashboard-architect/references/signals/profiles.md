@@ -2,9 +2,7 @@
 
 ## Datasource
 
-| Backend | Plugin type | Query language |
-|---|---|---|
-| Pyroscope | `grafana-pyroscope-datasource` | Profile type plus a label selector |
+Pyroscope: plugin type `grafana-pyroscope-datasource`, queried by profile type plus a label selector.
 
 Pyroscope has no MCP server and no VictoriaMetrics query skill. Discovery goes through the Grafana datasource
 proxy. See `SKILL.md` for the resolution order.

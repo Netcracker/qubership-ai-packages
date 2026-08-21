@@ -2,11 +2,9 @@
 
 ## Datasource
 
-| Backend | Plugin type | Query language |
-|---|---|---|
-| Tempo | `tempo` | TraceQL |
-| Jaeger | `jaeger` | Jaeger search parameters |
-| VictoriaTraces | `victoriametrics-traces-datasource` | Jaeger-compatible search |
+- Tempo: plugin type `tempo`, query language TraceQL.
+- Jaeger: plugin type `jaeger`, queried by Jaeger search parameters.
+- VictoriaTraces: plugin type `victoriametrics-traces-datasource`, queried by Jaeger-compatible search.
 
 ## Target shape
 

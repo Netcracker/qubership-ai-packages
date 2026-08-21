@@ -5,10 +5,11 @@ traces, and profiles.
 
 ## Skills
 
-| Skill | Purpose |
-|---|---|
-| `dashboard-finder` | Search the target Grafana, grafana.com, and this repository for a dashboard that meets stated criteria; score each candidate and report the gaps. |
-| `dashboard-architect` | Build or edit a dashboard, validate it, and publish it to Grafana or emit it as a grafana-operator manifest. |
+`dashboard-finder` searches the target Grafana, grafana.com, and this repository for a dashboard that meets
+stated criteria, scores each candidate, and reports the gaps.
+
+`dashboard-architect` builds or edits a dashboard, validates it, and publishes it to Grafana or emits it as a
+grafana-operator manifest.
 
 ## Setup
 
