@@ -1,0 +1,64 @@
+{
+  "id": 10,
+  "type": "state-timeline",
+  "title": "Node readiness",
+  "description": "Ready condition per node over time.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "mappings": [
+        {
+          "type": "value",
+          "options": {
+            "0": {
+              "text": "NotReady",
+              "color": "red",
+              "index": 0
+            },
+            "1": {
+              "text": "Ready",
+              "color": "green",
+              "index": 1
+            }
+          }
+        }
+      ],
+      "custom": {
+        "lineWidth": 0,
+        "fillOpacity": 80
+      }
+    }
+  },
+  "options": {
+    "mergeValues": true,
+    "showValue": "never",
+    "alignValue": "center",
+    "rowHeight": 0.9,
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom"
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "max by (node) (kube_node_status_condition{cluster=\"$cluster\", condition=\"Ready\", status=\"true\"})",
+      "legendFormat": "{{node}}"
+    }
+  ]
+}

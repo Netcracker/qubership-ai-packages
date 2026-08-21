@@ -1,0 +1,55 @@
+{
+  "id": 4,
+  "type": "bargauge",
+  "title": "CPU utilization by node",
+  "description": "Share of allocatable CPU in use, per node.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "percentunit",
+      "decimals": 2,
+      "min": 0,
+      "max": 1,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 0.85
+          }
+        ]
+      }
+    }
+  },
+  "options": {
+    "reduceOptions": {
+      "values": false,
+      "calcs": [
+        "lastNotNull"
+      ]
+    },
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "1 - avg by (node) (rate(node_cpu_seconds_total{cluster=\"$cluster\", mode=\"idle\"}[$__rate_interval]))",
+      "legendFormat": "{{node}}"
+    }
+  ]
+}

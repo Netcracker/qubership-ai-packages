@@ -1,0 +1,17 @@
+{
+  "uid": "fixture-undeclared", "title": "Fixture Undeclared Variable", "tags": ["ai-generated"], "schemaVersion": 41,
+  "templating": {"list": [
+    {"name": "datasource", "type": "datasource", "query": "prometheus"},
+    {"name": "cluster", "type": "query", "refresh": 2,
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "query": "label_values(kube_pod_info{region=\"$region\"}, cluster)"}
+  ]},
+  "panels": [
+    {"id": 1, "type": "timeseries", "title": "Uses undeclared namespace",
+     "description": "$namespace is never declared.",
+     "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}},
+     "targets": [{"expr": "sum(rate(http_requests_total{namespace=\"$namespace\"}[$__rate_interval]))"}]}
+  ]
+}

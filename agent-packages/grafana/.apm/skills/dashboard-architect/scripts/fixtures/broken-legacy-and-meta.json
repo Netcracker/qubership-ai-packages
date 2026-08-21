@@ -1,0 +1,16 @@
+{
+  "uid": "this-uid-is-far-too-long-for-grafana-to-accept-on-import-really",
+  "title": "Fixture Legacy",
+  "panels": [
+    {"id": 1, "type": "graph", "title": "Legacy graph panel", "description": "Removed in Grafana 11.",
+     "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"}, "targets": [{"expr": "up"}]},
+    {"id": 2, "type": "flamegraph", "title": "Flamegraph on Prometheus",
+     "description": "Wrong panel type for a metrics datasource.",
+     "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"}, "targets": [{"expr": "up"}]},
+    {"id": 3, "type": "timeseries", "title": "",
+     "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "hardcoded-uid"}, "targets": []}
+  ]
+}

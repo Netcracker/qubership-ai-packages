@@ -1,0 +1,80 @@
+{
+  "id": 5,
+  "type": "table",
+  "title": "Pod detail",
+  "description": "Per-pod restart counts and phase. Click a pod to open its resource dashboard.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "custom": {
+        "align": "auto",
+        "filterable": true
+      }
+    },
+    "overrides": [
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "pod"
+        },
+        "properties": [
+          {
+            "id": "links",
+            "value": [
+              {
+                "title": "Pod resources",
+                "targetBlank": true,
+                "url": "/d/k8s-pod-resources?var-datasource=$datasource&var-cluster=$cluster&var-namespace=$namespace&var-pod=${__value.text}"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "options": {
+    "showHeader": true,
+    "footer": {
+      "show": false
+    },
+    "sortBy": [
+      {
+        "displayName": "Value",
+        "desc": true
+      }
+    ]
+  },
+  "transformations": [
+    {
+      "id": "organize",
+      "options": {
+        "excludeByName": {
+          "Time": true,
+          "__name__": true
+        },
+        "renameByName": {
+          "pod": "Pod",
+          "Value": "Restarts"
+        }
+      }
+    }
+  ],
+  "targets": [
+    {
+      "refId": "A",
+      "format": "table",
+      "instant": true,
+      "expr": "sum by (pod) (kube_pod_container_status_restarts_total{cluster=\"$cluster\", namespace=\"$namespace\"})"
+    }
+  ]
+}
