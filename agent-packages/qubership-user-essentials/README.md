@@ -3,11 +3,11 @@
 Umbrella APM package with the Qubership agent setup for a global user workspace. Install it once per developer machine
 so your agent uses the same baseline across repositories.
 
-This package replaces [`qubership-global-essentials`](../qubership-global-essentials/). The name pairs with
-[`qubership-repo-essentials`](../qubership-repo-essentials/): `repo` is the per-repository baseline, `user` is the
-per-developer superset. This package has no content of its own — it pulls in the repository baseline plus the packages
-that only make sense user-wide. Through the repository baseline it now also carries `qubership-workflow-hub-usage`,
-which `qubership-global-essentials` used to leave out.
+Use this package for new user-workspace installations. The deprecated
+[`qubership-global-essentials`](../qubership-global-essentials/) package remains available with its original dependency
+set for existing consumers. This package nests [`qubership-repo-essentials`](../qubership-repo-essentials/) and adds
+the packages that only make sense user-wide. Through the repository baseline it also carries
+`qubership-workflow-hub-usage`.
 
 ## Install
 

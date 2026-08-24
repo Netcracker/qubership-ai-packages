@@ -13,6 +13,4 @@ dependencies:
     - Netcracker/qubership-ai-packages/agent-packages/triage-dependency-prs#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/enable-renovate-automerge#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/adr-authoring#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
-    # qubership-agent-support-pr changes on this branch (it now installs
-    # qubership-repo-essentials). TODO after merge: repin to a main commit SHA.
-    - Netcracker/qubership-ai-packages/agent-packages/qubership-agent-support-pr#feat/split-essentials
+    - Netcracker/qubership-ai-packages/agent-packages/qubership-agent-support-pr#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main

@@ -1,16 +1,15 @@
 # qubership-repo-essentials
 
-Umbrella APM package with the baseline agent setup every Netcracker/Qubership
-repository gets by default. Depend on this one package and the agent picks up
-the shared conventions through transitive APM dependencies — there is no content
+Umbrella APM package with the baseline agent setup for new Netcracker/Qubership
+repository installations. Depend on this one package and the agent picks up the
+shared conventions through transitive APM dependencies — there is no content
 of its own here, only the dependency list.
 
-This package replaces [`qubership-essentials`](../qubership-essentials/). The
-name states the installation scope: this baseline is installed per repository,
-while [`qubership-user-essentials`](../qubership-user-essentials/) covers the
-global user workspace. Unlike `qubership-essentials`, this package does not
-include `codex-review`; depend on [`codex-review`](../codex-review/) directly
-if your repository wants agent-run Codex reviews.
+The deprecated [`qubership-essentials`](../qubership-essentials/) package
+remains available with its original dependency set for existing consumers.
+This package states the repository installation scope explicitly and excludes
+`codex-review`; depend on [`codex-review`](../codex-review/) directly if your
+repository wants agent-run Codex reviews.
 
 ## What it pulls in
 

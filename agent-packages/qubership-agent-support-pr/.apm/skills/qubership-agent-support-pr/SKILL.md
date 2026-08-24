@@ -2,7 +2,7 @@
 name: qubership-agent-support-pr
 description: >
   Prepare a pull request that adds Qubership baseline agent support to a
-  repository: install qubership-repo-essentials, run apm install for
+  repository: install qubership-essentials, run apm install for
   repository-declared harnesses, commit generated agent assets, and configure
   generated-file attributes and Super-Linter exclusions.
 ---
@@ -10,7 +10,7 @@ description: >
 # Qubership agent support PR
 
 Use this skill when the user asks to onboard a repository to Qubership baseline
-agent support, install `qubership-repo-essentials`, or create a PR that adds
+agent support, install `qubership-essentials`, or create a PR that adds
 generated APM assets for Claude, Codex, Cursor, or another requested harness.
 
 The PR should be small: APM configuration, generated assets, generated-file
@@ -131,12 +131,12 @@ failures first and choose the smallest repository-appropriate fix.
 
 ## Install
 
-Install `qubership-repo-essentials`, then rely on `apm.lock.yaml` for the resolved
+Install `qubership-essentials`, then rely on `apm.lock.yaml` for the resolved
 revision:
 
 ```bash
 apm install \
-  Netcracker/qubership-ai-packages/agent-packages/qubership-repo-essentials
+  Netcracker/qubership-ai-packages/agent-packages/qubership-essentials
 ```
 
 Do not pass `--target` to `apm install`; targets belong in `apm.yml`, so future
@@ -187,7 +187,7 @@ it. Do not fix this by deleting transitive lockfile entries or allowed harness
 hooks.
 
 `apm audit --ci` can also report transitive packages from an umbrella package
-such as `qubership-repo-essentials` as orphaned (`no-orphaned-packages`). Treat this
+such as `qubership-essentials` as orphaned (`no-orphaned-packages`). Treat this
 as expected only when the reported packages are transitive dependencies of the
 umbrella package. Do not trim `apm.lock.yaml` or run `apm install` only to remove
 those transitive entries. If an orphaned package is not a transitive umbrella
@@ -257,7 +257,7 @@ chore: add APM agent support
 
 In the PR body, summarize:
 
-- Added `qubership-repo-essentials`.
+- Added `qubership-essentials`.
 - Installed target harnesses and generated assets.
 - Generated-file attributes and Super-Linter exclusions.
 - Validation commands and results.

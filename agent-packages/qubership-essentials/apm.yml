@@ -1,15 +1,13 @@
 name: qubership-essentials
-version: 2.0.0
-description: Deprecated compatibility alias for the old repository-baseline name. Resolves to qubership-repo-essentials, which no longer includes codex-review; depend on the new name directly. Carries no content of its own.
-
-# Backward-compatibility shim: keep the old name resolvable and point it at
-# the renamed repository baseline. codex-review left the baseline with the
-# rename, hence the major-version bump.
-#
-# Published marketplace packages are installed as remote packages, so they
-# cannot depend on sibling packages with filesystem-relative paths. The dep
-# is branch-pinned because qubership-repo-essentials first appears on this
-# branch. TODO after merge: repin to a main commit SHA.
+version: 1.0.2
+description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/qubership-repo-essentials#feat/split-essentials
+    # Sibling packages in this repository. Published manifests cannot use
+    # local-path deps, so each one is pinned to a commit SHA on this repo.
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    # Packages hosted in other repositories.
+    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#3511065e91edef101ca84ed1c88cfef7120dface  # main

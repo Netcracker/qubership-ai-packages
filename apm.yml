@@ -9,7 +9,7 @@ targets:
 
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/qubership-repo-essentials
+    - Netcracker/qubership-ai-packages/agent-packages/qubership-essentials
 
 marketplace:
   owner:
@@ -55,21 +55,21 @@ marketplace:
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
-      description: "Deprecated compatibility alias; resolves to qubership-repo-essentials. Depend on the new name directly."
+      description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-essentials
-      version: 2.0.0
+      version: 1.0.2
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
-      description: "Deprecated compatibility alias; resolves to qubership-user-essentials. Depend on the new name directly."
+      description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-global-essentials
-      version: 2.0.0
+      version: 1.0.2
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
-      description: Prepare a repository PR that installs qubership-repo-essentials and generated agent assets.
+      description: Prepare a repository PR that installs qubership-essentials and generated agent assets.
       source: ./agent-packages/qubership-agent-support-pr
-      version: 1.1.0
+      version: 1.0.1
       tags: ["topic:meta", "activity:setup", "activity:maintenance", "audience:public"]
 
     - name: english-developer-style

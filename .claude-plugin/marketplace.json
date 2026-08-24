@@ -64,8 +64,8 @@
     },
     {
       "name": "qubership-essentials",
-      "description": "Deprecated compatibility alias; resolves to qubership-repo-essentials. Depend on the new name directly.",
-      "version": "2.0.0",
+      "description": "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged.",
+      "version": "1.0.2",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -75,8 +75,8 @@
     },
     {
       "name": "qubership-global-essentials",
-      "description": "Deprecated compatibility alias; resolves to qubership-user-essentials. Depend on the new name directly.",
-      "version": "2.0.0",
+      "description": "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged.",
+      "version": "1.0.2",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -86,8 +86,8 @@
     },
     {
       "name": "qubership-agent-support-pr",
-      "description": "Prepare a repository PR that installs qubership-repo-essentials and generated agent assets.",
-      "version": "1.1.0",
+      "description": "Prepare a repository PR that installs qubership-essentials and generated agent assets.",
+      "version": "1.0.1",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -308,8 +308,6 @@
     },
     {
       "name": "adapt-nifi-flows-to-2-x",
-      "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
-      "version": "1.2.0",
       "tags": [
         "topic:integration",
         "stack:nifi",
@@ -326,8 +324,6 @@
     },
     {
       "name": "api-diff-authoring",
-      "description": "Authoring classify rules, response-scope handling, adapters, and tests for the api-diff library.",
-      "version": "1.0.0",
       "tags": [
         "topic:api",
         "stack:typescript",
@@ -344,8 +340,6 @@
     },
     {
       "name": "api-unifier-authoring",
-      "description": "Conventions for extending the api-unifier normalization engine (rules, unify functions, validators).",
-      "version": "1.0.0",
       "tags": [
         "topic:api",
         "stack:typescript",
@@ -362,8 +356,6 @@
     },
     {
       "name": "api-unifier-testing",
-      "description": "Conventions for writing api-unifier tests across OpenAPI, AsyncAPI, JSON Schema, and GraphAPI.",
-      "version": "1.0.0",
       "tags": [
         "topic:api",
         "stack:typescript",
@@ -380,8 +372,6 @@
     },
     {
       "name": "dbaas-mounted-secret-migration",
-      "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
-      "version": "1.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -398,8 +388,6 @@
     },
     {
       "name": "migrate-core-operator-dbaas-declarations",
-      "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
-      "version": "1.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -416,8 +404,6 @@
     },
     {
       "name": "qubership-workflow-hub-usage",
-      "description": "Skills for designing, writing, reviewing, and debugging GitHub Actions workflows that consume netcracker/qubership-workflow-hub actions and Netcracker/.github templates.",
-      "version": "1.0.0",
       "tags": [
         "topic:devops",
         "stack:github-actions",
@@ -435,8 +421,6 @@
     },
     {
       "name": "core-mesh-to-istio-migration",
-      "description": "Orchestrates the full Cloud-Core Mesh to Istio migration end-to-end — converts declarative mesh CRs to Gateway API, migrates route-registration libraries, wires SERVICE_MESH_TYPE, generates HTTPRoutes from code, and maintains MIGRATION_LOG.md.",
-      "version": "1.0.0",
       "tags": [
         "topic:cloud-core",
         "topic:service-mesh",
@@ -454,8 +438,6 @@
     },
     {
       "name": "ai-agent-telemetry",
-      "description": "Hooks that call the ai-agent-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).",
-      "version": "1.1.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -471,8 +453,6 @@
     },
     {
       "name": "ai-agent-telemetry-configure",
-      "description": "Agent-guided setup, testing, repair, and delivery verification.",
-      "version": "3.0.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
