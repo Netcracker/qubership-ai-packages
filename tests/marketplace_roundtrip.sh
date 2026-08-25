@@ -3,7 +3,7 @@
 #
 # It asserts this repo's published package manifests are remote-installable,
 # then builds a monorepo-hybrid marketplace from scratch with git and asserts:
-#   0. package manifests do not declare local-path APM dependencies;
+#   0. package manifests declare remote APM dependencies pinned to commit SHAs;
 #   1. `apm pack` emits the expected plugin entry (version, tags, local-path source);
 #   2. the release gate passes when the index is in sync and fails on drift;
 #   3. a consumer can register the marketplace, install, inspect, and uninstall;
@@ -45,6 +45,17 @@ if [ -n "$local_path_deps" ]; then
   fail "published package manifests must not declare local-path APM dependencies"
 fi
 ok "published package manifests avoid local-path APM dependencies"
+
+mutable_refs="$(
+  grep -nE '^[[:space:]]*-[[:space:]]+[^[:space:]#]+#[^[:space:]#]+' \
+    "$repo_root"/agent-packages/*/apm.yml |
+    grep -vE '#[0-9a-f]{40}([[:space:]]|$)' || true
+)"
+if [ -n "$mutable_refs" ]; then
+  printf '%s\n' "$mutable_refs" >&2
+  fail "published package dependencies must pin immutable commit SHAs"
+fi
+ok "published package dependencies pin immutable commit SHAs"
 
 # Deprecated umbrella packages keep their original dependency graphs. New
 # package adoption is explicit; only the new user package nests the new repo
