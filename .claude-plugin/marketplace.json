@@ -41,9 +41,31 @@
       "source": "./agent-packages/go-microservice-dev-kit"
     },
     {
+      "name": "qubership-repo-essentials",
+      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, and workflow-hub usage.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:meta",
+        "activity:setup",
+        "audience:public"
+      ],
+      "source": "./agent-packages/qubership-repo-essentials"
+    },
+    {
+      "name": "qubership-user-essentials",
+      "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:meta",
+        "activity:setup",
+        "audience:public"
+      ],
+      "source": "./agent-packages/qubership-user-essentials"
+    },
+    {
       "name": "qubership-essentials",
-      "description": "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, code review, English style, Markdown rules, and workflow-hub usage.",
-      "version": "1.0.1",
+      "description": "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged.",
+      "version": "1.0.2",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -53,8 +75,8 @@
     },
     {
       "name": "qubership-global-essentials",
-      "description": "Umbrella package with the Qubership agent setup that is useful in a global user workspace.",
-      "version": "1.0.1",
+      "description": "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged.",
+      "version": "1.0.2",
       "tags": [
         "topic:meta",
         "activity:setup",

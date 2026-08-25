@@ -3,7 +3,7 @@
 #
 # It asserts this repo's published package manifests are remote-installable,
 # then builds a monorepo-hybrid marketplace from scratch with git and asserts:
-#   0. package manifests do not declare local-path APM dependencies;
+#   0. package manifests declare remote APM dependencies pinned to commit SHAs;
 #   1. `apm pack` emits the expected plugin entry (version, tags, local-path source);
 #   2. the release gate passes when the index is in sync and fails on drift;
 #   3. a consumer can register the marketplace, install, inspect, and uninstall;
@@ -39,12 +39,85 @@ ok()   { echo "ok: $*"; }
 # A package listed by a git marketplace can be resolved as a remote package.
 # APM must reject local-path dependencies in that mode because they point at the
 # consumer's filesystem, not the producer repository.
-local_path_deps="$(rg -n '^[[:space:]]*-[[:space:]]*['\''"]?\.{1,2}(/|['\''"]?[[:space:]]*$)' "$repo_root"/agent-packages/*/apm.yml || true)"
+local_path_deps="$(grep -nE '^[[:space:]]*-[[:space:]]*['\''"]?\.{1,2}(/|['\''"]?[[:space:]]*$)' "$repo_root"/agent-packages/*/apm.yml || true)"
 if [ -n "$local_path_deps" ]; then
   printf '%s\n' "$local_path_deps" >&2
   fail "published package manifests must not declare local-path APM dependencies"
 fi
 ok "published package manifests avoid local-path APM dependencies"
+
+mutable_refs="$(
+  grep -nE '^[[:space:]]*-[[:space:]]+[^[:space:]#]+#[^[:space:]#]+' \
+    "$repo_root"/agent-packages/*/apm.yml |
+    grep -vE '#[0-9a-f]{40}([[:space:]]|$)' || true
+)"
+if [ -n "$mutable_refs" ]; then
+  printf '%s\n' "$mutable_refs" >&2
+  fail "published package dependencies must pin immutable commit SHAs"
+fi
+ok "published package dependencies pin immutable commit SHAs"
+
+# Deprecated umbrella packages keep their original dependency graphs. New
+# package adoption is explicit; only the new user package nests the new repo
+# package.
+dependency_block() { sed -n '/^dependencies:/,$p' "$1"; }
+
+require_dep() {  # $1 = manifest, $2 = package name
+  if ! dependency_block "$1" | grep -Fq "agent-packages/$2"; then
+    fail "$(basename "$(dirname "$1")") must retain dependency $2"
+  fi
+}
+
+reject_dep() {  # $1 = manifest, $2 = package name
+  if dependency_block "$1" | grep -Fq "agent-packages/$2"; then
+    fail "$(basename "$(dirname "$1")") must not depend on $2"
+  fi
+}
+
+require_dep_count() {  # $1 = manifest, $2 = expected count
+  local actual
+  actual="$(dependency_block "$1" | grep -cE '^[[:space:]]*-[[:space:]]+')"
+  [ "$actual" -eq "$2" ] || fail "$(basename "$(dirname "$1")") must keep $2 dependencies, found $actual"
+}
+
+legacy_repo="$repo_root/agent-packages/qubership-essentials/apm.yml"
+legacy_global="$repo_root/agent-packages/qubership-global-essentials/apm.yml"
+new_user="$repo_root/agent-packages/qubership-user-essentials/apm.yml"
+
+grep -qE '^description: .*Deprecated' "$legacy_repo" || fail "qubership-essentials must be marked deprecated"
+for dep in apm-authoring codex-review english-us-developer-style markdown-line-length-120 \
+  qubership-workflow-hub-usage; do
+  require_dep "$legacy_repo" "$dep"
+done
+require_dep_count "$legacy_repo" 5
+
+grep -qE '^description: .*Deprecated' "$legacy_global" || fail "qubership-global-essentials must be marked deprecated"
+for dep in apm-authoring codex-review english-us-developer-style markdown-line-length-120 \
+  qubership-agent-support-pr triage-dependency-prs enable-renovate-automerge adr-authoring; do
+  require_dep "$legacy_global" "$dep"
+done
+require_dep_count "$legacy_global" 8
+
+for manifest in "$legacy_repo" "$legacy_global"; do
+  reject_dep "$manifest" qubership-repo-essentials
+  reject_dep "$manifest" qubership-user-essentials
+done
+require_dep "$new_user" qubership-repo-essentials
+
+root_dependencies="$(sed -n '/^dependencies:/,/^marketplace:/p' "$repo_root/apm.yml")"
+printf '%s\n' "$root_dependencies" | grep -Fq 'agent-packages/qubership-essentials' || \
+  fail "root project must stay on qubership-essentials"
+if printf '%s\n' "$root_dependencies" | grep -Fq 'agent-packages/qubership-repo-essentials'; then
+  fail "root project migration to qubership-repo-essentials is out of scope"
+fi
+
+support_skill="$repo_root/agent-packages/qubership-agent-support-pr/.apm/skills/qubership-agent-support-pr/SKILL.md"
+grep -Fq 'agent-packages/qubership-essentials' "$support_skill" || \
+  fail "qubership-agent-support-pr must keep installing qubership-essentials"
+if grep -Fq 'agent-packages/qubership-repo-essentials' "$support_skill"; then
+  fail "existing repository onboarding migration is out of scope"
+fi
+ok "deprecated essentials stay independent while new user essentials nests repo essentials"
 
 write_pkg() {  # $1 = version
   mkdir -p "$pkg/.apm/skills/demo" "$pkg/.apm/instructions"

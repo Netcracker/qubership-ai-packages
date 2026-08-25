@@ -1,19 +1,20 @@
-# qubership-essentials
+# qubership-repo-essentials
 
-> **Deprecated:** Use [`qubership-repo-essentials`](../qubership-repo-essentials/) for new repository installations.
-> This package remains available for existing consumers and keeps its original dependency set.
-
-Umbrella APM package with the baseline agent setup every Netcracker/Qubership
-repository gets by default. Depend on this one package and the agent picks up
-the shared conventions through transitive APM dependencies — there is no content
+Umbrella APM package with the baseline agent setup for new Netcracker/Qubership
+repository installations. Depend on this one package and the agent picks up the
+shared conventions through transitive APM dependencies — there is no content
 of its own here, only the dependency list.
+
+The deprecated [`qubership-essentials`](../qubership-essentials/) package
+remains available with its original dependency set for existing consumers.
+This package states the repository installation scope explicitly and excludes
+`codex-review`; depend on [`codex-review`](../codex-review/) directly if your
+repository wants agent-run Codex reviews.
 
 ## What it pulls in
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages
   (instructions, skills, prompts, agents, hooks).
-- [`codex-review`](../codex-review/) — Codex CLI code review with auto-fix,
-  repeated until the review is clean.
 - [`english-us-developer-style`](../english-us-developer-style/) —
   American-English style for developer-facing text.
 - [`markdown-line-length-120`](../markdown-line-length-120/) — Markdown drafting
