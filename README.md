@@ -8,6 +8,7 @@ umbrella packages for agents such as Claude Code, Codex, Cursor, and GitHub Copi
 - [Quick start](#quick-start)
 - [APM quick start](#apm-quick-start)
 - [APM CLI installation](#apm-cli-installation)
+- [Comment maintenance](#comment-maintenance)
 - [Repository onboarding](#repository-onboarding)
 - [User workspace onboarding](#user-workspace-onboarding)
 - [Guides](#guides)
@@ -139,6 +140,17 @@ For Arch Linux AUR installs, update `apm-bin` through your AUR helper:
 
 ```bash
 yay -Syu apm-bin
+```
+
+## Comment maintenance
+
+- [Doc-comment sweep](agent-packages/doc-comment-sweep/) sweeps changed Java and Go comments with independent writer
+  and judge agents plus a deterministic source oracle.
+
+Install it for Claude Code and Codex:
+
+```bash
+apm install doc-comment-sweep@qubership-ai-packages --target claude,codex
 ```
 
 ## Repository onboarding

@@ -106,6 +106,8 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
+      - name: Install ast-bro for doc-comment survey tests
+        run: cargo install ast-bro --version 4.2.0 --locked
       # Run the skill unit tests and the network-free producer -> consumer
       # marketplace round-trip through the same entry point used locally.
       - name: Run repository tests

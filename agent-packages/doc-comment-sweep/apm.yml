@@ -1,0 +1,13 @@
+name: doc-comment-sweep
+version: 1.0.0
+description: Sweep changed Java and Go comments with independent writer and judge agents plus a comment-only source oracle.
+
+dependencies:
+  apm:
+    # Sibling packages in this repository. Published manifests cannot use
+    # local-path deps, so each one is pinned to a commit SHA on this repo.
+    # The two authoring skills are the rubric both agents grade against;
+    # this package carries no copy of either.
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#ec96ba422aaf854be4573e5abbd9e994c766a425  # main
+    - Netcracker/qubership-ai-packages/agent-packages/javadoc-authoring#ec96ba422aaf854be4573e5abbd9e994c766a425  # main
+    - Netcracker/qubership-ai-packages/agent-packages/godoc-authoring#ec96ba422aaf854be4573e5abbd9e994c766a425  # main
