@@ -287,7 +287,7 @@
     {
       "name": "adversarial-code-review",
       "description": "Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:code-review",
         "activity:code-review",

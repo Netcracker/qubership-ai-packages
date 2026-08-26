@@ -13,9 +13,9 @@ ask follow-up questions or ask after `REVIEW_INCOMPLETE`.
 GitHub and GitLab publications are in English by default. An explicit language request overrides this default.
 
 Both publication modes use line-specific comments by default. Each finding appears once. The general comment contains
-the result, reviewed revision, model signature, optional human assessment, and complete findings that cannot be attached
-to the current diff. The general comment does not otherwise mention findings published inline or include other review
-metadata.
+the result, reviewed revision, model signature, optional human assessment, complete findings that cannot be attached to
+the current diff, and direct links to still-valid blocking threads carried forward from earlier reviews. It does not
+otherwise mention findings published inline or include other review metadata.
 
 GitHub handling stays in the main
 [`SKILL.md`](.apm/skills/adversarial-code-review/SKILL.md). A conditional reference contains only the GitLab-specific
