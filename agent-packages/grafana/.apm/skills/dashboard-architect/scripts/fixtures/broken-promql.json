@@ -1,0 +1,38 @@
+{
+  "uid": "fixture-promql",
+  "title": "Fixture PromQL",
+  "tags": ["ai-generated"],
+  "schemaVersion": 41,
+  "editable": true,
+  "templating": {
+    "list": [
+      {"name": "datasource", "label": "Data source", "type": "datasource", "query": "prometheus"}
+    ]
+  },
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "Unparseable query",
+      "description": "Missing a closing parenthesis.",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "targets": [{"expr": "sum(rate(http_requests_total[$__rate_interval])"}]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Counter without rate",
+      "description": "A _total counter graphed raw.",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "short"}},
+      "targets": [{"expr": "sum(http_requests_total)"}]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Fixed interval",
+      "description": "Uses a hard-coded range instead of $__rate_interval.",
+      "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "targets": [{"expr": "sum(rate(http_requests_total[5m]))"}]
+    }
+  ]
+}

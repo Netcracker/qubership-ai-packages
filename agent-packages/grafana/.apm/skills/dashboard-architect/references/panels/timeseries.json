@@ -1,0 +1,51 @@
+{
+  "id": 1,
+  "type": "timeseries",
+  "title": "Request rate",
+  "description": "HTTP requests per second by service.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "reqps",
+      "decimals": 1,
+      "custom": {
+        "lineWidth": 1,
+        "fillOpacity": 10,
+        "showPoints": "never"
+      }
+    }
+  },
+  "options": {
+    "legend": {
+      "showLegend": true,
+      "displayMode": "table",
+      "placement": "bottom",
+      "calcs": [
+        "lastNotNull",
+        "max"
+      ],
+      "sortBy": "Last *",
+      "sortDesc": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "desc"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "sum(rate(http_requests_total{cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (service)",
+      "legendFormat": "{{service}}"
+    }
+  ]
+}

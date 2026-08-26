@@ -1,0 +1,16 @@
+{
+  "uid": "fixture-rows", "title": "Fixture Rows", "tags": ["ai-generated"], "schemaVersion": 41,
+  "templating": {"list": [{"name": "datasource", "type": "datasource", "query": "prometheus"}]},
+  "panels": [
+    {"id": 1, "type": "row", "title": "Expanded row holding children", "collapsed": false,
+     "gridPos": {"x": 0, "y": 0, "w": 24, "h": 1},
+     "panels": [
+       {"id": 2, "type": "stat", "title": "Child", "description": "Inline under an expanded row.",
+        "gridPos": {"x": 0, "y": 1, "w": 12, "h": 8},
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]}
+     ]},
+    {"id": 3, "type": "row", "title": "Empty collapsed row", "collapsed": true,
+     "gridPos": {"x": 0, "y": 9, "w": 24, "h": 1}, "panels": []}
+  ]
+}

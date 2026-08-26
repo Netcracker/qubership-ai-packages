@@ -1,0 +1,58 @@
+{
+  "id": 3,
+  "type": "gauge",
+  "title": "Memory utilization",
+  "description": "Working set memory as a share of the configured limit.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "percentunit",
+      "decimals": 1,
+      "min": 0,
+      "max": 1,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "yellow",
+            "value": 0.75
+          },
+          {
+            "color": "red",
+            "value": 0.9
+          }
+        ]
+      }
+    }
+  },
+  "options": {
+    "reduceOptions": {
+      "values": false,
+      "calcs": [
+        "lastNotNull"
+      ]
+    },
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "sum(container_memory_working_set_bytes{cluster=\"$cluster\", namespace=\"$namespace\"}) / sum(kube_pod_container_resource_limits{cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\"})",
+      "legendFormat": ""
+    }
+  ]
+}

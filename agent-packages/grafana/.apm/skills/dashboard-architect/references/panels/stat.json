@@ -1,0 +1,54 @@
+{
+  "id": 2,
+  "type": "stat",
+  "title": "Pods running",
+  "description": "Pods currently in the Running phase.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "decimals": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "red",
+            "value": null
+          },
+          {
+            "color": "green",
+            "value": 1
+          }
+        ]
+      }
+    }
+  },
+  "options": {
+    "reduceOptions": {
+      "values": false,
+      "calcs": [
+        "lastNotNull"
+      ]
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area"
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "count(kube_pod_status_phase{cluster=\"$cluster\", namespace=\"$namespace\", phase=\"Running\"} == 1)",
+      "legendFormat": ""
+    }
+  ]
+}

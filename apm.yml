@@ -174,6 +174,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
+    - name: grafana
+      description: Skill that authorizes Grafana dashboards based on the repository's observability stack.
+      source: ./agent-packages/grafana
+      version: 1.0.0
+      tags: ["topic:observability", "stack:grafana", "activity:authoring", "audience:public"]
+
     # --- packages curated from other repositories (remote, pinned to a commit) ---
     # description and version are inherited from each package's own apm.yml.
     # ref is a commit SHA (branches are mutable and rejected); the trailing

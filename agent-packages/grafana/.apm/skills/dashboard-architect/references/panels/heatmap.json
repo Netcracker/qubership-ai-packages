@@ -1,0 +1,60 @@
+{
+  "id": 9,
+  "type": "heatmap",
+  "title": "Request latency distribution",
+  "description": "Latency spread over time, from histogram buckets.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "s",
+      "custom": {
+        "hideFrom": {
+          "tooltip": false,
+          "viz": false,
+          "legend": false
+        }
+      }
+    }
+  },
+  "options": {
+    "calculate": false,
+    "cellGap": 1,
+    "color": {
+      "mode": "scheme",
+      "scheme": "Spectral",
+      "steps": 64,
+      "reverse": false
+    },
+    "yAxis": {
+      "unit": "s",
+      "axisPlacement": "left"
+    },
+    "legend": {
+      "show": true
+    },
+    "tooltip": {
+      "mode": "single",
+      "yHistogram": true
+    },
+    "exemplars": {
+      "color": "rgba(255,0,255,0.7)"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "format": "heatmap",
+      "legendFormat": "{{le}}",
+      "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))"
+    }
+  ]
+}

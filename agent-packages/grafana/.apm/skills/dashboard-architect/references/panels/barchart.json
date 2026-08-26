@@ -1,0 +1,44 @@
+{
+  "id": 6,
+  "type": "barchart",
+  "title": "Restarts by pod",
+  "description": "Container restarts over the selected range, highest first.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "decimals": 0,
+      "custom": {
+        "lineWidth": 1,
+        "fillOpacity": 80
+      }
+    }
+  },
+  "options": {
+    "orientation": "horizontal",
+    "showValue": "auto",
+    "xTickLabelRotation": 0,
+    "legend": {
+      "showLegend": false,
+      "displayMode": "list",
+      "placement": "bottom"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "format": "table",
+      "instant": true,
+      "expr": "topk(10, sum by (pod) (increase(kube_pod_container_status_restarts_total{cluster=\"$cluster\", namespace=\"$namespace\"}[$__range])))"
+    }
+  ]
+}
