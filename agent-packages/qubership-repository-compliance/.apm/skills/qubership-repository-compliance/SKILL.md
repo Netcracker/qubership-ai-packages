@@ -54,8 +54,13 @@ If a required source, permission, command, owner, secret, or provider choice is 
 1. Resolve the exact checkout and `owner/repository`. Record the branch, dirty state, remotes, and default branch.
 2. Read repository instructions, root files, manifests, build files, `.qubership/`, and every workflow. Detect workflow
    behavior from triggers, actions, commands, and referenced configuration, not filenames.
-3. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Treat it
-   as Maven only when it has a publishable Maven project, not an incidental fixture.
+3. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Assess
+   coverage applicability separately: require coverage only when maintained executable source is a material repository
+   deliverable. Do not use file count or lines of code alone. Small CI helpers, generators, examples, fixtures, tests,
+   or scripts that only validate documentation or configuration do not make coverage applicable. Record the relevant
+   source paths and their role. When no material executable source exists, mark `WF-005` and `WF-014` `NOT APPLICABLE`
+   and do not propose coverage tooling or publication. Treat a repository as Maven only when it has a publishable Maven
+   project, not an incidental fixture.
 4. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, variables, and public Actions
    configuration. Never expose secret values. Use GitHub's community-profile API and local paths for effective
    community files. Mark only evidence blocked by repository permissions as `UNAVAILABLE`.
@@ -86,7 +91,7 @@ Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPL
 | `WF-002` Conventional Commits: `ERROR` | Accept the central template or an active semantic equivalent for commits or PR titles. | [Conventional Commits template](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml), Grand Report C026 |
 | `WF-003` APM package updates: `ERROR` | Require a scheduled updater that can open a pull request; inspect its required secret separately. | [APM update template](https://github.com/Netcracker/.github/blob/main/workflow-templates/apm-packages-update.yml) |
 | `WF-004` build on `push`: `CONDITIONAL ERROR` for code repositories | Inspect all triggers and build steps; a workflow name does not prove a build. | [Netcracker workflow templates](https://github.com/Netcracker/.github/tree/main/workflow-templates), Grand Report C034 |
-| `WF-005` CI coverage generation: `CONDITIONAL ERROR` for code repositories | Require tests to generate coverage and retain an accessible CI result; do not require a percentage threshold or external publisher. | [GitHub workflow artifacts](https://docs.github.com/actions/using-workflows/storing-workflow-data-as-artifacts), Grand Report C020 |
+| `WF-005` CI coverage generation: `CONDITIONAL ERROR` when coverage applies | Require tests to generate coverage and retain an accessible CI result; do not require a percentage threshold or external publisher. Mark `NOT APPLICABLE` when executable code is only incidental repository tooling. | [GitHub workflow artifacts](https://docs.github.com/actions/using-workflows/storing-workflow-data-as-artifacts), Grand Report C020 |
 | `WF-006` allowed Maven publication: `CONDITIONAL ERROR` for Maven repositories | Inspect publishable POMs and workflows. Maven Central fails this rule; GitHub Packages passes. | [GitHub Maven registry](https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry), Grand Report C056 |
 | `WF-007` dependency updater: `CONDITIONAL ERROR` for code repositories | Require one working Renovate or Dependabot configuration and evidence the selected service can run; do not require both. | [Renovate](https://docs.renovatebot.com/configuration-options/), [Dependabot](https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates) |
 | `WF-008` Super-Linter: absent `WARNING`; broken `ERROR` | Accept working central or intentional custom configurations. Verify workflow and referenced configuration; byte differences from central are not a failure. | [Super-Linter template](https://github.com/Netcracker/.github/blob/main/workflow-templates/super-linter.yaml), Grand Report C027 |
@@ -95,7 +100,7 @@ Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPL
 | `WF-011` profanity filter: `WARNING` | Inspect active filtering; teams may decline it. | [Profanity template](https://github.com/Netcracker/.github/blob/main/workflow-templates/profanity-filter.yaml), Grand Report C030 |
 | `WF-012` broken-link checker: `WARNING` | Inspect active link checking and its last available run; a configured but failing checker remains a warning with evidence. | [Link-checker template](https://github.com/Netcracker/.github/blob/main/workflow-templates/link-checker.yaml), Grand Report C032 |
 | `WF-013` PR assigner: `WARNING` | Inspect whether pull requests are assigned from `CODEOWNERS`; repositories may operate without automatic assignment. | [PR assigner template](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-assigner.yml) |
-| `WF-014` external coverage publication: `WARNING` | Validate an existing Sonar, Codecov, or equivalent uploader. Do not require publication when `WF-005` passes. | [Sonar coverage](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/test-coverage/test-coverage-parameters), [Codecov upload](https://docs.codecov.com/docs/codecov-uploader), Grand Report C020 |
+| `WF-014` external coverage publication: `WARNING` when coverage applies | Validate an existing Sonar, Codecov, or equivalent uploader. Do not require publication when `WF-005` passes. Mark `NOT APPLICABLE` with `WF-005` when the repository has no material executable source. | [Sonar coverage](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/test-coverage/test-coverage-parameters), [Codecov upload](https://docs.codecov.com/docs/codecov-uploader), Grand Report C020 |
 
 Keep `WF-005` coverage generation separate from optional `WF-014` publication.
 
