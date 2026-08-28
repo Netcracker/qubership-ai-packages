@@ -108,7 +108,10 @@ to this repository.
 The skill installs [`qubership-essentials`](agent-packages/qubership-essentials/) in the repository and prepares the
 generated agent assets for the selected harnesses.
 
-## Mandatory skills for Qubership repositories
+## Qubership user essentials
+
+Recommended package to be used when working with any Qubership repository. It must be installed once, globally,
+into the user space.
 
 - [Qubership user essentials](agent-packages/qubership-user-essentials/) — the global baseline package.
 
