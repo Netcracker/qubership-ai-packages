@@ -5,36 +5,51 @@ umbrella packages for agents such as Claude Code, Codex, Cursor, and GitHub Copi
 
 ## Contents
 
+- [Prerequisites](#prerequisites)
 - [Quick start](#quick-start)
-- [APM quick start](#apm-quick-start)
-- [APM CLI installation](#apm-cli-installation)
+- [About APM](#about-apm)
+- [APM installation](#apm-installation)
 - [Repository onboarding](#repository-onboarding)
-- [User workspace onboarding](#user-workspace-onboarding)
+- [Mandatory skills for Qubership repositories](#mandatory-skills-for-qubership-repositories)
 - [Guides](#guides)
+
+## Prerequisites
+
+Microsoft APM is used to manage packages. Install APM as described in the
+[APM installation section](#apm-installation), or update it to the latest version by running:
+
+```shell
+apm self-update
+```
 
 ## Quick start
 
-Install the `apm` CLI first. See [APM CLI installation](#apm-cli-installation) below.
+### Register the marketplace
 
-Register the marketplace and install the global Qubership baseline into the agent harnesses you use:
-
-```bash
+```shell
 apm marketplace add Netcracker/qubership-ai-packages
-apm marketplace browse qubership-ai-packages
+```
+
+### Install the recommended package set
+
+Install it in the global user scope, then compile it.
+The `--target` value is your local harness list. The example uses the default Qubership targets.
+
+```shell
 apm install qubership-user-essentials@qubership-ai-packages --target claude,codex,cursor -g
 apm compile -g
 ```
 
-The `--target` value is your local harness list. The example uses the default Qubership targets.
+### Optional: pin the marketplace version
 
-The default marketplace registration tracks `main`. To pin the marketplace for reproducible installs, pass `--ref`
-with a release tag, branch, or commit SHA:
+The default marketplace registration tracks the `main` branch.
+To pin the marketplace for reproducible installs, pass `--ref` with a release tag, branch, or commit SHA:
 
-```bash
+```shell
 apm marketplace add Netcracker/qubership-ai-packages --ref <tag-or-sha>
 ```
 
-## APM quick start
+## About APM
 
 [Agent Package Manager (APM)](https://github.com/microsoft/apm) installs and deploys AI-agent primitives:
 instructions, skills, prompts, agents, hooks, plugins, and MCP servers.
@@ -46,100 +61,30 @@ Use the official Microsoft APM docs for the full workflow:
 - [APM CLI reference](https://microsoft.github.io/apm/reference/cli/install/)
 - [APM package anatomy](https://microsoft.github.io/apm/concepts/package-anatomy/)
 - [Primitives and targets](https://microsoft.github.io/apm/concepts/primitives-and-targets/)
-- [apm.yml Manifest Schema](https://microsoft.github.io/apm/reference/manifest-schema/)
+- [`apm.yml` manifest schema](https://microsoft.github.io/apm/reference/manifest-schema/)
 
-See the [package-manager evaluation](research/apm-research/) for the comparison against other open-source skill, MCP,
-and agent-context managers.
+See the [package-manager evaluation](research/apm-research/) for a comparison with other open-source managers for
+skills, MCP servers, and agent context.
 
 ### When to run `apm compile`
 
-For project installs, `apm install` deploys primitives and runs compile internally during its integrate phase. Run
+For project installs, `apm install` deploys primitives and runs `apm compile` internally during the integrate phase. Run
 `apm compile` directly when you are iterating on local `.apm/instructions/*.instructions.md`, need flags such as
 `--dry-run`, `--validate`, or `--clean`, or need to refresh generated root context files without changing
 dependencies.
 
 For global installs, run `apm compile -g` after `apm install -g` when the installed packages include instructions.
-Global install fetches and deploys the package, but global compilation is explicit and writes user-scope root context
-files such as `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`.
+A global install fetches and deploys the package, but global compilation is explicit and writes user-scoped root
+context files such as `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`.
 
 See the official [APM compile guide](https://microsoft.github.io/apm/producer/compile/). The Claude-specific
 discussion in [microsoft/apm#1807](https://github.com/microsoft/apm/issues/1807) explains why always-on or
 read-only-session guidance may need native context-file placement instead of only path-scoped rules.
 
-## APM CLI installation
+## APM installation
 
 Install APM with the package manager for your platform when one is available.
-
-### Homebrew
-
-```bash
-brew install microsoft/apm/apm
-```
-
-### Scoop
-
-```powershell
-scoop bucket add apm https://github.com/microsoft/scoop-apm
-scoop install apm
-```
-
-### pip
-
-```bash
-pip install apm-cli
-```
-
-### Arch Linux
-
-APM is available from the Arch User Repository as the community-maintained `apm-bin` package:
-
-```bash
-yay -S apm-bin
-```
-
-### Install script
-
-Use the official install script if your package manager is not listed above.
-
-Linux and macOS:
-
-```bash
-curl -sSL https://aka.ms/apm-unix | sh
-```
-
-Windows PowerShell:
-
-```powershell
-irm https://aka.ms/apm-windows | iex
-```
-
-### Verify the installation
-
-```bash
-apm --version
-```
-
-### Stay up to date
-
-Use the latest available `apm` CLI for your installation method:
-
-```bash
-brew upgrade apm
-pip install --upgrade apm-cli
-apm self-update
-```
-
-For Scoop, run:
-
-```powershell
-scoop update apm
-```
-
-For Arch Linux AUR installs, update `apm-bin` through your AUR helper:
-
-```bash
-yay -Syu apm-bin
-```
+Follow the [official APM installation guide](https://microsoft.github.io/apm/getting-started/installation/).
 
 ## Repository onboarding
 
@@ -148,7 +93,7 @@ yay -Syu apm-bin
 
 To add the Qubership repository baseline, install the marketplace and the onboarding skill globally:
 
-```bash
+```shell
 apm marketplace add Netcracker/qubership-ai-packages
 apm install qubership-agent-support-pr@qubership-ai-packages --target codex,claude -g
 ```
@@ -163,14 +108,14 @@ to this repository.
 The skill installs [`qubership-essentials`](agent-packages/qubership-essentials/) in the repository and prepares the
 generated agent assets for the selected harnesses.
 
-## User workspace onboarding
+## Mandatory skills for Qubership repositories
 
 - [Qubership user essentials](agent-packages/qubership-user-essentials/) — the global baseline package.
 
 Choose the agent harnesses you use and install the package globally. This example uses the default Qubership
 targets; replace `--target` with the harnesses you use:
 
-```sh
+```shell
 apm marketplace add Netcracker/qubership-ai-packages
 apm install qubership-user-essentials@qubership-ai-packages --target claude,codex,cursor -g
 apm compile -g
