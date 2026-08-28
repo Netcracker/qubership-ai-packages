@@ -11,7 +11,11 @@ Require `gh` on `PATH`. Derive the GitHub host from the target repository remote
 `gh auth status --active --hostname <host>` to succeed. Never use `--show-token`. If `gh` is missing or authentication
 fails, stop and tell the user to install or authenticate GitHub CLI.
 
-If any later `gh` operation fails because the active token lacks permission, stop that operation and tell the user
+Do not query the repository Actions-permissions API (`repos/{owner}/{repository}/actions/permissions*`); none of the
+catalog checks depends on it. If a tool reports a `403` from this endpoint, ignore it and omit it from unavailable
+evidence and the user report.
+
+If any other `gh` operation fails because the active token lacks permission, stop that operation and tell the user
 which repository operation needs additional access. Do not treat missing access as a compliance violation or request
 broader permissions yourself.
 
@@ -20,10 +24,19 @@ broader permissions yourself.
 Default to `Audit`. Audit is read-only: do not edit files, change GitHub settings, create pull requests, commit, push,
 merge, or close anything.
 
-`Apply` reuses a complete Audit from the current task and rechecks only confirmed finding IDs; run a full Audit only
-when none exists. Show the finding IDs, exact targets, proposed file and external changes, and unavailable
-prerequisites. Apply only the IDs or batch the user confirms, even if the initial request says to fix everything.
+`Apply` reuses a complete Audit from the current task and rechecks only confirmed checks; run a full Audit only when
+none exists. Show the descriptive check names, exact targets, proposed file and external changes, and unavailable
+prerequisites. Apply only the checks or batch the user confirms, even if the initial request says to fix everything.
 Permission for a target repository does not cover `Netcracker/.github` or `Netcracker/qubership-workflow-hub`.
+
+README remediation is always separate from other Apply work. Never include `FILE-001` in an Apply batch. When it
+fails, ask whether the user wants the assistant to prepare a README change. After approval, edit only the README, show
+its diff, and ask the user to accept or revert it before committing, publishing, or combining it with other changes.
+If the user rejects it, revert only the assistant's README edit.
+
+Keep finding IDs internal for catalog evaluation and fix routing. Outside the report table's `ID` column, use a clear
+descriptive check name in the user's language in every report, question, status, and confirmation. Accept an ID supplied
+by the user and map it to the descriptive name without asking them to remember the catalog.
 
 Treat every existing file, workflow, configuration, and setting as maintained repository content. A finding authorizes
 only the smallest change needed for that ID, never replacement with a central template. Do not change a working
@@ -61,9 +74,9 @@ If a required source, permission, command, owner, secret, or provider choice is 
    source paths and their role. When no material executable source exists, mark `WF-005` and `WF-014` `NOT APPLICABLE`
    and do not propose coverage tooling or publication. Treat a repository as Maven only when it has a publishable Maven
    project, not an incidental fixture.
-4. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, variables, and public Actions
-   configuration. Never expose secret values. Use GitHub's community-profile API and local paths for effective
-   community files. Mark only evidence blocked by repository permissions as `UNAVAILABLE`.
+4. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, and variables. Never expose
+   secret values. Use GitHub's community-profile API and local paths for effective community files. Mark only evidence
+   blocked by repository permissions as `UNAVAILABLE`.
 5. Evaluate all 28 checks below in order.
 
 Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPLICABLE`. Overall status is
@@ -73,7 +86,7 @@ Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPL
 
 | ID and violation | Inspect and applicability | Source |
 | --- | --- | --- |
-| `FILE-001` README: missing `ERROR`; weak content `WARNING` | Inspect root `README.md`; require purpose and applicable setup, build, test, and usage instructions without subjective scoring. | [GitHub README guidance](https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes), Grand Report C023 |
+| `FILE-001` README: missing or smaller than 1024 bytes `ERROR` | Match the root README case-insensitively and measure its file size in bytes, as Grand Report C023 does. A README of at least 1024 bytes passes without content scoring, authoring advice, or confirmation. | [Grand Report C023](https://github.com/exadmin/opensource_team_monitor/blob/d2e7ede1c90fcce9bfbff2d467f9dddd100fb171/src/main/java/com/github/exadmin/ostm/collectors/impl/repos/devops/ReadmeFilePresence.java#L17-L40) |
 | `FILE-002` Apache 2.0 `LICENSE`: `ERROR` | Compare normalized root `LICENSE` text with the official license; accept another license only with a documented legal exception. | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt), Grand Report C022 |
 | `FILE-003` CODEOWNERS: `ERROR` | Accept `.github/CODEOWNERS`, root `CODEOWNERS`, or `docs/CODEOWNERS`; verify syntax and report unresolved owners when the API permits. | [GitHub CODEOWNERS](https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), Grand Report C025 |
 | `FILE-004` `qubership-repo-essentials`: `ERROR` | Require a direct root dependency, `claude`, `codex`, and `cursor` targets, a resolved lock entry, committed generated assets for every target, and successful `apm audit --ci --no-policy`; organization policy discovery is outside this check. Nonempty `apm.yml` alone fails. | [Package manifest](https://github.com/Netcracker/qubership-ai-packages/blob/94b47bfd4171396bcacdb2d6c534470d60b1230f/agent-packages/qubership-repo-essentials/apm.yml), Grand Report C050 |
@@ -116,10 +129,13 @@ Keep `WF-005` coverage generation separate from optional `WF-014` publication.
 
 ## Report
 
-Start with `COMPLIANT`, `NON-COMPLIANT`, or `INCOMPLETE` and one sentence explaining why. Return all 28 checks in
-catalog order. For each check include its ID and name, result, applicability, exact evidence, source, reason, and
-smallest proposed remediation. Then list unavailable evidence and proposed Apply batches. Do not read fix references
-until the user confirms a batch.
+Start with `COMPLIANT`, `NON-COMPLIANT`, or `INCOMPLETE` and one sentence explaining why. Return all 28 checks in a
+localized Markdown table with exactly these columns: `ID`, `Status`, `Check and evidence`, `Minimal remediation`.
+Render row statuses as `ERROR`, `WARNING`, `INFO`, or `PASS`; map unavailable, not-applicable, and inapplicable
+conditional checks to `INFO`. Sort rows in that order and preserve catalog order within each status. Put applicability,
+evidence, source, and reason in `Check and evidence`. List unavailable evidence only when any exists. Then list proposed
+Apply batches by descriptive check name, excluding `FILE-001`. If `FILE-001` is an error, follow the batches with its
+separate README-remediation question. Do not read fix references until the user confirms a batch or README remediation.
 
 Do not add findings for open pull request count; email or CyberFerret scanning; language versions; pull request
 templates; universal release, SBOM, license, Release Drafter, security scan, or OSSF workflows; mandatory Sonar or

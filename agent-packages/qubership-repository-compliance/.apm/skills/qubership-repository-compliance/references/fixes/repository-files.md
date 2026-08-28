@@ -7,7 +7,7 @@ test, and usage facts. Show the proposed text and ask for missing product facts 
 placeholders or replace unrelated maintained content. If product intent is unavailable, keep the fix `UNAVAILABLE`.
 Run the repository's Markdown checks and `git diff --check`.
 
-Source: [GitHub README guidance][github-readme].
+Source: [GitHub README guidance](https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes).
 
 ## `FILE-002`: Apache License 2.0
 
@@ -23,7 +23,7 @@ Use `.github/CODEOWNERS` for a new file. Infer path coverage from repository str
 every proposed GitHub user or team; commits do not prove ownership. Verify syntax and owner visibility when the API
 permits, then run `git diff --check`.
 
-Source: [GitHub CODEOWNERS][github-codeowners].
+Source: [GitHub CODEOWNERS](https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
 ## `FILE-004`: Qubership repository Essentials
 
@@ -43,6 +43,3 @@ Keep the complete lockfile and generated assets for every target; never hand-edi
 generated markers. Preserve custom Super-Linter configuration and exclude only generated outputs. Completion requires
 the direct dependency, lock entry, generated assets, and successful audit; report audit limitations without deleting
 transitive lock entries.
-
-[github-codeowners]: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-[github-readme]: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes

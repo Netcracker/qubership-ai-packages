@@ -39,4 +39,4 @@ a ticket.
 
 Sources: [central file map](https://github.com/Netcracker/.github/blob/main/.github/broadcast-files-config.yaml),
 [workflow templates](https://github.com/Netcracker/.github/tree/main/workflow-templates), and
-[broadcast workflow](https://github.com/Netcracker/.github/blob/main/.github/workflows/broadcast-files.yaml).
+[broadcast implementation](https://github.com/borislavr/manage-files-in-multiple-repositories/blob/cdbab446c8b51bbb9499009c00a4f1e2dd4eeb38/lib/utils.js#L185-L194).

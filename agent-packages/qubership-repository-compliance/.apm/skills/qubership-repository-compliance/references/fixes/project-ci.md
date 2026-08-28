@@ -27,15 +27,16 @@ coverage format is unknown, list the missing input and keep remediation `UNAVAIL
 
 Inspect every publishable POM, distribution management, settings use, and release workflow. Configure GitHub Packages,
 not Maven Central, under this rule. Start from the current matching template and
-[GitHub Maven registry instructions][github-maven].
+[GitHub Maven registry instructions](https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
 List required secrets, variables, and permissions before applying. Require separate confirmation for coordinate or
 release-strategy changes.
 
 ## `WF-007`: Dependency updater
 
 Show existing integration evidence and ask the owner to choose Renovate or Dependabot; do not configure both. Limit
-ecosystems and directories to repository manifests. Use the current [Renovate reference][renovate] or
-[Dependabot reference][dependabot] and run the provider's validator when available.
+ecosystems and directories to repository manifests. Use the current [Renovate reference](https://docs.renovatebot.com/configuration-options/)
+or [Dependabot reference](https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates)
+and run the provider's validator when available.
 
 ## `WF-014`: External coverage publication
 
@@ -44,7 +45,3 @@ integration, variables, and secrets. Do not add dummy keys, tokens, or upload st
 steps when prerequisites are absent. Publication is never required when `WF-005` passes.
 
 Do not recreate a workflow from memory.
-
-[dependabot]: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates
-[github-maven]: https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry
-[renovate]: https://docs.renovatebot.com/configuration-options/
