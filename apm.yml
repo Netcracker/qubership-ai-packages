@@ -72,6 +72,12 @@ marketplace:
       version: 1.0.1
       tags: ["topic:meta", "activity:setup", "activity:maintenance", "audience:public"]
 
+    - name: qubership-repository-compliance
+      description: Audit and fix Qubership repository files, workflows, and GitHub settings against the reviewed compliance model.
+      source: ./agent-packages/qubership-repository-compliance
+      version: 1.0.0
+      tags: ["topic:devops", "activity:setup", "activity:maintenance", "audience:public"]
+
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
