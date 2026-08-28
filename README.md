@@ -10,7 +10,7 @@ umbrella packages for agents such as Claude Code, Codex, Cursor, and GitHub Copi
 - [About APM](#about-apm)
 - [APM installation](#apm-installation)
 - [Repository onboarding](#repository-onboarding)
-- [Mandatory skills for Qubership repositories](#mandatory-skills-for-qubership-repositories)
+- [Qubership user essentials](#qubership-user-essentials)
 - [Guides](#guides)
 
 ## Prerequisites
