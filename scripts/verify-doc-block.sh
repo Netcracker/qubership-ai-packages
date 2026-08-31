@@ -13,7 +13,7 @@
 #
 # Run the consumer guide locally with, for example:
 #   DOC_REPO=vlsi/qubership-ai-packages DOC_REF=<sha> APM_REQUIREMENTS="$PWD/requirements.txt" \
-#     uvx --python 3.12 --from doccmd --with-requirements requirements.txt doccmd \
+#     uvx --python 3.14 --from doccmd --with-requirements requirements.txt doccmd \
 #       --language=bash --group-marker=verify \
 #       --command="$PWD/scripts/verify-doc-block.sh" docs/consuming-packages.md
 set -euo pipefail
@@ -24,7 +24,7 @@ ref="${DOC_REF:-main}"
 req="${APM_REQUIREMENTS:?APM_REQUIREMENTS must point to a requirements.txt}"
 
 {
-  printf 'apm() { uvx --python 3.12 --from apm-cli --with-requirements %q apm "$@"; }\n' "$req"
+  printf 'apm() { uvx --python 3.14 --from apm-cli --with-requirements %q apm "$@"; }\n' "$req"
   sed -e "s#Netcracker/qubership-ai-packages#${repo}#g" \
       -e "s#v1.1.0#${ref}#g" \
       "$block"

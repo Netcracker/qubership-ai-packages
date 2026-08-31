@@ -67,7 +67,7 @@ jobs:
       # --check-clean: the committed marketplace.json matches what apm.yml would produce.
       # --dry-run is required: without it, pack rewrites the file first and the drift check always passes.
       - name: Check versions aligned and index in sync
-        run: uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
+        run: uvx --python 3.14 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
 
   verify-docs:
     needs: changes
@@ -93,7 +93,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .claude  # a harness marker so `apm install` has a deploy target
-          uvx --python 3.12 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
+          uvx --python 3.14 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
 
   test:
     needs: changes
