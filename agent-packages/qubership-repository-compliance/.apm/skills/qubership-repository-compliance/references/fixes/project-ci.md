@@ -9,8 +9,15 @@ equivalents and never infer action identifiers or inputs from memory.
 
 ## `WF-003`: APM package updates
 
-Fetch `apm-packages-update.yml` and its properties file. Report the required `APM_UPDATE_TOKEN` without reading or
-inventing its value. Confirm any schedule change before writing the workflow.
+Fetch `apm-packages-update.yml` and its properties file. Netcracker provides `APM_UPDATE_TOKEN` as an organization-level
+Actions secret. Use `secrets.APM_UPDATE_TOKEN` without asking the repository owner to create or provide a token, and
+never read, copy, or invent its value.
+
+An empty repository-level secret list or unavailable organization-secret listing does not mean the secret is missing.
+Verify access for the target repository through organization-administrator evidence or an updater workflow run after
+the workflow reaches the default branch. Only a run that cannot access the secret requires an organization
+administrator to add the repository to the secret's selected repositories. Confirm any schedule change before writing
+the workflow.
 
 ## `WF-004`: Build on push
 
