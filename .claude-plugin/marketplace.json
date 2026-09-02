@@ -99,7 +99,7 @@
     {
       "name": "qubership-repository-compliance",
       "description": "Audit and fix Qubership repository files, workflows, and GitHub settings against the reviewed compliance model.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "topic:devops",
         "activity:setup",
