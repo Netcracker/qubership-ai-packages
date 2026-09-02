@@ -27,10 +27,6 @@ holding five different things. The rules below name the reader every time, becau
 sentence is essential to one reader and noise to another, and the only way to decide is to ask
 whose question it answers.
 
-Section numbers follow `javadoc-authoring` and `docs-page-authoring` where the sections correspond;
-§4 and §6 do not, because a change description has readers a comment does not and is copied by
-machinery a page is not.
-
 ## 1. The correction that matters most
 
 **Write for the readers who are not in the room.** The reviewer can ask; the other four cannot. The
@@ -432,10 +428,3 @@ edited released entry.
 - Nothing: no entry for noise, no empty section, no diff paraphrase, no predicted merge difficulty
   (§7)?
 - Rewrite: net delta defended, causal links stated once, released entries untouched (§7a)?
-
-## 9. Where the rules come from
-
-The sources behind each rule, the conflicts between them and which reader decided each, and a test
-of the slot rules on real changes from five workflows are in
-[research/change-description-authoring](https://github.com/Netcracker/qubership-ai-packages/tree/main/research/change-description-authoring)
-in the `qubership-ai-packages` repository.
