@@ -27,11 +27,9 @@ holding five different things. The rules below name the reader every time, becau
 sentence is essential to one reader and noise to another, and the only way to decide is to ask
 whose question it answers.
 
-Rules are marked *measured* where a study backs them, *asserted* where a project guide states them,
-and *derived* where they follow from how a platform behaves. §9 lists what each rests on. Section
-numbers follow `javadoc-authoring` and `docs-page-authoring` where the sections correspond; §4 and
-§6 do not, because a change description has readers a comment does not and is copied by machinery a
-page is not.
+Section numbers follow `javadoc-authoring` and `docs-page-authoring` where the sections correspond;
+§4 and §6 do not, because a change description has readers a comment does not and is copied by
+machinery a page is not.
 
 ## 1. The correction that matters most
 
@@ -50,13 +48,6 @@ pull request while leaving `git log` with a title has served the one reader who 
 | **R4 Upgrading user** | The version they run and the one they want | The release notes | What changed that I can observe? Is it compatible? What must I do? |
 | **R5 Backporter** | A maintenance branch | Labels, trailers, and the subject list | Is this a fix? How severe? Which versions? Does it need another change first? |
 
-*Measured* for R1 and R2: reviewing others' changes is the most frequent reason engineers read a
-change (67.2% of 180 respondents), and the rationale is the information they need most and "one of
-the easiest to acquire if an informative change description ... is available"; about 44% of commit
-messages in five active projects lacked the what or the why. *Asserted* for R3, R4, and R5: no study
-observes an on-call engineer or a backporter reading, so what they open is inferred from what they
-hold.
-
 The test that follows from this, applied to every sentence: **name the reader and the question it
 answers.** A sentence that answers none of the questions above belongs in another artifact, or
 nowhere.
@@ -64,9 +55,7 @@ nowhere.
 **The permanent record is the commit, not the pull request.** In a repository that merges with merge
 commits, the description never reaches `git log`; in a repository that squashes with the default
 setting, the body is the list of branch commit messages, not the description. Write the commit
-message as if the pull request did not exist, and let the description repeat it. *Derived* from
-platform mechanics; observed on Kubernetes, Prometheus, and Renovate changes where a full
-description sat above a one-line commit.
+message as if the pull request did not exist, and let the description repeat it.
 
 ## 2. The slots
 
@@ -74,10 +63,12 @@ description sat above a one-line commit.
 
 One slot: **the change, as what it does to behavior**, in a form that stands alone in a one-line
 listing. Reader R2, then R1. Test: *R2, reading `git log --oneline`, asks what this commit did.* A
-file name, a phase, a ticket number, or `Fix bug` fails it. *Asserted*: Google eng-practices, Git
-`SubmittingPatches`, Zulip. The subject is change-first even though the body is problem-first; the
-two lines serve different reading moments (§4, conflict 3). A type prefix and a length limit are
-house style (§6).
+file name, a phase, a ticket number, or `Fix bug` fails it. The subject is change-first even though
+the body is problem-first; the two lines serve different reading moments (§4). A type prefix and a
+length limit are house style (§6).
+
+- *Fails:* `Fix bug`, `Phase 1`, `Update JobController.go`, `JIRA-1234`.
+- *Passes:* `Retry finalizer removal when the orphan pod sync fails`.
 
 ### Commit body
 
@@ -90,39 +81,65 @@ Four slots, in this order. Verification is not one of them (§4).
 | 3 | **Change and approach** | R2, R1 | What was done; the constraint that forced it; the alternative a reader would propose and why not; the measured trade-off | The problem statement makes the approach obvious |
 | 4 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
 
-Slot 1 is *measured*: the kernel's "Convince the reviewer that there is a problem worth fixing" and
-Git's "explains the problem the change tries to solve, i.e. what is wrong with the current code
-without the change" are the asserted forms, and the need behind them is the measured one. Zulip's
-pattern is the cheapest way to fill it: "Previously, when X happened, this caused Y to happen, which
-resulted in ...".
+Slot 1 opens the body. Convince the reader that there is a problem worth fixing before saying what
+you did about it. The cheapest shape is "Previously, when X happened, this caused Y, which resulted
+in Z."
 
-Slot 2 is *asserted*, from the kernel's "Describe user-visible impact ... provoking circumstances,
-excerpts from dmesg, crash descriptions, performance regressions, latency spikes, lockups" and from
-the CVE description template, which names the component, the version, the impact, and the vector.
-Where the defect has no symptom (a leak on an error path with nothing logged), say so; an empty slot
-looks like an omission, a stated absence does not.
+Slot 2 carries what a person outside the code observes: the exception, the log line, the wrong
+result, the hang, the regression in latency, and the circumstances that provoke it. Where the defect
+has no symptom (a leak on an error path with nothing logged), say so; an empty slot looks like an
+omission, a stated absence does not.
 
-Slot 3 is *asserted*: Git's "justifies the way the change solves the problem" and "alternate
-solutions considered but discarded, if any"; Google's "why this is the best approach. If there are
-any shortcomings to the approach, they should be mentioned"; the kernel's "include numbers that back
-them up. But also describe non-obvious costs". A rejected alternative earns its sentence only where
-a
-reader would propose it; a mechanism or a measurement makes it checkable, a preference does not.
+Slot 3 justifies the way the change solves the problem: why the result with the change is better,
+and which alternative was considered and discarded. A rejected alternative earns its sentence only
+where a reader would propose it, and a mechanism or a measurement makes it checkable where a
+preference does not. A performance claim carries its number and its cost.
 
-**The one-line why is not replaced by the issue link.** *Measured*: of 611 commit messages that
-linked an issue instead of stating a reason, 15% linked to something that did not contain the reason
-either, against 89.77% of surveyed developers who expected it to. Git says the same without the
-number: "Instead of giving a URL to a mailing list archive, summarize the relevant points of the
-discussion." Minimum inline content when an issue exists: one sentence of problem, the identifier,
+**The one-line why is not replaced by the issue link.** Links rot, trackers move, and a good share
+of
+linked issues do not contain the reason either. Summarize the relevant point instead of pointing at
+the archive. Minimum inline content when an issue exists: one sentence of problem, the identifier,
 and the symptom string.
+
+*Before:*
+
+```text
+Fix checkpointer assertion
+
+See #4711.
+```
+
+*After:*
+
+```text
+Fix checkpointer restartpoint assertion failure
+
+When recovery starts from a backup without a signal file, pg_subtrans is
+not started and stays unstarted throughout recovery. A restartpoint run
+by the checkpointer during recovery nevertheless tried to truncate it,
+which failed the assertion:
+
+    TRAP: failed Assert("TransactionIdIsValid(initial)")
+
+Track whether pg_subtrans was started during recovery and have the
+checkpointer check the flag before truncating. Skipping the truncation
+unconditionally was rejected: it leaves stale pages in the common case
+where pg_subtrans is running.
+
+Reported-by: ...
+Backpatch-through: 14
+```
+
+Slot 1 is the first paragraph, slot 2 the literal `TRAP:` line and the condition "from a backup
+without a signal file", slot 3 the fix and the rejected shortcut, slot 4 the trailers. R3 greps the
+`TRAP:` line; R5 reads `Backpatch-through:`; R2 gets the why without opening a tracker.
 
 ### Pull request title
 
 One slot: **a searchable, accurate summary**, which a squash merge turns into the commit subject and
 a merge commit carries as its second line. Reader R1, then R2. Test: *R1, reading a list of thirty
 open pull requests, asks which one this is.* Accuracy beats brevity here, because the title is read
-in a list and searched; the commit subject's limit belongs to the subject. *Derived* from GitHub and
-GitLab squash mechanics; Google's first-line rule applies because the title becomes that line.
+in a list and searched; the commit subject's limit belongs to the subject.
 
 ### Pull request description
 
@@ -138,14 +155,46 @@ Five slots, in order; the last two are conditional.
 
 Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open; where
 the merge model copies the description into the commit, they *are* the commit body (§4). Slot 3
-serves the reviewer and no one else: *measured*, "does this change break any code elsewhere?" is the
-second hardest information need to acquire, and naming what the tests establish is how the
-description answers it without the reviewer rerunning them. Say which tests are new; do not
-transcribe assertions. Slot 4 is *asserted* (Google's shortcomings; the Kubernetes cherry-pick guide
-for dependency order) and answers the hardest measured need of all, "are there other places that
-need similar changes". A sentence in slot 4 is falsifiable when it names a number or a path; "a
-follow-up will handle that" is not. Slot 5 is *documented mechanics*, project-specific: Kubernetes
-reads a fenced `release-note` block from its template, Prometheus a `release-notes` block.
+serves the reviewer and no one else: name what the tests establish and which are new, and do not
+transcribe assertions. Slot 4 answers the two questions a reviewer finds hardest to settle from the
+diff alone, whether this breaks something elsewhere and whether other places need the same change;
+a sentence in it is falsifiable when it names a number or a path, and "a follow-up will handle that"
+is not. Slot 5 is project-specific: Kubernetes reads a fenced `release-note` block from its
+template, Prometheus a `release-notes` block.
+
+*Before:*
+
+```text
+## Summary
+Updated the job controller.
+
+## Testing
+Ran the unit tests, all green.
+```
+
+*After:*
+
+```text
+## Why
+When the pod GC force-deletes a completed job pod and the job is deleted
+before the pod's finalizer is removed, the orphan sync fails with
+`"syncing orphan pod failed" err="Timeout: request did not complete within
+requested timeout"` and is never retried. The pod keeps its finalizer and
+cannot be removed.
+
+## What
+The orphan sync is requeued with backoff on failure instead of being
+dropped. Removing the finalizer synchronously in the GC path was rejected:
+the GC has no client for the job namespace.
+
+## Verification
+`TestSyncOrphanPodRetriesOnError` (new) fails without the change; the
+existing finalizer tests are unchanged.
+
+## Scope
+Fixes #141346. The stale-finalizer metric proposed in #140900 is not part
+of this change.
+```
 
 Reviewer-only content is not a slot. Checklists, screenshots, the template's own comments, and
 round-by-round history live in comments or in a collapsed block, and never in a description that a
@@ -163,15 +212,29 @@ Five parts in order, under a category heading. §3 argues the order.
 | 4 | **References**: pull request or commit, issue, CVE | R3, R2, R5 | Where is the detail? |
 | 5 | **Compatibility and action**: breaking or not, what the reader must do, and for a regression the version that introduced it | R4, R5, R3 | Will my upgrade break? Am I on an affected version? |
 
-Parts 1, 2, and 4 are *asserted* by Keep a Changelog and Common Changelog ("Each change must be
-self-describing, as if no category heading exists"; "changes must reference relevant commits, and
-should reference tickets or pull requests when available"). Part 2 has *measured* backing: users of
-release notes want impact and detail, and a surveyed tester called "Bug fixes and performance
-improvements" "completely meaningless. What was fixed? How will performance improve?" Part 3 is
-*asserted* from the CVE template, the kernel's impact rule, and Common Changelog's antipattern
-`json-parser 8.0.2 is fixed (#295)`, which "doesn't explain or reference what was fixed". The
-introducing version in part 5 is *derived*: no project was found writing it into the entry, so it
-is written only where a `Fixes:` trailer or a bisect established it, never guessed.
+Each entry must be self-describing as if no category heading existed, because dependency bots
+quote entries out of context. `json-parser 8.0.2 is fixed (#295)` is the antipattern: it names a
+ticket and explains nothing. The introducing version in part 5 is written only where a `Fixes:`
+trailer or a bisect established it, never guessed.
+
+*Before:*
+
+```text
+### Fixed
+- Bug fixes and performance improvements.
+- Fixed #19016.
+```
+
+*After:*
+
+```text
+### Fixed
+- Set a request timeout for `docker_sd` and `dockerswarm_sd`. Previously an
+  unresponsive daemon could freeze discovery indefinitely, silently pinning
+  targets to a stale snapshot. #19237
+- Fix silent data loss and a crash loop when `stale_series_compaction_threshold`
+  is set in the config file. Regression since 3.12.0. #19016
+```
 
 ## 3. The changelog entry is the on-call reader's artifact too
 
@@ -181,26 +244,20 @@ reader stops where their question is answered: the observable change first, beca
 for a feature; the symptom and trigger second, because R3 greps for it and R4 skips one clause; the
 references third; compatibility last, because R4 and R5 read it and R3 reads the version.
 
-The order is a decision, not a finding, and its argument is cost: the symptom in second place costs
-R4 one clause, while the symptom omitted costs R3 the whole entry, because nothing in it matches
-their search. A hand-written changelog was found using this order with no rule requiring it: "Set a
-request timeout for `docker_sd` and `dockerswarm_sd` on `unix`, `npipe`, and `tcp` hosts.
-Previously an unresponsive daemon could freeze discovery indefinitely, silently pinning targets to a
-stale snapshot. #19237".
+The order is a decision, and its argument is cost: the symptom in second place costs R4 one clause,
+while the symptom omitted costs R3 the whole entry, because nothing in it matches their search.
 
 **Breaking changes are marked in place and sorted first within their category**, with a
-`**Breaking:**` prefix (Common Changelog; Keep a Changelog 2.0.0 argues against a separate
-section so that "anyone scanning Changed or Removed sees them in place"). A separate top block is a
-house option for release notes long enough that R4 cannot scan every category, which is what
-Kubernetes' "Urgent Upgrade Notes" is for. **A Security entry leads with its CVE identifier** where
-one exists (Keep a Changelog 2.0.0), because R3 and security tooling match on it.
+`**Breaking:**` prefix, so that anyone scanning Changed or Removed sees them where they are. A
+separate top block is a house option for release notes long enough that R4 cannot scan every
+category. **A Security entry leads with its CVE identifier** where one exists, because R3 and
+security tooling match on it.
 
 **Quote the diagnostic as a literal**, everywhere it appears: exception class, error text, error
 code, log line, exactly as emitted, punctuation included. Under-reporting the detail means the
-reader "may not be able to make the appropriate match later on"; over-reporting "can obscure the
-distinguishing details" (CVE phrasing). The entry names the public identifier the reader will grep,
-spelled as the code spells it, and both versions where the project versions its releases: the one
-that introduced the defect and the one that fixes it.
+reader cannot make the match later; over-reporting buries the distinguishing detail. The entry names
+the public identifier the reader will grep, spelled as the code spells it, and both versions where
+the project versions its releases: the one that introduced the defect and the one that fixes it.
 
 ## 4. The merge model decides where the text ends up
 
@@ -214,42 +271,51 @@ Detect it before applying anything in §5 or §6. Read the last twenty or so sub
 | `Change-Id:` or `Reviewed-on:` trailers | Gerrit | One commit per change; the commit message is the review description |
 | `Signed-off-by:` chains with `Link: https://patch.msgid.link` or `lore.kernel.org` | Email patches | Text below `---` is stripped on apply; trailers are the routing layer |
 
-For a squash repository, the setting decides what the body is. *Cited*: GitHub's default "uses the
-commit title and message if the pull request contains only 1 commit, or the pull request title and
-list of commits if the pull request contains 2 or more commits"; a repository can choose "just the
-pull request title, the pull request title and commit details, or the pull request title and
-description". GitLab's default squash template is `%{title}`, and a project can compose
-`%{description}`, `%{first_commit}`, `%{all_commits}`, and `%{issues}`. The merging maintainer can
-edit the message before merging on both.
+For a squash repository, the platform setting decides what the body is. GitHub's default uses the
+commit title and message for a single-commit pull request, and the pull request title plus the list
+of commit messages for two or more; a repository can instead choose the title alone, the title and
+commit details, or the title and description. GitLab's default squash template is the title alone,
+and a project can compose the description, the first commit, all commits, and the closing issues.
+The merging maintainer can edit the message before merging on both.
 
-Rules, each marked:
+1. Write the title as the commit subject it will become.
+2. Under "title and description", the description is the body: shape it as §2's commit body, and
+   keep reviewer-only content out of it.
+3. Under the default or "commit details", the body is the list of branch commit messages, so the
+   durable why must be in the first branch commit, or the maintainer must edit at merge. Write the
+   first branch commit as a full commit body regardless of how good the description is.
+4. Compress verification to one line naming what the tests establish where the description will
+   become the body; move transcripts and checklists to comments.
+5. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
+   on any other target the keywords are ignored, so a backport carries the reference for humans.
+6. Where a release tool parses the squash subject (release-please, semantic-release), the title's
+   prefix is what it reads; the branch commits are invisible to it.
 
-1. *Cited.* Write the title as the commit subject it will become.
-2. *Cited.* Under "title and description", the description is the body: shape it as §2's commit
-   body, and keep reviewer-only content out of it.
-3. *Derived.* Under the default or "commit details", the body is the list of branch commit messages,
-   so the durable why must be in the first branch commit, or the maintainer must edit at merge. A
-   rich description above branch commits reading `Fix lint` and `Apply suggestion` leaves `git log`
-   with those lines and nothing else. Write the first branch commit as a full commit body regardless
-   of how good the description is.
-4. *Derived.* Compress verification to one line naming what the tests establish where the
-   description will become the body; move transcripts and checklists to comments.
-5. *Cited.* `Fixes #n` and `Closes #n` close the issue only when the change merges into the default
-   branch; on any other target the keywords are ignored, so a backport carries the reference for
-   humans.
-6. *Derived.* Where a release tool parses the squash subject (release-please, semantic-release), the
-   title's prefix is what it reads; the branch commits are invisible to it.
+What rule 3 prevents, from a squash under "title and commit details" of a pull request whose
+description ran to five paragraphs of mechanism and measurements:
 
-In a merge-commit repository, rule 3 applies with more force: the commit message carries problem,
-impact, and approach whether or not the description repeats them, because the description is
-reachable only while the platform is.
+```text
+fix(cache): re-add cacache.verify() to garbage collect orphaned content (#44987)
+
+* fix(cache): re-add cacache.verify() to garbage collect orphaned content
+
+* Fix lint
+
+* Apply suggestion from @reviewer
+
+* Apply suggestion from @reviewer
+```
+
+That is all `git blame` will ever show. The same happens under merge commits, where the description
+is never copied at all: the commit message carries problem, impact, and approach whether or not the
+description repeats them, because the description is reachable only while the platform is.
 
 **Default when detection fails**: treat the repository as squashing with "title and description".
 Write the description so it can stand as a commit body and write the first branch commit the same
 way. This costs one paragraph of duplication when the repository turns out to merge, and loses
 nothing in every other case.
 
-**Verification does not belong in `git log`.** The kernel strips it below `---`; Google and most
+**Verification does not belong in `git log`.** Email workflows strip it below `---`; pull request
 templates ask for it in the description; a squash setting can copy it into the body. R1's need is
 met in the pull request; R2's noise is kept out of the history. Where the description will become
 the body, rule 4 applies.
@@ -257,29 +323,27 @@ the body, rule 4 applies.
 ## 5. Trailers and the identifiers a reader greps
 
 Trailers are a block of `Key: value` lines at the end of the message, after a blank line, with no
-blank lines inside; keys are ASCII alphanumerics and hyphens (`git interpret-trailers`). Each one
-has a consumer, and the consumer decides whether it is worth writing.
+blank lines inside; keys are ASCII alphanumerics and hyphens. Each one has a consumer, and the
+consumer decides whether it is worth writing.
 
 | Trailer | Consumer | Reader | Write it when |
 | --- | --- | --- | --- |
 | `Fixes: <12+ hex sha> ("<subject>")` | Kernel stable scripts, to pick the branches that need the fix | R5, R3 | The project uses it; elsewhere it is prose only R5 reads, and still worth a line for a regression |
 | `Fixes #n`, `Closes #n`, `Resolves #n` | GitHub and GitLab: link, and close on merge to the default branch | R2, R5 | An issue exists |
-| `Closes: <url>` (kernel) | Humans and regzbot; "Private bug trackers and invalid URLs are forbidden" | R2, R3 | The project uses it |
+| `Closes: <url>` (kernel) | Humans and regression trackers; a public URL is required | R2, R3 | The project uses it |
 | `Link:` | Humans | R2 | A discussion or archive exists |
-| `Backpatch-through: <major>` | PostgreSQL's `git_changelog`, which groups identical messages across branches | R5 | The project back-patches and uses it |
+| `Backpatch-through: <major>` | PostgreSQL's release-note tooling, which groups identical messages across branches | R5 | The project back-patches and uses it |
 | `Cc: stable@vger.kernel.org # <ver>: <sha>: <subject>` | Kernel stable team; the sequence means `git cherry-pick <sha>` then this commit | R5 | Kernel only |
 | `Reported-by:` | Credit | R2 | Someone reported it |
 | `BREAKING CHANGE:`, or `!` after the type | release-please and semantic-release: major bump | R4, through the tool | The tool is present |
 | `Co-authored-by:` | Platform attribution | none of the five | Provenance requires it |
 | `Change-Id:`, `Signed-off-by:` | Gerrit; the DCO | none of the five | The workflow requires it |
 
-**Identifiers.** These decide what a search finds.
+**Identifiers.** Beyond the diagnostic and the versions of §3, these decide what a search finds.
 
-- The diagnostic, quoted as a literal (§3), in the commit body and the changelog entry both.
 - The public identifier the change touches: option, flag, class, method, configuration key, spelled
-  as the code spells it. *Asserted*: "Future developers will search for your CL based on its
-  description." A private helper is named only where its name is what the reader will grep for.
-- Both versions, introduced and fixed, where the project versions its releases (§3).
+  as the code spells it. Future readers search the history by these strings. A private helper is
+  named only where its name is what the reader will grep for.
 - The issue identifier, beside the one-line why, never instead of it (§2).
 - Identical messages across branches when back-patching, where tooling groups them; where the
   branches diverge in behavior, one branch-specific line beats a misdescription.
@@ -292,7 +356,7 @@ existing history shows which.
 
 | Prescription | Serves | Apply when |
 | --- | --- | --- |
-| `type(scope):` prefix | release-please, semantic-release, commitlint | The history already carries prefixes or a config names the tool. It "gives commit authors the false impression that their messages are descriptive" (Common Changelog); the body still owes the why |
+| `type(scope):` prefix | release-please, semantic-release, commitlint | The history already carries prefixes or a config names the tool. The prefix gives authors the impression that the message is descriptive; the body still owes the why |
 | 50- or 72-character subject | Terminal and email display | The project states a limit; it is a linter's check |
 | `Signed-off-by:` | The DCO | The project enforces it |
 | `Change-Id:` | Gerrit | The history shows it |
@@ -322,42 +386,28 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 
 ## 7a. Editing an existing description
 
-A rewrite of a description drifts longer, because every restructuring pass adds a sentence and none
-takes one away.
+The growth budget, the "which review decision becomes harder" test, the rule that each causal link
+is
+stated once, and the literal treatment of a quoted diagnostic are `english-developer-style`'s and
+apply here unchanged. Two rules are this skill's own:
 
-- **Budget the net delta at zero.** A description under roughly 300 words is presumed not to grow;
-  each added clause must support a review decision or restore a truth condition. Reordering,
-  transitions, and a mechanism another slot already gave do not qualify.
-- **Ask of every paragraph which review decision becomes harder if it disappears.** Delete a
-  paragraph with no concrete decision. This is sharper than "does the reader need the fact", because
-  almost any true fact can be argued to be needed.
-- **State each causal link once.** Why carries the symptom, the condition, and the wrong decision;
-  What carries the new boundary; Verification names the property the tests establish.
-- **Keep a specific value where the decision depends on it.** A threshold, a version, an
-  identifier, or a magnitude stays when changing it would change the behavioral conclusion, the
-  compatibility boundary, or what a test discriminates; being searchable alone does not keep it.
-- **A quoted diagnostic is a literal.** Reproduce its capitalization, spacing, and final
-  punctuation; moving a period outside the quotation marks makes it a string nobody will find.
 - **A released changelog entry is not yours to reword.** It has been read, quoted, and linked. Fix a
   wrong version or a wrong CVE and leave the wording.
+- **A rewrite that moves a fact between artifacts says where it went.** A symptom cut from the
+  description because the changelog entry now carries it is a move; the same cut with no entry is a
+  loss.
 
 ## 7b. Comparing two versions
 
-The new version will read better; it was written second. So read the old one first and reach the
-verdict last, on the protocol `docs-page-authoring` §7b and `pr-description-sweep` share:
-
-1. List the old version's facts: one fact is one symptom, one condition, one identifier, one
-   version, one measured value, one named test, one dependency between changes, one stated
-   non-goal.
-2. Mark each present, restated, or absent. Absent needs a defense: wrong, moved to a named place, or
-   belonging to another artifact. "The diff implies it" is not one.
-3. Only now count the delta, against §7a's budget.
-4. Check what the new version asserts without support, against the diff and the tests, not against
-   the old text.
-5. Name the changes that bought nothing.
-6. Say which finding it is: lost fact, unpaid growth, unsupported claim, diff paraphrased, symptom
-   dropped, diagnostic retyped, verification in the permanent body, reviewer content in a body the
-   squash will copy, issue link standing in for the why, edited released entry.
+Read the old version first and reach the verdict last, on the protocol `docs-page-authoring` §7b
+states: list the old version's facts (a symptom, a condition, an identifier, a version, a measured
+value, a named test, a dependency between changes, a stated non-goal), mark each present, restated,
+or absent, defend every absence, count the delta only then, and check what the new version asserts
+against the diff and the tests rather than against the old text. Name the finding: lost fact, unpaid
+growth, unsupported claim, diff paraphrased, symptom dropped, diagnostic retyped, verification in
+the
+permanent body, reviewer content in a body the squash will copy, issue link standing in for the why,
+edited released entry.
 
 ## 8. Review checklist
 
@@ -383,32 +433,9 @@ verdict last, on the protocol `docs-page-authoring` §7b and `pr-description-swe
   (§7)?
 - Rewrite: net delta defended, causal links stated once, released entries untouched (§7a)?
 
-## 9. What these rules rest on
+## 9. Where the rules come from
 
-*Measured*, and weighted accordingly when two rules collide:
-
-- **What readers need and how often they read**: 180 Microsoft engineers surveyed (Tao, Dang, Xie,
-  Zhang, Kim, FSE 2012); reviewing others' changes ranked first, rationale the most important need
-  and the easiest to meet with a description, consistency across the codebase the hardest and risk
-  the second hardest.
-- **How often messages lack it**: 1,597 messages from five active Java projects, about 44% lacking
-  What or Why (Tian, Zhang, Stol, Jiang, Liu, ICSE 2022).
-- **The issue link as a substitute for the why**: 611 linked messages from 32 Apache projects, 15%
-  failing to supply it (Li and Ahmed, ICSE 2023).
-- **What release notes contain and what users want**: 32,425 release notes from 1,000 GitHub
-  projects and 314 survey respondents (Bi, Xia, Lo, Grundy, Zimmermann, IEEE TSE 48(6), 2022).
-
-*Asserted*, by the projects and specifications named inline: the Linux kernel's `submitting-patches`
-and `stable-kernel-rules`, Git's `SubmittingPatches`, Google's eng-practices, PostgreSQL's commit
-message guidance and committing checklist, Zulip's commit discipline, Kubernetes' release-note and
-cherry-pick guides, Keep a Changelog 1.1.0 and 2.0.0, Common Changelog, and MITRE's CVE Key Details
-Phrasing. Everything about the on-call reader and the backporter is asserted; no study observes
-them.
-
-*Derived* from platform mechanics documented by GitHub, GitLab, and `git interpret-trailers`: the
-squash rules, the detection table, the default when detection fails, the introducing version in a
-changelog entry, and the rule that the commit carries the why in a merge-commit repository. The
-evidence, the sources with URLs, the conflicts between them and which reader decided each, and a
-test
-of these rules on real changes from five workflows are in the research directory
-`research/change-description-authoring/` of the `qubership-ai-packages` repository.
+The sources behind each rule, the conflicts between them and which reader decided each, and a test
+of the slot rules on real changes from five workflows are in
+[research/change-description-authoring](https://github.com/Netcracker/qubership-ai-packages/tree/main/research/change-description-authoring)
+in the `qubership-ai-packages` repository.

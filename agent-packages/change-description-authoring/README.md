@@ -31,14 +31,13 @@ the question it answers.
 - When to write nothing, how far a rewrite may grow, and how to compare two versions of a description
   without being sold by the newer one.
 
-Each rule is marked *measured*, *asserted*, or *derived*, and the skill's last section names what
-each label rests on.
-
 ## Contents
 
 - `.apm/instructions/change-description-authoring.instructions.md`: the trigger merged into
   `AGENTS.md` / `CLAUDE.md` by `apm compile`.
-- `.apm/skills/change-description-authoring/SKILL.md`: the on-demand rules and a review checklist.
+- `.apm/skills/change-description-authoring/SKILL.md`: the on-demand rules, before/after examples for
+  each artifact, and a review checklist. It carries no citations; the evidence stays in the research
+  directory below.
 
 ## Pairs with
 
