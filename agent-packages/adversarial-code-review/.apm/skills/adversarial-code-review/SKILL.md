@@ -267,12 +267,24 @@ Apply these rules identically to GitHub and GitLab. Inline publication is the de
 and attach it to the smallest useful changed line or range.
 
 The general comment contains only the result line defined above, the platform-authoritative revision tuple, the
-signature, and complete findings that the platform cannot attach to the current diff. Include `Coverage` only for
-`REVIEW_INCOMPLETE`. Do not add a positive recap, section placeholders, or other review metadata.
+signature, complete findings that the platform cannot attach to the current diff, and the carried-forward blocker list
+defined below. Include `Coverage` only for `REVIEW_INCOMPLETE`. Do not add a positive recap, section placeholders, or
+other review metadata.
 
-Omit every finding published inline from the rest of the general comment. Do not include its title, ordinal number,
-status, path, summary, or paraphrase. Do not write `See inline comment` or any equivalent pointer. Do not add `Blocking`
-or `Non-blocking` sections for findings that exist only as inline comments.
+Omit every finding published inline in the current review from the rest of the general comment. Do not include its
+title, ordinal number, status, path, summary, or paraphrase. Do not write `See inline comment` or any equivalent pointer
+for those findings. Do not add `Blocking` or `Non-blocking` sections for findings that exist only as inline comments.
+
+If `REQUEST_CHANGES` carries forward a blocking finding from an earlier review because its thread remains valid,
+unresolved, and not outdated, add this block after the signature:
+
+```markdown
+Outstanding blocking findings:
+- <direct thread URL>
+```
+
+List each carried-forward thread once. Do not repeat its title, status, path, summary, body, or paraphrase. Omit
+resolved, outdated, and no-longer-valid threads.
 
 When the platform cannot attach a finding to the current diff, put that complete finding in the summary once with its
 exact location and the positioning limitation. Binary files and unchanged lines outside the diff are common cases.
