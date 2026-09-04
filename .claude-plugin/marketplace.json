@@ -299,6 +299,18 @@
       "source": "./agent-packages/change-description-authoring"
     },
     {
+      "name": "docs-page-authoring",
+      "description": "Structure and content rules for documentation pages: which reader a section serves, what an option entry carries, what a change owes the documentation, and what a page may not claim.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/docs-page-authoring"
+    },
+    {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
       "version": "1.0.0",
