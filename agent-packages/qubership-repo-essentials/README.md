@@ -1,9 +1,8 @@
 # qubership-repo-essentials
 
-Umbrella APM package with the baseline agent setup for new Netcracker/Qubership
-repository installations. Depend on this one package and the agent picks up the
-shared conventions through transitive APM dependencies — there is no content
-of its own here, only the dependency list.
+APM package with the baseline agent setup for new Netcracker/Qubership repository installations. Depend on this one
+package and the agent picks up the shared conventions through the package's commit-message instruction and transitive
+APM dependencies.
 
 The deprecated [`qubership-essentials`](../qubership-essentials/) package
 remains available with its original dependency set for existing consumers.
@@ -12,6 +11,8 @@ This package states the repository installation scope explicitly and excludes
 repository wants agent-run Codex reviews.
 
 ## What it pulls in
+
+The package requires an `Assisted-by:` trailer in commit messages and includes these dependencies:
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages
   (instructions, skills, prompts, agents, hooks).
