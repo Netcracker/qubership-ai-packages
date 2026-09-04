@@ -1,6 +1,6 @@
 name: qubership-user-essentials
-version: 1.0.0
-description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
+version: 1.1.0
+description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
 dependencies:
   apm:
     # The per-repository baseline, pinned to the main commit that introduced it.
@@ -11,3 +11,8 @@ dependencies:
     - Netcracker/qubership-ai-packages/agent-packages/enable-renovate-automerge#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/adr-authoring#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/qubership-agent-support-pr#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
+    - Netcracker/qubership-ai-packages/agent-packages/javadoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/jsdoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/godoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/rustdoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/pythondoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
