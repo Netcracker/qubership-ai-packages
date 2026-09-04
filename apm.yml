@@ -75,7 +75,7 @@ marketplace:
     - name: qubership-repository-compliance
       description: Audit and fix Qubership repository files, workflows, and GitHub settings against the reviewed compliance model.
       source: ./agent-packages/qubership-repository-compliance
-      version: 1.0.3
+      version: 1.1.0
       tags: ["topic:devops", "activity:setup", "activity:maintenance", "audience:public"]
 
     - name: english-developer-style

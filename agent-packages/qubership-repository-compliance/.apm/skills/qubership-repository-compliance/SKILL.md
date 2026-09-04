@@ -25,8 +25,9 @@ Default to `Audit`. Audit is read-only: do not edit files, change GitHub setting
 merge, or close anything.
 
 `Apply` reuses a complete Audit from the current task and rechecks only confirmed checks; run a full Audit only when
-none exists. Confirmation to fix critical issues authorizes the error stage below. Warnings require the user's
-selection. Show exact targets and proposed file and external changes before applying them. Carry forward approvals
+none exists. Confirmation after the audit report authorizes the error stage below. An up-front request to "fix
+everything" is not confirmation of that stage. Warnings require the user's selection.
+Show exact targets and proposed file and external changes before applying them. Carry forward approvals
 and answers already given in the current task; do not ask again for the same decision.
 Permission for a target repository does not cover `Netcracker/.github` or `Netcracker/qubership-workflow-hub`.
 
@@ -56,18 +57,20 @@ Critical issues are confirmed `ERROR` and applicable `CONDITIONAL ERROR` finding
 1. After the user confirms fixing critical issues, read only their routed fix instructions and recheck those findings.
    Explain which changes you can make with the available facts, prerequisites, and approvals, and which need user input.
    Make this assessment after confirmation, not during Audit, and do not group changes by function.
-2. Perform and validate the authorized changes that need no further answers. Do not wait for unrelated open questions
+1. Perform and validate the authorized changes that need no further answers. Do not wait for unrelated open questions
    or request another confirmation for these changes. Preserve the separate approvals required above and in the fix
    instructions; a missing fact, prerequisite, or required decision prevents only the affected change.
-3. Report the completed changes and list all remaining questions in one numbered list. For each question, name the
+1. Report the completed changes and list all remaining questions in one numbered list. For each question, name the
    affected check and the fact, choice, or approval needed. Offer to go through the questions one at a time or let the
    user answer them all at once. In either mode, use answers already supplied and continue the corresponding fixes.
    Report unavailable prerequisites as blockers; do not turn them into questions the user cannot answer.
-4. Recheck the errors after remediation. Keep unresolved errors explicit and continue their questions or report their
-   blockers. Once all errors are resolved, ask which remaining warnings the user wants to fix. If Audit finds no
-   errors, ask this directly after the report. List warnings by descriptive check name and wait for the selection;
-   do not apply them automatically. If no warnings remain, report completion without a selection question.
-5. Read fix instructions only for the selected warnings, then follow the same assessment, execution, and question
+1. Recheck the errors after remediation. Keep unresolved errors explicit and continue their questions or report their
+   blockers. Once every error is resolved or reported as a blocker, ask which remaining warnings the user wants to fix.
+   Blocked errors do not suspend warning selection or change their unresolved status. If Audit finds no errors, ask
+   this directly after the report. List warnings by descriptive check name and wait for the selection;
+   do not apply them automatically. If no warnings remain, report completed work and any unresolved blockers without
+   a selection question.
+1. Read fix instructions only for the selected warnings, then follow the same assessment, execution, and question
    flow. An explicit request to work on warnings while errors remain changes the order, not the unresolved error status.
 
 ## Fix routing
@@ -88,19 +91,19 @@ If a required source, permission, command, owner, secret, or provider choice is 
 ## Audit
 
 1. Resolve the exact checkout and `owner/repository`. Record the branch, dirty state, remotes, and default branch.
-2. Read repository instructions, root files, manifests, build files, `.qubership/`, and every workflow. Detect workflow
+1. Read repository instructions, root files, manifests, build files, `.qubership/`, and every workflow. Detect workflow
    behavior from triggers, actions, commands, and referenced configuration, not filenames.
-3. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Assess
+1. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Assess
    coverage applicability separately: require coverage only when maintained executable source is a material repository
    deliverable. Do not use file count or lines of code alone. Small CI helpers, generators, examples, fixtures, tests,
    or scripts that only validate documentation or configuration do not make coverage applicable. Record the relevant
    source paths and their role. When no material executable source exists, mark `WF-005` and `WF-014` `NOT APPLICABLE`
    and do not propose coverage tooling or publication. Treat a repository as Maven only when it has a publishable Maven
    project, not an incidental fixture.
-4. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, and variables. Never expose
+1. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, and variables. Never expose
    secret values. Use GitHub's community-profile API and local paths for effective community files. Mark only evidence
    blocked by repository permissions as `UNAVAILABLE`.
-5. Evaluate all 28 checks below in order.
+1. Evaluate all 28 checks below in order.
 
 Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPLICABLE`. Overall status is
 `NON-COMPLIANT` for any error, `INCOMPLETE` when only mandatory evidence is unavailable, and `COMPLIANT` otherwise.
