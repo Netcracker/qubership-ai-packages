@@ -190,12 +190,24 @@ analysis and review the new revision. If a stable replacement cannot be reviewed
 Write the report in the request language while preserving exact identifiers, paths, and result labels.
 Keep the report direct, strict, and neutral. Do not add praise, thanks, a positive recap, or conversational framing.
 
+If earlier reviews contain findings to recheck, include `Previous findings` in the chat report and the next general
+comment. Use one short bullet per finding: a link to the original comment, `fix accepted`, `fix not accepted`, or
+`unable to verify`, and a brief reason. Translate the heading and statuses into the report or publication language.
+Base each status on the current revision; resolved or outdated thread labels alone do not prove a fix.
+Omit this block entirely on the first review or when there are no previous findings to recheck. Keep it to the current
+cycle, without retelling findings or repeating fixes already accepted in earlier cycles. Remaining blockers still
+count toward the result; accepted fixes do not.
+
 ```markdown
 # PR/MR review
 
 Result: APPROVE (0 blocking, 1 non-blocking) | REQUEST_CHANGES (2 blocking, 1 non-blocking) | REVIEW_INCOMPLETE
 Revision: <GitHub: base...head | GitLab: base=<sha>, start=<sha>, head=<sha>>
 Coverage: <only for REVIEW_INCOMPLETE: exact material gap>
+
+## Previous findings
+
+- [<short reference>](<original comment URL>): <fix accepted | fix not accepted | unable to verify>; <brief reason>.
 
 ## Findings
 
@@ -216,7 +228,7 @@ Confidence: high
 
 Include only non-empty sections. List `blocking` findings before `non-blocking` findings, then order them by impact.
 Keep only questions necessary to finish the review and include a maximum of three `non-blocking` findings. If there are
-no findings, return the summary only.
+no findings, return the summary and the previous-findings block when applicable.
 
 ## Publish feedback
 
@@ -267,10 +279,11 @@ Apply these rules identically to GitHub and GitLab. Inline publication is the de
 and attach it to the smallest useful changed line or range.
 
 The general comment contains only the result line defined above, the platform-authoritative revision tuple, the
-signature, and complete findings that the platform cannot attach to the current diff. Include `Coverage` only for
-`REVIEW_INCOMPLETE`. Do not add a positive recap, section placeholders, or other review metadata.
+signature, the conditional `Previous findings` block, complete findings that the platform cannot attach to the current
+diff, and the feedback request below. Include `Coverage` only for `REVIEW_INCOMPLETE`. The previous-findings block is a
+verification status, not a positive recap. Do not add section placeholders or other review metadata.
 
-Omit every finding published inline from the rest of the general comment. Do not include its title, ordinal number,
+Omit every new finding published inline from the rest of the general comment. Do not include its title, ordinal number,
 status, path, summary, or paraphrase. Do not write `See inline comment` or any equivalent pointer. Do not add `Blocking`
 or `Non-blocking` sections for findings that exist only as inline comments.
 
@@ -278,6 +291,11 @@ When the platform cannot attach a finding to the current diff, put that complete
 exact location and the positioning limitation. Binary files and unchanged lines outside the diff are common cases.
 These are general findings, not references to inline comments. Do not create a second copy. Merge findings with the
 same root cause and preserve the blocking status, confidence, problem, and proposed solution.
+
+End the general comment with this request in the publication language:
+
+> Please react with 👍 or 👎 to the finding comments. Your feedback will help us assess review quality and improve
+> future reviews.
 
 Leave a draft pending or unpublished unless the user explicitly asks to submit or publish it. After every platform
 write, read the created content back and verify its state, revision, general comment, bodies, paths, sides, and line
