@@ -39,7 +39,7 @@ marketplace:
     - name: go-microservice-dev-kit
       description: Umbrella package for Qubership Go microservices.
       source: ./agent-packages/go-microservice-dev-kit
-      version: 1.0.1
+      version: 1.1.0
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-repo-essentials
@@ -49,9 +49,9 @@ marketplace:
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-user-essentials
-      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
+      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
       source: ./agent-packages/qubership-user-essentials
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
