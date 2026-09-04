@@ -123,7 +123,7 @@
     {
       "name": "english-uk-developer-style",
       "description": "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -135,7 +135,7 @@
     {
       "name": "english-us-developer-style",
       "description": "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "tags": [
         "topic:documentation",
         "lang:en",
