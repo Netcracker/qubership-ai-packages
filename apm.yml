@@ -162,6 +162,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:documentation", "stack:python", "activity:authoring", "activity:code-review", "audience:public"]
 
+    - name: change-description-authoring
+      description: "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what a squash merge does to it."
+      source: ./agent-packages/change-description-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
+
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review
