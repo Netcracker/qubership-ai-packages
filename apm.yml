@@ -147,7 +147,7 @@ marketplace:
     - name: rustdoc-authoring
       description: "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/rustdoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:rust", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: jsdoc-authoring

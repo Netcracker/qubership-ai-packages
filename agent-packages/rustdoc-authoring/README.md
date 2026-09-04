@@ -1,6 +1,6 @@
 # rustdoc-authoring
 
-An APM package that governs **what a Rust comment says and in what order** — a `///` or `//!` doc comment, an inline
+An APM package that governs **what a Rust comment says and in what order**: a `///` or `//!` doc comment, an inline
 `//` comment, and the `// SAFETY:` comment above an `unsafe` block.
 
 It is the Rust sibling of [`javadoc-authoring`](../javadoc-authoring/) and [`godoc-authoring`](../godoc-authoring/) and
@@ -11,38 +11,44 @@ comment.
 
 ## What it covers
 
-- The four content slots — summary, contract, rationale, use — and the order they go in.
+- The four content slots (summary, contract, rationale, use) and the order they go in, with the obligated party as the
+  subject of every stated obligation.
 - Why the summary boundary is a blank `///` line rather than a period, so `e.g.` costs nothing and a second sentence
   costs the whole item-table row.
-- What `Option`, `Result`, `&mut`, and a trait bound already say, so the comment does not — and the list of contract
+- What `Option`, `Result`, `&mut`, and a trait bound already say, so the comment does not, and the list of contract
   facts that survives that cut: panics, error meanings, cancellation safety, laziness, complexity, `Drop`.
-- `# Errors`, `# Panics`, `# Safety`, and `# Examples` — the conventional headings that replace Javadoc's tags, and
-  which of them a lint actually enforces.
+- The history a comment may not narrate, the one exception for a regression test, and the counterfactual that describes
+  a path the code refuses.
+- A trait method implementation: what rustdoc renders when the impl has a doc comment of its own and when it has none,
+  and the three cases that decide what to write.
+- `# Errors`, `# Panics`, `# Safety`, and `# Examples`, the conventional headings that replace Javadoc's tags, and which
+  of them a lint enforces.
 - `# Safety` on an `unsafe fn` (the caller's obligations) versus on an `unsafe trait` (the implementer's), and the
   `// SAFETY:` comment that argues one call site satisfies them.
 - Doc examples as tests: the untagged fence and the four-space-indented block that get compiled as Rust by accident,
-  `?` in an example, hidden `#` lines, why `ignore` rots, and the two surprises about which doctests run at all.
+  `?` in an example, hidden lines, why `ignore` rots, and the two surprises about which doctests run at all.
 - Intra-doc links, the disambiguators a language with same-named structs and functions needs, and the rustdoc lints
-  that check them — the one place Rust is stricter than Go.
+  that check them, the one place Rust is stricter than Go. An issue number is an address, not a definition.
 - What a trait comment owes implementers it will never see.
 - How far a rewrite may grow, why a comment-only edit can still break a Rust build, and how to prove a sweep moved no
   code.
-- The extra rules for tests, module and crate comments, and docs that ship to docs.rs.
+- The extra rules for tests, including the four things that make a failing `cargo test` read as a bug report, for
+  module and crate comments, and for docs that ship to docs.rs.
 
 Every mechanical claim in the skill was measured on rustc / cargo 1.92.0, clippy 0.1.92, and rustfmt 1.8.0.
 
 ## Contents
 
-- `.apm/instructions/rustdoc-authoring.instructions.md` — the trigger merged into `AGENTS.md` / `CLAUDE.md` by
+- `.apm/instructions/rustdoc-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/rustdoc-authoring/SKILL.md` — the on-demand rules, a review checklist, and two worked examples
+- `.apm/skills/rustdoc-authoring/SKILL.md`: the on-demand rules, a review checklist, and two worked examples
   that pull in opposite directions.
 
 ## Pairs with
 
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and dialect. This
   package picks the slots; that one writes the sentences. Install both.
-- [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
+- [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family: Javadoc, KDoc, Groovydoc, and Scaladoc.
 - [`godoc-authoring`](../godoc-authoring/) covers Go.
 - [`pythondoc-authoring`](../pythondoc-authoring/) covers Python, where the docstring is a runtime object and two style
   guides disagree about the mood of its first line.
