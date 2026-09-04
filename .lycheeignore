@@ -13,3 +13,8 @@ https://www.oreilly.com/library/view/ibm-style-guide/9780132118989/
 # Cited in research/change-description-authoring/phase2_prompt.md (Li and Ahmed, ICSE 2023).
 # ACM Digital Library returns 403 to automated link checkers; the page opens in a browser.
 https://dl.acm.org/doi/10.1109/ICSE48619.2023.00076
+
+# Cited in research/docs-page-authoring/phase4_verification.md (Meng, Steinhardt, and Schubert 2019; Carroll, The Nurnberg Funnel, 1990).
+# ACM Digital Library returns 403 to automated link checkers; both pages open in a browser.
+https://dl.acm.org/doi/10.1145/3358931.3358937
+https://dl.acm.org/doi/10.5555/80371
