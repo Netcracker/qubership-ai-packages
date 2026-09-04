@@ -43,9 +43,9 @@ marketplace:
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-repo-essentials
-      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, documentation and change authoring, and workflow-hub usage."
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: commit-message conventions, APM authoring, English style, Markdown rules, documentation and change authoring, and workflow-hub usage."
       source: ./agent-packages/qubership-repo-essentials
-      version: 1.1.0
+      version: 1.3.1
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-user-essentials
@@ -57,13 +57,13 @@ marketplace:
     - name: qubership-essentials
       description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-essentials
-      version: 1.0.2
+      version: 1.0.3
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
       description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.0.2
+      version: 1.0.3
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
@@ -81,7 +81,7 @@ marketplace:
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
-      version: 2.0.1
+      version: 2.0.2
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-uk-developer-style
