@@ -28,7 +28,7 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120@v1.0.1
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger
