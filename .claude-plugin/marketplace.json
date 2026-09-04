@@ -54,7 +54,7 @@
     {
       "name": "qubership-user-essentials",
       "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "topic:meta",
         "activity:setup",
