@@ -153,7 +153,7 @@ marketplace:
     - name: jsdoc-authoring
       description: "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/jsdoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:javascript", "stack:typescript", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: pythondoc-authoring
