@@ -253,17 +253,19 @@ as authorization for a draft review. These commands authorize the selected platf
 assessment. Once the mode is clear, publish without `Assessed by` when assessment confirmation is absent or ambiguous.
 Other replies do not authorize a platform write; leave the report in chat without asking another question.
 
-Read the exact model identifier and any exposed thinking or reasoning level from runtime metadata. Never infer either
-value. Put all exposed parts on one `Model` line, for example `Model: Opus 5` or `Model: Sol Medium`. Omit an
-unavailable thinking or reasoning level; use `Model: not exposed` only when the model identifier itself is unavailable.
+Read the most specific model identity explicitly provided by runtime metadata or the session context. Prefer the exact
+model identifier. If it is unavailable, use the exposed model family and product context, for example
+`Model: GPT-5 Codex`. Never infer a more specific variant or an unavailable thinking or reasoning level. Omit the
+`Model` line when neither a model identifier nor a model family is known.
 Resolve the account selected to publish on the target GitHub or GitLab host. Prefer its display name and use its exact
 login when no display name is available. Add this compact signature to the general comment:
 
 ```markdown
-Model: <model identifier [thinking or reasoning level] | not exposed>
+Model: <exact model identifier [thinking or reasoning level] | exposed model family and product context>
 Assessed by: <selected platform account display name or login>
 ```
 
+Include `Model` only when at least the model family is known. Omit an unavailable thinking or reasoning level.
 Include `Assessed by` only when the user explicitly states both that they personally reviewed the report and that they
 agree with its findings. A publication command, a generic confirmation such as "yes" or "looks good", or agreement
 without a statement of personal review does not satisfy this condition. If either fact is absent or unclear, omit
