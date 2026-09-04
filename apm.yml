@@ -43,9 +43,9 @@ marketplace:
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-repo-essentials
-      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, and workflow-hub usage."
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, documentation and change authoring, and workflow-hub usage."
       source: ./agent-packages/qubership-repo-essentials
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-user-essentials

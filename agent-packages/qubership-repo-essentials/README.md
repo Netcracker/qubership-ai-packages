@@ -19,6 +19,11 @@ repository wants agent-run Codex reviews.
   American-English style for developer-facing text.
 - [`markdown-line-length-120`](../markdown-line-length-120/) — Markdown drafting
   rules for repositories that pin markdownlint `MD013.line_length` to 120.
+- [`change-description-authoring`](../change-description-authoring/) — structure
+  and content rules for commit messages, pull request descriptions, and changelog
+  entries.
+- [`docs-page-authoring`](../docs-page-authoring/) — structure and content rules
+  for README files and other documentation pages.
 - [`qubership-workflow-hub-usage`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/agent-packages/qubership-workflow-hub-usage)
   — conventions for GitHub Actions workflows built on qubership-workflow-hub.
 
