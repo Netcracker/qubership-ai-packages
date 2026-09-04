@@ -1,6 +1,6 @@
 # pythondoc-authoring
 
-An APM package that governs **what a Python comment says and in what order** — both a docstring on a module, class, or
+An APM package that governs **what a Python comment says and in what order**: both a docstring on a module, class, or
 function and an inline `#` comment beside a statement.
 
 It is the Python member of the doc-comment family listed under *Pairs with* and keeps its section numbering, so a
@@ -10,33 +10,39 @@ cross-reference syntax of its own, and offers three competing section dialects i
 
 ## What it covers
 
-- The four content slots — summary, contract, rationale, use — and the order they go in.
+- The four content slots (summary, contract, rationale, use) and the order they go in, with the obligated party as the
+  subject of every stated obligation.
 - The one-line summary, and the imperative-versus-descriptive dispute between PEP 257 and Google's style guide,
   including which ruff convention takes which side.
 - Why a docstring must be the first statement, and the three ways it stops being one: an f-string, a line above it,
   and `python -OO`.
 - What the type annotations already say, so a parameter line has to add a unit, a range, a `None` rule, or nothing.
-- The three section dialects — reStructuredText, Google, NumPy — and why mixing them fails silently.
+- The history a docstring may not narrate, the one exception for a regression test, and the counterfactual that
+  describes a path the code refuses.
+- An override of a base method or an abstract one: what `__doc__`, `inspect.getdoc`, and `help()` show when the
+  override has no docstring, and the three cases that decide what to write.
+- The three section dialects (reStructuredText, Google, NumPy) and why mixing them fails silently.
 - Sphinx roles and mkdocstrings references, and the fact that nothing resolves either one outside nitpicky mode.
 - `Raises:` as the only record of what a caller must catch, and `Yields:` as the place laziness gets stated.
 - Doctest examples, which are executable tests hiding inside prose.
-- Comments a tool rather than a human reads — `# type: ignore`, `# noqa`, `# fmt: off`, `# pragma: no cover` —
+- Comments a tool rather than a human reads (`# type: ignore`, `# noqa`, `# fmt: off`, `# pragma: no cover`),
   including the module docstring that silently un-silences a whole file for mypy.
 - How far a rewrite may grow, and how to compare two versions without being sold by the newer one.
-- The extra rules for tests, packages, and a docstring that ships as `--help` text or an OpenAPI description.
+- The extra rules for tests, including the four things that make a failing pytest read as a bug report, for packages,
+  and for a docstring that ships as `--help` text or an OpenAPI description.
 
 ## Contents
 
-- `.apm/instructions/pythondoc-authoring.instructions.md` — the trigger merged into `AGENTS.md` / `CLAUDE.md` by
+- `.apm/instructions/pythondoc-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/pythondoc-authoring/SKILL.md` — the on-demand rules, a review checklist, and two worked examples that
+- `.apm/skills/pythondoc-authoring/SKILL.md`: the on-demand rules, a review checklist, and two worked examples that
   pull in opposite directions.
 
 ## Pairs with
 
 - [`english-developer-style`](../english-developer-style/) owns wording, tone, sentence length, and dialect. This
   package picks the slots; that one writes the sentences. Install both.
-- [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family — Javadoc, KDoc, Groovydoc, and Scaladoc.
+- [`javadoc-authoring`](../javadoc-authoring/) covers the JVM family: Javadoc, KDoc, Groovydoc, and Scaladoc.
 - [`godoc-authoring`](../godoc-authoring/) covers Go doc comments and inline comments.
 - [`rustdoc-authoring`](../rustdoc-authoring/) covers Rust, where doc examples compile and run as tests.
 - [`jsdoc-authoring`](../jsdoc-authoring/) covers JavaScript and TypeScript, where a type in a tag is noise in one and
