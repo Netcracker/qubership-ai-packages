@@ -1,18 +1,10 @@
 ---
-description: Trigger for the jsdoc-authoring skill — write, rewrite, or review a JSDoc, TSDoc, or inline comment in JavaScript or TypeScript.
+description: "Trigger for the jsdoc-authoring skill: load it before writing, editing, or reviewing a JSDoc or TSDoc block or an inline comment in JavaScript or TypeScript."
 applyTo: "**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"
 ---
 
-## Skill trigger: `jsdoc-authoring`
-
-When the task involves a comment in JavaScript or TypeScript — a JSDoc or TSDoc block on a
-declaration, or an inline `//` comment — apply the `jsdoc-authoring` skill.
-
-Fires on:
-
-- writing a new comment, or deciding whether a declaration needs one at all;
-- editing, rewriting, or shortening an existing one;
-- reviewing two versions of one, including a machine-generated rewrite;
-- editing a type tag in a `.js` file the project type-checks, which is a code change.
-
-A one-line comment is in scope.
+Before writing, editing, or reviewing a JSDoc or TSDoc block or an inline comment in a JavaScript or TypeScript file
+(`*.js`, `*.jsx`, `*.mjs`, `*.cjs`, `*.ts`, `*.tsx`, `*.mts`, `*.cts`), load `jsdoc-authoring`, and
+`english-developer-style` with it. Inside a coding task ("fix the bug", "add the handler") load it as soon as the change
+touches a comment, before writing it; a one-line comment counts, and so does a type tag in a `.js` file the project
+type-checks, which is a code change.
