@@ -287,8 +287,8 @@
     },
     {
       "name": "change-description-authoring",
-      "description": "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what a squash merge does to it.",
-      "version": "1.0.0",
+      "description": "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what the merge model does to it.",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "topic:code-review",
