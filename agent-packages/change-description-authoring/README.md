@@ -28,8 +28,9 @@ the question it answers.
 - The trailers and identifiers that make text searchable, each with the tool that consumes it and the
   reader it serves: `Fixes:`, closing keywords, `Backpatch-through:`, the diagnostic quoted as a
   literal, both versions of a regression.
-- What a squash merge or a merge commit copies into the permanent history, how to detect the merge
-  model from `git log`, and the default when detection fails.
+- What a squash merge, a merge commit, and a rebase and merge each leave in the permanent history,
+  how to read the merge model from `git log`, what to write where the maintainers may pick either,
+  and the default when detection fails.
 - Which prescriptions are house style gated on a workflow (a type prefix, a subject limit,
   `Signed-off-by:`, `Change-Id:`, Prow commands, news fragments) rather than reader-serving rules.
 - When to write nothing, how far a rewrite may grow, and how to compare two versions of a description
@@ -42,6 +43,45 @@ the question it answers.
 - `.apm/skills/change-description-authoring/SKILL.md`: the on-demand rules, before/after examples for
   each artifact, and a review checklist. It carries no citations; the evidence stays in the research
   directory below.
+- `.apm/skills/change-description-authoring/references/merge-model.md`: a paste-ready `AGENTS.md`
+  block for each common merge setup. The skill does not read it; it is for whoever configures a
+  repository.
+
+## Telling the skill how the repository merges
+
+Left to itself, the skill reads the merge model from `git log`. A line in `AGENTS.md` or `CLAUDE.md`
+is already in the agent's context, so it saves the detection when it names both the method and what
+the method expects of the branch. Three lines cover most open-source repositories; the reference file above has the rest,
+including squash with "title and description" and the merge-commit setup.
+
+Squash only, GitHub's default squash message:
+
+```markdown
+Every pull request is squashed into one commit. The squash keeps the pull request title as the
+subject and the branch commit messages as the body; the description itself is not copied. Write the
+title as the commit subject, write the first commit with a full body (problem, symptom, approach,
+issue number), and keep later commits short: each one lands as a bullet in the body.
+```
+
+Rebase only:
+
+```markdown
+Every pull request is rebased onto the default branch: each commit lands as it is, with no merge
+commit and no pull request number appended. Write every commit to stand alone in git log, with a
+full body and the issue number, and squash fix-up commits (`Fix lint`, `Apply suggestion`) into the
+commit they correct before the merge. The description stays on the platform and is never copied.
+```
+
+Squash for one commit, rebase for a tidy branch, the setup GitHub's defaults produce once merge
+commits are turned off:
+
+```markdown
+Maintainers squash a single-commit pull request and rebase a multi-commit one, so every commit on
+the branch may land on the default branch as it is. Write every commit to stand alone in git log,
+with a full body and the issue number; squash fix-up commits before the merge; write the pull
+request title as a commit subject. The description is never copied into git log under either
+method.
+```
 
 ## Pairs with
 
