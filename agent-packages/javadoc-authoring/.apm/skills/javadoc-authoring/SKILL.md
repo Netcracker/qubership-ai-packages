@@ -393,13 +393,22 @@ Two placement hazards when you restructure code around them:
 
 ### Test class
 
-A test class is read in exactly one situation: it just went red. Write for that reader.
+The comment on a test is read by whoever opened the file. The reader of a red build already holds
+the test's name, its assertion, and its message in the report, and comes here for the rule behind
+them; the next author comes looking for what this class covers and where a case goes. Both want the
+rule, stated once.
 
-- **Summary = the firing condition**, not the subject matter. `Fails when a message type is added
-  without a hardened reader` beats `Tests the message type inventory`. This is the class comment's
-  shape. A test method's name already states what it establishes (below), so its comment, where it
-  has one, carries the reason or the construction, not a `Fails when …` restatement of the name.
-- **Contract = the rule the test guards**, stated positively and completely. The reader has to
+- **Summary = the rule the class guards, as a claim.** `A parameter the driver inlines arrives
+  unchanged and leaves no warning on a server with standard_conforming_strings off` beats `Tests
+  the message type inventory`, which names the subject and no rule. It also beats `Fails when a
+  parameter leaves a warning or does not come back unchanged`: a negation nested in a negation
+  makes the reader unpack three of them to reach the rule, and `english-developer-style` §3 asks
+  for what happens, not what does not. A guard test, whose whole content is one condition the build
+  enforces, may open with that condition instead: `Fails when a message type is added without a
+  hardened reader`. A test method's name already states what it establishes (below), so its
+  comment, where it has one, carries the reason or the construction, not a restatement of the name.
+- **Contract = the rest of the rule**, where one sentence could not hold it whole: the inputs, the
+  condition, what the reader has to satisfy. Stated positively and completely; the reader has to
   satisfy the rule, not reverse-engineer it from the assertion.
 - **Use = what to do about the red build.** Which set to edit, which annotation to add, where the
   failure message states the rest.
@@ -412,31 +421,11 @@ Deliberate duplication between this class comment, a field comment, and the asse
 correct, because each reader meets exactly one of the three. It does not extend to production code,
 where the class comment and the member comment have the same reader.
 
-**A failing test should read as a bug report, and four things write it.** Decide what each one
-carries before you write the next; the reader sees them together in one report.
-
-- **The class name** carries what every method in it shares: the unit under test and the condition
-  they all sit under. A fact true of every method belongs here rather than in each of them.
-- **The method name** states what this one method establishes. `aNegativeCountIsRefused` is a
-  finding; `testEnsureBytes` is a location that makes the reader open the file. One assertion per
-  method keeps the name able to do this, and keeps the report readable when several methods fail at
-  once.
-- **The assertion prints the values.** `assertEquals(expected, actual, message)` renders both and
-  opens a diff in an IDE; `assertTrue(expected == actual, message)` renders neither and leaves a
-  stack trace to reverse-engineer. `assertThrows` prints the expected type the same way. Choose the
-  assertion that already prints what the reader needs, rather than describing it in the message.
-- **The message adds what the other three cannot.** In a parameterized test that is which invocation
-  ran, so `ensureBytes(-2147483648)` is the whole message. Under a bare `assertTrue` it is the
-  invariant, because nothing else states it. Where the values are arguments already, do not restate
-  them; where the class or method name states the scenario, do not restate that either. A message
-  read while someone scans a stack trace competes with the lines around it.
-
-`fail()` with no message is that defect at its limit: it reports that something is wrong and nothing
-else.
-
-This does not contradict the duplication paragraph above. A name is printed in the report; a class
-comment is read only once someone opens the file. Repeating a comment in a message is the useful
-duplication; repeating a name is the one that costs.
+The name, the assertion, and the message are the test's, not its comment's. Which fact each of them
+carries in the failure report, and which assertion prints the operands, is `test-authoring`. The
+boundary matters here because a name is printed in the report and a class comment is read only once
+someone opens the file: repeating the comment's rule in a message is the useful duplication above,
+and repeating the name in the comment is the one that costs (§3).
 
 ### package-info.java
 
@@ -818,7 +807,7 @@ nowhere; the reader is pointed at a source position.
  */
 ```
 
-**After**: the summary is the firing condition; the contract is stated positively and first; the
+**After**: the summary is the one condition this guard enforces; the contract is stated positively and first; the
 neighboring class is compressed to its limitation; the reader is told what to do and where to look.
 
 ```java
@@ -841,7 +830,7 @@ neighboring class is compressed to its limitation; the reader is told what to do
  */
 ```
 
-What changed, slot by slot: the summary became a firing condition (§3); the contract moved to the
+What changed, slot by slot: the summary became the guard's condition (§3, §4); the contract moved to the
 front and gained a positive, parallel statement of the three obligations (§2); the mechanism of
 `PGStream` shrank to the one fact this comment needs (§4); `listed below` became `{@link #HARDENED}`
 and `{@link #FRONTEND}` (§5); and a Use slot appeared, naming the action and the failure message

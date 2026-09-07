@@ -32,8 +32,8 @@ comment.
 - What a trait comment owes implementers it will never see.
 - How far a rewrite may grow, why a comment-only edit can still break a Rust build, and how to prove a sweep moved no
   code.
-- The extra rules for tests, including the four things that make a failing `cargo test` read as a bug report, for
-  module and crate comments, and for docs that ship to docs.rs.
+- The extra rules for the comment on a test, for module and crate comments, and for docs that ship to docs.rs. The
+  test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 
 Every mechanical claim in the skill was measured on rustc / cargo 1.92.0, clippy 0.1.92, and rustfmt 1.8.0.
 

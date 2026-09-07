@@ -41,7 +41,9 @@ jobs:
             exit 0
           fi
 
-          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
+          # core.quotePath=false keeps a non-ASCII path unquoted, so the anchored patterns below still
+          # match it. A path holding a quote, a backslash, or a control byte is quoted regardless.
+          git -c core.quotePath=false diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
           if grep -Eq '^(apm\.yml|\.claude-plugin/marketplace\.json|agent-packages/.*|docs/.*|scripts/.*|tests/.*|requirements\.txt|\.github/workflows/marketplace\.yml)$' changed-files.txt; then
             echo "marketplace=true" >> "$GITHUB_OUTPUT"
           else

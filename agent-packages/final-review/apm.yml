@@ -1,0 +1,3 @@
+name: final-review
+version: 1.0.0
+description: "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands."

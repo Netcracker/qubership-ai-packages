@@ -475,7 +475,11 @@ Three Python-specific hazards when you restructure a file that contains them:
 
 ### Test file
 
-A test is read in exactly one situation: it just went red. Write for that reader.
+The comment on a test is read by whoever opened the file. The reader of a red build already holds the test's name, its
+assertion, and its message in the report, and comes here for the rule behind them; the next author comes looking for
+what this test covers and where a case goes. Both want the rule, stated once, as a claim: a negation nested in a
+negation (`fails when … does not …`) is not that, and `english-developer-style` §3 asks for what happens, not what does
+not.
 
 pytest's progress line and its short summary print the node id and nothing else, so **the test's name is its summary**:
 `test_retry_preserves_caller_headers`, not `test_headers_2`. The docstring still has a reader: pytest prints the failing
@@ -486,36 +490,17 @@ function's source in the traceback, docstring included, so it is the first prose
   observable. If you cannot phrase the rule as an observation, the test probably cannot check it either.
 - **Use = what to do about the red build.** Which fixture to look at, which case to add, where the assertion message
   states the rest.
-- **A `pytest.mark.parametrize` `ids=` entry is a comment.** It is the string the reader sees in the node id, so it
-  names the case's condition, not its ordinal.
 - **An assertion message is read before either.** Put the observable there; the docstring carries the rule behind it.
 
 Deliberate duplication between the test's docstring, a fixture's docstring, and the assertion message is correct,
 because each reader meets exactly one of the three. It does not extend to production code, where the class docstring and
 the method docstring have the same reader.
 
-**A failing test should read as a bug report, and four things write it.** Decide what each one carries before you write
-the next; the reader sees them together in one report.
-
-- **The module and class name** carry what every test in them shares: the unit under test and the condition they all
-  sit under. pytest prints them as the prefix of the node id (`test_stream.py::TestEnsureBytes::`), so a fact true of
-  every test belongs there rather than in each of them.
-- **The function name** states what this one test establishes. `test_negative_count_is_refused` is a finding;
-  `test_ensure_bytes` is a location that makes the reader open the file. One assertion per test keeps the name able to
-  do this, and keeps the report readable when several tests fail at once.
-- **The assertion prints the values.** pytest rewrites a bare `assert actual == expected` to print both operands
-  (`assert -1 == 0`) and, where an operand is a call, the call that produced it; `assert ok` on a boolean computed one
-  line earlier prints `assert False` and nothing else, and `pytest.fail()` with no reason prints `Failed` (measured on
-  pytest 8.4.2). `pytest.raises(ValueError)` names the expected type the same way. Choose the assertion that already
-  prints what the reader needs, rather than describing it in the message.
-- **The message adds what the other three cannot.** Under a bare `assert ok` it is the invariant, because nothing else
-  states it. In a parametrized test the `ids=` entry already sits in the node id, so the message does not repeat the
-  parameter; where the class or function name states the scenario, do not restate that either. A message read while
-  someone scans a traceback competes with the lines around it.
-
-This does not contradict the duplication paragraph above. A name is printed in the report; a docstring is read only once
-someone opens the file. Repeating a docstring's rule in a message is the useful duplication; repeating a name is the one
-that costs.
+The name, the assertion, and its message are the test's, not its docstring's. Which fact each of them carries in
+the traceback and the summary line, and which assertion pytest rewrites to print the operands, is `test-authoring`.
+The boundary matters here because a node id is printed in the report and a docstring is read only once someone opens
+the file: repeating the docstring's rule in a message is the useful duplication above, and repeating the name in the
+docstring is the one that costs (§3).
 
 ## 5. References
 

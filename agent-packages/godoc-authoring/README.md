@@ -27,8 +27,9 @@ bracket syntax, and has no tags at all.
 - Comments a tool rather than a human reads (`//go:`, `//nolint`, `+kubebuilder`), including the blank line that
   silently detaches a marker from its field.
 - How far a rewrite may grow, and how to compare two versions of a comment without being sold by the newer one.
-- The extra rules for tests, including the four things that make a failing `go test` read as a bug report, for package
-  comments, and for CRD field descriptions that reach users through `kubectl explain`.
+- The extra rules for the comment on a test, for package comments, and for CRD field descriptions that reach users
+  through `kubectl explain`. The test's own name, failure call, and message belong to
+  [`test-authoring`](../test-authoring/).
 
 ## Contents
 

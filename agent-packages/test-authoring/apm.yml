@@ -1,0 +1,3 @@
+name: test-authoring
+version: 1.0.0
+description: "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report."

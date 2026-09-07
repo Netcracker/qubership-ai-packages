@@ -536,10 +536,14 @@ Three Rust-specific hazards, all of them compile errors or silent behavior chang
 
 ### Test module
 
-A test is read in exactly one situation: it just went red. Write for that reader.
+The comment on a test is read by whoever opened the file. The reader of a red build already holds
+the test's name, its assertion, and its message in the report, and comes here for the rule behind
+them; the next author comes looking for what this test covers and where a case goes. Both want the
+rule, stated once, as a claim: a negation nested in a negation (`fails when … does not …`) is not
+that, and `english-developer-style` §3 asks for what happens, not what does not.
 
-Rustdoc does not render `#[cfg(test)]` code at all, so no tooling reads these and the firing
-condition wins over every other consideration:
+Rustdoc does not render `#[cfg(test)]` code at all, so no tooling reads these, and the comment has
+that one reader and no summary table to serve:
 
 ```rust
     /// A header the caller set by hand survives the retry unchanged.
@@ -561,35 +565,11 @@ Deliberate duplication between the test's comment, a helper's comment, and the f
 correct, because each reader meets exactly one of the three. It does not extend to production code,
 where the type comment and the method comment have the same reader.
 
-**A failing test should read as a bug report, and four things write it.** Decide what each one
-carries before you write the next; the reader sees them together in one report.
-
-- **The module path** carries what every test in it shares: the unit under test and the condition
-  they all sit under. `cargo test` prints it in front of the test's name, so a fact true of every
-  test belongs here rather than in each of them.
-- **The test's name** states what this one test establishes. `negative_count_is_refused` is a
-  finding; `test_ensure_bytes` is a location that makes the reader open the file. A table-driven
-  case's label is the same thing: it names the case's condition, not its ordinal. One assertion per
-  test keeps the name able to do this, and keeps the report readable when several tests fail at
-  once.
-- **The assertion prints the values.** `assert_eq!(left, right)` prints both values as `left` and
-  `right`; `assert!(left == right)` prints the expression text and neither value, and leaves a
-  stack trace to reverse-engineer. `#[should_panic(expected = "…")]` names the panic message the
-  same way. Choose the assertion that already prints what the reader needs, rather than describing
-  it in the message (output measured on rustc 1.92.0).
-- **The message adds what the other three cannot.** In a loop over cases that is which case ran, so
-  `ensure_bytes(-2147483648)` is the whole message. Under a bare `assert!` it is the invariant,
-  because nothing else states it, and a message on `assert!` replaces the expression text rather
-  than adding to it. Where the values are arguments already, do not restate them; where the module
-  or the test's name states the scenario, do not restate that either. A message read while someone
-  scans a stack trace competes with the lines around it.
-
-`panic!()` with no message shows the same defect in full: it prints `explicit panic`, which reports
-that something failed and nothing else.
-
-This does not contradict the duplication paragraph above. A name is printed in the report; a
-module's comment is read only once someone opens the file. Repeating a comment in a message is the
-useful duplication; repeating a name is the one that costs.
+The name, the assertion, and its message are the test's, not its comment's. Which fact each of them
+carries in the `cargo test` report, and which macro prints `left` and `right`, is `test-authoring`.
+The boundary matters here because a name is printed in the report and a comment is read only once
+someone opens the file: repeating the comment's rule in a message is the useful duplication above,
+and repeating the name in the comment is the one that costs (§3).
 
 ### Module and crate comment
 

@@ -52,6 +52,9 @@ verify-docs:
 test:
 	$(PYTHON) -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
+	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
+	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/test-authoring
+	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/final-review
 	bash tests/marketplace_roundtrip.sh
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).
