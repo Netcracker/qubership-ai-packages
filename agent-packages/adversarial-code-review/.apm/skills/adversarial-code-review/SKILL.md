@@ -304,8 +304,8 @@ For every platform write:
 
 1. Reread the authoritative revision tuple; if changed, discard stale work and review the new revision before writing.
    For a discussion write, also reread its full contents, reassess new replies, and skip duplicate actions.
-2. Post any required explanation and verify it before resolving/reopening. Keep drafts unpublished unless submission
-   was explicitly authorized.
+2. Treat a reply and resolve/reopen as separate writes. After posting and verifying a required explanation, restart
+   at step 1 before changing discussion state. Keep drafts unpublished unless submission was explicitly authorized.
 3. Read back each write: exact discussion/review ID, content, state, revision and applicable paths, sides and lines.
    Report created IDs and inspection URLs; never claim closure without confirmed state.
 4. On failure or uncertain outcome, inspect before retrying; stop mutations if ambiguity remains. Report limitations
