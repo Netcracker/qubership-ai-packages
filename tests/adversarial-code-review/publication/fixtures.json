@@ -1,0 +1,73 @@
+{
+  "provenance": {
+    "url": "https://github.com/Netcracker/qubership-ai-packages/pull/106",
+    "head": "b043c75d0d994725063ae3f5fa88a8cf49967705",
+    "note": "Snapshot-derived replay immediately before latest review. Technical evidence supplied from published review, not independently reverified. GitLab mirror and clarification case are synthetic."
+  },
+  "cases": {
+    "real_replay": {
+      "threads": [
+        {
+          "id": "jvm",
+          "resolved": false,
+          "comments": [
+            {
+              "id": "3949655164",
+              "author": "denifilatoff",
+              "body": "### [blocking] Parse callable signatures for every advertised JVM language\n\nConfidence: high\n\n- Problem: The first `DECL` branch treats Kotlin `fun read(Int)` as a type-like declaration and returns only `read`, so overloads still collapse; it also matches `fun String.read(...)` as `String`, while Java constructors do not match at all. This contradicts the script's stated Java/Kotlin/Groovy/Scala coverage and can hide the stale-comment case that the final-review form relies on.\n- Proposed solution: Parse callable names and parameter types separately from type/property declarations for each advertised syntax, and add Kotlin-overload, extension-function, and Java-constructor regression cases.",
+              "url": "https://github.com/Netcracker/qubership-ai-packages/pull/106#discussion_r3949655164"
+            }
+          ]
+        },
+        {
+          "id": "junit",
+          "resolved": false,
+          "comments": [
+            {
+              "id": "3949655189",
+              "author": "denifilatoff",
+              "body": "### [blocking] Correct mixed-engine discovery behavior\n\nConfidence: high\n\n- Problem: With both Jupiter and Vintage registered, a class containing one `org.junit.Test` method and one `org.junit.jupiter.api.Test` method is discovered by both engines, not by only one: a local JUnit Platform check found and ran both methods. The current explanation can send a reader looking for silently ignored tests when the real risks are duplicate class execution and incompatible lifecycle state.\n- Proposed solution: Keep the advice not to mix annotations, but describe independent discovery by the two engines and its lifecycle/instance consequences.",
+              "url": "https://github.com/Netcracker/qubership-ai-packages/pull/106#discussion_r3949655189"
+            }
+          ]
+        },
+        {
+          "id": "paths",
+          "resolved": false,
+          "comments": [
+            {
+              "id": "3952243402",
+              "author": "denifilatoff",
+              "body": "### [blocking] Preserve non-ASCII paths in the changed-file list\n\nConfidence: high\n\n- Problem: With Git's default `core.quotePath=true`, `git diff --name-only` quotes and escapes a path such as `Пример.java`, so the extension filter drops the entire file without a warning. A fixture with changed code beneath an unchanged doc comment produces an empty report; setting `core.quotePath=false` makes the same change appear as `code-changed, comment-unchanged`.\n- Proposed solution: Use `-z` and NUL-delimited parsing for both Git file lists, and add a regression check for a non-ASCII path.",
+              "url": "https://github.com/Netcracker/qubership-ai-packages/pull/106#discussion_r3952243402"
+            }
+          ]
+        }
+      ],
+      "evidence": "Coverage complete. Current head evidence: non-ASCII tracked/untracked paths use -z/NUL parsing, both regressions and 15 drift tests pass; accept that fix. JVM: ordinary Kotlin overloads work but package-private Java constructor identity and Kotlin extension receiver types still collapse, confirmed by reproductions. JUnit: current reference still claims one engine silently ignores other annotations; supplied reproduction finds 2 succeeds 2 with both engines. No changes beyond these three findings. No follow-up summary on this revision exists in this replay. JVM evidence is new relative to its original thread; JUnit evidence is unchanged. Prior reviewed revision precedes this head."
+    },
+    "clarification": {
+      "threads": [
+        {
+          "id": "clarification",
+          "resolved": false,
+          "comments": [
+            {
+              "id": "original",
+              "author": "denifilatoff",
+              "body": "[blocking] read(null) can dereference null. Proposed solution: add a null guard.",
+              "url": "https://example.invalid/discussion/original"
+            },
+            {
+              "id": "author-reply",
+              "author": "vlsi",
+              "body": "This function is only called through our existing validator; null is rejected before reaching it. A second guard is unnecessary.",
+              "url": "https://example.invalid/discussion/author-reply"
+            }
+          ]
+        }
+      ],
+      "evidence": "Synthetic case. Coverage complete, all current callers and the pre-existing validator were inspected; null cannot reach the function, and a boundary regression test passes. No code change and no other findings. The original reviewer claim is disproven."
+    }
+  }
+}

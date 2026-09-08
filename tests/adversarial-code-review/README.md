@@ -1,5 +1,7 @@
 # Discussion lifecycle evaluations
 
+For the current compact skill and publication replay, see [the compact evaluation](compact-report.md).
+
 This is the earlier lifecycle comparison. For the subsequent Sol medium structure comparison, see
 [the reassessment report](reassessment-report.md). For the final combined skill after APM packaging and installation,
 see [the installed-artifact evaluation](compiled-report.md).
