@@ -1,5 +1,5 @@
 name: go-microservice-dev-kit
-version: 1.0.1
+version: 1.1.0
 description: Umbrella package for Qubership Go microservices.
 dependencies:
   apm:
@@ -9,3 +9,6 @@ dependencies:
     - Netcracker/qubership-core-lib-go/security/agent-packages/security-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
     - Netcracker/qubership-core-lib-go-fiber-server-utils/agent-packages/fiber-server-utils-go-usage#ed9ccea9ca4cc0adf309e4876e9dfa81c7c77316  # feat/agent-packages
     - Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage#4594b3b9d09c066ec549f4b6cee2eb1266c7f948  # feat/agent-packages
+    # Sibling package in this repository. Published manifests cannot use
+    # local-path deps, so it is pinned to a commit SHA on this repo.
+    - Netcracker/qubership-ai-packages/agent-packages/godoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main

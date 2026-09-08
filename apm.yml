@@ -39,31 +39,31 @@ marketplace:
     - name: go-microservice-dev-kit
       description: Umbrella package for Qubership Go microservices.
       source: ./agent-packages/go-microservice-dev-kit
-      version: 1.0.1
+      version: 1.1.0
       tags: ["topic:devops", "stack:go", "stack:kubernetes", "activity:coding", "audience:public"]
 
     - name: qubership-repo-essentials
-      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: APM authoring, English style, Markdown rules, and workflow-hub usage."
+      description: "Umbrella package with the baseline agent setup for any Netcracker/Qubership repository: commit-message conventions, APM authoring, English style, Markdown rules, documentation and change authoring, and workflow-hub usage."
       source: ./agent-packages/qubership-repo-essentials
-      version: 1.0.0
+      version: 1.3.1
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-user-essentials
-      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
+      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
       source: ./agent-packages/qubership-user-essentials
-      version: 1.0.0
+      version: 1.1.1
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
       description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-essentials
-      version: 1.0.2
+      version: 1.0.3
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
       description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.0.2
+      version: 1.0.3
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
@@ -81,19 +81,19 @@ marketplace:
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
-      version: 2.0.1
+      version: 2.0.2
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-uk-developer-style
       description: "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files."
       source: ./agent-packages/english-uk-developer-style
-      version: 2.0.0
+      version: 2.1.0
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-us-developer-style
       description: "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files."
       source: ./agent-packages/english-us-developer-style
-      version: 2.0.0
+      version: 2.1.0
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: french-developer-style
@@ -111,7 +111,7 @@ marketplace:
     - name: markdown-line-length-120
       description: Markdown drafting rules an autofixer cannot fix, for repositories pinning markdownlint MD013.line_length to 120.
       source: ./agent-packages/markdown-line-length-120
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:documentation", "stack:markdown", "activity:authoring", "audience:public"]
 
     - name: triage-dependency-prs
@@ -135,32 +135,44 @@ marketplace:
     - name: javadoc-authoring
       description: "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/javadoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:java", "stack:kotlin", "stack:groovy", "stack:scala", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: godoc-authoring
       description: "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/godoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:go", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: rustdoc-authoring
       description: "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/rustdoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:rust", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: jsdoc-authoring
       description: "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/jsdoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:javascript", "stack:typescript", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: pythondoc-authoring
       description: "Structure and content rules for Python docstrings and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/pythondoc-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "stack:python", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: change-description-authoring
+      description: "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what a squash merge does to it."
+      source: ./agent-packages/change-description-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: docs-page-authoring
+      description: "Structure and content rules for documentation pages: which reader a section serves, what an option entry carries, what a change owes the documentation, and what a page may not claim."
+      source: ./agent-packages/docs-page-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.

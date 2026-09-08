@@ -1,13 +1,18 @@
 name: qubership-user-essentials
-version: 1.0.0
-description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, and ADR authoring."
+version: 1.1.1
+description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
 dependencies:
   apm:
     # The per-repository baseline, pinned to the main commit that introduced it.
-    - Netcracker/qubership-ai-packages/agent-packages/qubership-repo-essentials#94b47bfd4171396bcacdb2d6c534470d60b1230f  # main
+    - Netcracker/qubership-ai-packages/agent-packages/qubership-repo-essentials#90c61bcd493b5711827871fda4285ffab57b8ed6  # main
     # Sibling packages in this repository. Published manifests cannot use
     # local-path deps, so each one is pinned to a commit SHA on this repo.
     - Netcracker/qubership-ai-packages/agent-packages/triage-dependency-prs#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/enable-renovate-automerge#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/adr-authoring#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
     - Netcracker/qubership-ai-packages/agent-packages/qubership-agent-support-pr#ebbc567f900e00ea4ec6260536bb75c0d46ddd73  # main
+    - Netcracker/qubership-ai-packages/agent-packages/javadoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/jsdoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/godoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/rustdoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main
+    - Netcracker/qubership-ai-packages/agent-packages/pythondoc-authoring#0b8134af59f7e7ddb65d863d7a0677af0778f662  # main

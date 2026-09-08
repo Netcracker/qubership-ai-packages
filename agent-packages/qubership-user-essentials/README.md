@@ -41,6 +41,12 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 - [`enable-renovate-automerge`](../enable-renovate-automerge/) — enable Renovate automerge behind a real required
   check.
 - [`adr-authoring`](../adr-authoring/) — write Architecture Decision Records that follow the Qubership ADR contract.
+- [`javadoc-authoring`](../javadoc-authoring/) — what a doc comment says, and in which order, in Java, Kotlin,
+  Groovy, and Scala.
+- [`jsdoc-authoring`](../jsdoc-authoring/) — the same for JSDoc and TSDoc comments in JavaScript and TypeScript.
+- [`godoc-authoring`](../godoc-authoring/) — the same for Go doc comments and inline comments.
+- [`rustdoc-authoring`](../rustdoc-authoring/) — the same for Rust doc comments and inline comments.
+- [`pythondoc-authoring`](../pythondoc-authoring/) — the same for Python docstrings and inline comments.
 
 ## Adding a package to the bundle
 

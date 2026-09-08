@@ -1,13 +1,13 @@
 name: qubership-essentials
-version: 1.0.2
+version: 1.0.3
 description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
 dependencies:
   apm:
     # Sibling packages in this repository. Published manifests cannot use
     # local-path deps, so each one is pinned to a commit SHA on this repo.
-    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
-    - Netcracker/qubership-ai-packages/agent-packages/codex-review#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
-    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
-    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#b5c51a1eaa16ac523d94008db6dd5ed5d946ea08  # main
+    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring#2925e6e57848f10e27f98956b89284c1212e6c98  # main
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#2925e6e57848f10e27f98956b89284c1212e6c98  # main
+    - Netcracker/qubership-ai-packages/agent-packages/english-us-developer-style#2925e6e57848f10e27f98956b89284c1212e6c98  # main
+    - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120#2925e6e57848f10e27f98956b89284c1212e6c98  # main
     # Packages hosted in other repositories.
     - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#3511065e91edef101ca84ed1c88cfef7120dface  # main

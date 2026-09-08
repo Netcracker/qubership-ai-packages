@@ -1,16 +1,9 @@
 ---
-description: Trigger for the rustdoc-authoring skill — write, rewrite, or review a doc comment or an inline comment in Rust source.
+description: "Trigger for the rustdoc-authoring skill: load it before writing, editing, or reviewing a doc comment or inline comment in Rust."
 applyTo: "**/*.rs"
 ---
 
-## Skill trigger: `rustdoc-authoring`
-
-When the task involves a comment in `*.rs` — a `///` or `//!` doc comment, an inline `//`
-comment, or a `// SAFETY:` comment — apply the `rustdoc-authoring` skill.
-
-Fires on:
-
-- writing a new comment, or deciding whether an item needs one at all;
-- editing, rewriting, or shortening an existing one;
-- reviewing two versions of one, including a machine-generated rewrite;
-- adding or editing a doc example, which the build compiles and runs.
+Before writing, editing, or reviewing a doc comment or inline comment in a `*.rs` file, load `rustdoc-authoring`, and
+`english-developer-style` with it. Inside a coding task ("fix the bug", "add the method") load it as soon as the change
+touches a comment, before writing it; a one-line comment, a `// SAFETY:` comment, and a doc example that the build runs
+count.
