@@ -10,7 +10,7 @@ with supplied review evidence, not live API execution or an end-to-end code revi
 ## Recorded comparison
 
 Baseline: repository commit `3eee3aa9452514738d1936e79cbeca1748046b74`, package version `1.0.1`.
-Candidate: the pre-structure `1.0.2` changes, preserved in [pre-structure-skill.md](pre-structure-skill.md).
+Candidate: the pre-structure `1.0.2` changes, preserved in [pre-structure-skill.txt](pre-structure-skill.txt).
 The installed global skill was not the baseline; it contains other changes
 that are not in this repository revision.
 

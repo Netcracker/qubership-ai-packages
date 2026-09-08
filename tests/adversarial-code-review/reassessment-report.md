@@ -11,7 +11,7 @@ per variant and suite evaluates both platforms. Each platform is evaluated in th
 independent repeated samples. No live services, remote writes, or code-review verification commands are executed.
 The fixtures supply already checked evidence to isolate the reviewer's subsequent decisions.
 
-- Baseline: [pre-structure-skill.md](pre-structure-skill.md), with the unchanged GitLab reference.
+- Baseline: [pre-structure-skill.txt](pre-structure-skill.txt), with the unchanged GitLab reference.
 - Candidate: the restructured skill identified by the fingerprint below, before integration with PR #97.
   The current source has since changed; see [the installed-artifact evaluation](compiled-report.md) for the final version.
 - Reassessment: [8 cases](reassessment-cases.json) and [expected decisions](reassessment-expected.json).
