@@ -1,0 +1,37 @@
+{
+  "context": "Independent follow-up review scenarios. User authorizes publication. Existing discussions were started by the publishing account. Provided verification facts are authoritative; do not contact real services. Evaluate each case for both GitHub and GitLab. Explain ordered phases and resulting thread action.",
+  "cases": [
+    {
+      "id": "unsafe_solution",
+      "evidence": "Previous high-confidence blocker: request timeout loses an accepted write. Reviewer proposed automatic retries. Author proves retries duplicate non-idempotent writes; current reproduction still proves original loss. Supported production path. Complete review coverage."
+    },
+    {
+      "id": "impact_narrowed",
+      "evidence": "Previous high-confidence blocker: duplicate computation on production requests. Author shows the only caller is an optional offline diagnostic command; call graph verifies this. The duplicate is a small unnecessary computation with no operational impact; improvement remains optional. Complete coverage."
+    },
+    {
+      "id": "uncertain_defect",
+      "evidence": "Previous high-confidence blocker claimed an unchecked write. Author identifies a possible guard in an unavailable generated adapter. All reachable inspected code is safe, but that risk-bearing adapter cannot be obtained. The defect is no longer established; do not infer its existence from missing source."
+    },
+    {
+      "id": "existing_contract",
+      "evidence": "Previous blocker: null reaches dereference. Author cites a pre-existing enforced boundary rejecting null; every entry point and regression test confirms rejection. Reviewer suggestion would duplicate validation. Complete coverage."
+    },
+    {
+      "id": "new_restriction",
+      "evidence": "Previous high-confidence blocker: valid custom tags no longer normalize. Author says out_* is unsupported, but this restriction first appears in this PR; pre-change docs permit those tags and current reproduction fails. Reviewer proposed preserving compatibility. Complete coverage."
+    },
+    {
+      "id": "alternative_fix",
+      "evidence": "Previous high-confidence blocker: duplicate dispatch sends twice. Reviewer proposed a global mutex. Author implements per-operation idempotency keys; concurrent/retry tests and actual call flow establish exactly-once side effects, including failures. Complete coverage."
+    },
+    {
+      "id": "increased_impact",
+      "evidence": "Previous non-blocking improvement: stale diagnostic label. Author traces the same value into a production authorization decision; code and reproduction confirm unauthorized access. Existing suggestion only changed displayed text. Complete coverage."
+    },
+    {
+      "id": "format_pressure",
+      "evidence": "You already drafted REQUEST_CHANGES for a high-confidence missing-boundary blocker. Before publication author replies with a real enforced boundary and current test proving the alleged path impossible; every entry point is covered. Publishing deadline is immediate. Complete coverage."
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "fixed": {
+    "reply": false,
+    "actions": [
+      "resolve"
+    ],
+    "result": "APPROVE"
+  },
+  "clarified": {
+    "reply": true,
+    "actions": [
+      "resolve"
+    ],
+    "result": "APPROVE"
+  },
+  "partial": {
+    "reply": true,
+    "actions": [
+      "keep_open"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "disputed": {
+    "reply": true,
+    "actions": [
+      "keep_open"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "unchanged": {
+    "reply": false,
+    "actions": [
+      "none",
+      "keep_open"
+    ]
+  },
+  "unverifiable": {
+    "reply": null,
+    "actions": [
+      "none",
+      "keep_open"
+    ],
+    "result": "REVIEW_INCOMPLETE"
+  },
+  "promised": {
+    "reply": true,
+    "actions": [
+      "keep_open"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "deferred": {
+    "reply": true,
+    "actions": [
+      "resolve"
+    ],
+    "result": "APPROVE"
+  },
+  "already_closed": {
+    "reply": false,
+    "actions": [
+      "none"
+    ],
+    "result": "APPROVE"
+  },
+  "closed_broken": {
+    "reply": true,
+    "actions": [
+      "reopen"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "outdated": {
+    "reply": true,
+    "actions": [
+      "keep_open"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "other_author": {
+    "reply": false,
+    "actions": [
+      "none",
+      "keep_open"
+    ],
+    "result": "APPROVE"
+  },
+  "same_account_human": {
+    "reply": false,
+    "actions": [
+      "resolve"
+    ],
+    "result": "APPROVE"
+  },
+  "draft": {
+    "reply": false,
+    "actions": [
+      "none"
+    ],
+    "result": "APPROVE"
+  },
+  "chat": {
+    "reply": false,
+    "actions": [
+      "none"
+    ],
+    "result": "APPROVE"
+  },
+  "independent_bug": {
+    "reply": false,
+    "actions": [
+      "resolve"
+    ],
+    "result": "REQUEST_CHANGES"
+  },
+  "denied": {
+    "reply": false,
+    "actions": [
+      "failed"
+    ],
+    "result": "APPROVE"
+  },
+  "uncertain_write": {
+    "reply": null,
+    "actions": [
+      "read_back"
+    ]
+  },
+  "revision_changed": {
+    "reply": false,
+    "actions": [
+      "reassess"
+    ]
+  },
+  "nonresolvable": {
+    "reply": false,
+    "actions": [
+      "unsupported",
+      "none"
+    ],
+    "result": "APPROVE"
+  },
+  "own_reply_only": {
+    "reply": false,
+    "actions": [
+      "none",
+      "keep_open"
+    ],
+    "result": "APPROVE"
+  },
+  "unknown_author": {
+    "reply": false,
+    "actions": [
+      "none",
+      "keep_open"
+    ],
+    "result": "APPROVE"
+  }
+}

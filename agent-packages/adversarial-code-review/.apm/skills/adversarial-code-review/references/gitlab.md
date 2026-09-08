@@ -3,7 +3,8 @@
 Read this reference only when the review target is a GitLab merge request. Use it in two phases:
 
 1. Prepare `glab` and collect GitLab context, then return to the main skill.
-2. For a publication operation routed by the main skill, return here for published-note or Draft Note mechanics.
+2. For a publication operation routed by the main skill, return here for note, discussion-state, or Draft Note
+   mechanics.
 
 The main skill remains authoritative for the Git workspace, review checks, finding model, report, language, review
 communication, publication authorization, signature, verification, and cleanup. This reference owns only GitLab access
@@ -81,6 +82,43 @@ Return every `collapsed`, `too_large`, and overflow indicator, whether the API o
 position, and which GitLab discussion surfaces were available. If the latest matching diff version is inaccessible,
 return the exact error or revision mismatch to the main skill. GitLab can retain a stale discussion while omitting its
 former line position from the API. Return its body, replies, resolution state, and a location-unavailable marker.
+
+## Reply to and resolve discussions
+
+Use the main skill's ownership, authorization, and reassessment rules. Collect all discussion pages with the API map
+above and retain full IDs, replies, authors, and each note's `resolvable` and `resolved` fields. Read the target
+discussion again before writing. A general note or system note may not be resolvable; skip unsupported state changes
+without changing the finding assessment.
+Resolution capability does not establish that the publishing account has permission to change it.
+
+Prefer the installed CLI's supported subcommands. Use the full discussion ID and the explicit target repository URL,
+including the self-managed host, rather than relying on the current directory or a shortened ID:
+
+```text
+Reply    glab mr note create <iid> --repo <repository-url> --reply <discussion-id> < /path/to/reply.md
+Resolve  glab mr note resolve <iid> <discussion-id> --repo <repository-url>
+Reopen   glab mr note reopen <iid> <discussion-id> --repo <repository-url>
+```
+
+Check subcommand help when the installed CLI differs. If it lacks these operations, use the
+[Discussions API](https://docs.gitlab.com/api/discussions/#resolve-a-merge-request-thread) through `glab api`:
+
+```shell
+glab api --hostname <host> --method POST \
+  projects/<id>/merge_requests/<iid>/discussions/<discussion-id>/notes --field body=@/path/to/reply.md
+glab api --hostname <host> --method PUT \
+  projects/<id>/merge_requests/<iid>/discussions/<discussion-id> --field resolved=true
+```
+
+Use `--field resolved=false` to reopen. These operations publish immediately, so do not execute them for a draft.
+After a reply or state change, verify the returned note and all resolvable notes' state by reading the discussion:
+
+```shell
+glab api --hostname <host> projects/<id>/merge_requests/<iid>/discussions/<discussion-id>
+```
+
+Return the discussion ID, note URL, observed state, and any permission or capability error to the main skill. On an
+uncertain reply outcome, read back before retrying so a successful but timed-out reply is not duplicated.
 
 ## Create an unpublished draft review
 
