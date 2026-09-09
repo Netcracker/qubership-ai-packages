@@ -28,8 +28,8 @@ cross-reference syntax of its own, and offers three competing section dialects i
 - Comments a tool rather than a human reads (`# type: ignore`, `# noqa`, `# fmt: off`, `# pragma: no cover`),
   including the module docstring that silently un-silences a whole file for mypy.
 - How far a rewrite may grow, and how to compare two versions without being sold by the newer one.
-- The extra rules for tests, including the four things that make a failing pytest read as a bug report, for packages,
-  and for a docstring that ships as `--help` text or an OpenAPI description.
+- The extra rules for the docstring on a test, for packages, and for a docstring that ships as `--help` text or an
+  OpenAPI description. The test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 
 ## Contents
 

@@ -135,31 +135,31 @@ marketplace:
     - name: javadoc-authoring
       description: "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/javadoc-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "stack:java", "stack:kotlin", "stack:groovy", "stack:scala", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: godoc-authoring
       description: "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/godoc-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "stack:go", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: rustdoc-authoring
       description: "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/rustdoc-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "stack:rust", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: jsdoc-authoring
       description: "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/jsdoc-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "stack:javascript", "stack:typescript", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: pythondoc-authoring
       description: "Structure and content rules for Python docstrings and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/pythondoc-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "stack:python", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: change-description-authoring
@@ -173,6 +173,18 @@ marketplace:
       source: ./agent-packages/docs-page-authoring
       version: 1.0.0
       tags: ["topic:documentation", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: test-authoring
+      description: "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report."
+      source: ./agent-packages/test-authoring
+      version: 1.0.0
+      tags: ["topic:testing", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: final-review
+      description: "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands."
+      source: ./agent-packages/final-review
+      version: 1.0.0
+      tags: ["topic:testing", "topic:code-review", "activity:code-review", "audience:public"]
 
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.

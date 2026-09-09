@@ -45,8 +45,8 @@ difference is unreviewable.
   description, including the release tag that deletes a declaration from the published types.
 - How far a rewrite may grow, how to compare two versions without being sold by the newer one, and why the usual
   strip-the-comments proof is incomplete for checked JavaScript.
-- The extra rules for tests, where the `it` string is the comment and four things make a failing test read as a bug
-  report, and for module documentation.
+- The extra rules for the comment on a test, where the `it` string does the comment's job, and for module
+  documentation. The test's own strings, matcher, and message belong to [`test-authoring`](../test-authoring/).
 
 ## Contents
 

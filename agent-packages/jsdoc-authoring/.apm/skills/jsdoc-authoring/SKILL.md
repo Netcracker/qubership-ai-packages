@@ -430,7 +430,11 @@ Four placement hazards when you restructure code around them:
 
 ### Test file
 
-A test file is read in exactly one situation: it just went red. Write for that reader.
+The comment on a test is read by whoever opened the file. The reader of a red build already holds the test's name, its
+assertion, and its message in the report, and comes here for the rule behind them; the next author comes looking for
+what this test covers and where a case goes. Both want the rule, stated once, as a claim: a negation nested in a
+negation (`fails when … does not …`) is not that, and `english-developer-style` §3 asks for what happens, not what does
+not.
 
 - **Summary = the rule the test guards**, stated positively and completely, as something you could assert. `It has to
   stay quiet when the socket did go away` leaves the reader guessing: not throw, not retry, not log? Name the
@@ -447,32 +451,11 @@ Deliberate duplication between a test's comment, a helper's comment, and the fai
 reader meets exactly one of the three. It does not extend to production code, where the type's comment and the member's
 comment have the same reader.
 
-**A failing test should read as a bug report, and four things write it.** Decide what each one carries before you write
-the next; the reader sees them together in one report.
-
-- **The `describe` string** carries what every test in the block shares: the unit under test and the condition they all
-  sit under. A fact true of every test belongs here rather than in each `it`.
-- **The `it` string** states what this one test establishes. `it('refuses a negative count')` is a finding;
-  `it('ensureBytes')` is a location that makes the reader open the file. One assertion per test keeps the string able
-  to do this, and keeps the report readable when several tests fail at once.
-- **The assertion prints the values.** `assert.strictEqual(actual, expected)` and `expect(actual).toBe(expected)`
-  print both values and an inline diff between them in the runner's output. `assert.ok(actual === expected)` prints the
-  source expression (`The expression evaluated to a falsy value: assert.ok(actual === expected)`) and
-  `expect(actual === expected).toBe(true)` prints `false`; neither prints the operand values, so the reader is left with
-  a stack trace to reverse-engineer. `assert.throws(fn, RangeError)` and `expect(fn).toThrow(RangeError)` print the
-  expected error class the same way. Choose the assertion that already prints what the reader needs, rather than
-  describing it in a message.
-- **The message adds what the other three cannot.** In a parameterized test (`it.each`, `test.each`) that is which case
-  ran, so the `%s` or `$name` placeholder in the `it` string is the whole message. Under a bare `assert.ok` it is the
-  invariant, because nothing else states it. Where the values are arguments already, do not restate them; where the
-  `describe` or `it` string states the scenario, do not restate that either. A message read while someone scans a stack
-  trace competes with the lines around it.
-
-`assert.fail()` with no message is that defect at its limit: it reports that something is wrong and nothing else.
-
-This does not contradict the duplication paragraph above. A string is printed in the report; a comment at the top of the
-file is read only once someone opens it. Repeating a comment in a message is the useful duplication; repeating a string
-is the one that costs.
+The `describe` and `it` strings, the assertion, and its message are the test's, not its comment's. Which fact each of
+them carries in the runner's report, and which matcher prints the operands, is `test-authoring`. The boundary matters
+here because a string is printed in the report and a comment at the top of the file is read only once someone opens
+it: repeating the comment's rule in a message is the useful duplication above, and repeating the string in the comment
+is the one that costs (§3).
 
 ### Module documentation
 

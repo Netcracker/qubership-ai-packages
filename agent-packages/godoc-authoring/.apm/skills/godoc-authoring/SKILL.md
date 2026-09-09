@@ -475,7 +475,11 @@ Two Go-specific hazards when you restructure a comment that contains them:
 
 ### Test file
 
-A test is read in exactly one situation: it just went red. Write for that reader.
+The comment on a test is read by whoever opened the file. The reader of a red build already holds
+the test's name, its assertion, and its message in the report, and comes here for the rule behind
+them; the next author comes looking for what this test covers and where a case goes. Both want the
+rule, stated once, as a claim: a negation nested in a negation (`fails when … does not …`) is not
+that, and `english-developer-style` §3 asks for what happens, not what does not.
 
 Test functions are not rendered by `go doc` or pkg.go.dev, so the name-first rule of §3 has no
 tooling behind it here. `go test` prints the name, so the name states what the test establishes,
@@ -494,41 +498,16 @@ func TestClient_RetryPreservesCallerHeaders(t *testing.T) { … }
   either.
 - **What to do about the red build** goes in the comment as well: which set to edit, which case to
   add, where the failure message states the rest.
-- **A table-driven case's `name` field is a comment.** It is the string the reader sees in the
-  failure output, so it names the case's condition, not its ordinal.
 
 Deliberate duplication between the test's comment, a helper's comment, and the failure message is
 correct, because each reader meets exactly one of the three. It does not extend to production code,
 where the type comment and the method comment have the same reader.
 
-**A failing test should read as a bug report, and four things write it.** Decide what each one
-carries before you write the next; the reader sees them together in one `--- FAIL` block.
-
-- **The test function's name** carries what every subtest in it shares: the unit under test and
-  the condition they all sit under. A fact true of every case belongs here rather than in each of
-  them.
-- **The subtest's name**, the `name` field that `t.Run` receives, states what this one case
-  establishes. `negative count is refused` is a finding; `case 3` is a location that makes the
-  reader open the file. One assertion per case keeps the name able to do this, and keeps the
-  report readable when several cases fail at once.
-- **The failure call prints the values.** `t.Errorf("got %v, want %v", got, want)` renders both;
-  `if got != want { t.Fatal("mismatch") }` renders neither and leaves the reader to rerun under a
-  debugger. An assertion library's `Equal(t, want, got)` prints both the same way, and its
-  `True(t, got == want)` prints neither. Choose the form that already prints what the reader needs,
-  rather than describing it in the message.
-- **The message adds what the other three cannot.** `go test` prints the file and line before the
-  message, so the message never says where. In a table-driven test the subtest name states which
-  case ran, so the message states the invariant or nothing. Under a bare `t.Fatal` it is the
-  invariant, because nothing else states it. Where the values are in the format arguments already,
-  do not restate them; where the function or subtest name states the scenario, do not restate that
-  either.
-
-`t.Fatal("failed")` is that defect at its limit: it reports that something is wrong and nothing
-else.
-
-This does not contradict the duplication paragraph above. A name is printed in the report; a test's
-comment is read only once someone opens the file. Repeating a comment in a message is the useful
-duplication; repeating a name is the one that costs.
+The name, the failure call, and its message are the test's, not its comment's. Which fact each of
+them carries in the `--- FAIL` block, and which call prints the values, is `test-authoring`. The
+boundary matters here because a name is printed in the report and a comment is read only once
+someone opens the file: repeating the comment's rule in a message is the useful duplication above,
+and repeating the name in the comment is the one that costs (§3).
 
 ### Package comment
 

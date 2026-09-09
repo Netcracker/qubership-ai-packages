@@ -44,7 +44,9 @@ select_packages() {
   # covers them.
   local base="${BASE_SHA:?BASE_SHA must be set when MODE=diff}"
   local changed base_json name head_entry base_entry src dir
-  changed="$(git diff --name-only "$base" HEAD)"
+  # core.quotePath=false keeps a non-ASCII path unquoted, so the anchored match below still sees it.
+  # A path holding a quote, a backslash, or a control byte is quoted regardless and would still be missed.
+  changed="$(git -c core.quotePath=false diff --name-only "$base" HEAD)"
   base_json="$(git show "$base:$mkt_rel" 2>/dev/null || echo '{}')"
   while IFS= read -r name; do
     head_entry="$(jq -cS --arg n "$name" '.plugins[] | select(.name==$n)' "$mkt_json")"

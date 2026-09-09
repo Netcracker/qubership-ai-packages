@@ -31,8 +31,8 @@ so it behaves identically, and every sentence you would then have to edit was im
   into an OpenAPI spec.
 - How far a rewrite may grow, how to compare two versions without being sold by the newer one, and how to prove a
   comment-only sweep moved no code.
-- The extra rules for test classes, including the four things that make a failing test read as a bug report, and for
-  `package-info.java`.
+- The extra rules for the comment on a test class, and for `package-info.java`. The test's own name, assertion, and
+  message belong to [`test-authoring`](../test-authoring/).
 
 ## Scope
 
