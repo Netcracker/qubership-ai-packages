@@ -25,13 +25,15 @@ Default to `Audit`. Audit is read-only: do not edit files, change GitHub setting
 merge, or close anything.
 
 `Apply` reuses a complete Audit from the current task and rechecks only confirmed checks; run a full Audit only when
-none exists. Show the descriptive check names, exact targets, proposed file and external changes, and unavailable
-prerequisites. Apply only the checks or batch the user confirms, even if the initial request says to fix everything.
+none exists. Confirmation after the audit report authorizes the error stage below. An up-front request to "fix
+everything" is not confirmation of that stage. Warnings require the user's selection.
+Show exact targets and proposed file and external changes before applying them. Carry forward approvals
+and answers already given in the current task; do not ask again for the same decision.
 Permission for a target repository does not cover `Netcracker/.github` or `Netcracker/qubership-workflow-hub`.
 
-README remediation is always separate from other Apply work. Never include `FILE-001` in an Apply batch. When it
-fails, ask whether the user wants the assistant to prepare a README change. After approval, edit only the README, show
-its diff, and ask the user to accept or revert it before committing, publishing, or combining it with other changes.
+README remediation requires separate approval within the error stage. Include its preparation question among the open
+questions after the user confirms that stage. After approval, edit only the README in that step, show its diff, and
+ask the user to accept or revert it before committing, publishing, or combining it with other changes.
 If the user rejects it, revert only the assistant's README edit.
 
 Keep finding IDs internal for catalog evaluation and fix routing. Outside the report table's `ID` column, use a clear
@@ -48,9 +50,33 @@ on unexpected changes. Never discard existing dirty-worktree changes.
 
 Never merge or close a pull request. Read back every external mutation and return its evidence or pull request URL.
 
+## Apply
+
+Critical issues are confirmed `ERROR` and applicable `CONDITIONAL ERROR` findings. Keep the catalog's severity levels.
+
+1. After the user confirms fixing critical issues, read only their routed fix instructions and recheck those findings.
+   Explain which changes you can make with the available facts, prerequisites, and approvals, and which need user input.
+   Make this assessment after confirmation, not during Audit, and do not group changes by function.
+1. Perform and validate the authorized changes that need no further answers. Do not wait for unrelated open questions
+   or request another confirmation for these changes. Preserve the separate approvals required above and in the fix
+   instructions; a missing fact, prerequisite, or required decision prevents only the affected change.
+1. Report the completed changes and list all remaining questions in one numbered list. For each question, name the
+   affected check and the fact, choice, or approval needed. Offer to go through the questions one at a time or let the
+   user answer them all at once. In either mode, use answers already supplied and continue the corresponding fixes.
+   Report unavailable prerequisites as blockers; do not turn them into questions the user cannot answer.
+1. Recheck the errors after remediation. Keep unresolved errors explicit and continue their questions or report their
+   blockers. Once every error is resolved or reported as a blocker, ask which remaining warnings the user wants to fix.
+   Blocked errors do not suspend warning selection or change their unresolved status. If Audit finds no errors, ask
+   this directly after the report. List warnings by descriptive check name and wait for the selection;
+   do not apply them automatically. If no warnings remain, report completed work and any unresolved blockers without
+   a selection question.
+1. Read fix instructions only for the selected warnings, then follow the same assessment, execution, and question
+   flow. An explicit request to work on warnings while errors remain changes the order, not the unresolved error status.
+
 ## Fix routing
 
-Do not read `references/fixes/` during Audit. After Apply confirmation, read only the matching heading or file:
+Do not read `references/fixes/` during Audit. After error-stage confirmation or warning selection, read only the
+matching heading or file. Reading README instructions does not authorize editing the README:
 
 | Finding IDs | Fix instructions |
 | --- | --- |
@@ -65,19 +91,19 @@ If a required source, permission, command, owner, secret, or provider choice is 
 ## Audit
 
 1. Resolve the exact checkout and `owner/repository`. Record the branch, dirty state, remotes, and default branch.
-2. Read repository instructions, root files, manifests, build files, `.qubership/`, and every workflow. Detect workflow
+1. Read repository instructions, root files, manifests, build files, `.qubership/`, and every workflow. Detect workflow
    behavior from triggers, actions, commands, and referenced configuration, not filenames.
-3. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Assess
+1. Treat a repository as a code repository only when it has maintained source and a build or test entry point. Assess
    coverage applicability separately: require coverage only when maintained executable source is a material repository
    deliverable. Do not use file count or lines of code alone. Small CI helpers, generators, examples, fixtures, tests,
    or scripts that only validate documentation or configuration do not make coverage applicable. Record the relevant
    source paths and their role. When no material executable source exists, mark `WF-005` and `WF-014` `NOT APPLICABLE`
    and do not propose coverage tooling or publication. Treat a repository as Maven only when it has a publishable Maven
    project, not an incidental fixture.
-4. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, and variables. Never expose
+1. Use `gh` to inspect metadata, topics, rulesets or branch protection, workflow runs, and variables. Never expose
    secret values. Use GitHub's community-profile API and local paths for effective community files. Mark only evidence
    blocked by repository permissions as `UNAVAILABLE`.
-5. Evaluate all 28 checks below in order.
+1. Evaluate all 28 checks below in order.
 
 Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPLICABLE`. Overall status is
 `NON-COMPLIANT` for any error, `INCOMPLETE` when only mandatory evidence is unavailable, and `COMPLIANT` otherwise.
@@ -86,7 +112,7 @@ Use `PASS`, `ERROR`, `CONDITIONAL ERROR`, `WARNING`, `UNAVAILABLE`, or `NOT APPL
 
 | ID and violation | Inspect and applicability | Source |
 | --- | --- | --- |
-| `FILE-001` README: missing or smaller than 1024 bytes `ERROR` | Match the root README case-insensitively and measure its file size in bytes, as Grand Report C023 does. A README of at least 1024 bytes passes without content scoring, authoring advice, or confirmation. | [Grand Report C023](https://github.com/exadmin/opensource_team_monitor/blob/d2e7ede1c90fcce9bfbff2d467f9dddd100fb171/src/main/java/com/github/exadmin/ostm/collectors/impl/repos/devops/ReadmeFilePresence.java#L17-L40) |
+| `FILE-001` README: missing or smaller than 1024 bytes `ERROR` | Match the root README case-insensitively and measure its file size in bytes, as Grand Report C023 does. A README of at least 1024 bytes passes without content scoring, authoring advice, or confirmation. In reports, state the measured size and "required: at least 1024 bytes" in the user's language. | [Grand Report C023](https://github.com/exadmin/opensource_team_monitor/blob/d2e7ede1c90fcce9bfbff2d467f9dddd100fb171/src/main/java/com/github/exadmin/ostm/collectors/impl/repos/devops/ReadmeFilePresence.java#L17-L40) |
 | `FILE-002` Apache 2.0 `LICENSE`: `ERROR` | Compare normalized root `LICENSE` text with the official license; accept another license only with a documented legal exception. | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt), Grand Report C022 |
 | `FILE-003` CODEOWNERS: `ERROR` | Accept `.github/CODEOWNERS`, root `CODEOWNERS`, or `docs/CODEOWNERS`; verify syntax and report unresolved owners when the API permits. | [GitHub CODEOWNERS](https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), Grand Report C025 |
 | `FILE-004` `qubership-repo-essentials`: `ERROR` | Require a direct root dependency, `claude`, `codex`, and `cursor` targets, a resolved lock entry, committed generated assets for every target, and successful `apm audit --ci --no-policy`; organization policy discovery is outside this check. Nonempty `apm.yml` alone fails. | [Package manifest](https://github.com/Netcracker/qubership-ai-packages/blob/94b47bfd4171396bcacdb2d6c534470d60b1230f/agent-packages/qubership-repo-essentials/apm.yml), Grand Report C050 |
@@ -133,9 +159,13 @@ Start with `COMPLIANT`, `NON-COMPLIANT`, or `INCOMPLETE` and one sentence explai
 localized Markdown table with exactly these columns: `ID`, `Status`, `Check and evidence`, `Minimal remediation`.
 Render row statuses as `ERROR`, `WARNING`, `INFO`, or `PASS`; map unavailable, not-applicable, and inapplicable
 conditional checks to `INFO`. Sort rows in that order and preserve catalog order within each status. Put applicability,
-evidence, source, and reason in `Check and evidence`. List unavailable evidence only when any exists. Then list proposed
-Apply batches by descriptive check name, excluding `FILE-001`. If `FILE-001` is an error, follow the batches with its
-separate README-remediation question. Do not read fix references until the user confirms a batch or README remediation.
+evidence, source, and reason in `Check and evidence`. List unavailable evidence only when any exists.
+
+If errors exist, end by offering to fix the critical issues first and asking for confirmation of that stage. Keep the
+closing proposal free of functional batches, estimates of what can be fixed independently, and remediation questions.
+Leave warnings in the table; offer their selection only at the point defined in Apply. If no errors exist, ask which
+warnings the user wants to fix, or report that no fixes are needed when no warnings remain. Unavailable mandatory
+evidence keeps the audit `INCOMPLETE`; it is not a confirmed error or proof that no fixes are needed.
 
 Do not add findings for open pull request count; email or CyberFerret scanning; language versions; pull request
 templates; universal release, SBOM, license, Release Drafter, security scan, or OSSF workflows; mandatory Sonar or
