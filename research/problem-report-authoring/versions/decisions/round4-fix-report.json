@@ -1,0 +1,71 @@
+{
+  "round": 4,
+  "decisions": [
+    {
+      "id": "F-025",
+      "kind": "fixed",
+      "rationale": "The rule was rewritten rather than patched a fifth time. Nine findings across four rounds all landed on the same rule, and each earlier rewrite fixed its predecessor and broke something new: an anchor on the last mechanism sentence, then on the first, then a three-option placement list, then a gathering requirement the skill's own exemplar failed. It now states what the accepted report itself states: mark the guess, and the report stands without it",
+      "evidence": "SKILL.md:74-87. Question 1 deletes the marked block and asks whether the symptom, the expected behavior, the steps and the pasted output still stand. Question 2 asks whether a sentence naming a place in the project's code as the cause sits inside the symptom, the steps or the pasted output, and excludes the expected block by name, with the reason: grounding an expectation is what section 5 asks for. Symbol or owner: the test asks what a sentence claims, not which section encloses it. Fixture bigger than the defect: gradle/gradle#39079 passes, its two internals sentences sitting in Workaround and Context outside the three passages; the trial's treatment draft still fails, its trace into JUnitXmlResultWriter sitting inside Current Behavior; the recorded failure, whose mechanism carried the report, fails question 1. What the test cannot see: whether the theory is right. Five files carry the rule or point at it and all five are edited"
+    },
+    {
+      "id": "F-026",
+      "kind": "fixed",
+      "rationale": "Per-sentence hedging was refuted by the exemplar, which hedges once at the head of its section",
+      "evidence": "SKILL.md:77-78 marks the block once; gradle/gradle#39079's Possible cause opens 'This part is a guess and may be wrong; the sections above stand without it' and then states plainly"
+    },
+    {
+      "id": "F-027",
+      "kind": "fixed",
+      "rationale": "The previous question forbade in the expected block the grounding section 5 requires there",
+      "evidence": "SKILL.md:84-87 excludes the expected block from question 2 and says why; a report grounding its expectation in the error the project raises now passes both questions"
+    },
+    {
+      "id": "F-022",
+      "kind": "fixed",
+      "rationale": "The reference forbade across a whole field what the skill permits inside one narrative box; the new rule has no position requirement, so the conflict is gone rather than rebalanced",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/project-conventions.md:55-59 states one surviving rule, the symptom opening the report, and says the analysis rules are not about position"
+    },
+    {
+      "id": "F-024",
+      "kind": "fixed",
+      "rationale": "The skill body and the reference disagreed on how many rules survive the form override",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:97 and references/project-conventions.md:55-56 both name one, and it is true again under the rewritten rule"
+    },
+    {
+      "id": "F-023",
+      "kind": "fixed",
+      "rationale": "The checklist asked for an ordering the rule no longer requires",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:270-275: the analysis line asks the deletion question and the mixing question; the workaround line drops the clause about the analysis's position"
+    },
+    {
+      "id": "F-030",
+      "kind": "fixed",
+      "rationale": "The colleague reference waived the rule by its old name",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/colleague-message.md:5-7 states what relaxes and what holds: the theory may come first, it is still marked, and the message still says what was seen independently of it"
+    },
+    {
+      "id": "F-031",
+      "kind": "fixed",
+      "rationale": "The request reference placed alternatives relative to a block that no longer has a fixed position",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/request-genre.md:36-40 puts them in a slot of their own below the problem statement"
+    },
+    {
+      "id": "F-028",
+      "kind": "fixed",
+      "rationale": "The rule characterized what a context field asks, and the one context field the research documents asks something else",
+      "evidence": "The characterization is gone from SKILL.md; the instruction it carried survives at SKILL.md:77-79, which says to use a form field only where its own text asks for a cause. The diff check caught that the first edit dropped the instruction with the characterization"
+    },
+    {
+      "id": "F-029",
+      "kind": "fixed",
+      "rationale": "The research README said the Workaround section is last in the exemplar; two sections follow it",
+      "evidence": "research/problem-report-authoring/README.md now says it sits after everything that states the problem, with the guess and the attached reproducer below, matching worked-cases.md:52"
+    },
+    {
+      "id": "F-001",
+      "kind": "fixed",
+      "rationale": "Fourth filing, and this time it names a real contradiction inside the package rather than the research-material claim rejected three times: the README promised the skill carries no citations while the rule names a report. The README is the side that was wrong, and the production-history phrases the reviewer has been right about since round 1 are gone",
+      "evidence": "agent-packages/problem-report-authoring/README.md says the skill names one accepted report as an example; SKILL.md:181 drops 'the ones this skill was built from'; references/worked-cases.md:4-5 drops the sentence about the reports being the source of the repairs. The diff check caught a plural in the first version of the README line"
+    }
+  ]
+}

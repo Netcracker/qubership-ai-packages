@@ -1,0 +1,35 @@
+{
+  "round": 2,
+  "decisions": [
+    {
+      "id": "F-016",
+      "kind": "fixed",
+      "rationale": "Round 1's own fix declared the ownership rule inapplicable to a request, which the skill's worked case 5 contradicts. Split the claim: the reproducer and the supported-version reproduction lapse, the ownership obligation does not, and only its method changes",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/request-genre.md:3-9 now names the version substitution and keeps ownership, arguing it from the contract rather than from a command sequence. Symbol or owner: the rule asks what the request is about, not who encloses it, so a request against a project chosen wrongly still fails. Fixture bigger than the defect: worked case 5, an accepted request that argues its own addressee, is the case the reference must not break, and it passes. The matrix cell that led round 1 astray is annotated in research/problem-report-authoring/README.md with its real quoted ground, per the diff check. What the annotation cannot see: whether other cells rest on the same reasoning; only OWN1 was checked. Plan said annotate or correct, and the code annotates"
+    },
+    {
+      "id": "F-017",
+      "kind": "fixed",
+      "rationale": "The internal-tracker scope reached only the skill body, which a session reads after the skill has already loaded; the surfaces that gate loading and advertise the package still excluded it",
+      "evidence": "Six surfaces edited: agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md frontmatter and body, the instructions file, agent-packages/problem-report-authoring/README.md, agent-packages/problem-report-authoring/apm.yml, apm.yml and .claude-plugin/marketplace.json. Teeth: a whitespace-insensitive scan for 'you do not maintain' over the package and both manifests returns nothing, which the line-anchored grep in the plan would have missed; the three manifest descriptions compare byte-equal; the description is 985 characters of the 1020 allowed. What this does not establish: that an agent actually loads the skill on an own-repo task, which only a live session shows"
+    },
+    {
+      "id": "F-018",
+      "kind": "fixed",
+      "rationale": "The rule added in the previous pass had no detection, and the deletion test beside it was worded for a workaround, which the rule says the setting is not",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:93-99 now names where the statement must not sit, including under a workaround or alternatives heading, so a setting misfiled above the ask still fails; the deletion test covers the workaround and the tried setting together; a checklist line covers both placements. The legitimate input this must not silence: a genuine workaround placed after the problem, which the accepted Gradle report pins as still correct. Third mention in references/request-genre.md:17 reworded with it"
+    },
+    {
+      "id": "F-019",
+      "kind": "fixed",
+      "rationale": "The trial README made three claims its own drafts refute; corrected against the files rather than against the agents' summaries",
+      "evidence": "control.md has two sections after Investigation notes, so 'put its reading last' became 'below the symptom, with two sections after it'; treatment.md gives a command for two of the three gaps and raises the third as a question, and the README and research/problem-report-authoring/README.md both say so now; 'ran the deletion test' appears nowhere in treatment.md and is replaced by what the draft does show. n/a for the fixture question: no test exists, the check is per sentence against the named file"
+    },
+    {
+      "id": "F-001",
+      "kind": "fixed",
+      "rationale": "Refile from round 1, accepted in part. The duplicated grounding claim in section 5's opening is removed. The rest is rejected again on the same evidence the refile did not refute",
+      "evidence": "Accepted half: agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:127-129 states the omission fact once, and question 4 keeps the grounding order with its one-clause reason. Rejected half: the refile's premise is that any sentence traceable to a study is research material; the rule this package follows is narrower, and the shipped skill carries no figure, sample, author, venue or percentage, which was checked per sentence in round 1 and re-checked here. The two links in references/worked-cases.md are the accepted reports the cases are worked from, which an agent opens as examples rather than as support for a claim"
+    }
+  ]
+}

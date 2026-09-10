@@ -1,0 +1,35 @@
+{
+  "round": 3,
+  "decisions": [
+    {
+      "id": "F-001",
+      "kind": "fixed",
+      "rationale": "The placement test written in round 2 read the last mechanism sentence, so a report that interleaved theory with the reproduction passed while breaking the rule. Anchored on the first mechanism sentence, with what it forbids spelled out. The same filing's second half, the research-material claim, is accepted only where it names the skill's own production history and rejected again elsewhere on the mechanism two plan reviews have already checked",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:77-84 anchors on the first mechanism sentence, defines new as 'did not already appear above it', permits a back-reference to a run already pasted, and keeps the hedge clause; SKILL.md:258-259 carries the same wording. Symbol or owner: the test asks what a sentence asserts, not which section encloses it, so an analysis paragraph inside a narrative field is caught. Fixture bigger than the defect: the interleaved draft fails, the exemplar with one trailing section passes, and a report with no analysis passes vacuously. What the test cannot see: whether the theory is correct. The production-history clause is replaced by a named public artifact, gradle/gradle#39079, one report rather than a corpus"
+    },
+    {
+      "id": "F-020",
+      "kind": "fixed",
+      "rationale": "The trial README described the causal-analysis rule as it stood before this round, naming a field the rule no longer names",
+      "evidence": "research/problem-report-authoring/trial/README.md:60-63 now states the rule as shipped, checkable against agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:77-81, and drops the claim that the form's opening field is kept clear. n/a for the fixture question: the check is one sentence against one file"
+    },
+    {
+      "id": "F-021",
+      "kind": "fixed",
+      "rationale": "Two rules that state a test were unreachable from the checklist that claims to run every one",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:262-266: the reproducer line now asks whether the project's oracle run is linked, and the form line asks whether the headings are the form's labels in the form's order. Enumeration by the plan review: 15 test-bearing rules, exactly these two unreached, so folding them closes the set"
+    },
+    {
+      "id": "F-019",
+      "kind": "fixed",
+      "rationale": "Both READMEs called the tracker hand-over a command where the draft gives query terms",
+      "evidence": "trial/treatment.md:6 gives search terms and :8 gives a command; research/problem-report-authoring/trial/README.md and research/problem-report-authoring/README.md now say terms for the first and command for the second"
+    },
+    {
+      "id": "F-016",
+      "kind": "fixed",
+      "rationale": "The request reference announced two changed rules and then described three",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/request-genre.md:3-10 now says what becomes of three rules a defect report owes: the reproducer lapses, the version check is substituted, and ownership keeps its obligation while losing its method"
+    }
+  ]
+}
