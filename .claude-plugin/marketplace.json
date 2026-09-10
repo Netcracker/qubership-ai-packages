@@ -288,7 +288,7 @@
     {
       "name": "change-description-authoring",
       "description": "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what a squash merge does to it.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:documentation",
         "topic:code-review",
@@ -333,6 +333,19 @@
         "audience:public"
       ],
       "source": "./agent-packages/final-review"
+    },
+    {
+      "name": "problem-report-authoring",
+      "description": "Structure and content rules for problem reports: bug reports in any tracker or on a mailing list, in someone else's project or your own, feature and change requests, and short problem messages to a colleague.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "topic:code-review",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/problem-report-authoring"
     },
     {
       "name": "codex-review",

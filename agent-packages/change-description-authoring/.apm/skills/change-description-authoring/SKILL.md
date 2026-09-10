@@ -19,6 +19,10 @@ mood, sentence length, punctuation, and dialect belong to `english-developer-sty
 and let it own the sentences. Subject length limits, prefix grammar, and trailer syntax belong to
 commitlint or the platform, not to a prompt.
 
+A report of a problem nobody has fixed yet is a different artifact with a different reader, and it is
+`problem-report-authoring`'s: an issue, a feature request, or a message to a colleague opens with the
+symptom, because its reader does not yet know what is broken. Do not write one in this shape.
+
 A change description is three artifacts written at once: the commit message, the pull request
 description, and the changelog entry. They are read by five readers, at five different moments,
 holding five different things. The rules below name the reader every time, because the same
