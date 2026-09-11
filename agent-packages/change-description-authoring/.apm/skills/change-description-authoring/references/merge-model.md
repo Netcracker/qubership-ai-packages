@@ -70,8 +70,9 @@ log, with a full body and the issue number, and write the description as a commi
 `git log --first-parent` shows it as the commit for the whole change.
 ```
 
-Where the merge commit carries only the title, drop the clause about the description being a commit
-body and say that the description is never copied.
+Where the merge commit carries only the title, under GitHub's default message or "pull request
+title", drop the clause about the description being a commit body and say that the description is
+never copied.
 
 ## Squash for one commit, rebase for a tidy branch
 

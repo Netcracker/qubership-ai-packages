@@ -46,10 +46,11 @@ The test that follows from this, applied to every sentence: **name the reader an
 answers.** A sentence that answers none of the questions above belongs in another artifact, or
 nowhere.
 
-**The permanent record is the commit, not the pull request.** In a repository that merges with merge
-commits or rebases, the description never reaches `git log`; in a repository that squashes with the
-default setting, the body is the list of branch commit messages, not the description. Write the
-commit message as if the pull request did not exist, and let the description repeat it.
+**The permanent record is the commit, not the pull request.** In a repository that rebases, or
+merges with merge commits that carry only the title, the description never reaches `git log`; in a
+repository that squashes with the default setting, the body is the list of branch commit messages,
+not the description. Write the commit message as if the pull request did not exist, and let the
+description repeat it.
 
 ## 2. The slots
 
@@ -380,13 +381,17 @@ The merge model changes three things: which line becomes the subject of the perm
 becomes its body, and which of the branch commits survive as commits of their own. Detect it before
 applying anything in §5 or §6.
 
-Count the last forty subjects on the target branch by shape. Read the branch the pull request
+Count the last forty commits on the target branch by shape. Read the branch the pull request
 merges into, first-parent only, so that neither the branch's own unmerged commits nor the commits
-behind a merge commit enter the count:
+behind a merge commit enter the count. `<target>` is the remote-tracking ref of that branch:
+`origin/main` or `origin/master` for most pull requests, the release branch for a backport.
 
 ```bash
-git log -n 40 --first-parent origin/main --format='%s' | awk '/^Merge pull request #/ {m++; next} / \(#[0-9]+\)$/ {s++; next} {p++} END {printf "merge %d squash %d plain %d\n", m, s, p}'
+git log -n 40 --first-parent <target> --format='%P%x09%s' | awk -F'\t' '$1 ~ / / {m++; next} $2 ~ / \(#[0-9]+\)$/ {s++; next} {p++} END {printf "merge %d squash %d plain %d\n", m, s, p}'
 ```
+
+A commit with two parents is a merge whatever its subject says; the parent count is what tells a
+merge commit under GitHub's "pull request title" setting from a squash, since both end in `(#n)`.
 
 | Shapes in the count | Model |
 | --- | --- |
@@ -405,7 +410,7 @@ count; `references/merge-model.md` has the lines.
 | Squash, default message | For a single-commit pull request, that commit's subject; otherwise the title, number appended | That commit's body; otherwise the branch commit messages as a bulleted list | None, and every message lands as a bullet, `Fix lint` included |
 | Squash, "title and commit details" | The pull request title, number appended, for one commit or many | The branch commit messages as a bulleted list, one commit or many | None, and every message lands as a bullet, `Fix lint` included |
 | Squash, "title and description" | The pull request title, number appended | The description | None |
-| Merge commit | Each branch commit keeps its own; the merge commit carries the title | Each branch commit keeps its own; the description is never copied | Every one, behind a merge commit that a `--first-parent` reader sees instead |
+| Merge commit | Each branch commit keeps its own; the merge commit's subject is `Merge pull request #n from …` under the default message, with the title as its body, and the title with the number appended under "pull request title" and "pull request title and description" | Each branch commit keeps its own; the merge commit's body is the description under "pull request title and description" and nothing under "pull request title" | Every one, behind a merge commit that a `--first-parent` reader sees instead |
 | Rebase and merge | Each branch commit keeps its own; nothing is appended | Each branch commit keeps its own; the description is never copied | Every one, verbatim, as a separate commit that `git bisect` can stop on |
 
 GitHub's default squash setting is the first row, and GitHub lets a repository allow several
@@ -428,10 +433,12 @@ commits, and the closing issues. The merging maintainer can edit the message bef
    "title and description" it is the subject of every squash, under the default message it is the
    subject of a multi-commit squash, and under every other model it is the line the reviewer picks
    from a list. A prefix a release tool reads (rule 7) goes on the title for the same reason.
-5. Under "title and description", the description is the body: shape it as §2's commit body, keep
+5. Under a squash or a merge commit with "title and description", the description is the body of
+   the commit a `--first-parent` reader sees: shape it as §2's commit body, keep
    reviewer-only content out of it, and compress verification to one line naming what the tests
-   establish, with transcripts and checklists moved to comments. Under every other model the
-   description stays on the platform, and a template's checklist may stay in it.
+   establish, with transcripts and checklists moved to comments. Under every other setting the
+   description stays on the platform, and a template's checklist may stay in it. Which merge
+   commit setting a repository uses shows in the body of any merge commit in the count.
 6. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
    on any other target the keywords are ignored, so a backport carries the reference for humans.
 7. A release tool reads either the commits on the default branch (release-please, semantic-release:
@@ -461,9 +468,10 @@ fix(cache): re-add cacache.verify() to garbage collect orphaned content (#44987)
 
 That is all `git blame` will ever show. Under rebase and merge the same pull request lands as four
 commits, three of them `Fix lint` and `Apply suggestion from @reviewer`, and under merge commits
-the four sit behind a merge commit; in each case the description is never copied, so the commit
-messages carry problem, impact, and approach whether or not the description repeats them, because
-the description is reachable only while the platform is.
+the four sit behind a merge commit whose body is empty under GitHub's default message; in each
+case the description is never copied, so the commit messages carry problem, impact, and approach
+whether or not the description repeats them, because the description is reachable only while the
+platform is.
 
 **Default when detection fails**: write every branch commit as a full commit message, with the
 issue number in its body, and write the description so it can stand as a commit body. This is what
