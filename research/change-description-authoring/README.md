@@ -1,8 +1,9 @@
 # Change description authoring: research
 
-A four-step editorial pipeline that collects evidence for a repository-independent skill on **change descriptions**:
-the commit subject and body, the pull request title and description, and the changelog or release-note entry. This
-folder is the audit trail; the skill itself is written in a later session from the phase-3 synthesis.
+A three-step editorial pipeline, plus one addendum, that collects evidence for a repository-independent skill on
+**change descriptions**: the commit subject and body, the pull request title and description, and the changelog or
+release-note entry. This folder is the audit trail; the skill itself is written in a later session from the phase-3
+synthesis.
 
 The pipeline reuses the method of [`english-developer-style`](../english-developer-style/) and
 [`docs-page-authoring`](../docs-page-authoring/). What is different here is the unit of evaluation. The question is not
@@ -29,6 +30,7 @@ structural ones.
 | Phase 1: shortlist | `phase1_prompt.md`, `phase1_result.md` | Deep-research prompt seeded with project guides (kernel, git, PostgreSQL, OpenStack, Google, Kubernetes, Rust, Go, Mozilla), essays, formats (Conventional Commits, Keep a Changelog), platform behavior, and the empirical literature. Output: reader table, candidate inventory, shortlist. |
 | Phase 2: deep evaluation | `phase2_prompt.md`, `phase2_result.md` | Per source: what it prescribes per reader, what it prescribes that no reader needs, where sources contradict and which reader decides, and the false-positive risk outside the home workflow. |
 | Phase 3: synthesis | `phase3_prompt.md`, `phase3_result.md` | Synthesis document, not a skill: reader table, slots per artifact, trailer and identifier rules, squash-merge rules, the changelog as the on-call artifact, anti-patterns with the reader each fails. Every rule carries its sources. |
+| Phase 4: merge-model addendum | `phase4_merge_model.md` | Written on 2026-09-11 when SKILL.md section 4 grew rebase and merge, merge commits, and the first-parent classifier: the GitHub and GitLab mechanics with their pages, each claim marked cited, derived, or asserted, and the classifier runs. |
 
 Phases 1 and 2 were executed as manual deep-research sessions on 2026-09-02; the prompts here are what was pasted in,
 and the result files are what came back, unedited. Phase 3 was run by the coding agent over the phase-2 result. Before
@@ -42,6 +44,7 @@ the synthesis, marked *corrected* where they appear and listed in its section 10
 phase1_prompt.md, phase1_result.md     shortlist of sources, reader table
 phase2_prompt.md, phase2_result.md     deep evaluation, contradictions, transfer risk
 phase3_prompt.md, phase3_result.md     synthesis: candidate rule set with sources, and a test on real changes
+phase4_merge_model.md                  addendum: rebase and merge, merge commits, the first-parent classifier
 ```
 
 The phase prompts use one H1 and H2 sections; the result files are pasted unedited and are excluded from markdownlint
@@ -72,7 +75,8 @@ by `FILTER_REGEX_EXCLUDE` in `.github/super-linter.env`, as the other research d
 
 ## Status
 
-All three phases complete. The synthesis in `phase3_result.md` was the input for the skill, which lives in the APM
-package [`change-description-authoring`](../../agent-packages/change-description-authoring/) and is kept canonical
-there, not duplicated here. The research files in this folder are frozen as the audit trail. The prose of the synthesis
-runs to about 4,700 words, plus tables.
+Phases 1 to 3 are complete and frozen as the audit trail. The synthesis in `phase3_result.md` was the input for the
+skill, which lives in the APM package
+[`change-description-authoring`](../../agent-packages/change-description-authoring/) and is kept canonical there, not
+duplicated here; `phase4_merge_model.md` extends section 4 of the synthesis and carries its own sources. The prose of
+the synthesis runs to about 4,700 words, plus tables.
