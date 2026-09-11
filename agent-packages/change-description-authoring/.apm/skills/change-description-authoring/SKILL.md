@@ -153,9 +153,12 @@ Five slots, in order; the last two are conditional.
 | --- | --- | --- | --- | --- |
 | 1 | **Why** | R1; R2 and R3 where the description becomes the commit body | The problem, the symptom, the condition that reaches it | *R1 asks: is there a problem worth fixing?* |
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
-| 3 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed | *R1 asks: what would fail if this were wrong?* |
+| 3 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
 | 4 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
 | 5 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
+
+The Why slot has no skip condition. A fix, a feature, and a refactor each replace a version that
+worked for someone, and the reviewer's first question is why that version should change.
 
 Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open; where
 the merge model copies the description into the commit, they *are* the commit body (§4). Slot 3
@@ -208,6 +211,14 @@ The heading names are house style. `Why`, `What`, `How to verify`, and `Scope` i
 matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
 template, use its headings and fill them with the slots' content.
 
+Where the repository has no template, headings are the exception, not the default. A description of
+up to four paragraphs, each plainly answering one slot's question, is prose without headings, and
+that is the shape most changes take. A check that a claim about the code was made can sit in the
+sentence that makes the claim (`the tests under pgjdbc/src/test are all JUnit 5; git grep finds no
+org.junit.Test there`) and needs no section of its own. Use headings where the description carries
+a fenced command or output, names several tests, or describes a related or stacked pull request.
+Under §4 rule 5 the description is the commit body and takes the body's shape instead.
+
 #### What each paragraph must earn
 
 **A reviewer decides, and does not re-investigate.** Carry what changes that decision: what was
@@ -226,6 +237,14 @@ paragraph with no concrete decision. This is sharper than whether the reader nee
 because almost any true fact can be argued to be needed. *Whether `n <= 0` is the right condition*
 is a decision; *whether `Long.MIN_VALUE` needs handling of its own* is one; *that a sibling pull
 request touches the same class* usually is. Six assertion messages and a parameter matrix are not.
+
+**Length is the signal to run that question again.** Past about 400 words, or a slot past about
+120, re-read the description paragraph by paragraph under the decision question before posting it;
+a fix in one class rarely needs more (measured: a fix in one class was described in 807 words, its
+maintainer called it verbose, and 420 kept every fact a reviewer decides on). The usual surplus is
+the route in the Why slot, the construction of the tests, a passing run narrated, a neighbor that
+has landed, a documentation section copied in, and a derivation whose conclusion is one sentence and
+whose table is a collapsed block.
 
 **State each causal link once.** The Why slot carries the symptom, the condition that makes it
 reachable, and the decision that was wrong. The What slot carries the new behavioral boundary. The
@@ -246,7 +265,9 @@ needs it to understand or challenge the decision.
 **In the What slot, name the behavioral change, not the artifacts that carry it.** `Javadoc records
 the rule` and `changelog entry added` are changed files the diff already shows. A doc comment earns
 a line only where the contract it states is itself under review, and even then do not quote its
-wording, which is the part most likely to change before merge.
+wording, which is the part most likely to change before merge. A documentation section the change
+adds or rewrites is summarized in a sentence and linked; its configuration table or list of setups
+is reviewed in the diff, not copied into the description.
 
 **Keep a specific value where the decision depends on that value.** A threshold, a version, an
 identifier, or a magnitude stays when changing it would change the behavioral conclusion, the
@@ -275,11 +296,14 @@ read position after a refused skip, the minimum signed value, and zero as the bo
 three paragraphs of parameter sets and assertion output. A measured result earns a sentence where it
 shows test discrimination, the intended boundary, or another property the test names do not: `revert
 the guard and six of the seven fail, while zero still passes because it pins the boundary` does; `17
-of 23 tests fail without the change` does not.
+of 23 tests fail without the change` does not, and neither does `8184 tests pass` or an unrelated
+failure explained away.
 
 **Say which tests are new where that changes the coverage question.** Mark it once, as *two new
 tests* or a `New tests:` label above them, and say nothing further about the ones that did not
-change. The marking stays while the change is under review and may go on a settled diff.
+change. The marking stays while the change is under review and may go on a settled diff. A test
+removed or narrowed earns one sentence naming the coverage lost and the reason; the matrix, the
+payload, or the offsets that replaced it are the test file's.
 
 **What a test establishes is a property, not the construction that reaches it.** Fixture shape,
 parameter sets, and the harness belong to the tests unless one of them is itself under review: an
@@ -293,6 +317,13 @@ or a documented contract already carries, delete the demonstration and name the 
 Keep the demonstration where the reviewer needs it *before* judging that artifact: four lines of the
 old code that make the bug obvious earn their space; six lines of output proving the new tests fail
 without the fix do not.
+
+**A change with no tests still fills the slot.** A claim about the code that neither a hunk in the
+diff nor a named test establishes names how it was checked: the command that checks it, or the file
+that carries the fact. A docs-only or configuration change is made of such claims
+(*every test under this directory is JUnit 5*, *the module rejects JUnit 4 on its test classpath*),
+and a reviewer who is not told how they were checked takes them on trust or repeats the search.
+*Documentation only* names the kind of change, not what was checked.
 
 **Do not narrate an obvious command.** Give the command and one sentence on what success, or an
 intentional failure, establishes. Where the command names `RetryPolicyTest` and `RetryFailureTest`,
@@ -508,6 +539,39 @@ consumer decides whether it is worth writing.
   as the code spells it. Future readers search the history by these strings. A private helper is
   named only where its name is what the reader will grep for.
 - The issue identifier, beside the one-line why, never instead of it (§2).
+- A section of a document in the repository, with its heading text at the first mention:
+  `TESTING.md §4 Running the test suite` where the headings are numbered, or `the "Running the test
+  suite" section of TESTING.md`; later mentions may say `§4` or `that section`. The number changes
+  with the next inserted section and the description outlives it; the heading text is what the
+  reader searches the file for. A published specification is cited by its own number, `RFC 9110
+  §15.5.1`, `JLS §5.1.2`: the numbering is frozen with the document, and the number is what its
+  readers search for.
+- A link, in a pull request or issue description, to what the diff does not show. The diff shows
+  changed lines as source, so a link is owed at the first mention of the rendered section a docs
+  change edits, of code outside the diff, of a specification, of another project's documentation,
+  and of a pull request or issue by number. Not of text inside the diff: the reviewer has it open.
+  A specification links by its own anchor (`https://www.rfc-editor.org/rfc/rfc9110#section-15.5.1`,
+  the JLS or PostgreSQL page with the release in its path). A file in the repository links by a
+  permalink at the merge-base commit, `https://github.com/<owner>/<repo>/blob/<sha>/<path>`, with
+  `#L<from>-L<to>` for code and the heading anchor for rendered Markdown (the heading lowercased,
+  punctuation other than hyphens dropped, spaces turned into hyphens: `## 5 - Extending the test
+  suite with new tests` is `#5---extending-the-test-suite-with-new-tests`). `<owner>/<repo>` is the
+  repository the file lives in, and `<sha>` a commit that repository has: for the repository the
+  pull request targets, `git merge-base` with its branch, never the head of the pull request, which
+  a force-push replaces; for another repository, the tag or commit whose code the sentence is
+  about. Code in another repository is always a full permalink, never a bare path. The link text
+  is the citation itself (`TESTING.md §5 Extending the test suite with new tests`,
+  `V3ReplicationProtocol.configureSocketTimeout`), never `here`; one link per identifier, at its
+  first mention. Code in a JDK or another project is named with its version and linked only where
+  the URL was opened, and no link is written whose URL was neither built from one of these
+  patterns nor opened (`english-developer-style` §7).
+- In a commit body, or in a description that a squash of "title and description" copies into one
+  (§4 rule 5), code of this repository is named by path and identifier and carries no URL: the
+  reader has `git show` and `git blame`. A specification, another project's documentation, or
+  code in another repository keeps its full URL, moved out of the sentence into a `Link:` trailer,
+  one per line, or into a `[1]` footnote above the trailers where the project writes them; the
+  citation text stays in the sentence. Each footnote is referenced once in the body and each
+  reference has its footnote.
 - Identical messages across branches when back-patching, where tooling groups them; where the
   branches diverge in behavior, one branch-specific line beats a misdescription.
 
@@ -538,7 +602,8 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 - No changelog entry for maintenance noise: dotfiles, development-only dependencies, formatting,
   CI. Where the tooling demands a line, `NONE` is the line.
 - No section for an absent concern. A description with no breaking change, no follow-up, and no
-  rejected alternative has no such sections; an empty heading is not a gap to fill.
+  rejected alternative has no such sections; an empty heading is not a gap to fill. Verification
+  is not absent in a change with no tests: its claims about the code are checked in the slot (§2).
 - No verification narrative in the commit body (§4).
 - No paraphrase of the diff. A body whose sentences map one to one onto hunks adds no rationale;
   R2 has the diff.
@@ -582,12 +647,19 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 - Problem: does the body open with what was wrong, before the fix (§2)?
 - Symptom: is the diagnostic quoted as a literal, with the trigger condition, or is its absence
   stated (§2, §3)?
-- Why: is there a sentence of reason beside the issue link, not only the link (§2)?
+- Why: is the slot present, and is there a sentence of reason beside the issue link, not only the
+  link (§2)?
 - Approach: is the alternative a reviewer would propose answered with a mechanism or a number (§2)?
-- Verification: does the description say what the tests establish and which are new, and is none of
-  it in the commit body (§2, §4)? Does any sentence narrate an obvious command or transcribe
-  assertions?
+- Verification: does the description say what the tests establish, which are new, and which were
+  removed or narrowed and what coverage went, and is none of it in the commit body (§2, §4)? Does
+  any sentence narrate an obvious command or transcribe assertions? In a change with no tests, does
+  each claim about the code name the command or the file that checks it?
+- Headings: absent unless the description carries a fenced command or output, several named tests,
+  or a stacked change, and absent from a description that §4 rule 5 makes a commit body (§2)?
 - Decision: for every paragraph, which review decision becomes harder without it (§2)?
+- Length: past about 400 words, or a slot past about 120, was every paragraph re-read under the
+  decision question, and is no route in the Why slot, test construction, passing run, landed
+  neighbor, copied documentation section, or uncollapsed derivation left (§2)?
 - Alternatives: is an approach a reviewer would propose answered in one sentence, and a tried one in
   a collapsed block with a mechanism or a measurement (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
@@ -601,7 +673,12 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 - Trailers: each one has a consumer in this repository, and the closing keyword targets the default
   branch (§5)?
 - Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
-  placeholder (`english-developer-style` §7)?
+  placeholder (`english-developer-style` §7)? Does the first mention of a section of a repository
+  document carry its heading text (§5)? Links: does each first mention of a rendered section, code
+  outside the diff, a specification, or another project's documentation carry a link built from a
+  known pattern at the merge-base commit, never the head, none to text inside the diff, and in a
+  commit body or under §4 rule 5 none to this repository's code and the external ones only as a
+  `Link:` trailer or a footnote (§5)?
 - House style: prefix, limit, sign-off applied only where the workflow consumes them (§6)?
 - Nothing: no entry for noise, no empty section, no diff paraphrase, no predicted merge difficulty
   (§7)?

@@ -165,7 +165,7 @@ marketplace:
     - name: change-description-authoring
       description: "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what the merge model does to it."
       source: ./agent-packages/change-description-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: docs-page-authoring
