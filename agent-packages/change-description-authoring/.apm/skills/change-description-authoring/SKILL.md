@@ -46,10 +46,11 @@ The test that follows from this, applied to every sentence: **name the reader an
 answers.** A sentence that answers none of the questions above belongs in another artifact, or
 nowhere.
 
-**The permanent record is the commit, not the pull request.** In a repository that merges with merge
-commits, the description never reaches `git log`; in a repository that squashes with the default
-setting, the body is the list of branch commit messages, not the description. Write the commit
-message as if the pull request did not exist, and let the description repeat it.
+**The permanent record is the commit, not the pull request.** In a repository that rebases, or
+merges with merge commits that carry only the title, the description never reaches `git log`; in a
+repository that squashes with the default setting, the body of a multi-commit squash is the list of
+branch commit messages, not the description. Write the commit message as if the pull request did
+not exist, and let the description repeat it.
 
 ## 2. The slots
 
@@ -130,10 +131,12 @@ without a signal file", slot 3 the fix and the rejected shortcut, slot 4 the tra
 
 ### Pull request title
 
-One slot: **a searchable, accurate summary**, which a squash merge turns into the commit subject and
-a merge commit carries as its second line. Reader R1, then R2. Test: *R1, reading a list of thirty
-open pull requests, asks which one this is.* Accuracy beats brevity here, because the title is read
-in a list and searched; the commit subject's limit belongs to the subject.
+One slot: **a searchable, accurate summary**. A squash merge turns it into the commit subject,
+except under GitHub's default message for a single-commit pull request; a merge commit carries it
+as its subject or its first body line, as the setting decides; a rebase and merge leaves it on the
+platform (§4). Reader R1, then R2. Test: *R1, reading a list of thirty open pull requests, asks
+which one this is.* Accuracy beats brevity here, because the title is read in a list and searched;
+the commit subject's limit belongs to the subject.
 
 The imperative form, the prefix, and the absent trailing period carry over from the commit subject;
 the length limit does not. A pull request title has about 100 characters, and below that ceiling
@@ -200,7 +203,7 @@ of this change.
 
 Reviewer-only content is not a slot. Checklists, screenshots, the template's own comments, and
 round-by-round history live in comments or in a collapsed block, and never in a description that a
-squash setting will copy into the commit body (§4).
+squash or merge-commit setting will copy into the commit body (§4).
 
 The heading names are house style. `Why`, `What`, `How to verify`, and `Scope` is one set that
 matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
@@ -375,37 +378,88 @@ the project versions its releases: the one that introduced the defect and the on
 
 ## 4. The merge model decides where the text ends up
 
-Detect it before applying anything in §5 or §6. Read the last twenty or so subjects and bodies from
-`git log --format='%s%n%b'`:
+The merge model changes three things: which line becomes the subject of the permanent commit, what
+becomes its body, and which of the branch commits survive as commits of their own. Detect it before
+applying anything in §5 or §6.
 
-| Signal in history | Model | Consequence |
-| --- | --- | --- |
-| Subjects end in `(#123)`, no `Merge pull request` lines | Squash merge | The title becomes the subject; the body is whatever the setting copies (below) |
-| `Merge pull request #123 from` lines | Merge commits | The description never reaches `git log`; only the branch commits do |
-| `Change-Id:` or `Reviewed-on:` trailers | Gerrit | One commit per change; the commit message is the review description |
-| `Signed-off-by:` chains with `Link: https://patch.msgid.link` or `lore.kernel.org` | Email patches | Text below `---` is stripped on apply; trailers are the routing layer |
+Count the last forty commits on the target branch by shape. Read the branch the pull request
+merges into, first-parent only, so that neither the branch's own unmerged commits nor the commits
+behind a merge commit enter the count. `<target>` is the remote-tracking ref of that branch:
+`origin/main` or `origin/master` for most pull requests, the release branch for a backport.
 
-For a squash repository, the platform setting decides what the body is. GitHub's default uses the
-commit title and message for a single-commit pull request, and the pull request title plus the list
-of commit messages for two or more; a repository can instead choose the title alone, the title and
-commit details, or the title and description. GitLab's default squash template is the title alone,
-and a project can compose the description, the first commit, all commits, and the closing issues.
-The merging maintainer can edit the message before merging on both.
+```bash
+git log -n 40 --first-parent '<target>' --format='%P%x09%s' | awk -F'\t' '$1 ~ / / {m++; next} $2 ~ / \(#[0-9]+\)$/ {s++; next} {p++} END {printf "merge %d squash %d plain %d\n", m, s, p}'
+```
 
-1. Write the title as the commit subject it will become.
-2. Under "title and description", the description is the body: shape it as §2's commit body, and
-   keep reviewer-only content out of it.
-3. Under the default or "commit details", the body is the list of branch commit messages, so the
-   durable why must be in the first branch commit, or the maintainer must edit at merge. Write the
-   first branch commit as a full commit body regardless of how good the description is.
-4. Compress verification to one line naming what the tests establish where the description will
-   become the body; move transcripts and checklists to comments.
-5. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
+A commit with two parents is a merge whatever its subject says; the parent count is what tells a
+merge commit under GitHub's "pull request title" setting from a squash, since both end in `(#n)`.
+
+| Shapes in the count | Model |
+| --- | --- |
+| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
+| `plain` only | Rebase and merge, or a repository pushed to directly; the shape is the same and the consequences are too. On GitLab, also a squash under the default template, which appends no number, and only a house rule tells that apart; without one, the default at the end of this section |
+| `squash` and `plain` both | Ambiguous: squash and rebase both allowed and chosen per pull request (below), or squash beside direct pushes; without a house rule, the default at the end of this section |
+| `merge` present | Merge commits are enabled; a `squash` or `plain` line beside them is another method also enabled, or a direct push |
+
+The shapes are evidence of what the maintainers did, not of what the repository setting allows: a
+maintainer can type `(#n)` into a rebased subject or strip it from a squash, and a direct push
+looks like a rebase. A `CONTRIBUTING.md` or `AGENTS.md` line that names the method wins over the
+count; `references/merge-model.md` has the lines.
+
+| Model | Subject of the permanent commit | Body of the permanent commit | Branch commits that survive |
+| --- | --- | --- | --- |
+| Squash, default message | For a single-commit pull request, that commit's subject, number appended; otherwise the title, number appended | That commit's body; otherwise the branch commit messages as a bulleted list | None, and every message lands as a bullet, `Fix lint` included |
+| Squash, "pull request title" | The pull request title, number appended | Nothing | None, and no message reaches `git log` |
+| Squash, "title and commit details" | The pull request title, number appended, for one commit or many | That commit's message for one commit; the branch commit messages as a bulleted list for several | None, and every message lands as a bullet, `Fix lint` included |
+| Squash, "title and description" | The pull request title, number appended | The description | None |
+| Merge commit | Each branch commit keeps its own; the merge commit's subject is `Merge pull request #n from …` under the default message, with the title as its body, and the title with the number appended under "pull request title" and "pull request title and description" | Each branch commit keeps its own; the merge commit's body is the description under "pull request title and description" and nothing under "pull request title" | Every one, behind a merge commit that a `--first-parent` reader sees instead |
+| Rebase and merge | Each branch commit keeps its own; nothing is appended | Each branch commit keeps its own; the description is never copied | Every one with changes, as a separate commit that `git bisect` can stop on; GitHub rewrites the SHA and the committer, keeps the message, and drops a commit that was empty |
+
+GitHub's default squash setting is the first row, and GitHub lets a repository allow several
+methods at once, with the merging maintainer choosing one per pull request. GitLab's default squash
+template is the title alone, and a project can compose the description, the first commit, all
+commits, and the closing issues. The merging maintainer can edit the message before merging on both.
+
+1. Every commit that will survive is a full commit message (§2). Under rebase and merge, and under
+   a merge commit, that is every commit on the branch; under the default squash and under "title
+   and commit details" it is the first, since the messages land as bullets; under "title and
+   description" it is none, and the description takes the role; under "pull request title" it is
+   none, and the title is all that lands.
+2. Under rebase and merge, and under merge commits, tidy the branch before review. A `Fix lint` or
+   `Apply suggestion` commit lands on the default branch as a commit of its own, so squash it into
+   the commit it corrects before the merge. Under the default squash the same commit lands as a
+   bullet in the body.
+3. Under rebase and merge, the platform appends nothing. Where an issue exists, put its number in
+   the commit body, as `Fixes #n` or in prose, or `git log` will never link the commit to its
+   discussion. The issue number is known before the pull request exists; the pull request number
+   reaches a commit only by amending after the pull request is opened, so the issue is the
+   reference to rely on. Without an issue the body carries the problem itself, and no reference is
+   invented for it.
+4. Write the title as the commit subject it may become: under "pull request title", "title and
+   commit details", and "title and description" it is the subject of every squash, under the
+   default message it is the subject of a multi-commit squash, under a merge commit it is the
+   subject or the first body line as the setting decides, and under rebase and merge it is the
+   line the reviewer picks from a list. A prefix a release tool reads (rule 7) goes on the title
+   for the same reason.
+5. Under a squash or a merge commit with "title and description", the description is the body of
+   the commit a `--first-parent` reader sees: shape it as §2's commit body, keep reviewer-only
+   content out of it, and compress verification to one line naming what the tests establish, with
+   transcripts and checklists moved to comments. Under every other setting the description stays
+   on the platform, and a template's checklist may stay in it. Which merge commit setting a
+   repository uses shows in the body of any merge commit in the count.
+6. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
    on any other target the keywords are ignored, so a backport carries the reference for humans.
-6. Where a release tool parses the squash subject (release-please, semantic-release), the title's
-   prefix is what it reads; the branch commits are invisible to it.
+7. A release tool reads either the commits on the default branch (release-please, semantic-release:
+   the squash subject, or under rebase and merge every commit) or the pull request titles and labels
+   (release-drafter, GitHub's generated release notes). Find out which tool the repository runs, and
+   put the prefix or the label where that tool reads it.
 
-What rule 3 prevents, from a squash under "title and commit details" of a pull request whose
+**Where squash and rebase are both allowed**, the maintainer picks one per pull request, and the
+author cannot tell in advance. Write for both: every commit self-standing with its number (rules 1
+to 3) and the title as a subject (rule 4). Rule 5 applies only if the squash setting turns out to
+be "title and description"; under the default it does not.
+
+What rule 1 prevents, from a squash under "title and commit details" of a pull request whose
 description ran to five paragraphs of mechanism and measurements:
 
 ```text
@@ -420,19 +474,23 @@ fix(cache): re-add cacache.verify() to garbage collect orphaned content (#44987)
 * Apply suggestion from @reviewer
 ```
 
-That is all `git blame` will ever show. The same happens under merge commits, where the description
-is never copied at all: the commit message carries problem, impact, and approach whether or not the
-description repeats them, because the description is reachable only while the platform is.
+That is all `git blame` will ever show. Under rebase and merge the same pull request lands as four
+commits, three of them `Fix lint` and `Apply suggestion from @reviewer`, and under merge commits
+the four sit behind a merge commit whose body, under GitHub's default message, is the title and
+nothing more; in each case the description is never copied, so the commit messages carry problem,
+impact, and approach whether or not the description repeats them, because the description is
+reachable only while the platform is.
 
-**Default when detection fails**: treat the repository as squashing with "title and description".
-Write the description so it can stand as a commit body and write the first branch commit the same
-way. This costs one paragraph of duplication when the repository turns out to merge, and loses
-nothing in every other case.
+**Default when detection fails**: write every branch commit as a full commit message, with the
+issue number in its body where an issue exists, and write the description so it can stand as a
+commit body. This is what the strictest rows above demand at once; it costs one paragraph of
+duplication when the repository turns out to merge or rebase, and loses nothing in every other
+case.
 
 **Verification does not belong in `git log`.** Email workflows strip it below `---`; pull request
 templates ask for it in the description; a squash setting can copy it into the body. R1's need is
 met in the pull request; R2's noise is kept out of the history. Where the description will become
-the body, rule 4 applies.
+the body, rule 5 applies.
 
 ## 5. Trailers and the identifiers a reader greps
 
@@ -546,8 +604,9 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   overlap and order (§2)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
-- Merge model: detected, and the first branch commit written as a full body where the squash setting
-  or a merge commit would otherwise leave `git log` with a title (§4)?
+- Merge model: read from the history; every commit that survives the merge written as a full body,
+  with the issue number where an issue exists; no `Fix lint` commit left to land on its own under
+  rebase and merge (§4)?
 - Trailers: each one has a consumer in this repository, and the closing keyword targets the default
   branch (§5)?
 - Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
