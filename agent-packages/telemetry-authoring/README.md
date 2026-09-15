@@ -6,17 +6,21 @@ call, a metric, or a span, and when a change adds a branch that fails, retries, 
 
 ## What it governs
 
-- The mode: whether the module is a library, whose host decides where output goes, or a service.
-- The signal: a record, an instrument, a span, the caller's channel, or nothing, chosen by a rule with five branches
-  that tests first whether an existing signal already carries the fact.
-- The record: one per unit of work, or one per state transition where the code owns no unit of work; the joining
-  identifier, the branch that produced a value, the names a reader can set, and which state it reports.
-- The instrument: the question it answers, the attempts counter beside a failure counter, bounded reasons and
-  labels, and thresholds that live in the alert.
-- The span: no span around an already-instrumented call, and events as log records correlated with the span.
+- The mode: whether the artifact is a library, whose host decides where output goes, or a service with its own entry
+  point.
+- The signal: a record, an instrument, a span, the caller's channel, or nothing, chosen by a procedure that first
+  tests whether an existing signal of the right kind already carries the fact.
+- The record: one completion record per unit of work, plus interval progress, state transitions, and gated
+  diagnostics; the joining identifier or trace context, the branch that produced a value, the names a reader can
+  set, and which state it reports.
+- The instrument: the question it answers, a failure rate computable from one label set, low-cardinality reasons
+  and bounded labels, and a threshold that lives in the alert while the code exports the raw measurement.
+- The span: one span per operation, status from the operation's final outcome, the exception recorded once at the
+  frame that handles it and correlated with the span, and new events as log records.
 - What a library may emit: it does not decide where its output goes, it returns an error instead of also logging
   it, and it carries the host's context across the concurrency it creates.
-- Severity: no ladder of its own; the repository's convention, checked against the neighboring calls.
+- Severity: the axis is who must act; the repository's convention owns the ladder, checked against the neighboring
+  calls.
 
 Every rule carries its detection, and the reference files name the linter rule id where one exists.
 

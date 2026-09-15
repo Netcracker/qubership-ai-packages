@@ -120,7 +120,7 @@ Each cell is *documented* (stated by a primary source) or *measured* (establishe
 | T5 | `slf4j-api` only; Micrometer `globalRegistry` no-ops until a registry joins — documented | OTel API module only; `prometheus/client_golang` default registry is the host's — documented | OTel API only; Prometheus default registry — documented | all three |
 | T6 | `MetricsTrackerFactory`-shaped hook, adapters in separate artifacts — documented (read from HikariCP source) | interface + host-supplied collector | same | JVM primarily |
 | T8 | no first-class channel: a deprecation is `@Deprecated` plus documentation | no channel; the compiler and `staticcheck` carry deprecation | `warnings.warn(..., DeprecationWarning, stacklevel=2)` — documented | Python (the channel), body (the distinction) |
-| T9 | Sonar S2139 — documented | `go-logr`, Google Go style, `%w` wrapping — documented | HOWTO: raise; Ruff TRY400/TRY401 — documented | all three |
+| T9 | Sonar S2139 — documented | `go-logr`, Google Go style, `%w` wrapping — documented | HOWTO: raise; no Ruff rule reports log-and-raise (TRY400/TRY401 check `error` vs `exception` and a duplicated exception object) — manual | JVM by tool, Go and Python by reading |
 | T27 | SLF4J `{}` placeholders; `KeyValuePair` — documented | `slog.LogAttrs`; `sloglint no-raw-keys`, `forbidden-keys` — documented | `extra=`; Ruff G001–G004, G101 — documented | all three |
 | T28 | JUL `{0}` → `MessageFormat` → locale grouping — **measured** in-house; javadoc documented | `fmt` is not locale-aware — documented | `,`/`_` are not locale-aware, only `'n'` is — documented | JVM only |
 | T31 | `isDebugEnabled` where the argument is expensive — documented | `Logger.Enabled`; arguments always evaluated — documented | `logger.isEnabledFor`; lazy `%` formatting — documented | all three |
@@ -224,7 +224,7 @@ Branch 2: the exception *is* the signal, and it is the caller's. **Raise it, and
 The exception's text owes what T23 and T24 require: the observed size, the configured limit, and the name of the
 property that sets the limit, spelled as the connection string spells it. **Emit nothing about:** a log call at the
 throw site, a counter in library mode, or a span. Detection here is fully mechanical — a log call and a throw on the
-same path is what Sonar S2139 and Ruff's TRY family report.
+same path is what Sonar S2139 reports; Ruff's TRY400/TRY401 do not report it, so in Python it is a manual check.
 
 ### 5.6 A background reconciler that has not converged for ten minutes, service mode
 
@@ -243,7 +243,7 @@ tick, and the ten-minute threshold itself, which belongs to the alert (T21).
 | The counter nobody reads | T16 | No alert, dashboard or stated question names it (T20, T34) |
 | The line that prints its inputs and not its branch | "the value is logged" | The clamped and unclamped cases produce the same text (T23); F1's first defect |
 | The WARN the reader cannot act on | "errors are logged" | The code continues normally after it; agents overuse WARN in 29.9% of repositories |
-| Log-and-rethrow | T16 and "errors are logged" at once | One condition, two records; Sonar S2139, Ruff TRY400/401 |
+| Log-and-rethrow | T16 and "errors are logged" at once | One condition, two records; Sonar S2139 (JVM only; Ruff TRY400/401 do not report log-and-raise) |
 | Vacuous compliance with a removal instruction | "debug logs were removed" | Named by the agent study itself: 100% compliance with "remove debug instrumentation" where no debug instrumentation was ever added |
 | The object with no string form as the identifier | T22 | LS4 malformed output; Chen and Jiang's *Nullable objects* and *Malformed output* anti-patterns |
 | The per-attempt line inside the retry loop | "the retry is observable" | T29; loop sites are the hardest bucket in every language in MultiLogBench |
@@ -343,7 +343,7 @@ dissolves once the two ownerships are separated.
 | Bucket | Rules | Source per cell |
 | --- | --- | --- |
 | **1 — diff alone** | T1, T3, T5–T8, T10–T30 (less the run-only halves), T33, T34, T36, T38–T40 | The artifact and the diff; the rule's own detection column |
-| **1 with a tool in at least one ecosystem** | T2 (Ruff LOG015), T4 (sloglint `no-global`, Ruff LOG002), T9 (Sonar S2139, Ruff TRY400/401), T27 (Ruff G001–G004/G101, sloglint `no-raw-keys`/`forbidden-keys`, `go vet` slog pass), T31 (`sloglint`, LS8 detectors), T35 (`sloglint context`, `contextcheck`), T37 (`contextcheck`) | Tool documentation, verified |
+| **1 with a tool in at least one ecosystem** | T2 (Ruff LOG015), T4 (sloglint `no-global`, Ruff LOG002), T9 (Sonar S2139; Ruff TRY400/401 do not report log-and-raise, so Python is manual), T27 (Ruff G001–G004/G101, sloglint `no-raw-keys`/`forbidden-keys`, `go vet` slog pass), T31 (`sloglint`, LS8 detectors), T35 (`sloglint context`, `contextcheck`), T37 (`contextcheck`) | Tool documentation, verified |
 | **2 — needs the work run** | T32 (the real label value set), plus the run-only halves of T13 (records per unit under concurrency), T29/T30 (steady-state rate under load), and the honesty of a level under a real failure | Micrometer's high-cardinality detector is runtime, not lint; AL-Bench shows the gap directly — the best tool's output fails to compile 20.1% of the time and reaches 21.32% cosine similarity to the oracle logs at runtime |
 | **3 — reported by a tool, with limits** | See below | — |
 | **4 — human judgment** | Whether, holding only the emitted text, a competent engineer would wait or intervene (behind T25) | No source offers an oracle |

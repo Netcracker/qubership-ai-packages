@@ -1,7 +1,7 @@
 # Editing the telemetry-authoring package
 
 Three of the rules in [`../test-authoring/AGENTS.md`](../test-authoring/AGENTS.md) apply here unchanged. A rule that
-moves in one place moves in every place that restates it: here, the section of `SKILL.md`, its item in the §10
+moves in one place moves in every place that restates it: here, the section of `SKILL.md`, its item in the review
 checklist, the ecosystem files under `references/` that give its detection, and the trigger paragraph in
 `.apm/instructions/`. A cross-reference names a section by its heading and never by an ordinal. A paragraph is rewrapped
 whole after an edit. The rules there about test frameworks and measured failure output do not apply. `make test` runs

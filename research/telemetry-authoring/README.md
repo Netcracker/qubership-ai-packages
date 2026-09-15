@@ -31,7 +31,8 @@ documentation a user-visible message owes belongs to `docs-page-authoring`.
 | Trial | `ab-pr2837.md` | The skill tried on the review that seeded the research, with and without the skill |
 
 All passes ran on Opus on 2026-09-12. The prompts are what the subagents were given, and the result files are what
-came back, unedited.
+came back, unedited, with one correction: `phase2_result.md` claimed that Ruff TRY400/TRY401 report log-and-raise,
+which they do not, and the four occurrences now say so.
 
 ## Findings
 
