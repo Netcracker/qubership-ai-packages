@@ -31,10 +31,13 @@ rule can be satisfied by a test worth nothing.
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
 - The failure report and its four parts, container, name, assertion, message, with what each carries and what it may
   not repeat; the assertion that prints the operands; the framework's operand order; parameterized case names;
-  grouped assertions; error semantics over message strings; what a failed wait reports.
+  grouped assertions; error semantics over message strings; what a failed wait reports; a positive and a negative
+  case of one rule as a pair that shares its setup and states what differs; when several cases in one check are one
+  test, decided by whether the harness stops at the first mismatch.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
-- Organization: values in the test body rather than in a fixture, where a new test goes, when a class splits.
+- Organization: the varying input and the expected value in the test body and the shared part in a helper beside it,
+  where a new test goes, in which shape, and when a class splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run, needs a tool's verdict, or a
   question for a human.
 
@@ -68,7 +71,7 @@ test itself.
 
 - `.apm/instructions/test-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and three worked examples.
+- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and four worked examples.
 - `.apm/skills/test-authoring/references/`: one file per role and library, grouped by ecosystem.
 
 The research behind the rules, with the sources and the evidence label of each, is in
