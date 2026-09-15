@@ -344,11 +344,13 @@ comment may repeat the rule the message states, and the message may not repeat t
   harness of the project's own. Where none of them says, establish it once, by breaking two cases on purpose and
   counting what the report names, or by reading the harness's source, and record the answer in the stack line in
   the same change, so that the next writer reads it there. Where the check stops at the first, the cases hide each
-  other, so split them along the dimension whose failures should be named; an improvement to the harness is a
-  follow-up the pull request names, not an issue this task files. Where the check reports every mismatch and names
-  each case without the file, the shared check is one runner test with named cases, and the pair rule above is
-  satisfied by the check's own report. A report that names a case by a line number inside a source the test embeds
-  names it only to a reader holding the file.
+  other, so split them along the dimension whose failures should be named, and propose the follow-up that removes
+  the limitation: a change to the harness where its source is in the repository, or an issue against the library
+  where it is not, checked against the library's tracker for an existing report. The pull request names the
+  follow-up; the task files nothing. Where the check reports every mismatch and names each case without the file,
+  the shared check is one runner test with named cases, and the pair rule above is satisfied by the check's own
+  report. A report that names a case by a line number inside a source the test embeds names it only to a reader
+  holding the file.
 
 ## 8. Determinism
 
