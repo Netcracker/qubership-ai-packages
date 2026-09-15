@@ -15,6 +15,10 @@ Do not stop at an audit-complete approval stage. Reuse decisions already made; a
 materially affect scope and continue independent work. An audit or validation request uses the same rules read-only and
 reports remedies without editing files, settings, or PRs.
 
+Separate mechanism requirements from owner policy. Required checks, review enforcement, and platform auto-merge make
+the mechanism work. Eligible managers, packages, update types, and accepted post-merge risk are owner choices. Show
+their exact behavior delta, then implement the owner's choice instead of converting a coverage gap into a prohibition.
+
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
 distinct: without settings access, prepare source changes and exact owner actions. Missing evidence is unconfirmed, not
@@ -31,10 +35,11 @@ to Renovate validation modes are separate work. Never request credentials in cha
 
 ## Repository requirements
 
-### Requirement 1. Every allowed update has sufficient CI coverage
+### Requirement 1. Every allowed update has an explicit coverage and risk decision
 
-**Target.** Required workflows cover applicable linters and build/tests. If tests already build or compile the project,
-a separate build workflow is unnecessary. Select the minimum sufficient workflows.
+**Target.** Map every update that the target policy would allow to its pre-merge checks and residual risk. The owner
+decides whether post-merge detection is acceptable or whether the update needs more CI or a manual exception. If tests
+already build or compile the project, a separate build workflow is unnecessary. Select the minimum useful workflows.
 
 **Inspect.** Read effective Renovate configuration, inherited presets, rule ordering, groups, and exceptions. Search
 open and recently closed repository issues for required CI gates, branch protection, workflow reliability, and Renovate
@@ -48,22 +53,23 @@ map:
 | --- | --- | --- | --- | --- | --- |
 | Manager/package/update | Grouped files | Lint/build/test | Static or executed | Name | Run/skip conditions |
 
-**Implement.** Select the necessary lint and build/test workflows. Keep multiple lint gates when required linters live
-in separate workflows. Add specialized checks only where the allowed updates require them, such as Helm validation.
+**Implement.** Identify the relevant lint and build/test workflows. Keep multiple lint gates when required linters live
+in separate workflows. Add specialized checks when the owner chooses pre-merge coverage for an update class, such as
+Helm validation.
 PR titles, labeling, approval, release automation, and bare Docker builds do not establish test coverage.
 Show the map and proposed changes. Resolve undecided coverage choices with the owner; use existing authorization to
-prepare the concrete diff. Narrow uncovered selectors or agree separate CI work. Preserve actor exclusions: if Renovate
-is excluded from a necessary test, that update is not covered.
+prepare the concrete diff. Preserve actor exclusions: if Renovate is excluded from a relevant test, record that gap.
 
-A GitHub Action update is covered when a required PR workflow executes it with materially equivalent inputs,
-permissions, and behavior. An action used only by release, schedule, or manual workflows needs a safe smoke or dry run;
-otherwise keep it manual with a narrow local exception. Never publish or mutate an external system merely to qualify an
-update for automerge.
+For a GitHub Action update, record whether the Renovate PR executes the changed action and whether PR inputs and
+permissions differ from its normal use. Actions used only by release, schedule, manual, or default-branch workflows may
+first run after merge. Explain the resulting failure-detection and recovery path. Let the owner choose among accepting
+that post-merge feedback loop, adding a safe smoke or dry run, or keeping the action manual with a narrow local
+exception. Never publish or mutate an external system merely to qualify an update for automerge.
 
-**Confirm.** Every allowed selector, including all grouped members, maps to required coverage. The shared Netcracker
-policy allows minor, patch, pin, digest, and pin-digest updates for every manager, including GitHub Actions, Maven,
-Docker, Go modules, and non-major vulnerability fixes. Major updates remain manual. If required CI does not cover part
-of this policy, add the narrowest repository-local `automerge: false` exception instead of weakening the shared preset.
+**Confirm.** Every allowed selector, including all grouped members, appears in the coverage map with its residual risk
+and the owner's decision. The shared Netcracker policy allows minor, patch, pin, digest, and pin-digest updates for
+every manager, including GitHub Actions, Maven, Docker, Go modules, and non-major vulnerability fixes. Major updates
+remain manual. A coverage gap is a policy delta to disclose, not an automatic reason to narrow the shared preset.
 
 ### Requirement 2. Required workflows always report meaningful gates
 
@@ -173,7 +179,7 @@ because required checks hold the merge.
 
 See [Renovate Approver](https://github.com/renovatebot/renovate-approve-bot).
 
-### Requirement 6. Renovate delegates only covered updates to platform auto-merge
+### Requirement 6. Renovate delegates the owner-selected updates to platform auto-merge
 
 **Target.** Recommend that Netcracker repositories opt in through
 `github>Netcracker/renovate-config:automerge`. The preset enables GitHub platform auto-merge for all non-major update
@@ -187,16 +193,18 @@ ordering, schedules, groups, manual exceptions, and `vulnerabilityAlerts` overri
 **Implement.** If the shared preset is absent, report that centralized automerge configuration is not used and recommend
 migration. Absence alone is not a repository defect. Show the exact user-visible delta before changing configuration:
 
-| Policy area | Current behavior | Shared preset behavior |
-| --- | --- | --- |
-| Managers, packages, update types, files | Automatic and manual scope | Automatic and manual delta |
-| Vulnerability updates | Effective update-type behavior and overrides | Non-major automatic; major manual |
-| Local rules | Existing exceptions and duplicate rules | Rules removed, retained, or added |
-| Other behavior | Groups, schedules, minimum release age, and other presets | Any change, or explicitly none |
+| Policy area | Current behavior | Shared preset behavior | Behavior change or risk |
+| --- | --- | --- | --- |
+| Managers, packages, update types, files | Automatic and manual scope | Automatic and manual scope | Newly automatic updates |
+| Validation and recovery | Pre-merge and post-merge checks | Checks that apply to the new scope | Detection timing and recovery path |
+| Vulnerability updates | Effective update-type behavior and overrides | Non-major automatic; major manual | Newly automatic fixes |
+| Local rules | Existing exceptions and duplicate rules | Rules removed, retained, or added | Preserved or removed exceptions |
+| Other behavior | Groups, schedules, minimum release age, and other presets | Changed or unchanged | Operational effect |
 
-Let the owner decide whether the difference is acceptable and whether to migrate. Do not widen an intentionally narrow
-scope without that decision. After migration is chosen, preserve the existing `extends` entries and add the shared
-preset:
+Let the owner decide whether the difference is acceptable and whether to migrate. An explicit request to adopt the
+shared preset or all non-major updates is that decision; proceed without asking again. Otherwise, do not widen an
+intentionally narrow scope until the owner chooses. After migration is chosen, preserve the existing `extends` entries
+and add the shared preset:
 
 ```json
 {
@@ -212,9 +220,10 @@ shared package rule, while major vulnerability fixes remain manual. Keep only re
 capability presets locally. Remove obsolete duplicate automerge rules and `autoApprove`. For repositories outside
 Netcracker, use an equivalent local rule only when the shared preset is unavailable.
 
-Prepare configuration with CI changes when useful, but activate only after gates and review work. If automerge is
-already active without adequate CI, report the exposure and, within authorized scope, close the gap or suspend the
-affected rule.
+Prepare configuration with CI changes when useful. Put the review and required-check protections in place before
+activation unless the owner explicitly accepts a different order. Coverage gaps do not veto the owner's selected
+automerge scope: record the affected updates, when failures would be detected, and how they would be recovered. If
+automerge is already active with an unreviewed gap, show the same choices and implement the owner's selected policy.
 
 **Confirm.** Run existing Renovate validation and policy tests; preserve standalone and installation-specific modes.
 Verify effective selectors rather than syntax alone. Confirm the real auto-merge request in requirement 7.
@@ -256,10 +265,10 @@ Keep missing scenarios explicit rather than treating them as passed.
 
 ## Application order
 
-1. Inspect the starting state, build requirement 1's coverage map, and check requirement 4's bypass inventory and
-   requirement 5's prerequisites early.
-2. Prepare requirement 2 workflow changes and requirement 6 covered configuration within the requested scope. Resolve
-   only missing choices.
+1. Inspect the starting state, build requirement 1's coverage and risk map, and check requirement 4's bypass inventory
+   and requirement 5's prerequisites early.
+2. Show requirement 6's exact policy delta, resolve only missing owner choices, and prepare the selected configuration
+   plus any requirement 2 workflow changes.
 3. Confirm gates on PR runs, then apply requirement 3 and requirement 4 protection. Activate requirement 5 and
    requirement 6 only after protection works.
 4. Verify requirement 7 in one repository before broader rollout. Recheck each repository's policy and CI; a sample
