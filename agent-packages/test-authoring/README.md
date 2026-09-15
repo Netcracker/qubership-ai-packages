@@ -33,7 +33,7 @@ rule can be satisfied by a test worth nothing.
   not repeat; the assertion that prints the operands; the framework's operand order; parameterized case names;
   grouped assertions; error semantics over message strings; what a failed wait reports; a positive and a negative
   case of one rule as a pair that shares its setup and states what differs; when several cases in one check are one
-  test, decided by whether the harness stops at the first mismatch.
+  test, decided by whether the check stops at the first mismatch, a property of the stack learned once and recorded.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part in a helper beside it,
