@@ -38,7 +38,9 @@ if got := ensureBytes(-1); got != 0 {
 `t.Run(name, func(t *testing.T) {…})` prints the name after a slash, with spaces turned into underscores:
 `TestEnsureBytes/negative_count_is_refused`. Name each table case by its condition, never by its ordinal
 (`case_3` is a location), and keep the names unique, since two identical names are disambiguated by a suffix. The
-message inside the loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it.
+message inside the loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it. A pair
+of cases (`SKILL.md` §7) is two rows of the table, or two `t.Run` calls on one helper that builds the setup from the
+varying input; `t.Error` in the loop body keeps the rows reporting independently.
 
 ## Keep going, or stop
 
