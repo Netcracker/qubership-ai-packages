@@ -24,6 +24,9 @@ user changes. Use current evidence and refresh it when relevant state changes. P
 distinct: without settings access, prepare source changes and exact owner actions. Missing evidence is unconfirmed, not
 failure.
 
+When an owner must inspect, confirm, or change a GitHub setting, include its exact UI navigation and a direct settings
+URL when known. Do not leave the owner with only an API field or command.
+
 For every shared Renovate preset, record its reference, observed repository SHA, and observation time. If Renovate logs
 show the exact resolved SHA for the audited run, record it separately. Otherwise call the repository SHA observed, not
 proof of the run's effective revision.
@@ -146,7 +149,10 @@ evidence; stored JSON alone does not prove enforcement.
 Human and unrelated bypass actors retain their effective scope and mode.
 
 **Inspect.** Identify all actors in repository/inherited rulesets and classic bypass lists, including repository roles,
-organization roles, teams, and integrations. Do not infer identity from an unexplained numeric ID.
+organization roles, teams, and integrations. GitHub represents the built-in Maintain role as `RepositoryRole` with
+`actor_id: 2`; treat it as an identified human bypass and preserve it. For another unexplained numeric ID, provide the
+owner with `Repository Settings > Rules > Rulesets > <ruleset> > Bypass list` and the direct
+`https://github.com/<owner>/<repo>/settings/rules/<ruleset-id>` URL, then ask them to identify the displayed actor.
 
 **Implement.** Remove bypass only after identifying its actor as a direct automerge participant. Preserve human roles,
 teams, and unrelated App bypasses through consolidation without narrowing or broadening scope or mode.
