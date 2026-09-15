@@ -331,26 +331,32 @@ comment may repeat the rule the message states, and the message may not repeat t
   may come from the setup. Write the setup once, in a helper beside the tests that takes the varying input as its
   argument, as the arguments of one parameterized test, or as subtests under one parent; write the input and the
   expected outcome as a literal in each case; and keep one name per case, in the runner's report or in the check's
-  own report where the harness names cases (the next rule), so that a case fails on its own. Two copies of the
-  setup state the difference nowhere: the reviewer finds it by comparing the bodies, a change to the setup touches
-  every copy, and a copy that drifts turns the negative case into a test of nothing. The reviewer reads the
-  differing input off one line of each case without comparing bodies, and checks that the cases reach the setup
+  own report where the harness names cases (the next rule), so that a case fails on its own. A setup of a line or
+  two is written in each case, as the worked example below repeats one deposit; the helper pays for itself once the
+  shared part is long enough for the differing line to hide in it. Two copies of a setup that long state the
+  difference nowhere: the reviewer finds it by comparing the bodies, a change to the setup touches every copy, and
+  a copy that drifts turns the negative case into a test of nothing. The reviewer reads the differing input off one
+  line of each case without comparing bodies, and checks that the cases reach a setup longer than a line or two
   through the same helper or table rather than through a copy.
 - **Several independent cases in one check are one test where the check stops at the first mismatch.** A check
   that verifies many independent expectations in one run (the markers in one compiled source, the rows of one table
   assertion, the files of one golden comparison) reports either every mismatch or only the first. Which one is a
-  property of the project's test stack, learned once and not per test: the reference file says it for a known
-  engine, the stack line of the repository's instructions (§0) or the harness's own documentation says it for a
-  harness of the project's own. Where none of them says, establish it once, by breaking two cases on purpose and
-  counting what the report names, or by reading the harness's source, and record the answer in the stack line in
-  the same change, so that the next writer reads it there. Where the check stops at the first, the cases hide each
-  other, so split them along the dimension whose failures should be named, and propose the follow-up that removes
-  the limitation: a change to the harness where its source is in the repository, or an issue against the library
-  where it is not, checked against the library's tracker for an existing report. The pull request names the
-  follow-up; the task files nothing. Where the check reports every mismatch and names each case without the file,
-  the shared check is one runner test with named cases, and the pair rule above is satisfied by the check's own
-  report. A report that names a case by a line number inside a source the test embeds names it only to a reader
-  holding the file.
+  property of that check, not of the engine (`assertAll` reports every failed assertion and a sequence of
+  `assertEquals` stops at the first, under one engine), learned once per check and not per test: the reference
+  file says it for a known library's checks, the stack line of the repository's instructions (§0) or the harness's
+  own documentation says it for a check of the project's own. Where none of them says, establish it once, by
+  breaking two cases on purpose and counting what the report names, or by reading the harness's source, and record
+  the answer in the stack line in the same change, so that the next writer reads it there. Two questions, answered
+  apart: does the report carry every mismatch, and does it name each case without the file? Where the check stops
+  at the first, the cases hide each other, so split them along the dimension whose failures should be named. Where
+  it carries every mismatch but names a case by a line number inside a source the test embeds, which only a reader
+  holding the file can place, give each case a label the report prints, or split. Where it carries every mismatch
+  under a name, the shared check is one runner test with named cases, and the pair rule above is satisfied by the
+  check's own report. Where a form the harness already offers reports the cases apart (a subtest, a parameterized
+  case, a grouped assertion), use it and propose nothing; only a limitation that no offered form removes earns a
+  follow-up, proposed and named in the pull request: a change to the harness where its source is in the
+  repository, or an issue against the library where it is not, checked against the library's tracker for an
+  existing report. The task files nothing.
 
 ## 8. Determinism
 
@@ -398,7 +404,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; whether a check stops at the first mismatch, where no reference or stack line records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or a citation |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; whether a check carries every mismatch and names each case, where no reference or stack line records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3 | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -436,13 +442,13 @@ Run this over a test you wrote or one you are reviewing.
 - Is there an act after an assert that starts an unrelated scenario (§7)?
 - Do two cases differ in one input with the outcome flipped, and do they share the setup through one helper or table,
   with the input and the outcome as literals per case, so that the difference is read without comparing bodies (§7)?
-- Where one check covers several independent cases, does a reference, the stack line, or a recorded run say whether
-  the check stops at the first mismatch, and where it stops, is the check split along the dimension whose failures
-  should be named (§7)?
+- Where one check covers several independent cases, does a reference, the stack line, a recorded run, or a cited
+  line of the harness say whether that check carries every mismatch and names each case, and where it does not, is
+  the check split or its cases labeled (§7)?
 - Any sleep, wall-clock read, unseeded random, real host, or unordered collection compared as a sequence (§8)?
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
 - Is the new test beside the existing tests of the same unit, and in the shape of its neighbors (§9)?
-- For each finding: which of the four buckets, and what run or tool settles it (§10)?
+- For each finding: which of the four buckets, and what run, tool, or citation settles it (§10)?
 
 ## 12. Worked examples
 

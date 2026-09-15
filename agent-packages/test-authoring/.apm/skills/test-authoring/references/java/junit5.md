@@ -38,9 +38,10 @@ which resolves to `junit.jupiter.params.displayname.default` and, where that is 
 
 With the case named, the message adds only what the name cannot carry.
 
-A pair of cases (`SKILL.md` §7) whose assertions have the same shape is one `@ParameterizedTest` with `Named`
-arguments; where the outcomes differ in kind, one throws and one returns, it is two methods that call one helper which
-builds the setup from the varying input.
+A pair of cases (`SKILL.md` §7) has two forms here, and the file's neighbors choose between them (§9): one
+`@ParameterizedTest` with `Named` arguments where the assertions have the same shape, or two methods that call one
+helper which builds the setup from the varying input, the only form where the outcomes differ in kind, one throwing
+and one returning.
 
 ## Order and flakiness
 
