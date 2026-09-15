@@ -93,9 +93,24 @@ job-level `if: ${{ always() && github.event_name == 'pull_request' }}` condition
 as `Gate (push)`: a successful push check with the same name and SHA does not replace a failed pull-request check.
 Introduce different names only after reproducing a ruleset decision that incorrectly accepts the push check.
 
-Require the detector to succeed. Require success for applicable jobs; allow skipped jobs only when unnecessary.
-Fail on failure, cancellation, missing/unexplained results, or an applicable job that skipped. The final gate reports
-success or failure even when its validation jobs skip.
+Keep the gate contract minimal: require the detector to succeed, require applicable validation jobs to succeed, and
+otherwise let the gate succeed. Compare required results with `success`; this rejects failure, cancellation, timeout,
+and unexpected skips without enumerating every terminal state. Do not require inapplicable jobs to have a specific
+result because their internal skip behavior is not part of the merge contract.
+
+For detector-controlled validation, fail closed with the smallest condition that expresses that contract:
+
+```yaml
+- name: Require validation when applicable
+  if: >-
+    needs.changes.result != 'success' ||
+    (needs.changes.outputs.run != 'false' && needs.validation.result != 'success')
+  run: exit 1
+```
+
+The `!= 'false'` comparison treats a missing or unknown detector output as requiring validation. The validation job then
+cannot be skipped without failing the gate. Extend the final parenthesized clause when the detector controls several
+validation jobs; do not add inverse checks that require each job to be `skipped` when validation is inapplicable.
 
 **Confirm.** Compare applicable and inapplicable PR changes: validation keeps its intended conditions and gates report
 in both cases. Read exact check names and producer integration IDs on the candidate SHA; reusable workflows may report
