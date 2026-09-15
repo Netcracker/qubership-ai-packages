@@ -10,8 +10,9 @@ updates. It applies per repository and verifies one pilot before a broader rollo
 
 1. Reads effective Renovate configuration, GitHub protection, App access, PR evidence, and existing CI behavior.
 2. Maps allowed updates to the minimum lint and build/test workflows and prepares changes within the requested scope.
-   For GitHub Actions, it distinguishes static checks from real execution and keeps release-only actions manual unless a
-   safe smoke or dry run covers them. It asks the owner only for unresolved choices that affect coverage or scope.
+   For GitHub Actions, it distinguishes static checks, execution in the Renovate PR, and the first execution after
+   merge. It shows the failure-detection and recovery tradeoff; the owner chooses whether to accept it, add a safe smoke
+   or dry run, or keep that update class manual.
 3. Makes each required workflow report on every PR. It moves `pull_request.paths` decisions into the workflow so
    inapplicable validation jobs can skip while the final gate succeeds.
 4. Evaluates the combined protection policy, recommends one strict ruleset, and shows a candidate consolidated policy.
@@ -41,6 +42,7 @@ through this command only after publication; editing the source package does not
 
 - GitHub access through an authenticated `gh` CLI, with authority to enable auto-merge and change protection rulesets.
   Without that authority, the skill prepares source changes and settings instructions for the owner.
-- Renovate, a compatible Renovate Approver installation, and real PR test/style coverage for eligible updates.
+- Renovate, a compatible Renovate Approver installation, and documented CI coverage and accepted residual risk for
+  eligible updates.
 - Authority to run the pilot's test PRs and change the target protection policy. Read-only audits report gaps without
   activation.
