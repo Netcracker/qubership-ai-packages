@@ -121,7 +121,10 @@ ruleset is the recommended end state because it makes the policy easier to inspe
 
 **Inspect.** Fetch full repository and inherited rulesets plus classic branch protection. Evaluate their combined
 effect; multiple rulesets alone are not a defect. List responses may omit rules and bypass actors; do not interpret
-omissions as empty settings. Save the previous state and compare every target field.
+omissions as empty settings. Save the previous state and compare every target field. Inspect effective `rebaseWhen`,
+`schedule`, `updateNotScheduled`, `automergeSchedule`, timezone, and the actual Renovate runner cadence. A Renovate
+schedule limits when work is allowed; it does not trigger a run, so never infer runner cadence from it. Record the
+owner-approved maximum convergence latency.
 
 ```sh
 gh api repos/<owner>/<repo>/rulesets
@@ -141,7 +144,8 @@ requirement 2. Identify owner action if inherited or classic policy prevents con
 through an ordinary reviewed PR.
 
 **Confirm.** Re-read effective protection and compare it with the saved state. Use requirement 7 for enforcement
-evidence; stored JSON alone does not prove enforcement.
+evidence; stored JSON alone does not prove enforcement. If runner cadence or the convergence target is unknown, mark
+operational readiness unconfirmed.
 
 ### Requirement 4. Preserve unrelated bypass; remove bypass for automerge participants
 
@@ -248,7 +252,9 @@ Prefer a fresh eligible PR opened by Renovate. Human imitations, old merged PRs,
 **Implement.** Observe without manually approving, merging, or bypassing protection. Do not widen scope to manufacture
 a pilot. Approver reacts to PR opening and qualifying dismissal of its own review. Installing it later, editing the
 body, or reopening an old PR alone does not prove approval will occur. Verify approval restoration after a Renovate
-update/rebase dismisses stale reviews.
+update/rebase dismisses stale reviews. After one eligible PR merges, observe another eligible PR that is behind the
+default branch. Record timestamps for the base merge, Renovate rebase, restored approval, and required checks on the
+new head SHA.
 
 For explicitly authorized negative test PRs, arrange the blocking condition before any auto-merge request. Satisfy other
 merge prerequisites to isolate the check: a red PR also lacking approval does not prove CI enforcement.
@@ -263,11 +269,12 @@ branch for a test. Missing authority blocks only the affected scenario.
 | Required checks pass | Platform merge, checks and approval on the exact SHA, corroborating timeline |
 | Required check fails or is absent | Other prerequisites satisfied; PR remains blocked by that check |
 | Ordinary PR without human approval | CI passes, no bot approval, review blocks merge |
-| Renovate updates the branch | Stale approval dismissed, valid approval restored, CI evaluated on the new SHA |
+| Renovate updates the branch | Next-run timestamps for rebase, fresh approval, and required checks on the new SHA meet the convergence target |
 
 Capture the auto-merge request before merge. A bot in `merged_by` or green checks alone cannot distinguish direct merge
 from platform auto-merge. If no eligible PR or event is available, report configured with runtime pending.
-Keep missing scenarios explicit rather than treating them as passed.
+Keep missing scenarios explicit rather than treating them as passed. If actual runner cadence or convergence latency
+is not confirmed, report operational readiness as unconfirmed.
 
 ## Application order
 
