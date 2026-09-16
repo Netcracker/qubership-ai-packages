@@ -73,14 +73,15 @@ length limit are house style (§6).
 
 ### Commit body
 
-Four slots, in this order. Verification is not one of them (§4).
+Five slots, in this order; the fourth is conditional. Verification is not one of them (§4).
 
 | # | Slot | Reader | Answers | Skip when |
 | --- | --- | --- | --- | --- |
 | 1 | **Problem** | R2, R1, R3 | What was wrong or missing, before any word about the fix? | Never |
 | 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no observable symptom, and the body says so in one clause |
 | 3 | **Change and approach** | R2, R1 | What was done; the constraint that forced it; the alternative a reader would propose and why not; the measured trade-off | The problem statement makes the approach obvious |
-| 4 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
+| 4 | **Outcome** | R3, R4 | For each outcome the change adds or alters that a caller can observe (a test's own assertion message is not one): what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them, one line each under the label `User-visible:`; a deliberate non-change a reader would expect, one line under `Not changed:` | The change alters nothing a caller observes and keeps nothing a reader would expect it to change |
+| 5 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
 
 Slot 1 opens the body. Convince the reader that there is a problem worth fixing before saying what
 you did about it. The cheapest shape is "Previously, when X happened, this caused Y, which resulted
@@ -95,6 +96,30 @@ Slot 3 justifies the way the change solves the problem: why the result with the 
 and which alternative was considered and discarded. A rejected alternative earns its sentence only
 where a reader would propose it, and a mechanism or a measurement makes it checkable where a
 preference does not. A performance claim carries its number and its cost.
+
+Slot 4 is where the pull request's "User-visible changes" slot and the changelog entry take their
+outcomes from, so it is written to be lifted, not summarized. A caller is whoever uses what the
+change ships: the code that calls a library, the client of a service, the user of a command. The
+slot is a paragraph that opens with `User-visible:` and holds one line per outcome, followed by any
+`Not changed:` lines; a commit that only keeps an outcome has the `Not changed:` lines alone. Each
+line names what the caller observes and the condition under which they get it. An outcome that
+emits a diagnostic also carries the text as emitted and its identifier: the SQLState, the HTTP
+status, the exit code, or the exception class. A return value, a timing, a side effect, or a
+protocol exchange often has no such text, and its line gives the value or the behavior itself:
+
+```text
+User-visible:
+When every connection is in use, Pool.acquire() waits up to acquireTimeout instead of failing at once.
+```
+
+The symptom a fix removes is slot 2's and is not repeated here.
+
+A commit that deliberately leaves an outcome alone that a reader would expect it to change (a
+message type left unbounded, a SQLState kept where a sibling's changed) states that in one line
+under `Not changed:`. Both labels are plain text, not trailers, and sit after slot 3 and before the
+trailers. A fact in slot 4 is not also buried in slot 3's prose, where a later reader summarizing
+the body will drop it (measured: eleven drafts of one description dropped every SQLState that sat
+inside a slot 3 paragraph, and kept the ones the changelog listed on their own line).
 
 **The one-line why is not replaced by the issue link.** Links rot, trackers move, and a good share
 of
@@ -132,8 +157,9 @@ Backpatch-through: 14
 ```
 
 Slot 1 is the first paragraph, slot 2 the literal `TRAP:` line and the condition "from a backup
-without a signal file", slot 3 the fix and the rejected shortcut, slot 4 the trailers. R3 greps the
-`TRAP:` line; R5 reads `Backpatch-through:`; R2 gets the why without opening a tracker.
+without a signal file", slot 3 the fix and the rejected shortcut, slot 5 the trailers. Slot 4 is
+absent: the one outcome that changes is the assertion failure slot 2 quotes, which no longer
+happens. R3 greps the `TRAP:` line; R5 reads `Backpatch-through:`; R2 gets the why without opening a tracker.
 
 ### Pull request title
 
@@ -154,27 +180,47 @@ platform may append or strip the number (§4).
 
 ### Pull request description
 
-Five slots, in order; the last two are conditional.
+Six slots, in order; the last three are conditional.
 
 | # | Slot | Reader | Answers | Test |
 | --- | --- | --- | --- | --- |
 | 1 | **Why** | R1; R2 and R3 where the description becomes the commit body | The problem, the symptom, the condition that reaches it | *R1 asks: is there a problem worth fixing?* |
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
-| 3 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
-| 4 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
-| 5 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
+| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
+| 4 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
+| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
+| 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
 
 The Why slot has no skip condition. A fix, a feature, and a refactor each replace a version that
 worked for someone, and the reviewer's first question is why that version should change.
 
-Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open; where
-the merge model copies the description into the commit, they *are* the commit body (§4). Slot 3
+Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open, and
+slot 3 is the body's slot 4; where the merge model copies the description into the commit, they
+*are* the commit body, and slot 3 is written there as `User-visible:` and `Not changed:` lines (§4).
+Slot 4
 serves the reviewer and no one else: name what the tests establish and which are new, and do not
-transcribe assertions. Slot 4 answers the two questions a reviewer finds hardest to settle from the
+transcribe assertions. Slot 5 answers the two questions a reviewer finds hardest to settle from the
 diff alone, whether this breaks something elsewhere and whether other places need the same change;
 a sentence in it is falsifiable when it names a number or a path, and "a follow-up will handle that"
-is not. Slot 5 is project-specific: Kubernetes reads a fenced `release-note` block from its
+is not. Slot 6 is project-specific: Kubernetes reads a fenced `release-note` block from its
 template, Prometheus a `release-notes` block.
+
+Slot 3 carries what the changelog entry's symptom and compatibility parts carry, written where the
+reviewer and the on-call reader look before release notes exist. It is present whenever the change
+adds or alters an outcome a caller can observe: a new error text, a changed SQLState or status code,
+a value that is now refused, a different return value, a behavior that worked before and now fails.
+A new error is an outcome even where nothing that worked before breaks; the slot is not a list of
+breaks only.
+
+Its lines are data, not prose: one line per distinct outcome, with what the caller observes and the
+condition, and, for an outcome that emits a diagnostic, the text quoted as emitted and its error code
+or exception class. Breaks come first and add the version the old behavior had and the action the
+reader takes, such as the property to raise. Under rebase and merge the lines are taken from the
+commits' `User-visible:` and `Not changed:` lines, deduplicated: one line per distinct outcome however
+many commits produce it, so eleven commits yield the eight or ten outcomes they share, not forty
+lines. A line is carried over as written, not summarized; a commit whose outcome lines are missing
+is the place to fix, not the description. A change that alters nothing a caller observes has no
+slot 3 and does not write an empty one. A fact stated in slot 3 is not restated in slot 2.
 
 *Before:*
 
@@ -214,8 +260,8 @@ Reviewer-only content is not a slot. Checklists, screenshots, the template's own
 round-by-round history live in comments or in a collapsed block, and never in a description that a
 squash or merge-commit setting will copy into the commit body (§4).
 
-The heading names are house style. `Why`, `What`, `How to verify`, and `Scope` is one set that
-matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
+The heading names are house style. `Why`, `What`, `User-visible changes`, `How to verify`, and
+`Scope` is one set that matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
 template, use its headings and fill them with the slots' content.
 
 Where the repository has no template, headings are the exception, not the default. A description of
@@ -254,6 +300,12 @@ maintainer called it verbose, and 420 kept every fact a reviewer decides on). Th
 the route in the Why slot, the construction of the tests, a passing run narrated, a neighbor that
 has landed, a documentation section copied in, and a derivation whose conclusion is one sentence and
 whose table is a collapsed block.
+
+The count is of prose: the sentences in Why, What, Verification, and Scope. Outcome lines in slot
+3, lines that carry a literal, compatibility bullets with the old and the new behavior, and quoted
+commands are data and are outside the count; cutting one loses a fact one to one and is never
+how a description gets shorter. Where the prose is over the signal, the surplus is in the mechanics
+the diff shows, the test construction, and the route to a conclusion, not in the outcome lines.
 
 **State each causal link once.** The Why slot carries the symptom, the condition that makes it
 reachable, and the decision that was wrong. The What slot carries the new behavioral boundary. The
@@ -308,6 +360,22 @@ the guard and six of the seven fail, while zero still passes because it pins the
 of 23 tests fail without the change` does not, and neither does `8184 tests pass` or an unrelated
 failure explained away.
 
+**Name a test only where the description makes a claim that only that test carries.** Four claims
+qualify:
+
+- that a test fails without the change (the regression test for the reported symptom);
+- that a test guards a future change (a test that fails when a constant is added without being
+  classified);
+- that a test has a precondition the reviewer must know (a server, a JVM flag, a CI matrix axis);
+- that a test was removed or narrowed, with the coverage lost.
+
+Every other test is covered by one sentence stating the property the tests establish, with no class
+name: `each limit is taken at its boundary and one byte past it, in both hardening modes` covers nine
+classes, and the diff lists them. A list of test classes followed by one clause about all of them is
+the shape to avoid twice over: the list is the diff read aloud, and the clause is false for the
+first class in the list that differs (measured: two of three drafts on one branch said `all drive a
+scripted socket` over a list that included three tests that need a server).
+
 **Say which tests are new where that changes the coverage question.** Mark it once, as *two new
 tests* or a `New tests:` label above them, and say nothing further about the ones that did not
 change. The marking stays while the change is under review and may go on a settled diff. A test
@@ -318,8 +386,8 @@ payload, or the offsets that replaced it are the test file's.
 parameter sets, and the harness belong to the tests unless one of them is itself under review: an
 integration path chosen to prove that the real caller sees a checked exception is a property; the
 buffer state that makes a branch reachable is construction, and its reason has usually been given in
-the Why slot already. Name the test or the class either way, so a reviewer who wants the
-construction has somewhere to go.
+the Why slot already. The class names are in the diff; the description names one only under the
+rule above.
 
 **Follow-the-link test.** Where a paragraph only demonstrates a fact that a named test, a diff hunk,
 or a documented contract already carries, delete the demonstration and name the artifact instead.
@@ -548,6 +616,9 @@ templates ask for it in the description; a squash setting can copy it into the b
 met in the pull request; R2's noise is kept out of the history. Where the description will become
 the body, rule 5 applies.
 
+Where every commit says `See #n` and none says `Fixes #n`, the description says in one sentence why
+the issue stays open; the trailer choice was a decision and the reader should not have to infer it.
+
 ## 5. Trailers and the identifiers a reader greps
 
 Trailers are a block of `Key: value` lines at the end of the message, after a blank line, with no
@@ -697,13 +768,22 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   removed or narrowed and what coverage went, and is none of it in the commit body (§2, §4)? Does
   any sentence narrate an obvious command or transcribe assertions? In a change with no tests, does
   each claim about the code name the command or the file that checks it?
+- Caller: where the change adds or alters an outcome a caller can observe, does the description
+  carry one line per distinct outcome under "User-visible changes", breaks first, and does each
+  commit that adds one carry it under `User-visible:` (§2)? Does a line carry the exact text and its
+  error code or exception class only where the outcome emits them? Is a deliberate non-change a
+  reader would expect stated under `Not changed:`?
+- Tests named: is every test class the description names there for one of the four claims (fails without
+  the change, guards a future change, needs a precondition, removed or narrowed), and is no list of tests
+  characterized by one clause (§2)?
 - Headings: absent unless the description carries a fenced command or output, several named tests,
   or a related or stacked change, and absent from a description that §4 rule 5 makes a commit body
   (§2)?
 - Decision: for every paragraph, which review decision becomes harder without it (§2)?
-- Length: past about 400 words, or a slot past about 120, was every paragraph re-read under the
-  decision question, and is no route in the Why slot, test construction, passing run, landed
-  neighbor, copied documentation section, or uncollapsed derivation left (§2)?
+- Length: past about 400 words of prose, or a slot past about 120, was every paragraph re-read
+  under the decision question, and is no route in the Why slot, test construction, passing run,
+  landed neighbor, copied documentation section, or uncollapsed derivation left (§2)? Were the
+  outcome lines and other data lines left out of the count, and left in the description?
 - Alternatives: is an approach a reviewer would propose answered in one sentence, and a tried one in
   a collapsed block with a mechanism or a measurement (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
@@ -716,6 +796,8 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   rebase and merge (§4)?
 - Trailers: each one has a consumer in this repository, and the closing keyword targets the default
   branch (§5)?
+- Open issue: where every commit says `See #n` and none says `Fixes #n`, does the description say in
+  one sentence why the issue stays open (§4)?
 - Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
   placeholder (`english-developer-style` §7)? Does the first mention of a section of a repository
   document carry its heading text (§5)? Links: does each first mention of a rendered section, code
