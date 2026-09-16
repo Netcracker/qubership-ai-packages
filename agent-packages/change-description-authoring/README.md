@@ -14,9 +14,12 @@ the question it answers.
 ## What it covers
 
 - The five readers, what each one holds, which artifact each one opens, and what each one asks.
-- The slots of a commit body (problem, impact and trigger, change and approach, references) and of a
-  pull request description (why, what, verification, scope, release note), with the question each
-  slot answers and when it is skipped.
+- The slots of a commit body (problem, impact and trigger, change and approach, outcome, references)
+  and of a pull request description (why, what, user-visible changes, verification, scope, release
+  note), with the question each slot answers and when it is skipped. The outcome slot and
+  "user-visible changes" are present only when the change alters something a caller observes, and
+  list each outcome on its own line, with the exact text and its error code or exception class where
+  the outcome emits them.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the shortest chain that justifies that decision, the level of detail each artifact
   owns, and the verification section that names what the tests establish rather than transcribing
