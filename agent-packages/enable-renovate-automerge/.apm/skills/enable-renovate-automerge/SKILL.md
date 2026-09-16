@@ -34,13 +34,21 @@ write.
 Separate mechanism requirements from owner policy. Required checks, review enforcement, and platform auto-merge make
 the mechanism work. Eligible managers, packages, update types, and accepted post-merge risk are owner choices. Show
 their exact behavior delta during analysis, including newly automatic updates, validation timing, recovery, and local
-exceptions. End analysis with the owner's scope choice: canonical policy, current policy with mechanism fixes, or
-canonical policy with explicit exceptions. A generic request to configure automerge does not select that scope. An
-explicit request for canonical automerge, the shared preset, all non-major updates, or named selectors does. When
-canonical scope is selected, record coverage gaps, residual risks, and recovery paths, then continue with local
-preparation; do not reopen the scope decision unless new evidence requires a choice outside the canonical policy. Do
-not prepare policy-changing source edits before the scope decision. Implement the owner's choice instead of converting
-a coverage gap into a prohibition.
+exceptions.
+
+The required gate set is a separate owner choice. During analysis, show the current and proposed gate sets with exact
+check names and producer IDs when known, the selectors each gate covers, CI cost, and the residual risk of omitting it.
+Do not infer the gate set from the automerge scope: canonical scope does not select required checks. End analysis with
+both decisions before local preparation: the owner's scope choice and the exact required gate set. An explicit request
+that names checks makes the gate decision. An autonomous or end-to-end request delegates that choice to the agent; state
+the selected gates and reasoning in the analysis result, then continue. Otherwise, ask the owner to choose during the
+analysis-result discussion.
+
+A generic request to configure automerge does not select scope. An explicit request for canonical automerge, the shared
+preset, all non-major updates, or named selectors does. When canonical scope is selected, record coverage gaps,
+residual risks, and recovery paths; do not reopen the scope decision unless new evidence requires a choice outside the
+canonical policy. Do not prepare source edits before the required scope and gate decisions. Implement the owner's
+choices instead of converting a coverage gap into a prohibition.
 
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
@@ -64,8 +72,9 @@ to Renovate validation modes are separate work. Never request credentials in cha
 ### Requirement 1. Every allowed update has an explicit coverage and risk decision
 
 **Target.** Map every update that the target policy would allow to its pre-merge checks and residual risk. The owner
-decides whether post-merge detection is acceptable or whether the update needs more CI or a manual exception. If tests
-already build or compile the project, a separate build workflow is unnecessary. Select the minimum useful workflows.
+decides whether post-merge detection is acceptable, whether the update needs more CI or a manual exception, and which
+checks become required gates. If tests already build or compile the project, a separate build workflow is unnecessary.
+Recommend the minimum useful gate set; do not select it silently.
 
 **Inspect.** Read effective Renovate configuration, inherited presets, rule ordering, groups, and exceptions. Search
 open and recently closed repository issues for required CI gates, branch protection, workflow reliability, and Renovate
@@ -83,8 +92,9 @@ map:
 in separate workflows. Add specialized checks when the owner chooses pre-merge coverage for an update class, such as
 Helm validation.
 PR titles, labeling, approval, release automation, and bare Docker builds do not establish test coverage.
-Show the map and proposed changes. Resolve undecided coverage choices with the owner; use existing authorization to
-prepare the concrete diff. Preserve actor exclusions: if Renovate is excluded from a relevant test, record that gap.
+Show the map, proposed changes, and proposed required gate set. Resolve undecided coverage and gate choices with the
+owner; use existing authorization to prepare the concrete diff. Preserve actor exclusions: if Renovate is excluded
+from a relevant test, record that gap.
 
 For a GitHub Action update, record whether the Renovate PR executes the changed action and whether PR inputs and
 permissions differ from its normal use. Actions used only by release, schedule, manual, or default-branch workflows may
@@ -170,10 +180,11 @@ gh api repos/<owner>/<repo>/rulesets/<id>
 gh api repos/<owner>/<repo>/branches/<branch>/protection
 ```
 
-**Implement.** After gates report reliably, register their exact names and producer IDs and apply the review settings.
-Recommend one ruleset and show the owner a candidate policy that preserves the effective checks, review settings,
-bypasses, deletion and force-push restrictions, and unrelated protections. Consolidate only after the owner agrees.
-Add and verify combined requirements before retiring redundant rules; never leave the branch unprotected.
+**Implement.** After the owner selects the required gates and they report reliably, register their exact names and
+producer IDs and apply the review settings. Recommend one ruleset and show the owner a candidate policy that preserves
+the selected checks, review settings, bypasses, deletion and force-push restrictions, and unrelated protections.
+Consolidate only after the owner agrees. Add and verify combined requirements before retiring redundant rules; never
+leave the branch unprotected.
 
 Set strict required checks to `true`. Explain that after one PR changes the default branch, other open Renovate PRs must
 update from it, rerun CI, and regain an approval dismissed as stale. Report the resulting rebase and CI cost rather than
@@ -318,7 +329,8 @@ is not confirmed, report operational readiness as unconfirmed.
 
 1. Inspect the starting state, build requirement 1's coverage and risk map, and check requirement 4's bypass inventory
    and requirement 5's prerequisites early.
-2. Show requirement 6's exact policy delta and obtain the owner's scope decision unless the request already states it.
+2. Show requirement 6's exact policy delta and the current and proposed required gate sets. Obtain both owner decisions
+   unless the request states the scope and names the gates or explicitly delegates them through autonomous execution.
 3. Prepare and verify the selected configuration plus any requirement 2 workflow changes locally.
 4. When publication is authorized, commit, push, and open or update an ordinary reviewed PR. Confirm gates on PR runs.
 5. When live settings are authorized, apply requirement 3 and requirement 4 protection. Activate requirement 5 and
@@ -330,6 +342,6 @@ is not confirmed, report operational readiness as unconfirmed.
 
 Show the coverage map and report each golden rule as met, unmet, or unconfirmed, with evidence and the remaining action.
 Distinguish source changes prepared, live settings applied, and runtime verified. Link the diff/source PR and settings
-evidence separately. Name remaining owner actions, missing events, and the next authorization stage. Audit requests
-report remedies. Setup requests prepare and verify local changes, then continue only through explicitly authorized
-publication, live-setting, and runtime stages.
+evidence separately. Record the selected scope and exact required gate set. Name remaining owner actions, missing
+events, and the next authorization stage. Audit requests report remedies. Setup requests prepare and verify local
+changes, then continue only through explicitly authorized publication, live-setting, and runtime stages.
