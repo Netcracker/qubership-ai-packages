@@ -10,14 +10,37 @@ GitHub auto-merge only after required CI passes. Apply the checks below per repo
 
 ## Working mode and scope
 
-A setup or fix request means: inspect each golden rule, preserve what passes, correct deviations, and show the changes.
-Do not stop at an audit-complete approval stage. Reuse decisions already made; ask only for missing choices that
-materially affect scope and continue independent work. An audit or validation request uses the same rules read-only and
-reports remedies without editing files, settings, or PRs.
+A setup or fix request means: inspect each golden rule, preserve what passes, correct authorized deviations, and show
+the changes. An audit or validation request uses the same rules read-only and reports remedies without editing files,
+settings, or PRs.
+
+Treat analysis, local preparation, publication, live settings, and runtime exercises as separate authorization stages.
+Interpret intent from the request, not from exact keywords:
+
+- An audit, inspection, or analysis request authorizes analysis only.
+- A setup, fix, or implementation request also authorizes a verified local diff after the scope decision.
+- A request for canonical automerge, the shared preset, or all non-major updates selects canonical scope and authorizes
+  local preparation, but not publication or live changes.
+- An explicit request to complete the work autonomously or end to end authorizes all in-scope stages, including needed
+  publication, live settings, App access, and test PRs. It does not authorize manual approval or merge, bypassing
+  protections, unrelated changes, or destructive actions.
+- A request that names particular stages authorizes those stages without authorizing the others.
+
+Without the matching authorization, do not commit, push, create or update a pull request, issue, or comment, change a
+ruleset, repository setting, or App access, or create or close a test PR. Show the prepared result and exact external
+writes before asking for the next authorization. Read-only confirmation after an authorized write belongs to that
+write.
 
 Separate mechanism requirements from owner policy. Required checks, review enforcement, and platform auto-merge make
 the mechanism work. Eligible managers, packages, update types, and accepted post-merge risk are owner choices. Show
-their exact behavior delta, then implement the owner's choice instead of converting a coverage gap into a prohibition.
+their exact behavior delta during analysis, including newly automatic updates, validation timing, recovery, and local
+exceptions. End analysis with the owner's scope choice: canonical policy, current policy with mechanism fixes, or
+canonical policy with explicit exceptions. A generic request to configure automerge does not select that scope. An
+explicit request for canonical automerge, the shared preset, all non-major updates, or named selectors does. When
+canonical scope is selected, record coverage gaps, residual risks, and recovery paths, then continue with local
+preparation; do not reopen the scope decision unless new evidence requires a choice outside the canonical policy. Do
+not prepare policy-changing source edits before the scope decision. Implement the owner's choice instead of converting
+a coverage gap into a prohibition.
 
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
@@ -227,9 +250,9 @@ migration. Absence alone is not a repository defect. Show the exact user-visible
 | Other behavior | Groups, schedules, minimum release age, and other presets | Changed or unchanged | Operational effect |
 
 Let the owner decide whether the difference is acceptable and whether to migrate. An explicit request to adopt the
-shared preset or all non-major updates is that decision; proceed without asking again. Otherwise, do not widen an
-intentionally narrow scope until the owner chooses. After migration is chosen, preserve the existing `extends` entries
-and add the shared preset:
+canonical policy, shared preset, all non-major updates, or named selectors is that decision; do not ask for it again. A
+generic request to configure automerge is not. Otherwise, do not widen an intentionally narrow scope until the owner
+chooses. After migration is chosen, preserve the existing `extends` entries and add the shared preset:
 
 ```json
 {
@@ -295,16 +318,18 @@ is not confirmed, report operational readiness as unconfirmed.
 
 1. Inspect the starting state, build requirement 1's coverage and risk map, and check requirement 4's bypass inventory
    and requirement 5's prerequisites early.
-2. Show requirement 6's exact policy delta, resolve only missing owner choices, and prepare the selected configuration
-   plus any requirement 2 workflow changes.
-3. Confirm gates on PR runs, then apply requirement 3 and requirement 4 protection. Activate requirement 5 and
+2. Show requirement 6's exact policy delta and obtain the owner's scope decision unless the request already states it.
+3. Prepare and verify the selected configuration plus any requirement 2 workflow changes locally.
+4. When publication is authorized, commit, push, and open or update an ordinary reviewed PR. Confirm gates on PR runs.
+5. When live settings are authorized, apply requirement 3 and requirement 4 protection. Activate requirement 5 and
    requirement 6 only after protection works.
-4. Verify requirement 7 in one repository before broader rollout. Recheck each repository's policy and CI; a sample
-   does not prove fleet completion.
+6. When live exercises are authorized, verify requirement 7 in one repository before broader rollout. Recheck each
+   repository's policy and CI; a sample does not prove fleet completion.
 
 ## Result
 
 Show the coverage map and report each golden rule as met, unmet, or unconfirmed, with evidence and the remaining action.
 Distinguish source changes prepared, live settings applied, and runtime verified. Link the diff/source PR and settings
-evidence separately. Name remaining owner actions and missing events. Audit requests report remedies; setup requests
-report changes and continue through authorized work without a separate audit-approval stage.
+evidence separately. Name remaining owner actions, missing events, and the next authorization stage. Audit requests
+report remedies. Setup requests prepare and verify local changes, then continue only through explicitly authorized
+publication, live-setting, and runtime stages.
