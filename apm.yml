@@ -253,7 +253,7 @@ marketplace:
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: b025768c3c5fa42af04941d06b7e3aa0dcd2b26d  # main
+      ref: 5787cced9e46725d21a7ef3a1261d674038cad4c  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
