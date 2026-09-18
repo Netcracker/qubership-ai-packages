@@ -49,6 +49,11 @@ the question it answers.
   length, and dialect, and keeps its own per-surface modules for commits, pull requests, and
   changelogs. This package decides what goes in which slot and for whom; that one writes the
   sentences. Install both.
+- [`problem-report-authoring`](../problem-report-authoring/) governs the artifacts that report a
+  problem nobody has fixed yet: an issue in someone else's project or your own tracker, a feature
+  request, a message to a colleague. Their readers do not know what is broken, so they open with the
+  symptom rather than with the mechanism. Applying this package's form to one of them is the mistake
+  that package exists to prevent.
 - [`javadoc-authoring`](../javadoc-authoring/) and its siblings govern the doc comment, the artifact
   that carries the durable API contract; this package governs the artifacts that carry the reason
   the code changed.
