@@ -56,6 +56,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/test-authoring
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/final-review
+	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/telemetry-authoring
 	bash tests/marketplace_roundtrip.sh
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).
