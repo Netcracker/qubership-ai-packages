@@ -1,0 +1,58 @@
+{
+  "uid": "replace-me",
+  "title": "Replace Me",
+  "description": "One sentence on what this dashboard answers.",
+  "tags": ["ai-generated"],
+  "schemaVersion": 41,
+  "editable": true,
+  "time": {"from": "now-1h", "to": "now"},
+  "refresh": "",
+  "timezone": "browser",
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": true,
+      "tags": ["k8s"],
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": true,
+      "type": "dashboards"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "prometheus"
+      },
+      {
+        "name": "cluster",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(kube_pod_info, cluster)",
+        "refresh": 2,
+        "allValue": ".*",
+        "multi": false
+      },
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(kube_pod_info{cluster=\"$cluster\"}, namespace)",
+        "refresh": 2,
+        "allValue": ".*",
+        "multi": false
+      },
+      {
+        "name": "filter",
+        "type": "adhoc",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "baseFilters": [],
+        "filters": []
+      }
+    ]
+  },
+  "panels": []
+}

@@ -1,0 +1,63 @@
+{
+  "id": 13,
+  "type": "xychart",
+  "title": "CPU against memory",
+  "description": "Each point is one pod, positioned by CPU and memory use.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "custom": {
+        "show": "points",
+        "pointSize": {
+          "fixed": 5
+        }
+      }
+    }
+  },
+  "options": {
+    "mapping": "auto",
+    "series": [
+      {
+        "x": {
+          "matcher": {
+            "id": "byName",
+            "options": "cpu"
+          }
+        },
+        "y": {
+          "matcher": {
+            "id": "byName",
+            "options": "memory"
+          }
+        }
+      }
+    ],
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom"
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "format": "table",
+      "instant": true,
+      "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))"
+    }
+  ]
+}

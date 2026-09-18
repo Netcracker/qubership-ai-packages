@@ -1,0 +1,43 @@
+{
+  "id": 8,
+  "type": "histogram",
+  "title": "Response size distribution",
+  "description": "Distribution of response sizes across instances at the end of the range.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "bytes",
+      "decimals": 0,
+      "custom": {
+        "fillOpacity": 80,
+        "lineWidth": 1
+      }
+    }
+  },
+  "options": {
+    "bucketOffset": 0,
+    "combine": false,
+    "legend": {
+      "showLegend": false,
+      "displayMode": "list",
+      "placement": "bottom"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "instant": true,
+      "expr": "histogram_quantile(0.5, sum by (le, pod) (rate(http_response_size_bytes_bucket{cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
+      "legendFormat": "{{pod}}"
+    }
+  ]
+}

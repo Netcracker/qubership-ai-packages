@@ -1,0 +1,22 @@
+{
+  "uid": "fixture-gridpos", "title": "Fixture GridPos", "tags": ["ai-generated"], "schemaVersion": 41,
+  "templating": {"list": [{"name": "datasource", "type": "datasource", "query": "prometheus"}]},
+  "panels": [
+    {"id": 1, "type": "timeseries", "title": "Overflows the grid", "description": "x+w is 26.",
+     "gridPos": {"x": 14, "y": 0, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]},
+    {"id": 2, "type": "timeseries", "title": "Overlaps panel 3", "description": "Same cells as panel 3.",
+     "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]},
+    {"id": 3, "type": "timeseries", "title": "Overlaps panel 2", "description": "Same cells as panel 2.",
+     "gridPos": {"x": 6, "y": 10, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]},
+    {"id": 4, "type": "timeseries", "title": "Zero height", "description": "h is 0.",
+     "gridPos": {"x": 0, "y": 30, "w": 12, "h": 0},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]}
+  ]
+}

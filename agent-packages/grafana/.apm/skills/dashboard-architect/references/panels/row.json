@@ -1,0 +1,13 @@
+{
+  "id": 21,
+  "type": "row",
+  "title": "Resource usage",
+  "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+  },
+  "collapsed": false,
+  "panels": []
+}

@@ -1,0 +1,63 @@
+{
+  "id": 11,
+  "type": "status-history",
+  "title": "Probe results",
+  "description": "Scrape success per target, one cell per interval.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "mappings": [
+        {
+          "type": "value",
+          "options": {
+            "0": {
+              "text": "down",
+              "color": "red",
+              "index": 0
+            },
+            "1": {
+              "text": "up",
+              "color": "green",
+              "index": 1
+            }
+          }
+        }
+      ],
+      "custom": {
+        "fillOpacity": 70,
+        "lineWidth": 1
+      }
+    }
+  },
+  "options": {
+    "showValue": "never",
+    "rowHeight": 0.9,
+    "colWidth": 0.9,
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom"
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "max by (job) (up{cluster=\"$cluster\"})",
+      "legendFormat": "{{job}}"
+    }
+  ]
+}

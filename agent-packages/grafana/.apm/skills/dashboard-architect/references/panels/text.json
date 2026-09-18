@@ -1,0 +1,20 @@
+{
+  "id": 20,
+  "type": "text",
+  "title": "About this dashboard",
+  "description": "Static notes and runbook links.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "options": {
+    "mode": "markdown",
+    "code": {
+      "language": "plaintext",
+      "showLineNumbers": false
+    },
+    "content": "Generated dashboard. See the [runbook](https://example.com/runbook)."
+  }
+}

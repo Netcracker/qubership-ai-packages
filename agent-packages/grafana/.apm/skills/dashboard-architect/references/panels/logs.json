@@ -1,0 +1,36 @@
+{
+  "id": 16,
+  "type": "logs",
+  "title": "Application logs",
+  "description": "Raw log lines for the selected namespace, newest first.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "victoriametrics-logs-datasource",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {}
+  },
+  "options": {
+    "showTime": true,
+    "showLabels": false,
+    "showCommonLabels": false,
+    "wrapLogMessage": true,
+    "prettifyLogMessage": false,
+    "enableLogDetails": true,
+    "dedupStrategy": "none",
+    "sortOrder": "Descending"
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "queryType": "instant",
+      "expr": "{cluster=\"$cluster\", namespace=\"$namespace\"} | _time:$__range"
+    }
+  ]
+}

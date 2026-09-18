@@ -1,0 +1,14 @@
+{
+  "uid": "fixture-dup-ids", "title": "Fixture Duplicate Ids", "tags": ["ai-generated"], "schemaVersion": 41,
+  "templating": {"list": [{"name": "datasource", "type": "datasource", "query": "prometheus"}]},
+  "panels": [
+    {"id": 7, "type": "stat", "title": "First", "description": "Uses id 7.",
+     "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]},
+    {"id": 7, "type": "stat", "title": "Second", "description": "Also uses id 7.",
+     "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+     "datasource": {"type": "prometheus", "uid": "${datasource}"},
+     "fieldConfig": {"defaults": {"unit": "short"}}, "targets": [{"expr": "up"}]}
+  ]
+}

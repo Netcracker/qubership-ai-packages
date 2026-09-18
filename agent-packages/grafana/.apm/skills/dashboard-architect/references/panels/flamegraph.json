@@ -1,0 +1,28 @@
+{
+  "id": 19,
+  "type": "flamegraph",
+  "title": "CPU profile",
+  "description": "Aggregated CPU time by stack frame.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "grafana-pyroscope-datasource",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {}
+  },
+  "options": {},
+  "targets": [
+    {
+      "refId": "A",
+      "queryType": "profile",
+      "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
+      "labelSelector": "{service_name=\"$service\", namespace=\"$namespace\"}"
+    }
+  ]
+}

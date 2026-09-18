@@ -1,0 +1,72 @@
+{
+  "id": 14,
+  "type": "canvas",
+  "title": "Service topology",
+  "description": "Fixed layout where element position reflects the deployment diagram.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "short",
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "red",
+            "value": null
+          },
+          {
+            "color": "green",
+            "value": 1
+          }
+        ]
+      }
+    }
+  },
+  "options": {
+    "inlineEditing": true,
+    "showAdvancedTypes": true,
+    "panZoom": false,
+    "infinitePan": false,
+    "root": {
+      "type": "frame",
+      "name": "Element group",
+      "constraint": {
+        "vertical": "top",
+        "horizontal": "left"
+      },
+      "placement": {
+        "width": 100,
+        "height": 100,
+        "top": 0,
+        "left": 0
+      },
+      "background": {
+        "color": {
+          "fixed": "transparent"
+        }
+      },
+      "border": {
+        "color": {
+          "fixed": "dark-green"
+        }
+      },
+      "elements": []
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "expr": "max by (service) (up{cluster=\"$cluster\"})",
+      "legendFormat": "{{service}}"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": 17,
+  "type": "traces",
+  "title": "Trace detail",
+  "description": "Span waterfall for the selected trace.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "tempo",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {}
+  },
+  "options": {},
+  "targets": [
+    {
+      "refId": "A",
+      "queryType": "traceql",
+      "query": "{resource.service.name=\"$service\"} | duration > 100ms"
+    }
+  ]
+}

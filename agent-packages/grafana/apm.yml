@@ -1,0 +1,7 @@
+name: grafana
+version: 1.0.0
+description: Find, generate, validate, and publish Grafana dashboards across metrics, logs, traces, and profiles.
+
+dependencies:
+  apm:
+    - VictoriaMetrics/skills/plugins/query

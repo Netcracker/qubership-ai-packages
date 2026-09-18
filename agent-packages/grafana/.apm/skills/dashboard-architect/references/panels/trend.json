@@ -1,0 +1,47 @@
+{
+  "id": 12,
+  "type": "trend",
+  "title": "Latency against concurrency",
+  "description": "Latency plotted over a non-time x axis. Requires an ascending numeric field.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "s",
+      "decimals": 2,
+      "custom": {
+        "lineWidth": 1,
+        "fillOpacity": 10,
+        "showPoints": "auto"
+      }
+    }
+  },
+  "options": {
+    "xField": "concurrency",
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom"
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "format": "table",
+      "instant": true,
+      "expr": "sum by (concurrency) (rate(http_request_duration_seconds_sum{cluster=\"$cluster\"}[$__rate_interval]))"
+    }
+  ]
+}

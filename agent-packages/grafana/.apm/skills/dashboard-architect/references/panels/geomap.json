@@ -1,0 +1,63 @@
+{
+  "id": 15,
+  "type": "geomap",
+  "title": "Requests by region",
+  "description": "Request rate positioned by the region label.",
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "datasource": {
+    "type": "prometheus",
+    "uid": "${datasource}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "reqps",
+      "decimals": 1
+    }
+  },
+  "options": {
+    "view": {
+      "id": "zero",
+      "lat": 0,
+      "lon": 0,
+      "zoom": 1
+    },
+    "basemap": {
+      "type": "default",
+      "name": "Basemap"
+    },
+    "layers": [
+      {
+        "type": "markers",
+        "name": "Regions",
+        "location": {
+          "mode": "lookup",
+          "lookup": "region",
+          "gazetteer": "countries"
+        },
+        "config": {
+          "showLegend": true
+        }
+      }
+    ],
+    "controls": {
+      "showZoom": true,
+      "showAttribution": true
+    },
+    "tooltip": {
+      "mode": "details"
+    }
+  },
+  "targets": [
+    {
+      "refId": "A",
+      "format": "table",
+      "instant": true,
+      "expr": "sum by (region) (rate(http_requests_total{cluster=\"$cluster\"}[$__rate_interval]))"
+    }
+  ]
+}
