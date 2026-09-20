@@ -31,16 +31,15 @@ rule can be satisfied by a test worth nothing.
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
 - The failure report and its four parts, container, name, assertion, message, with what each carries and what it may
   not repeat; the assertion that prints the operands; the framework's operand order; parameterized case names;
-  grouped assertions; error semantics over message strings; what a failed wait reports; a positive and a negative
-  case of one rule as a pair that shares its setup and states what differs; when several cases in one check are one
-  test, decided by whether that check carries every mismatch and names each case, a property learned once per check and
-  recorded.
+  grouped assertions; error semantics over message strings; what a failed wait reports; related cases that write a
+  long shared setup once and state what differs in each case; when several cases may share one check, decided by
+  whether that check carries every mismatch and names each case, a property learned once per check and recorded.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part in a helper beside it,
-  where a new test goes, in which shape, and when a class splits.
-- The four buckets a review finding falls into: decidable from the diff, needs a run, needs a tool's verdict, or a
-  question for a human.
+  where a new test goes, in which shape, the helper it reuses before adding one, and when a class splits.
+- The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
+  needs a tool's verdict, or a question for a human.
 
 ## Scope
 

@@ -36,9 +36,9 @@ the root `conftest.py` opts the module in with `pytest.register_assert_rewrite("
 `@pytest.mark.parametrize("n", [-1, -2])` names each case from the value (`test_param[-1]`); for a value with no
 useful `repr`, or where the condition is the name, pass `ids=["minus one", "minus two"]` or `pytest.param(-1,
 id="minus one")`. The id becomes the node id suffix, is printed in the `FAILED` line, and is selectable with `-k`. Two
-cases with the same id are disambiguated by an index, which is a location. A pair of cases (`SKILL.md` §7) is two
-`pytest.param` rows with ids where both assert the same way, or two functions on one fixture or helper that builds
-the setup from the varying input where the outcomes differ in kind.
+cases with the same id are disambiguated by an index, which is a location. Cases that share a setup (`SKILL.md` §7)
+are `pytest.param` rows with ids where they assert the same way, or separate functions on one fixture or helper
+that builds the setup from the varying input where the outcomes differ in kind.
 
 ## Grouping assertions
 
