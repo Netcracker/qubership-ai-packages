@@ -163,7 +163,7 @@ cannot.
 | Change | First test | Second test | What the reviewer checks |
 | --- | --- | --- | --- |
 | A bug fix in a private helper | Small, through the caller that reaches the helper, on the input that triggered the bug | None, unless a larger test would establish wiring, a real dependency, or persistence the small test cannot | The test reaches the helper through its caller, not by reflection or widened visibility; the red run on the base commit is in the pull request |
-| A new method on a unit's interface | Small, one test per partition and boundary of its inputs (§4), through the method itself | Medium only where the outcome depends on a real dependency a fake cannot reproduce | The partition list against the specification; no mock of a collaborator where a fake exists |
+| A new method on a unit's interface | Small, one case per partition and boundary of its inputs (§4), through the method itself | Medium only where the outcome depends on a real dependency a fake cannot reproduce | The partition list against the specification; no mock of a collaborator where a fake exists |
 | A change to an error or failure path | Small, on the input that triggers it, asserting the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
 | A change to what crosses a process boundary: bytes on a wire, a schema, a message format, a serialized value | Small, feeding recorded or hand-built bytes or records to the reader with no socket or file | Medium, against the real peer or its wire-level fake, because the contract crossed a process boundary | The expected bytes are literals or captures, not produced by the writer under test; the medium test exists or is named |
 | A change in a configuration default | Small, asserting the behavior the code shows when nothing is set, through the accessor the rest of the code reads | Medium or large, where the default is read at deployment and the change altered the deployment path | The test asserts the behavior that depends on the default, not that the constant equals itself |
@@ -178,20 +178,24 @@ Inputs come from the signature and the specification, never from the branches of
 off an `if` in the code tests that the code does what the code does. **Partition the input whose handling the change
 touched, not every input the signature has.** The other arguments keep the value the existing tests already use,
 unless one of them can influence the changed behavior (another encoding, another mode, a prior state), and then it is
-varied too: one test per partition of it that the changed behavior distinguishes, and the reviewer checks that each
-such test would fail with the changed behavior wrong for that value alone. The decision table and the transition list
+varied too: one case per partition of it that the changed behavior distinguishes, and the reviewer checks that each
+such case would fail with the changed behavior wrong for that value alone. The decision table and the transition list
 below are scoped the same way, to the conditions and the states the change reached.
 
-- **One test per equivalence partition.** Partition each input into classes the specification treats alike, valid and
+This section counts cases, and §7 decides their form. A case is usually a test of its own. §7 says when cases are the
+rows of one table, and when a case stands beside its controls in one check. The counts below hold in every form.
+
+- **One case per equivalence partition.** Partition each input into classes the specification treats alike, valid and
   invalid; the classes do not overlap and none is empty. One value stands for its whole class. A second value from
   the same class earns its place only where it is a boundary, a distinct representation (another encoding, a
   different collection shape, a Unicode form), an interaction with another input, or a known regression; otherwise
-  it is a redundant test, not a stronger suite. Test each invalid class alone, because two invalid inputs in one call
-  mask each other: the first one rejected hides whether the second would have been.
+  it is a redundant case, not a stronger suite. Test each invalid class alone, because two invalid inputs in one call
+  mask each other: the first one rejected hides whether the second would have been. Two inputs that one act evaluates
+  separately, such as two lines of one linted source, are not one call; §7 says when they share a check.
 - **Each boundary and its neighbors.** For an ordered input, test the minimum, the maximum, and the value just outside
   each (two-value analysis); add the value just inside where a wrong operator is plausible, since `x <= 10` written as
   `x == 10` passes 10 and 11 and fails only on 9.
-- **A decision table when the outcome depends on a combination of conditions.** One test per feasible column, so the
+- **A decision table when the outcome depends on a combination of conditions.** One case per feasible column, so the
   happy column is not the only one tested.
 - **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid
   transition in its own test.
@@ -209,7 +213,7 @@ below are scoped the same way, to the conditions and the states the change reach
   Rust enum, `switch` on a sealed type, a `never` check in TypeScript), rely on it and write no test.
 
 The partition set against the specification is a judgment no tool checks. Make it from the specification and the
-existing tests, state it in the pull request, and stop when every partition of the changed input has one test, every
+existing tests, state it in the pull request, and stop when every partition of the changed input has one case, every
 boundary of it has a case, every partition of a varied argument that the changed behavior distinguishes has one, and
 every feasible column and transition the change reached has one, counting the tests that already exist. Ask about a
 partition only where the specification leaves the expected behavior open.
@@ -293,7 +297,7 @@ and each fact belongs in exactly one of them. Decide what each carries before wr
 | Part | Carries | Not |
 | --- | --- | --- |
 | **The container** (class, module path, `describe` block, parent test) | The unit under test and the condition every test in it shares | A file name; a fact true of one test |
-| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish: `a type variable is judged by its declared bound` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, a name with `and` |
+| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, a name with `and` |
 | **The assertion** | The values: got and want, printed by an assertion built to print them, in the operand order the framework labels | A boolean wrapped around a comparison, which prints `true` and `false` or the expression text |
 | **The message** | The function and the input where the assertion cannot print them: `ensureBytes(-2147483648)` | The scenario the name states; the values the assertion prints; `failed` |
 
@@ -349,12 +353,15 @@ comment may repeat the rule the message states, and the message may not repeat t
     rule only while the case that expects the outcome fires on the same setup; otherwise the silence may come from the
     setup. One input that holds the case and its control cannot drift, which is the reason the rule *Independent cases
     in one check hide each other* keeps them together.
-  - **A helper takes a value, not fragments of a program.** `configWithTimeout("-1")` leaves a document the reader can
-    picture. A helper whose arguments are pieces of syntax (a type parameter list, a statement, an expectation marker)
-    assembles an input the reader never sees whole, and that input is what the assertion depends on (§9). Where the
-    cases differ in the structure of the input, write them side by side in one input where they are a case and its
-    controls (*Independent cases in one check hide each other*). Cases of different rules under a check that stops at
-    the first mismatch each write their input out: that copy is the price of a program the reader sees whole.
+  - **A helper takes a value, not a fragment of the input's structure.** `configWithTimeout("-1")` leaves a document the
+    reader can picture. The same holds for one literal in a query, in a request body, or in a source the unit compiles.
+    A helper whose arguments are pieces of syntax (a clause of a query, a nested object of a request body, a statement
+    of a program, an expectation marker) assembles an input the reader never sees whole, and that input is what the
+    assertion depends on (§9). Cases that differ in the structure of the input stand side by side in one input where one
+    act of the unit evaluates them all and the rule *Independent cases in one check hide each other* lets them stay
+    together. Otherwise each case writes its input out whole. That covers a unit that takes one input per call, such as
+    a parser or a statement sent to a database, and cases of different rules under a check that stops at the first
+    mismatch. The copy is the price of an input the reader sees whole, and the name of each test states what differs.
   - **The form follows the assertions.** Cases that assert the same way, every case running the same checks, are rows of
     one table, arguments of one parameterized test, or separate tests on one helper, and the file's neighbors choose
     among these (§9). Cases that need different assertions, one expecting a throw and one a returned value, are separate
@@ -363,8 +370,9 @@ comment may repeat the rule the message states, and the message may not repeat t
 
   The reviewer reads the differing input off one line of each case without comparing bodies, checks that the cases reach
   a setup longer than a line or two through one input, helper, or table rather than through a copy, and checks that no
-  helper argument is a piece of syntax. A copied input passes only where the inputs differ in structure and the cases
-  belong to different rules under a check that stops at the first mismatch.
+  helper argument is a piece of syntax. A copied input passes only where the inputs differ in structure and cannot
+  stand side by side: the unit takes one input per call, or the cases belong to different rules under a check that stops
+  at the first mismatch.
 - **Independent cases in one check hide each other where the check stops at the first mismatch.** A check that verifies
   many expectations in one run (the markers in one compiled source, the rows of one table assertion, the files of one
   golden comparison) reports either every mismatch or only the first. Which one is a property of that check, not of the
@@ -377,16 +385,26 @@ comment may repeat the rule the message states, and the message may not repeat t
   documentation of a harness the repository owns, and otherwise in the pull request description (§0), which the next
   change does not see, so that change cites the harness again. Two questions, answered apart: does the report carry
   every mismatch, and does it name each case without the file?
-  - **A case and its controls are not independent, and stay in one check.** The input that is reported and the nearest
-    inputs that are not establish one rule between them, one run of the check is the act, and a failure of either says
-    that this rule moved. A check that stops at the first mismatch costs them a second run and hides nothing about
-    another rule. The test's name states the rule, and each control stands beside the case it controls. Each case in the
-    test still stands for one partition of §4. The reviewer checks that every case in the test would be named by that
-    one rule, and that a test with `and` in its name, or with cases a different production change would break, is split.
+  - **A case and its controls are not independent, and stay in one check.** A rule here is one statement of the
+    specification that ties one outcome to one condition: `a local is reported when nothing reads it`. The case meets
+    the condition, and each control is a nearest input that does not. They establish the rule between them, one run of
+    the check is the act, and a failure of either says that this rule moved. A check that stops at the first mismatch
+    costs them a second run and hides nothing about another rule. The test's name states the rule, and each control
+    stands beside the case it controls. Each case in the test still stands for one partition of §4. This form needs an
+    act that evaluates several inputs at once: one compilation, one validation of a batch, one table assertion. Where
+    the unit takes one input per call, the case and its control are separate cases, since a second call after an assert
+    is a second act. They take a form the shared-setup rule offers where they differ in a value, and each writes its
+    input out whole where they differ in structure. The reviewer states the rule's condition in one sentence and checks
+    that every case in the test either meets that condition or narrowly misses it. A test with `and` in its name, or
+    with a case whose outcome a different condition decides, is split.
   - **Where the check stops at the first mismatch, split between rules.** Cases of different rules in one such check
     hide each other, so each rule gets its own test, along the dimension whose failures should be named.
-  - **Where the check carries every mismatch but names a case by a line number** inside a source the test embeds, which
-    only a reader holding the file can place, give each case a label the report prints, or split between rules.
+  - **Where the check names a case by a line number** inside an input the test embeds, only a reader holding the file
+    can place it. This holds whether the check carries every mismatch or stops at the first. Give each case a label the
+    report prints where the harness offers one. Where it offers none, the test name is all the report carries besides
+    the line: a case with its controls is named by their rule, and cases of several rules are split between rules. For a
+    test that still holds several cases, the missing label is a limitation that no offered form removes, so it earns the
+    follow-up named in the pull request.
   - **Where the check carries every mismatch under a name,** the shared check is one runner test with named cases, and
     the check's own report gives each case the name that the shared-setup rule asks for. The runner test then takes the
     container's part in the four-part table of this section: its name states what the cases share, and each case name
@@ -421,10 +439,13 @@ before the test is. Each cause below has one fix, and every cause but the last i
   value hidden in `setUp`, in a loop, or in a file the test reads without showing is a mystery guest. Helpers construct
   value objects and infrastructure, and the part that related cases share (a request skeleton, a fixture record, a
   document with one varying value) is infrastructure: it is written once, in one input that holds the cases, in a helper
-  beside the tests that takes the varying value as its argument, or in a table (§7). A program the check compiles is an
-  input, not infrastructure, and stays whole in the test. A helper that hides the input or the expectation is the
-  mystery guest; one that hides the incidental part is not. A constant the expectation depends on is not incidental: the
-  balance of 5 that makes a withdrawal of 6 fail stays visible, as an argument or in the helper's name,
+  beside the tests that takes the varying value as its argument, or in a table (§7). Whether the shared part is
+  infrastructure depends on what varies between the cases, whatever kind of text the input is. Where the cases differ in
+  one value, the rest of the input is infrastructure, whether the input is a configuration document, a request body, a
+  query, or a source the unit compiles. Where the cases differ in the structure of the input, that structure is what the
+  assertion depends on, and the input stays whole in the test (§7). A helper that hides the input or the expectation is
+  the mystery guest; one that hides the incidental part is not. A constant the expectation depends on is not incidental:
+  the balance of 5 that makes a withdrawal of 6 fail stays visible, as an argument or in the helper's name,
   `accountWithBalance(5)`. A validation helper asserts one conceptual fact.
 - **A new test takes the shape of its neighbors.** Where the file writes one case per method, several cases in one
   source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the
@@ -471,9 +492,9 @@ Run this over a test you wrote or one you are reviewing.
 - Is the level named, and is it the smallest at which the behavior is observable through the unit's interface (§3)?
 - Is every existing test whose expectation moved named, with the behavior that moved with it (§3)?
 - Does a small test mock the boundary the change altered (§3)?
-- Is there one test per partition, or one case in a test that holds a case with its controls, each invalid partition
-  alone, and a case at each boundary and its neighbors (§4)?
-- Where another argument can influence the changed behavior, is it varied, one test per partition the behavior
+- Is there one case per partition, as a test of its own or in a form §7 allows, each invalid partition alone, and a
+  case at each boundary and its neighbors (§4)?
+- Where another argument can influence the changed behavior, is it varied, one case per partition the behavior
   distinguishes, and would each fail with the changed behavior wrong for that value alone (§4)?
 - Does the change add a member to an open set, and does a test enumerate the set from the code (§4)?
 - Do the partitions come from the specification, or from the branches of the code (§4)?
@@ -493,7 +514,7 @@ Run this over a test you wrote or one you are reviewing.
 - Is there an act after an assert that starts an unrelated scenario (§7)?
 - Where several cases share a setup longer than a line or two, do they reach it through one input, helper, or table,
   with the input and the outcome as literals per case, so that the difference is read without comparing bodies, or is
-  the copy the written-out input of cases that belong to different rules (§7)?
+  the copy the written-out input of cases that differ in structure and cannot stand side by side (§7)?
 - Does a helper take a piece of syntax as an argument, where the cases could stand side by side in one input or the
   input could be written out (§7)?
 - Does a row field or a flag select which assertion a case runs, where separate tests on one helper would do (§7)?
@@ -501,8 +522,11 @@ Run this over a test you wrote or one you are reviewing.
   say whether that check carries every mismatch and names each case, or does this change establish it, by a run or
   a cited line of the harness, and record it (§7)?
 - Is a check that stops at the first mismatch split between rules, with a case and its controls left together under a
-  name that states their rule, and does a check that names its cases only by an embedded line number give them labels
-  the report prints (§7)?
+  name that states their rule, and does every case in such a test meet the rule's one condition or narrowly miss it
+  (§7)?
+- Does a check that names its cases only by an embedded line number give them labels the report prints, whether it
+  carries every mismatch or stops at the first, and where the harness offers no label, does the pull request name the
+  missing label as the follow-up (§7)?
 - Any sleep, wall-clock read, unseeded random, real host, or unordered collection compared as a sequence (§8)?
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
 - Is the new test beside the existing tests of the same unit, and in the shape of its neighbors, and does a case whose
@@ -644,7 +668,9 @@ report still names each case.
 ### A case and its control in one check
 
 The harness lints one source and matches each `// expect:` marker against a finding on the next line. It stops at the
-first marker without a finding and names it by line number; the repository's stack line says so.
+first marker without a finding and names it by line number; the repository's stack line says so. It offers no label for
+a marker, so the report carries the test's name and a line, and the pull request proposes the label as a follow-up
+(§7).
 
 **Before**: the case and its control are two tests, and each carries its own copy of the class. The silent test
 establishes the rule only while the reporting one fires on the same source, and nothing keeps the two sources the same.

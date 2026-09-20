@@ -6,9 +6,10 @@ module ship with Node, so one file covers both roles. The rules that use it are 
 ## What the runner prints
 
 The runner prints the `describe` path and the `it` or `test` string as `parent > child` above each failure, then the
-assertion's message, then `test at m.test.mjs:5:3`. So the `describe` string carries the unit and the shared
-condition, the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires
-mid-flight')`, not `it('handles abort')`, and never `it('works')`), and the message never says where.
+assertion's message, then `test at m.test.mjs:5:3`. So the `describe` string carries the unit and the shared condition,
+the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires mid-flight')`,
+not `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds a case with its
+controls in one check (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which assertion prints the operands
 
@@ -28,8 +29,11 @@ result. The operand order is `(actual, expected)`, and the message is the last a
 
 ## Parameterized cases
 
-There is no `test.each`. A loop over a table that calls `test(name, …)` once per row gives each case its own name in
-the report; build the name from the condition (`` `ensureBytes(${n}) is refused` ``), not from the index.
+There is no `test.each`. A loop over a table that calls `test(name, …)` once per row gives each case its own name in the
+report; build the name from the condition (`` `ensureBytes(${n}) is refused` ``), not from the index. Cases that share a
+setup (`SKILL.md` §7) and assert the same way are the rows of that table. Where the outcomes differ in kind, one
+throwing and one returning, a row field that selects the assertion is the condition §6 rules out. Such cases are
+separate `test` calls on one helper that builds the setup from the varying value.
 
 ## Grouping assertions
 

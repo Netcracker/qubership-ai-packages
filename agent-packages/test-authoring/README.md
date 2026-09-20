@@ -18,7 +18,7 @@ rule can be satisfied by a test worth nothing.
   is observable through the unit's interface, when a second level is owed, what a change made for speed owes, which
   existing tests a deliberate behavior change updates, and the three questions that tell a chosen level from a
   defaulted one.
-- Which inputs the test set uses: one test per equivalence partition, each invalid partition alone, the boundaries and
+- Which inputs the test set uses: one case per equivalence partition, each invalid partition alone, the boundaries and
   their neighbors, a decision table for combinations, a state-transition test for history, a property-based test for an
   invariant over a large domain, a test that enumerates an open set when the change adds a member to one.
 - The shapes of a test that cannot fail, each visible in the diff: no assertion, an expected value computed by the code

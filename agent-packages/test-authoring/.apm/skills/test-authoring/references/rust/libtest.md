@@ -13,8 +13,9 @@ assertion `left == right` failed
  right: 0
 ```
 
-The module path and the test name are printed before the panic, with the file and line. So the module carries the
-unit, the test name carries the scenario and the outcome, and the message never says where.
+The module path and the test name are printed before the panic, with the file and line. So the module carries the unit,
+the test name carries the scenario and the outcome, and the message never says where. A test that holds a case with its
+controls in one check (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which macro prints the operands
 
@@ -34,10 +35,14 @@ order; `left` and `right` are labeled as written.
 
 ## Parameterized cases
 
-The harness has no parameterized test. A loop over cases inside one `#[test]` reports the first failure only, and
-the message must then identify the case: `assert_eq!(ensure_bytes(n), 0, "ensure_bytes({n})")`. A macro that
-expands to one `#[test]` per case, or the `rstest` crate's `#[case]`, gives each case its own name in the report,
-which is the shape §7 asks for.
+The harness has no parameterized test. A loop over cases inside one `#[test]` reports the first failure only, and the
+message must then identify the case: `assert_eq!(ensure_bytes(n), 0, "ensure_bytes({n})")`. A macro that expands to one
+`#[test]` per case, or the `rstest` crate's `#[case]`, gives each case its own name in the report, which is the shape §7
+asks for. Name an `rstest` case by its condition, `#[case::minus_one(-1)]`, since the default name is an index. Cases
+that share a setup (`SKILL.md` §7) and assert the same way are the `#[case]` rows of one `rstest` function, or separate
+`#[test]` functions that call one helper which builds the setup from the varying value. An `Err` and an `Ok` that one
+`assert_eq!` compares assert the same way and stay rows. Where the cases need different assertions, one panicking under
+`#[should_panic]` and one returning a value, they are separate functions on that helper.
 
 ## Grouping assertions
 

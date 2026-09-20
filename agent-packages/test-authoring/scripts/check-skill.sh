@@ -25,7 +25,7 @@ if out=$(grep -nE "(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|t
 fi
 
 # 2. A retired term does not survive in a table, a reference, or the README once the body has moved on.
-retired='public API|public method|public accessor|public interface|a human call|latest minor of the major the project names'
+retired='public API|public method|public accessor|public interface|a human call|latest minor of the major the project names|one test per|fragments of a program|program the check compiles'
 if out=$(grep -nE "$retired" "${files[@]}"); then
   report "retired terms (extend the list in this script when a term is renamed):"; echo "$out"
 fi
