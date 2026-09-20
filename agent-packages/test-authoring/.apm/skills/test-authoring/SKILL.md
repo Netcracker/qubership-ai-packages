@@ -45,12 +45,13 @@ Which files, in this order:
 
 1. **The repository's instructions name the stack.** A line such as `Tests: JUnit 5 engine, JUnit 5 assertions; Mockito
    for doubles; jetCheck for property-based tests; ArchUnit for structural tests` selects the files, and nothing else is
-   opened. Where the line is missing, propose it in the description of the first pull request that writes a test under
-   this skill, and write it into the repository's instructions file only where the repository already has one. A later
-   pull request does not propose it again, and adds to an existing line only a fact about the harness that the change
-   had to establish (§7). The line names the major version and, for a harness that has no reference file here, the
-   project's own or a library's, whether a check of several cases reports every mismatch and names each case (§7), and
-   no more.
+   opened. Where the line is missing, propose it: to the user where the session has one, and in the pull request
+   description otherwise. Write it into the repository's instructions file (`AGENTS.md`, `CLAUDE.md`) where the
+   repository already has one. Where it has none, ask the user whether to add the line in a new `AGENTS.md`, and create
+   no instructions file unasked. A change that finds the line present adds to it only a fact about the harness that the
+   change had to establish (§7). The line names the major version and, for a harness that has no reference file here,
+   the project's own or a library's, whether a check of several cases reports every mismatch and names each case (§7),
+   and no more.
 2. **Otherwise the imports of the nearest existing test of the same unit decide** (`org.junit.jupiter` against
    `org.junit.Test`, `org.assertj` against `org.junit.jupiter.api.Assertions`), then the build file. §9 already
    requires reading that test. In a repository with more than one test stack, the stack is the module's, not the
@@ -381,10 +382,11 @@ comment may repeat the rule the message states, and the message may not repeat t
   covers; the stack line of the repository's instructions (§0) or the harness's documentation says it for any other
   harness, the project's own or a library's. Where none of them says, establish it once, by breaking two cases on
   purpose and counting what the report names, or by reading the harness's source, and record the answer in the same
-  change where the next writer reads it: in the stack line; where the repository has no instructions file, in the
-  documentation of a harness the repository owns, and otherwise in the pull request description (§0), which the next
-  change does not see, so that change cites the harness again. Two questions, answered apart: does the report carry
-  every mismatch, and does it name each case without the file?
+  change where the next writer reads it: in the stack line, which §0 says how to add where it is missing. Where the
+  repository has no instructions file and the user wants none, record it in the documentation of a harness the
+  repository owns, and otherwise in the pull request description. The next change does not see that description, so it
+  cites the harness again. Two questions, answered apart: does the report carry every mismatch, and does it name each
+  case without the file?
   - **A case and its controls are not independent, and stay in one check.** A rule here is one statement of the
     specification that ties one outcome to one condition: `a local is reported when nothing reads it`. The case meets
     the condition, and each control is a nearest input that does not. They establish the rule between them, one run of
@@ -510,6 +512,8 @@ Run this over a test you wrote or one you are reviewing.
 - Does the test name state the scenario and the outcome, or a location (§7)?
 - Does the assertion print the operands, in the framework's order (§7)?
 - Do the grouping, error, and message forms come from the assertion library's reference, not the engine's (§0)?
+- Where the repository's instructions carry no stack line, was the line proposed, to the user or in the pull request,
+  and was no instructions file created unasked (§0)?
 - Does the message repeat the name or the values, or say only `failed` (§7)?
 - Is there an act after an assert that starts an unrelated scenario (§7)?
 - Where several cases share a setup longer than a line or two, do they reach it through one input, helper, or table,
