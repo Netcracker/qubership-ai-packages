@@ -29,15 +29,17 @@ rule can be satisfied by a test worth nothing.
   and why a coverage figure is neither.
 - Keeping a test green across a refactoring: the unit's interface, state over interactions, real before fake before stub,
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
-- The failure report and its four parts, container, name, assertion, message, with what each carries and what it may
-  not repeat; the assertion that prints the operands; the framework's operand order; parameterized case names;
-  grouped assertions; error semantics over message strings; what a failed wait reports; related cases that write a
-  long shared setup once and state what differs in each case; when several cases may share one check, decided by
-  whether that check carries every mismatch and names each case, a property learned once per check and recorded.
+- The failure report and its four parts, container, name, assertion, message, with what each carries and what it may not
+  repeat; the assertion that prints the operands; the framework's operand order; parameterized case names; grouped
+  assertions; error semantics over message strings; what a failed wait reports; related cases that write a long shared
+  setup once and state what differs in each case; a case and its controls kept in one check; when several cases may
+  share one check, decided by whether that check carries every mismatch and names each case, a property learned once per
+  check and recorded.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
-- Organization: the varying input and the expected value in the test body and the shared part in a helper beside it,
-  where a new test goes, in which shape, the helper it reuses before adding one, and when a class splits.
+- Organization: the varying input and the expected value in the test body and the shared part written once, in one
+  input, a helper that takes a value, or a table, where a new test goes, in which shape, the twin it joins, the helper
+  it reuses before adding one, and when a class splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
   needs a tool's verdict, or a question for a human.
 
@@ -71,7 +73,7 @@ test itself.
 
 - `.apm/instructions/test-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and four worked examples.
+- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and five worked examples.
 - `.apm/skills/test-authoring/references/`: one file per role and library, grouped by ecosystem.
 
 The research behind the rules, with the sources and the evidence label of each, is in

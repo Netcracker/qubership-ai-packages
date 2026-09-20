@@ -36,15 +36,16 @@ if got := ensureBytes(-1); got != 0 {
 ## Subtests and table-driven tests
 
 `t.Run(name, func(t *testing.T) {…})` prints the name after a slash, with spaces turned into underscores:
-`TestEnsureBytes/negative_count_is_refused`. Name each table case by its condition, never by its ordinal
-(`case_3` is a location), and keep the names unique, since two identical names are disambiguated by a suffix. The
-message inside the loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it. Cases
-that share a setup (`SKILL.md` §7) and assert the same way are rows of the table, each run through `t.Run` so that
-it has its own name and result; `t.Error` against `t.Fatal` inside the subtest decides whether that case continues,
-not whether the next row runs. Cases whose outcomes differ in kind, one returning an error and one a value, are
-separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked with
-`t.Helper()`. A `wantErr` field that selects the assertion is the condition §6 rules out, and the file's neighbors
-choose among the forms that remain (§9).
+`TestEnsureBytes/negative_count_is_refused`. Name each table case by its condition, never by its ordinal (`case_3` is a
+location), and keep the names unique, since two identical names are disambiguated by a suffix. The message inside the
+loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it. Cases that share a setup
+(`SKILL.md` §7) and assert the same way are rows of the table, each run through `t.Run` so that it has its own name and
+result; `t.Error` against `t.Fatal` inside the subtest decides whether that case continues, not whether the next row
+runs. Rows assert the same way where every row runs the same checks: a table with `want` and `wantErr error` columns
+whose loop compares both for every row, `errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. A `wantErr
+bool` that chooses which assertions run is the condition §6 rules out; such cases are separate test functions, or
+separate `t.Run` blocks written out under one parent, that call one helper marked with `t.Helper()`. The file's
+neighbors choose among the forms that remain (§9).
 
 ## Keep going, or stop
 

@@ -47,7 +47,7 @@ ragged=$(for f in "${files[@]}"; do
   awk -v f="$f" '
     function text(l) { sub(/^  +/, "", l); sub(/^(- |[0-9]+\. )/, "", l); return l }
     function prose(l) { return !fence && l != "" && l !~ /^(\||#|---|```|name:|description:)/ }
-    function cont(l) { return prose(l) && l !~ /^(- |[0-9]+\. )/ }
+    function cont(l) { return prose(l) && l !~ /^ *(- |[0-9]+\. )/ }
     NR == 1 && /^---$/ { front = 1; next }
     front && /^---$/ { front = 0; prev_prose = 0; next }
     front { next }
