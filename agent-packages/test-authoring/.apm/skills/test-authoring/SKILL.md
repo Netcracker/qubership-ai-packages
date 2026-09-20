@@ -357,9 +357,9 @@ comment may repeat the rule the message states, and the message may not repeat t
     the first mismatch each write their input out: that copy is the price of a program the reader sees whole.
   - **The form follows the assertions.** Cases that assert the same way, every case running the same checks, are rows of
     one table, arguments of one parameterized test, or separate tests on one helper, and the file's neighbors choose
-    among these (§9). Cases whose outcomes differ in kind, one throwing and one returning, are separate named tests or
-    subtests on one helper, since a row field that selects the assertion is a condition that decides whether a check
-    runs (§6).
+    among these (§9). Cases that need different assertions, one expecting a throw and one a returned value, are separate
+    named tests or subtests on one helper, since a row field that selects the assertion is a condition that decides
+    whether a check runs (§6).
 
   The reviewer reads the differing input off one line of each case without comparing bodies, checks that the cases reach
   a setup longer than a line or two through one input, helper, or table rather than through a copy, and checks that no
