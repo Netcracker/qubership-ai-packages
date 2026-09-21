@@ -1,0 +1,4 @@
+name: townhall-brief
+version: 1.0.0
+description: Skill that condenses a team's material for a period or a single activity into a two-minute brief for a technical townhall, keeping what changes the work of other teams and one line per large piece of work that changes nothing for them.
+author: Qubership
