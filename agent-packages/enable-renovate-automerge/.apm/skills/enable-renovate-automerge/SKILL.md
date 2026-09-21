@@ -101,6 +101,9 @@ permissions differ from its normal use. Actions used only by release, schedule, 
 first run after merge. Explain the resulting failure-detection and recovery path. Let the owner choose among accepting
 that post-merge feedback loop, adding a safe smoke or dry run, or keeping the action manual with a narrow local
 exception. Never publish or mutate an external system merely to qualify an update for automerge.
+A required Docker gate must build on `pull_request` without registry login or push. Keep publishing
+on trusted `push` or `workflow_dispatch` jobs. Do not make a container registry, or a later job that
+pulls a PR SHA from that registry, part of the merge contract.
 
 **Confirm.** Every allowed selector, including all grouped members, appears in the coverage map with its residual risk
 and the owner's decision. The shared Netcracker policy allows minor, patch, pin, digest, and pin-digest updates for
@@ -118,6 +121,8 @@ An absent workflow/check differs from an internal skipped job. Workflow filters 
 **Implement.** Reuse gates or add an aggregator with `needs` on the relevant jobs and `if: always()`.
 Move `on.pull_request.paths` and `paths-ignore` into an internal detector controlling validation jobs. Reuse an existing
 detector; unconditional validation needs none. Preserve the actual validation steps and effective applicability.
+Treat Dockerfiles, image configs, `.dockerignore`, and files copied into the image as applicable. Capture `git diff`
+with a checked command before iterating so a failed listing cannot report the change as inapplicable.
 Keep unrelated push, schedule, manual, and branch behavior; PR branch filters must include the protected branch.
 Use detector outputs and `needs.*.result` in the gate rather than duplicating path matching.
 
