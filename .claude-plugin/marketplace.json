@@ -368,6 +368,18 @@
       "source": "./agent-packages/meeting-analysis"
     },
     {
+      "name": "townhall-brief",
+      "description": "Skill that condenses a team's material for a period or a single activity into a two-minute brief for a technical townhall, keeping what changes the work of other teams and one line per large piece of work that changes nothing for them.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:communication",
+        "lang:ru",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/townhall-brief"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.2.0",
