@@ -32,8 +32,8 @@ result. The operand order is `(actual, expected)`, and the message is the last a
 There is no `test.each`. A loop over a table that calls `test(name, …)` once per row gives each case its own name in the
 report; build the name from the condition (`` `ensureBytes(${n}) is refused` ``), not from the index. Cases that share a
 setup (`SKILL.md` §7) and assert the same way are the rows of that table. Where the outcomes differ in kind, one
-throwing and one returning, a row field that selects the assertion is the condition §6 rules out. Such cases are
-separate `test` calls on one helper that builds the setup from the varying value.
+throwing and one returning, a row field that selects the assertion is the condition that decides whether a check runs,
+which §6 rules out. Such cases are separate `test` calls on one helper that builds the setup from the varying value.
 
 ## Grouping assertions
 

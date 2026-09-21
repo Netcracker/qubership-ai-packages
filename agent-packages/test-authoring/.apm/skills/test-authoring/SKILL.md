@@ -184,7 +184,8 @@ such case would fail with the changed behavior wrong for that value alone. The d
 below are scoped the same way, to the conditions and the states the change reached.
 
 This section counts cases, and §7 decides their form. A case is usually a test of its own. §7 says when cases are the
-rows of one table, and when a case stands beside its controls in one check. The counts below hold in every form.
+rows of one table, and when a case stands beside its controls in one check. The counts of this section hold in every
+form.
 
 - **One case per equivalence partition.** Partition each input into classes the specification treats alike, valid and
   invalid; the classes do not overlap and none is empty. One value stands for its whole class. A second value from
@@ -198,8 +199,8 @@ rows of one table, and when a case stands beside its controls in one check. The 
   `x == 10` passes 10 and 11 and fails only on 9.
 - **A decision table when the outcome depends on a combination of conditions.** One case per feasible column, so the
   happy column is not the only one tested.
-- **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid
-  transition in its own test.
+- **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid transition
+  as a case of its own.
 - **A property-based test for an invariant over a large domain**, where enumeration would list examples forever. It
   costs the T1 reader a reproducer. A failure carries what replays it: the seed or the reproduce blob the framework
   prints, or a seed the test pins where the framework prints none. Each shrunk counterexample the tool ever found
@@ -404,11 +405,11 @@ comment may repeat the rule the message states, and the message may not repeat t
     compilation does not either where one declaration changes what the compiler infers for the next. Where the unit
     takes one input per call, the case and its control are separate cases, since a second call after an assert is a
     second act. Where the inputs affect each other they are separate cases too, since each outcome then depends on its
-    neighbor. Separate cases take a form the shared-setup rule offers where they differ in a value, and each writes its
-    input out whole where they differ in structure. The reviewer states the rule's condition in one sentence and checks
-    that every case in the test either meets that condition or narrowly misses it. The reviewer also checks that each
-    expectation would stand with the other cases removed from the input. A test with `and` in its name, or with a case
-    whose outcome a different condition decides, is split.
+    neighbor. Separate cases take a form that the rule *Cases that share a setup write it once* offers where they differ
+    in a value, and each writes its input out whole where they differ in structure. The reviewer states the rule's
+    condition in one sentence and checks that every case in the test either meets that condition or narrowly misses it.
+    The reviewer also checks that each expectation would stand with the other cases removed from the input. A test with
+    `and` in its name, or with a case whose outcome a different condition decides, is split.
   - **Where the check stops at the first mismatch, split between rules.** Cases of different rules in one such check
     hide each other, so each rule gets its own test, along the dimension whose failures should be named.
   - **Where the check names a case by a line number** inside an input the test embeds, only a reader holding the file
@@ -418,9 +419,9 @@ comment may repeat the rule the message states, and the message may not repeat t
     test that still holds several cases, the missing label is a limitation that no offered form removes, so it earns the
     follow-up named in the pull request.
   - **Where the check carries every mismatch under a name,** the shared check is one runner test with named cases, and
-    the check's own report gives each case the name that the shared-setup rule asks for. The runner test then takes the
-    container's part in the four-part table of this section: its name states what the cases share, and each case name
-    states the scenario and the outcome.
+    the check's own report gives each case the name that the rule *Cases that share a setup write it once* asks for. The
+    runner test then takes the container's part in the four-part table of this section: its name states what the cases
+    share, and each case name states the scenario and the outcome.
 
   Where a form the harness already offers reports the cases apart (a subtest, a parameterized case, a grouped
   assertion), use it and propose nothing; only a limitation that no offered form removes earns a follow-up, proposed and
@@ -453,8 +454,8 @@ before the test is. Each cause below has one fix, and every cause but the last i
   document with one varying value) is infrastructure: it is written once, in one input that holds the cases, in a helper
   beside the tests that takes the varying value as its argument, or in a table (§7). Whether the shared part is
   infrastructure depends on what varies between the cases, whatever kind of text the input is. Where the cases differ in
-  one value, the rest of the input is infrastructure, whether the input is a configuration document, a request body, a
-  query, or a source the unit compiles. Where the cases differ in the structure of the input, that structure is what the
+  one value, the rest of the input is infrastructure. That holds for a configuration document, a request body, a query,
+  and a source the unit compiles. Where the cases differ in the structure of the input, that structure is what the
   assertion depends on, and the input stays whole in the test (§7). A helper that hides the input or the expectation is
   the mystery guest; one that hides the incidental part is not. A constant the expectation depends on is not incidental:
   the balance of 5 that makes a withdrawal of 6 fail stays visible, as an argument or in the helper's name,
@@ -687,10 +688,10 @@ report still names each case.
 
 ### A case and its control in one check
 
-The harness lints one source and matches each `// expect:` marker against a finding on the next line. It stops at the
-first marker without a finding and names it by line number; the repository's stack line says so. It offers no label for
-a marker, so the report carries the test's name and a line, and the pull request proposes the label as a follow-up
-(§7).
+The harness lints one source and matches each `// expect:` marker against a finding on the next line. A finding on a
+line with no marker fails the test too, so a line without a marker expects no finding. The harness stops at the first
+marker without a finding and names it by line number; the repository's stack line says so. It offers no label for a
+marker, so the report carries the test's name and a line, and the pull request proposes the label as a follow-up (§7).
 
 **Before**: the case and its control are two tests, and each carries its own copy of the class. The silent test
 establishes the rule only while the reporting one fires on the same source, and nothing keeps the two sources the same.
@@ -715,7 +716,8 @@ void aLocalThatIsReadIsNotReported() {
         class Example {
           void run(int used) {
             int read = 1;
-            System.out.println(used + read);
+            System.out.println(used);
+            System.out.println(read);
           }
         }
         """);
@@ -734,7 +736,8 @@ void aLocalIsReportedOnlyWhenNothingReadsIt() {
             // expect: unused-variable
             int unused = 1;
             int read = 1;
-            System.out.println(used + read);
+            System.out.println(used);
+            System.out.println(read);
           }
         }
         """);

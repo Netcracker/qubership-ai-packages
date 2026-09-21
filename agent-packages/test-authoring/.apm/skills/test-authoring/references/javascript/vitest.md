@@ -38,8 +38,9 @@ expectation in the matcher, and keep `toBe(true)` for a function that returns a 
 fields. `test.for` takes the same placeholders and passes the row as one argument. The formatted title is the test's
 name in the report, so the title carries the condition and the message adds nothing the title already says. Cases that
 share a setup (`SKILL.md` §7) and assert the same way are the rows of one `test.each`. Where the outcomes differ in
-kind, one throwing and one returning, a row field such as `shouldThrow` that selects the assertion is the condition §6
-rules out. Such cases are separate `test` calls on one helper that builds the setup from the varying value.
+kind, one throwing and one returning, a row field such as `shouldThrow` that selects the assertion is the condition that
+decides whether a check runs, which §6 rules out. Such cases are separate `test` calls on one helper that builds the
+setup from the varying value.
 
 ## Grouping assertions
 

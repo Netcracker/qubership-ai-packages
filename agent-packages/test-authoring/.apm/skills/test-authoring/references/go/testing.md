@@ -44,9 +44,9 @@ loop identifies the input (`ensureBytes(%d)`), because the case name may not spe
 result; `t.Error` against `t.Fatal` inside the subtest decides whether that case continues, not whether the next row
 runs. Rows assert the same way where every row runs the same checks: a table with `want` and `wantErr error` columns
 whose loop compares both for every row, `errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. A `wantErr
-bool` that chooses which assertions run is the condition §6 rules out; such cases are separate test functions, or
-separate `t.Run` blocks written out under one parent, that call one helper marked with `t.Helper()`. The file's
-neighbors choose among the forms that remain (§9).
+bool` that chooses which assertions run is the condition that decides whether a check runs, which §6 rules out; such
+cases are separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked
+with `t.Helper()`. The file's neighbors choose among the forms that remain (§9).
 
 ## Keep going, or stop
 

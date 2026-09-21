@@ -95,9 +95,11 @@ Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fa
 Tests: node:test with node:assert/strict; no test framework dependency.
 ```
 
-The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test
-to find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines
-save the same search again: the command that runs one test, and where a new test goes.
+The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
+find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines save the
+same search again: the command that runs one test, and where a new test goes. Where the line is missing, the skill
+proposes it: to you in a session, or in the pull request description when it runs unattended. It adds the line to an
+instructions file the repository already has, and it creates no such file without being asked.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.
