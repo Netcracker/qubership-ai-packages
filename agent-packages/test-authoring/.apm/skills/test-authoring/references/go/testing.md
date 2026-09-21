@@ -12,9 +12,10 @@ that library on top. The rules that use it are in `SKILL.md` §7 and §8.
         m_test.go:7: ensureBytes(-1) = -1, want 0
 ```
 
-The runner prints the function, the subtest, and `file:line:` before every message. So the message never says where,
-and the function name plus the subtest name carry the unit and the scenario. `t.Fail()` with no message prints the
-name and nothing else; `t.Fatal("mismatch")` prints the literal and no values.
+The runner prints the function, the subtest, and `file:line:` before every message. So the message never says where, and
+the function name plus the subtest name carry the unit and the scenario. `t.Fail()` with no message prints the name and
+nothing else; `t.Fatal("mismatch")` prints the literal and no values. A test that holds a case with its controls in one
+check (`SKILL.md` §7) is named by the rule they establish.
 
 ## The failure line
 

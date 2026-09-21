@@ -362,11 +362,12 @@ comment may repeat the rule the message states, and the message may not repeat t
     that adds or removes structure: a clause of a query, a statement of a program, an expectation marker. The reader
     learns its effect only after the helper splices it into the template. Such a helper assembles an input the reader
     never sees whole, and that input is what the assertion depends on (§9). Cases that differ in the structure of the
-    input stand side by side in one input where one act of the unit evaluates them all and the rule *Independent cases
-    in one check hide each other* lets them stay together. Otherwise each case writes its input out whole. That covers a
-    unit that takes one input per call, such as a parser or a statement sent to a database. It covers inputs that change
-    each other's outcome in one act. It also covers cases of different rules under a check that stops at the first
-    mismatch. The copy is the price of an input the reader sees whole, and the name of each test states what differs.
+    input stand side by side in one input where one act of the unit evaluates them all. The rule *Independent cases in
+    one check hide each other* says when they stay together. Otherwise each test writes its input out whole. That covers
+    a unit that takes one input per call, such as a parser or a statement sent to a database. It covers inputs that
+    change each other's outcome in one act. It also covers cases of different rules under a check that stops at the
+    first mismatch. The copy is the price of an input the reader sees whole, and the name of each test states what
+    differs.
   - **The form follows the assertions.** Cases that assert the same way, every case running the same checks, are rows of
     one table, arguments of one parameterized test, or separate tests on one helper, and the file's neighbors choose
     among these (§9). Cases that need different assertions, one expecting a throw and one a returned value, are separate
@@ -387,10 +388,10 @@ comment may repeat the rule the message states, and the message may not repeat t
   the repository's instructions (§0) or the harness's documentation says it for any other harness, the project's own or
   a library's. Where none of them says, establish it once, by breaking two cases on purpose and counting what the report
   names, or by reading the harness's source, and record the answer in the same change where the next writer reads it: in
-  the stack line, which §0 says how to add where it is missing. Where the repository has no instructions file and the
-  user wants none, record it in the documentation of a harness the repository owns, and otherwise in the pull request
-  description. The next change does not see that description, so it cites the harness again. Two questions, answered
-  apart: does the report carry every mismatch, and does it name each case without the file?
+  the stack line. §0 says how to add the line where it is missing. Where the repository has no instructions file and
+  none is created (§0), record it in the documentation of a harness the repository owns, and otherwise in the pull
+  request description. The next change does not see that description, so it cites the harness again. Two questions,
+  answered apart: does the report carry every mismatch, and does it name each case without the file?
   - **A case and its controls are not independent, and stay in one check.** A rule here is one statement of the
     specification that ties one outcome to one condition: `a local is reported when nothing reads it`. The case meets
     the condition, and each control is a nearest input that does not. They establish the rule between them, one run of
@@ -399,21 +400,21 @@ comment may repeat the rule the message states, and the message may not repeat t
     stands beside the case it controls. Each case in the test still stands for one partition of §4. This form needs an
     act that evaluates several inputs at once: one compilation, one validation of a batch, one table assertion. The form
     also needs the act to evaluate each input on its own, so that each case has the outcome it would have alone. An
-    atomic batch that rolls back the valid record along with the rejected one does not. Neither does a source where one
-    declaration changes what the compiler infers for the next. Where the unit takes one input per call, the case and its
-    control are separate cases, since a second call after an assert is a second act. Where the inputs affect each other
-    they are separate cases too, since each outcome then depends on its neighbor. Separate cases take a form the
-    shared-setup rule offers where they differ in a value, and each writes its input out whole where they differ in
-    structure. The reviewer states the rule's condition in one sentence and checks that every case in the test either
-    meets that condition or narrowly misses it. The reviewer also checks that each expectation would stand with the
-    other cases removed from the input. A test with `and` in its name, or with a case whose outcome a different
-    condition decides, is split.
+    atomic batch does not evaluate each record on its own: it rolls back the valid record along with the rejected one. A
+    compilation does not either where one declaration changes what the compiler infers for the next. Where the unit
+    takes one input per call, the case and its control are separate cases, since a second call after an assert is a
+    second act. Where the inputs affect each other they are separate cases too, since each outcome then depends on its
+    neighbor. Separate cases take a form the shared-setup rule offers where they differ in a value, and each writes its
+    input out whole where they differ in structure. The reviewer states the rule's condition in one sentence and checks
+    that every case in the test either meets that condition or narrowly misses it. The reviewer also checks that each
+    expectation would stand with the other cases removed from the input. A test with `and` in its name, or with a case
+    whose outcome a different condition decides, is split.
   - **Where the check stops at the first mismatch, split between rules.** Cases of different rules in one such check
     hide each other, so each rule gets its own test, along the dimension whose failures should be named.
   - **Where the check names a case by a line number** inside an input the test embeds, only a reader holding the file
     can place it. This holds whether the check carries every mismatch or stops at the first. Give each case a label the
     report prints where the harness offers one. Where it offers none, the test name is all the report carries besides
-    the line: a case with its controls is named by their rule, and cases of several rules are split between rules. For a
+    the line. A case with its controls is named by their rule. Cases of several rules are split between rules. For a
     test that still holds several cases, the missing label is a limitation that no offered form removes, so it earns the
     follow-up named in the pull request.
   - **Where the check carries every mismatch under a name,** the shared check is one runner test with named cases, and
@@ -462,13 +463,14 @@ before the test is. Each cause below has one fix, and every cause but the last i
   source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the
   neighbors' shape breaks a rule of this skill, the rule wins, the new test takes the shape the rule asks for, and the
   pull request names the rule. Two such shapes are common: cases of several rules in one check that stops at the first
-  mismatch, and a long setup copied into every test where §7 offers a form without the copy (both §7). A case with its
-  controls in one check is not one of them (§7). The neighbors stay as they are unless the task is to rewrite them, with
-  one exception: an existing test of the same rule, the case the new control belongs to or the control of the new case,
-  is the twin. The new case joins it, inside the twin's input where the file writes cases side by side, or through a
-  helper that both now call, and the twin's expectations do not change. §7's exceptions hold for a twin too. A setup of
-  a line or two is repeated. Inputs that differ in structure and cannot stand side by side are each written out whole. A
-  case of another rule that shares the setup takes the helper, or writes its input out (§7).
+  mismatch or names its cases only by a line number, and a long setup copied into every test where §7 offers a form
+  without the copy (both §7). A case with its controls in one check is not one of them (§7). The neighbors stay as they
+  are unless the task is to rewrite them, with one exception: an existing test of the same rule, the case the new
+  control belongs to or the control of the new case, is the twin. The new case joins it, inside the twin's input where
+  the file writes cases side by side, or through a helper that both now call, and the twin's expectations do not change.
+  §7's exceptions hold for a twin too. A setup of a line or two is repeated. Inputs that differ in structure and cannot
+  stand side by side are each written out whole. A case of another rule that shares the setup takes the helper, or
+  writes its input out (§7).
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for one value, write the helper
   that takes that value and have the old one call it, so that the existing tests stay as they are. Two helpers whose
@@ -530,23 +532,25 @@ Run this over a test you wrote or one you are reviewing.
   with the input and the outcome as literals per case, so that the difference is read without comparing bodies, or is
   the copy the written-out input of cases that differ in structure and cannot stand side by side (§7)?
 - Does every helper argument fill a place where the input has a value, or does one add or remove a clause, a
-  statement, or a marker, where the cases could stand side by side in one input or the input could be written out (§7)?
+  statement, or a marker (§7)?
 - Does a row field or a flag select which assertion a case runs, where separate tests on one helper would do (§7)?
 - Where one check covers several independent cases, does a reference, the stack line, or the harness's documentation
   say whether that check carries every mismatch and names each case, or does this change establish it, by a run or
   a cited line of the harness, and record it (§7)?
 - Is a check that stops at the first mismatch split between rules, with a case and its controls left together under a
-  name that states their rule, and does every case in such a test meet the rule's one condition or narrowly miss it
-  (§7)?
+  name that states their rule (§7)?
+- Does every case in a test of a case with its controls meet the rule's one condition or narrowly miss it (§7)?
 - Where a case and its controls share one check, would each expectation stand with the other cases removed from the
   input (§7)?
 - Does a check that names its cases only by an embedded line number give them labels the report prints, whether it
-  carries every mismatch or stops at the first, and where the harness offers no label, does the pull request name the
+  carries every mismatch or stops at the first (§7)?
+- Where the harness offers no label, are cases of several rules split between rules, and does the pull request name the
   missing label as the follow-up (§7)?
 - Any sleep, wall-clock read, unseeded random, real host, or unordered collection compared as a sequence (§8)?
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
-- Is the new test beside the existing tests of the same unit, and in the shape of its neighbors, and does a case whose
-  twin already exists join that twin rather than copy a setup longer than a line or two (§9)?
+- Is the new test beside the existing tests of the same unit, and in the shape of its neighbors (§9)?
+- Does a case whose twin already exists join that twin rather than copy a setup longer than a line or two, or write its
+  input out whole only where the inputs differ in structure and cannot stand side by side (§9)?
 - Does a new helper repeat the body of a helper the file already has (§9)?
 - For each finding: which of the four buckets, and what settles it there: the diff, a run or a citation of the
   harness, the tool's report, or a judgment stated in a sentence (§10)?
