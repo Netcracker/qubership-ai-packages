@@ -12,9 +12,10 @@ that library on top. The rules that use it are in `SKILL.md` §7 and §8.
         m_test.go:7: ensureBytes(-1) = -1, want 0
 ```
 
-The runner prints the function, the subtest, and `file:line:` before every message. So the message never says where,
-and the function name plus the subtest name carry the unit and the scenario. `t.Fail()` with no message prints the
-name and nothing else; `t.Fatal("mismatch")` prints the literal and no values.
+The runner prints the function, the subtest, and `file:line:` before every message. So the message never says where, and
+the function name plus the subtest name carry the unit and the scenario. `t.Fail()` with no message prints the name and
+nothing else; `t.Fatal("mismatch")` prints the literal and no values. A test that holds a case with its controls in one
+check (`SKILL.md` §7) is named by the rule they establish.
 
 ## The failure line
 
@@ -36,9 +37,26 @@ if got := ensureBytes(-1); got != 0 {
 ## Subtests and table-driven tests
 
 `t.Run(name, func(t *testing.T) {…})` prints the name after a slash, with spaces turned into underscores:
-`TestEnsureBytes/negative_count_is_refused`. Name each table case by its condition, never by its ordinal
-(`case_3` is a location), and keep the names unique, since two identical names are disambiguated by a suffix. The
-message inside the loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it.
+`TestEnsureBytes/negative_count_is_refused`. Name each table case by its condition, never by its ordinal (`case_3` is a
+location), and keep the names unique, since two identical names are disambiguated by a suffix. The message inside the
+loop identifies the input (`ensureBytes(%d)`), because the case name may not spell it. Cases that share a setup
+(`SKILL.md` §7) and assert the same way may be rows of the table, each run through `t.Run` so that it has its own name
+and result, or separate functions on one helper marked with `t.Helper()`. The main skill (§7) and the file's neighbors
+(§9) choose between them, and a short setup is repeated in each case. `t.Error` against `t.Fatal` inside the subtest
+decides whether that case continues, not whether the next row runs. Rows assert the same way where the loop makes the
+same comparisons for every row. A table with `want` and `wantErr error` columns whose loop compares both,
+`errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. So is the table the `gotests` generator writes: a
+`wantErr bool` column, `(err != nil) != tt.wantErr` compared for every row with a `return` on a mismatch, and `got`
+compared with `tt.want` for every row. That table is the idiom of the ecosystem, so a new case joins it as a row (§9),
+and the loop stays as it is unless the task is to rewrite it. The table has two weaknesses, and the pull request names
+the ones the new row inherits. A `bool` establishes only that some error came back, which is §5's row *An assertion
+weakened until it passes*. An error row compares `got` with a zero `want`, which asserts more than the contract where
+the contract leaves the result undefined on an error. A new table avoids both. It carries `wantErr error` and compares
+with `errors.Is`. Where the contract leaves the result undefined on an error, the accepting rows and the rejecting rows
+are two tables, each with its own loop, and only the accepting loop compares `got`. A row field that chooses between two
+blocks of assertions is the condition that decides whether an assertion runs, which §6 rules out. Such cases are
+separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked with
+`t.Helper()`. Many cases of each kind are one table for each kind.
 
 ## Keep going, or stop
 
