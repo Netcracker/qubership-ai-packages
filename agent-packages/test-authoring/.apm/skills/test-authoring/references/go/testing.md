@@ -43,10 +43,13 @@ loop identifies the input (`ensureBytes(%d)`), because the case name may not spe
 (`SKILL.md` §7) and assert the same way are rows of the table, each run through `t.Run` so that it has its own name and
 result; `t.Error` against `t.Fatal` inside the subtest decides whether that case continues, not whether the next row
 runs. Rows assert the same way where every row runs the same checks: a table with `want` and `wantErr error` columns
-whose loop compares both for every row, `errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. A `wantErr
-bool` that chooses which assertions run is the condition that decides whether a check runs, which §6 rules out; such
-cases are separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked
-with `t.Helper()`. The file's neighbors choose among the forms that remain (§9).
+whose loop compares both for every row, `errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. Where the
+contract leaves the result undefined on an error, comparing `got` on an error row asserts what the behavior does not
+define (§6). The accepting rows and the rejecting rows are then two tables, each with its own loop. A `wantErr bool`
+that chooses which assertions run is the condition that decides whether a check runs, which §6 rules out; such cases are
+separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked with
+`t.Helper()`. Many cases of each kind are one table for each kind. The file's neighbors choose among the forms that
+remain (§9).
 
 ## Keep going, or stop
 

@@ -42,7 +42,8 @@ Cases that share a setup (`SKILL.md` §7) take one of these forms, and the file'
 `@ParameterizedTest` where the assertions have the same shape, with the arguments named as *Name the argument, not the
 pattern* says; or separate methods that call one helper which builds the setup from the varying value. Where the
 outcomes differ in kind, one throwing and one returning, the parameterized form is out, and the cases are separate
-methods, or the dynamic tests of one `@TestFactory` in a file that already writes them.
+methods, or the dynamic tests of one `@TestFactory` in a file that already writes them. Many cases of each kind are one
+`@ParameterizedTest` for each kind.
 
 ## Order and flakiness
 

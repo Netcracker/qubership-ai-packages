@@ -42,7 +42,8 @@ asks for. Name an `rstest` case by its condition, `#[case::minus_one(-1)]`, sinc
 that share a setup (`SKILL.md` §7) and assert the same way are the `#[case]` rows of one `rstest` function, or separate
 `#[test]` functions that call one helper which builds the setup from the varying value. An `Err` and an `Ok` that one
 `assert_eq!` compares assert the same way and stay rows. Where the cases need different assertions, one panicking under
-`#[should_panic]` and one returning a value, they are separate functions on that helper.
+`#[should_panic]` and one returning a value, they are separate functions on that helper. Many cases of each kind are one
+`rstest` function for each kind.
 
 ## Grouping assertions
 

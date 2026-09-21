@@ -93,13 +93,17 @@ Tests: Go testing with testify require; fake clients from k8s.io/client-go/kuber
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding and names it by line.
 ```
 
 The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
 find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines save the
 same search again: the command that runs one test, and where a new test goes. Where the line is missing, the skill
 proposes it: to you in a session, or in the pull request description when it runs unattended. It adds the line to an
-instructions file the repository already has, and it creates no such file without being asked.
+instructions file the repository already has, or to the source that file is generated from. It creates no such file
+without being asked. In a review it only proposes the line. The `lint(...)` example carries one more fact, which the
+line owes for a harness that has no reference file in the skill. It says whether a check of several cases reports every
+mismatch and names each case.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.

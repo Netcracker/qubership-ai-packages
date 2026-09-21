@@ -38,7 +38,7 @@ the root `conftest.py` opts the module in with `pytest.register_assert_rewrite("
 The id becomes the node id suffix, is printed in the `FAILED` line, and is selectable with `-k`. Two cases with the same
 id are disambiguated by an index, which is a location. Cases that share a setup (`SKILL.md` §7) are `pytest.param` rows
 with ids where they assert the same way, or separate functions on one fixture or helper that builds the setup from the
-varying value where the outcomes differ in kind.
+varying value where the outcomes differ in kind. Many cases of each kind are one parametrized function for each kind.
 
 ## Grouping assertions
 
