@@ -24,9 +24,10 @@ the constructor.
   as `{0}` in the pattern, is the substitute for JUnit 5's `Named`.
 - **One parameter set per class.** A second set becomes more rows, or a second class; there is no per-method
   parameterization.
-- **Cases that share a setup (`SKILL.md` §7) are methods that call one helper which builds the setup from the varying
-  value**, or a class of its own parameterized over the input. The class-level parameter set would run every other test
-  in an existing class once per row.
+- **Cases that share a setup too long to repeat (`SKILL.md` §7) are methods that call one helper which builds the setup
+  from the varying value**, or a class of its own parameterized over the input. The class-level parameter set would run
+  every other test in an existing class once per row. The main skill (§7) and the file's neighbors (§9) choose between
+  the two forms, and a short setup is repeated in each case.
 
 ## Errors
 

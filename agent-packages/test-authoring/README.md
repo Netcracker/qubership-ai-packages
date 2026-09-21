@@ -31,15 +31,17 @@ rule can be satisfied by a test worth nothing.
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
 - The failure report and its four parts, container, name, assertion, message, with what each carries and what it may not
   repeat; the assertion that prints the operands; the framework's operand order; parameterized case names; grouped
-  assertions; error semantics over message strings; what a failed wait reports; related cases that write a long shared
-  setup once and state what differs in each case; a case and its controls kept in one check where one act evaluates each
-  input on its own, and separate cases otherwise; when several cases may share one check, decided by whether that check
-  carries every mismatch and names each case, a property learned once per check and recorded.
+  assertions; error semantics over message strings; what a failed wait reports; related cases that write a shared setup
+  once and state what differs in each case, unless the setup is short enough to repeat; literals in an example-based
+  case, and the generator and the property in a property-based one; a case and its controls in one check where one act
+  evaluates each input on its own, one partition that expects the outcome per test, and separate cases otherwise; when
+  several cases may share one harness call, decided by whether that call carries every mismatch and names each case, a
+  property of the harness learned once and recorded.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
-  input, a helper that takes a value, or a table, where a new test goes, in which shape, the twin it joins, the helper
-  it reuses before adding one, and when a class splits.
+  input, a helper that leaves the reader the whole input, a table, or a per-test fixture, where a new test goes, in
+  which shape, the twin it joins, the helper it reuses before adding one, and when a class splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
   needs a tool's verdict, or a question for a human.
 
@@ -93,17 +95,17 @@ Tests: Go testing with testify require; fake clients from k8s.io/client-go/kuber
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
-Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding and names it by line.
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names it by line, and offers no label.
 ```
 
 The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
 find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines save the
 same search again: the command that runs one test, and where a new test goes. Where the line is missing, the skill
-proposes it: to you in a session, or in the pull request description when it runs unattended. It adds the line to an
-instructions file the repository already has, or to the source that file is generated from. It creates no such file
-without being asked. In a review it only proposes the line. The `lint(...)` example carries one more fact, which the
-line owes for a harness that has no reference file in the skill. It says whether a check of several cases reports every
-mismatch and names each case.
+proposes it in one sentence: to you in a session, or in the pull request description when it runs unattended. It edits
+an instructions file only after you agree, and then it edits the source where that file is generated. It creates no such
+file without being asked. Unattended, in a repository somebody else maintains, and in a review it only proposes the
+line. The `lint(...)` example carries one more fact, which the line owes for a harness that has no reference file in the
+skill. It says whether one call of the harness reports every mismatch and how it names each case.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.
