@@ -3,9 +3,9 @@
   "extends": [
     "github>Netcracker/renovate-config:base",
     "github>Netcracker/renovate-config:github-actions",
+    "github>Netcracker/renovate-config:automerge",
     "github>Netcracker/renovate-config:apm"
   ],
-  "platformAutomerge": true,
   "prCreation": "not-pending",
   "customManagers": [
     {
@@ -26,30 +26,16 @@
   ],
   "packageRules": [
     {
-      "description": "Automerge low-risk dependency maintenance after CI is green.",
+      "description": "Wait one day before automerging newly released dependencies.",
+      "matchDepTypes": ["!apm"],
       "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
-        "digest"
+        "digest",
+        "pinDigest"
       ],
-      "minimumReleaseAge": "1 day",
-      "automerge": true
-    },
-    {
-      "description": "Require manual review for major dependency updates.",
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    },
-    {
-      "description": "Do not delay APM Git ref updates that have no release timestamp.",
-      "matchDepTypes": [
-        "apm"
-      ],
-      "matchDatasources": [
-        "git-refs"
-      ],
-      "minimumReleaseAge": null
+      "minimumReleaseAge": "1 day"
     },
     {
       "description": "Keep CI Python tools from requirements.txt grouped together.",
@@ -60,13 +46,6 @@
         "requirements.txt"
       ],
       "groupName": "python ci tools"
-    },
-    {
-      "description": "Do not automerge APM package updates because marketplace.json is generated separately.",
-      "matchDepTypes": [
-        "apm"
-      ],
-      "automerge": false
     }
   ]
 }

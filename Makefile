@@ -50,6 +50,7 @@ verify-docs:
 		'$(CURDIR)/docs/consuming-packages.md'
 
 test:
+	$(PYTHON) -m unittest discover -s tests/renovate-policy -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
