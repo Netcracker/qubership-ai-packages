@@ -12,11 +12,14 @@ The shared preset scans every `apm.yml` file and handles these APM reference for
 - Package dependencies pinned to release tags, such as
   `Netcracker/qubership-ai-packages/agent-packages/codex-review@v1.0.0`.
 - Package dependencies pinned to immutable commits with a tracked branch or release-tag comment, such as
-  `Netcracker/qubership-ai-packages/agent-packages/codex-review#<sha>  # main` or
+  `Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#<sha>  # main` or
   `Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry#<sha>  # v0.2.0`.
 - Package dependencies that still reference a mutable branch directly, such as
   `Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage#feat/agent-packages`.
 - Marketplace entries that use `source`, `subdir`, and `ref` fields in the root `apm.yml`.
+
+A dependency on another package in this repository is written as `../<name>` and resolves at the commit the dependent
+package is installed from, so Renovate has nothing to update there.
 
 Renovate groups these updates into an `apm packages` PR. For mutable branch references, Renovate pins the dependency to
 the latest commit SHA and keeps the source ref as a trailing comment.
