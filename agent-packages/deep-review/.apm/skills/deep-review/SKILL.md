@@ -225,16 +225,24 @@ records, and what force in the domain justifies it if not.
 ```
 Workflow({
   scriptPath: "${CLAUDE_SKILL_DIR}/workflow/deep-review.js",
-  args: { dossier, repo, skill: "${CLAUDE_SKILL_DIR}", surfaces: [...], axes: [...], models: {...}, completenessCritic: true }
+  args: { dossier, repo, skill: "${CLAUDE_SKILL_DIR}", surfaces: [...], surfacesWithoutPack: [...], axes: [...],
+          models: {...}, completenessCritic: true }
 })
 ```
 
 `args.skill` is required, and the script throws without it: every axis prompt points its agent at reference packs
 under that directory, and an agent that cannot resolve them reviews from memory instead.
 
-`surfaces` is the list from step 1, e.g. `["kubernetes", "code-library"]`. Every axis is told to read those packs and
-to obey the ownership table inside them; the distiller additionally carries their architectural questions into the
-synthesis prompt. Leave it out only when the repository genuinely exposes no API — which is rarer than it looks.
+`surfaces` holds the forms from step 1 that have a pack in `references/surfaces/`, e.g. `["kubernetes", "helm"]`.
+Every axis is told to read those packs and to obey the ownership table inside them; the distiller additionally carries
+their architectural questions into the synthesis prompt. Leave it out only when the repository genuinely exposes no
+API — which is rarer than it looks.
+
+`surfacesWithoutPack` holds the other forms from step 1, e.g. `["code-library", "rest-http"]` for a service that serves
+a REST API and also publishes a client library. A form without a pack must not go into `surfaces`: the
+workflow turns every entry there into a pack path, and an agent sent to a missing file reviews from memory. The
+workflow names these forms to every axis as reviewed by the form-independent rules, so the gap shows up in coverage
+instead of disappearing.
 
 Build `args.axes` from the focus file. Each entry:
 
