@@ -8,7 +8,7 @@
     {
       "name": "apm-authoring",
       "description": "Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "activity:authoring",
