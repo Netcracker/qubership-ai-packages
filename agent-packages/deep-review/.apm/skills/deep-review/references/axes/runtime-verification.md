@@ -1,7 +1,8 @@
 # Axis: runtime verification
 
 Finding prefix: `RUN`. Runs late, in the `synthesis` phase, because its subject is the findings the other axes
-already produced.
+already produced. Pass it with `distill: false`: it needs no distilled prompt, and the workflow hands it the verified
+findings directly.
 
 This axis does not look for defects. It takes the findings that a running system could settle and settles them —
 turning arguments into demonstrations, and occasionally proving one wrong. It exists because the rest of the review
@@ -10,8 +11,9 @@ double) differs from the real thing in exactly the places where careful reasonin
 
 ## Select before you execute
 
-Read `findings.jsonl` and the reports, and choose. A finding is worth an execution when a runtime would change what
-the reader does about it:
+Read the per-axis verified findings, `<dossier>/work/findings-<axis>.jsonl` (the workflow lists them in your prompt;
+`<dossier>/findings.jsonl` is empty until the consolidator writes it after you), and the reports behind them.
+Then choose. A finding is worth an execution when a runtime would change what the reader does about it:
 
 - it is `PLAUSIBLE` **and** a runtime would settle it;
 - it is `CONFIRMED` by code reading alone, and it is severe enough that the maintainers will argue — a demonstration
@@ -68,19 +70,25 @@ evidence.
 
 ## Verdicts
 
-For every selected finding return one of:
+Every selected finding produces one `RUN-` finding of your own whose `settles` field carries the settled finding's id
+and whose `runtimeVerdict` is one of:
 
-- `demonstrated` — reproduced. Quote the commands and the output that shows it. The finding stays, and its
-  confidence becomes `CONFIRMED` on your evidence rather than on someone's tracing.
+- `demonstrated` — reproduced. Quote the commands and the output that shows it. The consolidator relabels the settled
+  finding `CONFIRMED` on your evidence rather than on someone's tracing.
 - `refuted` — the runtime shows the claim is wrong. Say what actually happens. This is the most valuable outcome
   this axis produces and it must not be softened.
-- `narrowed` — real, but the trigger is tighter or the consequence milder than claimed. Give the new severity.
-- `widened` — worse than claimed, or reproducible more easily. Say so and raise the severity.
+- `narrowed` — real, but the trigger is tighter or the consequence milder than claimed. Put the severity you propose
+  in `proposedSeverity`; the consolidator applies it.
+- `widened` — worse than claimed, or reproducible more easily. Say so and put the higher severity in
+  `proposedSeverity`.
 - `not-reproducible` — you tried and could not, and you cannot say whether that is the finding or your setup. State
   which parts of the environment you doubt. Do not report this as a refutation.
 
-New defects found while demonstrating something else are ordinary findings with a `RUN-` id; keep them separate from
-the verdicts above.
+You do not edit the other axes' reports or findings files; the consolidator applies your verdicts when it merges, and
+your own verifier checks your executions like any other finding's.
+
+New defects found while demonstrating something else are ordinary `RUN-` findings without `settles`; keep them
+separate from the verdicts above.
 
 ## Report additions
 
@@ -94,6 +102,8 @@ On top of the standard format:
 
 | Finding | Selected because | Verdict | Evidence |
 | --- | --- | --- | --- |
+
+One row per settled finding, in the same order as your `RUN-` findings carry them.
 
 **Not attempted** — the findings a runtime could have settled but you had no budget for, and the ones a runtime
 cannot settle at all, kept apart.

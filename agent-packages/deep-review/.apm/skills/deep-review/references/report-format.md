@@ -3,12 +3,19 @@
 Write one Markdown file to the path given in your instructions. Also return the structured findings the schema asks
 for — the two must agree; the Markdown is for humans, the structured payload is for the pipeline.
 
-Report language: Russian, with identifiers, paths, and technical terms left in English. Structure:
+Report language: Russian body text, with identifiers, paths, and technical terms left in English. The headings are
+fixed as written in this file, English and Russian ones alike: the pipeline finds sections by heading text, so a
+translated heading is a missing section. Structure, in this order:
 
 ## Summary
 
 At most ten lines. What you attacked, what you found, and the one thing the reader should act on first. No preamble,
 no restatement of the task.
+
+## Направленные вопросы
+
+Only when the focus file addresses a directed question to your axis: one subsection per question, with the answer, or
+with what you tried and what would settle it. Before the findings, so a reader who came for the answer finds it first.
 
 ## Findings
 
@@ -69,6 +76,17 @@ Then mark **at most one** of them as the question for the user, and only when th
 conclusions — a different severity, a finding that appears or disappears. Everything else is a note for the
 maintainers. A list of twelve equally-weighted questions gets read as none: choosing the one that matters is part of
 the work, not a formality.
+
+## Axis additions
+
+An axis file may add sections of its own (the `architecture` verdict and decision inventory, the `tests` "Where the
+suite is blind", the `runtime-verification` environment and verdict table). They go between *Checked and sound* and
+*Cross-axis notes* unless the axis file places them elsewhere.
+
+## Отклонено при проверке
+
+Not yours to write. The verifier appends this section last, after *Open questions*, with every finding it refuted and
+the reason, and stamps its confidence onto the finding blocks above.
 
 ## What not to include
 

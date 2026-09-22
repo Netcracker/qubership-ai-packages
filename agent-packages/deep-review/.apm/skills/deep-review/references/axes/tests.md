@@ -83,5 +83,8 @@ say how many mutations you tried — six survivors out of six attempts and six o
 
 ## Required section
 
-End the report with **Where the suite is blind** — a ranked list of source areas with no meaningful test, each with
-one line on the defect class that would hide there. Other axes read this section first.
+Add a section **Where the suite is blind** after *Checked and sound* — a ranked list of source areas with no
+meaningful test, each with one line on the defect class that would hide there. Other axes read this section first.
+
+At `depth: coarse`, steps 3 and 4 shrink to what exists already: report the coverage the project measures itself, or
+none, and skip the mutation probe; the blind-spots section is then built from the layout map of step 2 and from CI.

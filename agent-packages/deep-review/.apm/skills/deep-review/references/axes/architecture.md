@@ -61,10 +61,10 @@ Do steps 1 and 2 **before** forming opinions about the code, so the implementati
 ## Fitness findings
 
 Prefix `FIT`, one per inventory row at most. The claim has a fixed shape: **a technology carries a role for which its
-distinctive properties are unused or in the way, and the project builds workarounds to keep it in that role.** "Unusual" is
-not a defect. SQLite as a file format, a relational table as a queue at low volume, a Kubernetes ConfigMap as a
-read-mostly store can each be the right choice. The finding is a mismatch that has a measured cost and no force in
-the domain to justify it.
+distinctive properties are unused or in the way, and the project builds workarounds to keep it in that role.**
+"Unusual" is not a defect. SQLite as a file format, a relational table as a queue at low volume, a Kubernetes
+ConfigMap as a read-mostly store can each be the right choice. The finding is a mismatch that has a measured cost and
+no force in the domain to justify it.
 
 Signals, each of which is a fact to collect rather than an opinion to hold:
 
@@ -84,9 +84,11 @@ belongs in the finding's **Alternative** line, after the signals have made the c
 
 A `FIT` finding is reported when all of these hold: the upstream documentation of X states a purpose or a non-goal
 that the role contradicts, quoted with its URL; the role is cited at `path:line`; and at least two signals from the
-table are measured, or one signal plus two or more evidence findings, from any axes, that name X in `Tool limit:`. With fewer than
-that, write one line under *Checked and sound*: "X in role R: <the signal checked> found nothing". Where a force in
-the domain justifies the role and is written nowhere, report `ACCEPTED-DEBT` and name what to write down.
+table are measured, or one signal plus two or more evidence findings, from any axes, that name X in `Tool limit:`.
+With fewer than that, write one line under *Checked and sound*: `X in role R: <the signal checked> found nothing`.
+Where a force in the domain justifies the role and is written nowhere, report the finding at its severity, say under
+**Force in the domain** that the force is undocumented and what to write down, and leave the `ACCEPTED-DEBT` label to
+the consolidator, which applies it once the verifier has upheld the finding on that ground.
 
 A constraint from the owner ("X is not forked", "X stays") fixes how X is used, not whether X fits the role. Treat it
 as a bound on the **Alternative** line, never as a reason to skip the row. The focus file carries the constraint as
@@ -95,7 +97,7 @@ a directed question to this axis for that reason.
 Block for a `FIT` finding:
 
 ```markdown
-### FIT-01 <technology> carries <role> that its <property> does not serve — MAJOR
+### FIT-01 <technology> carries <role> that its <property> does not serve — HIGH
 
 - **Designed for:** the quoted purpose or non-goal, with the URL
 - **Role here:** `path:line`, and the size of the artifact on it and around it
@@ -107,6 +109,11 @@ Block for a `FIT` finding:
 - **Cost to change:** now versus after the next release
 - **Проверка:** `executed` / `traced` / `inferred`, plus the artifact
 ```
+
+In the structured payload a `FIT` finding fills the common fields from the block — `file` from **Role here**,
+`expected` from **Designed for**, `actual` from **Signals measured**, `trigger` with the change or load under which the
+mismatch costs, `consequence` and `fix` as usual — and puts the rest under `fit` (`designedFor`, `signalsMeasured`,
+`findingsGenerated`, `forceInDomain`, `alternative`, `costToChange`).
 
 ## Report additions
 
@@ -127,21 +134,27 @@ premise of the whole project is the one most likely to be missing.
 **Findings**, using this block instead of the standard one (a `FIT` finding uses its own block, above):
 
 ```markdown
-### ARCH-01 <the decision, stated as a decision> — BLOCKER
+### ARCH-01 <the decision, stated as a decision> — CRITICAL
 
 - **Decision:** what was chosen, in one sentence
 - **Encoded in:** `path:line`, and the other places that assume it
 - **Force it fails under:** the requirement, scale, or change that breaks it
 - **Consequence:** what the consumer, the operator, or the next maintainer experiences
-- **Alternative:** what to do instead, and what that trades away
+- **Alternative:** what to do instead, where the genre or the upstream documentation establishes it, and what that
+  trades away
 - **Cost to change:** now versus after the next release
 - **Symptoms already visible:** evidence findings that this decision generated, by id
 - **Проверка:** `executed` / `traced` / `inferred`, plus the artifact — and what would settle the rest
 ```
 
-Severity on this axis: `BLOCKER` (a one-way door that is wrong, or a design that loses data under normal operation),
-`MAJOR` (will force a painful change within a year, or makes a required capability unreachable), `MINOR` (friction
-that compounds), `ACCEPTED-DEBT` (a defensible trade-off that is merely undocumented — say what to write down).
+In the structured payload: `file` from **Encoded in**, `actual` from **Decision**, `trigger` from **Force it fails
+under**, `expected` from **Alternative** with its source, `consequence` and `fix` (the cost to change) as usual.
+
+Severity uses the common ladder from `common-rules.md`, on this axis read as: `CRITICAL` for a one-way door that is
+wrong or a design that loses data under normal operation; `HIGH` for a design that forces a painful change within a
+year or makes a required capability unreachable; `MEDIUM` and `LOW` for friction that compounds. A defensible
+trade-off that is merely undocumented is reported at its severity with the missing document named under **Force in
+the domain** or **Alternative**; the consolidator relabels it `ACCEPTED-DEBT` after verification.
 
 **Pressure-test table** — one row per scenario: what the architecture makes you do, whether it absorbs the change, and
 the cost.

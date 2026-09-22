@@ -112,3 +112,16 @@ is untouched:
 - "Argo could be configured to ignore this" is not a refutation unless the project ships that configuration.
 - Preferences about repository layout, Application-of-Applications style, or directory structure are out of scope
   unless the project states a convention.
+
+## Architectural questions this surface raises
+
+For the `architecture` distiller, not for the evidence axes:
+
+- Is the unit of sync the unit of ownership? Where an Application spans two teams' resources, or two Applications
+  share a CRD, the manifests do not say who owns the shared object.
+- What does the loop re-apply that a human would have applied once — and is a controller's own write to a declared
+  object a design decision or an accident the manifests fight forever?
+- Does the health model tell the operator what is wrong, or only that something is? Which custom resources have no
+  health assessment at all?
+- What is the recovery path when git and the cluster disagree after an incident: does the design let an operator
+  fix the cluster first, or does the loop revert the fix?

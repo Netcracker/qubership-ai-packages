@@ -95,9 +95,11 @@ Check the version machinery itself: is more than one version served, which is `s
 webhook exist and is it tested in both directions? A `v1` shipped without any `v1alpha1`/`v1beta1` history and without
 conversion means the first schema mistake is permanent — say so.
 
-Also check CRD lifecycle: who installs and upgrades the CRD, and can an uninstall, a `helm upgrade`, or a disabled
-feature flag delete it? Deleting a CRD cascades to every custom resource in the cluster, and from there to anything
-those resources own. That is a data-loss path and it is `CRITICAL` wherever it exists.
+CRD lifecycle — who installs and upgrades the CRD, and whether an uninstall, a `helm upgrade`, or a disabled feature
+flag can delete it — is `deployment-config`'s row. Deleting a CRD cascades to every custom resource in the cluster,
+and from there to anything those resources own; that is a data-loss path and it is `CRITICAL` wherever it exists.
+The row is named here because of that severity: leave it to its owner, and note it under *Cross-axis notes* if you
+trip over it.
 
 ## `correctness` — reconcile semantics
 
@@ -112,7 +114,7 @@ documented. Requeue and backoff: is a permanent error retried forever, or a tran
 make manifests generate && git diff --exit-code   # committed CRDs must match the markers
 kubectl explain <kind>.spec --recursive           # the text a user actually sees
 kubeconform -strict -summary <rendered manifests>
-controller-gen crd paths=./api/... output:crd:dir=/tmp/crd-check   # then diff against config/crd/bases
+controller-gen crd paths=./api/... output:crd:dir=<dossier>/work/crd-check   # then diff against config/crd/bases
 ```
 
 Drift between kubebuilder markers and the committed CRDs is itself a finding: it means what ships is not what the
@@ -125,8 +127,9 @@ defaulting or pruning, do not enforce immutability, and take error paths the rea
 one review: three axes reported a nil-dereference panic that only the fake can produce, and a verifier refuted a
 genuine CEL-immutability defect because its fake-client probe could not see the rejection. So —
 
-- a defect **observed only against a fake** is `PLAUSIBLE` until reproduced against a real API server, envtest, or
-  at minimum a `kubectl apply --dry-run=server`;
+- a defect **observed only against a fake** carries `method: inferred` until reproduced against a real API server,
+  envtest, or at minimum a `kubectl apply --dry-run=server`, and a verifier that has done none of these stamps it
+  `PLAUSIBLE`;
 - a defect **refuted only against a fake** is not refuted at all; say what the fake cannot model and leave the
   finding standing;
 - anything about validation, defaulting, immutability, admission, or field pruning must go through a real API
