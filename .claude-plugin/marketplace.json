@@ -508,8 +508,8 @@
     },
     {
       "name": "core-mesh-to-istio-migration",
-      "description": "Orchestrates the full Cloud-Core Mesh to Istio migration end-to-end — converts declarative mesh CRs to Gateway API, migrates route-registration libraries, wires SERVICE_MESH_TYPE, generates HTTPRoutes from code, and maintains MIGRATION_LOG.md.",
-      "version": "1.0.0",
+      "description": "Orchestrates the full Cloud-Core Mesh to Istio migration end-to-end — converts declarative mesh CRs to Gateway API, migrates route-registration libraries, wires SERVICE_MESH_TYPE, generates HTTPRoutes from code, validates Istio guards / duplicate rules / imperative control-plane calls, and maintains .mesh-migration/MIGRATION_LOG.md.",
+      "version": "2.1.0",
       "tags": [
         "topic:cloud-core",
         "topic:service-mesh",
@@ -521,8 +521,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "b025768c3c5fa42af04941d06b7e3aa0dcd2b26d",
-        "sha": "b025768c3c5fa42af04941d06b7e3aa0dcd2b26d"
+        "ref": "5787cced9e46725d21a7ef3a1261d674038cad4c",
+        "sha": "5787cced9e46725d21a7ef3a1261d674038cad4c"
       }
     },
     {
