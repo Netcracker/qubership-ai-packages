@@ -49,9 +49,9 @@ marketplace:
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-user-essentials
-      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
+      description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, problem-report authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
       source: ./agent-packages/qubership-user-essentials
-      version: 1.2.0
+      version: 1.3.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
@@ -165,7 +165,7 @@ marketplace:
     - name: change-description-authoring
       description: "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what a squash merge does to it."
       source: ./agent-packages/change-description-authoring
-      version: 1.0.0
+      version: 1.0.1
       tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: docs-page-authoring
@@ -185,6 +185,12 @@ marketplace:
       source: ./agent-packages/final-review
       version: 1.0.0
       tags: ["topic:testing", "topic:code-review", "activity:code-review", "audience:public"]
+
+    - name: problem-report-authoring
+      description: "Structure and content rules for problem reports: bug reports in any tracker or on a mailing list, in someone else's project or your own, feature and change requests, questions and vendor support tickets, comments on existing reports, and short problem messages to a colleague."
+      source: ./agent-packages/problem-report-authoring
+      version: 1.0.0
+      tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
