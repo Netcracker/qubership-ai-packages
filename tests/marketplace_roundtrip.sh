@@ -3,10 +3,12 @@
 #
 # It asserts this repo's published package manifests are remote-installable,
 # then builds a monorepo-hybrid marketplace from scratch with git and asserts:
-#   0. package manifests declare remote APM dependencies pinned to commit SHAs;
+#   0. package manifests reach sibling packages by relative path and pin
+#      packages in other repositories to commit SHAs;
 #   1. `apm pack` emits the expected plugin entry (version, tags, local-path source);
 #   2. the release gate passes when the index is in sync and fails on drift;
-#   3. a consumer can register the marketplace, install, inspect, and uninstall;
+#   3. a consumer can register the marketplace, install a package together with
+#      its ../<name> sibling, inspect, and uninstall;
 #   4. bumping a package version is reflected after re-packing.
 #
 # Not covered: `apm marketplace outdated` / version-range tracking. That needs a
@@ -32,19 +34,41 @@ git config -f "$work/gitconfig" user.name "apm test"
 
 mkt="$work/mkt"
 pkg="$mkt/agent-packages/demo-pkg"
+dep_pkg="$mkt/agent-packages/demo-dep"   # a sibling that demo-pkg declares as ../demo-dep
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 ok()   { echo "ok: $*"; }
 
-# A package listed by a git marketplace can be resolved as a remote package.
-# APM must reject local-path dependencies in that mode because they point at the
-# consumer's filesystem, not the producer repository.
-local_path_deps="$(grep -nE '^[[:space:]]*-[[:space:]]*['\''"]?\.{1,2}(/|['\''"]?[[:space:]]*$)' "$repo_root"/agent-packages/*/apm.yml || true)"
-if [ -n "$local_path_deps" ]; then
-  printf '%s\n' "$local_path_deps" >&2
-  fail "published package manifests must not declare local-path APM dependencies"
+# A package listed by a git marketplace is installed as a remote package, and
+# APM 0.20.0 and later resolve its ../<sibling> dependencies in the same
+# repository at the same commit. A remote reference to a sibling pins a second
+# commit of this repository instead, which the next change to the sibling leaves
+# behind.
+remote_sibling_deps="$(grep -niE '^[[:space:]]*-[[:space:]]+netcracker/qubership-ai-packages/agent-packages/' \
+  "$repo_root"/agent-packages/*/apm.yml || true)"
+if [ -n "$remote_sibling_deps" ]; then
+  printf '%s\n' "$remote_sibling_deps" >&2
+  fail "sibling packages must be referenced as ../<name>, not by a remote reference to this repository"
 fi
-ok "published package manifests avoid local-path APM dependencies"
+ok "sibling packages are referenced by relative path"
+
+malformed_relative_deps="$(grep -nE '^[[:space:]]*-[[:space:]]+['\''"]?\.' "$repo_root"/agent-packages/*/apm.yml |
+  grep -vE ':[[:space:]]*-[[:space:]]+\.\./[A-Za-z0-9_.-]+[[:space:]]*$' || true)"
+if [ -n "$malformed_relative_deps" ]; then
+  printf '%s\n' "$malformed_relative_deps" >&2
+  fail "relative dependencies must be written as ../<name>, unquoted"
+fi
+
+missing_siblings=""
+while IFS=: read -r manifest line; do
+  sibling="$(printf '%s\n' "$line" | sed -E 's/^[[:space:]]*-[[:space:]]+\.\.\/([^[:space:]#]+).*/\1/')"
+  [ -f "$repo_root/agent-packages/$sibling/apm.yml" ] || missing_siblings+="$manifest: ../$sibling"$'\n'
+done < <(grep -HE '^[[:space:]]*-[[:space:]]+\.\./' "$repo_root"/agent-packages/*/apm.yml || true)
+if [ -n "$missing_siblings" ]; then
+  printf '%s' "$missing_siblings" >&2
+  fail "relative dependencies must name a package under agent-packages/"
+fi
+ok "relative dependencies name existing packages"
 
 mutable_refs="$(
   grep -nE '^[[:space:]]*-[[:space:]]+[^[:space:]#]+#[^[:space:]#]+' \
@@ -62,14 +86,20 @@ ok "published package dependencies pin immutable commit SHAs"
 # package.
 dependency_block() { sed -n '/^dependencies:/,$p' "$1"; }
 
+# Matches a sibling as ../<name> and a package in another repository as
+# <owner>/<repo>/agent-packages/<name>.
+has_dep() {  # $1 = manifest, $2 = package name
+  dependency_block "$1" | grep -Eq "(agent-packages/|\.\./)$2([#[:space:]]|$)"
+}
+
 require_dep() {  # $1 = manifest, $2 = package name
-  if ! dependency_block "$1" | grep -Fq "agent-packages/$2"; then
+  if ! has_dep "$1" "$2"; then
     fail "$(basename "$(dirname "$1")") must retain dependency $2"
   fi
 }
 
 reject_dep() {  # $1 = manifest, $2 = package name
-  if dependency_block "$1" | grep -Fq "agent-packages/$2"; then
+  if has_dep "$1" "$2"; then
     fail "$(basename "$(dirname "$1")") must not depend on $2"
   fi
 }
@@ -120,8 +150,10 @@ fi
 ok "deprecated essentials stay independent while new user essentials nests repo essentials"
 
 write_pkg() {  # $1 = version
-  mkdir -p "$pkg/.apm/skills/demo" "$pkg/.apm/instructions"
-  printf 'name: demo-pkg\nversion: %s\ndescription: Demo package\n' "$1" > "$pkg/apm.yml"
+  mkdir -p "$pkg/.apm/skills/demo" "$pkg/.apm/instructions" "$dep_pkg/.apm/skills/demo-dep"
+  printf 'name: demo-pkg\nversion: %s\ndescription: Demo package\ndependencies:\n  apm:\n    - ../demo-dep\n' "$1" > "$pkg/apm.yml"
+  printf 'name: demo-dep\nversion: 1.0.0\ndescription: Sibling of the demo package\n' > "$dep_pkg/apm.yml"
+  printf -- '---\nname: demo-dep\ndescription: A skill of the sibling package\n---\n# Demo dependency\n' > "$dep_pkg/.apm/skills/demo-dep/SKILL.md"
   printf -- '---\nname: demo\ndescription: A demo skill\n---\n# Demo\n' > "$pkg/.apm/skills/demo/SKILL.md"
   printf -- '---\napplyTo: "**/*.md"\n---\nBe concise.\n' > "$pkg/.apm/instructions/demo.instructions.md"
 }
@@ -184,10 +216,12 @@ printf 'name: consumer\nversion: 0.1.0\n' > "$cons/apm.yml"
 ( cd "$cons" && $APM marketplace browse demo-marketplace >/dev/null 2>&1 )            || fail "browse failed"
 ( cd "$cons" && $APM install demo-pkg@demo-marketplace >/dev/null 2>&1 )              || fail "install failed"
 grep -q demo-pkg "$cons/apm.lock.yaml"                                               || fail "demo-pkg not recorded in apm.lock.yaml after install"
+grep -q 'name: demo-dep' "$cons/apm.lock.yaml"                                       || fail "../demo-dep of demo-pkg not recorded in apm.lock.yaml after install"
+[ -f "$cons/.claude/skills/demo-dep/SKILL.md" ]                                      || fail "skill of ../demo-dep not deployed after installing demo-pkg"
 ( cd "$cons" && $APM deps list >/dev/null 2>&1 )                                     || fail "deps list failed"
 ( cd "$cons" && $APM uninstall demo-pkg@demo-marketplace >/dev/null 2>&1 )            || fail "uninstall failed"
 if grep -q demo-pkg "$cons/apm.yml" 2>/dev/null; then fail "demo-pkg still in apm.yml after uninstall"; fi
-ok "consumer add -> browse -> install -> deps -> uninstall"
+ok "consumer add -> browse -> install (with the ../ sibling) -> deps -> uninstall"
 
 # --- 4. version bump is reflected after re-pack ---
 write_pkg 1.1.0
