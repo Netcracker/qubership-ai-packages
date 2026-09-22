@@ -6,8 +6,9 @@ once, then install packages by name.
 
 ## Prerequisites
 
-- APM 0.16.0 or newer. Check with `apm --version`; upgrade with `apm self-update`. Install steps are in
-  [the APM installation guide](https://microsoft.github.io/apm/getting-started/installation/).
+- APM 0.20.0 or newer. Umbrella packages declare their sibling packages as `../<name>`, and an older APM installs the
+  umbrella without them and reports no error. Check with `apm --version`; upgrade with `apm self-update`. Install steps
+  are in [the APM installation guide](https://microsoft.github.io/apm/getting-started/installation/).
 - Network access to `github.com`. The marketplace index and every package are fetched over git.
 
 <!-- group doccmd[verify]: start -->

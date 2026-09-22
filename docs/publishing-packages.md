@@ -22,13 +22,16 @@ A package reaches the marketplace in one of two ways:
 - `.claude-plugin/marketplace.json` is generated, never hand-edited. Regenerate it with `apm pack` and commit the result.
 - Local-path packages live one per directory under `agent-packages/<name>/`, each with its own `apm.yml` and `.apm/`
   source tree.
+- A package depends on another package in this repository as `../<name>`; see
+  [Depend on another package in the same repository](#depend-on-another-package-in-the-same-repository).
 - Remote entries either pin a tag/SHA (`ref:`) or track a semver range (`version:` + `tag_pattern:`) — never a branch;
   `apm pack` rejects a mutable branch ref.
 - Every change lands through a pull request.
 
 ## Prerequisites
 
-- APM 0.16.0 or newer (`apm --version`, `apm self-update`).
+- APM 0.20.0 or newer (`apm --version`, `apm self-update`), the first version that resolves a `../<name>` dependency
+  of an installed package.
 - `gh` authenticated, for opening pull requests.
 
 ## Add a package that lives in this repository
@@ -71,6 +74,19 @@ A package reaches the marketplace in one of two ways:
 
 Once merged, the package is on `main`. It reaches consumers who pin a tag at the next
 [marketplace release](#releasing-the-marketplace).
+
+## Depend on another package in the same repository
+
+List the sibling in the package's `apm.yml` by its path relative to the package directory:
+
+```yaml
+dependencies:
+  apm:
+    - ../english-us-developer-style
+```
+
+A package in another repository is a remote reference pinned to a commit SHA, with the tracked branch or tag in
+a trailing comment: `Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#<sha>  # main`.
 
 ## Add a package from another repository
 
