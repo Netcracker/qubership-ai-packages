@@ -25,26 +25,17 @@
   ],
   "packageRules": [
     {
-      "description": "Wait one day before automerging newly released dependencies.",
-      "matchDepTypes": ["!apm"],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest",
-        "pinDigest"
-      ],
-      "minimumReleaseAge": "1 day"
-    },
-    {
-      "description": "Keep CI Python tools from requirements.txt grouped together.",
+      "description": "Keep CI Python tools from requirements.txt grouped together, and open their pull request outside the weekly schedule, so an update arrives once it passes the inherited release-age delay instead of on the next Monday after that.",
       "matchManagers": [
         "pip_requirements"
       ],
       "matchFileNames": [
         "requirements.txt"
       ],
-      "groupName": "python ci tools"
+      "groupName": "python ci tools",
+      "schedule": [
+        "at any time"
+      ]
     }
   ]
 }
