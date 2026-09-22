@@ -186,6 +186,12 @@ marketplace:
       version: 1.0.0
       tags: ["topic:testing", "topic:code-review", "activity:code-review", "audience:public"]
 
+    - name: telemetry-authoring
+      description: "Rules for instrumentation in libraries and services: which signal an event owes (a record, an instrument, a span, the caller's channel, or nothing), what a record carries, the rate it may be emitted at, and what a library may not decide for its host."
+      source: ./agent-packages/telemetry-authoring
+      version: 1.0.0
+      tags: ["topic:observability", "activity:authoring", "activity:code-review", "audience:public"]
+
     - name: codex-review
       description: Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.
       source: ./agent-packages/codex-review

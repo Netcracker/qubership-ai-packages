@@ -1,5 +1,11 @@
 # Editing the packages in this directory
 
+A package that hands wording to another skill names the rule, not one language's skill: "wording, tense, sentence
+length, and dialect belong to the developer-style skill of the language the text is written in
+(`english-developer-style` for English)", not "wording belongs to `english-developer-style`". The same package
+installs beside `russian-developer-style` and `french-developer-style`, and a hard-coded English skill sends a
+Russian or French text to the wrong one.
+
 Several packages here are the same skill written once per programming language or test framework. When you edit one
 of them, make the matching edit in every sibling where it applies, in the same change, so the set does not drift.
 
