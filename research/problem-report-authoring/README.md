@@ -133,9 +133,7 @@ found two ambiguities in the skill's own text, and both were fixed before the pa
 | `trial/facts.md` | The investigation notes both arms were given |
 | `trial/control.md` | The draft written without the skill |
 | `trial/treatment.md` | The draft written with the skill |
-| `versions/README.md` | What changed in the skill across four review rounds, rule by rule |
-| `versions/v1..v5-*.md` | The skill and its reference files as they stood before review and after each round |
-| `versions/decisions/` | The fix reports: every finding decided, with its evidence |
+| `review-history.md` | What changed in the skill across four review rounds, rule by rule, and what the merge took from each |
 
 ## Status
 

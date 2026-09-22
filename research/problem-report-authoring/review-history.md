@@ -1,21 +1,22 @@
-# The skill after each review round
+# The skill across the review rounds
 
-Five snapshots of the same skill, taken before the first review and after each of four cross-review
-rounds. Each file concatenates `SKILL.md` and the five reference files as they stood at that moment,
-with `<!-- ===== path ===== -->` markers between them. The files are verbatim snapshots and are
-excluded from the repository's linter.
+The skill went through four cross-review rounds before it was merged into the package as it now ships.
+A snapshot of the skill was taken before the first round and after each round, and on 2026-09-07 the
+five snapshots were merged into one text, taking from each version what held up best; the newest was
+not the best in every rule. This page records what each round changed, rule by rule, and what the
+merge took from where. It is the list to check a future revision against: several of the rules below
+were broken once and must not be broken again.
 
-They exist so that a later pass can compare the versions and merge the best of each, rather than
-assuming the newest is the best. It is not: the loop fixed a real defect in almost every round, and it
-also rewrote one rule five times, so some wording got sharper and some got longer for no gain.
+The snapshots and the per-round fix reports are not kept in the repository, because the merge below
+consumed them.
 
-| File | Taken | Carries |
+| Version | Taken | Carries |
 | --- | --- | --- |
-| `v1-after-synthesis.md` | before review | Written from the two-pass research, plus the two fixes the A/B trial produced |
-| `v2-after-round1.md` | after round 1 | 15 review findings and 4 from a final-review pass |
-| `v3-after-round2.md` | after round 2 | 5 review findings and 3 from a final-review pass |
-| `v4-after-round3.md` | after round 3 | 6 review findings, a hand rework of the analysis test, 3 from a final-review pass |
-| `v5-after-round4.md` | after round 4 | 11 review findings; the analysis rule rewritten from the accepted report's own wording |
+| v1 | before review | Written from the two-pass research, plus the two fixes the A/B trial produced |
+| v2 | after round 1 | 15 review findings and 4 from a final-review pass |
+| v3 | after round 2 | 5 review findings and 3 from a final-review pass |
+| v4 | after round 3 | 6 review findings, a hand rework of the analysis test, 3 from a final-review pass |
+| v5 | after round 4 | 11 review findings; the analysis rule rewritten from the accepted report's own wording |
 
 Findings per round: 15, 5, 6, 11. Blocking: 9, 2, 2, 5. The rise in round 4 is not new ground; it is
 nine findings against one rule that three consecutive rounds had each rewritten.
@@ -29,19 +30,18 @@ order where no form exists, and measurement evidence.
 
 ## What changed, by rule
 
-Read this before diffing. Most rules moved once and stayed; one moved five times.
+Most rules moved once and stayed; one moved five times.
 
-**The causal-analysis rule (five versions, and the reason to read all of them).** v1: analysis goes
-after the reproducer, and the test asks that no mechanism sentence precede the symptom. v2: "at the
-very end", plus a clause sending it to the form's context field, plus a clause about the form's
-opening field — three placements at once. v3: anchored on the first mechanism sentence, which
-conflicted with the rule that the target form's field order wins. v4: two questions, one about mixing
-and one about gathering, whose "last place you chose" was unanswerable from a report and whose
-per-sentence hedge requirement was refuted by the skill's own exemplar. v5: what the accepted report
-itself says — mark the guess, and the report stands without it — plus a mixing question that excludes
-the expected block, because grounding an expectation in the project's code is what §5 asks for. Each
-version failed for a different reason; a merge should start from v5 and check any wording it borrows
-against `gradle/gradle#39079`, which refuted three of the earlier versions.
+**The causal-analysis rule (five versions).** v1: analysis goes after the reproducer, and the test asks
+that no mechanism sentence precede the symptom. v2: "at the very end", plus a clause sending it to the
+form's context field, plus a clause about the form's opening field — three placements at once. v3:
+anchored on the first mechanism sentence, which conflicted with the rule that the target form's field
+order wins. v4: two questions, one about mixing and one about gathering, whose "last place you chose"
+was unanswerable from a report and whose per-sentence hedge requirement was refuted by the skill's own
+exemplar. v5: what the accepted report itself says — mark the guess, and the report stands without it —
+plus a mixing question that excludes the expected block, because grounding an expectation in the
+project's code is what §5 asks for. Each version failed for a different reason. Check any new wording
+of this rule against `gradle/gradle#39079`, which refuted three of the earlier versions.
 
 **The boundary with `change-description-authoring`.** v1 claimed a change description "opens with the
 mechanism". That is false: its first slot is the problem. v2 states the true difference, which is what
@@ -75,21 +75,20 @@ its position clauses around as the analysis rule moved; v5 drops the coupling en
 **Research material in the skill.** One reviewer filed this four times. Removed over the rounds: the
 production narrative in the worked cases, a template-conformance study result, a response-speed claim,
 "the reports this skill is drawn from". Kept deliberately, and rejected three times with the same
-mechanism: the one-clause reasons behind the grounding order and the expected-behavior test. A merge
-should decide this on purpose rather than by taking whichever version is shortest.
+mechanism: the one-clause reasons behind the grounding order and the expected-behavior test. Decide
+this on purpose rather than by taking whichever wording is shortest.
 
-## What a merge should check its result against
+## What a revision should check its result against
 
 - `gradle/gradle#39079` and `junit-team/junit-framework#6041`: the two accepted reports. Three
   versions of the analysis rule were refuted by the first one.
-- `../trial/`: the A/B trial. Its treatment draft fails v5's mixing question, which is correct and
+- `trial/`: the A/B trial. Its treatment draft fails v5's mixing question, which is correct and
   recorded there.
-- `../phase2_result.md` §3 and §4: the 45 extracted rules with their detections, and the genre matrix.
+- `phase2_result.md` §3 and §4: the 45 extracted rules with their detections, and the genre matrix.
   Two round-1 fixes went wrong by following a matrix cell without checking its stated ground.
-- `decisions/round<N>-fix-report.json`: 36 decision entries over 31 distinct findings, each with the
-  evidence behind it. Five findings were decided in more than one round, one of them four times: three
-  of those four entries are rejections of the same refiled claim, and reversing one silently would
-  undo the rule the rejections were protecting.
+- The rejected findings. One reviewer filed the research-material finding four times, and three of
+  the four entries rejected the same claim. Reversing that silently would undo the rule the
+  rejections were protecting.
 
 ## The merge
 
