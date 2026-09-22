@@ -22,7 +22,7 @@ if [ -e "$dossier" ]; then
   dossier="$dossier-$n"
 fi
 
-mkdir -p "$dossier/prompts" "$dossier/reports" "$dossier/work"
+mkdir -p "$dossier/prompts" "$dossier/reports" "$dossier/work/history"
 : >"$dossier/findings.jsonl"
 
 # Keep dossiers out of the reviewed repository's history without touching its .gitignore.
@@ -35,10 +35,11 @@ cat >"$dossier/README.md" <<EOF
 
 | File | Written by | Contents |
 | --- | --- | --- |
-| \`00-profile.md\` | session, stage 1 | archetype, surface, consumers, stability commitments, technology inventory |
+| \`00-profile.md\` | session, stage 1 | archetype, surface, consumers, stability commitments, technology inventory; for a system, the components table and their interactions |
 | \`00-commands.md\` | session, stage 1 | build, test, and tooling commands that were executed and work; read-only for agents |
 | \`work/commands-<axis>.md\` | agents | corrections to the above — one file per axis, never a shared append |
 | \`work/raw-<axis>.jsonl\` | axis agent | findings exactly as raised, before verification |
+| \`work/findings-<axis>.jsonl\` | verifier | the verified findings of one axis; the previous version moves to \`work/history/\` on a re-run |
 | \`questions.md\` | session, stage 2 | focus questions with pre-filled answers; the user edits this in place |
 | \`00-focus.md\` | session, stage 2 | resolved decisions only — every agent reads this |
 | \`prompts/<axis>.md\` | workflow | distilled prompts for synthesis axes |

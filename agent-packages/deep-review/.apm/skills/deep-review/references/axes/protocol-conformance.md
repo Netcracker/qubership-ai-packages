@@ -10,7 +10,8 @@ normative parts, and compare. Findings on this axis must cite the specification 
 Identify the exact normative source: the RFC and its errata, the standard's version, the vendor document, or — for a
 client of someone else's service — that service's source code if it is reachable. Record it in the report. A review
 of a protocol implementation against the reviewer's memory of the protocol is worthless; if the source cannot be
-found, say so and downgrade every finding to `PLAUSIBLE`.
+found, say so in the report, give every finding `method: inferred` with the missing source as the unchecked
+assumption, and make the source the one question for the user.
 
 ## What to compare
 
@@ -42,6 +43,7 @@ test.
 
 ## Fuzzing
 
-Parsers earn a fuzzer. Check whether one exists and runs in CI. If none exists and the toolchain makes it cheap
-(`go-fuzz`, `cargo-fuzz`, Jazzer, `atheris`), run a short session against the decoder and report what it found —
-including "nothing in N iterations", which is useful evidence.
+Parsers earn a fuzzer. Check whether one exists and runs in CI. If none exists and `00-commands.md` says the profiler
+installed one (`go-fuzz`, `cargo-fuzz`, Jazzer, `atheris`), run a short session against the decoder at `depth: deep`
+and report what it found — including "nothing in N iterations", which is useful evidence. Without an installed
+fuzzer, or at `depth: coarse`, report the absence once and name the fuzzer that would fit.

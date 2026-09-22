@@ -195,12 +195,13 @@ terminal, asserting the machine-readable output is byte-identical either way.
 
 ## Tooling
 
-Crawl the help tree first — it is the inventory every check below reads from. Do it in a throwaway directory, and
-never against a real endpoint: the crawler appends `--help`, and a parser that validates positionals before
-short-circuiting will happily run the command instead.
+Crawl the help tree first — it is the inventory every check below reads from. Do it under `<dossier>/work/`, so the
+output survives the run, and never against a real endpoint: the crawler appends `--help`, and a parser that validates
+positionals before short-circuiting will happily run the command instead.
 
 ```bash
-<tool> --help >/tmp/h.out 2>/tmp/h.err; echo "exit=$?"; wc -c /tmp/h.out /tmp/h.err   # 0, stdout, empty stderr
+W=<dossier>/work/cli
+<tool> --help >$W/h.out 2>$W/h.err; echo "exit=$?"; wc -c $W/h.out $W/h.err   # 0, stdout, empty stderr
 <tool> nosuchcmd >/dev/null; echo "exit=$?"                     # non-zero, message on stderr, valid values listed
 <tool> list --bogus-flag >/dev/null; echo "exit=$?"             # same, and distinguishable from a runtime failure
 <tool> list --output json | jq .                                # machine mode still parses when piped
