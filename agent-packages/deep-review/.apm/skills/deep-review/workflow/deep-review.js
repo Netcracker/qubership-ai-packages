@@ -212,7 +212,10 @@ const NOTE_SCHEMA = {
 // it decides which concern belongs to whom. That keeps one defect from being reported four times in
 // four vocabularies, and it keeps form-specific rules out of the form-independent axis files.
 const surfaces = A.surfaces || []
-const surfaceNote = surfaces.length
+// Forms the profile named that have no pack in references/surfaces/. They are kept apart from `surfaces` because
+// every entry there becomes a pack path the agents are told to read.
+const surfacesWithoutPack = A.surfacesWithoutPack || []
+const surfaceNote = (surfaces.length
   ? `
 
 **Surface packs.** This repository exposes its API in the following forms: ${surfaces.join(', ')}. Read the packs for
@@ -221,7 +224,14 @@ with an ownership table saying which axis owns which concern on that surface: wo
 alone, however tempting they look. The packs also name the normative source for that form, which is where the
 "expected" half of a finding has to come from — an expectation you cannot attribute to a specification, a local
 convention, or a documented rule is a preference, and preferences are not findings.`
-  : ''
+  : '') + (surfacesWithoutPack.length
+  ? `
+
+**Forms without a pack.** The repository also exposes its API as ${surfacesWithoutPack.join(', ')}. The skill has no
+pack for these forms, so judge them by your axis file's form-independent rules, take the "expected" half of a finding
+from the form's own specification or the repository's documented conventions, and list each of these forms in your
+coverage section as reviewed without a pack.`
+  : '')
 
 const preamble = `You are one agent in a multi-axis review of the repository at ${repo}.
 The review dossier is ${dossier}. Read and write files there; use ${dossier}/work/ for scratch output.
