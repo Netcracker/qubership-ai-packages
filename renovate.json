@@ -6,7 +6,6 @@
     "github>Netcracker/renovate-config:automerge",
     "github>Netcracker/renovate-config:apm"
   ],
-  "prCreation": "not-pending",
   "customManagers": [
     {
       "description": "Update the Python runtime used by uv commands.",
