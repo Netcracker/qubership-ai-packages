@@ -25,18 +25,6 @@
   ],
   "packageRules": [
     {
-      "description": "Wait one day before automerging newly released dependencies.",
-      "matchDepTypes": ["!apm"],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest",
-        "pinDigest"
-      ],
-      "minimumReleaseAge": "1 day"
-    },
-    {
       "description": "Keep CI Python tools from requirements.txt grouped together.",
       "matchManagers": [
         "pip_requirements"

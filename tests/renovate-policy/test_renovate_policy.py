@@ -7,29 +7,19 @@ ROOT = Path(__file__).parents[2]
 
 
 class RenovatePolicyTest(unittest.TestCase):
-    def test_non_apm_automerge_waits_one_day(self):
+    def test_release_age_and_schedule_come_from_the_shared_presets(self):
+        # The inherited org config and the shared presets set the release-age delay, its exemptions (Netcracker
+        # packages, APM git-refs through the apm preset), and the weekly schedule. A repository setting would
+        # override them for every dependency it matches.
         config = json.loads((ROOT / "renovate.json").read_text())
 
-        release_age_rules = [
-            rule for rule in config["packageRules"] if "minimumReleaseAge" in rule
+        overrides = [
+            (index, key)
+            for index, scope in enumerate([config, *config["packageRules"]])
+            for key in ("minimumReleaseAge", "schedule")
+            if key in scope
         ]
-        self.assertEqual(
-            release_age_rules,
-            [
-                {
-                    "description": "Wait one day before automerging newly released dependencies.",
-                    "matchDepTypes": ["!apm"],
-                    "matchUpdateTypes": [
-                        "minor",
-                        "patch",
-                        "pin",
-                        "digest",
-                        "pinDigest",
-                    ],
-                    "minimumReleaseAge": "1 day",
-                }
-            ],
-        )
+        self.assertEqual(overrides, [])
 
     def test_shared_automerge_keeps_apm_manual_and_validates_python_updates(self):
         config = json.loads((ROOT / "renovate.json").read_text())
@@ -46,6 +36,8 @@ class RenovatePolicyTest(unittest.TestCase):
         marketplace = (ROOT / ".github/workflows/marketplace.yml").read_text()
         self.assertIn("- Makefile", marketplace)
         self.assertIn("|Makefile|", marketplace)
+        self.assertIn("- renovate.json", marketplace)
+        self.assertIn("|renovate\\.json|", marketplace)
 
 
 if __name__ == "__main__":
