@@ -44,5 +44,6 @@ How this thing is installed, configured, upgraded, and rolled back. Services and
 
 ## Rules
 
-Render and run what you can; label anything you only read as `PLAUSIBLE`. Deployment findings are cheap to claim and
-expensive to be wrong about.
+Render and run what you can. A finding from reading a template carries `method: inferred`; only a render or a run is
+`executed`. Deployment findings are cheap to claim and expensive to be wrong about, and the verifier stamps the
+confidence.

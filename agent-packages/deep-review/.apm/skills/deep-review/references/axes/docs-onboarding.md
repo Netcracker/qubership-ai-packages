@@ -26,9 +26,10 @@ read the source, guess, or search elsewhere is a finding.
 
 - **Accuracy.** Documented behavior against actual behavior: defaults, units, option names, output formats, exit
   codes. Documentation that is wrong is worse than documentation that is missing, and rates higher.
-- **Coverage of the contract.** Every public entry point: what it does, what it requires, what it returns, what it
-  throws, what it retains, what thread it runs on. Gaps here are `api-ux` when they concern naming and this axis when
-  they concern the missing sentence.
+- **Coverage of the contract in the pages.** Every public entry point appears in the reference material with what it
+  does, what it requires, and what it returns. Whether the doc comment on the declaration itself states the contract
+  (units, nullability, thread-safety, what throws) is `api-ux`'s question; this axis owns the pages, the README, and
+  the reference a reader reaches without opening the source.
 - **Reference completeness.** Every configuration option, environment variable, and error code the code can produce
   appears somewhere a reader would look. Produce the gap list mechanically: grep the code for the identifiers, grep
   the docs for each. That list is the single most useful artifact this axis can produce.

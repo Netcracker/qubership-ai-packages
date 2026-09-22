@@ -2,6 +2,10 @@
 
 Finding prefix: `UX`.
 
+An evidence axis by default. The focus file makes it a synthesis axis when the repository has review history to
+distill from — earlier dossiers, a usability study, a migration post-mortem; the distilled prompt then names the
+entry points and the recorded confusions, and this file stays the invariant part.
+
 Two readers with the same handicap: neither has read the source. A developer has an IDE, the docs, and autocomplete;
 an AI agent has the signatures, the doc comments, the `--help` output, or the tool schema. Both must be able to use
 this thing correctly on the first attempt, and both must be able to tell a mistake from a failure.
@@ -10,7 +14,7 @@ Judge the surface, not the implementation. Every finding here is about what the 
 
 **Surface packs come first.** This file holds what is true of every API form. The conventions, the normative source,
 and the tooling for a *particular* form live in `references/surfaces/<form>.md`, and where a pack exists it wins over
-anything below — including the CLI and MCP sections, which stay here only until packs replace them. The pack also
+anything below — the CLI and MCP sections here are reminders of what those packs cover. The pack also
 carries an ownership table: on the Kubernetes surface, for example, the condition vocabulary belongs to `error-model`
 and CRD versioning to `api-compatibility`, however much they feel like API usability. Do not report those here.
 
@@ -33,7 +37,8 @@ and CRD versioning to `api-compatibility`, however much they feel like API usabi
 - Can a caller find the entry point from the package or module listing alone? Is there one obvious way in, or five
   plausible ones?
 - Do doc comments state the contract — units, nullability, thread-safety, ownership, what is retained, what throws —
-  or do they restate the signature?
+  or do they restate the signature? This axis owns the doc comment on the declaration; the pages a reader reaches
+  without opening the source are `docs-onboarding`'s.
 - Are examples present, current, and compilable? A README example that no longer compiles is a finding.
 
 ## CLI surface (when there is one)

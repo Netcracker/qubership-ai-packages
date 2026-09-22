@@ -199,7 +199,7 @@ marketplace:
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
     - name: deep-review
-      description: Review a whole repository along independent axes, refute every finding, and consolidate the survivors into one ranked report.
+      description: Review a repository, a microservice, or a system of services along independent axes, refute every finding, and consolidate the survivors into one ranked report.
       source: ./agent-packages/deep-review
       version: 1.0.0
       tags: ["topic:code-review", "topic:architecture", "activity:code-review", "audience:public"]

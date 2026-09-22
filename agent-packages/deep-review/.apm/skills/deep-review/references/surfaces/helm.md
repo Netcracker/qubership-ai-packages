@@ -23,14 +23,15 @@ than it costs you.
 | Concern | Owner axis |
 | --- | --- |
 | Value naming and casing; flat versus nested; what belongs under `global`; defaults that install unattended; documentation of each value; `values.schema.json` coverage; `NOTES.txt`; `--set` ergonomics | `api-ux` |
-| Renaming, removing, or moving a value; changing a default; tightening the schema; subchart `alias` and `condition` keys; chart `version` / `appVersion` discipline; rendered object names and immutable fields; CRD install-and-upgrade ownership | `api-compatibility` |
-| Rendering the matrix of profiles and toggles; probes, resources, RBAC, scheduling; hooks; the install / upgrade / rollback / uninstall drill | `deployment-config` |
+| Renaming, removing, or moving a value; changing a default; tightening the schema; subchart `alias` and `condition` keys; chart `version` / `appVersion` discipline; rendered object names and immutable fields; a CRD schema change against objects already stored | `api-compatibility` |
+| Rendering the matrix of profiles and toggles; probes, resources, RBAC, scheduling; hooks; the install / upgrade / rollback / uninstall drill; CRD install-and-upgrade ownership (`crds/` versus `templates/`, `--skip-crds`, what an uninstall deletes) | `deployment-config` |
 | Template logic: falsy defaults, type coercion, indentation shape, non-determinism, `lookup`, checksum annotations, subchart value plumbing that silently does nothing | `correctness` |
 | What a user sees when a value is wrong, and where they see it: `required` and `fail` messages, schema violation text, render error versus apply error versus a pod that crash-loops an hour later | `error-model` |
 | Secrets in values and in rendered output; image pinning; pod security context; RBAC breadth; supply chain of the dependencies | `security` |
 | `helm unittest` and golden renders; `ct lint` / `ct install`; `kubeconform` across the declared `kubeVersion` range | `tests` |
-| PVC retention, `helm.sh/resource-policy`, what an uninstall deletes | `data-lifecycle` |
-| Packaging, `Chart.lock`, OCI publishing, provenance, generated README drift | `build-release`, `docs-onboarding` |
+| PVC retention and what an uninstall does to user data; whether `helm.sh/resource-policy: keep` covers everything that holds it | `data-lifecycle` |
+| Packaging, `Chart.lock` currency, OCI publishing, provenance | `build-release` |
+| Generated README drift (`helm-docs` output against the source) | `docs-onboarding` |
 
 ## Normative sources
 
@@ -131,13 +132,18 @@ Under such a policy two ordinary practices become defects on sight, and both are
 Schema tightening deserves its own look here: a new `enum`, `pattern`, `minimum`, or `additionalProperties: false`
 rejects yesterday's file without anyone touching a template. And note the boundary, because it is where reviews of
 this kind go wrong: a parameter-compatibility promise says nothing about the CRDs the chart installs or the persisted
-state it owns. Those are separate contracts with separate failure modes — see the CRD paragraph above and the
+state it owns. Those are separate contracts with separate failure modes — see the CRD lifecycle paragraphs below and the
 `data-lifecycle` axis, and do not let the policy be cited as cover for either.
 
 Check the version machinery itself: does `version` move on every chart change, is `appVersion` the application's, and
 does anything state whether the values surface is under semver at all? Then check the dependencies: a floating range
 (`~0`, `*`, a branch) means a subchart's values contract can change with no commit in this repository, which is a
-supply-chain fact and a compatibility fact at once. Say whether `Chart.lock` exists and whether it is current.
+supply-chain fact and a compatibility fact at once. Whether `Chart.lock` exists and is current is `build-release`'s
+row; here, say what a floating range does to the values contract.
+
+**A CRD schema change against objects already in etcd is this axis's part of the CRD question**: see
+`surfaces/kubernetes.md`. Who installs, upgrades, and deletes the CRD is `deployment-config`'s part, below, and the
+paragraphs that follow are context for both.
 
 **CRD lifecycle is the data-loss path on this surface, and it is `CRITICAL` wherever it exists.** Establish which
 mechanism the chart uses. Files in `crds/` are installed once and are never upgraded, never deleted, and never
@@ -165,8 +171,11 @@ The axis file has the general questions. On this surface, add:
   again on every retry; `backoffLimit` and `ttlSecondsAfterFinished`, without which failed hook Jobs accumulate in the
   namespace. And the rule that catches people: **hooks are not rolled back.** `helm rollback` reverts the tracked
   objects, does not re-run the upgrade hooks, and does not undo whatever they did to a database.
-- **`helm.sh/resource-policy: keep`** on anything that must survive an uninstall — and the mirror defect, a kept
-  resource that then blocks a clean reinstall with an ownership conflict.
+- **CRD ownership at install, upgrade, and uninstall.** Which mechanism the chart uses (`crds/`, `templates/`, a
+  separate CRD chart, `--skip-crds`), whether the upgrade path for a schema change exists and is documented, and
+  whether an uninstall can delete the CRD; the paragraphs under `api-compatibility` above describe the mechanisms.
+- **A kept resource that blocks a clean reinstall** with an ownership conflict — the mirror defect of
+  `helm.sh/resource-policy: keep`, whose coverage of user data is `data-lifecycle`'s row.
 - **RBAC the chart grants against the calls the code makes.** Check in that direction; grants checked against
   themselves always look complete. Where a switch claims to drop to namespace scope, render it and confirm no
   `ClusterRole` or `ClusterRoleBinding` survives.
@@ -251,8 +260,9 @@ diff -u work/render-prev.yaml work/render-default.yaml   # every renamed object 
 not applied so custom resources are never validated against them, defaulting and admission do not run, and no
 immutable-field conflict can appear. So —
 
-- a defect **observed only in a local render** is `PLAUSIBLE` until it is reproduced with `--dry-run=server` or an
-  actual install into a throwaway namespace;
+- a defect **observed only in a local render** carries `method: inferred` until it is reproduced with
+  `--dry-run=server` or an actual install into a throwaway namespace, and a verifier that has done neither stamps it
+  `PLAUSIBLE`;
 - a defect **refuted only by a local render** is not refuted at all — say what the render cannot model and leave the
   finding standing;
 - anything about validation, admission, capabilities, `lookup`, immutability, or upgrade behavior must go through a

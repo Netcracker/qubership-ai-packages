@@ -74,7 +74,11 @@ These rules are the same for every axis. The axis file adds the subject matter; 
 - **No style noise.** Formatting, naming taste, comment nitpicks, and anything a linter already enforces are out of
   scope on every axis unless the axis file says otherwise.
 - **No blanket rewrites.** Propose the minimal change, or a design change stated with its trade-off. "Rewrite this on
-  top of <framework>" is not a finding.
+  top of `<framework>`" is not a finding.
+- **A concern a surface pack routes to an axis that is not running has no owner.** The workflow tells you which axes
+  are in the run. Where the pack's row names an axis that is absent and the concern is in reach of yours, report it
+  and say which row you took it from; otherwise record it under *Cross-axis notes* so the consolidator lists it as
+  uncovered.
 - **Assume the tests pass** and that the code works for the happy path, unless the profile says otherwise. You may
   challenge that assumption only with a concrete artifact: a failing test you wrote, an input that reproduces, or a
   line-level contract mismatch.
@@ -94,7 +98,10 @@ repository the user is working in.
 - **Report what you changed to get the measurement**, as a command or a diff, so a maintainer can reproduce the number
   and decide whether to adopt the setup permanently. A measurement nobody can repeat is not evidence.
 - **Missing tooling is a finding, not an excuse.** If the project has no coverage, no benchmark harness, no fuzzer, and
-  no race detection in CI, report that once, at the severity it deserves — then go and measure anyway in your copy.
+  no race detection in CI, report that once, at the severity it deserves — then measure anyway in your copy with the
+  tools the profiler installed before the run (`00-commands.md` lists them). Do not install a toolchain yourself: the
+  profiler asked the user, and an install from inside an axis races with the other axes. Where the tool you need was
+  not approved, report the gap in your coverage section and move on.
 
 ## Adversarial posture
 
@@ -123,6 +130,12 @@ Rate by consequence, not by how small the fix is. A one-character fix for a sile
 
 ## Budget
 
-Depth beats breadth. Fifteen findings that are each specific, evidenced, and actionable are worth more than sixty
-observations. If a part of your axis turns out to be genuinely well handled, say so in one line under *Checked and
-sound* — but only after you looked.
+Fifteen findings that are each specific, evidenced, and actionable are worth more than sixty observations. If a part
+of your axis turns out to be genuinely well handled, say so in one line under *Checked and sound* — but only after you
+looked.
+
+The workflow tells you the review's depth. At `coarse`, a finding sits at the level of a contract, a boundary, a
+configuration surface, or a failure domain, and you execute only what already exists: the build, the suite, a render,
+a scanner, a probe against an allowed runtime. At `deep`, the unit-level work your axis file describes is in scope.
+Where your axis file asks for a measurement the depth rules out, say in your coverage section what you did not do;
+do not do it anyway.

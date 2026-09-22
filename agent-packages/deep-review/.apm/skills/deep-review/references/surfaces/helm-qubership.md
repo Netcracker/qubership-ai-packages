@@ -38,8 +38,12 @@ topology one — review the parts it claims and name the rest as a gap for the m
 | Rendering each profile and each strategy value; the strategy and topology blocks in the workload templates | `deployment-config` |
 | Type coercion of `maxSurge` / `maxUnavailable` and of numeric profile values through the deployment tooling | `correctness` |
 
-Every finding must cite the contract document and, where the document is versioned, the entry it relies on — several
-of these rules have changed, and a finding written against a superseded revision is worse than none.
+## Normative sources
+
+The contracts below are the organization's, and each section names the guide it comes from. Every finding must cite
+the contract document and, where the document is versioned, the entry it relies on — several of these rules have
+changed, and a finding written against a superseded revision is worse than none. Where a guide and a chart's own
+README disagree, the guide is the expectation and the README is a `docs-onboarding` finding.
 
 ## Contract 0 — the three-year parameter window
 
@@ -181,3 +185,15 @@ authors left for themselves. Use them to understand intent; do not cite them as 
 
 Likewise, this pack says nothing about Helm craft — falsy defaults, list merge semantics, immutable selectors, CRD
 lifecycle. That is `surfaces/helm.md`, and it applies to these charts in full.
+
+## Architectural questions this surface raises
+
+For the `architecture` distiller, not for the evidence axes:
+
+- Does the platform contract carry parameters this chart has no use for, and what does honoring them cost on every
+  change? Where the chart emulates a contract feature it does not need, is that a finding against the chart or
+  against the contract?
+- Is the parameter window (three years of accepted names) implemented once, in a library chart or the deployment
+  tooling, or re-implemented per chart with the drift that follows?
+- Which side owns the resource profile: the chart, the profile file, or the deployer? What happens when the same
+  parameter is set in two of them?
