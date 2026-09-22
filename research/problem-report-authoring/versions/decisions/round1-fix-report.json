@@ -1,0 +1,95 @@
+{
+  "round": 1,
+  "decisions": [
+    {
+      "id": "F-001",
+      "kind": "fixed",
+      "rationale": "Dropped the production narrative from the worked cases and the two study-shaped sentences; kept the one-clause reasons that carry no figure, and hedged the third to a tendency after the plan review showed it was a stripped finding",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/worked-cases.md:3-7 no longer names the session or the round count; SKILL.md:102 now says 'a common reason'; SKILL.md:194 states admission rather than a template study; references/request-genre.md:35 states what the sketch is for. Axes: three files carry study-shaped prose and all three were edited. Not seen by this check: nothing, the claim is per-sentence and each was read. Plan said the section 4 sentence stays; the amendment reversed that and the code follows the amendment"
+    },
+    {
+      "id": "F-002",
+      "kind": "fixed",
+      "rationale": "The claim about change-description-authoring was false; replaced with the true difference, which is what the reader already holds",
+      "evidence": "change-description-authoring SKILL.md section 2 orders Problem first in the commit body and Why first in the description; agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:26-30 and agent-packages/problem-report-authoring/README.md:8-12 now say the reader holds the diff and knows something was wrong. Both sites carried the claim and both are edited"
+    },
+    {
+      "id": "F-003",
+      "kind": "fixed",
+      "rationale": "The blanket carry-over sentence imported tracker and form work into two genres the research marks them inapplicable to; replaced with the matrix's own cells",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/colleague-message.md:3-9 names the rules that carry over, marks the analysis-last rule optional per phase2_result.md:133, keeps the reproducer as command and output per REP1-2 Req, and lists what lapses; references/request-genre.md:3-7 drops the unsourced currency substitution and points at the prior-proposal slot instead"
+    },
+    {
+      "id": "F-004",
+      "kind": "fixed",
+      "rationale": "The ownership test was impossible to pass for a defect that only reproduces through a dependency, which section 6 explicitly permits",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:98-101 now admits the shortest failing chain and asks for the dependency and what happened when it was removed. The legitimate input this must not silence: a defect genuinely in the interaction of two projects, which worked case 5 pins as still reportable"
+    },
+    {
+      "id": "F-005",
+      "kind": "fixed",
+      "rationale": "The merge test asked the author to predict a maintainer's commit; replaced with two observable questions and a default when neither settles it",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:110-116 asks whether one outcome could be accepted while the other is refused and whether the two live under different owners, then files separately and links when unknown; references/worked-cases.md case 4 restated on the same observables. Second site named by the plan review and edited with it"
+    },
+    {
+      "id": "F-006",
+      "kind": "fixed",
+      "rationale": "The checklist restated the execution rule in the form section 5 had already narrowed after the trial",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:236 now asks for a transcript per claim about a tool's behavior today and for the rendering to be marked as one shape; references/worked-cases.md case 2 carries the same wording. A request whose expected behavior does not exist now passes both"
+    },
+    {
+      "id": "F-007",
+      "kind": "fixed",
+      "rationale": "A correlation was stated as a deterministic outcome, and personal preference was placed in the measured INVALID group where the source does not put it",
+      "evidence": "phase2_result.md section 11 records the INVALID-associated groups as standards, genre conventions and prior behavior, and reporter-expectation reports at roughly 20% FIXED; agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:120-121 and 145-149 now state tendencies and give personal preference its own reason. Both sites, the section opening and question 4, were edited"
+    },
+    {
+      "id": "F-008",
+      "kind": "fixed",
+      "rationale": "The reviewer read the example as contradicting the rule; the headings show the example is right and the skill was missing a distinction. A setting that does not solve the problem is a ruled-out alternative, not a workaround",
+      "evidence": "junit-team/junit-framework#6041 headings in order: What happens, Even junit.jupiter.params.displayname.default does not fix it, What I would like, Why this is not a report-format issue, Backport, Versions, with no Workaround section. gradle/gradle#39079 carries Workaround last, before Possible cause. agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md:89-94 states both placements, references/worked-cases.md case 3 is relabelled, references/request-genre.md:31-34 carries the same distinction. The transcript's own misattribution is recorded in research/problem-report-authoring/README.md rather than edited into the transcript"
+    },
+    {
+      "id": "F-009",
+      "kind": "fixed",
+      "rationale": "The research README reported a trial with no artifact behind it",
+      "evidence": "research/problem-report-authoring/trial/ now holds the input, both drafts and a README carrying the method, the per-defect comparison and the two skill edits the trial produced; the README's file table lists all four; .github/super-linter.env excludes only the three verbatim transcripts by name, so trial/README.md stays linted"
+    },
+    {
+      "id": "F-010",
+      "kind": "fixed",
+      "rationale": "The method table claimed six conflicts settled where the transcript settles five, and search counts that appear in no phase file",
+      "evidence": "research/problem-report-authoring/README.md:36-38: counts removed, 'five of six conflicts settled' per phase2_result.md section 8, which leaves template conformance partly open"
+    },
+    {
+      "id": "F-011",
+      "kind": "fixed",
+      "rationale": "test-authoring was linked to a repository that does not contain it",
+      "evidence": "agent-packages/problem-report-authoring/README.md:58-59 names it without a link and says it ships from elsewhere"
+    },
+    {
+      "id": "F-012",
+      "kind": "fixed",
+      "rationale": "The Contents list gave the reference files a path that does not exist at the package root",
+      "evidence": "agent-packages/problem-report-authoring/README.md:41-51 gives each the full .apm/skills/problem-report-authoring/references/ path"
+    },
+    {
+      "id": "F-013",
+      "kind": "fixed",
+      "rationale": "'Never mentions an issue' is false; the skill mentions issue links and numbers, but never how to write one",
+      "evidence": "research/problem-report-authoring/README.md:14-17 reworded; change-description-authoring SKILL.md contains 12 occurrences of 'issue', all of them links, numbers or trailers"
+    },
+    {
+      "id": "F-014",
+      "kind": "fixed",
+      "rationale": "The owning skill names had been cut from the description while shortening it to the platform limit, and there was room for them",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/SKILL.md frontmatter now names change-description-authoring, docs-page-authoring and test-authoring; the description is 972 characters of the 1020 the platform allows"
+    },
+    {
+      "id": "F-015",
+      "kind": "fixed",
+      "rationale": "'Closed unread' belongs to an unfilled checklist, not to an AI policy",
+      "evidence": "agent-packages/problem-report-authoring/.apm/skills/problem-report-authoring/references/machine-authorship.md:4-6 attributes the block to the AI policy and being closed unread to skipping the checklist"
+    }
+  ]
+}

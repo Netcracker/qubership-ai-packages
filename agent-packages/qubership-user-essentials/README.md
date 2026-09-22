@@ -34,7 +34,6 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 
 - [`qubership-repo-essentials`](../qubership-repo-essentials/) — the per-repository baseline: `apm-authoring`,
   `english-us-developer-style`, `markdown-line-length-120`, and `qubership-workflow-hub-usage`.
-- [`codex-review`](../codex-review/) — Codex CLI code review with auto-fix, repeated until the review is clean.
 - [`qubership-agent-support-pr`](../qubership-agent-support-pr/) — create a PR that adds Qubership baseline agent
   support to a repository.
 - [`triage-dependency-prs`](../triage-dependency-prs/) — triage failing checks on Renovate and Dependabot PRs.
@@ -47,6 +46,8 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 - [`godoc-authoring`](../godoc-authoring/) — the same for Go doc comments and inline comments.
 - [`rustdoc-authoring`](../rustdoc-authoring/) — the same for Rust doc comments and inline comments.
 - [`pythondoc-authoring`](../pythondoc-authoring/) — the same for Python docstrings and inline comments.
+- [`problem-report-authoring`](../problem-report-authoring/) — what a bug report, a feature request, or a problem
+  message to a colleague establishes and says, before anyone else has to act on it.
 
 ## Adding a package to the bundle
 

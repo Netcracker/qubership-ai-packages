@@ -1,6 +1,6 @@
 name: qubership-user-essentials
-version: 1.2.0
-description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
+version: 1.3.0
+description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, problem-report authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
 dependencies:
   apm:
     # The per-repository baseline and the other sibling packages in this
@@ -15,3 +15,4 @@ dependencies:
     - ../godoc-authoring
     - ../rustdoc-authoring
     - ../pythondoc-authoring
+    - ../problem-report-authoring

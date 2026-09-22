@@ -39,6 +39,8 @@ jobs:
           reporter: "github-pr-review"
           filter_mode: "diff_context"
           fail_level: "error"
+          # Raw research artifacts are verbatim provenance, quoted misspellings included;
+          # Super-Linter skips the same files (.github/super-linter.env).
           exclude: |
             ./.git/*
             ./node_modules/*
@@ -52,6 +54,11 @@ jobs:
             ./.cursor/*
             ./agent-packages/french-developer-style/*
             ./research/french-developer-style/*
+            ./research/*/phase*.md
+            ./research/*/versions/v*.md
+            ./research/*/trial/facts.md
+            ./research/*/trial/control.md
+            ./research/*/trial/treatment.md
           pattern: |
             *.java
             *.kt
