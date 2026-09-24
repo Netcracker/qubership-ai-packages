@@ -57,8 +57,8 @@ separate pass.
   the checklist, and component fields route them (pass 1A, pass 2 conflict 6).
 - **Expected behavior is the weak point, three times over.** It is the field reporters omit most
   often; its grounding predicts whether a report is fixed or closed as invalid; and three of the
-  maintainer's four unsourced rules were about it. The skill's center is a six-question test for one
-  expected block (pass 1A, pass 2 §5).
+  maintainer's four unsourced rules were about it. The skill's center was a six-question test for one
+  expected block (pass 1A, pass 2 §5); version 1.1.0 added a seventh.
 - **Attribution across a stack is a procedure, not an exhortation.** Four projects converge on the
   same shape: re-run the failure with one layer removed, and report the innermost layer that still
   fails (pass 1A).
@@ -120,6 +120,33 @@ four and handed over three gaps it could not close: the tracker search with the 
 the reproducer re-run with the command, and the human sign-off as a question for the person filing. It also
 found two ambiguities in the skill's own text, and both were fixed before the package was called done.
 
+## Cases
+
+A case is a regression test for the skill: frozen investigation notes as the input, the report a model drafted from them
+as the output, one directory per model with the `skill-tree` of the skill that produced it, and checks. The checks of
+`nested-workflow-tag` come from what the target project's maintainers said about a report written from the same notes;
+the four synthetic cases have fictional projects and vendors, and their checks come from a review of a first draft of
+version 1.1.0 that found rules overfit to the first case. Re-run every case when the skill or the model changes and
+commit the new output, so the diff shows how each report moved.
+
+The synthetic cases letter the rules of that draft they test:
+
+- **(a)** Question 7 asked every expected block for a shape of the fix that works.
+- **(b)** The deletion test kept only what helps the maintainer reproduce, accept, or choose a fix.
+- **(c)** A log of a run that succeeded was limited to one line.
+- **(d)** Local consistency ranked with the project's own specification, and one grounding was the limit.
+- **(e)** A gap no claim rests on, such as an untested latest release, left the report.
+- **(f)** What the investigation checked on the way, including the isolation of §4, went to the hand-over note.
+- **(g)** A shape of the fix nobody verified was kept out of the report.
+
+| Case | What it guards against |
+| --- | --- |
+| [`cases/nested-workflow-tag/`](cases/nested-workflow-tag/README.md) | A report padded with true facts that change no decision, and an expected behavior the maintainers read as impossible to implement |
+| [`cases/crash-no-known-fix/`](cases/crash-no-known-fix/README.md) | A synthetic crash report whose reporter has no fix to offer: a fix shape demanded of every expected block, a trimmed stack trace, an untested latest release left out of the report, and a required disclosure cut as padding |
+| [`cases/perf-regression/`](cases/perf-regression/README.md) | A synthetic latency regression where every run succeeded: measurements cut to one log line, a verified workaround deleted, and a cause stated as fact |
+| [`cases/vendor-ticket-mitigation/`](cases/vendor-ticket-mitigation/README.md) | A synthetic vendor support ticket after a mitigated incident: the ask for a timeline and a credit deleted, isolation evidence moved to the note, and identifiers the vendor needs redacted with the internal ones |
+| [`cases/intentional-exception-request/`](cases/intentional-exception-request/README.md) | A synthetic feature request against a documented exception: local consistency argued as the project's contract, the operator's standard dropped as a second grounding, and an untested design sketch banned or passed off as verified |
+
 ## Files
 
 | File | What it is |
@@ -133,6 +160,8 @@ found two ambiguities in the skill's own text, and both were fixed before the pa
 | `trial/facts.md` | The investigation notes both arms were given |
 | `trial/control.md` | The draft written without the skill |
 | `trial/treatment.md` | The draft written with the skill |
+| `cases/<case>/prompt.md` | The frozen investigation notes a case gives the model |
+| `cases/<case>/<model>/result.md` | The issue body that model drafted with the skill, and `result-note.md` beside it for the hand-over note |
 | `review-history.md` | What changed in the skill across four review rounds, rule by rule, and what the merge took from each |
 
 ## Status
@@ -140,8 +169,8 @@ found two ambiguities in the skill's own text, and both were fixed before the pa
 Complete. The skill ships at `agent-packages/problem-report-authoring`. Three follow-ups remain.
 
 - Pin the package in the umbrella packages once it is on `main` and has a commit SHA.
-- **The trial covered the bug-report genre only.** Both arms wrote a report for `gradle/gradle`; the
-  feature request, the colleague message, the question, the vendor support ticket, the comment on an
-  existing report, and the issue filed in your own repository have no evidence behind them, and
-  their rules rest on the sources alone.
+- **Four genres have no case.** The trial and the cases cover the bug report, the feature request,
+  and the vendor support ticket. The question, the comment on an existing report, the issue filed in
+  your own repository, and the colleague message have no evidence behind them, and their rules rest
+  on the sources alone.
 - Repeat the trial on a second real report in another ecosystem.
