@@ -1,82 +1,60 @@
 ### Problem
 
-We run Tallyqueue 2.3.1 (commit `9e41c07`, the latest release) on Kubernetes 1.30 with `management.auth.enabled = true` and a bearer token from `management.auth.token_file`. Our security rules require every endpoint on a listener that serves administrative or diagnostic functions to require authentication. The only exemption is a liveness or readiness endpoint served on a listener that serves nothing else and returns only the status. With these rules we cannot put Tallyqueue into production, because the management port always serves `/healthz` without a token, and there is no setting that changes this.
+We run Tallyqueue 2.3.1 (commit `9e41c07`) on Kubernetes 1.30 with `management.auth.enabled = true`, and a kubelet liveness probe on `/healthz` of the management port. Our organization's security standard requires every management endpoint to require authentication. We cannot meet that and keep the liveness probe: `/healthz` is the one management path that answers without the token, and it has to, because a probe cannot send one.
 
-This is documented and intentional. `docs/operations/management.md` says all management endpoints require a token "except `/healthz`, which liveness probes use", and `internal/mgmt/router.go` has the same comment at v2.3.1 and on `main` at `5d2e8b1`, referring to #412. I am not asking to reverse #412: probes that cannot carry a token have to keep working. I am asking for an opt-in way to run the liveness check somewhere other than the management port, so that the management port can require the token on every path.
-
-Observed on 2026-09-23 against our deployment, management port 9401, no token sent (`mgmt-paths.txt` holds the paths shown in the output; the address is changed):
+With auth enabled, every other management path returns 401 and `/healthz` returns 200. Observed on 2026-09-23; output trimmed to the lines below, the other 16 paths under `/admin/` also return 401:
 
 ```bash
 for p in $(cat mgmt-paths.txt); do printf '%-28s %s\n' "$p" "$(curl -s -o /dev/null -w '%{http_code}' "http://10.0.0.17:9401$p")"; done
 ```
 
-<details><summary>Output: every path answers 401 except <code>/healthz</code></summary>
-
 ```text
 /admin/queues                401
 /admin/queues/default        401
-/admin/queues/default/stats  401
-/admin/queues/default/pause  401
-/admin/queues/default/resume 401
-/admin/queues/default/purge  401
-/admin/workers               401
-/admin/workers/drain         401
-/admin/jobs/failed           401
-/admin/jobs/retry            401
-/admin/jobs/scheduled        401
-/admin/config                401
 /admin/config/reload         401
-/admin/cluster/members       401
-/admin/cluster/leader        401
-/admin/cluster/transfer      401
 /admin/tokens                401
-/admin/audit                 401
-/admin/snapshot              401
-/admin/log-level             401
 /metrics                     401
 /debug/pprof/                401
 /healthz                     200
 ```
 
-</details>
+This is documented and intended. `docs/operations/management.md` says: "All management endpoints require a token when `management.auth.enabled` is true, except `/healthz`, which liveness probes use." #412 made `/healthz` unauthenticated in 1.8.0 so that probes work, and `main` at `5d2e8b1` still exempts it. We are not asking to change that default.
 
-`/healthz` also returns more than a status, so it does not qualify for the exemption even on its own (store host redacted):
+Our standard exempts a liveness or readiness endpoint from authentication only when it is served on a listener with no other function and returns nothing beyond the status. It also says that a network restriction does not replace authentication, and that credentials must not appear in workload manifests. `/healthz` fails the exemption on both counts: it shares the listener with the admin API, and it returns more than the status (store hostname replaced):
 
 ```text
 $ curl -s http://10.0.0.17:9401/healthz
-{"status":"ok","version":"2.3.1","commit":"9e41c07","uptime_s":184233,"store":{"driver":"postgres","host":"<redacted: internal hostname>:5432","db":"tallyqueue","pool_in_use":7,"pool_max":32},"workers":12}
+{"status":"ok","version":"2.3.1","commit":"9e41c07","uptime_s":184233,"store":{"driver":"postgres","host":"pg-queue-01.corp.example.net:5432","db":"tallyqueue","pool_in_use":7,"pool_max":32},"workers":12}
 ```
 
-**Pointing the liveness probe at the data port does not fix it.** The data port has its own unauthenticated `GET /ping` (on port 9400 it answers `200` with the body `pong`), but moving the probe there leaves `/healthz` on the management port answering without a token, so the management port still fails the rule. I have also not established whether `/ping` fails when the management side is wedged, so I do not know whether it is a usable liveness signal.
+Our security review blocks the production rollout until this is met; a temporary exception runs until December 31, 2026. We are the only case we know of with this requirement. #977 asks to hide the version and store details from `/healthz`. That would shrink the response, but `/healthz` would still answer without a token on the management listener, so #977 alone does not meet the requirement.
 
-As far as I know we are the only case with this exact rule. #412 shows the probe-versus-token conflict itself is not unique to us, and #977 (open, 6 reactions) asks to reduce what `/healthz` exposes.
+**How we would know it works**, with the new option set and `management.auth.enabled = true`:
 
-**How we would know it works:** with the new setting enabled, `GET /healthz` on the management port without a token returns `401` like every other management path; a liveness endpoint on a separate listener returns `200` without a token while the server is healthy, returns no data beyond the status, and that listener serves nothing else (any other path returns `404`). With the setting unset, behavior is exactly as in 2.3.1.
+- `GET /healthz` on the management port without a token returns 401, like every other management path.
+- A separate listener answers a liveness `GET` without a token with 200 and a body that carries only the status.
+- That listener serves no other path.
 
-**Out of scope:** changing the default (the #412 decision stays as it is), the content of `/healthz` itself (#977), and TLS or response headers on the management port.
+With the option unset, behavior stays as it is, so the case #412 fixed keeps working.
+
+**Out of scope:** the default behavior of `/healthz`, what `/healthz` returns to an authenticated caller (#977), and the data port.
 
 ### Proposal
 
-One possible shape, not implemented, built, or tested:
+One possible shape; the names are yours to choose. A setting such as `management.probe_addr = "0.0.0.0:9402"`. When it is set, Tallyqueue serves `GET /livez` on that address and nothing else, answering `200` with the body `ok`, and `/healthz` on the management port requires the token like every other endpoint.
 
-```toml
-management.probe_addr = "0.0.0.0:9402"
-```
-
-When set, Tallyqueue serves `GET /livez` on that address and nothing else, answering `200` with the body `ok`, and `/healthz` on the management port requires the token like every other endpoint. When unset, nothing changes.
-
-What we need is the requirement in the acceptance paragraph above: a token-less liveness endpoint on a listener of its own that returns only the status, and a management port with no unauthenticated path. The setting name, the path, the body, whether a readiness endpoint joins it, and whether a Unix socket or something else serves better are the project's to choose.
+What we need is the behavior in the list above: an unauthenticated liveness check on a listener of its own that returns only the status, and no unauthenticated path on the management port. The setting name, the path, the body, and whether readiness gets the same treatment are the project's decision. We have not implemented, built, or tested this.
 
 ### Alternatives considered
 
-- **Network policy restricting port 9401**, as suggested in #412. Our rules state that network restrictions do not substitute for authentication, so this does not meet them.
-- **A static token in the probe's `httpHeaders`.** The Kubernetes probe API takes literal header values and cannot read a Secret ([Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), `httpHeaders`), so the token would sit in the workload manifest, which our rules forbid.
-- **An `exec` probe running `tallyqueuectl ping`.** Not tried: the image we deploy is distroless and does not include `tallyqueuectl`.
+- **A network policy that restricts port 9401**, as suggested in #412. Our standard does not accept a network restriction in place of authentication.
+- **A static token in the probe's `httpHeaders`.** The probe API takes literal header values and cannot read a Secret ([Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)), so the token would sit in the manifest, which our standard forbids.
+- **Pointing the liveness probe somewhere else**, such as `/ping` on the data port. The probe moves, but `/healthz` on port 9401 still answers without a token, so the management port still has an unauthenticated path.
 
 ### Additional context
 
-Searched issues and discussions, open and closed, for `healthz auth`, `healthz version`, `probe port`, `liveness`. Nearest hits: #412 (closed, fixed in 1.8.0), where `/healthz` was made unauthenticated so kubelet probes work; this request keeps that working and adds an opt-in alternative. #977 (open) asks to hide version and store details from `/healthz`; that is related but would not make the management port fully authenticated, so it does not cover this. #1203 (readiness during leader election) is unrelated.
+_No response_
 
-The IP address and the store hostname in the output above were changed or redacted; nothing else was edited.
+### Checklist
 
 - [x] I searched existing issues and discussions

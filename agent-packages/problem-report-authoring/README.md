@@ -26,11 +26,15 @@ else's internals.
   surface, a title that names the symptom rather than the fix, causal analysis marked with its
   confidence and the report standing without it, the goal as well as the step, and the project's own
   field order and field meaning winning over any preference in the skill.
-- The expected-behavior test: six questions covering what a machine could check, whether it
+- The expected-behavior test: seven questions covering what a machine could check, whether it
   separates acceptable from unacceptable behavior, identifiers that resolve by content rather than
   by position, the grounding and its strength with a compatibility promise counted as the project's
-  own specification, whether every claim about today's behavior was observed or cited, and one block
-  per actionable problem with the requirement separated from the rendering.
+  own specification, whether every claim about today's behavior was observed or cited, one block
+  per actionable problem with the requirement separated from the rendering, and, where the obvious
+  shape is impossible, a block that says so.
+- Length: the core written first, the reader deletion test that keeps a sentence only if some
+  reader of the report loses an established answer without it, and the hand-over note as the place
+  for what the investigation checked on the way.
 - Evidence and the reproducer: who produced each transcript, the secrets removed in every channel
   and the private names substituted only where the channel leaves the organization, with the
   reproducer kept runnable, the observation set that replaces a reproducer for an incident, a flaky
@@ -88,6 +92,9 @@ verified against its primary source, and the corrections are recorded. The sourc
 between them, the rules that had to be derived rather than sourced, and the audit of the maintainer's
 starting rules are in
 [`research/problem-report-authoring/`](../../research/problem-report-authoring/README.md).
+
+Tests: the reports the skill produces on known cases, per model, are in
+[`research/problem-report-authoring/cases/`](../../research/problem-report-authoring/cases/).
 
 ## Install
 

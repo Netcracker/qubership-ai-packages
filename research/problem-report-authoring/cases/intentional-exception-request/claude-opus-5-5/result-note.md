@@ -1,33 +1,38 @@
-# Hand-over note: Tallyqueue feature request (not part of the issue body)
+# Hand-over note: tallyqueue/tallyqueue feature request
+
+Proposed title: Cannot require authentication on every management endpoint and keep a Kubernetes liveness probe
 
 ## Filing
 
-The body is in `result.md`. The repository's form (`feature_request.yml`) is enforced only in the web UI, so the body writes the field labels as headings and ticks the search checkbox itself. To file from the CLI:
+Nothing was filed. The issue form is `.github/ISSUE_TEMPLATE/feature_request.yml`; the body in `result.md` carries its fields as headings in the form's order, because `gh` does not use the form. File with:
 
 ```bash
 gh issue create --repo tallyqueue/tallyqueue \
-  --title "No way to require the management token on every management-port path while keeping a token-less liveness probe" \
+  --title "Cannot require authentication on every management endpoint and keep a Kubernetes liveness probe" \
   --label enhancement \
   --body-file result.md
 ```
 
-Or paste each section into the matching field of the web form: Problem, Proposal, Alternatives considered, Additional context, then tick the checkbox.
+`--label` fails without triage rights on the repository; drop it in that case, or file through the web form and paste each section into its field.
 
 ## Decisions for you
 
-- **Naming Pellham and the standard.** The issue refers to "our security rules" and paraphrases SEC-STD-014 §3.2, §3.4, and §4.1 without naming the company, the standard, or SECREV-2291, because those are internal. If you want to name them or quote the clauses, that is your call.
-- **Deadline.** The temporary exception ends on 2026-12-31. The issue leaves the date out so it does not read as a milestone set for the project. Add it as a cost if you want the maintainers to know it.
-- **Offer a patch?** The notes say a second `http.Server` in `internal/mgmt/server.go` `Start()` looks feasible from reading the code (not built or run). If your team is willing to send a PR, add one line at the end of the Proposal field. The issue does not say so now.
-- **AI disclosure.** `CONTRIBUTING.md` has no AI policy and the form has no disclosure field, so the issue says nothing. Whether to mention that it was drafted with a tool is up to you. Be ready to answer maintainer follow-ups yourself.
+- **New issue or a comment on #977.** I drafted a new issue: #977 asks to hide data from `/healthz`, and your requirement is that no management path answers without a token, which #977 does not deliver. If you would rather add your case to #977, the Problem section is the comment.
+- **How much of the internal standard to show publicly.** The body paraphrases SEC-STD-014 §3.2, §3.4, and §4.1 without naming the document, its ID, the security review SECREV-2291, or the company. Confirm that the paraphrase may be published, or cut it further.
+- **The rollout deadline.** The body says the exception runs until December 31, 2026. Remove the sentence if you do not want the date public.
+- **AI disclosure.** `CONTRIBUTING.md` has no AI policy and the form has no disclosure field, so nothing is required. Whether to mention that a tool drafted it is your call.
 
-## Left out on purpose
+## What was changed or left out
 
-- The external scanner report (missing security headers, version disclosed, no TLS): separate hardening topics, not this request. File separately if wanted; version disclosure overlaps #977, so a comment there fits better than a new issue.
-- The security-team pointer to advisories in other queue servers where a health endpoint leaked a DB password: nothing like that was observed in Tallyqueue (`/healthz` shows host and database name, no credentials), so it would be speculative impact. `SECURITY.md` also says information the management port exposes is not treated as a vulnerability and hardening requests go to public issues, so the public tracker is the right channel.
+- Names changed: the pod IP `10.20.4.17` is `10.0.0.17`, and the store hostname is `pg-queue-01.corp.example.net`. The data came from captured output and is not re-run with the new values.
+- Left out: the external scanner report (missing headers, TLS, version disclosure) and the security-team chat about advisories in other queue servers. Neither is observed on Tallyqueue, and `SECURITY.md` says management-port information exposure is not treated as a vulnerability, so they add nothing to this request.
+- Left out: the reading of `internal/mgmt/server.go` that a second `http.Server` looks feasible. It is unverified, and the maintainers know their own code.
+- The trimmed path table: the full 23-line output is in your notes; `mgmt-paths.txt` itself is not in the issue.
 
-## Gaps not established, and how to close them
+## Not established
 
-- **Whether `/ping` on port 9400 fails when the management side is wedged.** The issue says this is unknown. To check: block the management side (for example stop the worker pool or freeze the process's management goroutines in a test deployment) and watch `curl -s -i http://<pod-ip>:9400/ping`.
-- **`tallyqueuectl` absent from the image.** The notes state the image is distroless without it, but not how that was checked. Confirm before filing: `kubectl debug -it <pod> --image=busybox --target=tallyqueue -- ls /proc/1/root/usr/local/bin /proc/1/root/usr/bin` (or `crane export <image> - | tar t | grep tallyqueuectl`).
-- **Tracker search was done in the session notes, not re-run here.** Before filing, re-run the queries on the live tracker in case something new appeared: `healthz auth`, `healthz version`, `probe port`, `liveness`, plus `probe_addr` and `livez` (issues and discussions, open and closed).
-- **Behavior on `main`.** Only `router.go` on `main` at `5d2e8b1` was read, not built or run. If you want certainty that `main` has not added such an option elsewhere, grep `main` for `probe` in the config docs: `git -C <clone> grep -n -i probe origin/main -- docs internal/config`.
+- **Tracker search.** The queries `healthz auth`, `healthz version`, `probe port`, and `liveness` were run in the earlier session (issues and discussions, open and closed; hits #412, #977, #1203). No network was used for this draft; re-run them before filing to catch anything opened since 2026-09-23.
+- **`main` behavior.** `main` at `5d2e8b1` was read with `git show`, not built or run. To confirm: `git -C <tallyqueue clone> fetch && git show origin/main:internal/mgmt/router.go | sed -n '35,50p'`.
+- **The Kubernetes docs link.** Written from the page title in your notes, not fetched. Open https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ and confirm the `httpHeaders` section says what the body claims.
+- **An `exec` probe** running `tallyqueuectl ping` was not tried; the image is distroless. The body does not list it, because the third alternative covers every probe that moves away from `/healthz`. A maintainer may still ask; `kubectl exec <pod> -- tallyqueuectl ping` shows whether the binary exists.
+- **`/ping` on the data port** was not checked for failing when the management side is wedged. The body does not rely on it.
