@@ -337,7 +337,7 @@
     {
       "name": "problem-report-authoring",
       "description": "Structure and content rules for problem reports: bug reports in any tracker or on a mailing list, in someone else's project or your own, feature and change requests, questions and vendor support tickets, comments on existing reports, and short problem messages to a colleague.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "topic:code-review",

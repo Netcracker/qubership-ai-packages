@@ -57,11 +57,12 @@ belongs somewhere else.
 The expensive work happens before any prose exists. Steps 1 and 2 can invalidate the whole report,
 and step 2 can send you back to step 1: a support window read there can rule the version out, and a
 routing rule can move the report to another project, whose channel you then read. A step you cannot
-complete does not hold the report back: the report says what was not established, and the hand-over
-note carries the step (§10). The routing and the security lookups are not gaps to file past: a
-suspected vulnerability with no private channel found stays with you (§4). What every report has to
-carry is an observation, the context a reader needs to act on it, and the ask; the steps raise the
-confidence a reader can place in it.
+complete does not hold the report back: the report says what was not established where a claim
+rests on it or a triager asks it (§10), and the hand-over note carries the step. The
+routing and the security lookups are not gaps to file past: a suspected vulnerability with no
+private channel found stays with you (§4). What every report has to carry is an observation, the
+context a reader needs to act on it, and the ask; the steps raise the confidence a reader can place
+in it.
 
 1. **Step 1. Establish ownership and currency.** Which project owns the defect and whether it survives
    on a version that project still supports (§4). The channel you read next is that project's.
@@ -75,10 +76,10 @@ confidence a reader can place in it.
    sandboxed session, an offline checkout), read what a local clone carries and list the lookups you
    could not do in the hand-over note (§10). What to read on each platform:
    `references/project-conventions.md`.
-1. **Step 3. Write into the form's fields, in the form's order,** with §3 governing what goes in each
-   and §6 governing how each piece of evidence is attributed and pasted. Count the reports and the
-   expected blocks (§4) once the expected outcomes are written down, because the count is taken over
-   them.
+1. **Step 3. Write the core (§7) where the form's opening goes, then the fields in the form's
+   order,** with §3 governing what goes in each and §6 governing how each piece of evidence is
+   attributed and pasted. Count the reports and the expected blocks (§4) once the expected outcomes
+   are written down, because the count is taken over them.
 1. **Step 4. Apply the expected-behavior test** to every expected block (§5). This is the center of the
    skill.
 1. **Step 5. Answer what the project asks of a report written with a tool** (§7), fill or mark every
@@ -156,7 +157,9 @@ confidence a reader can place in it.
   (the workaround deletion test):* delete every sentence that mentions a workaround. If what remains no
   longer states a requirement, the workaround was carrying the report. A setting that defines the
   failing case is not a workaround and stays: "with `maxRetries=0` the client still retries" is the
-  symptom, and deleting the setting would delete the report.
+  symptom, and deleting the setting would delete the report. A workaround you ran carries the
+  measurement that shows what it changed, such as the failure rate before and after it; where the
+  measurement you would expect to move did not, say which one did.
 - **A setting you tried that does not solve the problem is a negative result, not a workaround.** R2.
   It belongs with the symptom, under a heading or in a sentence that says it does not fix the problem.
   A setting that fixes one symptom and not another is a workaround for the first and a negative result
@@ -197,10 +200,13 @@ confidence a reader can place in it.
   transcript where the thread has none or a different one; it restates nothing the thread already
   says, and it is not a bare "same here". A report closed as fixed sends you back to the version
   check. A report closed as will-not-fix or a rejected proposal is cited, with what changed since. A
-  related but different problem gets a linked report. Record the query in the report as well, in the
-  slot the form or the genre has for what you searched, and otherwise in one sentence beside the
-  nearest hit or, where nothing was found, in the sentence that says so, because a null result
-  establishes nothing on its own and a reader can judge it only by the query. Where you cannot reach
+  related but different problem gets a linked report. Record the query in the slot the form or the
+  genre has for what you searched. Where it has none and the search found something, the report
+  names the nearest hit and the difference in one sentence, and the query goes to the hand-over
+  note. An open pull request that already makes the change is the nearest hit; whether a comment
+  there serves better than a new report is for the person filing (§10). Where the search
+  found nothing, the sentence that says so carries the query, because a null result establishes
+  nothing on its own and a reader can judge it only by the query. Where you cannot reach
   the tracker, the hand-over note (§10) carries the queries the person filing should run; an
   unreachable tracker is a gap to hand over, not a step to drop.
 - **File one report per owner, one expected block per independently actionable problem, and describe
@@ -228,7 +234,7 @@ confidence a reader can place in it.
 
 ## 5. The expected-behavior test
 
-Send every expected block through six questions in order. The first "no" is the finding.
+Send every expected block through seven questions in order. The first "no" is the finding.
 
 1. **Question 1. Is there something a machine could check?** At least one literal, such as a string, a
    number, an exit status, or an emitted artifact, or one relation between observables, such as
@@ -257,7 +263,14 @@ Send every expected block through six questions in order. The first "no" is the 
    grounded only in the next three is the one commonly closed as invalid, and a personal preference
    is weak because nothing outside you supports it. Use a weak grounding where it is all you have,
    and say what it rests on in plain words, such as "I am the only case I know of"; do not write the
-   word "weak" into the report.
+   word "weak" into the report. Where the artifact follows the rule you expect everywhere except in
+   the place you report, as with a file that pins every call but one, that consistency supports the
+   block once you have checked that the exception has no stated reason: a comment, a document, or a
+   difference in what it does. It is not the project's specification. Name the strongest grounding
+   first, and add another only where it establishes a requirement the first does not: a policy the
+   project is bound by, such as one of the organization that owns it, or a constraint of the person
+   asking, attributed to them, that explains why an existing option does not serve them
+   (`references/request-genre.md`).
 1. **Question 5. Was every claim about today's behavior observed, or read from a document?** The
    expected behavior may not exist anywhere yet, so nothing runs it. Everything you say around it
    can be checked: that a setting does not help, that another consumer of the same data shows the
@@ -274,6 +287,15 @@ Send every expected block through six questions in order. The first "no" is the 
    of an output, is the requirement separated from the rendering?** For a name, a message, a layout,
    or a format, say which part you need and which part is the project's to choose. A maintainer must
    be able to accept the requirement and reject the shape.
+1. **Question 7. Where the obvious shape is impossible, does the block say so?** Ask what a
+   maintainer will say first against the requirement. Where it is that the thing cannot be done and
+   you hold a shape that works, checked against a document or a run, give it in one sentence marked
+   as one possibility. Where you hold none, say what makes the obvious shape impossible and leave
+   the mechanism open: not knowing how to implement it does not fail the block, and neither does a
+   crash, an outage, or a new capability whose fix nobody outside the project can know. An
+   unchecked shape is marked as untested (question 5). An objection that something already covers
+   it is answered where §3 puts a negative result, not repeated here. *Test:* the block does not
+   read as asking for something the maintainer knows to be impossible.
 
 Whatever the grounding, state the value you expect. A block grounded in another system's behavior
 alone says what that system does, not what this one promised, and it says in plain words that this is
@@ -383,13 +405,42 @@ all it rests on. Worked repairs: `references/worked-cases.md`.
 
 ## 7. Length, impact, and disclosure
 
-The first two rules hold for every report. Projects state them as rules about machine-written reports
-because those break them most often, and a report you review is held to them whoever wrote it.
+These rules hold for every report. Projects state the summary rule and the ban on speculative
+consequences as rules about machine-written reports, because those break them most often, and a
+report you review is held to all of them whoever wrote it.
 
 - **Put the summary and the critical details where the reader meets them first:** the title and the
   opening sentence of the field §3 names for the opening. R1. Do not make a triager scan pages; each section
   carries at least one fact absent from every earlier one (§9). *Test:* the version, the symptom, and
   the expected value are all reachable without scrolling past a section that restates another.
+- **Write the core first, and cut what answers no reader.** R1, R2. The core says what you did or
+  observed, what you expected or ask for, and the one piece of evidence that shows the gap; where
+  the form or the genre opens differently (§3), the core goes where the opening goes. Every other
+  sentence answers a question a reader in §1 asks: reproducing, isolating, routing, whom it affects,
+  what to do until it is fixed, how to know it worked, the response you want, or a statement the
+  project's policy requires. An answer stays only where it is established: a workaround you ran,
+  with the measurement that shows its effect (§3), an affected set you observed or can cite, a
+  requirement the project is bound by. An untried workaround, a list of places you did not check,
+  and a guess at who is affected go to the hand-over note. *Test (the reader deletion test):* delete
+  the sentence; if no reader loses an established answer, it goes, however true it is. The section
+  test of the summary rule removes only repetition; this one removes true facts that answer nobody.
+  The queries once the report names the nearest hit (§4) and listings that came back empty and
+  support no claim go to the note as well; the elimination of §4 and the negative results of §3
+  stay. A shape of the fix you have not verified stays only marked as untested (§5, question 5).
+- **The report is not a transfer of your notes.** R1, R2. The notes hold everything you established;
+  the report holds what its readers need. *Checkpoint:* when the prose outside code blocks runs
+  past about 300 words, or past one screen, go through it sentence by sentence with the reader
+  deletion test before you add anything else. The number is a trigger for the test, not a
+  quota: a report that needs more after the test keeps it.
+- **An optional field carries only what passes the reader deletion test.** R1. A Logs or Additional
+  information field is not a slot to fill. A log of a run that succeeded belongs there as a control
+  or a measurement (§6): the last good release, the variant that does not fail, the timed runs.
+  Otherwise one line showing the step you report ran is enough, and a field with nothing that
+  passes is left blank (§8).
+- **Paste the output that carries the claim, verbatim.** R1, R3. Trim a long listing to the lines
+  the report points at and say that you trimmed it; the command stays whole, so anyone can re-run it
+  and see the rest. A stack trace is not trimmed, and neither is the incidental detail that shows
+  the run happened (§6).
 - **Do not enumerate speculative consequences.** R1, R2. "This could allow" with no observed instance
   is the tell triagers name. Keep an impact you actually observed, and paste the observation. Where
   the impact matters to routing, as with a suspected vulnerability, say that it is unconfirmed and
@@ -408,7 +459,8 @@ because those break them most often, and a report you review is held to them who
   field of its own. Where the channel has no fields at all, as on a mailing list, the sections the
   project's reporting guide names are the form, and the version, the environment, and the reproducer
   go in the body. Your own sections may sit inside a field or after the form's last field; they
-  never replace one. An optional field you have nothing for is left blank; a required one never.
+  never replace one. An optional field you have nothing for, or nothing that passes the reader
+  deletion test (§7), is left blank; a required one never.
   Where there is no form and no guide, the sections of a defect report are these, in this order:
   what you did and what you observed, with the pasted output; what you expected and what that rests
   on; the version of every layer; the reproducer; the workaround where one exists; the analysis,
@@ -431,6 +483,7 @@ because those break them most often, and a report you review is held to them who
 | A reproducer that was never run | Re-run it. Composed output lacks incidental detail; this is why the check is a run and not a reading |
 | A confident cause for a project that already shipped the fix | The version check and the tracker search of §4, against closed issues and release notes as well as open ones |
 | A report framed around its own workaround | The workaround deletion test in §3 |
+| A weakness with no failure, padded to look like a bug | Find the one observation that shows the gap (a resolved reference, a permission, a setting). If it sits below standards, policy quotes, or logs that show nothing about the gap, the report is padded. Where the weakness may be a vulnerability, it goes by the private route of §4 |
 | The same fact in four sections | Each section must contain a fact absent from every earlier section |
 | A grounding that names a document which does not say it | Fetch the named artifact and read the sentence claimed for it |
 | Evidence the reporter gathered, written as if you reproduced it | The attribution rule of §6: each transcript names who ran it |
@@ -447,6 +500,8 @@ answered already, or one the project's policy settles, is not asked again:
   long time.
 - Whether a pull request that carries the report as its motivation serves better than a report, as
   with a documentation sample that does not compile or a defect you hold a fix for.
+- Whether a comment on an open report or pull request that already covers the problem serves better
+  than a new report.
 - Whether a project's AI policy permits an agent-authored report, where the policy does not say.
 - Whether the request is one the project would want, and what it is worth, where the person filing
   has not said so.
@@ -455,8 +510,10 @@ answered already, or one the project's policy settles, is not asked again:
 
 **The report states a gap; the hand-over note says what to do about it.** A tracker you could not
 reach, a reproducer you could not run, a version you could not install, a lookup you could not make, a
-sign-off only a person can give: the report says, in the field concerned or beside the claim it would
-have supported, that this was not established, and never claims the work. The note to the person
+sign-off only a person can give: the report says, in the field concerned or beside the claim it
+would have supported, that this was not established, and never claims the work. A gap that answers
+a triager's question (§1: does it reproduce, on a supported version, is it a duplicate) is stated
+even where no claim rests on it; any other gap goes to the note alone. The note to the person
 filing, kept apart from the report body, carries each gap with the query or the command that would
 close it. Where you file through a command such as `gh issue create`, the deliverable is the body in a
 file of its own, the command that files it with `--body-file`, and the note outside that file.
@@ -464,7 +521,10 @@ file of its own, the command that files it with `--body-file`, and the note outs
 ## 11. Review checklist
 
 Run it over a draft, yours or someone else's. For a report filed in a tracker or sent to a list,
-every item gets an answer, "none" included. A report to a team's own backlog owes every item, with
+every item gets an answer, "none" included. The answers are the reviewer's, not the report's: an
+item is answered by pointing at a sentence the report already has, or in the hand-over note, and a
+sentence added to the report to answer an item passes the reader deletion test (§7) first. A
+report to a team's own backlog owes every item, with
 Ownership, Duplicates, and Redaction reduced as `references/project-conventions.md` says; an issue
 you file in your own repository to fix yourself owes the same, and its Ownership, Duplicates, and
 Disclosure answers are one line each. A question owes every item except Expected behavior and
@@ -484,6 +544,10 @@ message item below.
   colleague message, a private class inside the project?
 - Summary: are the version, the symptom, and the expected value reachable without scrolling past a
   section that restates another?
+- Length: does the report open on the core where the form and the genre allow, does every other
+  sentence pass the reader deletion test, and past about 300 words of prose, was it read sentence by
+  sentence? Does every optional field carry only what passes the test, and is every pasted output
+  trimmed to the lines the report points at (§7)?
 - Goal: is the task you could not finish stated, and not only the step you got stuck on?
 - Routing: does the project want this here, does the report match none of its redirect conditions,
   where you are not sure it is a defect, does the report say so and go where questions go, and where
@@ -494,14 +558,14 @@ message item below.
 - Currency: is the version an identifier that resolves to one build, inside the support window, the
   same one the reproducer declares, and for a regression are last good and first bad both stated?
 - Duplicates: is the nearest hit in the report with what makes this one different, is the query
-  recorded, and does an open report of the same defect get a comment rather than a second report,
-  carrying the version, the difference, your transcript where the thread lacks one, and nothing the
-  thread already says?
+  recorded where §4 puts it, and does an open report of the same defect get a comment rather than a
+  second report, carrying the version, the difference, your transcript where the thread lacks one,
+  and nothing the thread already says?
 - Count: how many owners, so how many reports; under one owner, how many independently fixable
   problems, so how many expected blocks in one report where they share a component, or linked reports
   where they do not or the project asks for one problem per issue; and does each report say what it
   depends on?
-- Expected behavior, for a filed report: run the six questions of §5 over every block, and name which
+- Expected behavior, for a filed report: run the seven questions of §5 over every block, and name which
   question failed.
 - Grounding: which of the seven sources is it, and is a compatibility promise or a documented
   behavior that changed counted as the project's own specification, unless the project's
@@ -515,8 +579,8 @@ message item below.
   does any sentence you wrote name the cause inside the symptom or the steps?
 - Workarounds: is a setting that works placed after everything that states the problem, or in the
   form's own field for it, and a setting that failed stated as a failure rather than filed as a
-  workaround or alternative? Run the workaround deletion test, and keep a setting that defines the
-  failing case out of it.
+  workaround or alternative? Does a workaround you ran carry the measurement that shows its effect?
+  Run the workaround deletion test, and keep a setting that defines the failing case out of it.
 - Impact: is every consequence the report names one you observed and pasted?
 - Reproducer, for a filed report: is it complete, in the form the channel accepts, does it depend on
   nothing outside the target project or name the layer that stays and why, does the pasted output
@@ -557,6 +621,7 @@ message item below.
   nothing?
 - Raised: are the questions of §10 that are still open put to the human, and not answered in the
   report?
-- Hand-over: is every step nobody executed and every check or lookup you could not make stated in the
-  report as not established, and carried in the note with the command that would close it?
+- Hand-over: is every step nobody executed and every check or lookup you could not make carried in
+  the note with the command that would close it, and stated in the report as not established beside
+  each claim that rests on it, or in the field concerned where it answers a triager's question?
 - Vacuous shapes: run §9.
