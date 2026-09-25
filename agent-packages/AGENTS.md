@@ -32,10 +32,11 @@ a test is written differently under each. Every failure message a file quotes is
 
 ## Testing a skill against its cases
 
-A skill can have regression cases under `research/<package>/cases/<case>/`: frozen input notes in `prompt.md`, the
-output of each model in `<model>/result.md`, and a `README.md` with the checks the output has to pass and the prompt
-that runs the case. The cases stay out of `agent-packages/<package>/`, because `apm install` copies the whole package
-directory into every consumer's `apm_modules/`.
+A skill can have regression cases under `research/<package>/cases/<case>/`: the input in `prompt.md` (frozen notes, or
+the task for a repository pinned at a tag), the output of each model under `<model>/` (`result.md`, or `result.diff` for
+a change to a repository), and a `README.md` with the checks the output has to pass and the way to run the case. The
+cases stay out of `agent-packages/<package>/`, because `apm install` copies the whole package directory into every
+consumer's `apm_modules/`.
 
 - **Run the skill as a consumer gets it.** Copy the skill at the revision under test to a directory outside the
   checkout, with `git archive <rev> <path to the skill> | tar -x -C <dir> --strip-components=<depth>`, and start the
@@ -43,7 +44,7 @@ directory into every consumer's `apm_modules/`.
   `AGENTS.md` files on the way, and a drafting agent should not see instructions for editing the skill.
 - **A change to a skill is a change to a file under `agent-packages/<package>/.apm/skills/<skill>/`**, the `SKILL.md` or
   a reference file. It re-runs every case of that skill, and the results go into the same commit as the change, so that
-  every commit holds results generated from its own skill and the diff of `result.md` shows what the change did to each
+  every commit holds results generated from its own skill and the diff of the result shows what the change did to each
   case. A change to the package README, `apm.yml`, or an `AGENTS.md` is not a change to the skill. A change to a case's
   checks re-runs that case's snippet over the committed results, not the models; a change to a case's `prompt.md`
   re-runs that case.

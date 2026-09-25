@@ -1,0 +1,199 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d3188..de5c315 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -1442,6 +1442,194 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void aTypeVariableIsContainedByANonNullExtendsWildcardOnlyWhenItsBoundExcludesNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              <N extends @Nullable Object, M> void test(
++                  Box<N> nullableBound, Box<M> nonNullBound, Box<@NonNull N> nonNullUse) {
++                // BUG: Diagnostic contains: incompatible types: Test.Box<N> cannot be converted to Test.Box<? extends Object>
++                Box<? extends Object> bad = nullableBound;
++                // legal: the declared bound of M excludes null
++                Box<? extends Object> fromNonNullBound = nonNullBound;
++                // legal: the use site says N is non-null here
++                Box<? extends Object> fromNonNullUse = nonNullUse;
++                // legal: the requirement admits null
++                Box<? extends @Nullable Object> toNullableRequirement = nullableBound;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void aWildcardBoundedByATypeVariableIsContainedByANonNullExtendsWildcardOnlyWhenTheBoundExcludesNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              <N extends @Nullable Object, M> void test(
++                  Box<? extends N> nullableBound,
++                  Box<? extends M> nonNullBound,
++                  Box<? extends @NonNull N> nonNullUse) {
++                // BUG: Diagnostic contains: incompatible types: Test.Box<? extends N> cannot be converted to Test.Box<? extends Object>
++                Box<? extends Object> bad = nullableBound;
++                // legal: the declared bound of M excludes null
++                Box<? extends Object> fromNonNullBound = nonNullBound;
++                // legal: the use site says N is non-null here
++                Box<? extends Object> fromNonNullUse = nonNullUse;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void aTypeVariableDeclaredInUnmarkedCodeIsNotContainedByANonNullExtendsWildcard() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              @NullUnmarked
++              static class Unmarked<U> {
++                @NullMarked
++                class Checked {
++                  void test(Box<U> box) {
++                    // BUG: Diagnostic contains: incompatible types: Test.Box<U> cannot be converted to Test.Box<? extends Object>
++                    Box<? extends Object> bad = box;
++                  }
++                }
++              }
++              static class Marked<U> {
++                class Checked {
++                  void test(Box<U> box) {
++                    // legal: U is declared in @NullMarked code, so its bound excludes null
++                    Box<? extends Object> ok = box;
++                  }
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void aTypeVariableWhoseBoundAdmitsNullIsRejectedByAWildcardOverATypeVariableThatExcludesNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              <T, S extends @Nullable T, R extends T> void nonNullRequirement(
++                  Box<S> mayBeNull, Box<T> same, Box<R> narrower) {
++                // BUG: Diagnostic contains: incompatible types: Test.Box<S> cannot be converted to Test.Box<? extends T>
++                Box<? extends T> bad = mayBeNull;
++                // legal: ? extends T admits T itself
++                Box<? extends T> fromSame = same;
++                // legal: R extends T and its bound excludes null
++                Box<? extends T> fromNarrower = narrower;
++              }
++              <T extends @Nullable Object, S extends @Nullable T> void nullableRequirement(
++                  Box<S> mayBeNull) {
++                // legal: T may be null too
++                Box<? extends T> ok = mayBeNull;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void aNullableUseIsRejectedByAWildcardOverTheSameTypeVariableWhoseBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              <T extends @Nullable Object> void test(Box<@Nullable T> nullableUse, Box<T> plainUse) {
++                // BUG: Diagnostic contains: incompatible types: Test.Box<@Nullable T> cannot be converted to Test.Box<? extends T>
++                Box<? extends T> bad = nullableUse;
++                // legal: ? extends T admits T itself
++                Box<? extends T> ok = plainUse;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void aTypeVariableWhoseBoundAdmitsNullIsRejectedByAWildcardOverItsNonNullUse() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              <T extends @Nullable Object> void test(Box<T> plainUse, Box<@NonNull T> nonNullUse) {
++                // BUG: Diagnostic contains: incompatible types: Test.Box<T> cannot be converted to
++                Box<? extends @NonNull T> bad = plainUse;
++                // legal: the use site says T is non-null here
++                Box<? extends @NonNull T> ok = nonNullUse;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void anOverrideReturningATypeVariableWhoseBoundAdmitsNullIsRejectedWhereItsNonNullUseIsRequired() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              abstract static class Base<V extends @Nullable Object> {
++                abstract Box<? extends @NonNull V> get();
++              }
++              static class PlainUse<V extends @Nullable Object> extends Base<V> {
++                @Override
++                // BUG: Diagnostic contains: which has mismatched type parameter nullability
++                Box<V> get() {
++                  throw new RuntimeException();
++                }
++              }
++              static class NonNullUse<V extends @Nullable Object> extends Base<V> {
++                // legal: the use site says V is non-null here
++                @Override
++                Box<@NonNull V> get() {
++                  throw new RuntimeException();
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(
