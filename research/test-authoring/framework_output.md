@@ -268,3 +268,76 @@ def check(value): assert value == 0    in helper.py, called from the test     E 
 the same, with pytest.register_assert_rewrite("helper") in conftest.py        E   assert -1 == 0
 assert ensure_bytes(-1) == 0           in the test module                     E   assert -1 == 0\nE    +  where -1 = ensure_bytes(-1)
 ```
+
+## pytest 8.4.2 (uv), a list and a set of batch errors (measured 2026-09-25)
+
+```python
+def test_batch():
+    got = [("r1", "NEGATIVE"), ("r2", "NOT_A_NUMBER"), ("r3", "OK_BUT_REPORTED")]
+    want = [("r1", "NEGATIVE"), ("r2", "EMPTY"), ("r4", "MISSING")]
+    assert got == want
+```
+
+```text
+default run:
+E       AssertionError: assert [('r1', 'NEGA...UT_REPORTED')] == [('r1', 'NEGA...', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         Use -v to get more diff
+
+-v:
+E       AssertionError: assert [('r1', 'NEGA...UT_REPORTED')] == [('r1', 'NEGA...', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         
+E         Full diff:
+E           [
+E               (
+E                   'r1',...
+E         
+E         ...Full output truncated (16 lines hidden), use '-vv' to show
+
+-vv:
+E       AssertionError: assert [('r1', 'NEGATIVE'), ('r2', 'NOT_A_NUMBER'), ('r3', 'OK_BUT_REPORTED')] == [('r1', 'NEGATIVE'), ('r2', 'EMPTY'), ('r4', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         
+E         Full diff:
+E           [
+E               (
+E                   'r1',
+E                   'NEGATIVE',
+E               ),
+E               (
+E                   'r2',
+E         -         'EMPTY',
+E         +         'NOT_A_NUMBER',
+E               ),
+E               (
+E         -         'r4',
+E         ?           ^
+E         +         'r3',
+E         ?           ^
+E         -         'MISSING',
+E         +         'OK_BUT_REPORTED',
+E               ),
+E           ]
+```
+
+The same values as sets, `{...} == {...}`:
+
+```text
+default run:
+E       AssertionError: assert {('r1', 'NEGA...UT_REPORTED')} == {('r1', 'NEGA...', 'MISSING')}
+E         
+E         Extra items in the left set:
+E         ('r2', 'NOT_A_NUMBER')
+E         ('r3', 'OK_BUT_REPORTED')
+E         Extra items in the right set:
+E         ('r2', 'EMPTY')
+E         ('r4', 'MISSING')
+E         Use -v to get more diff
+```
+
+A set lists every mismatch on each side in a default run. A list names only the first differing index in a default run,
+truncates the full diff under `-v`, and prints it whole under `-vv`.
