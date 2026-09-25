@@ -1,2 +1,1 @@
-other M	nullaway/src/test/java/com/uber/nullaway/jspecify/GenericsTests.java
 other M	nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java

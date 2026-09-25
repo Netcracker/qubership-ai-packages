@@ -1,42 +1,38 @@
-I rewrote the 21 tests that `d55c150` added to `WildcardTests.java` as 12 tests. I didn't touch production code and didn't commit. `./gradlew :nullaway:test --tests "com.uber.nullaway.jspecify.WildcardTests"` and `./gradlew :nullaway:buildWithNullAway` both pass.
+I rewrote the 20 tests the last commit added to `WildcardTests.java` as 13 tests. The production code is unchanged and nothing is committed. `./gradlew :nullaway:test` and `./gradlew :nullaway:buildWithNullAway` both pass.
+
+Here is the message for the author of the pull request:
 
 ---
 
-**Message for the PR author**
+**What changed in the tests, and why**
 
-**What I changed in the tests**
+On the code before the fix, 7 of the 20 new tests fail: each one expects a report that the old code never made. The other 13 passed on the base code too. Most of those were the silent twin of a failing case: the same source with one thing changed and the opposite outcome, written as a separate test with its own copy of the source. The skill's rule is that a case and the controls that a single compilation can check go into one source, so the silent side can't drift from the reporting side. I merged them on that basis.
 
-I rewrote the 21 tests as 12. No expectation changed: every `// BUG: Diagnostic contains:` marker is still there, word for word. There are now two new inputs that expect no report, and one test is merged into another.
+Error Prone's `CompilationTestHelper` stops at the first mismatch (`DiagnosticTestHelper.java:264-268` and `:288` in 2.50.0). So each test holds exactly one input whose outcome the fix moved, plus the controls that narrowly miss it. Each test name now states the rule that the case and its controls establish:
 
-- **Each new report now sits in one source with the cases that must stay silent.** Before, a reported case and its silent counterpart were two tests with two copies of the class. A silent test only proves the rule while its twin fires on the same code, and nothing kept the two copies the same. Error Prone compiles all of them in one run, so they belong together:
-  - A bound that admits null vs. one that doesn't, against `? extends Object`, `? extends @Nullable Object` and `?`.
-  - A `@Nullable T` use vs. a `@NonNull T` use.
-  - `@Nullable T` vs. bare `T`, against `? extends T`.
-  - `S extends @Nullable T` vs. `S extends T`, against `? extends T`.
-  - A bare `T` vs. `@NonNull T`, against `? extends @NonNull T`.
-- **Four reported cases had no silent counterpart, so I added one each**, differing from the case in one respect:
-  - A `@NullMarked` holder next to the `@NullUnmarked` one.
-  - `<T, S extends T>` with a non-null `T`.
-  - `Box<? extends T>` with a non-null `T`.
-  - An override returning `List<@NonNull V>`.
-- **Two inputs are new.**
-  - `NullableT.nullableSub`: `S extends @Nullable T` where `T` itself admits null, which must be accepted. It turns red if `admitsNull(lhsBound) ||` is removed.
-  - The `List<@NonNull V>` override control from the list above.
-- **Each test still holds at most one input that expects a report.** I checked the harness source: `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` (error_prone_test_helpers 2.50.0, lines 264–268 and 288) stops at the first mismatch. It identifies the mismatch by line number only, whether a report is missing or unexpected, and there is no way to label a marker. That's why cases of different rules stay in separate tests. Examples:
-  - The `@NullUnmarked` declaration and the `S extends T` chain are separate from the plain `@Nullable` bound.
-  - The override is separate from the call-site checks.
-- **Names now state the rule the test establishes.** For example, `aTypeVariableIsRejectedOnlyWhenItsBoundAdmitsNullAndTheWildcardBoundDoesNot` instead of the name of one input.
-- **Unchanged:** `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariableUnderInference`, `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement` and `aCapturedTypeArgumentMeetsABareTypeVariableRequirement`. They guard against false reports in the inference and capture paths, and none of them has a case to pair with.
+| Case the fix now reports | Silent controls in the same source |
+| --- | --- |
+| `Box<T>`, `T extends @Nullable Object` → `Box<? extends Object>` | `<T>`; `Box<@NonNull T>`; requirement `? extends @Nullable Object`; requirement `Box<?>` |
+| `T` declared in `@NullUnmarked` code | the same `T` in a `@NullMarked` class |
+| `S extends T`, `T extends @Nullable Object` | `S extends T`, `T` non-null |
+| `Box<? extends T>`, `T` admits null | `T` non-null |
+| `Box<S extends @Nullable T>` → `Box<? extends T>`, `T` non-null | `S extends T`; `T extends @Nullable Object` |
+| `Box<T>` → `Box<? extends @NonNull T>` | `Box<@NonNull T>`; requirement `? extends T` |
+| override `List<V>` for `List<? extends @NonNull V>` | override `List<@NonNull V>` |
 
-**Evidence**
+- **Unchanged-outcome reports:** two inputs with `@Nullable T` at the use site were already reported before the fix. Each got its own test with its silent control, because under a harness that stops at the first mismatch they can't share a test with a moved case.
+- **Kept as standalone tests:** four inputs that must stay silent and aren't a one-change control of any case. These are the two captured-type tests, the inference test, and `aTypeVariableMeetsAWildcardBoundedByTheVariableItExtends`.
+- **Removed:** `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariable` no longer exists as its own test. Its input (`Box<T>` → `Box<? extends T>`) is now a control in two tests, passed as an argument rather than returned.
+- **Distinct argument names:** each input now passes its argument under its own name (`takeNonNull(nonNullUse)`). When a diagnostic appears where none is expected, the harness prints the source line, so the report now names the input by content and not only by line number.
 
-- **Red on the base commit.** I ran the new tests against the production code of `HEAD~1`. Exactly the 7 tests whose report is new failed, each with `Did not see an error on line N matching <the expected diagnostic>`. The two tests whose report existed before the fix stayed green, as expected: `@Nullable T` against a non-null wildcard, and against `? extends T`.
-- **Mutations of `extendsBoundContains`**, applied one at a time and reverted:
-  - Removing `admitsNull(lhsBound) ||` fails the subtype-variable test.
-  - Removing `!hasNullnessAnnotation` in `typeComparedForNullness` fails the use-site annotation test.
-  - Removing the `CapturedType` exception fails only the existing `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement`. I had tried a direct `Box<? extends @NonNull T>` pass-through as a control, but it stayed green under that mutation, so I dropped it.
+**How I checked it**
 
-**What I propose and did not do**
+- **Base code:** all 7 case tests fail, each on its own case.
+- **Mutant 1**, which judges `@NonNull T` by its bound: the `nonNullUse` control catches it.
+- **Mutant 2**, the naive fix that also reads a type-variable requirement by its bound: 6 tests catch it.
+- **Mutant 3**, which drops the exception for captured types: the captured-type test catches it.
 
-- **A stack line in `AGENTS.md`/`CLAUDE.md`**, if the maintainers agree: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatched marker and names it by line number only, with no label.`
-- **A follow-up against Error Prone:** an optional label on a `// BUG: Diagnostic contains:` marker that the failure message prints. Until then, a failing test here is identified by the test name plus a line number inside the embedded source. I couldn't search the Error Prone tracker for an existing issue because this session had no network access.
+**Proposed, not done**
+
+- **Stack line:** add this to `AGENTS.md`/`CLAUDE.md`: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatch and names a case by line number and source line.` I didn't edit either file.
+- **Follow-up for the harness:** `// BUG: Diagnostic contains:` markers can't carry a label. A missing expected diagnostic is reported only by its line and pattern. That could become an Error Prone issue. I couldn't check their tracker for an existing report, because this session had no network access.

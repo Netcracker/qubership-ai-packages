@@ -34,12 +34,13 @@ rule can be satisfied by a test worth nothing.
   assertions; error semantics over message strings; what a failed wait reports; related cases that write a shared setup
   once and state what differs in each case, unless the setup is short enough to repeat; literals in an example-based
   case, and the generator and the property in a property-based one; a case and its controls in one check where one act
-  evaluates each input on its own, and, where the check stops at the first mismatch, at most one input per test that
-  expects a report and one whose outcome the change moves, counted on the diff and the base commit rather than by how
-  the rule is worded, and separate cases otherwise; when several cases may share one harness call, decided by whether
-  that call carries every mismatch and names each case for every kind of mismatch, a property of the harness learned
-  once and proposed for the repository's instructions; a form the instructions accept ahead of the harness; a loop over
-  table rows that stops at the first failing row as such a call.
+  evaluates each input on its own, and, where the check stops at the first mismatch, one case per test, with at most one
+  input whose outcome the change moves and no input that expects a report other than the case and its controls, counted
+  on the diff and the base commit rather than by how the rule is worded, and separate cases otherwise; when several
+  cases may share one harness call, decided by whether that call carries every mismatch and names each case for every
+  kind of mismatch, a property of the harness learned once and proposed for the repository's instructions; a form the
+  instructions accept ahead of the harness; a loop over table rows as separate cases, each needing its own name in the
+  report and a failure that hides no other.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
@@ -93,13 +94,13 @@ version and nothing finer:
 ```text
 Tests: JUnit 5 engine, JUnit 5 assertions; Mockito for doubles; jetCheck for property-based tests; ArchUnit for structural tests.
 Tests: JUnit 5 engine, AssertJ assertions; no Hamcrest in new tests.
-Tests: JUnit 4 engine with Hamcrest matchers; the module cannot move to JUnit 5 yet.
+Tests: JUnit 4 engine with Hamcrest matchers; new tests stay on JUnit 4.
 Tests: pytest; Hypothesis for property-based tests; no unittest.TestCase classes in new tests.
 Tests: Go testing with testify require; fake clients from k8s.io/client-go/kubernetes/fake, with PrependReactor for injected errors.
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
-Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names each mismatch, missing or unexpected, by line, and offers no label.
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names each mismatch, missing or unexpected, by line, and offers no label (the issue asking for one: <link>).
 Tests: JUnit 4 engine; Error Prone's CompilationTestHelper stops at the first mismatch, names a missing marker by line, and offers no label; write its tests as if it reported every mismatch.
 ```
 

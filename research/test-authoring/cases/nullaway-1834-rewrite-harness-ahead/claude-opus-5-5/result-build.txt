@@ -1,5 +1,4 @@
-on the fix: 50 tests ran, 0 failed
-on the base: 50 tests ran, 3 failed
-  WildcardTests.anOverrideReturnTypeMeetsANonNullWildcardOfATypeVariableOnlyWhenItsArgumentExcludesNull
-  WildcardTests.aTypeArgumentMeetsAWildcardBoundedByATypeVariableOnlyWhenItAdmitsNullNoMoreThanThatVariable
-  WildcardTests.aTypeVariableArgumentMeetsANonNullWildcardOnlyWhenItsDeclaredBoundExcludesNull
+on the fix: 48 tests ran, 0 failed
+on the base: 48 tests ran, 2 failed
+  WildcardTests.aTypeVariableArgumentMeetsANonNullWildcardOnlyWhenItsUseOrItsBoundExcludesNull
+  WildcardTests.aWildcardBoundedByATypeVariableRejectsAnArgumentThatMayBeNullWhereTheVariableMayNot

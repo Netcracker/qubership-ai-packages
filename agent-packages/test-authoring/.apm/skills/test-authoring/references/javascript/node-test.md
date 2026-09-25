@@ -5,11 +5,12 @@ module ship with Node, so one file covers both roles. The rules that use it are 
 
 ## What the runner prints
 
-The runner prints the `describe` path and the `it` or `test` string as `parent > child` above each failure, then the
-assertion's message, then `test at m.test.mjs:5:3`. So the `describe` string carries the unit and the shared condition,
-the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires mid-flight')`,
-not `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds a case with its
-controls in one check (`SKILL.md` §7) is named by the rule they establish.
+The runner prints the `describe` block and the `it` or `test` string nested in the tree it writes as the tests run. The
+summary of failing tests at the end prints `test at m.test.mjs:5:3`, then the `it` string alone, then the assertion's
+message, and no `describe` name. So the `describe` string carries the unit and the shared condition, which the tree
+shows, the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires
+mid-flight')`, not `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds
+a case with its controls in one check (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which assertion prints the operands
 

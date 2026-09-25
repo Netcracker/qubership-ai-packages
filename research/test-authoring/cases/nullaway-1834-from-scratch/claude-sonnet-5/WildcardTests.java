@@ -1443,7 +1443,7 @@ public class WildcardTests extends NullAwayTestsBase {
   }
 
   @Test
-  public void typeVariableActualWithNullableBoundRejectedByExtendsWildcard() {
+  public void typeVariableActualJudgedByDeclaredUpperBound() {
     makeHelper()
         .addSourceLines(
             "Test.java",
@@ -1451,14 +1451,14 @@ public class WildcardTests extends NullAwayTestsBase {
             import org.jspecify.annotations.*;
             @NullMarked
             class Test {
-              interface Box<X extends @Nullable Object> {}
-              static void accept(Box<? extends Object> box) {}
-              static <T extends @Nullable Object> void testPositive(Box<T> box) {
-                // BUG: Diagnostic contains: incompatible types
-                accept(box);
+              class Foo<X extends @Nullable Object> {}
+              void nonnullWildcard(Foo<? extends Object> foo) { throw new RuntimeException(); }
+              <V extends @Nullable Object> void testPositive(Foo<V> f) {
+                // BUG: Diagnostic contains: incompatible types: Test.Foo<V> cannot be converted to Test.Foo<? extends Object>
+                nonnullWildcard(f);
               }
-              static <T> void testNegative(Box<T> box) {
-                accept(box);
+              <V> void testNegative(Foo<V> f) {
+                nonnullWildcard(f);
               }
             }
             """)
@@ -1466,7 +1466,7 @@ public class WildcardTests extends NullAwayTestsBase {
   }
 
   @Test
-  public void typeVariableActualWithNullableBoundRejectedByExtendsTypeVariableWildcard() {
+  public void annotatedTypeVariableActualComparedAsWritten() {
     makeHelper()
         .addSourceLines(
             "Test.java",
@@ -1474,13 +1474,14 @@ public class WildcardTests extends NullAwayTestsBase {
             import org.jspecify.annotations.*;
             @NullMarked
             class Test {
-              interface Box<X extends @Nullable Object> {}
-              static <T, S extends @Nullable T> void testPositive(Box<S> actual) {
-                // BUG: Diagnostic contains: incompatible types
-                Box<? extends T> formal = actual;
+              class Foo<X extends @Nullable Object> {}
+              void nonnullWildcard(Foo<? extends Object> foo) { throw new RuntimeException(); }
+              <V extends @Nullable Object> void testNegative(Foo<@NonNull V> f) {
+                nonnullWildcard(f);
               }
-              static <T, S extends T> void testNegative(Box<S> actual) {
-                Box<? extends T> formal = actual;
+              <V> void testPositive(Foo<@Nullable V> f) {
+                // BUG: Diagnostic contains: incompatible types: Test.Foo<@Nullable V> cannot be converted to Test.Foo<? extends Object>
+                nonnullWildcard(f);
               }
             }
             """)
@@ -1488,7 +1489,7 @@ public class WildcardTests extends NullAwayTestsBase {
   }
 
   @Test
-  public void typeVariableActualRejectedByExplicitNonNullExtendsWildcard() {
+  public void actualBoundCheckedAgainstParametricRequirement() {
     makeHelper()
         .addSourceLines(
             "Test.java",
@@ -1496,13 +1497,39 @@ public class WildcardTests extends NullAwayTestsBase {
             import org.jspecify.annotations.*;
             @NullMarked
             class Test {
-              interface Box<X extends @Nullable Object> {}
-              static <T extends @Nullable Object> void testPositive(Box<T> actual) {
-                // BUG: Diagnostic contains: incompatible types
-                Box<? extends @NonNull T> formal = actual;
+              class Foo<X extends @Nullable Object> {}
+              <A> void nonnullBoundWildcard(Foo<? extends A> foo) { throw new RuntimeException(); }
+              <A, B extends @Nullable A> void testPositive(Foo<B> f) {
+                // BUG: Diagnostic contains: incompatible types: Test.Foo<B> cannot be converted to Test.Foo<? extends A>
+                this.<A>nonnullBoundWildcard(f);
               }
-              static <T extends @Nullable Object> void testNegative(Box<@NonNull T> actual) {
-                Box<? extends @NonNull T> formal = actual;
+              <A, B extends A> void testNegative(Foo<B> f) {
+                this.<A>nonnullBoundWildcard(f);
+              }
+            }
+            """)
+        .doTest();
+  }
+
+  @Test
+  public void annotatedParametricRequirementRejectsNullableBoundActual() {
+    makeHelper()
+        .addSourceLines(
+            "Test.java",
+            """
+            import org.jspecify.annotations.*;
+            @NullMarked
+            class Test {
+              class Foo<X extends @Nullable Object> {}
+              <A> void nonnullAnnotatedBoundWildcard(Foo<? extends @NonNull A> foo) {
+                throw new RuntimeException();
+              }
+              <A extends @Nullable Object> void testPositive(Foo<A> f) {
+                // BUG: Diagnostic contains: incompatible types: Test.Foo<A> cannot be converted to Test.Foo<? extends A>
+                this.<A>nonnullAnnotatedBoundWildcard(f);
+              }
+              <A> void testNegative(Foo<A> f) {
+                this.<A>nonnullAnnotatedBoundWildcard(f);
               }
             }
             """)
