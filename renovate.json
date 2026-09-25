@@ -21,6 +21,16 @@
       "depNameTemplate": "python",
       "datasourceTemplate": "python-version",
       "versioningTemplate": "python"
+    },
+    {
+      "description": "Update the tools a test-authoring probe pins in its probe.sh behind a `# renovate:` comment.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^research/test-authoring/probes/[^/]+/probe\\.sh$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z_]+=(?<currentValue>\\S+)"
+      ]
     }
   ],
   "packageRules": [
@@ -33,6 +43,16 @@
         "requirements.txt"
       ],
       "groupName": "python ci tools"
+    },
+    {
+      "description": "Stryker's TypeScript checker crashes on TypeScript 7 (ts.parseConfigFileTextToJson is gone); hold the mutation probe on TypeScript 6.",
+      "matchFileNames": [
+        "research/test-authoring/probes/javascript-mutation-stryker/package.json"
+      ],
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": "<7"
     }
   ]
 }

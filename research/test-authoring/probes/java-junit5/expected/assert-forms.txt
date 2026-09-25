@@ -5,7 +5,7 @@ org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected:
 	at probe.AssertFormsTest.assertThrowsOtherType(AssertFormsTest.java:67)
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertFormsTest.lambda$assertThrowsOtherType$1(AssertFormsTest.java:67)
+	at probe.AssertFormsTest.lambda$assertThrowsOtherType$<n>(AssertFormsTest.java:67)
 	at <framework frames>
 	... <n> more
 

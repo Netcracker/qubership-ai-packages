@@ -15,7 +15,7 @@ COLUMNS = ["id", "probe", "check", "pattern", "reference", "quote", "note"]
 
 
 def unescape(pattern: str) -> str:
-    return pattern.encode().decode("unicode_escape")
+    return pattern.encode("latin-1", "backslashreplace").decode("unicode_escape")
 
 
 def squash(text: str) -> str:

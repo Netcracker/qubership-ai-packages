@@ -44,9 +44,11 @@ mvn_quiet=(mvn -q -B --no-transfer-progress)
 # after "Failed to execute goal" names plugin versions and help links and says nothing about the tests. JDK 24 and
 # later warn when Byte Buddy, which AssertJ loads, calls sun.misc.Unsafe; JDK 21 does not. The seed, the durations
 # ../normalize.py leaves (the launcher's `100 ms`, Surefire's `0 s` for a fast test), and the counts of frames AssertJ
-# and Truth elide are this ecosystem's to replace; ../normalize.py handles paths and decimal durations.
+# and Truth elide, and the index javac gives a lambda's synthetic method, which differs between JDKs, are this
+# ecosystem's to replace; ../normalize.py handles paths and decimal durations.
 normalize() {
   sed -E \
+    -e 's/(lambda\$[A-Za-z0-9_]+)\$[0-9]+/\1$<n>/g' \
     -e '/^\[ERROR\] Failed to execute goal /,$d' \
     -e '/^WARNING: (A terminally deprecated method in sun\.misc\.Unsafe|sun\.misc\.Unsafe::|Please consider reporting)/d' \
     -e 's/(default seed: )[0-9]+/\1<seed>/' \

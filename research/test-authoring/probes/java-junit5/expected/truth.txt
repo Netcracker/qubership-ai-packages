@@ -43,7 +43,7 @@ but was : -2
 value of: ensureBytes(...)
 expected: 0
 but was : -1
-		at probe.TruthTest.lambda$assertAllReportsBoth$0(TruthTest.java:50)
+		at probe.TruthTest.lambda$assertAllReportsBoth$<n>(TruthTest.java:50)
 		at <framework frames>
 		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 		... <n> more
@@ -51,7 +51,7 @@ but was : -1
 value of: ensureBytes(...)
 expected: 0
 but was : -2
-		at probe.TruthTest.lambda$assertAllReportsBoth$1(TruthTest.java:51)
+		at probe.TruthTest.lambda$assertAllReportsBoth$<n>(TruthTest.java:51)
 		at <framework frames>
 		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 		... <n> more
@@ -63,7 +63,7 @@ but was            : count must not be negative: -1
 	at probe.TruthTest.hasMessageThatContains(TruthTest.java:63)
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.TruthTest.lambda$hasMessageThatContains$2(TruthTest.java:62)
+	at probe.TruthTest.lambda$hasMessageThatContains$<n>(TruthTest.java:62)
 	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 	at probe.TruthTest.hasMessageThatContains(TruthTest.java:62)
 
@@ -88,7 +88,7 @@ but was             : null
 	at probe.TruthTest.hasCauseThat(TruthTest.java:69)
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.TruthTest.lambda$hasCauseThat$3(TruthTest.java:68)
+	at probe.TruthTest.lambda$hasCauseThat$<n>(TruthTest.java:68)
 	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 	at probe.TruthTest.hasCauseThat(TruthTest.java:68)
 

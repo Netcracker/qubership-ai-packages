@@ -10,7 +10,7 @@ org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected:
 	at probe.ThrowsTest.assertThrowsExactlyRefusesSubclass(ThrowsTest.java:25)
 Caused by: java.lang.NumberFormatException: For input string: "x"
 	at <framework frames>
-	at probe.ThrowsTest.lambda$assertThrowsExactlyRefusesSubclass$2(ThrowsTest.java:25)
+	at probe.ThrowsTest.lambda$assertThrowsExactlyRefusesSubclass$<n>(ThrowsTest.java:25)
 	at <framework frames>
 	... <n> more
 

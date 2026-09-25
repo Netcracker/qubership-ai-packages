@@ -44,7 +44,7 @@ jobs:
             echo "probes=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git -c core.quotePath=false diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
+          git -c core.quotePath=false diff --name-only "$BASE_SHA...$HEAD_SHA" > changed-files.txt
           if grep -Eq '^(research/test-authoring/probes/.*|agent-packages/test-authoring/.*|\.github/workflows/test-authoring-probes\.yml)$' changed-files.txt; then
             echo "probes=true" >> "$GITHUB_OUTPUT"
           else
@@ -52,7 +52,7 @@ jobs:
           fi
 
   # One job per ecosystem, each with only the toolchain it needs. Adding an ecosystem is adding a job here and
-  # naming it in the gate's needs and result loop.
+  # naming it in the gate's needs.
   python-pytest:
     needs: changes
     if: ${{ needs.changes.outputs.probes == 'true' }}
@@ -70,6 +70,302 @@ jobs:
       - name: Compare pytest output with the golden files
         run: research/test-authoring/probes/run.sh python-pytest
 
+  go-testing:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: research/test-authoring/probes/go-testing/go.mod
+          cache-dependency-path: research/test-authoring/probes/go-testing/go.sum
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare go test and testify output with the golden files
+        run: research/test-authoring/probes/run.sh go-testing
+
+  rust-libtest:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          rust-src-dir: research/test-authoring/probes/rust-libtest
+          cache-workspaces: research/test-authoring/probes/rust-libtest -> target
+          # Two cases fail to compile on purpose; the problem matcher would annotate them on every run.
+          matcher: false
+          rustflags: ''
+          build-warnings: allow
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare cargo test output with the golden files
+        run: research/test-authoring/probes/run.sh rust-libtest
+
+  javascript-jest:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: research/test-authoring/probes/javascript-jest/.nvmrc
+          cache: npm
+          cache-dependency-path: research/test-authoring/probes/javascript-jest/package-lock.json
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare Jest output with the golden files
+        run: research/test-authoring/probes/run.sh javascript-jest
+
+  javascript-vitest:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: research/test-authoring/probes/javascript-vitest/.nvmrc
+          cache: npm
+          cache-dependency-path: research/test-authoring/probes/javascript-vitest/package-lock.json
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare Vitest output with the golden files
+        run: research/test-authoring/probes/run.sh javascript-vitest
+
+  javascript-node-test:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: research/test-authoring/probes/javascript-node-test/.nvmrc
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare node:test output with the golden files
+        run: research/test-authoring/probes/run.sh javascript-node-test
+
+  java-junit4:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: research/test-authoring/probes/java-junit4/pom.xml
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare JUnit 4 and Hamcrest output with the golden files
+        run: research/test-authoring/probes/run.sh java-junit4
+
+  java-junit5:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: research/test-authoring/probes/java-junit5/pom.xml
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare JUnit, AssertJ, and Truth output with the golden files
+        run: research/test-authoring/probes/run.sh java-junit5
+
+  java-extras:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: research/test-authoring/probes/java-*/pom.xml
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare Mockito, jetCheck, and ArchUnit output with the golden files
+        run: research/test-authoring/probes/run.sh java-mockito java-jetcheck java-archunit
+
+  java-mutation-pit:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: research/test-authoring/probes/java-mutation-pit/pom.xml
+      - name: Compare PIT output with the golden files
+        run: research/test-authoring/probes/run.sh java-mutation-pit
+
+  python-mutation-mutmut:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare mutmut output with the golden files
+        run: research/test-authoring/probes/run.sh python-mutation-mutmut
+
+  rust-mutation-cargo-mutants:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          rust-src-dir: research/test-authoring/probes/rust-mutation-cargo-mutants
+          cache-workspaces: research/test-authoring/probes/rust-mutation-cargo-mutants -> target
+          # The unviable mutants fail to compile on purpose; the problem matcher would annotate them on every run.
+          matcher: false
+          rustflags: ''
+          build-warnings: allow
+      - id: cargo-mutants
+        name: Read the pinned cargo-mutants version
+        run: echo "version=$(sed -n 's/^CARGO_MUTANTS_VERSION=//p' research/test-authoring/probes/rust-mutation-cargo-mutants/probe.sh)" >> "$GITHUB_OUTPUT"
+      - uses: taiki-e/install-action@9983c65e42da123ff25d1f78505eb6de315aa172 # v2.87.20
+        with:
+          tool: cargo-mutants@${{ steps.cargo-mutants.outputs.version }}
+      - name: Compare cargo-mutants output with the golden files
+        run: research/test-authoring/probes/run.sh rust-mutation-cargo-mutants
+
+  javascript-mutation-stryker:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: research/test-authoring/probes/javascript-mutation-stryker/.nvmrc
+          cache: npm
+          cache-dependency-path: research/test-authoring/probes/javascript-mutation-stryker/package-lock.json
+      - name: Compare Stryker output with the golden files
+        run: research/test-authoring/probes/run.sh javascript-mutation-stryker
+
+  go-mutation:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # Both go.mod files pin the same Go release.
+          go-version-file: research/test-authoring/probes/go-mutation-gremlins/go.mod
+          cache-dependency-path: |
+            research/test-authoring/probes/go-mutation-gremlins/go.sum
+            research/test-authoring/probes/go-mutation-go-mutesting/go.sum
+      - name: Compare gremlins and go-mutesting output with the golden files
+        run: research/test-authoring/probes/run.sh go-mutation-gremlins go-mutation-go-mutesting
+
   claims:
     needs: changes
     if: ${{ needs.changes.outputs.probes == 'true' }}
@@ -84,14 +380,32 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
+      - name: Check the probe scripts
+        run: shellcheck research/test-authoring/probes/*.sh research/test-authoring/probes/*/probe.sh
       - name: Check every claim against the golden files and the references
         run: uv run --python 3.12 --no-project python research/test-authoring/probes/check-claims.py
 
   probes-gate:
     # The one status to require on main: it passes when the change detection skipped the probes, and fails when
-    # any probe or the checker did not succeed.
+    # any probe or the checker did not succeed. A new ecosystem job only has to be added to needs.
     name: Test-authoring probes gate
-    needs: [changes, python-pytest, claims]
+    needs:
+      - changes
+      - python-pytest
+      - go-testing
+      - rust-libtest
+      - javascript-jest
+      - javascript-vitest
+      - javascript-node-test
+      - java-junit4
+      - java-junit5
+      - java-extras
+      - java-mutation-pit
+      - python-mutation-mutmut
+      - rust-mutation-cargo-mutants
+      - javascript-mutation-stryker
+      - go-mutation
+      - claims
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -99,26 +413,19 @@ jobs:
     steps:
       - name: Check the probe results
         env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          PROBES_REQUIRED: ${{ needs.changes.outputs.probes }}
-          PYTHON_PYTEST_RESULT: ${{ needs.python-pytest.result }}
-          CLAIMS_RESULT: ${{ needs.claims.result }}
+          NEEDS: ${{ toJSON(needs) }}
         run: |
-          if [[ "$CHANGES_RESULT" != "success" ]]; then
+          if [[ "$(jq -r '.changes.result' <<<"$NEEDS")" != "success" ]]; then
             echo "Change detection failed or did not complete."
             exit 1
           fi
-          if [[ "$PROBES_REQUIRED" != "true" ]]; then
+          if [[ "$(jq -r '.changes.outputs.probes' <<<"$NEEDS")" != "true" ]]; then
             echo "The probes are not required for this change."
             exit 0
           fi
-          failed=0
-          for result in "$PYTHON_PYTEST_RESULT" "$CLAIMS_RESULT"; do
-            if [[ "$result" != "success" ]]; then
-              failed=1
-            fi
-          done
-          if [[ "$failed" -ne 0 ]]; then
-            echo "A probe or the claims checker failed or did not complete."
+          failed=$(jq -r 'to_entries[] | select(.key != "changes" and .value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")
+          if [[ -n "$failed" ]]; then
+            echo "A probe or the claims checker failed or did not complete:"
+            echo "$failed"
             exit 1
           fi

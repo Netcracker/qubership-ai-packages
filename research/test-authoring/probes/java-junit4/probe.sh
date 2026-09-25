@@ -32,15 +32,14 @@ mvnw() {
   ./mvnw -B --no-transfer-progress "$@"
 }
 
-# Strip JUnitCore's version banner, the durations that ../normalize.py does not recognize (Surefire's "0 s" has no
-# fraction, JUnitCore's "Time: 0.008" no unit), and the index javac gives a lambda's synthetic method, which differs
-# between JDKs (lambda$assertThrowsWrongType$0 or $1). normalize.py handles paths and the other durations.
+# Strip JUnitCore's version banner and the durations that ../normalize.py does not recognize (Surefire's "0 s" has no
+# fraction, JUnitCore's "Time: 0.008" no unit). normalize.py handles paths, the other durations, and the index javac
+# gives a lambda's synthetic method.
 normalize() {
   sed -E \
     -e 's/Time elapsed: [0-9.]+ s/Time elapsed: <duration>/' \
     -e 's/^JUnit version [0-9.]+$/JUnit version <version>/' \
-    -e 's/^Time: [0-9.,]+$/Time: <duration>/' \
-    -e 's/(lambda\$[A-Za-z0-9_]+)\$[0-9]+/\1$<n>/g'
+    -e 's/^Time: [0-9.,]+$/Time: <duration>/'
 }
 
 # The part of Maven's output that belongs to Surefire: from the T E S T S banner to the totals line of the
@@ -83,8 +82,7 @@ run_junitcore() {
   local java=java
   if [ -n "${JAVA_HOME:-}" ]; then java=$JAVA_HOME/bin/java; fi
   # JUnitCore prints the whole stack; keep the frames of the probe's own classes, which are what the claims cite.
-  "$java" -Duser.language=en -Duser.country=US \
-    -cp "target/test-classes:target/classes:$(cat target/classpath.txt)" org.junit.runner.JUnitCore "$@" 2>&1 \
+  "$java" -cp "target/test-classes:target/classes:$(cat target/classpath.txt)" org.junit.runner.JUnitCore "$@" 2>&1 \
     | grep -vE '^[[:space:]]+(at (java|jdk|org\.junit|org\.hamcrest|sun)\.|\.\.\. [0-9]+ more)'
   return "${PIPESTATUS[0]}"
 }

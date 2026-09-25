@@ -49,7 +49,7 @@ but current throwable has no cause.
 Throwable that failed the check:
 java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$hasCauseInstanceOf$5(AssertjTest.java:100)
+	at probe.AssertjTest.lambda$hasCauseInstanceOf$<n>(AssertjTest.java:100)
 	at <framework frames>
 	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
 	at <framework frames>
@@ -83,12 +83,12 @@ Multiple Failures (2 failures)
 [first]
 expected: 0
  but was: -1
-at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:67)
+at AssertjTest.lambda$assertSoftlyReportsBoth$<n>(AssertjTest.java:67)
 -- failure 2 --
 [second]
 expected: 0
  but was: -2
-at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:68)
+at AssertjTest.lambda$assertSoftlyReportsBoth$<n>(AssertjTest.java:68)
 	at probe.AssertjTest.assertSoftlyReportsBoth(AssertjTest.java:66)
 
 [ERROR] probe.AssertjTest.overridingErrorMessage -- Time elapsed: <duration> <<< FAILURE!
@@ -108,7 +108,7 @@ Throwable that failed the check:
 
 java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$hasMessageContaining$4(AssertjTest.java:95)
+	at probe.AssertjTest.lambda$hasMessageContaining$<n>(AssertjTest.java:95)
 	at <framework frames>
 	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
 	at <framework frames>
@@ -127,7 +127,7 @@ Expecting actual throwable to be an instance of:
 but was:
   java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$thrownByOtherType$1(AssertjTest.java:80)
+	at probe.AssertjTest.lambda$thrownByOtherType$<n>(AssertjTest.java:80)
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 	at probe.AssertjTest.thrownByOtherType(AssertjTest.java:80)
@@ -138,7 +138,7 @@ java.lang.AssertionError:
 Expecting code not to raise a throwable but caught
   "java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$doesNotThrowAnyException$6(AssertjTest.java:105)
+	at probe.AssertjTest.lambda$doesNotThrowAnyException$<n>(AssertjTest.java:105)
 	at <framework frames>
 	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
 	at <framework frames>
@@ -153,7 +153,7 @@ Expecting actual throwable to be an instance of:
 but was:
   java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$3(AssertjTest.java:90)
+	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$<n>(AssertjTest.java:90)
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 	at probe.AssertjTest.exceptionOfTypeOtherType(AssertjTest.java:90)
@@ -177,12 +177,12 @@ Multiple Failures (2 failures)
 [first]
 expected: 0
  but was: -1
-at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:67)
+at AssertjTest.lambda$assertSoftlyReportsBoth$<n>(AssertjTest.java:67)
 -- failure 2 --
 [second]
 expected: 0
  but was: -2
-at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:68)
+at AssertjTest.lambda$assertSoftlyReportsBoth$<n>(AssertjTest.java:68)
 [ERROR]   AssertjTest.chainStopsAtFirst:74 [first]
 expected: 0
  but was: -1
@@ -201,7 +201,7 @@ expected: 0
 Expecting code not to raise a throwable but caught
   "java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$doesNotThrowAnyException$6(AssertjTest.java:105)
+	at probe.AssertjTest.lambda$doesNotThrowAnyException$<n>(AssertjTest.java:105)
 	at <framework frames>
 	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
 	at <framework frames>
@@ -212,7 +212,7 @@ Expecting actual throwable to be an instance of:
 but was:
   java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$3(AssertjTest.java:90)
+	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$<n>(AssertjTest.java:90)
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 [ERROR]   AssertjTest.hasCauseInstanceOf:100
@@ -222,7 +222,7 @@ but current throwable has no cause.
 Throwable that failed the check:
 java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$hasCauseInstanceOf$5(AssertjTest.java:100)
+	at probe.AssertjTest.lambda$hasCauseInstanceOf$<n>(AssertjTest.java:100)
 	at <framework frames>
 	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
 	at <framework frames>
@@ -238,7 +238,7 @@ Throwable that failed the check:
 
 java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$hasMessageContaining$4(AssertjTest.java:95)
+	at probe.AssertjTest.lambda$hasMessageContaining$<n>(AssertjTest.java:95)
 	at <framework frames>
 	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
 	at <framework frames>
@@ -260,7 +260,7 @@ Expecting actual throwable to be an instance of:
 but was:
   java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
-	at probe.AssertjTest.lambda$thrownByOtherType$1(AssertjTest.java:80)
+	at probe.AssertjTest.lambda$thrownByOtherType$<n>(AssertjTest.java:80)
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 [ERROR]   AssertjTest.withFailMessage:45 ensureBytes(-1) is wrong

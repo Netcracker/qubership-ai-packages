@@ -16,9 +16,14 @@ def normalize(text: str, placeholders: dict[str, str]) -> str:
         (r"/var/folders/\S+", "<tmp>"),
         (r"/tmp/\S+", "<tmp>"),
         (r"\b\d+\.\d+ ?(ms|s)\b", r"<duration>"),
-        (r"\b\d+:\d\d:\d\d\b", "<time>"),
+        # An English locale on the JVM appends AM or PM, after U+202F NARROW NO-BREAK SPACE since JDK 20.
+        (r"\b\d+:\d\d:\d\d(?:[ \u202f][AP]M)?\b", "<time>"),
         (r"\b(pid|PID)[ =:]+\d+\b", r"\1=<pid>"),
         (r"\bat 0x[0-9a-fA-F]+\b", "at 0x<address>"),
+        # javac numbers the synthetic method of each lambda in a class, and releases number them in different orders.
+        (r"(lambda\$[A-Za-z0-9_]+)\$[0-9]+", r"\1$<n>"),
+        # Every JVM prints this line when run.sh sets JAVA_TOOL_OPTIONS.
+        (r"(?m)^Picked up JAVA_TOOL_OPTIONS: .*\n", ""),
     ]
     for pattern, replacement in rules:
         text = re.sub(pattern, replacement, text)

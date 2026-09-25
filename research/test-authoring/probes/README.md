@@ -51,15 +51,28 @@ reference. Both need `uv`; each ecosystem needs its own toolchain (`go`, `cargo`
   line `exit code: N` with the framework's exit status. The script exits non-zero only when the probe itself is
   broken (toolchain missing, unknown case), never because the tests failed: they are meant to.
 
-`run.sh` runs the script under a scrubbed environment: `CI`, `BUILD_NUMBER`, `GITHUB_ACTIONS`, and the other
-variables a runner reads to detect CI are unset, colors are off (`NO_COLOR=1`, `TERM=dumb`), the terminal is 80
-columns, the locale is `C.UTF-8`. A case about the behavior under CI sets the variable on its own command line, so
-that a local run and a CI run produce the same golden file. Where a claim depends on an environment variable, the
-probe has both variants, and the ledger cites both.
+`run.sh` runs the script under a scrubbed environment. `CI`, `BUILD_NUMBER`, every `GITHUB_*` and `RUNNER_*` variable,
+and the other variables a runner reads to detect CI are unset: a tool may key off any of them, as cargo-mutants adds a
+`::warning` line per missed mutant when it sees `GITHUB_ACTIONS`. Colors are off (`NO_COLOR=1`, `TERM=dumb`), the
+terminal is 80 columns, the locale is `C.UTF-8`, and the time zone is UTC. The JVM on macOS ignores `LC_ALL` and takes
+its locale from the system settings, so `JAVA_TOOL_OPTIONS` sets `-Duser.language=en -Duser.country=US` for every JVM
+a probe starts, Surefire's and PIT's forks included. The variables a coding agent sets (`CLAUDECODE`, `AI_AGENT`,
+`CODEX_SANDBOX`, and others) are unset too, because Jest and Vitest switch to a shorter reporter when they see one. A
+case about the behavior under CI sets the variable on its own command line, so that a local run and a CI run produce
+the same golden file. Where a claim depends on an environment variable, the probe has both variants, and the ledger
+cites both.
+
+A probe also runs on the same release of its interpreter or toolchain on every machine, because a patch release can
+change the output: CPython 3.12.6 changed the source range pytest underlines under a `with` statement. The Python
+probes run the uv-managed CPython that their `.python-version` pins, never one found on the host, and Renovate's pyenv
+manager bumps the file. The Go probes set `GOTOOLCHAIN` to the release `go.mod` names, and the Rust probes run the
+toolchain `rust-toolchain.toml` pins. The Java and JavaScript probes run the JDK and the Node on the host; CI installs
+JDK 21 and the Node release in `.nvmrc`.
 
 The output then goes through two normalizations. `normalize.py` replaces the probe directory, the repository root,
-`$HOME`, temp directories, durations, clock times, process ids, and `0x` addresses with placeholders and strips
-trailing whitespace. Everything the ecosystem alone produces, a header line with version numbers, a random seed, a
+`$HOME`, temp directories, durations, clock times, process ids, `0x` addresses, and the index javac gives a lambda's
+synthetic method with placeholders, drops the line the JVM prints about `JAVA_TOOL_OPTIONS`, and strips trailing
+whitespace. Everything the ecosystem alone produces, a header line with version numbers, a random seed, a
 platform name, is the `probe.sh`'s to replace, with a placeholder in angle brackets (`pytest-<version>`, `<seed>`).
 A version number must not survive into a golden file: a bump that changes no behavior must leave the golden file
 untouched.
@@ -102,8 +115,8 @@ operand order, a case name, whether a second failure is reported, whether output
 4. Run `run.sh --update <ecosystem>` and read every golden file: nothing machine-specific, no version numbers.
 5. Write `claims.tsv`, one row per claim in the reference, then run `check-claims.py`.
 6. Add a job to [`.github/workflows/test-authoring-probes.yml`](../../../.github/workflows/test-authoring-probes.yml)
-   that installs the toolchain and runs `run.sh <ecosystem>`, and add the job to the gate's `needs` and its result
-   loop.
+   that installs the toolchain and runs `run.sh <ecosystem>`, and add the job to the gate's `needs`. The gate reads
+   the result of every job it needs, so it takes no other edit.
 
 ## After a framework bump
 

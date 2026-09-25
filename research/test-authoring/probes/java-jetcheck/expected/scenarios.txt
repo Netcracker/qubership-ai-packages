@@ -12,16 +12,16 @@ To re-run the minimal failing case, run
 To re-run the test with all intermediate shrinking steps, use `recheckingIteration(2126757142189610562L, 6)` instead for last iteration, or `withSeed(42L)` for all iterations
 
  Property failure reason: java.lang.AssertionError: ensureBytes(-1) returned -1 after []
-	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$2(ScenarioTest.java:20)
-	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$1(ScenarioTest.java:24)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$<n>(ScenarioTest.java:20)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$<n>(ScenarioTest.java:24)
 	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
 
 ==========================
 
 	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
 Caused by: java.lang.AssertionError: ensureBytes(-1) returned -1 after []
-	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$2(ScenarioTest.java:20)
-	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$1(ScenarioTest.java:24)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$<n>(ScenarioTest.java:20)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$<n>(ScenarioTest.java:24)
 	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
 
 [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
