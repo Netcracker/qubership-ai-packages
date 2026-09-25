@@ -1,0 +1,19 @@
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.PropertyTest
+[ERROR] m.PropertyTest.ensureBytesNeverReturnsANegativeCount -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Falsified on -1
+Shrunk in <n> stages, by trying <n> examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("<blob>")
+    .forAll(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(<seed>L, <size>)` instead for last iteration, or `withSeed(<seed>L)` for all iterations
+
+	at m.PropertyTest.ensureBytesNeverReturnsANegativeCount(PropertyTest.java:12)
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+results:
+  m.PropertyTest.ensureBytesNeverReturnsANegativeCount: error org.jetbrains.jetCheck.PropertyFalsified
+output of m.PropertyTest:
+  <time>: failed on iteration <n> (use `recheckingIteration(<seed>L, <size>)` or `withSeed(<seed>L)` to reproduce), shrinking...
+exit code: 1

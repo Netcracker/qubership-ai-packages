@@ -1,0 +1,32 @@
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.ScenarioTest
+[ERROR] m.ScenarioTest.reservedCountsNeverGoNegative -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Failed with java.lang.AssertionError: ensureBytes(-1) returned -1 after []
+On commands:
+  reserve -1
+Shrunk in 29 stages, by trying 33 examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("2ome2APC2eT7CQYB/////x8=")
+    .checkScenarios(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(2126757142189610562L, 6)` instead for last iteration, or `withSeed(42L)` for all iterations
+
+ Property failure reason: java.lang.AssertionError: ensureBytes(-1) returned -1 after []
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$2(ScenarioTest.java:20)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$1(ScenarioTest.java:24)
+	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
+
+==========================
+
+	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
+Caused by: java.lang.AssertionError: ensureBytes(-1) returned -1 after []
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$2(ScenarioTest.java:20)
+	at m.ScenarioTest.lambda$reservedCountsNeverGoNegative$1(ScenarioTest.java:24)
+	at m.ScenarioTest.reservedCountsNeverGoNegative(ScenarioTest.java:13)
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+results:
+  m.ScenarioTest.reservedCountsNeverGoNegative: error org.jetbrains.jetCheck.PropertyFalsified
+output of m.ScenarioTest:
+  <time>: failed on iteration 6 (use `recheckingIteration(2126757142189610562L, 6)` or `withSeed(42L)` to reproduce), shrinking...
+exit code: 1

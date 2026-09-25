@@ -1,0 +1,29 @@
+[ERROR] Tests run: 3, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.RunnerTest
+[ERROR] m.RunnerTest.unnecessary Mockito stubbings -- Time elapsed: <duration> <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException:
+
+Unnecessary stubbings detected in test class: RunnerTest
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at m.RunnerTest.a_unusedStub(RunnerTest.java:20)
+  2. -> at m.RunnerTest.b_stubCalledWithOtherArguments(RunnerTest.java:25)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+
+[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.RunnerUnusedTest
+[ERROR] m.RunnerUnusedTest.unnecessary Mockito stubbings -- Time elapsed: <duration> <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException:
+
+Unnecessary stubbings detected in test class: RunnerUnusedTest
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at m.RunnerUnusedTest.unusedStub(RunnerUnusedTest.java:17)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+
+[ERROR] Tests run: 5, Failures: 0, Errors: 2, Skipped: 0
+results:
+  m.RunnerTest.a_unusedStub: passed
+  m.RunnerTest.b_stubCalledWithOtherArguments: passed
+  m.RunnerTest.unnecessary Mockito stubbings: error org.mockito.exceptions.misusing.UnnecessaryStubbingException
+  m.RunnerUnusedTest.unusedStub: passed
+  m.RunnerUnusedTest.unnecessary Mockito stubbings: error org.mockito.exceptions.misusing.UnnecessaryStubbingException
+exit code: 1
