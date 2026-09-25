@@ -1,0 +1,50 @@
+FAIL tests/grouping.test.js
+  ✕ two assertions on one result
+  ✕ the whole object with toEqual
+
+  ● two assertions on one result
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      3 | test('two assertions on one result', () => {
+      4 |   const result = { count: ensureBytes(-1), unit: 'byte' };
+    > 5 |   expect(result.count).toBe(0);
+        |                        ^
+      6 |   expect(result.unit).toBe('bytes');
+      7 | });
+      8 |
+
+      at Object.toBe (tests/grouping.test.js:5:24)
+
+  ● the whole object with toEqual
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "count": 0,
+    -   "unit": "bytes",
+    +   "count": -1,
+    +   "unit": "byte",
+      }
+
+       9 | test('the whole object with toEqual', () => {
+      10 |   const result = { count: ensureBytes(-1), unit: 'byte' };
+    > 11 |   expect(result).toEqual({ count: 0, unit: 'bytes' });
+         |                  ^
+      12 | });
+      13 |
+
+      at Object.toEqual (tests/grouping.test.js:11:18)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/grouping.test.js.
+exit code: 1

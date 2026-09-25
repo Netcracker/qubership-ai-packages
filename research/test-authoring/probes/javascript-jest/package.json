@@ -1,0 +1,15 @@
+{
+  "name": "test-authoring-probes-jest",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deliberately failing tests whose output the test-authoring skill quotes; see ../README.md",
+  "engines": {
+    "node": ">=26"
+  },
+  "devDependencies": {
+    "jest": "30.5.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}

@@ -1,0 +1,21 @@
+FAIL tests/missing-at-collection.test.js
+  ● Test suite failed to run
+
+    TypeError: test.eachh is not a function
+
+      1 | const { ensureBytes } = require('./stream');
+      2 |
+    > 3 | test.eachh([[-1]])('ensureBytes(%d) is refused', (n) => {
+        |      ^
+      4 |   expect(ensureBytes(n)).toBe(0);
+      5 | });
+      6 |
+
+      at Object.eachh (tests/missing-at-collection.test.js:3:6)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/missing-at-collection.test.js.
+exit code: 1
