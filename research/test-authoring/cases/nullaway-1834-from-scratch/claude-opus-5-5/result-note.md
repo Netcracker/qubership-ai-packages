@@ -1,36 +1,49 @@
-I added seven tests to `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, placed after the other tests of wildcard bounds. Production code is unchanged and nothing is committed. The full `./gradlew :nullaway:test` run passes, and so does `./gradlew :nullaway:buildWithNullAway`.
+I added seven tests to `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, right after `wildcardActualArgumentNoInference`. Six of them fail on the parent commit with the bug's symptom, which is that no diagnostic appears at all. The production code is untouched and nothing is committed. The full `:nullaway:test` run has 1106 tests and 0 failures, and `:nullaway:buildWithNullAway` passes.
 
 ---
 
-**Message for the author**
+**Message for the PR author**
 
-Your change reports code that used to compile clean. The trouble is that the old defect had no diagnostic, so nothing in the suite could fail on it. These tests cover the new reports, plus one report the change keeps as it was. Like their neighbours, they are in-process compilation tests through `CompilationTestHelper`.
+This PR changes which code NullAway reports, so it needs tests. I added seven to `WildcardTests`, each compiling a single source with `CompilationTestHelper`.
 
-Error Prone's `CompilationTestHelper` (`DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines`, 2.50.0) stops at the first missing or unexpected diagnostic and identifies it only by line number. So each test holds one rule: one case that must be reported, beside controls that each narrowly miss its condition.
+**Tests added.** Each holds one case that should now be reported, next to the closest inputs that should stay silent:
 
-| Test | Case reported | Controls accepted |
+| Test | Reported | Stays silent |
 | --- | --- | --- |
-| `unannotatedTypeVariableArgumentMeetsNonNullWildcardOnlyWhenItsBoundExcludesNull` | `Box<N>`, `N extends @Nullable Object` → `Box<? extends Object>` | the same `N` passed to `? extends @Nullable Object`; `Box<@NonNull N>`; `N extends Object` |
-| `typeVariableArgumentFromUnmarkedClassDoesNotMeetNonNullWildcard` | `V` declared in a `@NullUnmarked` class (a second way a bound admits null) | the same shape in a `@NullMarked` class |
-| `wildcardArgumentBoundedByTypeVariableMeetsNonNullWildcardOnlyWhenThatBoundExcludesNull` | `Box<? extends N>`, nullable `N` → `Box<? extends Object>` (the changelog example) | a non-null `N` |
-| `typeVariableArgumentMeetsWildcardBoundedByNonNullTypeVariableOnlyWhenItExcludesNull` | `Box<S>`, `S extends @Nullable T` → `Box<? extends T>` | `S extends T`; `Box<T>` itself; a `T` that is itself nullable |
-| `typeVariableArgumentMeetsWildcardBoundedByNonNullUseOfItOnlyWhenItExcludesNull` | `Box<T>` → `Box<? extends @NonNull T>` | `Box<@NonNull T>`; `Box<T>` → `Box<? extends T>` |
-| `nullableUseOfTypeVariableDoesNotMeetWildcardBoundedByThatVariable` | `Box<@Nullable T>` → `Box<? extends T>`, the report your message says must survive | `Box<T>` |
-| `overrideMeetsNonNullWildcardReturnOnlyWhenItsTypeVariableArgumentIsNonNull` | an override returning `List<V>` where `List<? extends @NonNull V>` is required (the changelog's override note) | `List<@NonNull V>` |
+| `typeVariableActualIsRejectedByNonNullWildcardOnlyWhenItsBoundAdmitsNull` | `Box<T>` with `T extends @Nullable Object` passed to `Box<? extends Object>` | `Box<@NonNull T>`; `Box<U>` where `U`'s bound is non-null |
+| `wildcardActualIsRejectedByNonNullWildcardOnlyWhenItsTypeVariableBoundAdmitsNull` | `Box<? extends T>` passed to the same parameter | `Box<? extends U>` |
+| `typeVariableFromNullUnmarkedCodeIsRejectedByNonNullWildcardOnlyWhenUnannotated` | `T` declared in a `@NullUnmarked` class, used in a `@NullMarked` method | `Box<@NonNull T>` |
+| `subtypeVariableIsRejectedByParametricWildcardOnlyWhenItAdmitsNullAndTheRequirementDoesNot` | `Box<S>` with `S extends @Nullable T` passed to `Box<? extends T>` | `Box<R extends T>`; `Box<T>`; `M extends @Nullable N` passed to `Box<? extends N>` where `N` admits null |
+| `typeVariableActualIsRejectedByNonNullTypeVariableWildcardOnlyWhenItsBoundAdmitsNull` | `Box<T>` passed to `Box<? extends @NonNull T>` | `Box<@NonNull T>` |
+| `overrideReturningTypeVariableIsRejectedWhereNonNullTypeVariableWildcardIsReturned` | The override case from the CHANGELOG | An override returning `List<@NonNull V>` |
+| `nullableTypeVariableUseIsRejectedByParametricWildcardWhoseBoundAdmitsNull` | `Box<@Nullable N>` passed to `Box<? extends N>` | `Box<N>` |
 
-**Red on the base commit.** I checked out `HEAD~1`'s `CheckIdenticalNullabilityVisitor.java` and `GenericsUtils.java`, ran the tests, then restored the fixed files. The first five tests and the override test fail there, each on the missing diagnostic: `Did not see an error on line N matching … There were no errors.` The `@Nullable T` test passes on the base commit, as it should, since that report is the one the change preserves.
+The last test passed before this PR too. It protects the choice the commit message explains: a type-variable requirement is not replaced by its bound. If that choice were reversed, this report would go silent.
 
-**Mutants.** I scoped these to the new clauses, applied them one at a time, and reverted each:
-- **Bound substituted under a parametric requirement.** Killed by the `@Nullable T` test and the two parametric tests.
-- **`admitsNull(lhsBound)` dropped.** Killed by my tests and by four existing ones.
-- **Use-site annotation ignored in `typeComparedForNullness`, or in `admitsNull`.** Each is killed.
-- **The `rhsTypeArgument instanceof Type.CapturedType` exception removed.** This one survives the whole jspecify suite, and I have not resolved it:
-  - I traced every captured actual the suite reaches. By the time `wildcardUpperBound` returns, it has already put `@NonNull V` back on the bound, so `admitsNull` is false and the capture clause never decides the result.
-  - A test I wrote for it passed with and without the clause, so I dropped it rather than keep a test nothing can fail.
-  - Either there is an input that needs the clause, in which case please add it as a test, or the clause is redundant and can go.
+**Why one case per test.** I checked Error Prone 2.50.0's `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` (lines 223–292):
+- It stops at the first expected diagnostic that doesn't appear, or the first unexpected one.
+- It identifies the failing case only by line number and offers no label.
+
+A source with several `// BUG` markers, as most neighbouring tests in this file have, would therefore hide the second failure behind the first. So each test has exactly one expected report, surrounded by silent controls, and its name states the rule being tested. I left the existing tests alone.
+
+**Evidence the tests can fail.**
+- **Before the fix:** I cloned the repo into a scratch directory and put back `nullaway/src/main` from `HEAD~1`. Six tests fail with `Did not see an error on line N matching … There were no errors.` The seventh passes, as expected.
+- **Mutations:** I also broke the fix in that clone in several ways, one at a time. At least one new test fails for each of these:
+  - replacing a type-variable requirement with its bound;
+  - dropping `admitsNull(lhsBound)`;
+  - ignoring use-site annotations in `typeComparedForNullness` or in `admitsNull`;
+  - ignoring `@NonNull` in `hasNullnessAnnotation`;
+  - making `typeComparedForNullness` return its argument unchanged;
+  - making `typeVariableUpperBound` return the declared bound as written.
+
+**Not resolved: the `CapturedType` short-circuit in `extendsBoundContains`.** Removing it breaks nothing, neither in the full suite nor in the capture forms I tried: return values, fields, locals, `self()` calls and list elements. I added a temporary print statement in the scratch clone, and it showed:
+- Captured actuals do reach that branch.
+- But `wildcardUpperBound` already restores the annotation there (`capture of ? extends @NonNull T` gives an upper bound of `@NonNull T`), so the actual never looks nullable.
+
+In other words, I couldn't reproduce the situation the commit message describes, where capture drops the annotation. Either there is a source that does it and it deserves a test, or the clause is unnecessary. I'd like you to settle which. I didn't add a test that claims to cover it.
+
+**Not covered:** a type variable whose bound becomes nullable through a library model. The model applies to type variables declared in compiled library classes, and those variables only appear as-is inside the library, which NullAway doesn't check. As far as I can tell, no call site can observe it.
 
 **Proposed, not done:**
-- **The report prints the wrong requirement.** In the `@NonNull T` case it reads `Box<T> cannot be converted to Box<? extends T>`, which drops the `@NonNull` from the requirement and makes the report look wrong. My marker matches only the prefix, so the test doesn't lock in that text. Worth fixing.
-- **The library-model partition is untested.** A library model can override a type variable's bound (`onOverride…TypeVariableUpperBound`); I didn't set up a model for that.
-- **A stack line for the instructions file.** `AGENTS.md`/`CLAUDE.md` could gain: `Tests: JUnit 4 engine and assertions; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatched marker and identifies it by line number only.` I haven't edited either file; say if you want it added.
-- **No marker labels.** The harness offers no way to label a marker, so a failure is named only by test name and line. That would need an issue against Error Prone; I filed nothing.
+- **Diagnostic text:** the diagnostic prints the requirement `Box<? extends @NonNull T>` as `Box<? extends T>`, so users see "`Box<T>` cannot be converted to `Box<? extends T>`". The marker in that test matches only up to `Box<? extends`, so it doesn't lock in the missing annotation. Printing the `@NonNull` looks worth a follow-up.
+- **Instructions line:** the repository's instructions don't name its test stack. I suggest adding this to `CLAUDE.md`: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatched diagnostic and names each case only by line number.`

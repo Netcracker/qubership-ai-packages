@@ -34,14 +34,17 @@ rule can be satisfied by a test worth nothing.
   assertions; error semantics over message strings; what a failed wait reports; related cases that write a shared setup
   once and state what differs in each case, unless the setup is short enough to repeat; literals in an example-based
   case, and the generator and the property in a property-based one; a case and its controls in one check where one act
-  evaluates each input on its own, one partition that expects the outcome per test, and separate cases otherwise; when
-  several cases may share one harness call, decided by whether that call carries every mismatch and names each case, a
-  property of the harness learned once and recorded.
+  evaluates each input on its own, and, where the check stops at the first mismatch, at most one input per test that
+  expects a report and one whose outcome the change moves, counted on the diff and the base commit rather than by how
+  the rule is worded, and separate cases otherwise; when several cases may share one harness call, decided by whether
+  that call carries every mismatch and names each case, a property of the harness learned once and proposed for the
+  repository's instructions; a loop over table rows that stops at the first failing row as such a call.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
   input, a helper that leaves the reader the whole input, a table, or a per-test fixture, where a new test goes, in
-  which shape, the twin it joins, the helper it reuses before adding one, and when a class splits.
+  which shape, the twin it joins and when it stands apart, the helper it reuses before adding one, and when a class
+  splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
   needs a tool's verdict, or a question for a human.
 

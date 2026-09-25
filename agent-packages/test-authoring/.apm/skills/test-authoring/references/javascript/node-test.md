@@ -40,7 +40,10 @@ the setup from the varying value. Many cases of each kind are one table for each
 ## Grouping assertions
 
 `node:assert` stops at the first failing assertion. Several assertions on the fields of one result either compare the
-whole object with `deepStrictEqual` or move into separate cases.
+whole object with `deepStrictEqual` or move into separate cases. Several expectations on the result of one act, the
+errors of one validated batch, are one `deepStrictEqual` of the whole list reduced to the fields the behavior defines,
+the record and the error code without the message, sorted where the behavior defines no order, so that one run shows
+every mismatch (§7).
 
 `t.plan(n)` on the test context fails the test when fewer than `n` assertions ran by the time it ended, which is
 how an `async` test that forgot an `await` is caught. The plan counts only assertions made through `t.assert`
