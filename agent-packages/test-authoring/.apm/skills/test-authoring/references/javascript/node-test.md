@@ -5,10 +5,12 @@ module ship with Node, so one file covers both roles. The rules that use it are 
 
 ## What the runner prints
 
-The runner prints the `describe` path and the `it` or `test` string as `parent > child` above each failure, then the
-assertion's message, then `test at m.test.mjs:5:3`. So the `describe` string carries the unit and the shared
-condition, the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires
-mid-flight')`, not `it('handles abort')`, and never `it('works')`), and the message never says where.
+The runner prints the `describe` block and the `it` or `test` string nested in the tree it writes as the tests run. The
+summary of failing tests at the end prints `test at m.test.mjs:5:3`, then the `it` string alone, then the assertion's
+message, and no `describe` name. So the `describe` string carries the unit and the shared condition, which the tree
+shows, the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires
+mid-flight')`, not `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds
+a case with its controls in one check (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which assertion prints the operands
 
@@ -28,13 +30,21 @@ result. The operand order is `(actual, expected)`, and the message is the last a
 
 ## Parameterized cases
 
-There is no `test.each`. A loop over a table that calls `test(name, …)` once per row gives each case its own name in
-the report; build the name from the condition (`` `ensureBytes(${n}) is refused` ``), not from the index.
+There is no `test.each`. A loop over a table that calls `test(name, …)` once per row gives each case its own name in the
+report; build the name from the condition (`` `ensureBytes(${n}) is refused` ``), not from the index. Cases that share a
+setup (`SKILL.md` §7) and assert the same way may be the rows of that table, or separate `test` calls on one helper. The
+main skill (§7) and the file's neighbors (§9) choose between them, and a short setup is repeated in each case. Where the
+outcomes differ in kind, one throwing and one returning, a row field that selects the assertion is the condition that
+decides whether an assertion runs, which §6 rules out. Such cases are separate `test` calls on one helper that builds
+the setup from the varying value. Many cases of each kind are one table for each kind.
 
 ## Grouping assertions
 
 `node:assert` stops at the first failing assertion. Several assertions on the fields of one result either compare the
-whole object with `deepStrictEqual` or move into separate cases.
+whole object with `deepStrictEqual` or move into separate cases. Several expectations on the result of one act, the
+errors of one validated batch, are one `deepStrictEqual` of the whole list reduced to the fields the behavior defines,
+the record and the error code without the message, sorted where the behavior defines no order, so that one run shows
+every mismatch (§7).
 
 `t.plan(n)` on the test context fails the test when fewer than `n` assertions ran by the time it ended, which is
 how an `async` test that forgot an `await` is caught. The plan counts only assertions made through `t.assert`

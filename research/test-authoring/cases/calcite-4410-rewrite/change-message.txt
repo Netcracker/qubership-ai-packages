@@ -1,0 +1,1 @@
+[CALCITE-7051] JOIN with USING does not match the appropriate columns when caseSensitive is false

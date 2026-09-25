@@ -1,0 +1,6 @@
+on the fix: 64 tests ran, 0 failed
+on the base: 64 tests ran, 4 failed
+  GenericInheritanceTests.overrideReturnTypeJudgedByDeclaredUpperBoundInExtendsWildcard
+  WildcardTests.annotatedParametricRequirementRejectsNullableBoundActual
+  WildcardTests.typeVariableActualJudgedByDeclaredUpperBound
+  WildcardTests.actualBoundCheckedAgainstParametricRequirement

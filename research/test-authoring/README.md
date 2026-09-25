@@ -54,6 +54,7 @@ ab-refs-by-role.md                     the references split by role against the 
 ab-go-prs.md                           three Go pull requests, with and without the skill, against their own tests and hand-made mutants
 ab-javadoc-reread.md                   whether a re-read-the-comment rule in javadoc-authoring changes the output; it did not
 ab-final-review.md                     a checklist review in a fresh subagent (the final-review package) against two real reviews
+cases/<case>/                          a regression case: the tag it starts from, the task, and each model's result
 ```
 
 The phase prompts use one H1 and H2 sections; the result files are pasted unedited and are excluded from markdownlint
@@ -107,6 +108,43 @@ by `FILTER_REGEX_EXCLUDE` in `.github/super-linter.env`, as the other research d
   unexported helper. Error identity over message substrings moved for Sonnet and caught one mutant the pull request's
   tests miss; where the pull request's tests were already sound, the skill changed shape (named subtests, no sleep, no
   empty timeout branch) rather than what the tests catch.
+
+## Cases
+
+A case is a regression test for the skill: a repository pinned at a tag, the task a session is given there, the change
+each model made with the skill, and checks. The procedure for running them is in
+[`agent-packages/AGENTS.md`](../../agent-packages/AGENTS.md#testing-a-skill-against-its-cases). The cases come from two
+compiler-like harnesses, NullAway's and Calcite's SQL validator, and a rule checked only against them can still break a
+service, a database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lists the kinds to read an edit against.
+
+| Case | What it guards against |
+| --- | --- |
+| [`cases/nullaway-1834-rewrite/`](cases/nullaway-1834-rewrite/README.md) | The tests of uber/NullAway#1834 as submitted, each case and its control a separate copy of one source: a rewrite that keeps the copies, drops a case, puts two cases that expect a diagnostic into one check that stops at the first mismatch, or assembles the source from pieces of syntax |
+| [`cases/nullaway-1834-from-scratch/`](cases/nullaway-1834-from-scratch/README.md) | The same production change with no tests: a defect left uncaught, a behavior the commit message names left without a case, and the same failures of form |
+| [`cases/nullaway-1750-from-scratch/`](cases/nullaway-1750-from-scratch/README.md) | The production change of uber/NullAway#1750, a fix that removes a false positive: a silent case written without its reporting control, two moved inputs in one test, a new case pushed into a twin that holds cases of its own, or the `Value` stub copied again |
+| [`cases/calcite-4410-rewrite/`](cases/calcite-4410-rewrite/README.md) | The tests of apache/calcite#4410 as the reviewer saw them, on a validator that takes one query per call: a dropped input, no negative case with its error position, the fixture chain copied into every test, or a loop over the inputs in one test |
+| [`cases/nullaway-1834-rewrite-harness-ahead/`](cases/nullaway-1834-rewrite-harness-ahead/README.md) | The rewrite, where NullAway's instructions ask for tests written as if the harness reported every mismatch: a split by the harness's current behavior that the maintainers declined, or a proposal to change the harness they did not ask for |
+
+`cases/run-nullaway-case.sh` runs the NullAway#1834 cases, and `cases/run-case.sh` any case that carries its repository,
+base, change, and `build.sh`; both add the case's `instructions.md` to the repository's instructions where the case has
+one, and `cases/check-nullaway-case.py` prints the counts their checks rely on.
+
+The writer may run the build. On 2026-09-25 the four cells ran on skill 1.1.0 twice, one run each: once with the prompt
+forbidding the build and once allowing it. Every writer that was allowed ran the tests. The cost barely moved, and the
+time roughly doubled for Opus. The eight sessions and their Gradle builds ran at the same time, so the times are
+inflated and noisy.
+
+| Case, model | Without the build | With the build |
+| --- | --- | --- |
+| rewrite, Opus 5.5 | $1.22, 16 turns, 259 s | $1.17, 15 turns, 555 s |
+| rewrite, Sonnet 5 | $1.79, 29 turns, 826 s | $1.99, 33 turns, 962 s |
+| from scratch, Opus 5.5 | $1.49, 23 turns, 297 s | $1.55, 27 turns, 964 s |
+| from scratch, Sonnet 5 | $1.93, 38 turns, 692 s | $1.93, 35 turns, 805 s |
+| total | $6.43 | $6.64 |
+
+Two earlier runs of from scratch with Opus, with the build forbidden, wrote tests that failed on the fix. Their markers
+quoted `Test.Box<…>` where NullAway prints `Box<…>`. A writer that runs the tests sees that. A reader of the diff does
+not, so the script runs the build after the session whatever the writer ran.
 
 ## Status
 

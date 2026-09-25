@@ -268,3 +268,125 @@ def check(value): assert value == 0    in helper.py, called from the test     E 
 the same, with pytest.register_assert_rewrite("helper") in conftest.py        E   assert -1 == 0
 assert ensure_bytes(-1) == 0           in the test module                     E   assert -1 == 0\nE    +  where -1 = ensure_bytes(-1)
 ```
+
+## pytest 8.4.2 (uv), a list and a set of batch errors (measured 2026-09-25)
+
+```python
+def test_batch():
+    got = [("r1", "NEGATIVE"), ("r2", "NOT_A_NUMBER"), ("r3", "OK_BUT_REPORTED")]
+    want = [("r1", "NEGATIVE"), ("r2", "EMPTY"), ("r4", "MISSING")]
+    assert got == want
+```
+
+```text
+default run:
+E       AssertionError: assert [('r1', 'NEGA...UT_REPORTED')] == [('r1', 'NEGA...', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         Use -v to get more diff
+
+-v:
+E       AssertionError: assert [('r1', 'NEGA...UT_REPORTED')] == [('r1', 'NEGA...', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         
+E         Full diff:
+E           [
+E               (
+E                   'r1',...
+E         
+E         ...Full output truncated (16 lines hidden), use '-vv' to show
+
+-vv:
+E       AssertionError: assert [('r1', 'NEGATIVE'), ('r2', 'NOT_A_NUMBER'), ('r3', 'OK_BUT_REPORTED')] == [('r1', 'NEGATIVE'), ('r2', 'EMPTY'), ('r4', 'MISSING')]
+E         
+E         At index 1 diff: ('r2', 'NOT_A_NUMBER') != ('r2', 'EMPTY')
+E         
+E         Full diff:
+E           [
+E               (
+E                   'r1',
+E                   'NEGATIVE',
+E               ),
+E               (
+E                   'r2',
+E         -         'EMPTY',
+E         +         'NOT_A_NUMBER',
+E               ),
+E               (
+E         -         'r4',
+E         ?           ^
+E         +         'r3',
+E         ?           ^
+E         -         'MISSING',
+E         +         'OK_BUT_REPORTED',
+E               ),
+E           ]
+```
+
+The same values as sets, `{...} == {...}`:
+
+```text
+default run:
+E       AssertionError: assert {('r1', 'NEGA...UT_REPORTED')} == {('r1', 'NEGA...', 'MISSING')}
+E         
+E         Extra items in the left set:
+E         ('r2', 'NOT_A_NUMBER')
+E         ('r3', 'OK_BUT_REPORTED')
+E         Extra items in the right set:
+E         ('r2', 'EMPTY')
+E         ('r4', 'MISSING')
+E         Use -v to get more diff
+```
+
+A short set lists every mismatch on each side in a default run; a long one is cut, see the rechecks below. A list names
+only the first differing index in a default run, truncates the full diff under `-v`, and prints it whole under `-vv`.
+
+## Rechecks after a review of 1.1.0 (measured 2026-09-25)
+
+pytest 8.4.2, two sets of 20 records that differ in every record, `assert got == want`:
+
+```text
+default run:
+E         Extra items in the left set:
+E         ('r5', 'EMPTY')
+E         ('r13', 'EMPTY')
+E         ('r16', 'EMPTY')
+E         ('r8', 'EMPTY')
+E         ('r2', 'EMPTY')...
+E         
+E         ...Full output truncated (37 lines hidden), use '-vv' to show
+
+CI=true: all 40 extra items are listed, 20 on each side.
+```
+
+Node 26.9.0, `node --test`, one failing `it` inside a `describe`:
+
+```text
+▶ ensureBytes
+  ✖ refuses a negative count (1.173334ms)
+✖ ensureBytes (1.96275ms)
+...
+✖ failing tests:
+
+test at m.test.mjs:4:3
+✖ refuses a negative count (1.173334ms)
+  AssertionError [ERR_ASSERTION]: ensureBytes(-1)
+  
+  -1 !== 0
+```
+
+JUnit 4.13.2 with Hamcrest 1.3, `ErrorCollector` with two failing `checkThat` calls, run by `JUnitCore` (the JUnit
+Platform result for the same test is in the JUnit 4.13.2 section above):
+
+```text
+There were 2 failures:
+1) fields(ECTest)
+java.lang.AssertionError: port
+Expected: <8081>
+     but: was <8080>
+2) fields(ECTest)
+java.lang.AssertionError: host
+Expected: "b"
+     but: was "a"
+```

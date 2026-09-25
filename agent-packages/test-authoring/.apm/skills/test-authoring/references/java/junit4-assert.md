@@ -29,8 +29,10 @@ that returns a boolean, with a message that names the call.
 ## Grouping assertions
 
 There is no `assertAll`. `ErrorCollector` as a `@Rule` collects `checkThat(reason, actual, matcher)` and `addError`
-calls and reports them together at the end of the test as `Multiple Failures (2 failures)` with each failure's own
-lines; its matchers are Hamcrest's, so the operand order inside `checkThat` is `hamcrest.md`'s.
+calls and reports them together at the end of the test. Under the JUnit Platform (`junit-vintage-engine`) the report
+reads `Multiple Failures (2 failures)` with each failure's own lines; JUnit 4's own runner, `JUnitCore`, reports each
+collected failure as a failure of its own under the test's name. Its matchers are Hamcrest's, so the operand order
+inside `checkThat` is `hamcrest.md`'s.
 
 ## Errors
 

@@ -1,9 +1,41 @@
 # Editing the test-authoring package
 
-The skill under `.apm/skills/test-authoring/` states one rule in up to five places: the section body of `SKILL.md`,
-the bucket row in §10, the checklist item in §11, the reference file of every library that restates it, and the
-bullet in `README.md`. Six rounds of review of the first version found the same three defects each time, and each is
-a rule that moved in one place and not the others. The rules below exist so that the next edit does not repeat them.
+These are instructions for changing the skill under `.apm/skills/test-authoring/`, not for using it to write a test.
+
+## The skill serves every kind of test
+
+The skill has to help write tests for a variety of libraries, services, and applications, in every language its
+references cover. An edit that fits one kind of test and breaks another is a regression, however well it serves the
+case that prompted it. Before an edit, check the new text against each of these kinds, by reading where no case covers
+one:
+
+- a unit test of a library function: a parser, a codec, a collection, a date or number formatter;
+- a compiler, linter, or static-analysis check, where one compiled source carries many expectations;
+- a database or other stateful integration test, where a failed case can poison shared state;
+- a service test over HTTP or a message queue, with structured request bodies and fakes of the services it calls;
+- an application or end-to-end test through a UI or a CLI, with its output compared as text or as a golden file;
+- a concurrency, timing, or retry test;
+- a property-based test, and a test set judged by a mutation report.
+
+The rules on related cases in version 1.1.0 started from a reviewer's comment on `uber/NullAway#1834`, and every model
+run of their drafts was on NullAway's compiler harness. The early drafts made the harness's stop-at-first behavior
+decide the form of every test, and a helper that assembled a source from pieces of syntax passed for the shared setup
+the comment asked for. A Go client library, `qubership-core-lib-go-paas-mediation-client#167`, later widened the rule to
+cases that expect the same outcome.
+
+- **A rule drawn from one case states the condition under which it holds**: the kind of test, the harness property, or
+  the shape of the input. Where the rule has to hold everywhere, check it against every kind above before writing it.
+- **A worked example is one instance, not the rule.** Where §12 or a reference file shows the rule on one kind of test,
+  the rule's text still names the check a reviewer applies to any kind.
+- **A new case goes to a kind the cases do not cover yet**, where the edit rests on a kind they miss. The cases so far
+  are `uber/NullAway#1834` and `#1750`, and `apache/calcite#4410`: compiler-like harnesses only.
+
+## One rule, five places
+
+The skill states one rule in up to five places: the section body of `SKILL.md`, the bucket row in §10, the checklist
+item in §11, the reference file of every library that restates it, and the bullet in `README.md`. Six rounds of review
+of the first version found the same three defects each time, and each is a rule that moved in one place and not the
+others. The rules below exist so that the next edit does not repeat them.
 
 ## What an edit to a rule owes
 
@@ -50,3 +82,9 @@ a rule that moved in one place and not the others. The rules below exist so that
 The reference files stay split by role, grouped by ecosystem. The §11 checklist stays: the trials in
 `research/test-authoring/` show the models act on it. The `owe` metaphor stays. The skill carries no study figure and
 no citation; a rule stands on its own detection and repair, and the evidence is in `research/test-authoring/`.
+
+## Cases
+
+The cases are under `research/test-authoring/cases/`, and the procedure for running them is in
+`agent-packages/AGENTS.md`, under "Testing a skill against its cases". A NullAway case runs with
+`research/test-authoring/cases/run-nullaway-case.sh`, and its README says how.

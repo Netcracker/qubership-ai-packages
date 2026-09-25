@@ -38,6 +38,14 @@ which resolves to `junit.jupiter.params.displayname.default` and, where that is 
 
 With the case named, the message adds only what the name cannot carry.
 
+Cases that share a setup (`SKILL.md` §7) take one of these forms, and the file's neighbors choose among them (§9): one
+`@ParameterizedTest` where the assertions have the same shape, with the arguments named as *Name the argument, not the
+pattern* says; or separate methods that call one helper which builds the setup from the varying value, with the part
+that no case varies in `@BeforeEach` where the file keeps it there. A short setup is repeated in each case. Where the
+outcomes differ in kind, one throwing and one returning, the parameterized form is out, and the cases are separate
+methods, or the dynamic tests of one `@TestFactory` in a file that already writes them. Many cases of each kind are one
+`@ParameterizedTest` for each kind.
+
 ## Order and flakiness
 
 `junit.jupiter.testmethod.order.default = org.junit.jupiter.api.MethodOrderer$Random` runs methods in random order and

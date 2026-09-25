@@ -1,0 +1,5 @@
+on the fix: 52 tests ran, 0 failed
+on the base: 52 tests ran, 3 failed
+  WildcardTests.aTypeVariableFailsAConcreteNonNullWildcardOnlyWhenItsDeclaredBoundAdmitsNull
+  WildcardTests.aBareTypeVariableFailsAParametricWildcardOnlyWhenItAdmitsNullAndTheRequirementDoesNot
+  WildcardTests.anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported
