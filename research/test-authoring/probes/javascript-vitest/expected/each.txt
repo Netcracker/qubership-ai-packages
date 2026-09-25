@@ -1,0 +1,235 @@
+
+ RUN  v<version> <probe>
+
+ ❯ tests/each.test.js (11 tests | 11 failed) <duration>
+   ❯ ensureBytes (11)
+     × ensureBytes(-1) is refused <duration>
+     × ensureBytes(-2) is refused <duration>
+     × placeholder s: minus one <duration>
+     × placeholder p: %p <duration>
+     × placeholder j: {"count":-1} <duration>
+     × placeholder o: { count: -1 } <duration>
+     × placeholder #: case 0 <duration>
+     × placeholder #: case 1 <duration>
+     × minus one with count -1 <duration>
+     × test.for: ensureBytes(-1) is refused <duration>
+     × test.for: ensureBytes(-2) is refused <duration>
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/each.test.js > ensureBytes > ensureBytes(-1) is refused
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:7:28
+      5| describe('ensureBytes', () => {
+      6|   test.each([[-1], [-2]])('ensureBytes(%d) is refused', (n) => {
+      7|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+      8|   });
+      9|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > ensureBytes(-2) is refused
+AssertionError: expected -2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -2
+
+ ❯ tests/each.test.js:7:28
+      5| describe('ensureBytes', () => {
+      6|   test.each([[-1], [-2]])('ensureBytes(%d) is refused', (n) => {
+      7|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+      8|   });
+      9|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder s: minus one
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:11:28
+      9|
+     10|   test.each([['minus one', -1]])('placeholder s: %s', (_name, n) => {
+     11|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+     12|   });
+     13|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder p: %p
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:15:32
+     13|
+     14|   test.each([[{ count: -1 }]])('placeholder p: %p', ({ count }) => {
+     15|     expect(ensureBytes(count)).toBe(0);
+       |                                ^
+     16|   });
+     17|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder j: {"count":-1}
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:19:32
+     17|
+     18|   test.each([[{ count: -1 }]])('placeholder j: %j', ({ count }) => {
+     19|     expect(ensureBytes(count)).toBe(0);
+       |                                ^
+     20|   });
+     21|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder o: { count: -1 }
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:23:32
+     21|
+     22|   test.each([[{ count: -1 }]])('placeholder o: %o', ({ count }) => {
+     23|     expect(ensureBytes(count)).toBe(0);
+       |                                ^
+     24|   });
+     25|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder #: case 0
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:27:28
+     25|
+     26|   test.each([[-1], [-2]])('placeholder #: case %#', (n) => {
+     27|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+     28|   });
+     29|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > placeholder #: case 1
+AssertionError: expected -2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -2
+
+ ❯ tests/each.test.js:27:28
+     25|
+     26|   test.each([[-1], [-2]])('placeholder #: case %#', (n) => {
+     27|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+     28|   });
+     29|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > minus one with count -1
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:31:38
+     29|
+     30|   test.each([{ name: 'minus one', value: { count: -1 } }])('$name with…
+     31|     expect(ensureBytes(value.count)).toBe(0);
+       |                                      ^
+     32|   });
+     33|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > test.for: ensureBytes(-1) is refused
+AssertionError: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/each.test.js:35:28
+     33|
+     34|   test.for([[-1], [-2]])('test.for: ensureBytes(%d) is refused', ([n])…
+     35|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+     36|   });
+     37| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  tests/each.test.js > ensureBytes > test.for: ensureBytes(-2) is refused
+AssertionError: expected -2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -2
+
+ ❯ tests/each.test.js:35:28
+     33|
+     34|   test.for([[-1], [-2]])('test.for: ensureBytes(%d) is refused', ([n])…
+     35|     expect(ensureBytes(n)).toBe(0);
+       |                            ^
+     36|   });
+     37| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  11 failed (11)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 1

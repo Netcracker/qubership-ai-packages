@@ -1,0 +1,11 @@
+-test.shuffle <seed>
+--- FAIL: TestEnsureBytes (<duration>)
+    --- FAIL: TestEnsureBytes/negative_count_is_refused (<duration>)
+        m_test.go:14: ensureBytes(-1) = -1, want 0
+    --- FAIL: TestEnsureBytes/bare_fatal (<duration>)
+        m_test.go:19: mismatch
+    --- FAIL: TestEnsureBytes/no_message (<duration>)
+FAIL
+FAIL	probes.example/gotesting/report	<duration>
+FAIL
+exit code: 1

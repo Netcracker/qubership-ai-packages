@@ -1,0 +1,23 @@
+FAIL tests/soft.test.js
+  ✕ expect.soft
+
+  ● expect.soft
+
+    TypeError: expect.soft is not a function
+
+      2 |
+      3 | test('expect.soft', () => {
+    > 4 |   expect.soft(ensureBytes(-1)).toBe(0);
+        |          ^
+      5 |   expect.soft(ensureBytes(-2)).toBe(0);
+      6 | });
+      7 |
+
+      at Object.soft (tests/soft.test.js:4:10)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/soft.test.js.
+exit code: 1

@@ -1,0 +1,9 @@
+Found 5 mutants to test
+ok       Unmutated baseline
+MISSED   src/other.rs:3:5: replace double -> i64 with 0
+MISSED   src/other.rs:3:5: replace double -> i64 with 1
+MISSED   src/other.rs:3:5: replace double -> i64 with -1
+MISSED   src/other.rs:3:7: replace * with + in double
+MISSED   src/other.rs:3:7: replace * with / in double
+5 mutants tested: 5 missed
+exit code: 2

@@ -1,0 +1,3 @@
+error[E0004]: non-exhaustive patterns: `Unit::Kibibytes` not covered
+error: could not compile `test-authoring-probes-libtest` (test "non_exhaustive") due to 1 previous error
+exit code: 101

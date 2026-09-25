@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+_______________ ERROR collecting tests/test_missing_at_import.py _______________
+tests/test_missing_at_import.py:3: in <module>
+    pytest.no_such_call()
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'pytest' has no attribute 'no_such_call'
+=========================== short test summary info ============================
+ERROR tests/test_missing_at_import.py - AttributeError: module 'pytest' has n...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in <duration> ===============================
+exit code: 1

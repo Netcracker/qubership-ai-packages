@@ -1,0 +1,95 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.AssertFormsTest
+[ERROR] Tests run: 11, Failures: 11, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.AssertFormsTest
+[ERROR] probe.AssertFormsTest.assertArrayEqualsPlain -- Time elapsed: <duration> <<< FAILURE!
+org.junit.internal.ArrayComparisonFailure: arrays first differed at element [2]; expected:<3> but was:<4>
+	at probe.AssertFormsTest.assertArrayEqualsPlain(AssertFormsTest.java:20)
+Caused by: java.lang.AssertionError: expected:<3> but was:<4>
+	at probe.AssertFormsTest.assertArrayEqualsPlain(AssertFormsTest.java:20)
+
+[ERROR] probe.AssertFormsTest.assertEqualsPlain -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-1>
+	at probe.AssertFormsTest.assertEqualsPlain(AssertFormsTest.java:25)
+
+[ERROR] probe.AssertFormsTest.assertEqualsStrings -- Time elapsed: <duration> <<< FAILURE!
+org.junit.ComparisonFailure: expected:<Hello[] world> but was:<Hello[,] world>
+	at probe.AssertFormsTest.assertEqualsStrings(AssertFormsTest.java:30)
+
+[ERROR] probe.AssertFormsTest.assertEqualsSwapped -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<-1> but was:<0>
+	at probe.AssertFormsTest.assertEqualsSwapped(AssertFormsTest.java:35)
+
+[ERROR] probe.AssertFormsTest.assertEqualsWithMessage -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: ensureBytes(-1) expected:<0> but was:<-1>
+	at probe.AssertFormsTest.assertEqualsWithMessage(AssertFormsTest.java:40)
+
+[ERROR] probe.AssertFormsTest.assertNotNullPlain -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError
+	at probe.AssertFormsTest.assertNotNullPlain(AssertFormsTest.java:45)
+
+[ERROR] probe.AssertFormsTest.assertThrowsNothingThrown -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown
+	at probe.AssertFormsTest.assertThrowsNothingThrown(AssertFormsTest.java:50)
+
+[ERROR] probe.AssertFormsTest.assertThrowsWrongType -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: unexpected exception type thrown; expected:<java.lang.IllegalArgumentException> but was:<java.lang.IllegalStateException>
+	at probe.AssertFormsTest.assertThrowsWrongType(AssertFormsTest.java:55)
+Caused by: java.lang.IllegalStateException: closed
+	at probe.AssertFormsTest.lambda$assertThrowsWrongType$<n>(AssertFormsTest.java:56)
+	at probe.AssertFormsTest.assertThrowsWrongType(AssertFormsTest.java:55)
+
+[ERROR] probe.AssertFormsTest.assertTruePlain -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError
+	at probe.AssertFormsTest.assertTruePlain(AssertFormsTest.java:63)
+
+[ERROR] probe.AssertFormsTest.assertTrueWithMessage -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: ensureBytes(-1) must refuse
+	at probe.AssertFormsTest.assertTrueWithMessage(AssertFormsTest.java:69)
+
+[ERROR] probe.AssertFormsTest.failPlain -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError
+	at probe.AssertFormsTest.failPlain(AssertFormsTest.java:74)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   AssertFormsTest.assertArrayEqualsPlain:20 arrays first differed at element [2]; expected:<3> but was:<4>
+[ERROR]   AssertFormsTest.assertEqualsPlain:25 expected:<0> but was:<-1>
+[ERROR]   AssertFormsTest.assertEqualsStrings:30 expected:<Hello[] world> but was:<Hello[,] world>
+[ERROR]   AssertFormsTest.assertEqualsSwapped:35 expected:<-1> but was:<0>
+[ERROR]   AssertFormsTest.assertEqualsWithMessage:40 ensureBytes(-1) expected:<0> but was:<-1>
+[ERROR]   AssertFormsTest.assertNotNullPlain:45
+[ERROR]   AssertFormsTest.assertThrowsNothingThrown:50 expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown
+[ERROR]   AssertFormsTest.assertThrowsWrongType:55 unexpected exception type thrown; expected:<java.lang.IllegalArgumentException> but was:<java.lang.IllegalStateException>
+[ERROR]   AssertFormsTest.assertTruePlain:63
+[ERROR]   AssertFormsTest.assertTrueWithMessage:69 ensureBytes(-1) must refuse
+[ERROR]   AssertFormsTest.failPlain:74
+[INFO]
+[ERROR] Tests run: 11, Failures: 11, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.AssertFormsTest.xml
+  <testcase name="assertArrayEqualsPlain" classname="probe.AssertFormsTest">
+    <failure message="arrays first differed at element [2]; expected:&lt;3&gt; but was:&lt;4&gt;" type="org.junit.internal.ArrayComparisonFailure">
+  <testcase name="assertEqualsPlain" classname="probe.AssertFormsTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="assertEqualsStrings" classname="probe.AssertFormsTest">
+    <failure message="expected:&lt;Hello[] world&gt; but was:&lt;Hello[,] world&gt;" type="org.junit.ComparisonFailure">
+  <testcase name="assertEqualsSwapped" classname="probe.AssertFormsTest">
+    <failure message="expected:&lt;-1&gt; but was:&lt;0&gt;" type="java.lang.AssertionError">
+  <testcase name="assertEqualsWithMessage" classname="probe.AssertFormsTest">
+    <failure message="ensureBytes(-1) expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="assertNotNullPlain" classname="probe.AssertFormsTest">
+    <failure type="java.lang.AssertionError">
+  <testcase name="assertThrowsNothingThrown" classname="probe.AssertFormsTest">
+    <failure message="expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown" type="java.lang.AssertionError">
+  <testcase name="assertThrowsWrongType" classname="probe.AssertFormsTest">
+    <failure message="unexpected exception type thrown; expected:&lt;java.lang.IllegalArgumentException&gt; but was:&lt;java.lang.IllegalStateException&gt;" type="java.lang.AssertionError">
+  <testcase name="assertTruePlain" classname="probe.AssertFormsTest">
+    <failure type="java.lang.AssertionError">
+  <testcase name="assertTrueWithMessage" classname="probe.AssertFormsTest">
+    <failure message="ensureBytes(-1) must refuse" type="java.lang.AssertionError">
+  <testcase name="failPlain" classname="probe.AssertFormsTest">
+    <failure type="java.lang.AssertionError">
+exit code: 1

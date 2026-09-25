@@ -1,0 +1,129 @@
+✖ strictEqual (<duration>)
+✖ strictEqual with a message (<duration>)
+✖ strictEqual with the operands swapped (<duration>)
+✖ deepStrictEqual (<duration>)
+✖ ok (<duration>)
+✖ ok with a message (<duration>)
+✖ fail (<duration>)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 0
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/assert-forms.test.mjs:5:1
+✖ strictEqual (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  -1 !== 0
+
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:6:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: -1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:9:1
+✖ strictEqual with a message (<duration>)
+  AssertionError [ERR_ASSERTION]: ensureBytes(-1)
+
+  -1 !== 0
+
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:10:10)
+      at <node internals> {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: -1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:13:1
+✖ strictEqual with the operands swapped (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== -1
+
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:14:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: -1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:17:1
+✖ deepStrictEqual (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   count: -1,
+  -   count: 0,
+      unit: 'B'
+    }
+
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:18:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { count: -1, unit: 'B' },
+    expected: { count: 0, unit: 'B' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:21:1
+✖ ok (<duration>)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(ensureBytes(-1) === 0)
+
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:22:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:25:1
+✖ ok with a message (<duration>)
+  AssertionError [ERR_ASSERTION]: ensureBytes(-1) must return 0
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:26:10)
+      at <node internals> {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/assert-forms.test.mjs:29:1
+✖ fail (<duration>)
+  AssertionError [ERR_ASSERTION]: Failed
+      at TestContext.<anonymous> (file://<probe>/tests/assert-forms.test.mjs:30:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }
+exit code: 1

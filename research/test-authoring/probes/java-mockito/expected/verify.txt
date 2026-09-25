@@ -1,0 +1,95 @@
+[ERROR] Tests run: 8, Failures: 8, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.VerifyTest
+[ERROR] m.VerifyTest.a_neverCalled -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.WantedButNotInvoked:
+
+Wanted but not invoked:
+sender.send("bob", "hello bob");
+-> at m.VerifyTest.a_neverCalled(VerifyTest.java:30)
+Actually, there were zero interactions with this mock.
+
+	at m.VerifyTest.a_neverCalled(VerifyTest.java:30)
+
+[ERROR] m.VerifyTest.b_differentArguments -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.opentest4j.ArgumentsAreDifferent:
+
+Argument(s) are different! Wanted:
+sender.send("bob", "hi bob");
+-> at m.VerifyTest.b_differentArguments(VerifyTest.java:36)
+Actual invocations have different arguments at position [1]:
+sender.send("bob", "hello bob");
+-> at m.Notifier.notify(Notifier.java:13)
+
+	at m.VerifyTest.b_differentArguments(VerifyTest.java:36)
+
+[ERROR] m.VerifyTest.c_calledOnceWantedTwice -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.TooFewActualInvocations:
+
+sender.send(<any string>, <any string>);
+Wanted 2 times:
+-> at m.VerifyTest.c_calledOnceWantedTwice(VerifyTest.java:42)
+But was 1 time:
+-> at m.Notifier.notify(Notifier.java:13)
+
+	at m.VerifyTest.c_calledOnceWantedTwice(VerifyTest.java:42)
+
+[ERROR] m.VerifyTest.d_unverifiedCall -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.NoInteractionsWanted:
+
+No interactions wanted here:
+-> at m.VerifyTest.d_unverifiedCall(VerifyTest.java:48)
+But found this interaction on mock 'sender':
+-> at m.Notifier.notify(Notifier.java:13)
+Actually, above is the only interaction with this mock.
+	at m.VerifyTest.d_unverifiedCall(VerifyTest.java:48)
+
+[ERROR] m.VerifyTest.e_rejectedInput -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.NoInteractionsWanted:
+
+No interactions wanted here:
+-> at m.VerifyTest.e_rejectedInput(VerifyTest.java:54)
+But found these interactions on mock 'sender':
+-> at m.Notifier.notify(Notifier.java:13)
+Actually, above is the only interaction with this mock.
+	at m.VerifyTest.e_rejectedInput(VerifyTest.java:54)
+
+[ERROR] m.VerifyTest.f_cacheHit -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.TooManyActualInvocations:
+
+backend.load("k");
+Wanted 1 time:
+-> at m.VerifyTest.f_cacheHit(VerifyTest.java:62)
+But was 2 times:
+-> at m.Cache.get(Cache.java:12)
+-> at m.Cache.get(Cache.java:12)
+
+
+	at m.VerifyTest.f_cacheHit(VerifyTest.java:62)
+
+[ERROR] m.VerifyTest.g_commitBeforeNotification -- Time elapsed: <duration> <<< FAILURE!
+org.mockito.exceptions.verification.VerificationInOrderFailure:
+
+Verification in order failure
+Wanted but not invoked:
+sender.send("bob", "placed o-1");
+-> at m.VerifyTest.g_commitBeforeNotification(VerifyTest.java:70)
+Wanted anywhere AFTER following interaction:
+store.commit("o-1");
+-> at m.Orders.place(Orders.java:15)
+
+	at m.VerifyTest.g_commitBeforeNotification(VerifyTest.java:70)
+
+[ERROR] m.VerifyTest.h_captor -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <hi bob> but was: <hello bob>
+	at m.VerifyTest.h_captor(VerifyTest.java:78)
+
+[ERROR] Tests run: 8, Failures: 8, Errors: 0, Skipped: 0
+results:
+  m.VerifyTest.a_neverCalled: failure org.mockito.exceptions.verification.WantedButNotInvoked
+  m.VerifyTest.b_differentArguments: failure org.mockito.exceptions.verification.opentest4j.ArgumentsAreDifferent
+  m.VerifyTest.c_calledOnceWantedTwice: failure org.mockito.exceptions.verification.TooFewActualInvocations
+  m.VerifyTest.d_unverifiedCall: failure org.mockito.exceptions.verification.NoInteractionsWanted
+  m.VerifyTest.e_rejectedInput: failure org.mockito.exceptions.verification.NoInteractionsWanted
+  m.VerifyTest.f_cacheHit: failure org.mockito.exceptions.verification.TooManyActualInvocations
+  m.VerifyTest.g_commitBeforeNotification: failure org.mockito.exceptions.verification.VerificationInOrderFailure
+  m.VerifyTest.h_captor: failure org.opentest4j.AssertionFailedError
+exit code: 1

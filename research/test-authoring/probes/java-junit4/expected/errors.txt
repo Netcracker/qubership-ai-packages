@@ -1,0 +1,36 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.ErrorsTest
+[ERROR] Tests run: 5, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ErrorsTest
+[ERROR] probe.ErrorsTest.assertThrowsReturnsTheException -- Time elapsed: <duration> <<< FAILURE!
+org.junit.ComparisonFailure: expected:<count must [be posi]tive: -1> but was:<count must [not be nega]tive: -1>
+	at probe.ErrorsTest.assertThrowsReturnsTheException(ErrorsTest.java:49)
+
+[ERROR] probe.ErrorsTest.expectedAttributeHidesTheSetup -- Time elapsed: <duration>
+[ERROR] probe.ErrorsTest.expectedAttributeNothingThrown -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: Expected exception: java.lang.IllegalArgumentException
+
+[ERROR] probe.ErrorsTest.expectedExceptionRuleHidesTheSetup -- Time elapsed: <duration>
+[ERROR] probe.ErrorsTest.expectedExceptionRuleNothingThrown -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: Expected test to throw an instance of java.lang.IllegalArgumentException
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   ErrorsTest.assertThrowsReturnsTheException:49 expected:<count must [be posi]tive: -1> but was:<count must [not be nega]tive: -1>
+[ERROR]   ErrorsTest.expectedAttributeNothingThrown Expected exception: java.lang.IllegalArgumentException
+[ERROR]   ErrorsTest.expectedExceptionRuleNothingThrown Expected test to throw an instance of java.lang.IllegalArgumentException
+[INFO]
+[ERROR] Tests run: 5, Failures: 3, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.ErrorsTest.xml
+  <testcase name="assertThrowsReturnsTheException" classname="probe.ErrorsTest">
+    <failure message="expected:&lt;count must [be posi]tive: -1&gt; but was:&lt;count must [not be nega]tive: -1&gt;" type="org.junit.ComparisonFailure">
+  <testcase name="expectedAttributeHidesTheSetup" classname="probe.ErrorsTest"/>
+  <testcase name="expectedAttributeNothingThrown" classname="probe.ErrorsTest">
+    <failure message="Expected exception: java.lang.IllegalArgumentException" type="java.lang.AssertionError">
+  <testcase name="expectedExceptionRuleHidesTheSetup" classname="probe.ErrorsTest"/>
+  <testcase name="expectedExceptionRuleNothingThrown" classname="probe.ErrorsTest">
+    <failure message="Expected test to throw an instance of java.lang.IllegalArgumentException" type="java.lang.AssertionError">
+exit code: 1

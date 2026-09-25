@@ -1,0 +1,47 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.GroupingTest
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.GroupingTest
+[ERROR] probe.GroupingTest.errorCollectorOneFailure -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+first
+Expected: is <0>
+     but: was <-1>
+	at probe.GroupingTest.errorCollectorOneFailure(GroupingTest.java:21)
+
+[ERROR] probe.GroupingTest.errorCollectorTwoFailures -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.MultipleFailuresError:
+Multiple Failures (2 failures)
+	java.lang.AssertionError: first
+Expected: is <0>
+     but: was <-1>
+	java.lang.AssertionError: second
+
+[ERROR] probe.GroupingTest.twoAssertsStopAtTheFirst -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: first expected:<0> but was:<-1>
+	at probe.GroupingTest.twoAssertsStopAtTheFirst(GroupingTest.java:34)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   GroupingTest.errorCollectorOneFailure:21 first
+Expected: is <0>
+     but: was <-1>
+[ERROR]   GroupingTest.errorCollectorTwoFailures Multiple Failures (2 failures)
+	java.lang.AssertionError: first
+Expected: is <0>
+     but: was <-1>
+	java.lang.AssertionError: second
+[ERROR]   GroupingTest.twoAssertsStopAtTheFirst:34 first expected:<0> but was:<-1>
+[INFO]
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.GroupingTest.xml
+  <testcase name="errorCollectorOneFailure" classname="probe.GroupingTest">
+    <failure message="first&#10;Expected: is &lt;0&gt;&#10;     but: was &lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="errorCollectorTwoFailures" classname="probe.GroupingTest">
+    <failure message="Multiple Failures (2 failures)&#10;	java.lang.AssertionError: first&#10;Expected: is &lt;0&gt;&#10;     but: was &lt;-1&gt;&#10;	java.lang.AssertionError: second" type="org.opentest4j.MultipleFailuresError">
+  <testcase name="twoAssertsStopAtTheFirst" classname="probe.GroupingTest">
+    <failure message="first expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+exit code: 1

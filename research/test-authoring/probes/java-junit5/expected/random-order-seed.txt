@@ -1,0 +1,42 @@
+CONFIG: MethodOrderer.Random default seed: <seed>
+CONFIG: Using custom seed for configuration parameter [junit.jupiter.execution.order.random.seed] with value [42].
+CONFIG: Using custom seed for configuration parameter [junit.jupiter.execution.order.random.seed] with value [42].
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.RandomOrderTest
+[ERROR] probe.RandomOrderTest.b -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: b
+	at <framework frames>
+	at probe.RandomOrderTest.b(RandomOrderTest.java:16)
+	at <framework frames>
+
+[ERROR] probe.RandomOrderTest.c -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: c
+	at <framework frames>
+	at probe.RandomOrderTest.c(RandomOrderTest.java:21)
+	at <framework frames>
+
+[ERROR] probe.RandomOrderTest.d -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: d
+	at <framework frames>
+	at probe.RandomOrderTest.d(RandomOrderTest.java:26)
+	at <framework frames>
+
+[ERROR] probe.RandomOrderTest.e -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: e
+	at <framework frames>
+	at probe.RandomOrderTest.e(RandomOrderTest.java:31)
+	at <framework frames>
+
+[ERROR] probe.RandomOrderTest.a -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: a
+	at <framework frames>
+	at probe.RandomOrderTest.a(RandomOrderTest.java:11)
+	at <framework frames>
+
+[ERROR] Failures:
+[ERROR]   RandomOrderTest.a:11 a
+[ERROR]   RandomOrderTest.b:16 b
+[ERROR]   RandomOrderTest.c:21 c
+[ERROR]   RandomOrderTest.d:26 d
+[ERROR]   RandomOrderTest.e:31 e
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0
+exit code: 1

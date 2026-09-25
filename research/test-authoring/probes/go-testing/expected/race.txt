@@ -1,0 +1,8 @@
+<probe>/race/m_test.go:14
+<probe>/race/m_test.go:17
+<access> at <address> by goroutine <n>:
+FAIL
+FAIL	probes.example/gotesting/race	<duration>
+WARNING: DATA RACE
+testing.go:<line>: race detected during execution of test
+exit code: 1

@@ -1,0 +1,24 @@
+FAIL tests/report.test.js
+  ● ensureBytes › with a negative count › returns zero
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      4 |   describe('with a negative count', () => {
+      5 |     it('returns zero', () => {
+    > 6 |       expect(ensureBytes(-1)).toBe(0);
+        |                               ^
+      7 |     });
+      8 |   });
+      9 | });
+
+      at Object.toBe (tests/report.test.js:6:31)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/report.test.js.
+exit code: 1

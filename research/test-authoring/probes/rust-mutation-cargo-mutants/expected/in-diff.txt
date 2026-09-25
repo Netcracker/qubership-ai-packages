@@ -1,0 +1,9 @@
+Found 5 mutants to test
+ok       Unmutated baseline
+caught   src/lib.rs:19:5: replace is_positive -> bool with true
+caught   src/lib.rs:19:5: replace is_positive -> bool with false
+caught   src/lib.rs:19:7: replace > with == in is_positive
+caught   src/lib.rs:19:7: replace > with < in is_positive
+MISSED   src/lib.rs:19:7: replace > with >= in is_positive
+5 mutants tested: 1 missed, 4 caught
+exit code: 2

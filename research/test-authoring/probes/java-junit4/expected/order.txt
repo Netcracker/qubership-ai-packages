@@ -1,0 +1,20 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.OrderTest
+ran a
+ran b
+ran c
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.OrderTest
+[INFO] probe.OrderTest.a -- Time elapsed: <duration>
+[INFO] probe.OrderTest.b -- Time elapsed: <duration>
+[INFO] probe.OrderTest.c -- Time elapsed: <duration>
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.OrderTest.xml
+  <testcase name="a" classname="probe.OrderTest">
+  <testcase name="b" classname="probe.OrderTest">
+  <testcase name="c" classname="probe.OrderTest">
+exit code: 0

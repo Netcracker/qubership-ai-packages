@@ -1,0 +1,38 @@
+FAIL tests/message.test.js
+  ✕ a second argument to expect
+  ✕ a custom matcher from expect.extend
+
+  ● a second argument to expect
+
+    Expect takes at most one argument.
+
+      11 |
+      12 | test('a second argument to expect', () => {
+    > 13 |   expect(ensureBytes(-1), 'ensureBytes(-1)').toBe(0);
+         |   ^
+      14 | });
+      15 |
+      16 | test('a custom matcher from expect.extend', () => {
+
+      at expect (node_modules/expect/build/index.js:<line>:<column>)
+      at Object.expect (tests/message.test.js:13:3)
+
+  ● a custom matcher from expect.extend
+
+    ensureBytes returned -1 for a negative count instead of 0
+
+      15 |
+      16 | test('a custom matcher from expect.extend', () => {
+    > 17 |   expect(ensureBytes(-1)).toBeRefusedCount();
+         |                           ^
+      18 | });
+      19 |
+
+      at Object.toBeRefusedCount (tests/message.test.js:17:27)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/message.test.js.
+exit code: 1

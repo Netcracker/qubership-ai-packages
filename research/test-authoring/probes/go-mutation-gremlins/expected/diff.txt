@@ -1,0 +1,18 @@
+Starting...
+Gathering files diff...
+Gathering coverage... done in <duration>
+     SKIPPED CONDITIONALS_BOUNDARY at numbers.go:9:23
+     SKIPPED CONDITIONALS_NEGATION at numbers.go:9:23
+     SKIPPED INCREMENT_DECREMENT at numbers.go:9:29
+       LIVED CONDITIONALS_BOUNDARY at numbers.go:17:11
+      KILLED CONDITIONALS_NEGATION at numbers.go:17:11
+     SKIPPED ARITHMETIC_BASE at numbers.go:22:28
+     SKIPPED ARITHMETIC_BASE at numbers.go:27:15
+     SKIPPED ARITHMETIC_BASE at other/other.go:6:11
+
+Mutation testing completed in <duration>
+Killed: 1, Lived: 1, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 6
+Test efficacy: 50.00%
+Mutator coverage: 100.00%
+exit code: 0

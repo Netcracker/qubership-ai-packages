@@ -1,0 +1,22 @@
+     Running tests/threads.rs (target/debug/deps/threads-<hash>)
+
+running 2 tests
+test first ... FAILED
+test second ... ok
+
+failures:
+
+---- first stdout ----
+
+thread 'first' (<tid>) panicked at tests/threads.rs:12:9:
+the other test did not start within 3 seconds
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    first
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test threads`
+exit code: 101

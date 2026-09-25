@@ -1,0 +1,25 @@
+Found 21 mutants to test
+ok       Unmutated baseline
+caught   src/lib.rs:8:5: replace sum_below -> i64 with 0
+caught   src/lib.rs:8:5: replace sum_below -> i64 with 1
+caught   src/lib.rs:8:5: replace sum_below -> i64 with -1
+caught   src/lib.rs:10:13: replace < with == in sum_below
+caught   src/lib.rs:10:13: replace < with > in sum_below
+caught   src/lib.rs:10:13: replace < with <= in sum_below
+TIMEOUT  src/lib.rs:12:11: replace += with -= in sum_below
+TIMEOUT  src/lib.rs:12:11: replace += with *= in sum_below
+caught   src/lib.rs:19:5: replace is_positive -> bool with true
+caught   src/lib.rs:19:5: replace is_positive -> bool with false
+caught   src/lib.rs:19:7: replace > with == in is_positive
+caught   src/lib.rs:19:7: replace > with < in is_positive
+MISSED   src/lib.rs:19:7: replace > with >= in is_positive
+MISSED   src/lib.rs:24:5: replace label -> String with String::new()
+MISSED   src/lib.rs:24:5: replace label -> String with "xyzzy".into()
+unviable src/lib.rs:31:5: replace count_of -> Count with Default::default()
+MISSED   src/other.rs:3:5: replace double -> i64 with 0
+MISSED   src/other.rs:3:5: replace double -> i64 with 1
+MISSED   src/other.rs:3:5: replace double -> i64 with -1
+MISSED   src/other.rs:3:7: replace * with + in double
+MISSED   src/other.rs:3:7: replace * with / in double
+21 mutants tested: 8 missed, 10 caught, 1 unviable, 2 timeouts
+exit code: 3

@@ -1,0 +1,66 @@
+
+ RUN  v<version> <probe>
+
+ ❯ tests/soft.test.js (2 tests | 2 failed) <duration>
+   × bare expect calls <duration>
+   × expect.soft calls <duration>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/soft.test.js > bare expect calls
+AssertionError: first: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/soft.test.js:6:27
+      4| test('bare expect calls', () => {
+      5|   const result = ensureBytes(-1);
+      6|   expect(result, 'first').toBe(0);
+       |                           ^
+      7|   expect(result, 'second').toBeGreaterThan(0);
+      8| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/soft.test.js > expect.soft calls
+AssertionError: first: expected -1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ -1
+
+ ❯ tests/soft.test.js:12:32
+     10| test('expect.soft calls', () => {
+     11|   const result = ensureBytes(-1);
+     12|   expect.soft(result, 'first').toBe(0);
+       |                                ^
+     13|   expect.soft(result, 'second').toBeGreaterThan(0);
+     14| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/soft.test.js > expect.soft calls
+AssertionError: second: expected -1 to be greater than 0
+ ❯ tests/soft.test.js:13:33
+     11|   const result = ensureBytes(-1);
+     12|   expect.soft(result, 'first').toBe(0);
+     13|   expect.soft(result, 'second').toBeGreaterThan(0);
+       |                                 ^
+     14| });
+     15|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 1

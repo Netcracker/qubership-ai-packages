@@ -1,0 +1,45 @@
+
+ RUN  v<version> <probe>
+      Running tests with seed "42"
+
+ ❯ tests/order.test.js (5 tests) <duration>
+   ✓ one <duration>
+   ✓ two <duration>
+   ✓ three <duration>
+   ✓ four <duration>
+   ✓ five <duration>
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/order.test.js [ tests/order.test.js ]
+AssertionError: expected [ 'five', 'three', 'one', 'two', …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "five",
++   "three",
++   "one",
++   "two",
++   "four",
++ ]
+
+ ❯ tests/order.test.js:7:17
+      5|
+      6| afterAll(() => {
+      7|   expect(order).toEqual([]);
+       |                 ^
+      8| });
+      9|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 passed (5)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 1

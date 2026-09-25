@@ -1,0 +1,9 @@
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.FreezeWithoutStoreTest
+[ERROR] m.FreezeWithoutStoreTest.firstCheckWithoutAStore -- Time elapsed: <duration> <<< ERROR!
+com.tngtech.archunit.library.freeze.StoreInitializationFailedException: Creating new violation store is disabled (enable by configuration freeze.store.default.allowStoreCreation=true)
+	at m.FreezeWithoutStoreTest.firstCheckWithoutAStore(FreezeWithoutStoreTest.java:23)
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+results:
+  m.FreezeWithoutStoreTest.firstCheckWithoutAStore: error com.tngtech.archunit.library.freeze.StoreInitializationFailedException
+exit code: 1

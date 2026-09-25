@@ -1,0 +1,3 @@
+-shuffle=<seed> with the printed seed ran the tests in the same order
+-test.shuffle <seed>
+exit code: 0

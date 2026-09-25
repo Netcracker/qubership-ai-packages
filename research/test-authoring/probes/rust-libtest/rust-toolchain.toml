@@ -1,0 +1,4 @@
+# The toolchain the golden files were recorded with; Renovate's rust-toolchain manager bumps it.
+[toolchain]
+channel = "1.98.1"
+profile = "minimal"

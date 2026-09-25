@@ -1,0 +1,25 @@
+file://<probe>/tests/each.test.mjs:5
+test.each([-1, -2])('ensureBytes(%i) is refused', (n) => {
+     ^
+
+TypeError: test.each is not a function
+    at file://<probe>/tests/each.test.mjs:5:6
+    at <node internals>
+
+Node.js v<version>
+✖ tests/each.test.mjs (<duration>)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/each.test.mjs:1:1
+✖ tests/each.test.mjs (<duration>)
+  'test failed'
+exit code: 1

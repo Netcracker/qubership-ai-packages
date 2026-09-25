@@ -1,0 +1,31 @@
+PASS tests/forgotten-await.test.js
+  ✓ a forgotten await
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/forgotten-await.test.js.
+<probe>/tests/forgotten-await.test.js:12
+  later(ensureBytes(-1)).then(n => expect(n).toBe(0));
+                                             ^
+
+JestAssertionError: expect(received).toBe(expected) // Object.is equality
+
+Expected: 0
+Received: -1
+    at toBe (<probe>/tests/forgotten-await.test.js:11:48) {
+  matcherResult: {
+    actual: -1,
+    expected: 0,
+    message: 'expect(received).toBe(expected) // Object.is equality\n' +
+      '\n' +
+      'Expected: 0\n' +
+      'Received: -1',
+    name: 'toBe',
+    pass: false
+  }
+}
+
+Node.js <version>
+exit code: 1

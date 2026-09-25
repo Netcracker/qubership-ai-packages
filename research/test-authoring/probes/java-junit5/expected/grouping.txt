@@ -1,0 +1,55 @@
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.GroupingTest
+[ERROR] probe.GroupingTest.chainStopsAtFirst -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.GroupingTest.chainStopsAtFirst(GroupingTest.java:27)
+	at <framework frames>
+
+[ERROR] probe.GroupingTest.assertAllWithoutHeading -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.MultipleFailuresError:
+Multiple Failures (2 failures)
+	org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+	org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.GroupingTest.assertAllWithoutHeading(GroupingTest.java:20)
+	at <framework frames>
+	Suppressed: org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+		at <framework frames>
+		at probe.GroupingTest.lambda$assertAllWithoutHeading$<n>(GroupingTest.java:21)
+		at <framework frames>
+		... <n> more
+	Suppressed: org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+		at <framework frames>
+		at probe.GroupingTest.lambda$assertAllWithoutHeading$<n>(GroupingTest.java:22)
+		at <framework frames>
+		... <n> more
+
+[ERROR] probe.GroupingTest.assertAllReportsBoth -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.MultipleFailuresError:
+account (2 failures)
+	org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+	org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.GroupingTest.assertAllReportsBoth(GroupingTest.java:13)
+	at <framework frames>
+	Suppressed: org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+		at <framework frames>
+		at probe.GroupingTest.lambda$assertAllReportsBoth$<n>(GroupingTest.java:14)
+		at <framework frames>
+		... <n> more
+	Suppressed: org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+		at <framework frames>
+		at probe.GroupingTest.lambda$assertAllReportsBoth$<n>(GroupingTest.java:15)
+		at <framework frames>
+		... <n> more
+
+[ERROR] Failures:
+[ERROR]   GroupingTest.assertAllReportsBoth:13 account (2 failures)
+	org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+	org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+[ERROR]   GroupingTest.assertAllWithoutHeading:20 Multiple Failures (2 failures)
+	org.opentest4j.AssertionFailedError: first ==> expected: <0> but was: <-1>
+	org.opentest4j.AssertionFailedError: second ==> expected: <0> but was: <-2>
+[ERROR]   GroupingTest.chainStopsAtFirst:27 first ==> expected: <0> but was: <-1>
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0
+exit code: 1

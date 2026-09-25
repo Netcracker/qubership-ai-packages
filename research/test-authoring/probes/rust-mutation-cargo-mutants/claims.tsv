@@ -1,0 +1,12 @@
+id	probe	check	pattern	reference	quote	note
+caught	verdicts	contains	caught   src/lib.rs:10:13: replace < with == in sum_below	references/mutation-tools.md	caught, missed, unviable, timeout	
+missed	verdicts	contains	MISSED   src/lib.rs:19:7: replace > with >= in is_positive	references/mutation-tools.md	caught, missed, unviable, timeout	
+survivor-name	verdicts	contains	MISSED 	references/mutation-tools.md	The tools name the survivor differently (*survived*, *lived*, *missed*, and go-mutesting's *failed*)	
+unviable	verdicts	contains	unviable src/lib.rs:31:5: replace count_of -> Count with Default::default()	references/mutation-tools.md	*unviable* is a mutant that did not compile	
+timeout	verdicts	contains	TIMEOUT  src/lib.rs:12:11: replace += with -= in sum_below	references/mutation-tools.md	caught, missed, unviable, timeout	
+summary	verdicts	contains	21 mutants tested: 8 missed, 10 caught, 1 unviable, 2 timeouts	references/mutation-tools.md	caught, missed, unviable, timeout	
+no-coverage-is-missed	verdicts	contains	MISSED   src/lib.rs:24:5: replace label -> String with String::new()	SKILL.md	*no coverage* is a missing test	refines: cargo-mutants has no coverage verdict; a mutant in a function no test calls is reported MISSED, like any survivor
+in-diff-keeps	in-diff	contains	Found 5 mutants to test	references/mutation-tools.md	`--file` or `--in-diff` scopes to the changed code	
+in-diff-drops	in-diff	absent	sum_below|label|count_of|other\.rs	references/mutation-tools.md	`--file` or `--in-diff` scopes to the changed code	
+file-keeps	file	contains	MISSED   src/other.rs:3:7: replace * with + in double	references/mutation-tools.md	`--file` or `--in-diff` scopes to the changed code	
+file-drops	file	absent	src/lib\.rs	references/mutation-tools.md	`--file` or `--in-diff` scopes to the changed code	

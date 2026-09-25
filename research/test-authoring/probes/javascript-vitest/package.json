@@ -1,0 +1,10 @@
+{
+  "name": "test-authoring-probes-vitest",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deliberately failing tests whose output the test-authoring skill quotes",
+  "type": "module",
+  "devDependencies": {
+    "vitest": "5.0.2"
+  }
+}

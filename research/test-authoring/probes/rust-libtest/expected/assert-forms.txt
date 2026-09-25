@@ -1,0 +1,80 @@
+     Running tests/assert_forms.rs (target/debug/deps/assert_forms-<hash>)
+
+running 8 tests
+test assert_eq_debug_form ... FAILED
+test assert_eq_plain ... FAILED
+test assert_eq_swapped ... FAILED
+test assert_eq_with_message ... FAILED
+test assert_ne_plain ... FAILED
+test assert_plain ... FAILED
+test assert_with_message ... FAILED
+test panic_plain ... FAILED
+
+failures:
+
+---- assert_eq_debug_form stdout ----
+
+thread 'assert_eq_debug_form' (<tid>) panicked at tests/assert_forms.rs:21:5:
+assertion `left == right` failed
+  left: "-1 bytes"
+ right: "0 bytes"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- assert_eq_plain stdout ----
+
+thread 'assert_eq_plain' (<tid>) panicked at tests/assert_forms.rs:5:5:
+assertion `left == right` failed
+  left: -1
+ right: 0
+
+---- assert_eq_swapped stdout ----
+
+thread 'assert_eq_swapped' (<tid>) panicked at tests/assert_forms.rs:16:5:
+assertion `left == right` failed
+  left: 0
+ right: -1
+
+---- assert_eq_with_message stdout ----
+
+thread 'assert_eq_with_message' (<tid>) panicked at tests/assert_forms.rs:11:5:
+assertion `left == right` failed: ensure_bytes(-1)
+  left: -1
+ right: 0
+
+---- assert_ne_plain stdout ----
+
+thread 'assert_ne_plain' (<tid>) panicked at tests/assert_forms.rs:26:5:
+assertion `left != right` failed
+  left: -1
+ right: -1
+
+---- assert_plain stdout ----
+
+thread 'assert_plain' (<tid>) panicked at tests/assert_forms.rs:31:5:
+assertion failed: ensure_bytes(-1) == 0
+
+---- assert_with_message stdout ----
+
+thread 'assert_with_message' (<tid>) panicked at tests/assert_forms.rs:36:5:
+ensure_bytes(-1)
+
+---- panic_plain stdout ----
+
+thread 'panic_plain' (<tid>) panicked at tests/assert_forms.rs:42:9:
+explicit panic
+
+
+failures:
+    assert_eq_debug_form
+    assert_eq_plain
+    assert_eq_swapped
+    assert_eq_with_message
+    assert_ne_plain
+    assert_plain
+    assert_with_message
+    panic_plain
+
+test result: FAILED. 0 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test assert_forms`
+exit code: 101

@@ -1,0 +1,11 @@
+id	probe	check	pattern	reference	quote	note
+killed	verdicts	contains	src/numbers.ts:12:10 Killed EqualityOperator "n <= 0"	references/mutation-tools.md	`Killed`, `Survived`, `NoCoverage`, `Timeout`, `CompileError`	
+survived	verdicts	contains	src/numbers.ts:12:10 Survived EqualityOperator "n >= 0"	references/mutation-tools.md	`Killed`, `Survived`, `NoCoverage`, `Timeout`, `CompileError`	
+survived-report	verdicts	contains	[Survived] EqualityOperator\nsrc/numbers.ts:12:10\n-     return n > 0;\n+     return n >= 0;	references/mutation-tools.md	The tools name the survivor differently (*survived*, *lived*, *missed*, and go-mutesting's *failed*)	
+no-coverage	verdicts	contains	[NoCoverage] StringLiteral\nsrc/numbers.ts:17:10	references/mutation-tools.md	`Killed`, `Survived`, `NoCoverage`, `Timeout`, `CompileError`	
+timeout	verdicts	contains	src/numbers.ts:4:26 Timeout UpdateOperator "i--" Hit limit reached (401/400)	references/mutation-tools.md	`Killed`, `Survived`, `NoCoverage`, `Timeout`, `CompileError`	refines: a mutant that loops forever is stopped by Stryker's hit counter and reported Timeout, without waiting for timeoutMS
+compile-error	verdicts	contains	src/numbers.ts:2:45 CompileError BlockStatement "{}" src/numbers.ts(2,38): error TS2355	references/mutation-tools.md	a compile error is no information	refines: here the verdict comes from the typescript checker plugin (checkers: ["typescript"]); the clear-text table counts it under `# errors`
+mutate-file-keeps	mutate-file	contains	src/numbers.ts:12:10 Survived EqualityOperator "n >= 0"	references/mutation-tools.md	`--mutate` takes the changed files	
+mutate-file-drops	mutate-file	absent	other\.ts	references/mutation-tools.md	`--mutate` takes the changed files	
+mutate-lines-keeps	mutate-lines	contains	src/numbers.ts:12:10 Survived EqualityOperator "n >= 0"	references/mutation-tools.md	`--mutate` takes the changed files	
+mutate-lines	mutate-lines	absent	src/numbers\.ts:(?!12:)\d+:	references/mutation-tools.md	`--mutate` takes the changed files	refines: --mutate also takes a line range (src/numbers.ts:12-12) and then mutates only those lines

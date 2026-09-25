@@ -1,0 +1,27 @@
+
+ RUN  v<version> <probe>
+
+ ❯ tests/missing-import.test.js (1 test | 1 failed) <duration>
+   × an export this release does not have <duration>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/missing-import.test.js > an export this release does not have
+TypeError: noSuchExport is not a function
+ ❯ tests/missing-import.test.js:5:3
+      3|
+      4| test('an export this release does not have', () => {
+      5|   noSuchExport();
+       |   ^
+      6|   expect(ensureBytes(-1)).toBe(0);
+      7| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 1

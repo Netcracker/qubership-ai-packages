@@ -1,0 +1,32 @@
+
+ RUN  v<version> <probe>
+
+ ❯ tests/assertions.test.js (2 tests | 2 failed) <duration>
+   × forgotten await with expect.assertions <duration>
+   × forgotten await with expect.hasAssertions <duration>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/assertions.test.js > forgotten await with expect.assertions
+Error: expected number of assertions to be 1, but got 0
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/assertions.test.js > forgotten await with expect.hasAssertions
+Error: expected any number of assertion, but got none
+ ❯ tests/assertions.test.js:16:10
+     14|
+     15| test('forgotten await with expect.hasAssertions', async () => {
+     16|   expect.hasAssertions();
+       |          ^
+     17|   never(ensureBytes(-1)).then((result) => expect(result).toBe(0));
+     18| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 1

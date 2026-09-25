@@ -1,0 +1,22 @@
+✖ planned assertion made through the module (<duration>)
+✔ planned assertion made through t.assert (<duration>)
+✖ planned assertion behind a missing await (<duration>)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/plan.test.mjs:5:1
+✖ planned assertion made through the module (<duration>)
+  'plan expected 1 assertions but received 0'
+
+test at tests/plan.test.mjs:17:1
+✖ planned assertion behind a missing await (<duration>)
+  'plan expected 1 assertions but received 0'
+exit code: 1

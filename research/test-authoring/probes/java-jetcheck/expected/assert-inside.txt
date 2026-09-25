@@ -1,0 +1,29 @@
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.AssertInPropertyTest
+[ERROR] m.AssertInPropertyTest.ensureBytesNeverReturnsANegativeCount -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Failed with org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <true> but was: <false>
+On -1
+Shrunk in 30 stages, by trying 33 examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("ACoB/////x8=")
+    .forAll(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(42L, 1)` instead for last iteration, or `withSeed(42L)` for all iterations
+
+ Property failure reason: org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <true> but was: <false>
+	at m.AssertInPropertyTest.lambda$ensureBytesNeverReturnsANegativeCount$<n>(AssertInPropertyTest.java:15)
+	at m.AssertInPropertyTest.ensureBytesNeverReturnsANegativeCount(AssertInPropertyTest.java:14)
+
+==========================
+
+	at m.AssertInPropertyTest.ensureBytesNeverReturnsANegativeCount(AssertInPropertyTest.java:14)
+Caused by: org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <true> but was: <false>
+	at m.AssertInPropertyTest.lambda$ensureBytesNeverReturnsANegativeCount$<n>(AssertInPropertyTest.java:15)
+	at m.AssertInPropertyTest.ensureBytesNeverReturnsANegativeCount(AssertInPropertyTest.java:14)
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+results:
+  m.AssertInPropertyTest.ensureBytesNeverReturnsANegativeCount: error org.jetbrains.jetCheck.PropertyFalsified
+output of m.AssertInPropertyTest:
+  <time>: failed on iteration 1 (use `recheckingIteration(42L, 1)` or `withSeed(42L)` to reproduce), shrinking...
+exit code: 1
