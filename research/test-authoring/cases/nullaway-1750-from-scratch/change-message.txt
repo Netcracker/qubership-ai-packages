@@ -1,0 +1,49 @@
+Fix false positive in SpringHandler for SpEL expressions using null in comparisons (#1750)
+
+## What and why
+
+This PR fixes a false positive in `SpringHandler` for Spring `@Value`
+fields whose SpEL expression
+mentions `null` only as a comparison operand.
+
+### Bug fix
+
+**`SpringHandler`: false positive for SpEL expressions with `null` in
+comparisons**
+
+`containsNullSpELExpression` used a single regex that matched `null`
+anywhere inside a `#{...}`
+expression. This caused a false positive for conditional expressions
+like:
+
+```java
+@Value("#{someBean != null ? someBean.value : 'default'}")
+private String field;
+```
+
+NullAway incorrectly flagged `field` as potentially null, even though
+`null` here is only used in
+a comparison, not as a possible return value. Fix: a second regex
+(`NULL_COMPARISON_PATTERN`) strips
+null-in-comparison occurrences before re-checking whether `null` can
+actually be the value.
+
+The heuristic still (correctly) treats the field as possibly
+uninitialized when `null` can actually
+be produced by the expression, e.g. `#{someBean != null ? null :
+'default'}`.
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **Bug Fixes**
+  - Improved Spring `@Value` null detection for SpEL expressions.
+- Equality comparisons involving `null` no longer trigger incorrect
+non-null initialization diagnostics.
+- Continued detecting expressions that may return `null`, including
+ternary expressions and comparisons with `null` on either side.
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
