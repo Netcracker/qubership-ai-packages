@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 2 items
+
+tests/test_grouping.py FF                                                [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_two_asserts _______________________________
+
+    def test_two_asserts():
+        result = ensure_bytes(-1)
+>       assert result == 0, "first"
+E       AssertionError: first
+E       assert -1 == 0
+
+tests/test_grouping.py:8: AssertionError
+______________________________ test_pytest_check _______________________________
+tests/test_grouping.py::test_pytest_check:0: check -1 == 0: first
+
+FAILURE: check -1 == 0: first
+tests/test_grouping.py:14 in test_pytest_check() -> check.equal(result, 0, "first")
+
+FAILURE: check -1 > 0: second
+------------------------------------------------------------
+Failed Checks: 2
+=========================== short test summary info ============================
+FAILED tests/test_grouping.py::test_two_asserts - AssertionError: first
+FAILED tests/test_grouping.py::test_pytest_check - check -1 == 0: first
+============================== 2 failed in <duration> ===============================
+exit code: 1

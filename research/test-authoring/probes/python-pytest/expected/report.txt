@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 1 item
+
+tests/test_stream.py F                                                   [100%]
+
+=================================== FAILURES ===================================
+_____________________ TestEnsureBytes.test_negative_count ______________________
+
+self = <test_stream.TestEnsureBytes object at 0x<address>>
+
+    def test_negative_count(self):
+        """A negative count is refused."""
+>       assert ensure_bytes(-1) == 0
+E       assert -1 == 0
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_stream.py:7: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stream.py::TestEnsureBytes::test_negative_count - assert -1...
+============================== 1 failed in <duration> ===============================
+exit code: 1

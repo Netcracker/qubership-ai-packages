@@ -1,0 +1,75 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 7 items
+
+tests/test_assert_forms.py FFFFFFF                                       [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_bare_assert _______________________________
+
+    def test_bare_assert():
+>       assert ensure_bytes(-1) == 0
+E       assert -1 == 0
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_assert_forms.py:7: AssertionError
+____________________________ test_reversed_operands ____________________________
+
+    def test_reversed_operands():
+>       assert 0 == ensure_bytes(-1)
+E       assert 0 == -1
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_assert_forms.py:11: AssertionError
+________________________ test_boolean_computed_earlier _________________________
+
+    def test_boolean_computed_earlier():
+        ok = ensure_bytes(-1) == 0
+>       assert ok
+E       assert False
+
+tests/test_assert_forms.py:16: AssertionError
+_________________________________ test_message _________________________________
+
+    def test_message():
+>       assert ensure_bytes(-1) == 0, "ensure_bytes(-1)"
+E       AssertionError: ensure_bytes(-1)
+E       assert -1 == 0
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_assert_forms.py:20: AssertionError
+__________________________________ test_fail ___________________________________
+
+    def test_fail():
+>       pytest.fail()
+E       Failed
+
+tests/test_assert_forms.py:24: Failed
+______________________________ test_fail_message _______________________________
+
+    def test_fail_message():
+>       pytest.fail("ensure_bytes(-1) returned instead of throwing")
+E       Failed: ensure_bytes(-1) returned instead of throwing
+
+tests/test_assert_forms.py:28: Failed
+_____________________________ test_raises_nothing ______________________________
+
+    def test_raises_nothing():
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_assert_forms.py:32: Failed
+=========================== short test summary info ============================
+FAILED tests/test_assert_forms.py::test_bare_assert - assert -1 == 0
+FAILED tests/test_assert_forms.py::test_reversed_operands - assert 0 == -1
+FAILED tests/test_assert_forms.py::test_boolean_computed_earlier - assert False
+FAILED tests/test_assert_forms.py::test_message - AssertionError: ensure_byte...
+FAILED tests/test_assert_forms.py::test_fail - Failed
+FAILED tests/test_assert_forms.py::test_fail_message - Failed: ensure_bytes(-...
+FAILED tests/test_assert_forms.py::test_raises_nothing - Failed: DID NOT RAIS...
+============================== 7 failed in <duration> ===============================
+exit code: 1

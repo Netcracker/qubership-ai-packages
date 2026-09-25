@@ -1,5 +1,9 @@
 # Measured failure output per framework
 
+> Superseded, one ecosystem at a time, by the executable probes under [`probes/`](probes/README.md): their golden
+> files are the measurement, and `probes/*/claims.tsv` ties each sentence of a reference to it. The pytest section
+> below is the first one the probes cover; the others stay until their probes land.
+
 Measured on 2026-09-06 on macOS (arm64) with the versions named in each section. `expected = 0`, `actual = -1`
 throughout, from a function `ensureBytes(-1)` that returns its argument. Each line is the exception message the
 assertion raised, with newlines shown as `\n`; the runner adds the test name and the location around it.

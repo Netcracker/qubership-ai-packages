@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 2 items
+
+tests/test_helpers.py FF                                                 [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_plain_helper _______________________________
+
+    def test_plain_helper():
+>       helper_plain.check(ensure_bytes(-1))
+
+tests/test_helpers.py:8:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = -1
+
+    def check(value):
+>       assert value == 0
+               ^^^^^^^^^^
+E       AssertionError
+
+tests/helper_plain.py:2: AssertionError
+____________________________ test_rewritten_helper _____________________________
+
+    def test_rewritten_helper():
+>       helper_rewritten.check(ensure_bytes(-1))
+
+tests/test_helpers.py:12:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = -1
+
+    def check(value):
+>       assert value == 0
+E       assert -1 == 0
+
+tests/helper_rewritten.py:2: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_helpers.py::test_plain_helper - AssertionError
+FAILED tests/test_helpers.py::test_rewritten_helper - assert -1 == 0
+============================== 2 failed in <duration> ===============================
+exit code: 1
