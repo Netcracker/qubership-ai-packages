@@ -1,53 +1,13 @@
-diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
-index 095772e..d003cb1 100644
---- a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
-+++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
-@@ -383,6 +383,35 @@ public class GenericInheritanceTests extends NullAwayTestsBase {
-         .doTest();
-   }
- 
-+  @Test
-+  public void overrideReturnTypeCheckedAgainstNonNullWildcardBoundOfTypeVariable() {
-+    makeHelper()
-+        .addSourceLines(
-+            "Test.java",
-+            """
-+            import java.util.List;
-+            import org.jspecify.annotations.NonNull;
-+            import org.jspecify.annotations.NullMarked;
-+            import org.jspecify.annotations.Nullable;
-+            @NullMarked
-+            class Test {
-+              interface Source<V extends @Nullable Object> {
-+                List<? extends @NonNull V> get();
-+              }
-+              static class BadOverride<V extends @Nullable Object> implements Source<V> {
-+                @Override
-+                // BUG: Diagnostic contains: mismatched type parameter nullability
-+                public List<V> get() { throw new RuntimeException(); }
-+              }
-+              static class GoodOverride<V extends @Nullable Object> implements Source<V> {
-+                @Override
-+                public List<@NonNull V> get() { throw new RuntimeException(); }
-+              }
-+            }
-+            """)
-+        .doTest();
-+  }
-+
-   private CompilationTestHelper makeHelper() {
-     return makeTestHelperWithArgs(
-         JSpecifyJavacConfig.withJSpecifyModeArgs(
 diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-index 31d3188..3487538 100644
+index 31d3188..d283ec2 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-@@ -1442,6 +1442,95 @@ public class WildcardTests extends NullAwayTestsBase {
+@@ -1442,6 +1442,105 @@ public class WildcardTests extends NullAwayTestsBase {
          .doTest();
    }
  
 +  @Test
-+  public void typeVariableActualCheckedAgainstItsDeclaredBoundForNonNullExtendsWildcard() {
++  public void bareTypeVariableActualRejectedWhenItsBoundAdmitsNull() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -55,20 +15,13 @@ index 31d3188..3487538 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              class Box<T extends @Nullable Object> {}
-+              void nonnullWildcard(Box<? extends Object> box) {}
-+              <U extends @Nullable Object> void testNullableBoundActual(Box<U> box) {
++              static class Box<T extends @Nullable Object> {}
++              static void nonnullWildcard(Box<? extends Object> box) {}
++              static <T extends @Nullable Object> void testPositive(Box<T> box) {
 +                // BUG: Diagnostic contains: incompatible types
 +                nonnullWildcard(box);
 +              }
-+              <U> void testNonNullBoundActual(Box<U> box) {
-+                nonnullWildcard(box);
-+              }
-+              <U extends @Nullable Object> void testNullableBoundWildcardActual(Box<? extends U> box) {
-+                // BUG: Diagnostic contains: incompatible types
-+                nonnullWildcard(box);
-+              }
-+              <U> void testNonNullBoundWildcardActual(Box<? extends U> box) {
++              static <T> void testNegative(Box<T> box) {
 +                nonnullWildcard(box);
 +              }
 +            }
@@ -77,7 +30,7 @@ index 31d3188..3487538 100644
 +  }
 +
 +  @Test
-+  public void parametricExtendsWildcardComparesTypeVariablesAsWritten() {
++  public void wildcardActualOverTypeVariableRejectedWhenItsBoundAdmitsNull() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -85,24 +38,40 @@ index 31d3188..3487538 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              class Box<X extends @Nullable Object> {}
-+              class Helper<T> {
-+                void extendsT(Box<? extends T> box) {}
-+                <S extends @Nullable T> void testNullableBoundOnS(Box<S> box) {
-+                  // BUG: Diagnostic contains: incompatible types
-+                  extendsT(box);
-+                }
-+                <S extends T> void testNonNullBoundOnS(Box<S> box) {
-+                  extendsT(box);
-+                }
-+                void testSameTypeVariable(Box<T> box) {
-+                  extendsT(box);
++              static class Box<T extends @Nullable Object> {}
++              static void nonnullWildcard(Box<? extends Object> box) {}
++              static <T extends @Nullable Object> void testPositive(Box<? extends T> box) {
++                // BUG: Diagnostic contains: incompatible types
++                nonnullWildcard(box);
++              }
++              static <T> void testNegative(Box<? extends T> box) {
++                nonnullWildcard(box);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void parametricExtendsBoundAdmitsActualOnlyWhenItsNullnessMatchesTheVariable() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static class SameOrSubtype<T, S extends T> {
++                void test(Box<T> t, Box<S> s) {
++                  Box<? extends T> fromSameT = t;
++                  Box<? extends T> fromSubtypeS = s;
 +                }
 +              }
-+              class NullableHelper<T extends @Nullable Object> {
-+                void extendsT(Box<? extends T> box) {}
-+                void testSameNullableTypeVariable(Box<T> box) {
-+                  extendsT(box);
++              static class NullableSubtype<T, S extends @Nullable T> {
++                void test(Box<S> s) {
++                  // BUG: Diagnostic contains: incompatible types
++                  Box<? extends T> bad = s;
 +                }
 +              }
 +            }
@@ -111,7 +80,7 @@ index 31d3188..3487538 100644
 +  }
 +
 +  @Test
-+  public void explicitNonNullWildcardBoundRejectsUnannotatedNullableTypeVariable() {
++  public void explicitNonNullOnWildcardBoundRejectsTypeVariableWhoseBoundAdmitsNull() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -119,15 +88,16 @@ index 31d3188..3487538 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              class Box<X extends @Nullable Object> {}
-+              class Helper<T extends @Nullable Object> {
-+                void nonNullTWildcard(Box<? extends @NonNull T> box) {}
-+                void testNullableBound(Box<T> box) {
++              static class Box<T extends @Nullable Object> {}
++              static class NullableBound<T extends @Nullable Object> {
++                void test(Box<T> box) {
 +                  // BUG: Diagnostic contains: incompatible types
-+                  nonNullTWildcard(box);
++                  Box<? extends @NonNull T> bad = box;
 +                }
-+                void testExplicitNonNullBound(Box<@NonNull T> box) {
-+                  nonNullTWildcard(box);
++              }
++              static class NonNullBound<T> {
++                void test(Box<T> box) {
++                  Box<? extends @NonNull T> ok = box;
 +                }
 +              }
 +            }

@@ -8,6 +8,10 @@
 # consumer's session would have loaded it. In NullAway that file is a symlink
 # to AGENTS.md and imports nothing.
 #
+# After the session, the script builds the test classes the session changed,
+# on the fix and then on the base of the pull request, whatever the session
+# ran itself.
+#
 # Run from the repository root:
 #   research/test-authoring/cases/run-nullaway-case.sh <case directory> <model> [<rev>]
 # With <rev>, the skill is taken from that commit; without it, from the
@@ -17,6 +21,9 @@
 #                   empty), then every test file relative to the base of
 #                   uber/NullAway#1834
 #   result-note.md  the session's final message
+#   result-build.txt  the failing tests on the fix and on the base
+#   run.txt         the session's cost, turns, and duration, and whether it
+#                   ran the tests itself
 #   skill-tree      the tree id of the skill that ran, see scripts/skill-tree.sh
 set -eu
 
@@ -40,14 +47,63 @@ git clone -q --depth 2 --branch "$(cat "$case_dir/tag")" https://github.com/vlsi
 sed "s|<skill>|$work/skill|g" "$case_dir/prompt.md" > "$work/prompt.txt"
 (cd "$work/nullaway" &&
   claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
-    --append-system-prompt-file CLAUDE.md \
-    --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/out/result-note.md"
+    --append-system-prompt-file CLAUDE.md --output-format json \
+    --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.json"
+
+ran_tests=no
+[ -d "$work/nullaway/nullaway/build/test-results" ] && ran_tests=yes
+python3 - "$work/session.json" "$work/out" "$ran_tests" <<'EOF'
+import json, sys
+session, out, ran_tests = sys.argv[1:]
+d = json.load(open(session))
+if d['is_error']:
+    sys.exit(f"session failed: {d['result']}")
+open(f'{out}/result-note.md', 'w').write(d['result'].rstrip('\n') + '\n')
+open(f'{out}/run.txt', 'w').write(
+    f"cost_usd: {d['total_cost_usd']:.2f}\nturns: {d['num_turns']}\n"
+    f"duration_s: {d['duration_ms'] // 1000}\nwriter_ran_tests: {ran_tests}\n")
+EOF
 
 git -C "$work/nullaway" add -A -N
 {
   git -C "$work/nullaway" diff HEAD -- nullaway/src/main CHANGELOG.md
   git -C "$work/nullaway" diff "$base" -- . ':!nullaway/src/main' ':!CHANGELOG.md'
 } > "$work/out/result.diff"
+
+# The test classes the session changed, as Gradle --tests filters.
+classes=$(git -C "$work/nullaway" diff --name-only "$base" -- 'nullaway/src/test/java/*.java' |
+  sed 's|^nullaway/src/test/java/||; s|\.java$||; s|/|.|g')
+filters=$(for c in $classes; do printf -- '--tests %s ' "$c"; done)
+build() {
+  if [ -z "$classes" ]; then
+    echo "on the $1: no test class changed" >> "$work/out/result-build.txt"
+    return
+  fi
+  # $filters is split on purpose: one --tests argument per class.
+  # shellcheck disable=SC2086
+  (cd "$work/nullaway" && ./gradlew :nullaway:test --rerun --quiet $filters > "$work/build-$1.log" 2>&1) || true
+  # shellcheck disable=SC2086
+  python3 - "$work/nullaway/nullaway/build/test-results/test" "$work/build-$1.log" "$1" $classes <<'EOF' >> "$work/out/result-build.txt"
+import glob, sys
+import xml.etree.ElementTree as ET
+results, log, label, classes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
+ran, failed = 0, []
+for c in classes:
+    for f in glob.glob(f'{results}/TEST-{c}.xml'):
+        for tc in ET.parse(f).getroot().iter('testcase'):
+            ran += 1
+            if tc.find('failure') is not None or tc.find('error') is not None:
+                failed.append(f"{c.rsplit('.', 1)[1]}.{tc.get('name')}")
+print(f'on the {label}: {ran} tests ran, {len(failed)} failed' + ''.join(f'\n  {t}' for t in failed))
+if ran == 0:
+    errors = [line.rstrip() for line in open(log) if 'error:' in line]
+    print('  the build failed before any test ran:' + ''.join(f'\n  {e}' for e in errors[:10]))
+EOF
+}
+build fix
+git -C "$work/nullaway" checkout -q "$base" -- nullaway/src/main
+build base
+git -C "$work/nullaway" checkout -q HEAD -- nullaway/src/main
 
 mkdir -p "$case_dir/$model"
 cp "$work/out/"* "$case_dir/$model/"

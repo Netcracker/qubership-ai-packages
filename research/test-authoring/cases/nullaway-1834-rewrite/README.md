@@ -32,6 +32,8 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
 | `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to the base of the pull request, `09fdea5a`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
+| `<model>/result-build.txt` | The tests that fail on the fix and on the base, from the build the script runs after the session. |
+| `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
 
@@ -43,11 +45,14 @@ research/test-authoring/cases/run-nullaway-case.sh \
 ```
 
 The script copies the skill out of the checkout, clones NullAway at the tag into a temporary directory, runs
-`claude -p --safe-mode` there with `prompt.md`, and writes the three files above once the session succeeds. Safe mode
-keeps every installed skill, every user rule, and every `CLAUDE.md` out of the session, including the installed copy of
+`claude -p --safe-mode` there with `prompt.md`, and writes the files above once the session succeeds. Safe mode keeps
+every installed skill, every user rule, and every `CLAUDE.md` out of the session, including the installed copy of
 `test-authoring` and this repository's `AGENTS.md`. It drops NullAway's own `CLAUDE.md` too, so the script appends that
-file to the system prompt, where a consumer's session would have it. The script prints the temporary directory, which
-holds the rewritten NullAway tree for the optional build check.
+file to the system prompt, where a consumer's session would have it.
+
+The session may run the build, as a writer of tests would. Whatever it ran, the script then runs the test classes the
+session changed, on the fix and on the base `09fdea5a`, and records the failures in `result-build.txt`. The script
+prints the temporary directory, which holds the NullAway tree and the two build logs.
 
 ## Checks
 
@@ -71,8 +76,9 @@ Read `result.diff` and `result-note.md` against all of them.
 6. **The production code is unchanged, and so are the other tests.** The session proposes the stack line (§0) in its
    closing message and does not edit `AGENTS.md`.
 7. **The closing message names what moved and why**, and the rule of the skill behind each move.
-8. **Optional: the rewritten tests pass.** In the directory the script printed:
-   `./gradlew :nullaway:test --tests com.uber.nullaway.jspecify.WildcardTests --quiet`.
+8. **The rewritten tests pass on the fix, and each test with a marker fails on the base** (§5). Read
+   `result-build.txt`: no failure on the fix, and on the base a failure for every test that expects a diagnostic the
+   fix added.
 
 Checks 1 to 6 are partly countable. For the submitted tests the script prints 20 tests, 11 of them with no marker. The
 two captured type arguments control no case that expects a diagnostic, so they may stay tests of their own; every other

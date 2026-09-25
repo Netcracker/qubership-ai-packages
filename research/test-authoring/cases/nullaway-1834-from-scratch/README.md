@@ -32,6 +32,8 @@ its own, and whether it finds the cases the change owes.
 | `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to `09fdea5a`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
+| `<model>/result-build.txt` | The tests that fail on the fix and on the base, from the build the script runs after the session. |
+| `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
 
@@ -47,11 +49,11 @@ research/test-authoring/cases/run-nullaway-case.sh \
 Read `result.diff` and `result-note.md` against all of them.
 
 1. **The defect is caught** (§3). One test expects an `incompatible types` diagnostic on passing a `Box<T>` with
-   `<T extends @Nullable Object>` to a `Box<? extends Object>` in `@NullMarked` code. On the base `09fdea5a` that test
-   fails, since the diagnostic is missing there. The existing tests in `WildcardTests.java` write the marker both ways,
-   with the two types and as `incompatible types` alone, so either passes.
-2. **Each behavior the commit message names has a case** (§4): the seven listed under *What it exercises*. Each case that
-   expects no diagnostic, such as `Box<S extends T>` into `Box<? extends T>`, counts.
+   `<T extends @Nullable Object>` to a `Box<? extends Object>` in `@NullMarked` code. The existing tests in
+   `WildcardTests.java` write the marker both ways, with the two types and as `incompatible types` alone, so either
+   passes.
+2. **Each behavior the commit message names has a case** (§4): the seven listed under *What it exercises*. Each case
+   that expects no diagnostic, such as `Box<S extends T>` into `Box<? extends T>`, counts.
 3. **Each case that expects a diagnostic stands with its controls** (§7). The nearest input that differs in the one
    annotation or bound deciding the diagnostic sits in the same source: `<T>` beside `<T extends @Nullable Object>`,
    `Box<? extends @Nullable Object>` beside `Box<? extends Object>`.
@@ -61,9 +63,8 @@ Read `result.diff` and `result-note.md` against all of them.
 6. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining two rules.
 7. **The production code is unchanged.** The session proposes the stack line (§0) in its closing message and does not
    edit `AGENTS.md`.
-8. **Optional: the tests pass on the change and the defect's test fails without it.** In the directory the script
-   printed, run `./gradlew :nullaway:test --tests com.uber.nullaway.jspecify.WildcardTests --quiet`, then
-   `git checkout 09fdea5a -- nullaway/src/main` and run it again.
+8. **The tests pass on the fix, and the defect's test fails on the base** (§5). Read `result-build.txt`: no failure on
+   the fix, and on the base a failure for the test of check 1.
 
 Checks 4 to 7 are partly countable. A result that passes has one marker at most per test. The markers may stop at
 `incompatible types`, so the script is given no diagnostic to look for; read which declaration each marker sits on:

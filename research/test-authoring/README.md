@@ -125,6 +125,23 @@ database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lists the kind
 `cases/run-nullaway-case.sh` runs either case, and `cases/check-nullaway-case.py` prints the counts their checks rely
 on.
 
+The writer may run the build. On 2026-09-25 the four cells ran on skill 1.1.0 twice, one run each: once with the prompt
+forbidding the build and once allowing it. Every writer that was allowed ran the tests. The cost barely moved, and the
+time roughly doubled for Opus. The eight sessions and their Gradle builds ran at the same time, so the times are
+inflated and noisy.
+
+| Case, model | Without the build | With the build |
+| --- | --- | --- |
+| rewrite, Opus 5.5 | $1.22, 16 turns, 259 s | $1.17, 15 turns, 555 s |
+| rewrite, Sonnet 5 | $1.79, 29 turns, 826 s | $1.99, 33 turns, 962 s |
+| from scratch, Opus 5.5 | $1.49, 23 turns, 297 s | $1.55, 27 turns, 964 s |
+| from scratch, Sonnet 5 | $1.93, 38 turns, 692 s | $1.93, 35 turns, 805 s |
+| total | $6.43 | $6.64 |
+
+Two earlier runs of from scratch with Opus, with the build forbidden, wrote tests that failed on the fix. Their markers
+quoted `Test.Box<…>` where NullAway prints `Box<…>`. A writer that runs the tests sees that. A reader of the diff does
+not, so the script runs the build after the session whatever the writer ran.
+
 ## Status
 
 Both phases and the verification complete, all run on 2026-09-06. The skill lives in the APM package
