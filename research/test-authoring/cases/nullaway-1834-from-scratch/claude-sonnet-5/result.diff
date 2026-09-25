@@ -1,0 +1,110 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d3188..d283ec2 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -1442,6 +1442,105 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void bareTypeVariableActualRejectedWhenItsBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static void nonnullWildcard(Box<? extends Object> box) {}
++              static <T extends @Nullable Object> void testPositive(Box<T> box) {
++                // BUG: Diagnostic contains: incompatible types
++                nonnullWildcard(box);
++              }
++              static <T> void testNegative(Box<T> box) {
++                nonnullWildcard(box);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void wildcardActualOverTypeVariableRejectedWhenItsBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static void nonnullWildcard(Box<? extends Object> box) {}
++              static <T extends @Nullable Object> void testPositive(Box<? extends T> box) {
++                // BUG: Diagnostic contains: incompatible types
++                nonnullWildcard(box);
++              }
++              static <T> void testNegative(Box<? extends T> box) {
++                nonnullWildcard(box);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void parametricExtendsBoundAdmitsActualOnlyWhenItsNullnessMatchesTheVariable() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static class SameOrSubtype<T, S extends T> {
++                void test(Box<T> t, Box<S> s) {
++                  Box<? extends T> fromSameT = t;
++                  Box<? extends T> fromSubtypeS = s;
++                }
++              }
++              static class NullableSubtype<T, S extends @Nullable T> {
++                void test(Box<S> s) {
++                  // BUG: Diagnostic contains: incompatible types
++                  Box<? extends T> bad = s;
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void explicitNonNullOnWildcardBoundRejectsTypeVariableWhoseBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static class NullableBound<T extends @Nullable Object> {
++                void test(Box<T> box) {
++                  // BUG: Diagnostic contains: incompatible types
++                  Box<? extends @NonNull T> bad = box;
++                }
++              }
++              static class NonNullBound<T> {
++                void test(Box<T> box) {
++                  Box<? extends @NonNull T> ok = box;
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(

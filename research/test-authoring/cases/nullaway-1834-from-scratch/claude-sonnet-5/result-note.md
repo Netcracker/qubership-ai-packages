@@ -1,0 +1,18 @@
+All four regression tests are in place, verified red-on-base and green-on-fix, and the full module suite plus `buildWithNullAway` pass. Nothing was committed. Here's the note for the PR author:
+
+---
+
+**Tests added** (`nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, 4 new `@Test` methods, no production code touched):
+
+1. `bareTypeVariableActualRejectedWhenItsBoundAdmitsNull` — the headline case from the commit message: `Box<T>` with `T extends @Nullable Object` passed where `Box<? extends Object>` is required. Paired with a `testNegative` control using a plain `<T>` (non-null bound), which must stay legal.
+2. `wildcardActualOverTypeVariableRejectedWhenItsBoundAdmitsNull` — same rule, but the actual is `Box<? extends T>` rather than a bare `Box<T>`; this exercises a different branch (`GenericsUtils.wildcardUpperBound`'s `EXTENDS` case returns `T` unsubstituted, then `typeComparedForNullness` substitutes its bound), which the commit's example list calls out separately.
+3. `parametricExtendsBoundAdmitsActualOnlyWhenItsNullnessMatchesTheVariable` — the case where the *requirement itself* names a type variable (`? extends T`): `Box<T>` and `Box<S extends T>` stay assignable to `Box<? extends T>` (controls, unchanged behavior), but `Box<S>` with `S extends @Nullable T` is now rejected when `T` itself can't be null.
+4. `explicitNonNullOnWildcardBoundRejectsTypeVariableWhoseBoundAdmitsNull` — `Box<T>` (`T extends @Nullable Object`) rejected against `Box<? extends @NonNull T>`, with a plain-`T` control staying legal. This is a distinct branch from #3 since the wildcard's own bound carries an explicit annotation rather than falling back to `T`'s declaration.
+
+Each case is paired with its nearest legal control in the same test (matching the file's own `testPositive`/`testNegative` idiom, e.g. `simpleWildcardNoInference`), and each test states one rule, since I confirmed empirically (a throwaway probe test with two broken markers) that `CompilationTestHelper` stops at the first line mismatch per compilation — so independent rules can't safely share one test method here.
+
+**Verification**: I temporarily reverted just the two production files to the parent commit (`09fdea5`) and reran — all four new tests failed on exactly their intended line with "There were no errors" (the silent-acceptance bug reproduced), while the other 50 existing `WildcardTests` still passed. Restored the fix, reran — all green. Full `./gradlew :nullaway:test` and `./gradlew :nullaway:buildWithNullAway` pass.
+
+**Proposed, not done**:
+- The repo's `AGENTS.md`/`CLAUDE.md` carry no `Tests: ...` stack line naming the harness. Proposing: *"Tests: JUnit 4 engine; assertions via Error Prone's `CompilationTestHelper` (`// BUG: Diagnostic contains:` markers); one compilation per test method, which stops at the first line mismatch and names a case only by its embedded line number, with no other label."* Want me to add it?
+- `CheckIdenticalNullabilityVisitor.extendsBoundContains`'s `rhsTypeArgument instanceof Type.CapturedType` guard (skipping the new nullness check for a captured actual, since capture conversion drops annotations) has no test — existing or new — exercising it specifically in the `lhsBound instanceof Type.TypeVar` branch. I looked for an existing capture-conversion test that would hit it and found none; constructing a minimal, reliably-correct trigger (an actual that's genuinely a `CapturedType` flowing into a `? extends <type-var>` requirement) was more than I could verify with confidence in this pass, so I'm flagging it as an unresolved gap rather than guessing at a test.
