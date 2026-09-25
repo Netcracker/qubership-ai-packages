@@ -1,0 +1,4 @@
+     Running tests/threads.rs (target/debug/deps/threads-<hash>)
+error: The "shuffle" flag is only accepted on the nightly compiler with -Z unstable-options
+error: test failed, to rerun pass `--test threads`
+exit code: 101

@@ -1,0 +1,28 @@
+     Running tests/errors.rs (target/debug/deps/errors-<hash>)
+
+running 2 tests
+test matches_variant ... FAILED
+test unwrap_err_eq ... FAILED
+
+failures:
+
+---- matches_variant stdout ----
+
+thread 'matches_variant' (<tid>) panicked at tests/errors.rs:6:5:
+assertion failed: matches!(r, Err(Error::NegativeCount(_)))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- unwrap_err_eq stdout ----
+
+thread 'unwrap_err_eq' (<tid>) panicked at tests/errors.rs:12:18:
+called `Result::unwrap_err()` on an `Ok` value: -1
+
+
+failures:
+    matches_variant
+    unwrap_err_eq
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test errors`
+exit code: 101

@@ -1,0 +1,14 @@
+# Probe crate for the cargo test claims in the test-authoring skill; see ../README.md.
+# Renovate's cargo manager bumps the pins below and refreshes Cargo.lock.
+[package]
+name = "test-authoring-probes-libtest"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+name = "stream"
+path = "src/lib.rs"
+
+[dev-dependencies]
+rstest = { version = "=0.27.0", default-features = false }
