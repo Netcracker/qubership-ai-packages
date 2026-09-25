@@ -1,0 +1,268 @@
+[ERROR] Tests run: 17, Failures: 17, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.AssertjTest
+[ERROR] probe.AssertjTest.isEqualTo -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+expected: 0
+ but was: -1
+	at probe.AssertjTest.isEqualTo(AssertjTest.java:18)
+
+[ERROR] probe.AssertjTest.asBefore -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+[ensureBytes(-1)]
+expected: 0
+ but was: -1
+	at probe.AssertjTest.asBefore(AssertjTest.java:29)
+
+[ERROR] probe.AssertjTest.describedAs -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+[ensureBytes(-1)]
+expected: 0
+ but was: -1
+	at probe.AssertjTest.describedAs(AssertjTest.java:40)
+
+[ERROR] probe.AssertjTest.chainStopsAtFirst -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+[first]
+expected: 0
+ but was: -1
+	at probe.AssertjTest.chainStopsAtFirst(AssertjTest.java:74)
+
+[ERROR] probe.AssertjTest.isEqualToSwapped -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+expected: -1
+ but was: 0
+	at probe.AssertjTest.isEqualToSwapped(AssertjTest.java:23)
+
+[ERROR] probe.AssertjTest.isTrue -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+Expecting value to be true but was false
+	at probe.AssertjTest.isTrue(AssertjTest.java:56)
+
+[ERROR] probe.AssertjTest.hasCauseInstanceOf -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting a throwable with cause being an instance of:
+  java.lang.ArithmeticException
+but current throwable has no cause.
+Throwable that failed the check:
+java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$hasCauseInstanceOf$5(AssertjTest.java:100)
+	at <framework frames>
+	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
+	at <framework frames>
+
+	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
+
+[ERROR] probe.AssertjTest.asAfter -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+expected: 0
+ but was: -1
+	at probe.AssertjTest.asAfter(AssertjTest.java:35)
+
+[ERROR] probe.AssertjTest.contains -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting ListN:
+  [1, 2, 3]
+to contain:
+  [4]
+but could not find the following element(s):
+  [4]
+
+	at probe.AssertjTest.contains(AssertjTest.java:61)
+
+[ERROR] probe.AssertjTest.assertSoftlyReportsBoth -- Time elapsed: <duration> <<< FAILURE!
+org.assertj.core.error.AssertJMultipleFailuresError:
+
+Multiple Failures (2 failures)
+-- failure 1 --
+[first]
+expected: 0
+ but was: -1
+at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:67)
+-- failure 2 --
+[second]
+expected: 0
+ but was: -2
+at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:68)
+	at probe.AssertjTest.assertSoftlyReportsBoth(AssertjTest.java:66)
+
+[ERROR] probe.AssertjTest.overridingErrorMessage -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: ensureBytes(-1) is wrong
+	at probe.AssertjTest.overridingErrorMessage(AssertjTest.java:50)
+
+[ERROR] probe.AssertjTest.hasMessageContaining -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting throwable message:
+  "count must not be negative: -1"
+to contain:
+  "positive"
+but did not.
+
+Throwable that failed the check:
+
+java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$hasMessageContaining$4(AssertjTest.java:95)
+	at <framework frames>
+	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
+	at <framework frames>
+
+	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
+
+[ERROR] probe.AssertjTest.withFailMessage -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: ensureBytes(-1) is wrong
+	at probe.AssertjTest.withFailMessage(AssertjTest.java:45)
+
+[ERROR] probe.AssertjTest.thrownByOtherType -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting actual throwable to be an instance of:
+  java.lang.IllegalArgumentException
+but was:
+  java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$thrownByOtherType$1(AssertjTest.java:80)
+	at <framework frames>
+	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+	at probe.AssertjTest.thrownByOtherType(AssertjTest.java:80)
+
+[ERROR] probe.AssertjTest.doesNotThrowAnyException -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting code not to raise a throwable but caught
+  "java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$doesNotThrowAnyException$6(AssertjTest.java:105)
+	at <framework frames>
+	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
+	at <framework frames>
+"
+	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
+
+[ERROR] probe.AssertjTest.exceptionOfTypeOtherType -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting actual throwable to be an instance of:
+  java.lang.IllegalArgumentException
+but was:
+  java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$3(AssertjTest.java:90)
+	at <framework frames>
+	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+	at probe.AssertjTest.exceptionOfTypeOtherType(AssertjTest.java:90)
+
+[ERROR] probe.AssertjTest.thrownByNothing -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expecting code to raise a throwable.
+	at probe.AssertjTest.thrownByNothing(AssertjTest.java:85)
+
+[ERROR] Failures:
+[ERROR]   AssertjTest.asAfter:35
+expected: 0
+ but was: -1
+[ERROR]   AssertjTest.asBefore:29 [ensureBytes(-1)]
+expected: 0
+ but was: -1
+[ERROR]   AssertjTest.assertSoftlyReportsBoth:66
+Multiple Failures (2 failures)
+-- failure 1 --
+[first]
+expected: 0
+ but was: -1
+at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:67)
+-- failure 2 --
+[second]
+expected: 0
+ but was: -2
+at AssertjTest.lambda$assertSoftlyReportsBoth$0(AssertjTest.java:68)
+[ERROR]   AssertjTest.chainStopsAtFirst:74 [first]
+expected: 0
+ but was: -1
+[ERROR]   AssertjTest.contains:61
+Expecting ListN:
+  [1, 2, 3]
+to contain:
+  [4]
+but could not find the following element(s):
+  [4]
+
+[ERROR]   AssertjTest.describedAs:40 [ensureBytes(-1)]
+expected: 0
+ but was: -1
+[ERROR]   AssertjTest.doesNotThrowAnyException:105
+Expecting code not to raise a throwable but caught
+  "java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$doesNotThrowAnyException$6(AssertjTest.java:105)
+	at <framework frames>
+	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
+	at <framework frames>
+"
+[ERROR]   AssertjTest.exceptionOfTypeOtherType:90
+Expecting actual throwable to be an instance of:
+  java.lang.IllegalArgumentException
+but was:
+  java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$exceptionOfTypeOtherType$3(AssertjTest.java:90)
+	at <framework frames>
+	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+[ERROR]   AssertjTest.hasCauseInstanceOf:100
+Expecting a throwable with cause being an instance of:
+  java.lang.ArithmeticException
+but current throwable has no cause.
+Throwable that failed the check:
+java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$hasCauseInstanceOf$5(AssertjTest.java:100)
+	at <framework frames>
+	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
+	at <framework frames>
+
+[ERROR]   AssertjTest.hasMessageContaining:95
+Expecting throwable message:
+  "count must not be negative: -1"
+to contain:
+  "positive"
+but did not.
+
+Throwable that failed the check:
+
+java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$hasMessageContaining$4(AssertjTest.java:95)
+	at <framework frames>
+	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
+	at <framework frames>
+
+[ERROR]   AssertjTest.isEqualTo:18
+expected: 0
+ but was: -1
+[ERROR]   AssertjTest.isEqualToSwapped:23
+expected: -1
+ but was: 0
+[ERROR]   AssertjTest.isTrue:56
+Expecting value to be true but was false
+[ERROR]   AssertjTest.overridingErrorMessage:50 ensureBytes(-1) is wrong
+[ERROR]   AssertjTest.thrownByNothing:85
+Expecting code to raise a throwable.
+[ERROR]   AssertjTest.thrownByOtherType:80
+Expecting actual throwable to be an instance of:
+  java.lang.IllegalArgumentException
+but was:
+  java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.AssertjTest.lambda$thrownByOtherType$1(AssertjTest.java:80)
+	at <framework frames>
+	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+[ERROR]   AssertjTest.withFailMessage:45 ensureBytes(-1) is wrong
+[ERROR] Tests run: 17, Failures: 17, Errors: 0, Skipped: 0
+exit code: 1

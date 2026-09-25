@@ -1,0 +1,96 @@
+[ERROR] Tests run: 13, Failures: 13, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedCasesTest
+[ERROR] probe.ParameterizedCasesTest.argumentSetName(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.argumentSetName(ParameterizedCasesTest.java:58)
+
+[ERROR] probe.ParameterizedCasesTest.argumentSetName(int)[2] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.argumentSetName(ParameterizedCasesTest.java:58)
+
+[ERROR] probe.ParameterizedCasesTest.argumentsNamed(List, int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.argumentsNamed(ParameterizedCasesTest.java:48)
+
+[ERROR] probe.ParameterizedCasesTest.argumentsWithNamesPlaceholder(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.argumentsWithNamesPlaceholder(ParameterizedCasesTest.java:64)
+
+[ERROR] probe.ParameterizedCasesTest.customPattern(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.customPattern(ParameterizedCasesTest.java:28)
+
+[ERROR] probe.ParameterizedCasesTest.customPattern(int)[2] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.customPattern(ParameterizedCasesTest.java:28)
+
+[ERROR] probe.ParameterizedCasesTest.defaultName(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.defaultName(ParameterizedCasesTest.java:22)
+
+[ERROR] probe.ParameterizedCasesTest.defaultName(int)[2] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.defaultName(ParameterizedCasesTest.java:22)
+
+[ERROR] probe.ParameterizedCasesTest.duplicateName(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.duplicateName(ParameterizedCasesTest.java:80)
+
+[ERROR] probe.ParameterizedCasesTest.duplicateName(int)[2] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.duplicateName(ParameterizedCasesTest.java:80)
+
+[ERROR] probe.ParameterizedCasesTest.namedOf(List)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.namedOf(ParameterizedCasesTest.java:38)
+
+[ERROR] probe.ParameterizedCasesTest.otherPlaceholders(int)[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.otherPlaceholders(ParameterizedCasesTest.java:70)
+
+[ERROR] probe.ParameterizedCasesTest.otherPlaceholders(int)[2] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+	at <framework frames>
+	at probe.ParameterizedCasesTest.otherPlaceholders(ParameterizedCasesTest.java:70)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedConstructorTest
+[ERROR] probe.ParameterizedConstructorTest.negativeCountIsRefused()[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedConstructorTest.negativeCountIsRefused(ParameterizedConstructorTest.java:22)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedFieldsTest
+[ERROR] probe.ParameterizedFieldsTest.negativeCountIsRefused()[1] -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ParameterizedFieldsTest.negativeCountIsRefused(ParameterizedFieldsTest.java:20)
+
+[ERROR] Failures:
+[ERROR]   ParameterizedCasesTest.argumentSetName:58 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.argumentSetName:58 expected: <0> but was: <-2>
+[ERROR]   ParameterizedCasesTest.argumentsNamed:48 expected: <1> but was: <0>
+[ERROR]   ParameterizedCasesTest.argumentsWithNamesPlaceholder:64 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.customPattern:28 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.customPattern:28 expected: <0> but was: <-2>
+[ERROR]   ParameterizedCasesTest.defaultName:22 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.defaultName:22 expected: <0> but was: <-2>
+[ERROR]   ParameterizedCasesTest.duplicateName:80 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.duplicateName:80 expected: <0> but was: <-2>
+[ERROR]   ParameterizedCasesTest.namedOf:38 expected: <1> but was: <0>
+[ERROR]   ParameterizedCasesTest.otherPlaceholders:70 expected: <0> but was: <-1>
+[ERROR]   ParameterizedCasesTest.otherPlaceholders:70 expected: <0> but was: <-2>
+[ERROR]   ParameterizedConstructorTest.negativeCountIsRefused:22 expected: <0> but was: <-1>
+[ERROR]   ParameterizedFieldsTest.negativeCountIsRefused:20 expected: <0> but was: <-1>
+[ERROR] Tests run: 15, Failures: 15, Errors: 0, Skipped: 0
+exit code: 1

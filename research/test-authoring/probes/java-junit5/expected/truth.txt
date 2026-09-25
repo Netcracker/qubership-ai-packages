@@ -1,0 +1,132 @@
+[ERROR] Tests run: 10, Failures: 10, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.TruthTest
+[ERROR] probe.TruthTest.isEqualTo -- Time elapsed: <duration> <<< FAILURE!
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	at probe.TruthTest.isEqualTo(TruthTest.java:17)
+
+[ERROR] probe.TruthTest.chainStopsAtFirst -- Time elapsed: <duration> <<< FAILURE!
+first
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	at probe.TruthTest.chainStopsAtFirst(TruthTest.java:56)
+
+[ERROR] probe.TruthTest.isEqualToSwapped -- Time elapsed: <duration> <<< FAILURE!
+expected: -1
+but was : 0
+	at probe.TruthTest.isEqualToSwapped(TruthTest.java:22)
+
+[ERROR] probe.TruthTest.isTrue -- Time elapsed: <duration> <<< FAILURE!
+expected to be true
+	at probe.TruthTest.isTrue(TruthTest.java:39)
+
+[ERROR] probe.TruthTest.contains -- Time elapsed: <duration> <<< FAILURE!
+expected to contain: 4
+but was            : [1, 2, 3]
+	at probe.TruthTest.contains(TruthTest.java:44)
+
+[ERROR] probe.TruthTest.assertAllReportsBoth -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.MultipleFailuresError:
+Multiple Failures (2 failures)
+	com.google.common.truth.Platform$ComparisonFailureWithFacts: first
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	com.google.common.truth.Platform$ComparisonFailureWithFacts: second
+value of: ensureBytes(...)
+expected: 0
+but was : -2
+	at <framework frames>
+	at probe.TruthTest.assertAllReportsBoth(TruthTest.java:49)
+	Suppressed: first
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+		at probe.TruthTest.lambda$assertAllReportsBoth$0(TruthTest.java:50)
+		at <framework frames>
+		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
+		... <n> more
+	Suppressed: second
+value of: ensureBytes(...)
+expected: 0
+but was : -2
+		at probe.TruthTest.lambda$assertAllReportsBoth$1(TruthTest.java:51)
+		at <framework frames>
+		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
+		... <n> more
+
+[ERROR] probe.TruthTest.hasMessageThatContains -- Time elapsed: <duration> <<< FAILURE!
+value of           : assertThrows(...).getMessage()
+expected to contain: positive
+but was            : count must not be negative: -1
+	at probe.TruthTest.hasMessageThatContains(TruthTest.java:63)
+Caused by: java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.TruthTest.lambda$hasMessageThatContains$2(TruthTest.java:62)
+	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
+	at probe.TruthTest.hasMessageThatContains(TruthTest.java:62)
+
+[ERROR] probe.TruthTest.assertWithMessageFormat -- Time elapsed: <duration> <<< FAILURE!
+ensureBytes(-1)
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	at probe.TruthTest.assertWithMessageFormat(TruthTest.java:33)
+
+[ERROR] probe.TruthTest.assertWithMessagePlain -- Time elapsed: <duration> <<< FAILURE!
+ensureBytes(-1)
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	at probe.TruthTest.assertWithMessagePlain(TruthTest.java:27)
+
+[ERROR] probe.TruthTest.hasCauseThat -- Time elapsed: <duration> <<< FAILURE!
+value of            : assertThrows(...).getCause()
+expected instance of: ArithmeticException
+but was             : null
+	at probe.TruthTest.hasCauseThat(TruthTest.java:69)
+Caused by: java.lang.IllegalStateException: count must not be negative: -1
+	at probe.Stream.refuse(Stream.java:13)
+	at probe.TruthTest.lambda$hasCauseThat$3(TruthTest.java:68)
+	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
+	at probe.TruthTest.hasCauseThat(TruthTest.java:68)
+
+[ERROR] Failures:
+[ERROR]   TruthTest.assertAllReportsBoth:49 Multiple Failures (2 failures)
+	com.google.common.truth.Platform$ComparisonFailureWithFacts: first
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+	com.google.common.truth.Platform$ComparisonFailureWithFacts: second
+value of: ensureBytes(...)
+expected: 0
+but was : -2
+[ERROR]   TruthTest.assertWithMessageFormat:33 ensureBytes(-1)
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+[ERROR]   TruthTest.assertWithMessagePlain:27 ensureBytes(-1)
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+[ERROR]   TruthTest.chainStopsAtFirst:56 first
+value of: ensureBytes(...)
+expected: 0
+but was : -1
+[ERROR]   TruthTest.contains:44 expected to contain: 4
+but was            : [1, 2, 3]
+[ERROR]   TruthTest.hasCauseThat:69 value of            : assertThrows(...).getCause()
+expected instance of: ArithmeticException
+but was             : null
+[ERROR]   TruthTest.hasMessageThatContains:63 value of           : assertThrows(...).getMessage()
+expected to contain: positive
+but was            : count must not be negative: -1
+[ERROR]   TruthTest.isEqualTo:17 value of: ensureBytes(...)
+expected: 0
+but was : -1
+[ERROR]   TruthTest.isEqualToSwapped:22 expected: -1
+but was : 0
+[ERROR]   TruthTest.isTrue:39 expected to be true
+[ERROR] Tests run: 10, Failures: 10, Errors: 0, Skipped: 0
+exit code: 1
