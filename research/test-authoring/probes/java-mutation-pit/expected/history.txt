@@ -1,0 +1,3 @@
+History has been enabled but no history plugin has been installed/activated.
+If you are using https://www.arcmutate.com remember to activate the history plugin with +arcmutate_history
+exit code: 1

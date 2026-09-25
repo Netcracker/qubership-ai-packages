@@ -1,0 +1,10 @@
+Starting...
+Gathering coverage... done in <duration>
+ NOT COVERED ARITHMETIC_BASE at other.go:6:11
+
+Mutation testing completed in <duration>
+Killed: 0, Lived: 0, Not covered: 1
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 0.00%
+Mutator coverage: 0.00%
+exit code: 0

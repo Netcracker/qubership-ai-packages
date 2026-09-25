@@ -1,0 +1,27 @@
+
+All tests/numbers.test.ts
+  ✘ sums below four (covered 0)
+  ✓ positive and negative (killed 3)
+
+[Survived] EqualityOperator
+src/numbers.ts:12:10
+-     return n > 0;
++     return n >= 0;
+Tests ran:
+    positive and negative
+
+
+Ran 1.00 tests per mutant on average.
+------------|------------------|----------|-----------|------------|----------|----------|
+            | % Mutation score |          |           |            |          |          |
+File        |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+------------|--------|---------|----------|-----------|------------|----------|----------|
+All files   |  75.00 |   75.00 |        3 |         0 |          1 |        0 |        0 |
+ numbers.ts |  75.00 |   75.00 |        3 |         0 |          1 |        0 |        0 |
+------------|--------|---------|----------|-----------|------------|----------|----------|
+--- reports/mutation/mutation.json, one mutant per line
+src/numbers.ts:12:10 Killed ConditionalExpression "false" expected false to be true // Object.is equality
+src/numbers.ts:12:10 Killed ConditionalExpression "true" expected true to be false // Object.is equality
+src/numbers.ts:12:10 Killed EqualityOperator "n <= 0" expected false to be true // Object.is equality
+src/numbers.ts:12:10 Survived EqualityOperator "n >= 0"
+exit code: 0

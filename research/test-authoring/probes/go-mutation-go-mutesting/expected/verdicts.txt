@@ -1,0 +1,159 @@
+PASS "<tmp>/numbers.go.0" with checksum 3e9abbb69c4fdd68b67784369ea717fd
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.1" with checksum 49f35cc2508a8ece7785fb72458be5d1
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -19,7 +19,7 @@
+
+ // Label is a label for n, which no test reads.
+ func Label(n int64) string {
+-	return strconv.FormatInt(n+1, 10)
++	return strconv.FormatInt(n-1, 10)
+ }
+
+ // Greet greets name. A test reads it, and its mutant that turns the string + into - does not compile.
+
+FAIL "<tmp>/numbers.go.2" with checksum 10758f7e1012731a78aeb5241d4e5bae
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.3" with checksum 27e64e163ea3cc18ec25aa2b0e78cfaa
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.4" with checksum ddd91deef8e45996157052074b01c10f
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -14,7 +14,7 @@
+
+ // IsPositive reports whether n is strictly positive.
+ func IsPositive(n int64) bool {
+-	return n > 0
++	return n >= 0
+ }
+
+ // Label is a label for n, which no test reads.
+
+FAIL "<tmp>/numbers.go.5" with checksum fc2b22edcada853f38ba74ea9a7e61c3
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.6" with checksum fbcf08da87663e6f2ee322c1fcde9979
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.7" with checksum 2d88a90599706ae2f8fd5e35edb7a39e
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -14,7 +14,7 @@
+
+ // IsPositive reports whether n is strictly positive.
+ func IsPositive(n int64) bool {
+-	return n > 0
++	return n > -1
+ }
+
+ // Label is a label for n, which no test reads.
+
+FAIL "<tmp>/numbers.go.8" with checksum fdb520c30662399f1c7c8d9d7e25fa24
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -19,7 +19,7 @@
+
+ // Label is a label for n, which no test reads.
+ func Label(n int64) string {
+-	return strconv.FormatInt(n+1, 10)
++	return strconv.FormatInt(n+0, 10)
+ }
+
+ // Greet greets name. A test reads it, and its mutant that turns the string + into - does not compile.
+
+FAIL "<tmp>/numbers.go.9" with checksum bbcc28b53a7f408550f9f17f88d705f5
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -19,7 +19,7 @@
+
+ // Label is a label for n, which no test reads.
+ func Label(n int64) string {
+-	return strconv.FormatInt(n+1, 10)
++	return strconv.FormatInt(n+1, 9)
+ }
+
+ // Greet greets name. A test reads it, and its mutant that turns the string + into - does not compile.
+
+FAIL "<tmp>/numbers.go.10" with checksum 9b1201073fc621d3faece8d492322a04
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -6,7 +6,7 @@
+ // SumBelow sums the integers in [0, n); a non-positive n sums nothing.
+ func SumBelow(n int64) int64 {
+ 	var total int64
+-	for i := int64(0); i < n; i++ {
++	for i := int64(1); i < n; i++ {
+ 		total += i
+ 	}
+ 	return total
+
+FAIL "<tmp>/numbers.go.11" with checksum ad455a0610f37d6754971e8c47e072f4
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -14,7 +14,7 @@
+
+ // IsPositive reports whether n is strictly positive.
+ func IsPositive(n int64) bool {
+-	return n > 0
++	return n > 1
+ }
+
+ // Label is a label for n, which no test reads.
+
+FAIL "<tmp>/numbers.go.12" with checksum 20d3deb4d43ae9c48fc2c931ce3d5c3d
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -19,7 +19,7 @@
+
+ // Label is a label for n, which no test reads.
+ func Label(n int64) string {
+-	return strconv.FormatInt(n+1, 10)
++	return strconv.FormatInt(n+2, 10)
+ }
+
+ // Greet greets name. A test reads it, and its mutant that turns the string + into - does not compile.
+
+FAIL "<tmp>/numbers.go.13" with checksum 70a9869555462c822ce509ea77381f71
+------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Original
++++ New
+@@ -19,7 +19,7 @@
+
+ // Label is a label for n, which no test reads.
+ func Label(n int64) string {
+-	return strconv.FormatInt(n+1, 10)
++	return strconv.FormatInt(n+1, 11)
+ }
+
+ // Greet greets name. A test reads it, and its mutant that turns the string + into - does not compile.
+
+FAIL "<tmp>/numbers.go.14" with checksum 349e93d653e7362237d209d8bc0e640c
+------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS "<tmp>/numbers.go.15" with checksum 096b25d9e865dbc7827687d6370dcc20
+------------------------------------------------------------------------------------------------------------------------------------------------------
+The mutation score is 0.437500 (7 passed, 9 failed, 0 duplicated, 0 skipped, total is 16)
+--- report.json, one mutant per line
+killed    arithmetic/assign_invert     -total += i | +total -= i
+killed    arithmetic/assignment        -total += i | +total = i
+killed    arithmetic/base              -return "hi " + name | +return "hi " - name
+killed    expression/comparison        -for i := int64(0); i < n; i++ { | +for i := int64(0); i <= n; i++ {
+killed    loop/condition               -for i := int64(0); i < n; i++ { | +for i := int64(0); 1 < 1; i++ {
+killed    numbers/decrementer          -for i := int64(0); i < n; i++ { | +for i := int64(-1); i < n; i++ {
+killed    statement/remove             -total += i | +_, _ = total, i | +
+escaped   arithmetic/base              -return strconv.FormatInt(n+1, 10) | +return strconv.FormatInt(n-1, 10)
+escaped   expression/comparison        -return n > 0 | +return n >= 0
+escaped   numbers/decrementer          -return n > 0 | +return n > -1
+escaped   numbers/decrementer          -return strconv.FormatInt(n+1, 10) | +return strconv.FormatInt(n+0, 10)
+escaped   numbers/decrementer          -return strconv.FormatInt(n+1, 10) | +return strconv.FormatInt(n+1, 9)
+escaped   numbers/incrementer          -for i := int64(0); i < n; i++ { | +for i := int64(1); i < n; i++ {
+escaped   numbers/incrementer          -return n > 0 | +return n > 1
+escaped   numbers/incrementer          -return strconv.FormatInt(n+1, 10) | +return strconv.FormatInt(n+2, 10)
+escaped   numbers/incrementer          -return strconv.FormatInt(n+1, 10) | +return strconv.FormatInt(n+1, 11)
+exit code: 0
