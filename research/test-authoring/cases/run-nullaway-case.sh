@@ -5,7 +5,8 @@
 # installed copy of the skill, no user CLAUDE.md or rule, and none of this
 # repository's AGENTS.md files reach the session. Safe mode drops the clone's
 # own CLAUDE.md too, so the script appends it to the system prompt, where a
-# consumer's session would have loaded it. In NullAway that file is a symlink
+# consumer's session would have loaded it, followed by the case's
+# instructions.md where the case has one. NullAway's CLAUDE.md is a symlink
 # to AGENTS.md and imports nothing.
 #
 # After the session, the script builds the test classes the session changed,
@@ -21,7 +22,9 @@
 #                   empty), then every test file relative to the base of
 #                   uber/NullAway#1834
 #   result-note.md  the session's final message
-#   result-build.txt  the failing tests on the fix and on the base
+#   result-build.txt  for the fix and for the base, the tests that ran and
+#                   the ones that failed, or the exit status of a build that
+#                   failed before any test ran
 #   run.txt         the session's cost, turns, and duration, and whether it
 #                   ran the tests itself
 #   skill-tree      the tree id of the skill that ran, see scripts/skill-tree.sh
@@ -45,9 +48,16 @@ fi
 git clone -q --depth 2 --branch "$(cat "$case_dir/tag")" https://github.com/vlsi/NullAway.git "$work/nullaway"
 
 sed "s|<skill>|$work/skill|g" "$case_dir/prompt.md" > "$work/prompt.txt"
+# A case may add lines to NullAway's instructions, as its maintainers would
+# write them there; they reach the session with the rest of CLAUDE.md.
+cat "$work/nullaway/CLAUDE.md" > "$work/instructions.md"
+if [ -f "$case_dir/instructions.md" ]; then
+  printf '\n' >> "$work/instructions.md"
+  cat "$case_dir/instructions.md" >> "$work/instructions.md"
+fi
 (cd "$work/nullaway" &&
   claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
-    --append-system-prompt-file CLAUDE.md --output-format json \
+    --append-system-prompt-file "$work/instructions.md" --output-format json \
     --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.json"
 
 ran_tests=no
@@ -79,14 +89,19 @@ build() {
     echo "on the $1: no test class changed" >> "$work/out/result-build.txt"
     return
   fi
+  # Reports of an earlier build, the writer's or the fix's, must not be
+  # read as this one's.
+  results=$work/nullaway/nullaway/build/test-results/test
+  rm -rf "$results"
+  status=0
   # $filters is split on purpose: one --tests argument per class.
   # shellcheck disable=SC2086
-  (cd "$work/nullaway" && ./gradlew :nullaway:test --rerun --quiet $filters > "$work/build-$1.log" 2>&1) || true
+  (cd "$work/nullaway" && ./gradlew :nullaway:test --rerun --quiet $filters > "$work/build-$1.log" 2>&1) || status=$?
   # shellcheck disable=SC2086
-  python3 - "$work/nullaway/nullaway/build/test-results/test" "$work/build-$1.log" "$1" $classes <<'EOF' >> "$work/out/result-build.txt"
+  python3 - "$results" "$work/build-$1.log" "$1" "$status" $classes <<'EOF' >> "$work/out/result-build.txt"
 import glob, sys
 import xml.etree.ElementTree as ET
-results, log, label, classes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
+results, log, label, status, classes = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5:]
 ran, failed = 0, []
 for c in classes:
     for f in glob.glob(f'{results}/TEST-{c}.xml'):
@@ -94,10 +109,13 @@ for c in classes:
             ran += 1
             if tc.find('failure') is not None or tc.find('error') is not None:
                 failed.append(f"{c.rsplit('.', 1)[1]}.{tc.get('name')}")
-print(f'on the {label}: {ran} tests ran, {len(failed)} failed' + ''.join(f'\n  {t}' for t in failed))
 if ran == 0:
-    errors = [line.rstrip() for line in open(log) if 'error:' in line]
-    print('  the build failed before any test ran:' + ''.join(f'\n  {e}' for e in errors[:10]))
+    errors = [line.rstrip() for line in open(log) if 'error:' in line or 'FAILURE' in line]
+    print(f'on the {label}: no test report was written, and the build exited with {status}' + ''.join(f'\n  {e}' for e in errors[:10]))
+elif status != 0 and not failed:
+    print(f'on the {label}: {ran} tests ran and none failed, but the build exited with {status}; see the build log')
+else:
+    print(f'on the {label}: {ran} tests ran, {len(failed)} failed' + ''.join(f'\n  {t}' for t in failed))
 EOF
 }
 build fix

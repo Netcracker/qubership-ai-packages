@@ -1,40 +1,42 @@
-I rewrote the tests the last commit added to `WildcardTests.java`: 20 tests became 9, one per rule. The whole `WildcardTests` class passes (55 tests, 0 failures). Production code is unchanged and nothing is committed. I only ran the one test class, not `:nullaway:buildWithNullAway`, since only a test file changed.
+I rewrote the 21 tests that `d55c150` added to `WildcardTests.java` as 12 tests. I didn't touch production code and didn't commit. `./gradlew :nullaway:test --tests "com.uber.nullaway.jspecify.WildcardTests"` and `./gradlew :nullaway:buildWithNullAway` both pass.
 
 ---
 
-**Message for the author**
+**Message for the PR author**
 
-**How the test harness behaves.** Error Prone's `CompilationTestHelper` (2.50.0) has no reference file in the skill, so I read its source. `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` does three things that matter here:
-- It **stops at the first mismatch**: the first marker with no matching report, or the first unmarked line that gets a report ("Saw unexpected error on line N").
-- It **names a failure only by a line number** and has no per-case label.
-- A **line with no marker therefore expects no report.**
+**What I changed in the tests**
 
-The skill says that under a harness like this, each rule gets its own test. That test holds the one input that should draw the report, next to the nearest inputs that should not (the controls), all in one source file. Before, a case and its control were separate tests, each with its own copy of the class, and nothing kept the copies in step. So a silent test could be silent because its copy had drifted, not because the check works. The file already uses this shape (`simpleWildcardNoInference`).
+I rewrote the 21 tests as 12. No expectation changed: every `// BUG: Diagnostic contains:` marker is still there, word for word. There are now two new inputs that expect no report, and one test is merged into another.
 
-**What changed.** Each new test is named for the rule it establishes:
+- **Each new report now sits in one source with the cases that must stay silent.** Before, a reported case and its silent counterpart were two tests with two copies of the class. A silent test only proves the rule while its twin fires on the same code, and nothing kept the two copies the same. Error Prone compiles all of them in one run, so they belong together:
+  - A bound that admits null vs. one that doesn't, against `? extends Object`, `? extends @Nullable Object` and `?`.
+  - A `@Nullable T` use vs. a `@NonNull T` use.
+  - `@Nullable T` vs. bare `T`, against `? extends T`.
+  - `S extends @Nullable T` vs. `S extends T`, against `? extends T`.
+  - A bare `T` vs. `@NonNull T`, against `? extends @NonNull T`.
+- **Four reported cases had no silent counterpart, so I added one each**, differing from the case in one respect:
+  - A `@NullMarked` holder next to the `@NullUnmarked` one.
+  - `<T, S extends T>` with a non-null `T`.
+  - `Box<? extends T>` with a non-null `T`.
+  - An override returning `List<@NonNull V>`.
+- **Two inputs are new.**
+  - `NullableT.nullableSub`: `S extends @Nullable T` where `T` itself admits null, which must be accepted. It turns red if `admitsNull(lhsBound) ||` is removed.
+  - The `List<@NonNull V>` override control from the list above.
+- **Each test still holds at most one input that expects a report.** I checked the harness source: `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` (error_prone_test_helpers 2.50.0, lines 264–268 and 288) stops at the first mismatch. It identifies the mismatch by line number only, whether a report is missing or unexpected, and there is no way to label a marker. That's why cases of different rules stay in separate tests. Examples:
+  - The `@NullUnmarked` declaration and the `S extends T` chain are separate from the plain `@Nullable` bound.
+  - The override is separate from the call-site checks.
+- **Names now state the rule the test establishes.** For example, `aTypeVariableIsRejectedOnlyWhenItsBoundAdmitsNullAndTheWildcardBoundDoesNot` instead of the name of one input.
+- **Unchanged:** `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariableUnderInference`, `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement` and `aCapturedTypeArgumentMeetsABareTypeVariableRequirement`. They guard against false reports in the inference and capture paths, and none of them has a case to pair with.
 
-| Rule (new test) | Reported case | Controls (not reported) |
-| --- | --- | --- |
-| `aBareTypeVariableIsRejectedByANonNullWildcardBoundOnlyWhenItsDeclaredBoundAdmitsNull` | `<T extends @Nullable Object> Box<T>` → `? extends Object` | same `b` passed to `? extends @Nullable Object` and to `?`; `<T> Box<T>`; `Box<@NonNull T>` |
-| `aTypeVariableDeclaredInUnannotatedCodeIsRejectedByANonNullWildcardBound` | `T` from an `@NullUnmarked` holder | **new:** the same holder when it is `@NullMarked` |
-| `aTypeVariableBoundedByAVariableThatAdmitsNullIsRejectedByANonNullWildcardBound` | `S extends T`, where `T extends @Nullable Object` | **new:** `<T, S extends T>` |
-| `aWildcardBoundedByATypeVariableThatAdmitsNullIsRejectedByANonNullWildcardBound` | `Box<? extends T>`, where `T extends @Nullable Object` | **new:** `<T> Box<? extends T>` |
-| `aNullableWrittenOnATypeVariableUseIsRejectedByANonNullWildcardBound` | `<T> Box<@Nullable T>` → `? extends Object` | same `b` passed to `? extends @Nullable Object`; **new:** `<T> Box<T>` |
-| `aNullableUseOfATypeVariableIsRejectedByAWildcardBoundedByThatVariable` | `Box<@Nullable T>` → `? extends T` | `Box<T>` passed as an argument and as a return value; the `CompletableFuture` inference case; the captured `Map<…, ? extends V>` case |
-| `aWildcardBoundedByATypeVariableRejectsAnActualThatAdmitsNullOnlyWhenTheVariableDoesNot` | `S extends @Nullable T`, where `T` cannot be null | `S extends T` with either kind of `T`; **new:** `S extends @Nullable T`, where `T extends @Nullable Object` |
-| `aTypeVariableThatAdmitsNullIsRejectedByAWildcardBoundedByItsNonNullUse` | `Box<T>` → `? extends @NonNull T` | **new:** `Box<@NonNull T>`; the captured `CompletableFuture<Map<…, ? extends @NonNull V>>` case |
-| `anOverrideReturningATypeVariableThatAdmitsNullIsRejectedWhereTheOverriddenWildcardBoundIsNonNull` | an override returning `List<V>` | **new:** an override returning `List<@NonNull V>` |
+**Evidence**
 
-- **The new controls** are each the input nearest to the reported case that should stay silent. Several of the old silent tests differed from their reported counterpart in more than one thing, so on their own they did not show which condition decides the outcome.
-- **No expected diagnostic text changed.** Every reported line keeps the exact `Diagnostic contains:` text it had.
-- **The two captured-type and the `CompletableFuture` reproductions** keep their original bodies. They now sit as nested `Loader` interfaces in the source of the rule they control, instead of standing alone.
+- **Red on the base commit.** I ran the new tests against the production code of `HEAD~1`. Exactly the 7 tests whose report is new failed, each with `Did not see an error on line N matching <the expected diagnostic>`. The two tests whose report existed before the fix stayed green, as expected: `@Nullable T` against a non-null wildcard, and against `? extends T`.
+- **Mutations of `extendsBoundContains`**, applied one at a time and reverted:
+  - Removing `admitsNull(lhsBound) ||` fails the subtype-variable test.
+  - Removing `!hasNullnessAnnotation` in `typeComparedForNullness` fails the use-site annotation test.
+  - Removing the `CapturedType` exception fails only the existing `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement`. I had tried a direct `Box<? extends @NonNull T>` pass-through as a control, but it stayed green under that mutation, so I dropped it.
 
-**Evidence that the tests can fail.** I made two temporary production edits and reverted both with `git checkout HEAD -- nullaway/src/main`.
-- **Pre-fix code:** I put back the production sources from before the fix (`HEAD~1`). The 7 tests for new behaviour fail, each with `Did not see an error on line N`, which is the bug's symptom: a missing report. The 2 tests for `@Nullable` written on the type variable pass, because that was already reported before the fix.
-- **Capture exception removed:** I deleted the `rhsTypeArgument instanceof Type.CapturedType` exception. Only the `asyncLoadAll` control catches it, with `Saw unexpected error on line 27`.
-- **One control dropped:** a simpler captured control I had tried (`Box<? extends @NonNull T>` passed as an argument) stayed silent under that change, so it guarded nothing and I removed it. The capture exception is therefore guarded by the `Map`/`CompletableFuture` reproduction alone.
+**What I propose and did not do**
 
-**Proposed, not done:**
-1. **A line naming the test stack in `CLAUDE.md`/`AGENTS.md`**, which currently have none. For example: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper, which stops at the first mismatch and names a case only by its line number (no per-case label).` The skill says to add it only if you agree.
-2. **A follow-up on the harness's missing label:** a red report names a line number, never the case. The fix would be an issue or change against Error Prone's test helpers to let a `// BUG:` marker carry a label. I did not check their tracker for an existing report.
-3. **Writing and doc-comment guidance:** the skill defers wording to `english-developer-style` and comments to `javadoc-authoring`. Neither is available in this session, so I did not apply them. The new test methods have no Javadoc, which `CLAUDE.md` allows for tests.
+- **A stack line in `AGENTS.md`/`CLAUDE.md`**, if the maintainers agree: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatched marker and names it by line number only, with no label.`
+- **A follow-up against Error Prone:** an optional label on a `// BUG: Diagnostic contains:` marker that the failure message prints. Until then, a failing test here is identified by the test name plus a line number inside the embedded source. I couldn't search the Error Prone tracker for an existing issue because this session had no network access.

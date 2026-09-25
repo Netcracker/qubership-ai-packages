@@ -46,7 +46,9 @@ Many cases of each kind are one `test.each` for each kind.
 ## Grouping assertions
 
 Jest stops at the first failing assertion; several assertions on the fields of one result either compare the whole
-object with `toEqual` or move into separate cases.
+object with `toEqual` or move into separate cases. Several expectations on the result of one act, the errors of one
+validated batch, are one `toEqual` of the whole list reduced to the fields the behavior defines, the record and the
+error code without the message, sorted where the behavior defines no order, so that one run shows every mismatch (§7).
 
 An `async` test that forgets to `await` passes with no assertion run; `expect.assertions(n)` or
 `expect.hasAssertions()` turns that into a failure.

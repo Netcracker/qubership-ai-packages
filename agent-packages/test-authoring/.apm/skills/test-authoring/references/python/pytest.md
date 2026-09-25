@@ -45,7 +45,12 @@ varying value. Many cases of each kind are one parametrized function for each ki
 ## Grouping assertions
 
 There is no soft assert in pytest itself; a test with several assertions on one result stops at the first. Where the
-fields are independent, `pytest-check` or a parametrized test over the fields keeps them reporting together.
+fields are independent, `pytest-check` or a parametrized test over the fields keeps them reporting together. Several
+expectations on the result of one act, the errors of one validated batch, are one `assert` on the fields the behavior
+defines, the record and the error code without the message. Where the behavior defines no order and no duplicates,
+compare sets, `{("r2", "EMPTY"), …}`: pytest lists every extra item on each side in a default run. Where it defines the
+order, compare lists, which a default run reports only up to the first differing index and `-vv` prints whole. A
+parametrized test would repeat the act for each expectation.
 
 ## Errors
 
