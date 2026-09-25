@@ -47,16 +47,20 @@ decides whether that case continues, not whether the next row runs. Rows assert 
 same comparisons for every row. A table with `want` and `wantErr error` columns whose loop compares both,
 `errors.Is(err, tt.wantErr)` and `got != tt.want`, is one table. So is the table the `gotests` generator writes: a
 `wantErr bool` column, `(err != nil) != tt.wantErr` compared for every row with a `return` on a mismatch, and `got`
-compared with `tt.want` for every row. That table is the idiom of the ecosystem, so a new case joins it as a row (§9),
-and the loop stays as it is unless the task is to rewrite it. The table has two weaknesses, and the pull request names
-the ones the new row inherits. A `bool` establishes only that some error came back, which is §5's row *An assertion
-weakened until it passes*. An error row compares `got` with a zero `want`, which asserts more than the contract where
-the contract leaves the result undefined on an error. A new table avoids both. It carries `wantErr error` and compares
-with `errors.Is`. Where the contract leaves the result undefined on an error, the accepting rows and the rejecting rows
-are two tables, each with its own loop, and only the accepting loop compares `got`. A row field that chooses between two
-blocks of assertions is the condition that decides whether an assertion runs, which §6 rules out. Such cases are
-separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper marked with
-`t.Helper()`. Many cases of each kind are one table for each kind.
+compared with `tt.want` for every row. That table is the idiom of the ecosystem, and a new row whose input the contract
+accepts joins it (§9): the row requires no error and compares `got` with `want`, the comparisons §5 to §7 ask for there.
+A new row that expects an error does not join it, because the table is ill-suited to such a row in two ways. A `bool`
+establishes only that some error came back, which is §5's row *An assertion weakened until it passes*. An error row
+compares `got` with a zero `want`, which asserts more than the contract where the contract leaves the result undefined
+on an error. The new error case is a test of its own, or a table of its own where there are several, beside the old one.
+The old table keeps its rows and its assertions unless the task is to rewrite them. Where the setup is too long to
+repeat, the old loop and the new test share it through a helper that both call, which is the one change §9 allows in a
+twin. A new table avoids both weaknesses. It carries `wantErr error` and compares with `errors.Is`. Where the contract
+leaves the result undefined on an error, the accepting rows and the rejecting rows are two tables, each with its own
+loop, and only the accepting loop compares `got`. A row field that chooses between two blocks of assertions is the
+condition that decides whether an assertion runs, which §6 rules out. Such cases are separate test functions, or
+separate `t.Run` blocks written out under one parent, that call one helper marked with `t.Helper()`. Many cases of each
+kind are one table for each kind.
 
 ## Keep going, or stop
 

@@ -43,8 +43,8 @@ rule can be satisfied by a test worth nothing.
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
   input, a helper that leaves the reader the whole input, a table, or a per-test fixture, where a new test goes, in
-  which shape, the twin it joins and when it stands apart, the helper it reuses before adding one, and when a class
-  splits.
+  which shape, when it joins an ecosystem's idiom table, the twin it joins and when it stands apart, the helper it
+  reuses before adding one, and when a class splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
   needs a tool's verdict, or a question for a human.
 

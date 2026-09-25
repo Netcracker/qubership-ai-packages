@@ -32,7 +32,7 @@ its own, and whether it finds the cases the change owes.
 | `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to `09fdea5a`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
-| `<model>/result-build.txt` | The tests that fail on the fix and on the base, from the build the script runs after the session. |
+| `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
 | `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
@@ -57,11 +57,12 @@ Read `result.diff` and `result-note.md` against all of them.
 3. **Each case that expects a diagnostic stands with its controls** (§7). The nearest input that differs in the one
    annotation or bound deciding the diagnostic sits in the same source: `<T>` beside `<T extends @Nullable Object>`,
    `Box<? extends @Nullable Object>` beside `Box<? extends Object>`.
-4. **One case that expects a diagnostic per test** (§7). The harness stops at the first mismatch.
+4. **One case that expects a diagnostic per test** (§7), and at most one input whose outcome the fix moves, which check
+   8 shows. The harness stops at the first mismatch.
 5. **No source is assembled from pieces** (§7). Each source is one text block, in the form of the tests around it
    (§9).
-6. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining the outcomes of two inputs. An
-   `And` inside the condition of one rule passes.
+6. **The name states the rule** (§7). No ordinal, no line number, and no `And` or `But` joining the outcomes of two
+   inputs. An `And` inside the condition of one rule passes.
 7. **The production code is unchanged.** The session proposes the stack line (§0) in its closing message and does not
    edit `AGENTS.md`.
 8. **The tests pass on the fix, and the defect's test fails on the base** (§5). Read `result-build.txt`: no failure on

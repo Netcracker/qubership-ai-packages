@@ -302,7 +302,7 @@ and each fact belongs in exactly one of them. Decide what each carries before wr
 | Part | Carries | Not |
 | --- | --- | --- |
 | **The container** (class, module path, `describe` block, parent test) | The unit under test and the condition every test in it shares | A file name; a fact true of one test |
-| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish, and the partition of the case where the rule has a test for each: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, an `and` that joins the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`) |
+| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish, and the partition of the case where the rule has a test for each: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, a conjunction, `and` or `but`, that joins the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`) |
 | **The assertion** | The values: got and want, printed by an assertion built to print them, in the operand order the framework labels | A boolean wrapped around a comparison, which prints `true` and `false` or the expression text |
 | **The message** | The function and the input where the assertion cannot print them: `ensureBytes(-2147483648)` | The scenario the name states; the values the assertion prints; `failed` |
 
@@ -465,11 +465,11 @@ comment may repeat the rule the message states, and the message may not repeat t
     moves, and finds at most one of each, unless the check carries every mismatch. The reviewer checks that every other
     case narrowly misses that partition's condition, and that each expectation would stand with the other cases removed
     from the input. A case whose outcome a different condition decides moves to a test of its own, or to the form of the
-    sub-bullet *Where the check carries every mismatch under a name*. A name whose `and` joins the outcomes of two
-    inputs or two scenarios (`rejects a negative count and accepts zero`) names two tests, and the test is split. An
-    `and` inside the condition of one rule stays (`is rejected only when its bound admits null and the requirement does
-    not`), and so does one between two observations of one act (`serves the second read from the cache and queries the
-    backend once`).
+    sub-bullet *Where the check carries every mismatch under a name*. A name whose conjunction, `and` or `but`, joins
+    the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`, `accepts a subtype but
+    rejects a nullable use`) names two tests, and the test is split. An `and` inside the condition of one rule stays
+    (`is rejected only when its bound admits null and the requirement does not`), and so does one between two
+    observations of one act (`serves the second read from the cache and queries the backend once`).
   - **Where the check stops at the first mismatch, split between the cases.** Cases of different rules in one such check
     hide each other, and so do two inputs of one rule that each expect a report, or that each have an outcome the change
     moves. Each gets its own test, with its controls.
@@ -540,20 +540,22 @@ before the test is. Each cause below has one fix, and every cause but the last i
   offers a form without the copy. A case and its control that one act could evaluate are written as two tests with two
   copies of the input, at any length. A case with its controls in one check is not one of them (§7), and neither is a
   case and its control of separate acts whose setup is short enough to repeat (§7's sub-bullet *A short setup is
-  repeated*): the new test takes that shape. A reference file may name the ecosystem's idiom for a table and say how a
-  new case joins it. That holds only where the idiom still reports each case apart. An idiom that asserts less than this
-  skill asks, such as Go's `wantErr bool`, keeps its shape, and the pull request names what the new row inherits. The
-  neighbors stay as they are unless the task is to rewrite them, with one exception: an existing test of the same
-  specification rule, the case the new control belongs to or the control of the new case, is the twin. The new case
-  joins it, inside the twin's input where one act evaluates both (§7), or through a helper that both now call, and the
-  twin's expectations do not change. Its name changes where the test now holds a case with its controls and has to state
-  their rule (§7). §7's exceptions hold for a twin too. A short setup of separate acts is repeated. Inputs that differ
-  in structure and cannot stand side by side are each written out whole. A new case beside a twin that already holds an
-  input that expects a report, or one whose outcome the change moves, is a test of its own under a check that stops at
-  the first mismatch, with the controls it needs written in its input (§7's sub-bullet *A case and its controls are not
-  independent*). A twin that reaches its input through a helper that assembles it from pieces of syntax is not joined:
-  the new test writes its input out whole, and the pull request names the twin and the helper. A case of another
-  specification rule that shares the setup takes the helper, or writes its input out (§7).
+  repeated*): the new test takes that shape. A reference file may name the ecosystem's idiom for a table and say which
+  new cases join it: those for which the idiom reports each case apart and asserts what §5 to §7 ask. Any other new case
+  takes the smallest form that does, beside the table, and the table keeps its rows and its assertions. Go's `wantErr
+  bool` table takes a new row whose input is accepted, and not a new row that expects an error. The neighbors stay as
+  they are unless the task is to rewrite them, with one exception: an existing test of the same specification rule, the
+  case the new control belongs to or the control of the new case, is the twin. The new case joins it, inside the twin's
+  input where one act evaluates both (§7), or through a helper that both now call, and the twin's expectations do not
+  change. Its name changes where the test now holds a case with its controls and has to state their rule (§7). §7's
+  exceptions hold for a twin too. A short setup of separate acts is repeated. Inputs that differ in structure and cannot
+  stand side by side are each written out whole. A new case beside a twin that already holds an input that expects a
+  report, or one whose outcome the change moves, is a test of its own under a check that stops at the first mismatch,
+  with the controls it needs written in its input (§7's sub-bullet *A case and its controls are not independent*). A
+  twin that is a row of an idiom table the new case may not join stays in its table, and the two share a long setup
+  through a helper that both call. A twin that reaches its input through a helper that assembles it from pieces of
+  syntax is not joined: the new test writes its input out whole, and the pull request names the twin and the helper. A
+  case of another specification rule that shares the setup takes the helper, or writes its input out (§7).
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for one value, write the helper
   that takes that value and have the old one call it, so that the existing tests stay as they are. Two helpers whose
@@ -607,7 +609,7 @@ Run this over a test you wrote or one you are reviewing.
 - Any mock of a type the repository does not own (§6)?
 - Any loop or concatenation that produces the expected value, or condition that decides whether an assertion runs (§6)?
 - Does the test name state the scenario and the outcome, or a location, or the outcomes of two inputs or scenarios
-  joined by `and` (§7)?
+  joined by `and` or `but` (§7)?
 - Does the assertion print the operands, in the framework's order (§7)?
 - Do the grouping, error, and message forms come from the assertion library's reference, not the engine's (§0)?
 - Where the repository's instructions carry no stack line, was the line proposed in one sentence, to the user, in the
@@ -651,11 +653,14 @@ Run this over a test you wrote or one you are reviewing.
   unless the stack line or the harness's documentation already records it (§7)?
 - Any sleep, wall-clock read, unseeded random, real host, or unordered collection compared as a sequence (§8)?
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
-- Is the new test beside the existing tests of the same unit, and in the shape of its neighbors (§9)?
+- Is the new test beside the existing tests of the same unit, and in the shape of its neighbors unless that shape breaks
+  this skill? Beside a table a reference names as the ecosystem's idiom, does it join only where the table asserts for
+  it what §5 to §7 ask (§9)?
 - Does a case whose twin already exists join that twin rather than copy a setup that has to be compared line by line?
   Does it stand apart only where it is a second case under a check that stops at the first mismatch, the twin and the
-  new case are separate acts with a setup short enough to repeat, the twin's helper assembles pieces of syntax, or the
-  inputs differ in structure and cannot stand side by side (§9)?
+  new case are separate acts with a setup short enough to repeat, the twin's helper assembles pieces of syntax, the twin
+  is a row of an idiom table that asserts too little or too much for the new case, or the inputs differ in structure and
+  cannot stand side by side (§9)?
 - Does a new helper repeat the body of a helper the file already has, or copy one that assembles an input from pieces of
   syntax (§9)?
 - For each finding: which of the four buckets, and what settles it there: the diff, a run or a citation of the

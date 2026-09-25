@@ -32,7 +32,7 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
 | `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to the base of the pull request, `09fdea5a`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
-| `<model>/result-build.txt` | The tests that fail on the fix and on the base, from the build the script runs after the session. |
+| `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
 | `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
@@ -64,16 +64,17 @@ Read `result.diff` and `result-note.md` against all of them.
    annotations changed.
 2. **Each case that expects a diagnostic stands with its controls** (§7). A control is a nearest input that differs in
    the one annotation or bound that decides the diagnostic: `<T>` beside `<T extends @Nullable Object>`,
-   `Box<? extends @Nullable Object>` beside `Box<? extends Object>`. It sits in the same source as the case it
-   controls. An input that expects nothing and controls no case, such as a captured type argument, may stay a test of
-   its own.
-3. **One case that expects a diagnostic per test** (§7). The harness stops at the first mismatch, so two markers in one
-   test fail, however closely the two rules are related.
+   `Box<? extends @Nullable Object>` beside `Box<? extends Object>`. It sits in the same source as the case it controls.
+   An input that expects nothing and controls no case, such as a captured type argument or the case under inference,
+   may stay a test of its own.
+3. **One case that expects a diagnostic per test** (§7), and at most one input whose outcome the fix moves, which check
+   8 shows. The harness stops at the first mismatch, so two markers in one test fail, however closely the two rules are
+   related.
 4. **No source is assembled from pieces** (§7). No `String.formatted`, `String.format`, or concatenation builds a
    source, and no helper takes a type parameter list, a statement, or a marker. The source of each test is one text
    block the reader sees whole.
-5. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining the outcomes of two inputs. An
-   `And` inside the condition of one rule passes.
+5. **The name states the rule** (§7). No ordinal, no line number, and no `And` or `But` joining the outcomes of two
+   inputs. An `And` inside the condition of one rule passes.
 6. **The production code is unchanged, and so are the other tests.** The session proposes the stack line (§0) in its
    closing message and does not edit `AGENTS.md`.
 7. **The closing message names what moved and why**, and the rule of the skill behind each move.
@@ -82,9 +83,9 @@ Read `result.diff` and `result-note.md` against all of them.
    fix added.
 
 Checks 1 to 6 are partly countable. For the submitted tests the script prints 20 tests, 11 of them with no marker. The
-two captured type arguments control no case that expects a diagnostic, so they may stay tests of their own; every other
-input joins one of the 9 tests with a marker. A result that passes has at most 11 tests, at most 2 of them with no
-marker, one marker at most per test, and prints `True` for every diagnostic:
+two captured type arguments and the case under inference control no case that expects a diagnostic, so they may stay
+tests of their own; every other input joins one of the 9 tests with a marker. A result that passes has at most 12 tests,
+at most 3 of them with no marker, one marker at most per test, and prints `True` for every diagnostic:
 
 ```bash
 python3 research/test-authoring/cases/check-nullaway-case.py \
