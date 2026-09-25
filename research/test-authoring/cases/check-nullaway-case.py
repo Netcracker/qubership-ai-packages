@@ -3,29 +3,57 @@
 Usage, from the repository root:
     python3 research/test-authoring/cases/check-nullaway-case.py <case>/<model> [<diagnostic> ...]
 
-Reads <case>/<model>/result.diff, as run-nullaway-case.sh writes it, and
-prints one line per count. Each <diagnostic> is the text after
-"BUG: Diagnostic contains: " that the tests have to expect somewhere. The
-checks a count cannot settle are graded by reading; see the case README.
+Reads <case>/<model>/changed-files.txt and the changed files beside it, as
+run-nullaway-case.sh writes them, compares each file other than production
+code with its version at the case's base commit, fetched from
+raw.githubusercontent.com, and prints one line per count. Each <diagnostic>
+is the text after "BUG: Diagnostic contains: " that the tests have to expect
+somewhere. The checks a count cannot settle are graded by reading; see the
+case README.
 """
 
+import os
 import re
+import subprocess
 import sys
+import tempfile
+import urllib.error
+import urllib.request
 
-model_dir = sys.argv[1]
+model_dir = sys.argv[1].rstrip('/')
 required = sys.argv[2:]
-diff = open(f'{model_dir}/result.diff').read()
+base = open(os.path.join(os.path.dirname(model_dir), 'base')).read().strip()
 
-# One section per file; the path is taken from the "+++ b/" line.
+
+def at_base(path):
+    url = f'https://raw.githubusercontent.com/uber/NullAway/{base}/{path}'
+    try:
+        return urllib.request.urlopen(url).read().decode()
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return ''
+        raise
+
+
+# The added lines of each changed file: production against the commit the
+# session started from, which leaves them empty when nothing changed; every
+# other file against the base.
 sections = {}
-for chunk in re.split(r'^diff --git ', diff, flags=re.M)[1:]:
-    path = re.search(r'^\+\+\+ (?:b/(.*)|/dev/null)$', chunk, re.M)
-    path = path.group(1) if path and path.group(1) else chunk.split()[0][2:]
-    added = [line[1:] for line in chunk.splitlines()
-             if line.startswith('+') and not line.startswith('+++')]
-    sections[path] = added
+production = []
+for line in open(f'{model_dir}/changed-files.txt').read().splitlines():
+    kind, status, path = line.split(maxsplit=2)
+    if kind == 'production':
+        production.append(path)
+        continue
+    new = os.devnull if status == 'D' else os.path.join(model_dir, os.path.basename(path))
+    with tempfile.NamedTemporaryFile('w', suffix='.java') as old:
+        old.write('' if status == 'A' else at_base(path))
+        old.flush()
+        # git's own diff, so that the lines count as added exactly as git shows them.
+        diff = subprocess.run(['git', 'diff', '--no-index', '-U0', old.name, new],
+                              capture_output=True, text=True).stdout
+    sections[path] = [d[1:] for d in diff.splitlines() if d.startswith('+') and not d.startswith('+++')]
 
-production = [p for p in sections if p.startswith('nullaway/src/main/') or p == 'CHANGELOG.md']
 tests = {p: a for p, a in sections.items() if '/src/test/' in p}
 other = [p for p in sections if p not in production and p not in tests]
 print('production files changed (expect none):', production or 'none')

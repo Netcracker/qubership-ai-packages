@@ -27,9 +27,11 @@ its own, and whether it finds the cases the change owes.
 
 | File | What it is |
 | --- | --- |
+| `base` | The commit the tests are compared with, the base of the pull request. |
 | `tag` | The tag in `vlsi/NullAway` the session starts from. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to `09fdea5a`. |
+| `<model>/<file>` | Every file the session changed, under its own name, so that the commit of the next run shows how the result moved. |
+| `<model>/changed-files.txt` | One line per changed file: `production` or `other`, the git status letter, and the path. Production code is compared with the commit the session started from (expected empty), every other file with the base, `09fdea5a`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
 | `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
@@ -46,7 +48,8 @@ research/test-authoring/cases/run-nullaway-case.sh \
 
 ## Checks
 
-Read `result.diff` and `result-note.md` against all of them.
+Read the changed test files against the base, `git diff 09fdea5a` in the case's clone or the snippet below, and
+`result-note.md` against all of them.
 
 1. **The defect is caught** (§3). One test expects an `incompatible types` diagnostic on passing a `Box<T>` with
    `<T extends @Nullable Object>` to a `Box<? extends Object>` in `@NullMarked` code. The existing tests in

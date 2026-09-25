@@ -38,7 +38,7 @@ research/test-authoring/cases/run-nullaway-case.sh \
 
 ## Checks
 
-Read `result.diff` and `result-note.md` against all of them.
+Read the changed test files against the base and `result-note.md` against all of them, as in `nullaway-1834-rewrite`.
 
 1. **Every case survives with its expectation** (§4), as check 1 of `nullaway-1834-rewrite` states it.
 2. **Each case that expects a diagnostic stands with its controls** (§7), in the same source, as check 2 of
