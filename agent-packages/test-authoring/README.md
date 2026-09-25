@@ -37,8 +37,9 @@ rule can be satisfied by a test worth nothing.
   evaluates each input on its own, and, where the check stops at the first mismatch, at most one input per test that
   expects a report and one whose outcome the change moves, counted on the diff and the base commit rather than by how
   the rule is worded, and separate cases otherwise; when several cases may share one harness call, decided by whether
-  that call carries every mismatch and names each case, a property of the harness learned once and proposed for the
-  repository's instructions; a loop over table rows that stops at the first failing row as such a call.
+  that call carries every mismatch and names each case for every kind of mismatch, a property of the harness learned
+  once and proposed for the repository's instructions; a form the instructions accept ahead of the harness; a loop over
+  table rows that stops at the first failing row as such a call.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
@@ -98,7 +99,8 @@ Tests: Go testing with testify require; fake clients from k8s.io/client-go/kuber
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
-Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names it by line, and offers no label.
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names each mismatch, missing or unexpected, by line, and offers no label.
+Tests: JUnit 4 engine; Error Prone's CompilationTestHelper stops at the first mismatch, names a missing marker by line, and offers no label; write its tests as if it reported every mismatch.
 ```
 
 The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
@@ -108,7 +110,10 @@ proposes it in one sentence: to you in a session, or in the pull request descrip
 an instructions file only after you agree, and then it edits the source where that file is generated. It creates no such
 file without being asked. Unattended, in a repository somebody else maintains, and in a review it only proposes the
 line. The `lint(...)` example carries one more fact, which the line owes for a harness that has no reference file in the
-skill. It says whether one call of the harness reports every mismatch and how it names each case.
+skill. It says whether one call of the harness reports every mismatch and how it names each case. The Error Prone
+example also accepts a form ahead of the harness: its maintainers group the cases of one rule in one source for the
+reader, and accept a second run to see the next mismatch until the harness reports them all. The skill then writes the
+tests that way and proposes no change to the harness.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.

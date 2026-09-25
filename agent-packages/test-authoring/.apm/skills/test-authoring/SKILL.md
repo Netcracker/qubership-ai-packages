@@ -55,7 +55,9 @@ Which files, in this order:
    unasked. A change that finds the line present adds to it only a fact about the harness that the change had to
    establish (§7), under the same condition. The line names the major version. For a harness that has no reference file
    here, the project's own or a library's, it also says whether one call of the harness reports every mismatch and how
-   it names each case (§7). It carries no more.
+   it names each case (§7). Maintainers may write their tests as if a harness reported every mismatch, or named each
+   case by content, before it does, and accept a harder diagnosis until the harness does; the line then says so (§7). It
+   carries no more.
 2. **Otherwise the imports of the nearest existing test of the same unit decide** (`org.junit.jupiter` against
    `org.junit.Test`, `org.assertj` against `org.junit.jupiter.api.Assertions`), then the build file. §9 already
    requires reading that test. In a repository with more than one test stack, the stack is the module's, not the
@@ -420,8 +422,12 @@ comment may repeat the rule the message states, and the message may not repeat t
   line: the stack line, or the documentation of a harness the repository owns. Without that agreement, the answer goes
   in the pull request description, or in the review where the task is a review. The next change does not see either, so
   it cites the harness again. Two questions, answered apart: does the report carry every mismatch, and does it name each
-  case without the file? A test that asserts on the result of one act itself, the error list of one validated batch, has
-  no such property to learn, since the writer chooses the assertions. Several expectations on that result go into the
+  case without the file? The stack line may say that the repository's tests are written as if the harness answered yes
+  to either before it does. Every rule of this skill that asks whether the check carries every mismatch or names each
+  case then takes the line's answer, and the change proposes nothing about the harness. The reviewer checks that the
+  line says so. A writer's own preference for fewer tests is not such a line, and neither is the shape of the
+  neighboring tests. A test that asserts on the result of one act itself, the error list of one validated batch, has no
+  such property to learn, since the writer chooses the assertions. Several expectations on that result go into the
   grouped form whose report carries every failure (*Several assertions on one behavior report together*), each with a
   message that names its case where the assertion cannot. Where the assertion library has no grouped form (cargo test,
   Jest, `node:assert`, pytest without a plugin), one assertion compares the whole result with the expected one and
@@ -442,46 +448,52 @@ comment may repeat the rule the message states, and the message may not repeat t
     reported nothing. Two counts decide what shares a test, whatever the wording of the rule: the inputs that expect a
     report, which the diff shows, and the inputs whose outcome the change moves, which a run on the base settles (§1). A
     batch validator that newly applies `a timeout is accepted only when it is a nonnegative integer` rejects `-1` and
-    `"abc"`: those are two cases, and an accepted value is the control of each.  They establish the rule between them,
-    one run of the check is the act, and a failure of either says that this rule moved. A check that stops at the first
-    mismatch costs them a second run and hides nothing about another rule. The test's name states the rule, and each
-    control stands beside the case it controls. Unless the check carries every mismatch, one test holds at most one
-    input that expects a report and at most one input whose outcome the change moves. Usually both are the case; in a
-    fix that removes a false report, the case is silent and its control is the one input that expects a report. A second
-    partition whose outcome the change moves, a timeout that is not a number beside a negative one, is a second case
-    with controls of its own, however broadly the specification words the rule. Under a check that stops at the first
-    mismatch it is a second test, since the first mismatch would hide the second. Each such test names the rule and its
-    case's partition, `a timeout is accepted only when it is a number` and `a timeout is accepted only when it is not
-    negative`, so that the report tells the tests of one rule apart. This form needs an act that evaluates several
-    inputs at once: one compilation or one validation of a batch. The form also needs the act to evaluate each input on
-    its own, so that each case has the outcome it would have alone. An atomic batch does not evaluate each record on its
-    own: it rolls back the valid record along with the rejected one. A compilation does not either where one declaration
-    changes what the compiler infers for the next. Where the unit takes one input per call, the case and its control are
-    separate cases, since each call on the unit is an act of its own (§9). A loop or a grouped assertion over such a
-    unit makes one call per case and changes nothing in that. Where the inputs affect each other they are separate cases
-    too, since each outcome then depends on its neighbor. Separate cases take a form that the bullet *Cases that share a
-    setup write it once* offers where they differ in a value, and each writes its input out whole where they differ in
-    structure. The reviewer counts the inputs in the test that expect a report and the inputs whose outcome the change
-    moves, and finds at most one of each, unless the check carries every mismatch. The reviewer checks that every other
-    case narrowly misses that partition's condition, and that each expectation would stand with the other cases removed
-    from the input. A case whose outcome a different condition decides moves to a test of its own, or to the form of the
-    sub-bullet *Where the check carries every mismatch under a name*. A name whose conjunction, `and` or `but`, joins
-    the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`, `accepts a subtype but
-    rejects a nullable use`) names two tests, and the test is split. An `and` inside the condition of one rule stays
-    (`is rejected only when its bound admits null and the requirement does not`), and so does one between two
-    observations of one act (`serves the second read from the cache and queries the backend once`).
+    `"abc"`: those are two cases, and an accepted value is the control of each. The test's name states the rule, and
+    each control stands beside the case it controls. Where the check carries every mismatch, both cases and their
+    controls may share one test, since one run reports each of them. Unless the check carries every mismatch, one test
+    holds at most one input that expects a report and at most one input whose outcome the change moves. Usually both are
+    the case; in a fix that removes a false report, the case is silent and its control is the one input that expects a
+    report. A second partition whose outcome the change moves, a timeout that is not a number beside a negative one, is
+    a second case with controls of its own, however broadly the specification words the rule. Under a check that stops
+    at the first mismatch it is a second test, since the first mismatch would hide the second. Each such test names the
+    rule and its case's partition, `a timeout is accepted only when it is a number` and `a timeout is accepted only when
+    it is not negative`, so that the report tells the tests of one rule apart. This form needs an act that evaluates
+    several inputs at once: one compilation or one validation of a batch. The form also needs the act to evaluate each
+    input on its own, so that each case has the outcome it would have alone. An atomic batch does not evaluate each
+    record on its own: it rolls back the valid record along with the rejected one. A compilation does not either where
+    one declaration changes what the compiler infers for the next. Where the unit takes one input per call, the case and
+    its control are separate cases, since each call on the unit is an act of its own (§9). A loop or a grouped assertion
+    over such a unit makes one call per case and changes nothing in that. Where the inputs affect each other they are
+    separate cases too, since each outcome then depends on its neighbor. Separate cases take a form that the bullet
+    *Cases that share a setup write it once* offers where they differ in a value, and each writes its input out whole
+    where they differ in structure. The reviewer counts the inputs in the test that expect a report and the inputs whose
+    outcome the change moves, and finds at most one of each, unless the check carries every mismatch. The reviewer
+    checks that every other case narrowly misses that partition's condition, and that each expectation would stand with
+    the other cases removed from the input. A case whose outcome a different condition decides moves to a test of its
+    own, or to the form of the sub-bullet *Where the check carries every mismatch under a name*. A name whose
+    conjunction, `and` or `but`, joins the outcomes of two inputs or two scenarios (`rejects a negative count and
+    accepts zero`, `accepts a subtype but rejects a nullable use`) names two tests, and the test is split. An `and`
+    inside the condition of one rule stays (`is rejected only when its bound admits null and the requirement does not`),
+    and so does one between two observations of one act (`serves the second read from the cache and queries the backend
+    once`).
   - **Where the check stops at the first mismatch, split between the cases.** Cases of different rules in one such check
     hide each other, and so do two inputs of one rule that each expect a report, or that each have an outcome the change
     moves. Each gets its own test, with its controls.
-  - **Where the check names a case by a line number** inside an input the test embeds, only a reader holding the file
-    can place it. This holds whether the check carries every mismatch or stops at the first. Give each case a label the
-    report prints where the harness offers one. Where it offers none, the test name is all the report carries besides
-    the line. A case with its controls is named by their rule. Cases of several rules are split between rules, and under
-    a check that stops at the first mismatch the cases of one rule are split too (the sub-bullet *Where the check stops
-    at the first mismatch, split between the cases*). For a test that still holds several cases, the missing label is a
-    limitation that no offered form removes, so it earns the follow-up named in the pull request. Where the stack line
-    or the harness's documentation already records that the harness offers no label, the follow-up has been proposed,
-    and the pull request does not repeat it.
+  - **Where the check names a case only by a line number** inside an input the test embeds, only a reader holding the
+    file can place it. This holds whether the check carries every mismatch or stops at the first. A report names a case
+    by content where it prints text that tells the case apart from the other cases of the test: a label, the source
+    line, or the expected text of a marker. A harness can do that for one kind of mismatch and not for another. It may
+    print the source line of an unexpected finding, and only the line number of an expected finding that is missing,
+    which is how a regression test usually fails. The report names the cases of a test only where it does so for every
+    kind of mismatch the test can produce. Printed text tells cases apart only where it differs between them. A case and
+    its control often sit on identical lines and differ in a declaration above them, and there only a label tells them
+    apart. Give each case a label the report prints where the harness offers one. Where it offers none, the test name is
+    all the report carries besides the line. A case with its controls is named by their rule. Cases of several rules are
+    split between rules, and under a check that stops at the first mismatch the cases of one rule are split too (the
+    sub-bullet *Where the check stops at the first mismatch, split between the cases*). For a test that still holds
+    several cases, the missing label is a limitation that no offered form removes, so it earns the follow-up named in
+    the pull request. Where the stack line or the harness's documentation already records that the harness offers no
+    label, the follow-up has been proposed, and the pull request does not repeat it.
   - **Where the check carries every mismatch under a name,** the shared check is one runner test with named cases, and
     the check's own report gives each case the name that the bullet *Cases that share a setup write it once* asks for.
     The runner test then takes the container's part in the four-part table of this section: its name states what the
@@ -534,28 +546,29 @@ before the test is. Each cause below has one fix, and every cause but the last i
 - **A new test takes the shape of its neighbors.** Where the file writes one case per method, several cases in one
   source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the
   neighbors' shape breaks this skill, the skill wins: the new test takes the shape the skill asks for, and the pull
-  request names the section. Three such shapes are common, all from §7. Independent cases hide each other in one check
-  that stops at the first mismatch or names its cases only by a line number; a loop over a table of literal cases in one
-  test, whose assertion stops at the first failing row, is such a check. A long setup is copied into every test where §7
-  offers a form without the copy. A case and its control that one act could evaluate are written as two tests with two
-  copies of the input, at any length. A case with its controls in one check is not one of them (§7), and neither is a
-  case and its control of separate acts whose setup is short enough to repeat (§7's sub-bullet *A short setup is
-  repeated*): the new test takes that shape. A reference file may name the ecosystem's idiom for a table and say which
-  new cases join it: those for which the idiom reports each case apart and asserts what §5 to §7 ask. Any other new case
-  takes the smallest form that does, beside the table, and the table keeps its rows and its assertions. Go's `wantErr
-  bool` table takes a new row whose input is accepted, and not a new row that expects an error. The neighbors stay as
-  they are unless the task is to rewrite them, with one exception: an existing test of the same specification rule, the
-  case the new control belongs to or the control of the new case, is the twin. The new case joins it, inside the twin's
-  input where one act evaluates both (§7), or through a helper that both now call, and the twin's expectations do not
-  change. Its name changes where the test now holds a case with its controls and has to state their rule (§7). §7's
-  exceptions hold for a twin too. A short setup of separate acts is repeated. Inputs that differ in structure and cannot
-  stand side by side are each written out whole. A new case beside a twin that already holds an input that expects a
-  report, or one whose outcome the change moves, is a test of its own under a check that stops at the first mismatch,
-  with the controls it needs written in its input (§7's sub-bullet *A case and its controls are not independent*). A
-  twin that is a row of an idiom table the new case may not join stays in its table, and the two share a long setup
-  through a helper that both call. A twin that reaches its input through a helper that assembles it from pieces of
-  syntax is not joined: the new test writes its input out whole, and the pull request names the twin and the helper. A
-  case of another specification rule that shares the setup takes the helper, or writes its input out (§7).
+  request names the section. The neighbors' shape does not stand in for a stack line that accepts a form ahead of the
+  harness (§7). Three such shapes are common, all from §7. Independent cases hide each other in one check that stops at
+  the first mismatch or names its cases only by a line number; a loop over a table of literal cases in one test, whose
+  assertion stops at the first failing row, is such a check. A long setup is copied into every test where §7 offers a
+  form without the copy. A case and its control that one act could evaluate are written as two tests with two copies of
+  the input, at any length. A case with its controls in one check is not one of them (§7), and neither is a case and its
+  control of separate acts whose setup is short enough to repeat (§7's sub-bullet *A short setup is repeated*): the new
+  test takes that shape. A reference file may name the ecosystem's idiom for a table and say which new cases join it:
+  those for which the idiom reports each case apart and asserts what §5 to §7 ask. Any other new case takes the smallest
+  form that does, beside the table, and the table keeps its rows and its assertions. Go's `wantErr bool` table takes a
+  new row whose input is accepted, and not a new row that expects an error. The neighbors stay as they are unless the
+  task is to rewrite them, with one exception: an existing test of the same specification rule, the case the new control
+  belongs to or the control of the new case, is the twin. The new case joins it, inside the twin's input where one act
+  evaluates both (§7), or through a helper that both now call, and the twin's expectations do not change. Its name
+  changes where the test now holds a case with its controls and has to state their rule (§7). §7's exceptions hold for a
+  twin too. A short setup of separate acts is repeated. Inputs that differ in structure and cannot stand side by side
+  are each written out whole. A new case beside a twin that already holds an input that expects a report, or one whose
+  outcome the change moves, is a test of its own under a check that stops at the first mismatch, with the controls it
+  needs written in its input (§7's sub-bullet *A case and its controls are not independent*). A twin that is a row of an
+  idiom table the new case may not join stays in its table, and the two share a long setup through a helper that both
+  call. A twin that reaches its input through a helper that assembles it from pieces of syntax is not joined: the new
+  test writes its input out whole, and the pull request names the twin and the helper. A case of another specification
+  rule that shares the setup takes the helper, or writes its input out (§7).
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for one value, write the helper
   that takes that value and have the old one call it, so that the existing tests stay as they are. Two helpers whose
@@ -576,7 +589,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; which inputs of a test have an outcome the change moves (§7); whether a harness call carries every mismatch and names each case, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; which inputs of a test have an outcome the change moves (§7); whether a harness call carries every mismatch and names each case, where no reference, stack line, or documentation of the harness records it, answered for each kind of mismatch: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether the act of one check evaluates each input on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -632,6 +645,7 @@ Run this over a test you wrote or one you are reviewing.
 - Where one harness call covers several independent cases, does a reference, the stack line, or the harness's
   documentation say whether that call carries every mismatch and names each case, or does this change establish it, by a
   run or a cited line of the harness, and propose it where §0 allows, or put it in the pull request or the review (§7)?
+  Where the test is written as if the harness did either before it does, does the stack line say so (§0, §7)?
 - Do several expectations on the result of one act use the grouped form that reports every failure, each with a message
   that names its case, or, where the library has none, one assertion on the whole result reduced to the fields the
   behavior defines (§7)?
@@ -646,8 +660,8 @@ Run this over a test you wrote or one you are reviewing.
   could name each row (§7)?
 - Where a case and its controls share one check, would each expectation stand with the other cases removed from the
   input (§7)?
-- Does a check that names its cases only by an embedded line number give them labels the report prints, whether it
-  carries every mismatch or stops at the first (§7)?
+- Does a check that names its cases only by an embedded line number, for any kind of mismatch the test can produce, give
+  them labels the report prints, whether it carries every mismatch or stops at the first (§7)?
 - Where the harness offers no label, are the cases of several rules split between rules, and under a check that stops at
   the first mismatch the cases of one rule too, and does the pull request name the missing label as the follow-up,
   unless the stack line or the harness's documentation already records it (§7)?
@@ -800,9 +814,9 @@ report still names each case.
 
 The harness lints one source and matches each `// expect:` marker against a finding on the next line. A finding on a
 line with no marker fails the test too, so a line without a marker expects no finding. The harness stops at the first
-marker without a finding and names it by line number. It offers no label for a marker, so the report carries the test's
-name and a line. The repository's stack line records all three facts, so the pull request does not propose the label
-again (§7).
+marker without a finding and names it by line number, and it names an unexpected finding by line number too. It offers
+no label for a marker, so the report carries the test's name and a line. The repository's stack line records these
+facts, so the pull request does not propose the label again (§7).
 
 **Before**: the case and its control are two tests, and each carries its own copy of the class. The silent test
 establishes the rule only while the reporting one fires on the same source, and nothing keeps the two sources the same.

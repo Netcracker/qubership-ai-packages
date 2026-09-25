@@ -1,7 +1,7 @@
-on the fix: 60 tests ran, 0 failed
-on the base: 60 tests ran, 7 failed
-  WildcardTests.aTypeVariableFailsAWildcardBoundedByAnotherOnlyWhenItAdmitsNullAndTheOtherDoesNot
+on the fix: 62 tests ran, 0 failed
+on the base: 62 tests ran, 7 failed
   WildcardTests.aTypeVariableIsRejectedOnlyWhenItsBoundAdmitsNullAndTheRequirementDoesNot
+  WildcardTests.aTypeVariableIsRejectedByAWildcardBoundedByAnotherTypeVariableOnlyWhenItAdmitsNull
   WildcardTests.aTypeVariableBoundedByAnotherWhoseBoundAdmitsNullFailsANonNullWildcardRequirement
   WildcardTests.anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported
   WildcardTests.aWildcardActualBoundedByATypeVariableThatAdmitsNullFailsANonNullWildcardRequirement

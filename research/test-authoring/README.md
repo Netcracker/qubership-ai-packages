@@ -113,7 +113,7 @@ by `FILTER_REGEX_EXCLUDE` in `.github/super-linter.env`, as the other research d
 
 A case is a regression test for the skill: a repository pinned at a tag, the task a session is given there, the change
 each model made with the skill, and checks. The procedure for running them is in
-[`agent-packages/AGENTS.md`](../../agent-packages/AGENTS.md#testing-a-skill-against-its-cases). Both cases so far come
+[`agent-packages/AGENTS.md`](../../agent-packages/AGENTS.md#testing-a-skill-against-its-cases). All cases so far come
 from one pull request on one compiler-like harness, and a rule checked only against them can still break a service, a
 database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lists the kinds to read an edit against.
 
@@ -121,9 +121,10 @@ database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lists the kind
 | --- | --- |
 | [`cases/nullaway-1834-rewrite/`](cases/nullaway-1834-rewrite/README.md) | The tests of uber/NullAway#1834 as submitted, each case and its control a separate copy of one source: a rewrite that keeps the copies, drops a case, puts two cases that expect a diagnostic into one check that stops at the first mismatch, or assembles the source from pieces of syntax |
 | [`cases/nullaway-1834-from-scratch/`](cases/nullaway-1834-from-scratch/README.md) | The same production change with no tests: a defect left uncaught, a behavior the commit message names left without a case, and the same failures of form |
+| [`cases/nullaway-1834-rewrite-harness-ahead/`](cases/nullaway-1834-rewrite-harness-ahead/README.md) | The rewrite, where NullAway's instructions ask for tests written as if the harness reported every mismatch: a split by the harness's current behavior that the maintainers declined, or a proposal to change the harness they did not ask for |
 
-`cases/run-nullaway-case.sh` runs either case, and `cases/check-nullaway-case.py` prints the counts their checks rely
-on.
+`cases/run-nullaway-case.sh` runs any of them, with the case's `instructions.md` added to NullAway's instructions where
+the case has one, and `cases/check-nullaway-case.py` prints the counts their checks rely on.
 
 The writer may run the build. On 2026-09-25 the four cells ran on skill 1.1.0 twice, one run each: once with the prompt
 forbidding the build and once allowing it. Every writer that was allowed ran the tests. The cost barely moved, and the

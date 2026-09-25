@@ -5,7 +5,8 @@
 # installed copy of the skill, no user CLAUDE.md or rule, and none of this
 # repository's AGENTS.md files reach the session. Safe mode drops the clone's
 # own CLAUDE.md too, so the script appends it to the system prompt, where a
-# consumer's session would have loaded it. In NullAway that file is a symlink
+# consumer's session would have loaded it, followed by the case's
+# instructions.md where the case has one. NullAway's CLAUDE.md is a symlink
 # to AGENTS.md and imports nothing.
 #
 # After the session, the script builds the test classes the session changed,
@@ -47,9 +48,16 @@ fi
 git clone -q --depth 2 --branch "$(cat "$case_dir/tag")" https://github.com/vlsi/NullAway.git "$work/nullaway"
 
 sed "s|<skill>|$work/skill|g" "$case_dir/prompt.md" > "$work/prompt.txt"
+# A case may add lines to NullAway's instructions, as its maintainers would
+# write them there; they reach the session with the rest of CLAUDE.md.
+cat "$work/nullaway/CLAUDE.md" > "$work/instructions.md"
+if [ -f "$case_dir/instructions.md" ]; then
+  printf '\n' >> "$work/instructions.md"
+  cat "$case_dir/instructions.md" >> "$work/instructions.md"
+fi
 (cd "$work/nullaway" &&
   claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
-    --append-system-prompt-file CLAUDE.md --output-format json \
+    --append-system-prompt-file "$work/instructions.md" --output-format json \
     --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.json"
 
 ran_tests=no

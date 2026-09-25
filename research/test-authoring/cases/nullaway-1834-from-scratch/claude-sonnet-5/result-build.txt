@@ -1,5 +1,6 @@
-on the fix: 49 tests ran, 0 failed
-on the base: 49 tests ran, 3 failed
-  WildcardTests.extendsConcreteWildcardAcceptsBareTypeVariableActualOnlyWhenItsBoundIsNonNull
-  WildcardTests.extendsAnnotatedNonNullTypeVariableWildcardRejectsNullableBoundActual
-  WildcardTests.extendsTypeVariableWildcardRejectsNullableBoundActualUnlessRequirementAdmitsNull
+on the fix: 166 tests ran, 0 failed
+on the base: 166 tests ran, 4 failed
+  GenericsTests.overrideReturnTypeVariableViolatesNonNullExtendsWildcard
+  WildcardTests.typeVariableActualWithNullableBoundRejectedByExtendsTypeVariableWildcard
+  WildcardTests.typeVariableActualWithNullableBoundRejectedByExtendsWildcard
+  WildcardTests.typeVariableActualRejectedByExplicitNonNullExtendsWildcard

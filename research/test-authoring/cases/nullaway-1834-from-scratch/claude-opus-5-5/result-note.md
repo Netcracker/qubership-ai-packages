@@ -1,36 +1,38 @@
-I added five tests to `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, right after `wildcardActualArgumentNoInference`. All five fail on the commit before your fix and pass on it; the full `:nullaway:test` and `:nullaway:buildWithNullAway` both pass. Production code is unchanged and nothing is committed.
+I added six regression tests, one for each way the fix can now report. All six fail on the base commit `09fdea5` and pass on `614efcf`. I didn't change production code or commit anything. The full `./gradlew :nullaway:test` and `./gradlew :nullaway:buildWithNullAway` both pass.
 
-Here is the message for the pull request author:
+**Message for the PR author**
 
 ---
 
-**Tests added for "Report a type argument whose bound admits null where a non-null wildcard is required"**
+**Tests added** (small tests, run through `CompilationTestHelper`)
 
-Each test compiles one source through the existing `makeHelper()` and holds one call that must now be reported, next to calls that differ from it in one respect and must stay silent. That layout is deliberate: Error Prone's `CompilationTestHelper` (2.50.0) stops at the first mismatch it finds and names it only by line number (`DiagnosticTestHelper.java:264-268` and `:288`). So each test holds only one call that should be reported, and the test name states the rule.
+`WildcardTests`:
+- `typeVariableArgumentIsRejectedByNonNullWildcardOnlyWhenItsBoundAdmitsNull`: a `Box<N>` with `N extends @Nullable Object` passed to `Box<? extends Object>` is reported. Two controls stay silent: a `Box<M>` whose bound is non-null, and a `Box<@NonNull N>` (a use-site annotation beats the bound).
+- `wildcardArgumentIsRejectedByNonNullWildcardOnlyWhenItsTypeVariableBoundAdmitsNull`: the same rule for `Box<? extends N>`, with `Box<? extends M>` as the control.
+- `typeVariableArgumentIsRejectedByNonNullWildcardOnlyWhenDeclaredInUnmarkedCode`: the unannotated-declaration branch of `typeVariableUpperBound`. A `U` declared in a `@NullUnmarked` class and used in a `@NullMarked` method is reported; the same `U` declared in marked code is the control.
+- `typeVariableArgumentIsRejectedByWildcardOfNonNullTypeVariableOnlyWhenItsBoundAdmitsNull`: a `Box<S extends @Nullable T>` passed to `Box<? extends T>` with `T` non-null is reported. The silent controls are `Box<R extends T>` and `Box<T>`, plus a requirement whose `T extends @Nullable Object` accepts the same `S`.
+- `typeVariableArgumentIsRejectedByWildcardOfNonNullUseOnlyWhenItsBoundAdmitsNull`: a `Box<T>` passed to `Box<? extends @NonNull T>` is reported; `Box<@NonNull T>` is the control.
 
-| Test | Reported call | Calls that must stay silent |
-| --- | --- | --- |
-| `typeVariableArgumentMeetsNonNullWildcardOnlyWhenItsBoundExcludesNull` | `Foo<N>` with `N extends @Nullable Object` passed to `Foo<? extends Object>` | `Foo<M>` (non-null bound); `Foo<@NonNull N>` |
-| `...ExcludesNullInUnmarkedCode` | `Foo<U>`, where `U` is declared in a `@NullUnmarked` class | `Foo<@NonNull U>` |
-| `wildcardArgumentBoundedByTypeVariableMeetsNonNullWildcardOnlyWhenTheVariableExcludesNull` | `Foo<? extends N>` passed to `Foo<? extends Object>` | `Foo<? extends M>` |
-| `typeVariableArgumentMeetsWildcardOfAnotherVariableOnlyWhenNullCannotEnterThroughItsBound` | `Foo<S>` with `S extends @Nullable E` passed to `Foo<? extends E>` | `Foo<R extends E>`; `Foo<E>`; the same `S` when `E` itself admits null |
-| `typeVariableArgumentMeetsNonNullTypeVariableWildcardOnlyWhenItsBoundExcludesNull` | `Foo<N>` passed to `Foo<? extends @NonNull N>` | `Foo<M>`; `Foo<@NonNull N>` |
+`GenericsTests`:
+- `overrideReturningTypeVariableIsRejectedByWildcardOfNonNullUseOnlyWhenItsBoundAdmitsNull`: the override path the CHANGELOG promises. Returning `List<V>` where the overridden method returns `List<? extends @NonNull V>` reports `mismatched type parameter nullability`; `List<@NonNull V>` is the control. It is the only test that reaches the visitor through override checking.
 
-**Failing before the fix:** on `HEAD~1` with these tests, each of the five fails on its reported line with `Did not see an error on line N matching incompatible types: … There were no errors.` The missing report is the bug itself.
+**Evidence**
+- **Red on the base commit:** every test fails at its expected line with `Did not see an error on line N matching … There were no errors.`, which is the bug's symptom (the silence). The controls were silent on the base too, so the fix moves the outcome of exactly one input per test.
+- **Mutation runs**, done by hand on a scratch copy and run against the `jspecify` tests. Each of these fails at least one new test:
+  - dropping `admitsNull(lhsBound)`
+  - dropping `!admitsNull(rhsUpperBound)`
+  - dropping the `lhsBound instanceof Type.TypeVar` branch
+  - ignoring use-site annotations in `admitsNull`
+  - ignoring use-site annotations in `typeComparedForNullness`
+  
+  Before the new tests, the `lhsBound instanceof Type.TypeVar` branch and both use-site-annotation mutants were caught by nothing.
 
-**Mutants of the changed lines:** I made each change by hand and ran the jspecify tests, confirming each mutant compiled:
-- Comparing the actual's bound for a type-variable requirement fails the fourth test with a false report on `Foo<E>` when `E` admits null.
-- Replacing `admitsNull(lhsBound)` with `true` fails the fourth and fifth tests. Replacing it with `false` fails the fourth test and four existing tests.
-- Replacing `!admitsNull(rhsUpperBound)` with `true` fails the fourth and fifth tests.
-- Using `getUpperBound()` in place of `typeVariableUpperBound` fails the unmarked-code test.
-- Ignoring `@NonNull` at the use site fails the three tests that have a `@NonNull` call, each on that call's line.
+**Shape.** The rest of `WildcardTests` puts several `// BUG:` markers in one source. Each new test holds exactly one input that expects a report, with its silent controls beside it. The reason is the harness: `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` (error_prone_test_helpers 2.50.0, lines 264–289) stops at the first mismatch. For a missing diagnostic it prints the marker text, and for an unexpected one the line number plus the source line. So a second reporting input in the same source would be hidden whenever the first one fails (test-authoring skill §7, §9).
 
-**Not resolved: the captured-actual exception.** Removing `rhsTypeArgument instanceof Type.CapturedType ||` leaves all 1,104 tests in `:nullaway:test` green. I added a temporary print to that branch. Every captured actual that reached it, from existing tests and from several inputs I tried, kept its `@NonNull` on the bound (`capture of ? extends @NonNull V`, bound `@NonNull V`). So the exception changed no outcome. I couldn't reproduce the annotation loss the commit message describes. Either the input that produced it should become a test, or the exception should be justified another way.
-
-**Proposed, not done:**
-1. **Diagnostic text.** The message drops `@NonNull` from the requirement: `Test.Foo<N> cannot be converted to Test.Foo<? extends N>`, when the parameter is `Foo<? extends @NonNull N>`. Read alone, the report looks wrong, since `Foo<N>` does fit `Foo<? extends N>`. The fifth test matches today's text and would need updating if the message is fixed.
-2. **Override checks.** The changelog says override checks now report too (`List<V>` returned where `List<? extends @NonNull V>` is overridden). That goes through the same containment code, but no test pins it.
-3. **Library-model route.** A type variable whose bound admits null only because of a library model reaches the new code through `typeVariableUpperBound`. That route has no test here; it would need a test that supplies library models.
-4. **Stack line for `AGENTS.md`.** Something like: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper with "// BUG: Diagnostic contains:" markers, which stops at the first mismatch and names it by line number only (no per-marker label)`. I haven't edited `AGENTS.md`; I'll add the line if you want it.
+**Not done, proposed**
+1. **Unresolved surviving mutant.** Removing `rhsTypeArgument instanceof Type.CapturedType ||` breaks nothing: not the full `:nullaway:test` run (1105 tests), not `buildWithNullAway`, and not my probes. The probes passed `Box<? extends @NonNull T>` through parameters, returns, locals and member substitution such as `s.values()` and `subList`. I can't tell whether the exception is unreachable or needs a specific input. Could you add the input that motivated it as a test, or remove the clause if no such input exists?
+2. **The message drops `@NonNull`.** For a `? extends @NonNull T` requirement it prints `Box<T> cannot be converted to Box<? extends T>`, which reads as if the two types were compatible. My marker matches that text as it is. I'd suggest a follow-up that keeps the annotation in the message.
+3. **Library-model branch untested.** The `onOverrideClassTypeVariableUpperBound` / `onOverrideMethodTypeVariableUpperBound` branch of `typeVariableUpperBound` has no test on the new type-variable path. It needs a library-model handler setup, so I left it out.
+4. **Proposed line for `CLAUDE.md`/`AGENTS.md`** (I didn't edit either): `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatch and names a missing diagnostic by its marker text and an unexpected one by line and source line.`
 
 ---

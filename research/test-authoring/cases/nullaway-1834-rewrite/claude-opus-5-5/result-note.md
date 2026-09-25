@@ -1,42 +1,42 @@
-I rewrote the 20 tests from `d55c150` as 12 in `WildcardTests.java`. Production code is untouched and nothing is committed. `WildcardTests` passes on the fixed code (57 tests). I did not run `:nullaway:buildWithNullAway`, since only test code changed. The note for the author follows.
+I rewrote the 21 tests that `d55c150` added to `WildcardTests.java` as 12 tests. I didn't touch production code and didn't commit. `./gradlew :nullaway:test --tests "com.uber.nullaway.jspecify.WildcardTests"` and `./gradlew :nullaway:buildWithNullAway` both pass.
 
 ---
 
-**To the author of the change**
+**Message for the PR author**
 
-**What I changed and why**
+**What I changed in the tests**
 
-I checked how the test harness reports failures first, because that decides how cases can be grouped. Error Prone's `CompilationTestHelper.doTest()` stops at the first mismatch: a missing `BUG:` marker or an unexpected diagnostic. It names the failing case only by its line number, and it offers no way to give a case a label (`DiagnosticTestHelper.java:223-291` in `error_prone_test_helpers` 2.50.0).
+I rewrote the 21 tests as 12. No expectation changed: every `// BUG: Diagnostic contains:` marker is still there, word for word. There are now two new inputs that expect no report, and one test is merged into another.
 
-Your 20 tests put each case and each of its controls in a separate test, each with its own copy of the class. One compilation can check a case and its controls together. So I grouped them: each test now holds one rule, at most one input that expects a report, and controls that miss the rule's condition in exactly one respect. Each test name states the rule it checks.
-
-| New test | Case (reported) | Controls (silent) | Replaces |
-| --- | --- | --- | --- |
-| `…OnlyWhenItsBoundIsAnnotatedNullable` | `Box<N extends @Nullable Object>` → `? extends Object` | bound without `@Nullable`; `@NonNull N` at the use; nullable wildcard; `Box<?>` | 1, 2, 3, 8, 12 |
-| `…OnlyWhenItIsDeclaredInNullUnmarkedCode` | `T` of a `@NullUnmarked` holder | the same holder without `@NullUnmarked` (new control) | 9 |
-| `…OnlyWhenItsBoundIsATypeVariableThatAdmitsNull` | `S extends N`, where `N` admits null | `R extends M`, where `M` does not (new) | 10 |
-| `aWildcardIsRejected…ATypeVariableThatAdmitsNull` | `Box<? extends N>` | `Box<? extends M>` (new) | 20 |
-| `aNullableTypeVariableUseIsRejectedByANonNullWildcardWhateverItsBound` | `Box<@Nullable T>` | `Box<T>`; nullable wildcard | 4, 5 |
-| `…BoundedByAnotherOnlyWhenItAdmitsNullAndTheOtherDoesNot` | `S extends @Nullable T` → `? extends T`, where `T` cannot be null | `R extends T`; the same three calls in a holder whose `T` admits null | 6, 11, 14, 15 |
-| `…BoundedByItselfAnnotatedNonNullOnlyWhenItsUseAdmitsNull` | `Box<T>` → `? extends @NonNull T` | `Box<@NonNull T>` (new) | 18 |
-| `aNullableTypeVariableUseIsRejectedByAWildcardBoundedByThatVariable` | `Box<@Nullable T>` → `? extends T` | `Box<T>` (new) | 13 |
-| `anOverrideIsReportedOnly…` | override returning `List<V>` | override returning `List<@NonNull V>` (new) | 19 |
-| `aCapturedTypeArgumentMeets…` | — | both captured cases in one interface | 16, 17 |
-| `anInferredTypeArgumentMeets…` | — | unchanged except the name | 7 |
-
-Grouping follows the harness: two reports in one compilation would hide each other, so cases of the same rule that each draw a report stay in separate tests.
+- **Each new report now sits in one source with the cases that must stay silent.** Before, a reported case and its silent counterpart were two tests with two copies of the class. A silent test only proves the rule while its twin fires on the same code, and nothing kept the two copies the same. Error Prone compiles all of them in one run, so they belong together:
+  - A bound that admits null vs. one that doesn't, against `? extends Object`, `? extends @Nullable Object` and `?`.
+  - A `@Nullable T` use vs. a `@NonNull T` use.
+  - `@Nullable T` vs. bare `T`, against `? extends T`.
+  - `S extends @Nullable T` vs. `S extends T`, against `? extends T`.
+  - A bare `T` vs. `@NonNull T`, against `? extends @NonNull T`.
+- **Four reported cases had no silent counterpart, so I added one each**, differing from the case in one respect:
+  - A `@NullMarked` holder next to the `@NullUnmarked` one.
+  - `<T, S extends T>` with a non-null `T`.
+  - `Box<? extends T>` with a non-null `T`.
+  - An override returning `List<@NonNull V>`.
+- **Two inputs are new.**
+  - `NullableT.nullableSub`: `S extends @Nullable T` where `T` itself admits null, which must be accepted. It turns red if `admitsNull(lhsBound) ||` is removed.
+  - The `List<@NonNull V>` override control from the list above.
+- **Each test still holds at most one input that expects a report.** I checked the harness source: `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` (error_prone_test_helpers 2.50.0, lines 264–268 and 288) stops at the first mismatch. It identifies the mismatch by line number only, whether a report is missing or unexpected, and there is no way to label a marker. That's why cases of different rules stay in separate tests. Examples:
+  - The `@NullUnmarked` declaration and the `S extends T` chain are separate from the plain `@Nullable` bound.
+  - The override is separate from the call-site checks.
+- **Names now state the rule the test establishes.** For example, `aTypeVariableIsRejectedOnlyWhenItsBoundAdmitsNullAndTheWildcardBoundDoesNot` instead of the name of one input.
+- **Unchanged:** `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariableUnderInference`, `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement` and `aCapturedTypeArgumentMeetsABareTypeVariableRequirement`. They guard against false reports in the inference and capture paths, and none of them has a case to pair with.
 
 **Evidence**
 
-- **Pre-fix code:** I ran the new tests against the production code from `HEAD~1`. Exactly the 7 tests whose report the fix adds go red, and each fails with `Did not see an error on line N matching …` on its own case. Your original 7 tests of the same cases also go red there. The other tests pass on both versions.
-- **Mutants:** I tried three mutants of `CheckIdenticalNullabilityVisitor`, and the tests catch all three:
-  - Dropping the exception for captured types breaks the captured test.
-  - Removing the branch for requirements that name a type variable breaks both `? extends T` tests and the captured test.
-  - Ignoring the annotation written on a type-variable use breaks the `@Nullable`-use test, and the `@NonNull`-use control in the first test.
+- **Red on the base commit.** I ran the new tests against the production code of `HEAD~1`. Exactly the 7 tests whose report is new failed, each with `Did not see an error on line N matching <the expected diagnostic>`. The two tests whose report existed before the fix stayed green, as expected: `@Nullable T` against a non-null wildcard, and against `? extends T`.
+- **Mutations of `extendsBoundContains`**, applied one at a time and reverted:
+  - Removing `admitsNull(lhsBound) ||` fails the subtype-variable test.
+  - Removing `!hasNullnessAnnotation` in `typeComparedForNullness` fails the use-site annotation test.
+  - Removing the `CapturedType` exception fails only the existing `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement`. I had tried a direct `Box<? extends @NonNull T>` pass-through as a control, but it stayed green under that mutation, so I dropped it.
 
-**Proposed, not done**
+**What I propose and did not do**
 
-1. **A stack line for `CLAUDE.md` / `AGENTS.md`**, for example: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper, whose doTest() stops at the first mismatch and names a case only by line number`. That tells the next author how to group cases without re-reading the harness source.
-2. **A way to label cases in the harness.** Error Prone's `BUG: Diagnostic contains:` marker has no label, so a failure reads `line 13` and you have to open the file to see which case it is. This would be a request against Error Prone. I couldn't check their tracker for an existing report.
-3. **A possible missed report.** While probing, I found that returning a captured `Map<? extends K, ? extends V>` (with `V extends @Nullable Object`) where `Map<? extends K, ? extends @NonNull V>` is required draws no report. The exception for captured types seems to let this through. I did not add a test, because the expected behavior is a decision for you. If it should be reported, it belongs as the case in `aCapturedTypeArgumentMeets…`.
-4. **Two silent cases none of my three mutants catches:** `anInferredTypeArgumentMeets…` and the bare captured `pass()` case. I kept both. If they came from a failure you saw during development, a one-line comment naming that failure would tell a reviewer what they guard. If they didn't, they could be dropped.
+- **A stack line in `AGENTS.md`/`CLAUDE.md`**, if the maintainers agree: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatched marker and names it by line number only, with no label.`
+- **A follow-up against Error Prone:** an optional label on a `// BUG: Diagnostic contains:` marker that the failure message prints. Until then, a failing test here is identified by the test name plus a line number inside the embedded source. I couldn't search the Error Prone tracker for an existing issue because this session had no network access.
