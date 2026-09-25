@@ -1,0 +1,23 @@
+file://<probe>/tests/missing-at-import.test.mjs:1
+import { noSuchExport } from 'node:test';
+         ^^^^^^^^^^^^
+SyntaxError: The requested module 'node:test' does not provide an export named 'noSuchExport'
+    at <node internals>
+
+Node.js v<version>
+✖ tests/missing-at-import.test.mjs (<duration>)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/missing-at-import.test.mjs:1:1
+✖ tests/missing-at-import.test.mjs (<duration>)
+  'test failed'
+exit code: 1
