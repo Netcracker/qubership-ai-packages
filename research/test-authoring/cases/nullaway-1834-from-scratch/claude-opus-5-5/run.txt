@@ -1,4 +1,4 @@
-cost_usd: 1.81
-turns: 34
-duration_s: 1351
+cost_usd: 1.64
+turns: 28
+duration_s: 584
 writer_ran_tests: yes

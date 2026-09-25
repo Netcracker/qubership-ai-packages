@@ -1,5 +1,5 @@
-on the fix: 49 tests ran, 0 failed
-on the base: 49 tests ran, 3 failed
-  WildcardTests.extendsWildcardWithTypeVariableBoundComparesActualAsWritten
-  WildcardTests.extendsWildcardWithNonNullAnnotatedTypeVariableBoundRejectsNullableBoundActual
-  WildcardTests.extendsWildcardWithConcreteBoundRejectsTypeVariableActualWithNullableBound
+on the fix: 50 tests ran, 0 failed
+on the base: 50 tests ran, 3 failed
+  WildcardTests.explicitNonNullTypeVariableExtendsWildcardRejectsANullableBoundActual
+  WildcardTests.nonNullExtendsWildcardRejectsTypeVariableActualOnlyWhenItsBoundAdmitsNull
+  WildcardTests.typeVariableExtendsWildcardRejectsANullableBoundActualUnlessItAdmitsNullItself

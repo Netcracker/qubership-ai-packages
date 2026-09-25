@@ -45,7 +45,7 @@ print('most markers in one test (expect 1):', max((n for _, n in per_test), defa
 for name, n in per_test:
     flag = '  <- two cases that expect a report' if n > 1 else ''
     print(f'  {n} {name}{flag}')
-print('names with "And" (expect none):',
+print('names with "And" (read each: the outcomes of two inputs fail, the condition of one rule passes):',
       [name for name, _ in per_test if re.search(r'And[A-Z]', name)] or 'none')
 
 for diagnostic in required:

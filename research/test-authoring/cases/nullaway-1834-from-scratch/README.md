@@ -60,7 +60,8 @@ Read `result.diff` and `result-note.md` against all of them.
 4. **One case that expects a diagnostic per test** (§7). The harness stops at the first mismatch.
 5. **No source is assembled from pieces** (§7). Each source is one text block, in the form of the tests around it
    (§9).
-6. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining two rules.
+6. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining the outcomes of two inputs. An
+   `And` inside the condition of one rule passes.
 7. **The production code is unchanged.** The session proposes the stack line (§0) in its closing message and does not
    edit `AGENTS.md`.
 8. **The tests pass on the fix, and the defect's test fails on the base** (§5). Read `result-build.txt`: no failure on

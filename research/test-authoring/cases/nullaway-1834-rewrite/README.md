@@ -72,7 +72,8 @@ Read `result.diff` and `result-note.md` against all of them.
 4. **No source is assembled from pieces** (§7). No `String.formatted`, `String.format`, or concatenation builds a
    source, and no helper takes a type parameter list, a statement, or a marker. The source of each test is one text
    block the reader sees whole.
-5. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining two rules.
+5. **The name states the rule** (§7). No ordinal, no line number, and no `And` joining the outcomes of two inputs. An
+   `And` inside the condition of one rule passes.
 6. **The production code is unchanged, and so are the other tests.** The session proposes the stack line (§0) in its
    closing message and does not edit `AGENTS.md`.
 7. **The closing message names what moved and why**, and the rule of the skill behind each move.

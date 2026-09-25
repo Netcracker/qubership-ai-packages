@@ -1,4 +1,4 @@
-I rewrote the 21 tests the commit added to `WildcardTests.java` as 11, and the class passes: 57 tests, all green. Production code is unchanged and nothing is committed. While adding a control I found a false positive that the fix introduces (item 1 below).
+I rewrote the 20 tests the commit added as 12. Only `WildcardTests.java` changed; production code is untouched and nothing is committed. All 58 tests in `WildcardTests` pass on the fix, and `:nullaway:buildWithNullAway` passes.
 
 Here is the message I'd leave for the author:
 
@@ -6,43 +6,31 @@ Here is the message I'd leave for the author:
 
 **Tests for "Report a type argument whose bound admits null where a non-null wildcard is required"**
 
-**1. The fix introduces a false positive.** With the fix, this is reported; on the base commit it is not:
+**What I changed.** Most of the 20 new tests were one case each: either a call that must be reported or a call that must stay silent. The silent tests used their own copy of the source, and nothing kept that copy the same as the reporting one. A silent test only shows the rule holds while the reporting case fires on the same code. So each reporting case now shares one source with its controls: the nearest inputs that differ in one respect and must stay silent. Each test is named for the rule the cases establish together:
 
-```java
-@NullMarked
-interface Test<V extends @Nullable Object> {
-  List<? extends V> get();
-  static <V extends @Nullable Object> Test<V> make() {
-    return new Test<>() {
-      @Override public List<V> get() { throw new UnsupportedOperationException(); }
-      // warning: Method returns List<V>, but overridden method returns List<? extends V>,
-      //          which has mismatched type parameter nullability
-    };
-  }
-}
-```
+| Test | Case | Controls (silent) |
+| --- | --- | --- |
+| `aTypeVariableFailsAWildcardRequirementOnlyWhenItMayBeNullAndTheWildcardBoundMayNot` | `<T extends @Nullable Object> Box<T>` passed to `Box<? extends Object>` | `<T>` bound; `Box<@NonNull T>`; a `? extends @Nullable Object` requirement; a `Box<?>` requirement |
+| `…OnlyWhenDeclaredInNullUnmarkedCode` | `T` of a `@NullUnmarked` holder | **new:** the same holder with `@NullMarked` |
+| `…OnlyWhenTheVariableItExtendsAdmitsNull` | `S extends T`, where `T extends @Nullable Object` | **new:** `<T, S extends T>` |
+| `aWildcardBoundedByATypeVariable…OnlyWhenTheVariableAdmitsNull` | `Box<? extends T>`, where `T extends @Nullable Object` | **new:** `<T>` |
+| `aNullableTypeVariableUse…OnlyWhenTheWildcardBoundIsNonNull` | `Box<@Nullable T>` passed to `Box<? extends Object>` | a nullable requirement |
+| `aTypeVariableUse…OnlyWhenItIsWrittenNullable` | `Box<@Nullable T>` passed to `Box<? extends T>` | `Box<T>` returned as `Box<? extends T>`; `<S extends T> Box<S>` |
+| `…OnlyWhenItsBoundAddsNullable` | `<S extends @Nullable T>` passed to `Box<? extends T>` | `<S extends T>` |
+| `…BoundedByItsNonNullUseOnlyWhenItMayBeNull` | `Box<T>` passed to `Box<? extends @NonNull T>` | **new:** `Box<@NonNull T>` |
+| `anOverrideReturnType…OnlyWhenItsTypeArgumentMayBeNull` | an override returning `List<V>` | **new:** an override returning `List<@NonNull V>` |
 
-`List<V>` is a valid override of `List<? extends V>` for any `V`. The same override in a named class (`class Impl<W …> implements Test<W>`) is not reported, so the anonymous class with `new Test<>()` seems to be the trigger. I found this while adding the obvious control to `anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported`. I left that control out, because asserting the warning would lock in the bug. The CHANGELOG entry says only the `? extends @NonNull V` override is newly reported. I suggest adding this source as a no-warning control to that test when you fix it.
+- **The four new controls.** Four reporting cases had no silent neighbor. Without one, nothing showed that the condition named in the test is what triggers the report, so I added one to each.
+- **Unchanged.** The three inference and capture tests (`…UnderInference` and the two `aCapturedTypeArgument…` tests) expect no report and have nothing to pair with, so I left them as they were.
+- **Every original input is kept.** One changed shape: the `Box<T>` returned as `Box<? extends T>` now uses the holder's class-level `T` instead of a method-level one.
 
-**2. What changed in the tests, and why.**
-- **Evidence that the tests catch the bug.** I ran the tests against the base commit's production code. Seven fail with `Did not see an error on line N … There were no errors.`, which is the bug's symptom (the report was missing). They are the seven tests that expect a report the fix adds. The other 14 passed on the base: they are controls, or guards against the fix reporting too much.
-- **Each new case sits beside its controls in one source.** Before, a case and its controls were separate tests, each with its own copy of the class, so nothing kept the reporting input and the silent inputs alike. `CompilationTestHelper.doTest()` stops at the first mismatching marker (`DiagnosticTestHelper.java:248–289`, Error Prone 2.50.0). So each test holds at most one input that expects a report, and each test name states the rule it checks.
-- **What joined what:**
-  - `aNonNullWildcardRejectsATypeVariableOnlyWhenItsBoundIsNullable` merges five old tests: the nullable-bound case, the non-null bound, a `@NonNull T` use, the `? extends @Nullable Object` requirement, and the `?` requirement.
-  - `…OnlyWhenDeclaredInUnannotatedCode`, `…OnlyWhenTheVariableItExtendsIsNullable` and `aNonNullWildcardRejectsAWildcardActualOnlyWhenItsTypeVariableBoundIsNullable` each gained one new control that differs from the case in one respect: a `@NullMarked` holder, `<T, S extends T>`, and `Box<? extends T>` with `<T>`.
-  - `aWildcardBoundedByATypeVariableRejectsAnActualThatAdmitsNullOnlyWhenTheVariableDoesNot` covers both `<S extends T>` and `<S extends @Nullable T>`, each under a non-null `T` and a nullable `T`. The nullable-`T` / `<S extends @Nullable T>` combination is new.
-  - `aWildcardBoundedByANonNullTypeVariableRejectsAnActualOnlyWhenItAdmitsNull` puts the `? extends @NonNull T` case beside a new `@NonNull T` control and the old "same type variable" test.
-  - The two tests of a `@Nullable T` use were already reported on the base. Each is now one test with its control.
-  - The two captured-type tests are merged into one test.
-  - The inference test and the override test are kept as they were.
-- **Case labels.** Methods inside each source are named after their case (`nullableBound`, `nonNullOuterBound`, …). The harness reports only a line number, so these names let a reader with the file find the case.
-- **Mutants.** I tried two by hand and reverted both.
-  - Dropping the `CapturedType` exception fails the captured-type test.
-  - Turning off the branch for a requirement that names a type variable (`if (false)`) fails three of the new controls and the captured-type test.
-  - Neither mutant fails `passLoadAll` (in the merged captured-type test) or the `CompletableFuture` inference test. They still guard real-world shapes, but no line of this fix depends on them.
+**Why each reporting case has its own test.** Error Prone's `CompilationTestHelper` stops at the first mismatch, whether a missing `// BUG` marker or an unexpected diagnostic, and names it only by line number. I found this in the source, not a failing run: `DiagnosticTestHelper.assertHasDiagnosticOnAllMatchingLines` in 2.50.0, around lines 223–291. Two reporting cases in one source would therefore hide each other, so each test holds exactly one input that expects a report.
 
-**3. Proposed, not done:**
-- Add a stack line to `CLAUDE.md`, for example: `Tests: JUnit 4 engine; Truth for assertions; checker tests use Error Prone's CompilationTestHelper, whose doTest() stops at the first mismatching marker and names it only by line number`. I didn't edit it; it's your call.
-- The harness has no way to label a `// BUG:` marker, so a failure names only a line. That would be an Error Prone feature request; check their tracker for an existing issue first. I filed nothing.
+**Red on the base commit.** I ran the rewritten file against the production code of `HEAD~1`:
+- The 7 tests whose case this change moves fail, each with `Did not see an error on line N matching …` at its own marker, not a compile error.
+- The 2 tests whose report already existed before the fix pass: the `@Nullable T` use against `? extends Object` and against `? extends T`.
 
----
+**Proposed, not done:**
+1. **A stack line for `AGENTS.md`/`CLAUDE.md`**, which currently name no test stack: *"Tests: JUnit 4 engine, JUnit 4 assertions; checker tests use Error Prone's `CompilationTestHelper`, which stops at the first mismatched `// BUG: Diagnostic contains:` marker or unexpected diagnostic and names it only by line number."* It would save the next writer from looking this up again.
+2. **A label for `// BUG` markers.** The report shows only the test name and a line number, so a reader needs the file open to see which case failed. The fix would be an issue against Error Prone asking for a label the report prints. I couldn't check their tracker for an existing one, since I had no gh or browser.
+3. **A missing case.** `typeVariableUpperBound` also treats a bound as nullable when a library model says so, but no test sends a type variable whose bound comes from a library model to a `? extends Object` requirement. That route is untested for this change; a test using a handler/library-model fixture would cover it.

@@ -302,7 +302,7 @@ and each fact belongs in exactly one of them. Decide what each carries before wr
 | Part | Carries | Not |
 | --- | --- | --- |
 | **The container** (class, module path, `describe` block, parent test) | The unit under test and the condition every test in it shares | A file name; a fact true of one test |
-| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish, and the partition of the case where the rule has a test for each: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, a name with `and` |
+| **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. Where the test holds a case with its controls (*Independent cases in one check hide each other*), the rule they establish, and the partition of the case where the rule has a test for each: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, an `and` that joins the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`) |
 | **The assertion** | The values: got and want, printed by an assertion built to print them, in the operand order the framework labels | A boolean wrapped around a comparison, which prints `true` and `false` or the expression text |
 | **The message** | The function and the input where the assertion cannot print them: `ensureBytes(-2147483648)` | The scenario the name states; the values the assertion prints; `failed` |
 
@@ -465,7 +465,11 @@ comment may repeat the rule the message states, and the message may not repeat t
     moves, and finds at most one of each, unless the check carries every mismatch. The reviewer checks that every other
     case narrowly misses that partition's condition, and that each expectation would stand with the other cases removed
     from the input. A case whose outcome a different condition decides moves to a test of its own, or to the form of the
-    sub-bullet *Where the check carries every mismatch under a name*. A test with `and` in its name is split.
+    sub-bullet *Where the check carries every mismatch under a name*. A name whose `and` joins the outcomes of two
+    inputs or two scenarios (`rejects a negative count and accepts zero`) names two tests, and the test is split. An
+    `and` inside the condition of one rule stays (`is rejected only when its bound admits null and the requirement does
+    not`), and so does one between two observations of one act (`serves the second read from the cache and queries the
+    backend once`).
   - **Where the check stops at the first mismatch, split between the cases.** Cases of different rules in one such check
     hide each other, and so do two inputs of one rule that each expect a report, or that each have an outcome the change
     moves. Each gets its own test, with its controls.
@@ -602,7 +606,8 @@ Run this over a test you wrote or one you are reviewing.
 - Any private name reached by reflection, a test-only export, or widened visibility (§6)?
 - Any mock of a type the repository does not own (§6)?
 - Any loop or concatenation that produces the expected value, or condition that decides whether an assertion runs (§6)?
-- Does the test name state the scenario and the outcome, or a location (§7)?
+- Does the test name state the scenario and the outcome, or a location, or the outcomes of two inputs or scenarios
+  joined by `and` (§7)?
 - Does the assertion print the operands, in the framework's order (§7)?
 - Do the grouping, error, and message forms come from the assertion library's reference, not the engine's (§0)?
 - Where the repository's instructions carry no stack line, was the line proposed in one sentence, to the user, in the
