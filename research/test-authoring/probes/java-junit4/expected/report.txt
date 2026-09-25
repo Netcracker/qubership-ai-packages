@@ -1,0 +1,20 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.ReportTest
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ReportTest
+[ERROR] probe.ReportTest.aNegativeCountIsRefused -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-1>
+	at probe.ReportTest.aNegativeCountIsRefused(ReportTest.java:12)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   ReportTest.aNegativeCountIsRefused:12 expected:<0> but was:<-1>
+[INFO]
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.ReportTest.xml
+  <testcase name="aNegativeCountIsRefused" classname="probe.ReportTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+exit code: 1

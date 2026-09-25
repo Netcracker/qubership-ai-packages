@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Probe project for the JUnit 4 and Hamcrest claims in the test-authoring skill; see ../README.md.
+     Renovate's maven manager bumps the versions below, and its maven-wrapper manager bumps Maven itself in
+     .mvn/wrapper/maven-wrapper.properties. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>probe</groupId>
+  <artifactId>test-authoring-probes-junit4</artifactId>
+  <version>0.0.0</version>
+  <description>Deliberately failing tests whose output the test-authoring skill quotes</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+    <!-- One test source calls methods that do not exist; only the missing-call case compiles it. -->
+    <probe.testExclude>**/MissingCallTest.java</probe.testExclude>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>3.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Surefire runs JUnit 4 through the Vintage engine; the Jupiter engine is here for the class that mixes both. -->
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>6.1.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>6.1.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+        <configuration>
+          <testExcludes>
+            <testExclude>${probe.testExclude}</testExclude>
+          </testExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <!-- Frames from the JDK, JUnit, and Surefire change between releases; the test's own frames stay. -->
+          <trimStackTrace>true</trimStackTrace>
+          <!-- Lists every test, passed ones too, so a case can show that a test passed. -->
+          <reportFormat>plain</reportFormat>
+          <!-- The default order is the file system's, which differs between macOS and Linux. -->
+          <runOrder>alphabetical</runOrder>
+          <argLine>-Duser.language=en -Duser.country=US</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- dependency:build-classpath gives the cases that run JUnit 4's own JUnitCore their class path. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.11.0</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

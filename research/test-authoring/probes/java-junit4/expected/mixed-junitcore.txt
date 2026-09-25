@@ -1,0 +1,13 @@
+JUnit version <version>
+JUnit 4 @BeforeClass
+.constructed, count 1
+JUnit 4 @Before
+JUnit 4 @Test
+JUnit 4 @After
+I.JUnit 4 @Test in a @Disabled class
+
+Time: <duration>
+
+OK (2 tests)
+
+exit code: 0

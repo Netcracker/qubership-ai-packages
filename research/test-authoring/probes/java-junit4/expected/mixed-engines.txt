@@ -1,0 +1,55 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.MixedDisabledTest
+JUnit 4 @Test in a @Disabled class
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.MixedDisabledTest
+[INFO] probe.MixedDisabledTest.junit4Method -- Time elapsed: <duration>
+[INFO] Running probe.MixedEnginesTest
+JUnit 4 @BeforeClass
+constructed, count 1
+JUnit 4 @Before
+JUnit 4 @Test
+JUnit 4 @After
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.MixedEnginesTest
+[INFO] probe.MixedEnginesTest.junit4Method -- Time elapsed: <duration>
+[INFO] Running probe.MixedIgnoredTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: <duration> -- in probe.MixedIgnoredTest
+[WARNING] probe.MixedIgnoredTest.junit4Method skipped
+[INFO] Running probe.MixedDisabledTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: <duration> -- in probe.MixedDisabledTest
+[WARNING] probe.MixedDisabledTest.jupiterMethod skipped
+[INFO] Running probe.MixedEnginesTest
+Jupiter @BeforeAll
+constructed, count 2
+Jupiter @BeforeEach
+Jupiter @Test
+Jupiter @AfterEach
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.MixedEnginesTest
+[INFO] probe.MixedEnginesTest.jupiterMethod -- Time elapsed: <duration>
+[INFO] Running probe.MixedIgnoredTest
+Jupiter @Test in an @Ignore class
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.MixedIgnoredTest
+[INFO] probe.MixedIgnoredTest.jupiterMethod -- Time elapsed: <duration>
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 2
+=== Surefire XML report
+--- TEST-probe.MixedDisabledTest.xml
+  <testcase name="junit4Method" classname="probe.MixedDisabledTest">
+  <testcase name="jupiterMethod" classname="probe.MixedDisabledTest">
+    <skipped message="disabled by Jupiter"/>
+--- TEST-probe.MixedEnginesTest.xml
+  <testcase name="junit4Method" classname="probe.MixedEnginesTest">
+  <testcase name="jupiterMethod" classname="probe.MixedEnginesTest">
+--- TEST-probe.MixedIgnoredTest.xml
+  <testcase name="junit4Method" classname="probe.MixedIgnoredTest">
+    <skipped message="ignored by JUnit 4"/>
+  <testcase name="jupiterMethod" classname="probe.MixedIgnoredTest">
+=== Surefire text report
+-------------------------------------------------------------------------------
+Test set: probe.MixedEnginesTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: <duration> -- in probe.MixedEnginesTest
+probe.MixedEnginesTest.jupiterMethod -- Time elapsed: <duration>
+exit code: 0

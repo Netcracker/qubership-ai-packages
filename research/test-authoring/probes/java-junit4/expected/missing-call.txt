@@ -1,0 +1,6 @@
+[ERROR] COMPILATION ERROR :
+[ERROR] <probe>/src/test/java/probe/MissingCallTest.java:[14,5] no suitable method found for assertEquals(int,int,java.lang.String)
+[ERROR] <probe>/src/test/java/probe/MissingCallTest.java:[15,5] no suitable method found for assertEquals(int,int,()->"messa[...]lier")
+[ERROR] <probe>/src/test/java/probe/MissingCallTest.java:[16,5] no suitable method found for assertThat(int,org.hamcrest.Matcher<java.lang.Integer>,java.lang.String)
+[INFO] 3 errors
+exit code: 1
