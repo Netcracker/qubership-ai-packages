@@ -1,0 +1,12 @@
+-test.shuffle <seed>
+=== RUN   TestA
+=== RUN   TestA/x
+=== RUN   TestA/y
+=== RUN   TestA/z
+--- PASS: TestA (<duration>)
+    --- PASS: TestA/x (<duration>)
+    --- PASS: TestA/y (<duration>)
+    --- PASS: TestA/z (<duration>)
+PASS
+ok  	probes.example/gotesting/shuffle	<duration>
+exit code: 0

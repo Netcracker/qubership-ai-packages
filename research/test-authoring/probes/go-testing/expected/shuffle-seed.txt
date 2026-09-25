@@ -1,0 +1,68 @@
+-test.shuffle 1
+=== RUN   TestF
+=== RUN   TestF/x
+=== RUN   TestF/y
+=== RUN   TestF/z
+--- PASS: TestF (<duration>)
+    --- PASS: TestF/x (<duration>)
+    --- PASS: TestF/y (<duration>)
+    --- PASS: TestF/z (<duration>)
+=== RUN   TestA
+=== RUN   TestA/x
+=== RUN   TestA/y
+=== RUN   TestA/z
+--- PASS: TestA (<duration>)
+    --- PASS: TestA/x (<duration>)
+    --- PASS: TestA/y (<duration>)
+    --- PASS: TestA/z (<duration>)
+=== RUN   TestH
+=== RUN   TestH/x
+=== RUN   TestH/y
+=== RUN   TestH/z
+--- PASS: TestH (<duration>)
+    --- PASS: TestH/x (<duration>)
+    --- PASS: TestH/y (<duration>)
+    --- PASS: TestH/z (<duration>)
+=== RUN   TestB
+=== RUN   TestB/x
+=== RUN   TestB/y
+=== RUN   TestB/z
+--- PASS: TestB (<duration>)
+    --- PASS: TestB/x (<duration>)
+    --- PASS: TestB/y (<duration>)
+    --- PASS: TestB/z (<duration>)
+=== RUN   TestC
+=== RUN   TestC/x
+=== RUN   TestC/y
+=== RUN   TestC/z
+--- PASS: TestC (<duration>)
+    --- PASS: TestC/x (<duration>)
+    --- PASS: TestC/y (<duration>)
+    --- PASS: TestC/z (<duration>)
+=== RUN   TestD
+=== RUN   TestD/x
+=== RUN   TestD/y
+=== RUN   TestD/z
+--- PASS: TestD (<duration>)
+    --- PASS: TestD/x (<duration>)
+    --- PASS: TestD/y (<duration>)
+    --- PASS: TestD/z (<duration>)
+=== RUN   TestG
+=== RUN   TestG/x
+=== RUN   TestG/y
+=== RUN   TestG/z
+--- PASS: TestG (<duration>)
+    --- PASS: TestG/x (<duration>)
+    --- PASS: TestG/y (<duration>)
+    --- PASS: TestG/z (<duration>)
+=== RUN   TestE
+=== RUN   TestE/x
+=== RUN   TestE/y
+=== RUN   TestE/z
+--- PASS: TestE (<duration>)
+    --- PASS: TestE/x (<duration>)
+    --- PASS: TestE/y (<duration>)
+    --- PASS: TestE/z (<duration>)
+PASS
+ok  	probes.example/gotesting/shuffle	<duration>
+exit code: 0
