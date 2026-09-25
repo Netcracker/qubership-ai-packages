@@ -94,6 +94,19 @@ run so that a failure in one file does not hide the others, and so that a claim 
 | `quote` | A verbatim substring of that file. The checker collapses whitespace on both sides, so a quote may span a wrapped line. Editing the sentence in the reference breaks the row, which is the point |
 | `note` | Empty, or `contradicts: ...` where the measurement disagrees with the quote, or `refines: ...` where it adds a condition the reference does not state. The pattern always records the measured behavior; the reference is not edited from here |
 
+Two ecosystems that run the same tests on two majors of a framework share one ledger. `java-junit5` runs the tests of
+`java-junit6` on JUnit 5, and its `claims.tsv` opens with a line above the header:
+
+```text
+# inherit: java-junit6
+```
+
+Every row of the `java-junit6` ledger is then checked again against the golden files of `java-junit5`, under the same
+case ids. A row of `java-junit5`'s own with the same `id` replaces the inherited row, so that ledger holds only the
+claims whose output differs on JUnit 5, with a note naming the difference. An inherited row that fails is reported
+under the inheriting ecosystem: `java-junit5/<id> (inherited from java-junit6)`. The notes of inherited rows are
+printed once, under the ecosystem that owns them. A ledger that inherits cannot itself be inherited from.
+
 The checker prints the `contradicts:` and `refines:` notes as a summary on every run. A contradiction is a finding
 for whoever maintains the reference, and it stays in the ledger until the reference changes, at which point the
 quote no longer matches and the row is rewritten.

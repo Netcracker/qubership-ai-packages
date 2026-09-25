@@ -4,13 +4,6 @@ value of: ensureBytes(...)
 expected: 0
 but was : -1
 	at probe.TruthTest.isEqualTo(TruthTest.java:17)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.chainStopsAtFirst -- Time elapsed: <duration> <<< FAILURE!
 first
@@ -18,48 +11,20 @@ value of: ensureBytes(...)
 expected: 0
 but was : -1
 	at probe.TruthTest.chainStopsAtFirst(TruthTest.java:56)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.isEqualToSwapped -- Time elapsed: <duration> <<< FAILURE!
 expected: -1
 but was : 0
 	at probe.TruthTest.isEqualToSwapped(TruthTest.java:22)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.isTrue -- Time elapsed: <duration> <<< FAILURE!
 expected to be true
 	at probe.TruthTest.isTrue(TruthTest.java:39)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.contains -- Time elapsed: <duration> <<< FAILURE!
 expected to contain: 4
 but was            : [1, 2, 3]
 	at probe.TruthTest.contains(TruthTest.java:44)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.assertAllReportsBoth -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.MultipleFailuresError:
@@ -74,7 +39,6 @@ expected: 0
 but was : -2
 	at <framework frames>
 	at probe.TruthTest.assertAllReportsBoth(TruthTest.java:49)
-	at <framework frames>
 	Suppressed: first
 value of: ensureBytes(...)
 expected: 0
@@ -82,14 +46,7 @@ but was : -1
 		at probe.TruthTest.lambda$assertAllReportsBoth$<n>(TruthTest.java:50)
 		at <framework frames>
 		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at probe.TruthTest.assertAllReportsBoth(TruthTest.java:49)
-		at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
+		... <n> more
 	Suppressed: second
 value of: ensureBytes(...)
 expected: 0
@@ -97,33 +54,18 @@ but was : -2
 		at probe.TruthTest.lambda$assertAllReportsBoth$<n>(TruthTest.java:51)
 		at <framework frames>
 		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at probe.TruthTest.assertAllReportsBoth(TruthTest.java:49)
-		at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
-		at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-		at <framework frames>
+		... <n> more
 
 [ERROR] probe.TruthTest.hasMessageThatContains -- Time elapsed: <duration> <<< FAILURE!
 value of           : assertThrows(...).getMessage()
 expected to contain: positive
 but was            : count must not be negative: -1
 	at probe.TruthTest.hasMessageThatContains(TruthTest.java:63)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
 	at probe.TruthTest.lambda$hasMessageThatContains$<n>(TruthTest.java:62)
 	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 	at probe.TruthTest.hasMessageThatContains(TruthTest.java:62)
-	... <n> more
 
 [ERROR] probe.TruthTest.assertWithMessageFormat -- Time elapsed: <duration> <<< FAILURE!
 ensureBytes(-1)
@@ -131,13 +73,6 @@ value of: ensureBytes(...)
 expected: 0
 but was : -1
 	at probe.TruthTest.assertWithMessageFormat(TruthTest.java:33)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.assertWithMessagePlain -- Time elapsed: <duration> <<< FAILURE!
 ensureBytes(-1)
@@ -145,32 +80,17 @@ value of: ensureBytes(...)
 expected: 0
 but was : -1
 	at probe.TruthTest.assertWithMessagePlain(TruthTest.java:27)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 
 [ERROR] probe.TruthTest.hasCauseThat -- Time elapsed: <duration> <<< FAILURE!
 value of            : assertThrows(...).getCause()
 expected instance of: ArithmeticException
 but was             : null
 	at probe.TruthTest.hasCauseThat(TruthTest.java:69)
-	at [[Reflective call: 2 frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
-	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
-	at <framework frames>
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
 	at probe.TruthTest.lambda$hasCauseThat$<n>(TruthTest.java:68)
 	at [[Testing framework: <n> frames collapsed (https://goo.gl/aH3UyP)]].(:0)
 	at probe.TruthTest.hasCauseThat(TruthTest.java:68)
-	... <n> more
 
 [ERROR] Failures:
 [ERROR]   TruthTest.assertAllReportsBoth:49 Multiple Failures (2 failures)

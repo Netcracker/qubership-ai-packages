@@ -53,6 +53,16 @@
         "typescript"
       ],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "The java-junit5 probe measures the last JUnit 5 release; java-junit6 follows the current major.",
+      "matchFileNames": [
+        "research/test-authoring/probes/java-junit5/pom.xml"
+      ],
+      "matchPackageNames": [
+        "org.junit:junit-bom"
+      ],
+      "allowedVersions": "<6"
     }
   ]
 }

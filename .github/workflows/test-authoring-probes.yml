@@ -223,8 +223,31 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
-      - name: Compare JUnit, AssertJ, and Truth output with the golden files
+      - name: Compare JUnit 5, AssertJ, and Truth output with the golden files
         run: research/test-authoring/probes/run.sh java-junit5
+
+  java-junit6:
+    needs: changes
+    if: ${{ needs.changes.outputs.probes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: research/test-authoring/probes/java-junit6/pom.xml
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+      - name: Compare JUnit 6, AssertJ, and Truth output with the golden files
+        run: research/test-authoring/probes/run.sh java-junit6
 
   java-extras:
     needs: changes
@@ -399,6 +422,7 @@ jobs:
       - javascript-node-test
       - java-junit4
       - java-junit5
+      - java-junit6
       - java-extras
       - java-mutation-pit
       - python-mutation-mutmut

@@ -3,13 +3,11 @@
 org.opentest4j.AssertionFailedError: expected: <negative> but was: <For input string: "x">
 	at <framework frames>
 	at probe.ThrowsTest.assertThrowsReturnsTheException(ThrowsTest.java:14)
-	at <framework frames>
 
 [ERROR] probe.ThrowsTest.assertThrowsExactlyRefusesSubclass -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NumberFormatException>
 	at <framework frames>
 	at probe.ThrowsTest.assertThrowsExactlyRefusesSubclass(ThrowsTest.java:25)
-	at <framework frames>
 Caused by: java.lang.NumberFormatException: For input string: "x"
 	at <framework frames>
 	at probe.ThrowsTest.lambda$assertThrowsExactlyRefusesSubclass$<n>(ThrowsTest.java:25)

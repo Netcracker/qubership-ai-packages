@@ -5,7 +5,6 @@ org.opentest4j.AssertionFailedError:
 expected: 0
  but was: -1
 	at probe.AssertjTest.isEqualTo(AssertjTest.java:18)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.asBefore -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
@@ -13,7 +12,6 @@ org.opentest4j.AssertionFailedError:
 expected: 0
  but was: -1
 	at probe.AssertjTest.asBefore(AssertjTest.java:29)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.describedAs -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
@@ -21,7 +19,6 @@ org.opentest4j.AssertionFailedError:
 expected: 0
  but was: -1
 	at probe.AssertjTest.describedAs(AssertjTest.java:40)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.chainStopsAtFirst -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
@@ -29,7 +26,6 @@ org.opentest4j.AssertionFailedError:
 expected: 0
  but was: -1
 	at probe.AssertjTest.chainStopsAtFirst(AssertjTest.java:74)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.isEqualToSwapped -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
@@ -37,14 +33,12 @@ org.opentest4j.AssertionFailedError:
 expected: -1
  but was: 0
 	at probe.AssertjTest.isEqualToSwapped(AssertjTest.java:23)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.isTrue -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
 
 Expecting value to be true but was false
 	at probe.AssertjTest.isTrue(AssertjTest.java:56)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.hasCauseInstanceOf -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -61,7 +55,6 @@ java.lang.IllegalStateException: count must not be negative: -1
 	at <framework frames>
 
 	at probe.AssertjTest.hasCauseInstanceOf(AssertjTest.java:100)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.asAfter -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError:
@@ -69,7 +62,6 @@ org.opentest4j.AssertionFailedError:
 expected: 0
  but was: -1
 	at probe.AssertjTest.asAfter(AssertjTest.java:35)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.contains -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -82,7 +74,6 @@ but could not find the following element(s):
   [4]
 
 	at probe.AssertjTest.contains(AssertjTest.java:61)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.assertSoftlyReportsBoth -- Time elapsed: <duration> <<< FAILURE!
 org.assertj.core.error.AssertJMultipleFailuresError:
@@ -99,12 +90,10 @@ expected: 0
  but was: -2
 at AssertjTest.lambda$assertSoftlyReportsBoth$<n>(AssertjTest.java:68)
 	at probe.AssertjTest.assertSoftlyReportsBoth(AssertjTest.java:66)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.overridingErrorMessage -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError: ensureBytes(-1) is wrong
 	at probe.AssertjTest.overridingErrorMessage(AssertjTest.java:50)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.hasMessageContaining -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -125,12 +114,10 @@ java.lang.IllegalStateException: count must not be negative: -1
 	at <framework frames>
 
 	at probe.AssertjTest.hasMessageContaining(AssertjTest.java:95)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.withFailMessage -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError: ensureBytes(-1) is wrong
 	at probe.AssertjTest.withFailMessage(AssertjTest.java:45)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.thrownByOtherType -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -144,7 +131,6 @@ but was:
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 	at probe.AssertjTest.thrownByOtherType(AssertjTest.java:80)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.doesNotThrowAnyException -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -158,7 +144,6 @@ Expecting code not to raise a throwable but caught
 	at <framework frames>
 "
 	at probe.AssertjTest.doesNotThrowAnyException(AssertjTest.java:105)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.exceptionOfTypeOtherType -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
@@ -172,14 +157,12 @@ but was:
 	at <framework frames>
 	...(<n> remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
 	at probe.AssertjTest.exceptionOfTypeOtherType(AssertjTest.java:90)
-	at <framework frames>
 
 [ERROR] probe.AssertjTest.thrownByNothing -- Time elapsed: <duration> <<< FAILURE!
 java.lang.AssertionError:
 
 Expecting code to raise a throwable.
 	at probe.AssertjTest.thrownByNothing(AssertjTest.java:85)
-	at <framework frames>
 
 [ERROR] Failures:
 [ERROR]   AssertjTest.asAfter:35

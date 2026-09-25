@@ -3,7 +3,6 @@
 org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.IllegalStateException>
 	at <framework frames>
 	at probe.AssertFormsTest.assertThrowsOtherType(AssertFormsTest.java:67)
-	at <framework frames>
 Caused by: java.lang.IllegalStateException: count must not be negative: -1
 	at probe.Stream.refuse(Stream.java:13)
 	at probe.AssertFormsTest.lambda$assertThrowsOtherType$<n>(AssertFormsTest.java:67)
@@ -14,73 +13,61 @@ Caused by: java.lang.IllegalStateException: count must not be negative: -1
 org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <0> but was: <-1>
 	at <framework frames>
 	at probe.AssertFormsTest.assertEqualsSupplier(AssertFormsTest.java:30)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertIterableEqualsDiffer -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: iterable contents differ at index [2], expected: <3> but was: <4>
 	at <framework frames>
 	at probe.AssertFormsTest.assertIterableEqualsDiffer(AssertFormsTest.java:62)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.failPlain -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError
 	at <framework frames>
 	at probe.AssertFormsTest.failPlain(AssertFormsTest.java:77)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertThrowsNothing -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
 	at <framework frames>
 	at probe.AssertFormsTest.assertThrowsNothing(AssertFormsTest.java:72)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertEqualsMessage -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <0> but was: <-1>
 	at <framework frames>
 	at probe.AssertFormsTest.assertEqualsMessage(AssertFormsTest.java:25)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertTrueMessage -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: ensureBytes(-1) must refuse ==> expected: <true> but was: <false>
 	at <framework frames>
 	at probe.AssertFormsTest.assertTrueMessage(AssertFormsTest.java:47)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.failMessage -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: ensureBytes(-1) returned instead of throwing
 	at <framework frames>
 	at probe.AssertFormsTest.failMessage(AssertFormsTest.java:82)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertNotNullOfNull -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: not <null>
 	at <framework frames>
 	at probe.AssertFormsTest.assertNotNullOfNull(AssertFormsTest.java:52)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertArrayEqualsDiffer -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: array contents differ at index [2], expected: <3> but was: <4>
 	at <framework frames>
 	at probe.AssertFormsTest.assertArrayEqualsDiffer(AssertFormsTest.java:57)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertEqualsPlain -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
 	at <framework frames>
 	at probe.AssertFormsTest.assertEqualsPlain(AssertFormsTest.java:20)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertEqualsSwapped -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: <-1> but was: <0>
 	at <framework frames>
 	at probe.AssertFormsTest.assertEqualsSwapped(AssertFormsTest.java:35)
-	at <framework frames>
 
 [ERROR] probe.AssertFormsTest.assertTruePlain -- Time elapsed: <duration> <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
 	at <framework frames>
 	at probe.AssertFormsTest.assertTruePlain(AssertFormsTest.java:41)
-	at <framework frames>
 
 [ERROR] Failures:
 [ERROR]   AssertFormsTest.assertArrayEqualsDiffer:57 array contents differ at index [2], expected: <3> but was: <4>
