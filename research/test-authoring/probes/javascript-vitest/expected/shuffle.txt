@@ -1,0 +1,12 @@
+
+ RUN  v<version> <probe>
+      Running tests with seed "<seed>"
+
+ ✓ tests/shuffle.test.js (3 tests) <duration>
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 0
