@@ -16,12 +16,11 @@ rebase; step 3 covers the differences.
 
 ## Policy (read first)
 
-- Fix the root cause first, in its own pull request, so the same problem
-  does not come back. Only then fix the current problem.
-- Cause is clear: fix it and push to the PR branch.
-- Cause is unclear or ambiguous: ask, don't guess.
-- Test is flaky: open an issue linking the CI failure, or fix it in a
-  separate PR when the change is a line or two.
+- If the cause is unclear, ask. Don't guess.
+- If the failure is systemic, not a one-off, find the root cause and fix
+  it in its own pull request. Only then fix the current problem.
+- A flaky test is a one-off: open an issue linking the CI failure, or
+  fix it in a separate PR when the change is a line or two.
 - Reproduce and confirm the fix locally before any push, under the same
   toolchain and command as CI. Don't push what you haven't verified.
 
