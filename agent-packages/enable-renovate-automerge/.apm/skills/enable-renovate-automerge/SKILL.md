@@ -165,7 +165,7 @@ ruleset is the recommended end state because it makes the policy easier to inspe
 | Setting | Target |
 | --- | --- |
 | Required status checks | Verified gates selected under requirement 1 and requirement 2 |
-| `strict_required_status_checks_policy` | `true` |
+| `strict_required_status_checks_policy` | `false` |
 | Require a pull request | Enabled |
 | `required_approving_review_count` | `1` |
 | `require_code_owner_review` | `false` |
@@ -176,8 +176,8 @@ ruleset is the recommended end state because it makes the policy easier to inspe
 effect; multiple rulesets alone are not a defect. List responses may omit rules and bypass actors; do not interpret
 omissions as empty settings. Save the previous state and compare every target field. Inspect effective `rebaseWhen`,
 `schedule`, `updateNotScheduled`, `automergeSchedule`, timezone, and the actual Renovate runner cadence. A Renovate
-schedule limits when work is allowed; it does not trigger a run, so never infer runner cadence from it. Record the
-owner-approved maximum convergence latency.
+schedule limits when work is allowed; it does not trigger a run, so never infer runner cadence from it. A branch that
+is behind the default branch is not a merge defect when required checks have passed on its head.
 
 ```sh
 gh api repos/<owner>/<repo>/rulesets
@@ -191,15 +191,16 @@ the selected checks, review settings, bypasses, deletion and force-push restrict
 Consolidate only after the owner agrees. Add and verify combined requirements before retiring redundant rules; never
 leave the branch unprotected.
 
-Set strict required checks to `true`. Explain that after one PR changes the default branch, other open Renovate PRs must
-update from it, rerun CI, and regain an approval dismissed as stale. Report the resulting rebase and CI cost rather than
-weakening the policy. Preserve existing required checks unless replaced with verified equivalent coverage under
-requirement 2. Identify owner action if inherited or classic policy prevents convergence. Source-controlled changes go
-through an ordinary reviewed PR.
+Set `strict_required_status_checks_policy` to `false` on every ruleset and classic protection rule that requires status
+checks. That is the GitHub setting "Require branches to be up to date before merging"; leave it off. Required checks
+still must pass on the pull request head. GitHub must not block the merge only because the branch is behind the base.
+Renovate may still rebase on its own schedule; that rebase is not a merge gate. Preserve existing required checks unless
+replaced with verified equivalent coverage under requirement 2. Identify owner action if an inherited or classic policy
+forces the up-to-date requirement. Source-controlled changes go through an ordinary reviewed PR.
 
-**Confirm.** Re-read effective protection and compare it with the saved state. Use requirement 7 for enforcement
-evidence; stored JSON alone does not prove enforcement. If runner cadence or the convergence target is unknown, mark
-operational readiness unconfirmed.
+**Confirm.** Re-read effective protection and compare it with the saved state. Every status-check rule has
+`strict_required_status_checks_policy` set to `false`. Use requirement 7 for enforcement evidence; stored JSON alone
+does not prove enforcement.
 
 ### Requirement 4. Preserve unrelated bypass; remove bypass for automerge participants
 
@@ -306,9 +307,9 @@ Prefer a fresh eligible PR opened by Renovate. Human imitations, old merged PRs,
 **Implement.** Observe without manually approving, merging, or bypassing protection. Do not widen scope to manufacture
 a pilot. Approver reacts to PR opening and qualifying dismissal of its own review. Installing it later, editing the
 body, or reopening an old PR alone does not prove approval will occur. Verify approval restoration after a Renovate
-update/rebase dismisses stale reviews. After one eligible PR merges, observe another eligible PR that is behind the
-default branch. Record timestamps for the base merge, Renovate rebase, restored approval, and required checks on the
-new head SHA.
+update/rebase dismisses stale reviews. A pull request that is behind the default branch stays mergeable when required
+checks and approval are already present on its head SHA. Do not treat that lag as a failed merge. When Renovate itself
+rebases, record the new head SHA, the restored approval, and the required checks on that SHA.
 
 For explicitly authorized negative test PRs, arrange the blocking condition before any auto-merge request. Satisfy other
 merge prerequisites to isolate the check: a red PR also lacking approval does not prove CI enforcement.
@@ -323,12 +324,12 @@ branch for a test. Missing authority blocks only the affected scenario.
 | Required checks pass | Platform merge, checks and approval on the exact SHA, corroborating timeline |
 | Required check fails or is absent | Other prerequisites satisfied; PR remains blocked by that check |
 | Ordinary PR without human approval | CI passes, no bot approval, review blocks merge |
-| Renovate updates the branch | Next-run timestamps for rebase, fresh approval, and required checks on the new SHA meet the convergence target |
+| Renovate updates the branch | Fresh approval and required checks on the new head SHA |
 
 Capture the auto-merge request before merge. A bot in `merged_by` or green checks alone cannot distinguish direct merge
 from platform auto-merge. If no eligible PR or event is available, report configured with runtime pending.
-Keep missing scenarios explicit rather than treating them as passed. If actual runner cadence or convergence latency
-is not confirmed, report operational readiness as unconfirmed.
+Keep missing scenarios explicit rather than treating them as passed. Unknown runner cadence does not block a merge
+while the branch is behind the base.
 
 ## Application order
 
