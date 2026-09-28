@@ -16,6 +16,8 @@ rebase; step 3 covers the differences.
 
 ## Policy (read first)
 
+- Fix the root cause first, in its own pull request, so the same problem
+  does not come back. Only then fix the current problem.
 - Cause is clear: fix it and push to the PR branch.
 - Cause is unclear or ambiguous: ask, don't guess.
 - Test is flaky: open an issue linking the CI failure, or fix it in a
