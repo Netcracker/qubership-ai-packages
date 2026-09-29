@@ -194,8 +194,8 @@
     },
     {
       "name": "enable-renovate-automerge",
-      "description": "Skill that enables Renovate automerge on a repository behind a real test/style required check.",
-      "version": "1.0.0",
+      "description": "Configure GitHub Renovate automerge with required review, Renovate Approver, and verified CI coverage.",
+      "version": "2.0.0",
       "tags": [
         "topic:devops",
         "topic:dependencies",
