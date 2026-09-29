@@ -4,7 +4,7 @@
 # tools, and `uv run --with-requirements requirements.txt python ...` for the
 # scripts under scripts/.
 # Updated automatically by Renovate's pip_requirements manager.
-apm-cli==0.24.1
+apm-cli==0.31.0
 doccmd==2026.5.25
 # Read by scripts/check-skill-descriptions.py. apm-cli pulls PyYAML in anyway,
 # but a script that imports it declares it.

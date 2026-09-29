@@ -370,6 +370,18 @@
       "source": "./agent-packages/adversarial-code-review"
     },
     {
+      "name": "deep-review",
+      "description": "Review a repository, a microservice, or a system of services along independent axes, refute every finding, and consolidate the survivors into one ranked report.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:code-review",
+        "topic:architecture",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/deep-review"
+    },
+    {
       "name": "meeting-analysis",
       "description": "Skill that turns a meeting transcript or recording into a structured, verifiable report through multi-axis analysis.",
       "version": "1.0.0",
@@ -407,7 +419,8 @@
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
         "ref": "09c4bf708d787eba45046904ab5b40b9ac597c6b",
-        "sha": "09c4bf708d787eba45046904ab5b40b9ac597c6b"
+        "sha": "09c4bf708d787eba45046904ab5b40b9ac597c6b",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -425,7 +438,8 @@
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
         "ref": "7b0bf733df7288bf051ec2e5719d7ffc2753566f",
-        "sha": "7b0bf733df7288bf051ec2e5719d7ffc2753566f"
+        "sha": "7b0bf733df7288bf051ec2e5719d7ffc2753566f",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -443,7 +457,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
         "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
-        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
+        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -461,7 +476,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
         "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
-        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
+        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -479,7 +495,8 @@
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
         "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
-        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
+        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -497,7 +514,8 @@
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
         "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
-        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
+        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -516,7 +534,8 @@
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
         "ref": "3511065e91edef101ca84ed1c88cfef7120dface",
-        "sha": "3511065e91edef101ca84ed1c88cfef7120dface"
+        "sha": "3511065e91edef101ca84ed1c88cfef7120dface",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -535,7 +554,8 @@
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
         "ref": "5787cced9e46725d21a7ef3a1261d674038cad4c",
-        "sha": "5787cced9e46725d21a7ef3a1261d674038cad4c"
+        "sha": "5787cced9e46725d21a7ef3a1261d674038cad4c",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -552,7 +572,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
         "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
-        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
+        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -569,7 +590,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
         "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
-        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
+        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
+        "tag_pattern": "v{version}"
       }
     }
   ]
