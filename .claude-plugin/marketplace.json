@@ -406,8 +406,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "09c4bf708d787eba45046904ab5b40b9ac597c6b",
-        "sha": "09c4bf708d787eba45046904ab5b40b9ac597c6b"
+        "ref": "bb46660cb0a2fb4ec1bbe30786c6ef09105fc20b",
+        "sha": "bb46660cb0a2fb4ec1bbe30786c6ef09105fc20b"
       }
     },
     {
@@ -424,8 +424,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
-        "ref": "7b0bf733df7288bf051ec2e5719d7ffc2753566f",
-        "sha": "7b0bf733df7288bf051ec2e5719d7ffc2753566f"
+        "ref": "e59a80396e4fbb22d3686ed1f3f69e93cb70d103",
+        "sha": "e59a80396e4fbb22d3686ed1f3f69e93cb70d103"
       }
     },
     {
@@ -442,8 +442,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
-        "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
-        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
+        "ref": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b",
+        "sha": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b"
       }
     },
     {
@@ -460,14 +460,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
-        "ref": "635ce729bd94f42a61a1c036bc3b066a20ab7755",
-        "sha": "635ce729bd94f42a61a1c036bc3b066a20ab7755"
+        "ref": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b",
+        "sha": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b"
       }
     },
     {
       "name": "dbaas-mounted-secret-migration",
       "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -478,14 +478,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
-        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
+        "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
+        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
       }
     },
     {
       "name": "migrate-core-operator-dbaas-declarations",
       "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -496,8 +496,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "383792564eb9bceaed19adc5f75dcdcefcfec2ab",
-        "sha": "383792564eb9bceaed19adc5f75dcdcefcfec2ab"
+        "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
+        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
       }
     },
     {
@@ -515,8 +515,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "3511065e91edef101ca84ed1c88cfef7120dface",
-        "sha": "3511065e91edef101ca84ed1c88cfef7120dface"
+        "ref": "faf6c63d2a7db1b540ff8e4bc35726d8990f16d6",
+        "sha": "faf6c63d2a7db1b540ff8e4bc35726d8990f16d6"
       }
     },
     {
@@ -534,13 +534,13 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "5787cced9e46725d21a7ef3a1261d674038cad4c",
-        "sha": "5787cced9e46725d21a7ef3a1261d674038cad4c"
+        "ref": "b48af28950b7c56e17eb837809e6c67932b576b6",
+        "sha": "b48af28950b7c56e17eb837809e6c67932b576b6"
       }
     },
     {
       "name": "ai-agent-telemetry",
-      "description": "Hooks that call the ai-agent-telemetry CLI after each skill invocation (Claude Code, Codex, Cursor).",
+      "description": "Repository-scoped ai-agent-telemetry hooks for Claude Code, Codex, and Cursor compatibility.",
       "version": "1.1.0",
       "tags": [
         "topic:observability",
@@ -551,14 +551,14 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
-        "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
-        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
+        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
       }
     },
     {
       "name": "ai-agent-telemetry-configure",
       "description": "Agent-guided setup, testing, repair, and delivery verification.",
-      "version": "3.0.0",
+      "version": "3.4.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -568,8 +568,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
-        "ref": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e",
-        "sha": "ffffc0e8e26eb7c62808649ea6170423c0ef6d6e"
+        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
       }
     }
   ]
