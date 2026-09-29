@@ -1,0 +1,199 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 5 items
+
+tests/test_diffs.py FFFFF                                                [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_string __________________________________
+
+    def test_string():
+>       assert "Hello world" == "Hello, world"
+E       AssertionError: assert 'Hello world' == 'Hello, world'
+E
+E         - Hello, world
+E         ?      -
+E         + Hello world
+
+tests/test_diffs.py:2: AssertionError
+__________________________________ test_list ___________________________________
+
+    def test_list():
+>       assert [1, 2, 3] == [1, 2, 4]
+E       assert [1, 2, 3] == [1, 2, 4]
+E
+E         At index 2 diff: 3 != 4
+E
+E         Full diff:
+E           [
+E               1,
+E               2,
+E         -     4,
+E         ?     ^
+E         +     3,
+E         ?     ^
+E           ]
+
+tests/test_diffs.py:6: AssertionError
+__________________________________ test_dict ___________________________________
+
+    def test_dict():
+>       assert {"a": 1, "b": 2} == {"a": 1, "b": 3}
+E       AssertionError: assert {'a': 1, 'b': 2} == {'a': 1, 'b': 3}
+E
+E         Omitting 1 identical items, use -vv to show
+E         Differing items:
+E         {'b': 2} != {'b': 3}
+E
+E         Full diff:
+E           {
+E               'a': 1,
+E         -     'b': 3,
+E         ?          ^
+E         +     'b': 2,
+E         ?          ^
+E           }
+
+tests/test_diffs.py:10: AssertionError
+___________________________________ test_set ___________________________________
+
+    def test_set():
+>       assert {1, 2, 3} == {1, 2, 4}
+E       assert {1, 2, 3} == {1, 2, 4}
+E
+E         Extra items in the left set:
+E         3
+E         Extra items in the right set:
+E         4
+E
+E         Full diff:
+E           {
+E               1,
+E               2,
+E         -     4,
+E         ?     ^
+E         +     3,
+E         ?     ^
+E           }
+
+tests/test_diffs.py:14: AssertionError
+________________________________ test_long_list ________________________________
+
+    def test_long_list():
+>       assert list(range(20)) == [*range(19), 99]
+E       assert [0, 1, 2, 3, 4, 5, ...] == [0, 1, 2, 3, 4, 5, ...]
+E
+E         At index 19 diff: 19 != 99
+E
+E         Full diff:
+E           [
+E               0,
+E               1,
+E               2,
+E               3,
+E               4,
+E               5,
+E               6,
+E               7,
+E               8,
+E               9,
+E               10,
+E               11,
+E               12,
+E               13,
+E               14,
+E               15,
+E               16,
+E               17,
+E               18,
+E         -     99,
+E         ?     ^
+E         +     19,
+E         ?     ^
+E           ]
+
+tests/test_diffs.py:18: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_diffs.py::test_string - AssertionError: assert 'Hello world' == 'Hello, world'
+
+  - Hello, world
+  ?      -
+  + Hello world
+FAILED tests/test_diffs.py::test_list - assert [1, 2, 3] == [1, 2, 4]
+
+  At index 2 diff: 3 != 4
+
+  Full diff:
+    [
+        1,
+        2,
+  -     4,
+  ?     ^
+  +     3,
+  ?     ^
+    ]
+FAILED tests/test_diffs.py::test_dict - AssertionError: assert {'a': 1, 'b': 2} == {'a': 1, 'b': 3}
+
+  Omitting 1 identical items, use -vv to show
+  Differing items:
+  {'b': 2} != {'b': 3}
+
+  Full diff:
+    {
+        'a': 1,
+  -     'b': 3,
+  ?          ^
+  +     'b': 2,
+  ?          ^
+    }
+FAILED tests/test_diffs.py::test_set - assert {1, 2, 3} == {1, 2, 4}
+
+  Extra items in the left set:
+  3
+  Extra items in the right set:
+  4
+
+  Full diff:
+    {
+        1,
+        2,
+  -     4,
+  ?     ^
+  +     3,
+  ?     ^
+    }
+FAILED tests/test_diffs.py::test_long_list - assert [0, 1, 2, 3, 4, 5, ...] == [0, 1, 2, 3, 4, 5, ...]
+
+  At index 19 diff: 19 != 99
+
+  Full diff:
+    [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+  -     99,
+  ?     ^
+  +     19,
+  ?     ^
+    ]
+============================== 5 failed in <duration> ===============================
+exit code: 1

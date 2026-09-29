@@ -1,0 +1,42 @@
+FAIL tests/assertions.test.js
+  ✕ a forgotten await under expect.assertions
+  ✕ a forgotten await under expect.hasAssertions
+
+  ● a forgotten await under expect.assertions
+
+    expect.assertions(1)
+
+    Expected one assertion to be called but received zero assertion calls.
+
+       7 |
+       8 | test('a forgotten await under expect.assertions', async () => {
+    >  9 |   expect.assertions(1);
+         |          ^
+      10 |   never().then(() => expect(ensureBytes(-1)).toBe(0));
+      11 | });
+      12 |
+
+      at Object.assertions (tests/assertions.test.js:9:10)
+
+  ● a forgotten await under expect.hasAssertions
+
+    expect.hasAssertions()
+
+    Expected at least one assertion to be called but received none.
+
+      12 |
+      13 | test('a forgotten await under expect.hasAssertions', async () => {
+    > 14 |   expect.hasAssertions();
+         |          ^
+      15 |   never().then(() => expect(ensureBytes(-1)).toBe(0));
+      16 | });
+      17 |
+
+      at Object.hasAssertions (tests/assertions.test.js:14:10)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/assertions.test.js.
+exit code: 1

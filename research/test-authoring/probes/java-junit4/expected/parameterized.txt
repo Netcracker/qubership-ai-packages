@@ -1,0 +1,68 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.ParameterizedConditionTest
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedConditionTest
+[ERROR] probe.ParameterizedConditionTest.refused[minus one] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-1>
+	at probe.ParameterizedConditionTest.refused(ParameterizedConditionTest.java:31)
+
+[ERROR] probe.ParameterizedConditionTest.refused[negative] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-2>
+	at probe.ParameterizedConditionTest.refused(ParameterizedConditionTest.java:31)
+
+[ERROR] probe.ParameterizedConditionTest.refused[negative] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-3>
+	at probe.ParameterizedConditionTest.refused(ParameterizedConditionTest.java:31)
+
+[INFO] Running probe.ParameterizedDefaultNameTest
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedDefaultNameTest
+[ERROR] probe.ParameterizedDefaultNameTest.refused[0] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-1>
+	at probe.ParameterizedDefaultNameTest.refused(ParameterizedDefaultNameTest.java:24)
+
+[ERROR] probe.ParameterizedDefaultNameTest.refused[1] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-2>
+	at probe.ParameterizedDefaultNameTest.refused(ParameterizedDefaultNameTest.java:24)
+
+[INFO] Running probe.ParameterizedNamedTest
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ParameterizedNamedTest
+[ERROR] probe.ParameterizedNamedTest.refused[0: ensureBytes(-1) is refused] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-1>
+	at probe.ParameterizedNamedTest.refused(ParameterizedNamedTest.java:24)
+
+[ERROR] probe.ParameterizedNamedTest.refused[1: ensureBytes(-2) is refused] -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: expected:<0> but was:<-2>
+	at probe.ParameterizedNamedTest.refused(ParameterizedNamedTest.java:24)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   ParameterizedConditionTest.refused:31 expected:<0> but was:<-1>
+[ERROR]   ParameterizedConditionTest.refused:31 expected:<0> but was:<-2>
+[ERROR]   ParameterizedConditionTest.refused:31 expected:<0> but was:<-3>
+[ERROR]   ParameterizedDefaultNameTest.refused:24 expected:<0> but was:<-1>
+[ERROR]   ParameterizedDefaultNameTest.refused:24 expected:<0> but was:<-2>
+[ERROR]   ParameterizedNamedTest.refused:24 expected:<0> but was:<-1>
+[ERROR]   ParameterizedNamedTest.refused:24 expected:<0> but was:<-2>
+[INFO]
+[ERROR] Tests run: 7, Failures: 7, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.ParameterizedConditionTest.xml
+  <testcase name="refused[minus one]" classname="probe.ParameterizedConditionTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="refused[negative]" classname="probe.ParameterizedConditionTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-2&gt;" type="java.lang.AssertionError">
+  <testcase name="refused[negative]" classname="probe.ParameterizedConditionTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-3&gt;" type="java.lang.AssertionError">
+--- TEST-probe.ParameterizedDefaultNameTest.xml
+  <testcase name="refused[0]" classname="probe.ParameterizedDefaultNameTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="refused[1]" classname="probe.ParameterizedDefaultNameTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-2&gt;" type="java.lang.AssertionError">
+--- TEST-probe.ParameterizedNamedTest.xml
+  <testcase name="refused[0: ensureBytes(-1) is refused]" classname="probe.ParameterizedNamedTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="refused[1: ensureBytes(-2) is refused]" classname="probe.ParameterizedNamedTest">
+    <failure message="expected:&lt;0&gt; but was:&lt;-2&gt;" type="java.lang.AssertionError">
+exit code: 1

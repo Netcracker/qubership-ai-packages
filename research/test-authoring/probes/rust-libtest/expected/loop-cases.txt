@@ -1,0 +1,32 @@
+     Running tests/loop_cases.rs (target/debug/deps/loop_cases-<hash>)
+
+running 2 tests
+test loop_with_message ... FAILED
+test loop_without_message ... FAILED
+
+failures:
+
+---- loop_with_message stdout ----
+
+thread 'loop_with_message' (<tid>) panicked at tests/loop_cases.rs:13:9:
+assertion `left == right` failed: ensure_bytes(-1)
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- loop_without_message stdout ----
+
+thread 'loop_without_message' (<tid>) panicked at tests/loop_cases.rs:6:9:
+assertion `left == right` failed
+  left: -1
+ right: 0
+
+
+failures:
+    loop_with_message
+    loop_without_message
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test loop_cases`
+exit code: 101

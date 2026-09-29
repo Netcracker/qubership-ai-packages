@@ -1,0 +1,11 @@
+
+ RUN  v<version> <probe>
+
+ ✓ tests/no-await.test.js (1 test) <duration>
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  <time>
+   Duration  <duration>
+
+exit code: 0

@@ -1,0 +1,13 @@
+--- FAIL: TestEnsureBytes (<duration>)
+    --- FAIL: TestEnsureBytes/minus_one (<duration>)
+        m_test.go:24: ensureBytes(-1) = -1, want 0
+    --- FAIL: TestEnsureBytes/minus_two (<duration>)
+        m_test.go:24: ensureBytes(-2) = -2, want 0
+    --- FAIL: TestEnsureBytes/same (<duration>)
+        m_test.go:24: ensureBytes(-3) = -3, want 0
+    --- FAIL: TestEnsureBytes/same#01 (<duration>)
+        m_test.go:24: ensureBytes(-4) = -4, want 0
+FAIL
+FAIL	probes.example/gotesting/subtests	<duration>
+FAIL
+exit code: 1

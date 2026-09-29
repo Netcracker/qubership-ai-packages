@@ -1,0 +1,25 @@
+JUnit version <version>
+.E.EE.E
+Time: <duration>
+There were 4 failures:
+1) errorCollectorOneFailure(probe.GroupingTest)
+java.lang.AssertionError: first
+Expected: is <0>
+     but: was <-1>
+	at probe.GroupingTest.errorCollectorOneFailure(GroupingTest.java:21)
+2) errorCollectorTwoFailures(probe.GroupingTest)
+java.lang.AssertionError: first
+Expected: is <0>
+     but: was <-1>
+	at probe.GroupingTest.errorCollectorTwoFailures(GroupingTest.java:27)
+3) errorCollectorTwoFailures(probe.GroupingTest)
+java.lang.AssertionError: second
+	at probe.GroupingTest.errorCollectorTwoFailures(GroupingTest.java:28)
+4) twoAssertsStopAtTheFirst(probe.GroupingTest)
+java.lang.AssertionError: first expected:<0> but was:<-1>
+	at probe.GroupingTest.twoAssertsStopAtTheFirst(GroupingTest.java:34)
+
+FAILURES!!!
+Tests run: 3,  Failures: 4
+
+exit code: 1

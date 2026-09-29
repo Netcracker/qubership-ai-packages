@@ -1,0 +1,6 @@
+results:
+  m.LenientSettingsTest.a_unusedStub: passed
+  m.LenientSettingsTest.b_stubCalledWithOtherArguments: passed
+  m.LenientTest.a_unusedLenientStub: passed
+  m.LenientTest.b_lenientStubCalledWithOtherArguments: passed
+exit code: 0

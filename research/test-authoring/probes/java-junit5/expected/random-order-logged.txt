@@ -1,0 +1,2 @@
+CONFIG: MethodOrderer.Random default seed: <seed>
+exit code: 0

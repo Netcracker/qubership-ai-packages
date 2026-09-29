@@ -1,0 +1,3 @@
+results:
+  m.MinValueTest.integersNeverReachMinValue: passed
+exit code: 0

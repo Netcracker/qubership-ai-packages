@@ -1,0 +1,4 @@
+results:
+  m.PlainMockTest.a_unusedStub: passed
+  m.PlainMockTest.b_stubCalledWithOtherArguments: passed
+exit code: 0

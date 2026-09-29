@@ -1,0 +1,15 @@
+# Probe project for the pytest claims in the test-authoring skill; see ../README.md.
+# Renovate's pep621 manager bumps the pins below and refreshes uv.lock.
+[project]
+name = "test-authoring-probes-pytest"
+version = "0.0.0"
+description = "Deliberately failing tests whose output the test-authoring skill quotes"
+requires-python = ">=3.12"
+dependencies = [
+  "pytest==9.1.1",
+  "pytest-randomly==5.0.0",
+  "pytest-check==2.9.1",
+]
+
+[tool.uv]
+package = false

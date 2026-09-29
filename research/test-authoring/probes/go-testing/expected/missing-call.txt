@@ -1,0 +1,5 @@
+# probes.example/gotesting/missingcall [probes.example/gotesting/missingcall.test]
+missingcall/m_test.go:9:45: undefined: assert.NoSuchCall
+FAIL	probes.example/gotesting/missingcall [build failed]
+FAIL
+exit code: 1

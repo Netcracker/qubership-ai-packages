@@ -1,0 +1,8 @@
+[ERROR] COMPILATION ERROR :
+[ERROR] <probe>/src/missing-call/java/probe/MissingCallTest.java:[3,1] cannot find symbol
+  symbol:   static assertNoSuchCall
+  location: class org.junit.jupiter.api.Assertions
+[ERROR] <probe>/src/missing-call/java/probe/MissingCallTest.java:[11,9] cannot find symbol
+  symbol:   method assertNoSuchCall(int,int)
+  location: class probe.MissingCallTest
+exit code: 1

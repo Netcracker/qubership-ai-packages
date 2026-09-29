@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 2 items
+
+tests/test_raises.py FF                                                  [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_match_mismatch ______________________________
+
+    def test_match_mismatch():
+>       with pytest.raises(ValueError, match=r"positive"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'positive'
+E         Actual message: 'count must not be negative: -1'
+
+tests/test_raises.py:9: AssertionError
+_______________________________ test_wrong_type ________________________________
+
+    def test_wrong_type():
+        with pytest.raises(TypeError):
+>           refuse(-1)
+
+tests/test_raises.py:15:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+count = -1
+
+    def refuse(count):
+>       raise ValueError(f"count must not be negative: {count}")
+E       ValueError: count must not be negative: -1
+
+tests/test_raises.py:5: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_raises.py::test_match_mismatch - AssertionError: Regex patt...
+FAILED tests/test_raises.py::test_wrong_type - ValueError: count must not be ...
+============================== 2 failed in <duration> ===============================
+exit code: 1

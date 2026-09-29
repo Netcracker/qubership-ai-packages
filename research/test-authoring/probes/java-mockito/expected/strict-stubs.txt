@@ -1,0 +1,47 @@
+[ERROR] Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.StrictStubsTest
+[ERROR] m.StrictStubsTest.a_unusedStub -- Time elapsed: <duration> <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException:
+
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at m.StrictStubsTest.a_unusedStub(StrictStubsTest.java:23)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+
+[ERROR] m.StrictStubsTest.b_stubCalledWithOtherArguments -- Time elapsed: <duration> <<< ERROR!
+org.mockito.exceptions.misusing.PotentialStubbingProblem:
+
+Strict stubbing argument mismatch. Please check:
+ - this invocation of 'greeting' method:
+    templates.greeting("fr");
+    -> at m.Notifier.notifyIn(Notifier.java:17)
+ - has following stubbing(s) with different arguments:
+    1. templates.greeting("en"); stubbed with: [Returns: hello]
+      -> at m.StrictStubsTest.b_stubCalledWithOtherArguments(StrictStubsTest.java:31)
+Typically, stubbing argument mismatch indicates user mistake when writing tests.
+Mockito fails early so that you can debug potential problem easily.
+However, there are legit scenarios when this exception generates false negative signal:
+  - stubbing the same method multiple times using 'given().will()' or 'when().then()' API
+    Please use 'will().given()' or 'doReturn().when()' API for stubbing.
+  - stubbed method is intentionally invoked with different arguments by code under test
+    Please use default or 'silent' JUnit Rule (equivalent of Strictness.LENIENT).
+For more information see javadoc for PotentialStubbingProblem class.
+	at m.StrictStubsTest.b_stubCalledWithOtherArguments(StrictStubsTest.java:32)
+
+[ERROR] m.StrictStubsTest.c_unusedStubOnMockCreatedInBody -- Time elapsed: <duration> <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException:
+
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at m.StrictStubsTest.c_unusedStubOnMockCreatedInBody(StrictStubsTest.java:39)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+
+[ERROR] Tests run: 3, Failures: 0, Errors: 3, Skipped: 0
+results:
+  m.StrictStubsTest.a_unusedStub: error org.mockito.exceptions.misusing.UnnecessaryStubbingException
+  m.StrictStubsTest.b_stubCalledWithOtherArguments: error org.mockito.exceptions.misusing.PotentialStubbingProblem
+  m.StrictStubsTest.c_unusedStubOnMockCreatedInBody: error org.mockito.exceptions.misusing.UnnecessaryStubbingException
+output of m.StrictStubsTest:
+  a_unusedStub: the body ran to its end
+exit code: 1

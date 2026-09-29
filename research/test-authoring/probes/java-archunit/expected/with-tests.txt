@@ -1,0 +1,12 @@
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.WithTestsTest
+[ERROR] m.WithTestsTest.everyHandlerIsAnnotated -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement m.Handler should be annotated with @Handles' was violated (2 times):
+Class <m.BHandler> is not annotated with @Handles in (BHandler.java:0)
+Class <m.FixtureHandler> is not annotated with @Handles in (FixtureHandler.java:0)
+	at m.WithTestsTest.everyHandlerIsAnnotated(WithTestsTest.java:17)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+results:
+  m.WithTestsTest.everyHandlerIsAnnotated: failure java.lang.AssertionError
+exit code: 1

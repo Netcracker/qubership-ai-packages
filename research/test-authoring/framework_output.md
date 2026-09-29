@@ -1,5 +1,9 @@
 # Measured failure output per framework
 
+> Superseded by the executable probes under [`probes/`](probes/README.md), which cover every framework below:
+> their golden files are the measurement, and `probes/*/claims.tsv` ties each sentence of a reference to it. This
+> file stays as the record of the first measurement.
+
 Measured on 2026-09-06 on macOS (arm64) with the versions named in each section. `expected = 0`, `actual = -1`
 throughout, from a function `ensureBytes(-1)` that returns its argument. Each line is the exception message the
 assertion raised, with newlines shown as `\n`; the runner adds the test name and the location around it.

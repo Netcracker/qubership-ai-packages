@@ -1,0 +1,13 @@
+id	probe	check	pattern	reference	quote	note
+killed	verdicts	contains	      KILLED CONDITIONALS_BOUNDARY at numbers.go:9:23	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	
+lived	verdicts	contains	       LIVED CONDITIONALS_BOUNDARY at numbers.go:17:11	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	
+survivor-name	verdicts	contains	LIVED 	references/mutation-tools.md	The tools name the survivor differently (*survived*, *lived*, *missed*, and go-mutesting's *failed*)	
+not-covered	verdicts	contains	 NOT COVERED ARITHMETIC_BASE at numbers.go:22:28	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	
+timed-out	verdicts	contains	   TIMED OUT INCREMENT_DECREMENT at numbers.go:9:29	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	
+not-viable	verdicts	contains	      KILLED ARITHMETIC_BASE at numbers.go:27:15	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	contradicts: the mutant "hi " - name does not compile and is reported KILLED; gremlins reports NOT VIABLE only when go test exits 2, and go test exits 1 on a build failure
+not-viable-count	verdicts	contains	Timed out: 1, Not viable: 0, Skipped: 0	references/mutation-tools.md	killed, lived, not covered, timed out, not viable	
+not-compiling-counted-killed	verdicts	contains	      KILLED ARITHMETIC_BASE at numbers.go:27:15	SKILL.md	a mutant that does not compile is no information	contradicts: with gremlins the reader cannot tell a mutant that does not compile from a killed one: both print KILLED
+path-keeps	path	contains	 NOT COVERED ARITHMETIC_BASE at other.go:6:11	references/mutation-tools.md	pass the changed packages	
+path-drops	path	absent	numbers\.go	references/mutation-tools.md	pass the changed packages	
+diff-flag	diff	contains	     SKIPPED ARITHMETIC_BASE at other/other.go:6:11	references/mutation-tools.md	pass the changed packages	refines: gremlins also takes --diff <ref> and reports every mutant outside the diff as SKIPPED
+diff-tests-changed-lines	diff	contains	       LIVED CONDITIONALS_BOUNDARY at numbers.go:17:11\n      KILLED CONDITIONALS_NEGATION at numbers.go:17:11	references/mutation-tools.md	pass the changed packages	

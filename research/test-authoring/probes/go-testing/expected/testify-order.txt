@@ -1,0 +1,18 @@
+--- FAIL: TestExpectedFirst (<duration>)
+    m_test.go:14:
+        	Error Trace:	<probe>/testifyorder/m_test.go:14
+        	Error:      	Not equal:
+        	            	expected: 0
+        	            	actual  : -1
+        	Test:       	TestExpectedFirst
+--- FAIL: TestSwapped (<duration>)
+    m_test.go:17:
+        	Error Trace:	<probe>/testifyorder/m_test.go:17
+        	Error:      	Not equal:
+        	            	expected: -1
+        	            	actual  : 0
+        	Test:       	TestSwapped
+FAIL
+FAIL	probes.example/gotesting/testifyorder	<duration>
+FAIL
+exit code: 1

@@ -1,0 +1,11 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -16,7 +16,7 @@
+ 
+ /// Whether `n` is strictly positive.
+ pub fn is_positive(n: i64) -> bool {
+-    n >= 0
++    n > 0
+ }
+ 
+ /// A label for `n`, which no test reads.

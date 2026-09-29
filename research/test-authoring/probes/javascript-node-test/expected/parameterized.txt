@@ -1,0 +1,47 @@
+▶ ensureBytes
+  ✖ ensureBytes(-1) is refused (<duration>)
+  ✖ ensureBytes(-2) is refused (<duration>)
+✖ ensureBytes (<duration>)
+ℹ tests 2
+ℹ suites 1
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/parameterized.test.mjs:7:5
+✖ ensureBytes(-1) is refused (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  -1 !== 0
+
+      at TestContext.<anonymous> (file://<probe>/tests/parameterized.test.mjs:8:14)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: -1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parameterized.test.mjs:7:5
+✖ ensureBytes(-2) is refused (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  -2 !== 0
+
+      at TestContext.<anonymous> (file://<probe>/tests/parameterized.test.mjs:8:14)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: -2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+exit code: 1

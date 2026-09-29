@@ -1,0 +1,8 @@
+
+Seed:        <seed>
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/order.test.js.
+exit code: 0

@@ -1,0 +1,14 @@
+{
+  "name": "test-authoring-probes-stryker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Probe project for the Stryker claims in the test-authoring skill; see ../README.md. Renovate's npm manager bumps the pins below and refreshes package-lock.json.",
+  "type": "module",
+  "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
+  }
+}

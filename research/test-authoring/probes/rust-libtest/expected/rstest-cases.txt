@@ -1,0 +1,50 @@
+     Running tests/rstest_cases.rs (target/debug/deps/rstest_cases-<hash>)
+
+running 4 tests
+test refuses_negative::case_1 ... FAILED
+test refuses_negative::case_2 ... FAILED
+test refuses_negative_named::case_1_minus_one ... FAILED
+test refuses_negative_named::case_2_minus_two ... FAILED
+
+failures:
+
+---- refuses_negative::case_1 stdout ----
+
+thread 'refuses_negative::case_1' (<tid>) panicked at tests/rstest_cases.rs:8:5:
+assertion `left == right` failed
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- refuses_negative::case_2 stdout ----
+
+thread 'refuses_negative::case_2' (<tid>) panicked at tests/rstest_cases.rs:8:5:
+assertion `left == right` failed
+  left: -2
+ right: 0
+
+---- refuses_negative_named::case_1_minus_one stdout ----
+
+thread 'refuses_negative_named::case_1_minus_one' (<tid>) panicked at tests/rstest_cases.rs:15:5:
+assertion `left == right` failed
+  left: -1
+ right: 0
+
+---- refuses_negative_named::case_2_minus_two stdout ----
+
+thread 'refuses_negative_named::case_2_minus_two' (<tid>) panicked at tests/rstest_cases.rs:15:5:
+assertion `left == right` failed
+  left: -2
+ right: 0
+
+
+failures:
+    refuses_negative::case_1
+    refuses_negative::case_2
+    refuses_negative_named::case_1_minus_one
+    refuses_negative_named::case_2_minus_two
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test rstest_cases`
+exit code: 101

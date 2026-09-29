@@ -1,0 +1,33 @@
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.SeededTest
+[ERROR] m.SeededTest.ensureBytesNeverReturnsANegativeCount -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Falsified on -1
+Shrunk in 30 stages, by trying 33 examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("ACoB/////x8=")
+    .forAll(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(42L, 1)` instead for last iteration, or `withSeed(42L)` for all iterations
+
+	at m.SeededTest.ensureBytesNeverReturnsANegativeCount(SeededTest.java:17)
+
+[ERROR] m.SeededTest.sameSeedAgain -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Falsified on -1
+Shrunk in 30 stages, by trying 33 examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("ACoB/////x8=")
+    .forAll(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(42L, 1)` instead for last iteration, or `withSeed(42L)` for all iterations
+
+	at m.SeededTest.sameSeedAgain(SeededTest.java:23)
+
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0
+results:
+  m.SeededTest.ensureBytesNeverReturnsANegativeCount: error org.jetbrains.jetCheck.PropertyFalsified
+  m.SeededTest.sameSeedAgain: error org.jetbrains.jetCheck.PropertyFalsified
+output of m.SeededTest:
+  <time>: failed on iteration 1 (use `recheckingIteration(42L, 1)` or `withSeed(42L)` to reproduce), shrinking...
+  <time>: failed on iteration 1 (use `recheckingIteration(42L, 1)` or `withSeed(42L)` to reproduce), shrinking...
+exit code: 1

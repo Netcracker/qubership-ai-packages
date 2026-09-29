@@ -1,0 +1,27 @@
+--- FAIL: TestAssertContinues (<duration>)
+    m_test.go:15:
+        	Error Trace:	<probe>/testifygrouping/m_test.go:15
+        	Error:      	Not equal:
+        	            	expected: 0
+        	            	actual  : -1
+        	Test:       	TestAssertContinues
+        	Messages:   	first
+    m_test.go:16:
+        	Error Trace:	<probe>/testifygrouping/m_test.go:16
+        	Error:      	Not equal:
+        	            	expected: 0
+        	            	actual  : -2
+        	Test:       	TestAssertContinues
+        	Messages:   	second
+--- FAIL: TestRequireStops (<duration>)
+    m_test.go:20:
+        	Error Trace:	<probe>/testifygrouping/m_test.go:20
+        	Error:      	Not equal:
+        	            	expected: 0
+        	            	actual  : -1
+        	Test:       	TestRequireStops
+        	Messages:   	first
+FAIL
+FAIL	probes.example/gotesting/testifygrouping	<duration>
+FAIL
+exit code: 1
