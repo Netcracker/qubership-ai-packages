@@ -1,0 +1,115 @@
+{
+ "key": "pgjdbc_pgjdbc_4259",
+ "summary": "On PostgreSQL 18+, invalidates the server-prepared statement cache when a search_path ParameterStatus (GUC_REPORT) reports a changed value, skipping the SET/RESET command-tag scan once the server reports search_path.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Behaviour change; adds searchPathPreparedStatementInPlpgsqlInvalidatesOnGucReport covering both pre-18 failure and 18+ re-prepare, and existing SET/RESET tests run through the report path on 18."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "server-prepare.md updated, but sehrope flagged that 'pgJDBC detects them wherever they happen and re-prepares automatically' overclaims: \"$user\", public plus SET ROLE changes resolution without a search_path report; author agreed to tighten wording and add a note."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Non-obvious comments in receiveParameterStatus and processResults explain the ordering against onParameterStatus and when the scan is skipped; they match the code."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "User-visible behaviour change on PG 18+ but the PR adds no CHANGELOG.md entry, while the repo keeps an Unreleased 42.7.12 section that feature PRs fill in."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "receiveParameterStatus and the SET/RESET branch gain a map lookup and string compare; negligible, and unchanged values cost no invalidation."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No auth, TLS, or untrusted-input parsing touched."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "On 18+ invalidation now follows server reports (e.g. also after ROLLBACK of a SET), which only adds re-prepares; pre-18 path unchanged."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Epoch bump happens on the protocol-reading thread like the existing command-tag path."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error paths added or changed."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial protocol-path logic (compare with previous value before onParameterStatus, skip scan when reported); the $user + SET ROLE gap the reviewer found is pre-existing, not introduced."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes a real class of 'cached plan must not change result type' errors with no new option."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Behaviour now differs by server version (18+ vs older), which the docs describe."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Docs, comments, and tests were updated together and agree; the only mismatch is the docs' scope wording already counted under user_docs."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build or CI changes."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No new failure or fallback state that needs a signal."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Interprets the PostgreSQL protocol: ParameterStatus/GUC_REPORT for search_path from PG 18, including the initial report at startup used as the baseline."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "user_docs",
+    "change_description",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "Small, cohesive change to one protocol code path with its docs and test."
+ }
+}

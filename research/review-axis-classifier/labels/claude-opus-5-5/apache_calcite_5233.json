@@ -1,0 +1,120 @@
+{
+ "key": "apache_calcite_5233",
+ "summary": "Adds an IEJoin (inequality join) operator, rule, and linq4j enumerator for inner joins with two or more cross-input inequality predicates, and registers the rule in the default Enumerable rule sets.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New operator and algorithm; mihaibudiu said the EnumerableIEJoinTest cases were hard to review and asked why the outputs are correct (a hard-coded 600 was replaced by a nested-loop count), and asked what happens when both comparisons use the same field, which had no test until then."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New rule enters the default rule sets (EnumerableRules, Programs), changing plans users see, but Calcite does not document individual enumerable rules on its site."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Reviewer asked for Javadoc on IEJoinEnumerator and its non-obvious fields and on the test helpers, flagged a copy-pasted comment in EnumerableIEJoin, and asked that the algorithm be explained without assuming readers know the paper."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Title matches the Jira (CALCITE-7755) and the description explains the algorithm and scope; no issue raised."
+  },
+  "performance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New join algorithm with its own computeSelfCost (2*nLogN + rows) that now competes with nested-loop join in default plans; mihaibudiu asked whether it is still more efficient with a residual Calc, and no benchmark backs the cost model."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No auth, parsing, or credential code; memory use of materialized inputs is comparable to existing hash and merge joins."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "ENUMERABLE_IE_JOIN_RULE is added to EnumerableRules.ENUMERABLE_RULES and Programs, so existing queries change plans (CombineRelOptRulesTest.xml switches NestedLoopJoin to IEJoin) and row order changes; the maintainer blamed later CI failures on non-deterministic tests."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "IEJoinEnumerator reads and closes both input enumerators in try-with-resources and clears state in close(); nothing shared."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New IllegalArgumentException paths in the EnumerableIEJoin constructor, copy(), and EnumerableDefaults.ieJoin with messages naming the offending types or operator; unremarkable."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial union-array algorithm with strict/non-strict tie-breaks and null handling; reviewer asked about the same field in both comparisons and why DOUBLE is excluded (NaN, signed zero), and unsigned types fail code generation."
+  },
+  "user_value": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New physical operator enabled by default; reviewer questioned whether IEJoin plus a residual Calc beats the original join, i.e. whether the rule pays off in the default rule set."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Result row order of inequality joins changes under the default rules; semantics are otherwise the same."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Reviewer found a stale copy-pasted comment in EnumerableIEJoin; covered by doc_comments."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build or dependency change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging or metrics relevant to an in-memory join operator."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Must match SQL comparison semantics for NULL (excluded), floating point (excluded), and character/datetime keys; handled by restricting types in supportsKeyTypes."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "tests"
+   ],
+   [
+    "performance",
+    "user_value",
+    "backward_compat"
+   ],
+   [
+    "doc_comments"
+   ]
+  ],
+  "why": "A 1500-line new operator with an algorithmic core, planner-cost and default-rule-set impact, and heavy documentation needs; each deserves a focused pass."
+ }
+}

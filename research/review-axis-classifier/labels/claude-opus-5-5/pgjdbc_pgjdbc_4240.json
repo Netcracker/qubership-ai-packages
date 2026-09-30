@@ -1,0 +1,116 @@
+{
+ "key": "pgjdbc_pgjdbc_4240",
+ "summary": "Re-enables the aggregate JaCoCo XML/HTML report and adds per-job Codecov upload plus a manual-trigger finalization job to the PR workflow, committing the public Codecov upload token as a fallback for fork PRs.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "CI/build change; no driver behavior changed, validated by the Codecov run on the PR itself."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds a Code coverage section to TESTING.md; its -Pcoverage claim matches build-logic.java.gradle.kts:50 (coverage param or a jacoco task name)."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Many new explanatory comments in main.yml/matrix.mjs/codecov.yml; mostly accurate."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Detailed why/what and token rationale; the first commit message still says only omni.yml uploads, but the PR body is current."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Instrumentation slows tests and crashed Windows workers; commit 3ed0b449 already limits coverage to ubuntu jobs."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Commits a Codecov upload token in plain text in main.yml (`token: ${{ env.CODECOV_TOKEN || '75d2...' }}`) and exposes secrets.CODECOV_TOKEN as a job-level env var visible to every build/test step; credentials handling in CI needs a deliberate check."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No public API or driver behavior touched."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial workflow conditions: codecov.yml `manual_trigger: true` also applies to the unchanged omni.yml uploads, which never call send-notifications, so those runs never notify; the `Tests` job, described as an aggregate gate, runs with if: always() and fail_ci_if_error: false and never checks needs.build-test.result, so it passes when the matrix fails."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Contributor tooling; no user-facing feature."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "A job named `Tests` that always succeeds could be mistaken for a required-check gate (see correctness)."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "build.gradle.kts comment says Codecov consumes the XML 'see .github/workflows/omni.yml' while main.yml is now the PR uploader; omni.yml still labels the same codecov-action SHA `# v6` and uses the old `file:` input while main.yml calls it v7.0.0 with `files:`."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Changes build.gradle.kts, build-logic jacoco plugin, main.yml, matrix.mjs, codecov.yml."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "build_ci",
+    "correctness",
+    "contradictions"
+   ],
+   [
+    "security"
+   ]
+  ],
+  "why": "Workflow logic and cross-file consistency form one review; the committed token and secret exposure deserve a separate security pass."
+ }
+}

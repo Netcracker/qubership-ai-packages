@@ -1,0 +1,118 @@
+{
+ "key": "uber_NullAway_1807",
+ "summary": "Keeps array types whose component type is raw (instead of dropping them as raw) when computing tree types, so nullness of array elements is still checked; the diff also carries a stacked fix resolving unbound generic method references against the functional-interface receiver.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Behavior change in every getTreeType caller; tests were added for parameter, for-each, ternary, raw-to-parameterized and inference contexts (commits e5d438ef4f, c828135274 note an earlier test passed with the fix reverted), but the raw-array-as-target direction CodeRabbit raised (@Nullable Test<String>[] into Test[]) still has no test."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Public resolveMemberReference and record ResolvedMethodReference added, getMemberReferenceMethodType gains a parameter, getTreeType @return contract changed; comments were corrected in 7d397c8db4 and db52657725 (helper renamed to typeOrNullIfRawNonArray). Minor typo 'javac compute' remains."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Description covers only raw arrays; it omits the new diagnostics now reported (incompatible types for @Nullable Test[] -> Test<String>[], per commit e5d438ef4f) and the bundled method-reference changes (issue1795 tests)."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Users in JSpecify mode may see new errors on code NullAway was silent on; expected for a checker improvement."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New diagnostics surface with messages like 'Test<String> []' (space before brackets), produced by existing pretty-printing."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial change to getTreeType and method-ref resolution; CodeRabbit's unresolved finding: raw-array targets still exit early via isRaw() guards (GenericsChecks ~2122, 2039, 2496, 3543) so assigning @Nullable Test<String>[] to Test[] is not checked, inconsistent with the new policy."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes #1800; useful but narrow improvement."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Reports diagnostics that were previously suppressed for raw-component arrays (commit e5d438ef4f), which users will notice after upgrading."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comments and helper name were aligned with the code by db52657725/7d397c8db4; residual asymmetry between raw-array source and raw-array target handling is covered under correctness."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Interprets javac/JLS raw-type semantics for arrays and JSpecify nullness of array components and method-reference typing."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "spec_conformance",
+    "tests"
+   ],
+   [
+    "doc_comments",
+    "change_description",
+    "surprising_behavior"
+   ]
+  ],
+  "why": "Large type-system change bundled with a stacked method-ref fix: one agent for logic/spec/tests, one for comments, description and user-visible diagnostics."
+ }
+}

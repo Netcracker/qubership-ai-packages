@@ -1,0 +1,112 @@
+{
+ "key": "apache_calcite_5238",
+ "summary": "Stops SqlValidatorImpl from overwriting OFFSET and FETCH on an inner SELECT when pushing an outer ORDER BY into it, so a FETCH added by a custom rewrite (e.g. ROWNUM) is kept.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Bug fix; julianhyde objected to the original synthetic test, mihaibudiu asked for a Quidem test or an explanation of why only a custom validator reproduces it, and for the test to reference the Jira."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal validator fix; no option or documented behavior."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Reviewer asked for Javadoc naming CALCITE-7761 on the new test and a comment explaining that the tree shape comes only from external rewrites; both were added in the final version."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Title matches the Jira and the description gives the ROWNUM example; reviewer noted the term 'pagination' was unclear."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Two null checks in validation."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Changes rewrite output only for trees with OFFSET/FETCH on the inner SELECT, which Calcite's parser does not produce; affects downstream validators that override performUnconditionalRewrites."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error path changed."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Small guard in two symmetric branches; reviewer called the fix safe."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix, not a feature."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Restores expected semantics."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The comment above both branches was rewritten alongside the code and matches it."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "FETCH-then-ORDER-BY must keep SQL semantics (limit applied before the outer sort); the wrap into a subquery does that."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "doc_comments"
+   ]
+  ],
+  "why": "A two-branch validator guard; one reviewer can cover the test adequacy and comments."
+ }
+}

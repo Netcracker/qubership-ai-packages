@@ -1,0 +1,121 @@
+{
+ "key": "apache_calcite_5113",
+ "summary": "Allows arbitrary scalar expressions in OFFSET (parser, validator, RelBuilder, Enumerable execution, rules, metadata, rel-to-SQL unparsing with new MySQL/SQLite OFFSET-only forms) and renames the FETCH-only validator resources to shared OFFSET/FETCH ones.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Large feature; offset.iq, JdbcTest, RelBuilderTest, RelOptRulesTest, RelToSqlConverterTest, SqlValidatorTest etc. added; reviewers asked why an existing validator test still passed (fixed by adding a negative-literal check) and for results cross-checked against PostgreSQL."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New user-visible syntax; reference.md updated, but the retained sentence 'start may be either an unsigned numeric literal or a dynamic parameter' now conflicts with the new OFFSET-expression sentence right after it."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Parser.jj grammar comments, RexUtil.makeOffsetFetchSum Javadoc and RelBuilder.sortLimit @param updated; mostly accurate."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Description keeps the full PR template and describes only the parser feature, not the MySQL/SQLite OFFSET-only unparse change, the SortUnionTransposeRule/EnumerableMergeUnionRule changes, or the resource renames; xuzifu666 asked for a summary of why existing tests changed and for a better PR title."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Planning-time only; no hot loop added."
+  },
+  "security": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "OFFSET now evaluates arbitrary scalar expressions incl. UDFs, but column references, aggregates and subqueries are rejected; nothing security-relevant beyond a glance."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Public CalciteResource methods fetchExpressionMustBeNumeric/fetchExpressionCannotReferenceColumn/fetchExpressionEvaluatedToNull (released in calcite-1.42.0) are renamed to offsetFetch* with a new parameter; a negative FETCH literal now fails with a different message; RelBuilder.sortLimit and EnumerableLimit.getExpression change contracts."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New validation errors; the same condition now yields two different messages ('OFFSET must not be negative' from the validator vs 'OFFSET value -1 is out of range; expected a non-negative value' from RexUtil), and SqlDialect.unparseOffset throws a bare IllegalArgumentException for non-reducible expressions in LIMIT dialects."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Many non-trivial paths: CEIL(offset)+CEIL(fetch) pushdown in union rules, determinism checks for OFFSET re-evaluation, RelMdMinRowCount fallback to rowCount for non-literal offsets, decorrelation guard, parser change from UnsignedNumericLiteralOrParam to Expression."
+  },
+  "user_value": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New SQL feature; reviewer questioned scope (author had fixed an unrelated UNION DISTINCT issue and backed it out) and asked to consolidate unparse helpers."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "MySQL OFFSET-only now unparses as LIMIT 18446744073709551615 and SQLite as LIMIT -1; documented vendor idioms, but a user reading generated SQL may be surprised."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "reference.md now says both that OFFSET start must be an unsigned literal or parameter and that OFFSET may contain any scalar expression; two different negative-value messages for the same rule."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Parser.jj is a grammar source, no build script or dependency change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No new retry, fallback, or background state."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Extends SQL:2008 OFFSET <offset row count> grammar beyond the standard's simple value specification and emulates it per dialect (PostgreSQL, MySQL, SQLite); reviewers asked for verification against real databases."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "tests",
+    "spec_conformance"
+   ],
+   [
+    "backward_compat",
+    "error_model",
+    "user_docs",
+    "contradictions",
+    "change_description",
+    "user_value"
+   ]
+  ],
+  "why": "Large change spanning parser, planner rules and dialect unparsing plus public-API/message changes; logic and contract/docs reviews are independent."
+ }
+}
