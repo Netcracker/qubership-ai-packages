@@ -27,9 +27,10 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
 
 | File | What it is |
 | --- | --- |
+| `base` | The commit the tests are compared with, the base of the pull request. |
 | `tag` | The tag in `vlsi/NullAway` the session starts from. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/result.diff` | What the session changed in the production code (expected empty), then the tests relative to the base of the pull request, `09fdea5a`. |
+| `<model>/result.diff` | What the session changed in the production code (expected empty), then every other file relative to `base`. |
 | `<model>/result-note.md` | The session's closing message to the author of the pull request. |
 | `<model>/skill-tree` | The tree id of the skill that produced the result. |
 | `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |

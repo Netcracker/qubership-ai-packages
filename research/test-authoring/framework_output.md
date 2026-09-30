@@ -339,5 +339,54 @@ E         ('r4', 'MISSING')
 E         Use -v to get more diff
 ```
 
-A set lists every mismatch on each side in a default run. A list names only the first differing index in a default run,
-truncates the full diff under `-v`, and prints it whole under `-vv`.
+A short set lists every mismatch on each side in a default run; a long one is cut, see the rechecks below. A list names
+only the first differing index in a default run, truncates the full diff under `-v`, and prints it whole under `-vv`.
+
+## Rechecks after a review of 1.1.0 (measured 2026-09-25)
+
+pytest 8.4.2, two sets of 20 records that differ in every record, `assert got == want`:
+
+```text
+default run:
+E         Extra items in the left set:
+E         ('r5', 'EMPTY')
+E         ('r13', 'EMPTY')
+E         ('r16', 'EMPTY')
+E         ('r8', 'EMPTY')
+E         ('r2', 'EMPTY')...
+E         
+E         ...Full output truncated (37 lines hidden), use '-vv' to show
+
+CI=true: all 40 extra items are listed, 20 on each side.
+```
+
+Node 26.9.0, `node --test`, one failing `it` inside a `describe`:
+
+```text
+▶ ensureBytes
+  ✖ refuses a negative count (1.173334ms)
+✖ ensureBytes (1.96275ms)
+...
+✖ failing tests:
+
+test at m.test.mjs:4:3
+✖ refuses a negative count (1.173334ms)
+  AssertionError [ERR_ASSERTION]: ensureBytes(-1)
+  
+  -1 !== 0
+```
+
+JUnit 4.13.2 with Hamcrest 1.3, `ErrorCollector` with two failing `checkThat` calls, run by `JUnitCore` (the JUnit
+Platform result for the same test is in the JUnit 4.13.2 section above):
+
+```text
+There were 2 failures:
+1) fields(ECTest)
+java.lang.AssertionError: port
+Expected: <8081>
+     but: was <8080>
+2) fields(ECTest)
+java.lang.AssertionError: host
+Expected: "b"
+     but: was "a"
+```

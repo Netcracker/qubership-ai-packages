@@ -27,8 +27,8 @@ cases that expect the same outcome.
   the shape of the input. Where the rule has to hold everywhere, check it against every kind above before writing it.
 - **A worked example is one instance, not the rule.** Where §12 or a reference file shows the rule on one kind of test,
   the rule's text still names the check a reviewer applies to any kind.
-- **A new case goes to a kind the cases do not cover yet**, where the edit rests on a kind they miss. The three cases so
-  far are all `uber/NullAway#1834`.
+- **A new case goes to a kind the cases do not cover yet**, where the edit rests on a kind they miss. The cases so far
+  are `uber/NullAway#1834` and `#1750`, and `apache/calcite#4410`: compiler-like harnesses only.
 
 ## One rule, five places
 

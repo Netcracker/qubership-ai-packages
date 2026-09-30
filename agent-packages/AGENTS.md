@@ -34,9 +34,10 @@ a test is written differently under each. Every failure message a file quotes is
 
 A skill can have regression cases under `research/<package>/cases/<case>/`: the input in `prompt.md` (frozen notes, or
 the task for a repository pinned at a tag), the output of each model under `<model>/` (`result.md`, or `result.diff` for
-a change to a repository), and a `README.md` with the checks the output has to pass and the way to run the case. The
-cases stay out of `agent-packages/<package>/`, because `apm install` copies the whole package directory into every
-consumer's `apm_modules/`.
+a change to a repository: the change is the skill's output, and the files it touches belong to the repository, not to
+the case), and a `README.md` with the checks the output has to pass and the way to run the case. The cases stay out of
+`agent-packages/<package>/`, because `apm install` copies the whole package directory into every consumer's
+`apm_modules/`.
 
 - **Run the skill as a consumer gets it.** Copy the skill at the revision under test to a directory outside the
   checkout, with `git archive <rev> <path to the skill> | tar -x -C <dir> --strip-components=<depth>`, and start the

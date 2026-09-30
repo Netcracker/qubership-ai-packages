@@ -48,9 +48,10 @@ There is no soft assert in pytest itself; a test with several assertions on one 
 fields are independent, `pytest-check` or a parametrized test over the fields keeps them reporting together. Several
 expectations on the result of one act, the errors of one validated batch, are one `assert` on the fields the behavior
 defines, the record and the error code without the message. Where the behavior defines no order and no duplicates,
-compare sets, `{("r2", "EMPTY"), …}`: pytest lists every extra item on each side in a default run. Where it defines the
-order, compare lists, which a default run reports only up to the first differing index and `-vv` prints whole. A
-parametrized test would repeat the act for each expectation.
+compare sets, `{("r2", "EMPTY"), …}`: pytest lists the extra items on each side. A default run cuts a long list after a
+few lines and says `Full output truncated`; `-vv`, or the `CI` environment variable that CI services set, prints it
+whole. Where it defines the order, compare lists, which a default run reports only up to the first differing index and
+`-vv` prints whole. A parametrized test would repeat the act for each expectation.
 
 ## Errors
 

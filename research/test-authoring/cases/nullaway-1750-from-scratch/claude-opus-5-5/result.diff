@@ -1,0 +1,122 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+index ad70e902f..acb90419d 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+@@ -1888,6 +1888,117 @@ public class FrameworkTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  /**
++   * Adds a source stub for Spring's {@code @Value} annotation.
++   *
++   * @param helper the test helper to add the stub to
++   * @return the test helper, for chaining
++   */
++  private static CompilationTestHelper addSpringValueAnnotationStub(CompilationTestHelper helper) {
++    return helper.addSourceLines(
++        "Value.java",
++        "package org.springframework.beans.factory.annotation;",
++        ANNOTATION_IMPORTS,
++        "@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})",
++        RETENTION_RUNTIME,
++        "public @interface Value { String value(); }");
++  }
++
++  @Test
++  public void springValueSpelNullAfterNotEqualsIsNotAResult() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{bean != null ? bean.name : 'default'}")
++              String comparedWithNull;
++              @Value("#{bean != null ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
++              String nullResult;
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueSpelNullAfterEqualsIsNotAResult() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{bean == null ? 'default' : bean.name}")
++              String comparedWithNull;
++              @Value("#{bean == null ? null : bean.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
++              String nullResult;
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueSpelNullBeforeNotEqualsIsNotAResult() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{null != bean ? bean.name : 'default'}")
++              String comparedWithNull;
++              @Value("#{null != bean ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
++              String nullResult;
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueSpelNullBeforeEqualsIsNotAResult() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{null == bean ? 'default' : bean.name}")
++              String comparedWithNull;
++              @Value("#{null == bean ? null : bean.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
++              String nullResult;
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueSpelNullAfterUnspacedNotEqualsIsNotAResult() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{bean!=null ? bean.name : 'default'}")
++              String comparedWithNull;
++              @Value("#{bean!=null ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
++              String nullResult;
++            }
++            """)
++        .doTest();
++  }
++
+   @Test
+   public void mavenParameterFieldTest() {
+     defaultCompilationHelper
