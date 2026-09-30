@@ -1,0 +1,21 @@
+{"key": "apache_calcite_5244",
+ "summary": "Re-enables three disabled tests in JdbcTest and RelMetadataTest, updating the expected plan and selectivity to the current optimizer output.",
+ "axes": {
+  "tests": {"label": 2, "mandated": false, "finding": true, "evidence": "Test-only change. Reviewer asked to keep one string literal per plan line, which was changed; mihaibudiu noted the plan is very hard to verify by eye. The new expected plan in testCloneGroupBy2Plan pins an EnumerableNestedLoopJoin(condition=[true]) cross product without anyone checking that it is acceptable."},
+  "user_docs": {"label": 0, "mandated": false, "finding": false, "evidence": "No user-visible change."},
+  "doc_comments": {"label": 0, "mandated": false, "finding": false, "evidence": "Only @Disabled annotations and their comments removed."},
+  "change_description": {"label": 2, "mandated": false, "finding": true, "evidence": "The description calls the new plan more optimized, although it contains a cross-product NestedLoopJoin(condition=[true]). It also says the filter literal is folded to 1997:SMALLINT, while the filter still uses CAST($t4):INTEGER = 1997 and the SMALLINT appears only in the top projection."},
+  "performance": {"label": 1, "mandated": false, "finding": false, "evidence": "No production code, but the re-enabled plan test baselines a cross join, which a reviewer may want to flag as a planner regression."},
+  "security": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."},
+  "backward_compat": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."},
+  "concurrency": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."},
+  "error_model": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."},
+  "correctness": {"label": 1, "mandated": false, "finding": false, "evidence": "Expected values were checked: 1.0 / DEPT_SIZE follows from the fixed four-row dept table, and testCloneGroupBy2 confirms the query results."},
+  "user_value": {"label": 0, "mandated": false, "finding": false, "evidence": "No feature."},
+  "surprising_behavior": {"label": 0, "mandated": false, "finding": false, "evidence": "No behavior change."},
+  "contradictions": {"label": 1, "mandated": false, "finding": true, "evidence": "The description's claims about the plan (more optimized, literal folded) disagree with the plan text the test asserts."},
+  "build_ci": {"label": 0, "mandated": false, "finding": false, "evidence": "No build changes; three more tests now run in CI."},
+  "observability": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."},
+  "spec_conformance": {"label": 0, "mandated": false, "finding": false, "evidence": "Test-only."}
+ },
+ "plan": {"mode": "single", "groups": [["tests", "change_description"]], "why": "A small test-only change; one reviewer can check the pinned plan and the description's claims about it together."}}
