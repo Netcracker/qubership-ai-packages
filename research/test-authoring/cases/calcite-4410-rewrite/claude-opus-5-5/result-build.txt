@@ -1,0 +1,10 @@
+on the fix (build.sh exited with 0):
+  553 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  553 tests ran, 6 failed
+    SqlValidatorTest.testJoinUsingCaseInsensitiveMatchesSelectItemSpelledOtherThanUsingColumn()
+    SqlValidatorTest.testJoinUsingCaseInsensitiveMatchesUsingColumnSpelledOtherThanSelectItem()
+    SqlValidatorTest.testJoinUsingCaseInsensitiveExpandsColumnSpelledOtherThanCatalog()
+    SqlValidatorTest.testNaturalJoinCaseSensitiveExpandsCommonColumn()
+    SqlValidatorTest.testNaturalJoinCaseInsensitiveExpandsColumnSpelledAsInCatalog()
+    SqlValidatorTest.testNaturalJoinCaseInsensitiveExpandsColumnSpelledOtherThanCatalog()

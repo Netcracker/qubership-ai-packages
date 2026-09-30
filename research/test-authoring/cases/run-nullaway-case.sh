@@ -19,8 +19,7 @@
 # working copy. The output goes to <case directory>/<model>/, and only after
 # the session succeeds:
 #   result.diff     what the session changed in production code (expected
-#                   empty), then every test file relative to the base of
-#                   uber/NullAway#1834
+#                   empty), then every other file relative to the base
 #   result-note.md  the session's final message
 #   result-build.txt  for the fix and for the base, the tests that ran and
 #                   the ones that failed, or the exit status of a build that
@@ -34,7 +33,7 @@ case_dir=${1:?usage: run-nullaway-case.sh <case directory> <model> [<rev>]}
 case_dir=${case_dir%/}
 model=${2:?usage: run-nullaway-case.sh <case directory> <model> [<rev>]}
 skill=agent-packages/test-authoring/.apm/skills/test-authoring
-base=09fdea5a232106714b68f3d9a275e9bdf227c2c5
+base=$(cat "$case_dir/base")
 
 work=$(mktemp -d)
 mkdir "$work/skill" "$work/out"
@@ -123,6 +122,7 @@ git -C "$work/nullaway" checkout -q "$base" -- nullaway/src/main
 build base
 git -C "$work/nullaway" checkout -q HEAD -- nullaway/src/main
 
+rm -rf "${case_dir:?}/$model"
 mkdir -p "$case_dir/$model"
 cp "$work/out/"* "$case_dir/$model/"
 echo "$work"

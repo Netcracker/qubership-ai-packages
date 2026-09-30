@@ -39,11 +39,12 @@ The engine has no parameterized test. A loop over cases inside one `#[test]` rep
 call in the loop is a case of its own (§7's bullet *One behavior per test*), so the cases after the first failure are
 not reported. Separate `#[test]` functions, a macro that expands to one `#[test]` per case, or the `rstest` crate's
 `#[case]` give each case its own name in the report, which is the shape §7 asks for. A crate without `rstest` often
-keeps such a loop anyway. It is a check that stops at the first mismatch, which §9 lists among the shapes a new test
-does not take. Where the file already has one, the new case is a `#[test]` function of its own, or a row of the file's
-macro where it has one, and the loop stays as it is unless the task is to rewrite it. The pull request names §7. Name an
-`rstest` case by its condition, `#[case::minus_one(-1)]`, since the default name is an index. Cases that share a setup
-(`SKILL.md` §7) and assert the same way may be the `#[case]` rows of one `rstest` function, or separate `#[test]`
+keeps such a loop anyway. Its assertion stops at the first failing row, which §9 lists among the shapes a new test does
+not take. Where the file already has one, the new case is a `#[test]` function of its own, or a row of the file's macro
+where it has one, and the loop stays as it is unless the task is to rewrite it. Where the setup is too long to repeat,
+the loop and the new test share it through a helper that both call, as §9 lets a twin do. The pull request names §7.
+Name an `rstest` case by its condition, `#[case::minus_one(-1)]`, since the default name is an index. Cases that share a
+setup (`SKILL.md` §7) and assert the same way may be the `#[case]` rows of one `rstest` function, or separate `#[test]`
 functions that call one helper which builds the setup from the varying value. The main skill (§7) and the file's
 neighbors (§9) choose between them, and a short setup is repeated in each case. An `Err` and an `Ok` that one
 `assert_eq!` compares assert the same way and stay rows. Where the cases need different assertions, one panicking under

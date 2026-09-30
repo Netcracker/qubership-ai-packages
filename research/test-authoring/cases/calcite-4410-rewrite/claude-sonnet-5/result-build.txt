@@ -1,0 +1,8 @@
+on the fix (build.sh exited with 0):
+  549 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  549 tests ran, 4 failed
+    SqlValidatorTest.testJoinUsingCommonColumnMatchesCaseInsensitivelyLowerSelectList()
+    SqlValidatorTest.testNaturalJoinCommonColumnIsCoalesced()
+    SqlValidatorTest.testNaturalJoinCommonColumnMatchesCaseInsensitively()
+    SqlValidatorTest.testJoinUsingCommonColumnMatchesCaseInsensitivelyUpperSelectList()
