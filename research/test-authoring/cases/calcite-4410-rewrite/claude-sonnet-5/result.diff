@@ -1,0 +1,76 @@
+diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+index 958be01..ada7552 100644
+--- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
++++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+@@ -5486,6 +5486,71 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+         .ok();
+   }
+ 
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
++   * The common column keeps the spelling used in the select list, whichever side of the
++   * {@code USING} list is upper-cased. */
++  @Test void testJoinUsingCommonColumnMatchesCaseInsensitivelyUpperSelectList() {
++    sql("select DEPTNO from emp join dept using (deptno)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`deptno`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
++   * As {@link #testJoinUsingCommonColumnMatchesCaseInsensitivelyUpperSelectList()}, with the
++   * casing of the select list and the {@code USING} list swapped, to confirm the alias follows
++   * the select list rather than always taking one fixed case. */
++  @Test void testJoinUsingCommonColumnMatchesCaseInsensitivelyLowerSelectList() {
++    sql("select deptno from emp join dept using (DEPTNO)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`DEPTNO`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
++   * Before the fix, a common column of a {@code NATURAL JOIN} was never qualified or coalesced,
++   * regardless of case sensitivity, because {@code expandExprFromJoin} handled only
++   * {@code USING}; validating such a query failed with "Column 'DEPTNO' is ambiguous". */
++  @Test void testNaturalJoinCommonColumnIsCoalesced() {
++    sql("select DEPTNO from emp natural join dept")
++        .withCaseSensitive(true)
++        .withValidatorIdentifierExpansion(true)
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
++            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
++   * Once a {@code NATURAL JOIN} common column is coalesced
++   * ({@link #testNaturalJoinCommonColumnIsCoalesced()}), matching it against the select list
++   * must also honor {@code caseSensitive false}, the same as for {@code USING}. */
++  @Test void testNaturalJoinCommonColumnMatchesCaseInsensitively() {
++    sql("select deptno from emp natural join dept")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept`");
++  }
++
+   @Test void testCrossJoinOnFails() {
+     sql("select * from emp cross join dept\n"
+         + " ^on^ emp.deptno = dept.deptno")

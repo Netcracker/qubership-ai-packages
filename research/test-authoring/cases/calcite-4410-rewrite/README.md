@@ -82,8 +82,7 @@ common column, not only case-insensitive matching.
 
 ## Checks
 
-Read the changed files against `base` (`git diff <base>` in the session's clone, or the file beside `changed-files.txt`
-against its version at `base`) and `result-note.md` against all of them.
+Read `result.diff` and `result-note.md` against all of them.
 
 1. **Every submitted input survives with its expectation** (§4). The 8 queries of the submitted tests, each with its
    case-sensitivity setting, are each validated by some test of the result and still expected to pass. A missing input

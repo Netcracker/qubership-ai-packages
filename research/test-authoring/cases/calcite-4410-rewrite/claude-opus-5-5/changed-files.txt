@@ -1,1 +1,0 @@
-other M	core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java

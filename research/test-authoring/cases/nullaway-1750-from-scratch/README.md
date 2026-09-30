@@ -46,7 +46,7 @@ Before the fix, `SpringHandler` treated a Spring `@Value` field as possibly unin
 | `production-paths` | `nullaway/src/main`. The pull request does not touch `CHANGELOG.md`. |
 | `build.sh` | Runs every test class under `nullaway/src/test/java` that differs from `base`, with `./gradlew :nullaway:test --rerun --quiet`, and prints how many tests ran and which failed. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy; the same text as `nullaway-1834-from-scratch`. |
-| `<model>/` | The output of `run-case.sh`: the changed files under their own names, `changed-files.txt`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
+| `<model>/` | The output of `run-case.sh`: `result.diff`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
 
 The infrastructure was checked without a model on 2026-09-25: the pull request's own tests applied on top of the case
 commit give `73 tests ran, 0 failed` on the fix (59 s with a warm Gradle cache), and on the base
@@ -62,8 +62,7 @@ research/test-authoring/cases/run-case.sh research/test-authoring/cases/nullaway
 
 ## Checks
 
-Read the changed files against `base` (`git diff <base>` in the session's clone, or the file beside `changed-files.txt`
-against its version at `base`) and `result-note.md` against all of them.
+Read `result.diff` and `result-note.md` against all of them.
 
 1. **The false positive is caught** (§1, §3). One test holds a field whose SpEL expression mentions `null` only as the
    right operand of `!=` or `==`, such as `#{someBean != null ? someBean.value : 'default'}`, with no marker on it, and
@@ -92,7 +91,7 @@ against its version at `base`) and `result-note.md` against all of them.
    inputs; `Unless` or `OnlyWhen` stating the condition of one rule passes. A test that now holds the new case keeps no
    name that states only an older rule, such as `springValueFieldTest`; where the rule has a test per partition, the
    name also states the partition, such as the side of the operator `null` is on.
-8. **The production code is unchanged.** `changed-files.txt` has no `production` line. The session proposes the stack
+8. **The production code is unchanged.** The first part of `result.diff` is empty. The session proposes the stack
    line (§0) in its closing message, with the text of the line, for `AGENTS.md` or `CLAUDE.md`, and edits neither.
 9. **Green on the fix, red on the base for each moved case** (§1). Read `result-build.txt`: no failure on the fix, and
    on the base a failure for every test that holds a silent field with `null` in a comparison and for no other test: at

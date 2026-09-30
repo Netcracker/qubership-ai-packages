@@ -18,12 +18,8 @@
 # With <rev>, the skill is taken from that commit; without it, from the
 # working copy. The output goes to <case directory>/<model>/, and only after
 # the session succeeds:
-#   <file>          every file the session changed, under its own name, so
-#                   that the commit of the next run shows how the result moved
-#   changed-files.txt  one line per changed file: production or other, the
-#                   git status letter, and the path; production is compared
-#                   with the commit the session started from (expected
-#                   empty), everything else with the base
+#   result.diff     what the session changed in production code (expected
+#                   empty), then every other file relative to the base
 #   result-note.md  the session's final message
 #   result-build.txt  for the fix and for the base, the tests that ran and
 #                   the ones that failed, or the exit status of a build that
@@ -79,15 +75,9 @@ EOF
 
 git -C "$work/nullaway" add -A -N
 {
-  git -C "$work/nullaway" diff --name-status HEAD -- nullaway/src/main CHANGELOG.md | sed 's/^/production /'
-  git -C "$work/nullaway" diff --name-status "$base" -- . ':!nullaway/src/main' ':!CHANGELOG.md' | sed 's/^/other /'
-} > "$work/out/changed-files.txt"
-while read -r _ status path; do
-  [ "$status" = D ] && continue
-  name=$(basename "$path")
-  [ -e "$work/out/$name" ] && { echo "two changed files are named $name" >&2; exit 1; }
-  cp "$work/nullaway/$path" "$work/out/$name"
-done < "$work/out/changed-files.txt"
+  git -C "$work/nullaway" diff HEAD -- nullaway/src/main CHANGELOG.md
+  git -C "$work/nullaway" diff "$base" -- . ':!nullaway/src/main' ':!CHANGELOG.md'
+} > "$work/out/result.diff"
 
 # The test classes the session changed, as Gradle --tests filters.
 classes=$(git -C "$work/nullaway" diff --name-only "$base" -- 'nullaway/src/test/java/*.java' |

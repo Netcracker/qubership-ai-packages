@@ -1,0 +1,149 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
+index 095772e0d..ef4be5279 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericInheritanceTests.java
+@@ -383,6 +383,39 @@ public class GenericInheritanceTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void overrideReturnTypeJudgedByDeclaredUpperBoundInExtendsWildcard() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import java.util.List;
++            import org.jspecify.annotations.NonNull;
++            import org.jspecify.annotations.NullMarked;
++            import org.jspecify.annotations.Nullable;
++            @NullMarked
++            class Test {
++              interface Base<V extends @Nullable Object> {
++                List<? extends @NonNull V> get();
++              }
++              static class BadOverride<V extends @Nullable Object> implements Base<V> {
++                @Override
++                // BUG: Diagnostic contains: Method returns List<V>, but overridden method returns List<? extends V>, which has mismatched type parameter nullability
++                public List<V> get() {
++                  throw new RuntimeException();
++                }
++              }
++              static class OkOverride<V> implements Base<V> {
++                @Override
++                public List<V> get() {
++                  throw new RuntimeException();
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d318847..60112334a 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -1442,6 +1442,100 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void typeVariableActualJudgedByDeclaredUpperBound() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              class Foo<X extends @Nullable Object> {}
++              void nonnullWildcard(Foo<? extends Object> foo) { throw new RuntimeException(); }
++              <V extends @Nullable Object> void testPositive(Foo<V> f) {
++                // BUG: Diagnostic contains: incompatible types: Test.Foo<V> cannot be converted to Test.Foo<? extends Object>
++                nonnullWildcard(f);
++              }
++              <V> void testNegative(Foo<V> f) {
++                nonnullWildcard(f);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void annotatedTypeVariableActualComparedAsWritten() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              class Foo<X extends @Nullable Object> {}
++              void nonnullWildcard(Foo<? extends Object> foo) { throw new RuntimeException(); }
++              <V extends @Nullable Object> void testNegative(Foo<@NonNull V> f) {
++                nonnullWildcard(f);
++              }
++              <V> void testPositive(Foo<@Nullable V> f) {
++                // BUG: Diagnostic contains: incompatible types: Test.Foo<@Nullable V> cannot be converted to Test.Foo<? extends Object>
++                nonnullWildcard(f);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void actualBoundCheckedAgainstParametricRequirement() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              class Foo<X extends @Nullable Object> {}
++              <A> void nonnullBoundWildcard(Foo<? extends A> foo) { throw new RuntimeException(); }
++              <A, B extends @Nullable A> void testPositive(Foo<B> f) {
++                // BUG: Diagnostic contains: incompatible types: Test.Foo<B> cannot be converted to Test.Foo<? extends A>
++                this.<A>nonnullBoundWildcard(f);
++              }
++              <A, B extends A> void testNegative(Foo<B> f) {
++                this.<A>nonnullBoundWildcard(f);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void annotatedParametricRequirementRejectsNullableBoundActual() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              class Foo<X extends @Nullable Object> {}
++              <A> void nonnullAnnotatedBoundWildcard(Foo<? extends @NonNull A> foo) {
++                throw new RuntimeException();
++              }
++              <A extends @Nullable Object> void testPositive(Foo<A> f) {
++                // BUG: Diagnostic contains: incompatible types: Test.Foo<A> cannot be converted to Test.Foo<? extends A>
++                this.<A>nonnullAnnotatedBoundWildcard(f);
++              }
++              <A> void testNegative(Foo<A> f) {
++                this.<A>nonnullAnnotatedBoundWildcard(f);
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(

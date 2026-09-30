@@ -32,12 +32,8 @@
 # With <rev>, the skill is taken from that commit; without it, from the working
 # copy. The output goes to <case directory>/<model>/, and only after the
 # session succeeds:
-#   <file>            every file the session changed, under its own name, so
-#                     that the commit of the next run shows how the result moved
-#   changed-files.txt one line per changed file: production or other, the git
-#                     status letter, and the path; production is compared with
-#                     the commit the session started from (expected empty),
-#                     everything else with base
+#   result.diff       what the session changed in production code (expected
+#                     empty), then every other file relative to base
 #   result-note.md    the session's final message
 #   result-build.txt  the output of build.sh on the fix and on the base
 #   run.txt           the session's cost, turns, and duration
@@ -103,16 +99,10 @@ git -C "$repo" add -A -N
 {
   # $production and $excluded are split on purpose: one pathspec each.
   # shellcheck disable=SC2086
-  git -C "$repo" diff --name-status HEAD -- $production | sed 's/^/production /'
+  git -C "$repo" diff HEAD -- $production
   # shellcheck disable=SC2086
-  git -C "$repo" diff --name-status "$base" -- . $excluded | sed 's/^/other /'
-} > "$work/out/changed-files.txt"
-while read -r _ status file; do
-  [ "$status" = D ] && continue
-  name=$(basename "$file")
-  [ -e "$work/out/$name" ] && { echo "two changed files are named $name" >&2; exit 1; }
-  cp "$repo/$file" "$work/out/$name"
-done < "$work/out/changed-files.txt"
+  git -C "$repo" diff "$base" -- . $excluded
+} > "$work/out/result.diff"
 
 build() {
   status=0
