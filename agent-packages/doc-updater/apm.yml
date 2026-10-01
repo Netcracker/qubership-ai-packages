@@ -1,0 +1,3 @@
+name: doc-updater
+version: 1.0.0
+description: Analyze code changes and update project documentation. Run this skill only when the user explicitly asks to update or sync documentation, mentions that docs are outdated, or uses a command like /doc-updater. Do NOT run automatically before commits.
