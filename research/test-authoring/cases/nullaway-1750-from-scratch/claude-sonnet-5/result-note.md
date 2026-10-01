@@ -1,18 +1,23 @@
-Clean: only `FrameworkTests.java` is touched, nothing committed, production code untouched.
+Here's the note I'd leave for the PR author:
 
 ---
 
-**Message for the PR author:**
+This fix shipped with no tests, so I added six cases to the existing `springValueFieldTest` in `FrameworkTests.java`, joining the test that already covers this exact heuristic rather than starting a new one.
 
-The fix shipped with no tests, so I added three fields to the existing `springValueFieldTest` in `FrameworkTests.java` (nearest existing test of this unit — `SpringHandler`'s `containsNullSpELExpression` is private, so it's exercised the same way its neighbors are: through the full compilation pipeline, via `@Value`-annotated fields and NullAway's "not initialized" diagnostic).
+**Added to `NegativeCases`** (should not be flagged) — one per form your new javadoc names (`== null`, `!= null`, `null ==`, `null !=`):
+- `ternaryNullCheckBeforeDereference`: `#{someBean != null ? someBean.value : 'default'}` — this is the exact false positive from the bug report.
+- `ternaryNullEqualityCheckBeforeDereference`: `#{someBean == null ? 'default' : someBean.value}`
+- `ternaryNullBeforeNotEqualsCheck`: `#{null != someBean ? someBean.value : 'default'}`
+- `ternaryNullBeforeEqualsCheck`: `#{null == someBean ? someBean.value : 'default'}`
 
-Added, partitioning the input the diff actually touched (the new `NULL_COMPARISON_PATTERN` stripping):
-- `NegativeCases.nullOnlyInComparison` — `#{someBean != null ? someBean.value : 'default'}`, the exact false positive from the bug report. No diagnostic expected.
-- `NegativeCases.nullOnlyInReversedComparison` — `#{null == someBean ? someBean.value : 'default'}`. The fix's regex has a second alternative specifically for this reversed-operand order, and the new Javadoc calls it out by name, so it gets its own case rather than being assumed from the forward-order one.
-- `PositiveCases.nullValueDespiteComparison` — `#{someBean != null ? null : 'default'}`, the non-regression control the PR description itself names: `null` appears both as a comparison operand and as the actual ternary value, and the field must still be flagged.
+I kept all four rather than just the reported case because `NULL_COMPARISON_PATTERN` is two alternations (`null` after the operator vs. before it) over a two-letter character class (`!=`/`==`); a one-sided regression test wouldn't notice if one alternative or one operator silently stopped matching.
 
-I verified all three the way §1 of the test-authoring skill asks: checked out `SpringHandler.java` as it stood one commit before this fix (production code only, tests kept at HEAD) and reran `springValueFieldTest` — it failed with exactly the bug's symptom, a spurious `@NonNull field 'nullOnlyInComparison'/'nullOnlyInReversedComparison' not initialized` warning on both new negative cases. Restored the fix and reran: `:nullaway:test` and `:nullaway:buildWithNullAway` both pass.
+**Added to `PositiveCases`** (should still be flagged) as controls, pairing with two of the above by changing only the ternary's value branch to `null`:
+- `ternaryNullCheckWithNullBranch`: `#{someBean != null ? null : 'default'}` — this is your own "still correctly flags" example.
+- `ternaryNullBeforeNotEqualsCheckWithNullBranch`: `#{null != someBean ? null : 'default'}`
 
-I didn't add a second, larger test — this is an in-process regex/string heuristic with no real dependency or process boundary involved, so the compilation-level test is the right (and only) level owed.
+These show the stripping is selective (removes only the comparison occurrence) rather than accidentally swallowing a real null adjacent to it, in both regex directions.
 
-One open item I didn't act on: the repository's `AGENTS.md`/`CLAUDE.md` name no test-stack line (engine + assertion library) for this module. I inferred JUnit 4 + Error Prone's `CompilationTestHelper` from the file's existing imports and neighbors rather than from a declared convention. If you'd like, I can propose adding that line to `AGENTS.md`/`CLAUDE.md` in a follow-up, but I didn't touch the instructions file since that's a separate decision for you to confirm.
+I verified red/green: with `SpringHandler.java` reverted to the pre-fix revision, all four new negative cases are (wrongly) flagged — confirmed by running `springValueFieldTest`, which prints all four as unexpected errors — and both controls are flagged on both revisions, so they're true non-regression controls, not artifacts of the fix. With the fix restored, `springValueFieldTest`, all of `FrameworkTests`, the full `:nullaway:test` run, and `:nullaway:buildWithNullAway` all pass.
+
+One thing I did **not** do: the repository's `AGENTS.md`/`CLAUDE.md` names no test engine/assertion-library stack line, so per the test-authoring skill I'm only proposing it here rather than writing it into the file myself. Proposed line: `Tests: JUnit 4 engine; CompilationTestHelper (error-prone) as the assertion library — one `doTest()` call compiles all added sources and stops at the first missing expected diagnostic, but reports all unexpected (unmarked) diagnostics at once; a case is named by its field/method identifier since the harness labels failures by file:line plus message.` I confirmed the "stops at first missing, but reports all unexpected at once" split experimentally rather than guessing.

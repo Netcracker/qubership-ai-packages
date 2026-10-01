@@ -1,0 +1,17 @@
+service/internal/kubernetes/adapterForCache.go
+service/internal/kubernetes/adapterForCrud.go
+service/internal/kubernetes/certificate.go
+service/internal/kubernetes/configmap.go
+service/internal/kubernetes/deployment.go
+service/internal/kubernetes/deploymentfamiliyversions.go
+service/internal/kubernetes/gateway_system.go
+service/internal/kubernetes/kubeService.go
+service/internal/kubernetes/kubeWatchService.go
+service/internal/kubernetes/kubeWatchServiceShared.go
+service/internal/kubernetes/mock
+service/internal/kubernetes/namespace.go
+service/internal/kubernetes/pod.go
+service/internal/kubernetes/route.go
+service/internal/kubernetes/secret.go
+service/internal/kubernetes/service.go
+service/internal/kubernetes/serviceaccount.go

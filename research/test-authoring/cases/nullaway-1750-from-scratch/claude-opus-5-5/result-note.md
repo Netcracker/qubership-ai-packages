@@ -1,35 +1,40 @@
-I added five regression tests to `nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java`. Each one fails on the code before the fix and passes on the fix. `FrameworkTests` and `./gradlew :nullaway:buildWithNullAway` both pass. Production code is unchanged and nothing is committed.
+I added five regression tests for the fix in #1750. All five fail on the code before the fix and pass after it. `:nullaway:test --tests FrameworkTests` passes (75 tests) and so does `:nullaway:buildWithNullAway`. I changed only `FrameworkTests.java`, and nothing is committed.
 
-**Message for the PR author:**
+---
 
-The fix changes when `SpringHandler` decides a `@Value` SpEL expression can produce `null`, and it came with no tests. I added one test per comparison form that your new `NULL_COMPARISON_PATTERN` handles:
+**Message for the author of #1750**
 
-- `springValueSpelNullAfterNotEqualsIsNotAPossibleValue`: `bean != null`
-- `springValueSpelNullAfterEqualsIsNotAPossibleValue`: `bean == null`
-- `springValueSpelNullBeforeNotEqualsIsNotAPossibleValue`: `null != bean`
-- `springValueSpelNullBeforeEqualsIsNotAPossibleValue`: `null == bean`
-- `springValueSpelNullComparedWithoutSpacesIsNotAPossibleValue`: `bean!=null?…`, which covers the `\s*` in the pattern
+Thanks for the fix. Here are the tests it needs. They are small compile-and-check tests in `FrameworkTests`, placed next to `springValueFieldTest`.
 
-Each test compiles one class with two fields:
-- **The case:** `null` appears only in the comparison, and no warning is expected.
-- **The control:** the same expression, except one branch of the conditional returns `null`. It must still give `@NonNull field '…' not initialized`. That warning fired before the fix too, so it shows the silence comes from the comparison rule and not from the setup.
+**What I added**
 
-These are small, in-process compilation tests, which is the same level as the existing `springValueFieldTest`. Nothing outside the compiler is involved, so no larger test is needed.
+- **Five tests, one for each way the fix can see `null` in a comparison:**
+  - `bean != null`
+  - `bean == null`
+  - `null != bean`
+  - `null == bean`
+  - `bean!=null` with no spaces
 
-**Red on the base commit:** I temporarily put back the pre-fix `SpringHandler` and restored it afterwards. All five tests failed for the right reason, for example:
-```
-FrameworkTests > springValueSpelNullAfterNotEqualsIsNotAPossibleValue FAILED
-    java.lang.AssertionError: Saw unexpected error on line 5. All errors:
-/TestCase.java:5: warning: [NullAway] @NonNull field 'nameOrDefault' not initialized
-/TestCase.java:8: warning: [NullAway] @NonNull field 'nullOrDefault' not initialized
-```
+  Each test compiles one class with two `@Value` fields:
+  - `comparisonOnly`: `null` appears only in the comparison, and it must not be reported. This is the false positive you fixed.
+  - `nullResult`: the same expression, but one branch returns `null`, so it must still be reported. This is the control. It shows the silence comes from the comparison rule and not from the test setup.
+- **One test per operator and side, not one class with every case.** I ran Error Prone's test helper with two cases broken on purpose. It stops at the first mismatch, and it names an unexpected warning only by line number ("Saw unexpected error on line 18"). Putting the cases in one class would hide every failure after the first.
+  - With one case and its control per test, the test name says which case failed, and a line number is never ambiguous. The only unexpected warning possible is on the field that should be silent, and a missing warning is named by its marker text.
+  - So I don't propose a labelling feature for the helper.
+- **A shared helper, `checkOnlyNullResultSpelIsReported(comparisonOnlySpel, nullResultSpel)`.** It writes the class out in full, and each test passes in only the two SpEL strings.
+- **A small helper, `addSpringValueAnnotationStub`, for the `@Value` stub.** It is modelled on `addSpringMockAnnotationStubs`. `springValueFieldTest` now calls it too, and its expectations are unchanged.
 
-**Why five tests instead of one:** I added a temporary test with two missing diagnostics in one compilation. Error Prone's `CompilationTestHelper` reported only the first, by line number (`Did not see an error on line 6 matching field 'a' not initialized`). A second broken case in the same compilation would be hidden, so each case gets its own test with its control.
+**Checks I ran**
 
-**Other change in the test file:** the `@Value` stub is now in a helper, `addSpringValueAnnotationStub`, next to `addSpringMockAnnotationStubs`. `springValueFieldTest` now calls it, and its expectations are unchanged.
+- **Before the fix:** I ran the tests with `SpringHandler.java` temporarily put back to `HEAD~1`, then restored it.
+  - All five failed with `Saw unexpected error on line 5`. Line 5 is the `comparisonOnly` field, so the failure is the original false positive, not a missing class or method.
+  - The controls passed before the fix too.
+- **Deliberately breaking the fix:** each break failed exactly the test for that case.
+  - Removing the `null ==` / `null !=` half of `NULL_COMPARISON_PATTERN` failed the two `null`-on-the-left tests.
+  - Changing `\s*` to `\s+` failed the no-spaces test.
 
-**Proposed, not done:**
-- **Stack line for `CLAUDE.md` / `AGENTS.md`:** neither says how tests are written. I'd add: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper with "// BUG: Diagnostic contains:" markers; one compilation stops at the first mismatch and names an unexpected diagnostic by line number.` I didn't edit either file because nobody has agreed to it yet.
-- **A label for unexpected diagnostics in the harness:** a failure names an unexpected diagnostic only by its line number. Error Prone offers no label for that, and the helper isn't in this repository, so the fix would be an issue against Error Prone. I couldn't check their tracker for an existing issue, and filed nothing.
-- **`springValueFieldTest`:** I left it as it is. It checks several cases in one compilation, so one failure can hide the others.
-- **A false positive the pattern doesn't cover:** `#{null == null}` would still be flagged. It isn't a regression, so I wrote no test for it.
+**Proposed, not done**
+
+- **`ne` / `eq` comparisons:** SpEL also accepts the word forms `ne` and `eq` for `!=` and `==`. `@Value("#{bean ne null ? bean.name : 'default'}")` is still reported as not initialized; I confirmed this with a temporary test that I then removed. The PR describes the fix as covering "equality comparisons". Either extend `NULL_COMPARISON_PATTERN` to handle `ne` and `eq` and add a test like the five above, or narrow the description to `==` and `!=`. I didn't add a failing test for it, because that would need a production change.
+- **Test-stack line for `CLAUDE.md` / `AGENTS.md`:** neither file says which test libraries the repo uses. I suggest adding this line, which I haven't written into either file: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper for checker tests: one doTest() stops at the first mismatch, names a missing diagnostic by its marker text and an unexpected one by line number only.`
+- **`springValueFieldTest` layout:** it still keeps cases that should stay silent and cases that should be reported in separate files. I left it as it is because it isn't part of this change.
