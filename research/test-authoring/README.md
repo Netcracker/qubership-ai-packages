@@ -113,9 +113,10 @@ by `FILTER_REGEX_EXCLUDE` in `.github/super-linter.env`, as the other research d
 
 A case is a regression test for the skill: a repository pinned at a tag, the task a session is given there, the change
 each model made with the skill, and checks. The procedure for running them is in
-[`agent-packages/AGENTS.md`](../../agent-packages/AGENTS.md#testing-a-skill-against-its-cases). The cases come from two
-compiler-like harnesses, NullAway's and Calcite's SQL validator, and a rule checked only against them can still break a
-service, a database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lists the kinds to read an edit against.
+[`agent-packages/AGENTS.md`](../../agent-packages/AGENTS.md#testing-a-skill-against-its-cases). Five cases come from two
+compiler-like harnesses, NullAway's and Calcite's SQL validator; one from a Go service client with fakes, and one from a
+batch validator that reports every error of a table. A rule checked only against them can still break a database or a UI
+test; `agent-packages/test-authoring/AGENTS.md` lists the kinds to read an edit against.
 
 | Case | What it guards against |
 | --- | --- |
@@ -123,6 +124,8 @@ service, a database, or a UI test; `agent-packages/test-authoring/AGENTS.md` lis
 | [`cases/nullaway-1834-from-scratch/`](cases/nullaway-1834-from-scratch/README.md) | The same production change with no tests: a defect left uncaught, a behavior the commit message names left without a case, and the same failures of form |
 | [`cases/nullaway-1750-from-scratch/`](cases/nullaway-1750-from-scratch/README.md) | The production change of uber/NullAway#1750, a fix that removes a false positive: a silent case written without its reporting control, two moved inputs in one test, a new case pushed into a twin that holds cases of its own, or the `Value` stub copied again |
 | [`cases/calcite-4410-rewrite/`](cases/calcite-4410-rewrite/README.md) | The tests of apache/calcite#4410 as the reviewer saw them, on a validator that takes one query per call: a dropped input, no negative case with its error position, the fixture chain copied into every test, or a loop over the inputs in one test |
+| [`cases/paas-mediation-167-rewrite/`](cases/paas-mediation-167-rewrite/README.md) | The tests of Netcracker/qubership-core-lib-go-paas-mediation-client#167 as submitted: the client setup copied into each test, and a new client helper beside an existing one that differs in a few settings and return values; the change is tests only, so `mutants.sh` stands in for the red run |
+| [`cases/frictionless-1799-from-scratch/`](cases/frictionless-1799-from-scratch/README.md) | The production change of frictionlessdata/frictionless-py#1799, one `validate()` call per table: a silent case without the irregular row that still reports, assertions weaker than one comparison of the reduced report, and six old tests that encode the old report and have to be updated |
 | [`cases/nullaway-1834-rewrite-harness-ahead/`](cases/nullaway-1834-rewrite-harness-ahead/README.md) | The rewrite, where NullAway's instructions ask for tests written as if the harness reported every mismatch: a split by the harness's current behavior that the maintainers declined, or a proposal to change the harness they did not ask for |
 
 `cases/run-nullaway-case.sh` runs the NullAway#1834 cases, and `cases/run-case.sh` any case that carries its repository,

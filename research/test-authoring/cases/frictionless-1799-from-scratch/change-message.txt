@@ -1,0 +1,11 @@
+fix: avoid cell errors for header mismatches (#1799)
+
+- fixes #1791
+
+With `fieldsMatch: "exact"`, a header mismatch was reported twice: once
+as `missing-label` or `extra-label`, and again as a cell error for every
+row.
+
+This PR makes the expected fields follow the header length. Integrity
+checks and analyzer statistics now only use fields that are actually
+present, while irregular rows still report cell errors as expected.
