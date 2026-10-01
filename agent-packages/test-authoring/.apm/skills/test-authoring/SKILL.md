@@ -386,25 +386,26 @@ whole result reduced to the fields the behavior defines (§6), compared as a set
      a run, or the harness's source; a form ahead of the harness is backed by the instructions and not by the writer or
      the neighbors; every case a report names only by position carries a label or is proposed one.
   2. **The reader sees each input whole, and the difference between two cases on one line.** Write what related cases
-     share once: in one act's input where principle 3 puts the cases there; in a helper beside the tests that takes
-     the varying value; as the rows of one table; or in the engine's per-test fixture, for the part no expectation
-     depends on (§8, §9). Repeat a setup only where a reader takes it in without comparing two bodies, as §12's *Three
-     behaviors in one test* repeats one deposit; a document or a source of several lines is not that short, whether
-     one line differs or many, since copies of it state the difference nowhere and drift apart. A new helper beside
-     one whose body differs in one line is the copy one level up: write the helper that takes the value and have the
-     old one call it (§9). A helper that builds a textual input takes a value the input's grammar has a slot for
-     (`configWithTimeout("-1")`, one literal in a query or a request body), sets or omits one key of a record
-     (`orderWithout("address")`), or wraps one whole fragment the test writes out in fixed text no expectation depends
-     on (`lintInMethod(body)`). It never assembles the input from two or more pieces of syntax, and never splices a
-     piece into text the expectation depends on: a query built from clauses, or a source built from a type parameter
-     list, a statement, and a marker, shows the reader the input only after the helper has run. Cases that differ in
-     the structure of the input each write it out whole, or stand side by side in one act's input under principle 3;
-     the copy is the price of an input the reader sees whole. An example-based case carries its input and its outcome
-     as literals; a property-based test shows its generator and its property, and its failure carries the reproducer
-     (§4). The reviewer checks: no two cases have to be compared line by line to find what differs; every line the
-     expectation depends on is in the test body in one piece; every argument of a helper that builds an input is a
-     value, one key of a record, or the one whole fragment the helper wraps; no new helper repeats the body of one the
-     file has.
+     share once: in one act's input where principle 3 puts the cases there; in a helper beside the tests that takes the
+     varying value; as the rows of one table; or in the engine's per-test fixture, for the part no expectation depends
+     on (§8, §9). Repeat a setup only where a reader takes it in without comparing two bodies, as §12's *Three behaviors
+     in one test* repeats one deposit; a document or a source of several lines is not that short, whether one line
+     differs or many, since copies of it state the difference nowhere and drift apart. A new helper that builds what an
+     existing helper builds, the same client, fixture, or document with a few settings or return values different, is
+     the copy one level up, however many lines differ: give the existing helper the differences as arguments or options,
+     have both callers use one body, and keep the existing tests' expectations (§9). A helper that builds a textual
+     input takes a value the input's grammar has a slot for (`configWithTimeout("-1")`, one literal in a query or a
+     request body), sets or omits one key of a record (`orderWithout("address")`), or wraps one whole fragment the test
+     writes out in fixed text no expectation depends on (`lintInMethod(body)`). It never assembles the input from two or
+     more pieces of syntax, and never splices a piece into text the expectation depends on: a query built from clauses,
+     or a source built from a type parameter list, a statement, and a marker, shows the reader the input only after the
+     helper has run. Cases that differ in the structure of the input each write it out whole, or stand side by side in
+     one act's input under principle 3; the copy is the price of an input the reader sees whole. An example-based case
+     carries its input and its outcome as literals; a property-based test shows its generator and its property, and its
+     failure carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find
+     what differs; every line the expectation depends on is in the test body in one piece; every argument of a helper
+     that builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in
+     the file build the same thing with a few lines different.
   3. **A case that expects nothing stands with a control that expects something.** Silence establishes nothing on its
      own, since it may come from the setup rather than from the rule. A silent case (nothing rejected, nothing
      reported) has a nearest control that reports, and the two share one act's input where the unit evaluates several
@@ -477,11 +478,13 @@ before the test is. Each cause below has one fix, and every cause but the last i
   table and say which new cases join it; any other case goes beside the table in the smallest form that asserts what
   §5 to §7 ask, and the table keeps its rows.
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
-  utilities, before writing one. Where an existing helper builds the same setup except for one value, write the helper
-  that takes that value and have the old one call it, so that the existing tests stay as they are. Two helpers whose
-  bodies differ in one line are the copied setup of §7 one level up: the reader compares the bodies to learn which one a
-  test needs. A helper that assembles an input from pieces of syntax (§7) is neither called by the new test nor copied:
-  the new test writes its input out whole, leaves that helper and its callers as they are, and the pull request says so.
+  utilities, before writing one. Where an existing helper builds the same setup except for some values, settings, or
+  return values, give it those as arguments or options and have the old callers keep calling it, so that the existing
+  tests stay as they are. Two helpers that build the same thing with a few lines different are the copied setup of §7
+  one level up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds
+  for a helper the change itself added beside an existing one. A helper that assembles an input from pieces of syntax
+  (§7) is neither called by the new test nor copied: the new test writes its input out whole, leaves that helper and its
+  callers as they are, and the pull request says so.
 - **A new test goes beside the nearest existing test of the unit it exercises**, in the file or directory named for
   the code under test, not in a file named for the ticket or the author. A test class splits when its fixture no
   longer serves every test in it; a fixture with fields only some tests use is the signal.
@@ -557,7 +560,7 @@ Run this over a test you wrote or one you are reviewing.
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
 - Is the new test beside the existing tests of the same unit, in the shape of its neighbors unless that shape breaks
   §7, joined to the existing test of the same rule where §7 lets them share an act or a helper, and on the file's
-  helpers rather than on a new one whose body differs from an existing one in one line (§9)?
+  helpers rather than on a new one that builds what an existing one builds with a few lines different (§9)?
 - For each finding: which of the four buckets, and what settles it there: the diff, a run or a citation of the
   harness, the tool's report, or a judgment stated in a sentence (§10)?
 

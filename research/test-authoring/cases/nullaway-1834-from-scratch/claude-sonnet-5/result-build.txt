@@ -1,5 +1,5 @@
-on the fix: 49 tests ran, 0 failed
-on the base: 49 tests ran, 3 failed
-  WildcardTests.bareTypeVariableActualIsJudgedByItsDeclaredBound
-  WildcardTests.parametricExtendsWildcardComparesDeclaredBoundsNotNames
-  WildcardTests.explicitNonNullWildcardBoundRejectsSameBareTypeVariable
+on the fix: 51 tests ran, 0 failed
+on the base: 51 tests ran, 3 failed
+  WildcardTests.typeVariableWithNullableBoundedSubVariableRejectedByExtendsWildcardNamingNonNullVariable
+  WildcardTests.typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard
+  WildcardTests.typeVariableActualRejectedByExtendsWildcardNamingNonNullAnnotatedVariable
