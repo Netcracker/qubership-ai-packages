@@ -778,10 +778,14 @@ defaults = yaml.safe_load(open("values.yaml")) or {}
 failures = []
 
 def merge_dicts(base, override):
-    """Deep merge override into base (Helm's merge behavior)."""
+    """Deep merge override into base (Helm's merge behavior with null handling)."""
     result = deepcopy(base)
     for key, value in override.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+        if value is None:
+            # Helm behavior: null in override removes/unsets optional fields
+            if key in result:
+                del result[key]
+        elif key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = merge_dicts(result[key], value)
         else:
             result[key] = value
