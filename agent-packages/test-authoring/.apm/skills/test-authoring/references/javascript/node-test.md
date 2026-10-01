@@ -10,7 +10,7 @@ summary of failing tests at the end prints `test at m.test.mjs:5:3`, then the `i
 message, and no `describe` name. So the `describe` string carries the unit and the shared condition, which the tree
 shows, the `it` string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires
 mid-flight')`, not `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds
-a case with its controls in one check (`SKILL.md` §7) is named by the rule they establish.
+a case with its controls in one act (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which assertion prints the operands
 

@@ -31,22 +31,18 @@ rule can be satisfied by a test worth nothing.
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
 - The failure report and its four parts, container, name, assertion, message, with what each carries and what it may not
   repeat; the assertion that prints the operands; the framework's operand order; parameterized case names; grouped
-  assertions; error semantics over message strings; what a failed wait reports; related cases that write a shared setup
-  once and state what differs in each case, unless the setup is short enough to repeat; literals in an example-based
-  case, and the generator and the property in a property-based one; a case and its controls in one check where one act
-  evaluates each input on its own, and, where the check stops at the first mismatch, one case per test, with at most one
-  input whose outcome the change moves and no input that expects a report other than the case and its controls, counted
-  on the diff and the base commit rather than by how the rule is worded, and separate cases otherwise; when several
-  cases may share one harness call, decided by whether that call carries every mismatch and names each case for every
-  kind of mismatch, a property of the harness learned once and proposed for the repository's instructions; a form the
-  instructions accept ahead of the harness; a loop over table rows as separate cases, each needing its own name in the
-  report and a failure that hides no other.
+  assertions; error semantics over message strings; what a failed wait reports; related cases under four principles:
+  each case fails on its own under its own name, so cases share one act only where the harness reports every mismatch
+  and names each by content, a fact learned once per harness and proposed for the repository's instructions, which may
+  accept a form ahead of the harness; the reader sees each input whole and the difference between cases on one line,
+  through a helper that takes the varying value or one act's input, never a helper that assembles the input from pieces;
+  a silent case stands with a control that reports; and the form follows the assertions.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one
   input, a helper that leaves the reader the whole input, a table, or a per-test fixture, where a new test goes, in
-  which shape, when it joins an ecosystem's idiom table, the twin it joins and when it stands apart, the helper it
-  reuses before adding one, and when a class splits.
+  which shape, when it joins an ecosystem's idiom table, when a new case joins the existing test of its rule, the helper
+  it reuses before adding one, and when a class splits.
 - The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
   needs a tool's verdict, or a question for a human.
 

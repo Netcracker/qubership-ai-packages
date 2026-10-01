@@ -1,17 +1,19 @@
 diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-index 958be01..ada7552 100644
+index 958be01..b6c8276 100644
 --- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
 +++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-@@ -5486,6 +5486,71 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+@@ -5486,6 +5486,75 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
          .ok();
    }
  
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * The common column keeps the spelling used in the select list, whichever side of the
-+   * {@code USING} list is upper-cased. */
-+  @Test void testJoinUsingCommonColumnMatchesCaseInsensitivelyUpperSelectList() {
++   * A common column named in upper case in the SELECT clause is matched,
++   * case-insensitively, against a USING column named in lower case; the
++   * COALESCE operands follow the spelling of the USING clause, and the
++   * result column keeps the spelling of the SELECT item. */
++  @Test void testJoinUsingCommonColumnMatchesCaseInsensitively() {
 +    sql("select DEPTNO from emp join dept using (deptno)")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
@@ -25,10 +27,11 @@ index 958be01..ada7552 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * As {@link #testJoinUsingCommonColumnMatchesCaseInsensitivelyUpperSelectList()}, with the
-+   * casing of the select list and the {@code USING} list swapped, to confirm the alias follows
-+   * the select list rather than always taking one fixed case. */
-+  @Test void testJoinUsingCommonColumnMatchesCaseInsensitivelyLowerSelectList() {
++   * The mirror of {@link #testJoinUsingCommonColumnMatchesCaseInsensitively()}: the
++   * SELECT item is now the one in lower case and the USING column the one in
++   * upper case, showing that the result column always keeps the spelling of
++   * the SELECT item and not of the USING clause. */
++  @Test void testJoinUsingCommonColumnAliasKeepsSelectItemCasing() {
 +    sql("select deptno from emp join dept using (DEPTNO)")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
@@ -42,11 +45,11 @@ index 958be01..ada7552 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * Before the fix, a common column of a {@code NATURAL JOIN} was never qualified or coalesced,
-+   * regardless of case sensitivity, because {@code expandExprFromJoin} handled only
-+   * {@code USING}; validating such a query failed with "Column 'DEPTNO' is ambiguous". */
-+  @Test void testNaturalJoinCommonColumnIsCoalesced() {
-+    sql("select DEPTNO from emp natural join dept")
++   * A common column of a NATURAL JOIN, selected unqualified, is coalesced
++   * rather than rejected as ambiguous, even with the default, case-sensitive
++   * name matching. */
++  @Test void testNaturalJoinCommonColumnIsNotAmbiguous() {
++    sql("select deptno from emp natural join dept")
 +        .withCaseSensitive(true)
 +        .withValidatorIdentifierExpansion(true)
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
@@ -57,9 +60,10 @@ index 958be01..ada7552 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * Once a {@code NATURAL JOIN} common column is coalesced
-+   * ({@link #testNaturalJoinCommonColumnIsCoalesced()}), matching it against the select list
-+   * must also honor {@code caseSensitive false}, the same as for {@code USING}. */
++   * The common column of a NATURAL JOIN is also matched case-insensitively:
++   * {@code deptno}, selected in lower case, is matched against the
++   * upper-case {@code DEPTNO} columns of EMP and DEPT, and the result column
++   * keeps the lower-case spelling of the SELECT item. */
 +  @Test void testNaturalJoinCommonColumnMatchesCaseInsensitively() {
 +    sql("select deptno from emp natural join dept")
 +        .withCaseSensitive(false)

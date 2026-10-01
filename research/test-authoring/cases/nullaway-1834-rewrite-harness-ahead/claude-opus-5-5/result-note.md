@@ -1,35 +1,32 @@
-I rewrote the commit's 20 tests as 2 in `WildcardTests.java`. They pass on the fixed code, and `buildWithNullAway` passes. Only that test file changed; nothing is committed. While doing this I found a false positive that the fix introduces, described first in the message below.
+I rewrote the 20 tests from `d55c150` as two tests in `WildcardTests.java`, one per rule. All 66 `WildcardTests` pass, the production code is back as it was, and nothing is committed. I didn't run `buildWithNullAway`, since only a test file changed.
+
+**Message for the author:**
 
 ---
 
-**Message for the PR author**
+The 20 tests the commit added each compiled one input: either a case the fix changes, or a control that behaved the same before the fix. The repo's test instructions say to keep the cases of one rule in one source. So the inputs are now two sources, one per rule, and each case sits next to its controls. Every input from the original 20 tests is still there, with the same expectations.
 
-**A false positive the fix introduces (not fixed here).** An anonymous class written with the diamond form now draws a false report:
+1. **`aTypeVariableArgumentMeetsANonNullWildcardBoundOnlyWhenItsUseOrItsDeclaredBoundExcludesNull`** covers a requirement like `Box<? extends Object>`.
+   - Cases that are reported now: `Box<T>` where `T`'s bound admits null, `Box<S>` where `S extends T`, `Box<? extends T>`, and a `T` declared in `@NullUnmarked` code.
+   - Controls: a `T` with a non-null bound, `Box<@NonNull T>`, `Box<@Nullable T>` (already reported before the fix), the `? extends @Nullable Object` and `Box<?>` requirements, plus the two new controls below.
+2. **`aWildcardBoundedByATypeVariableAdmitsOnlyAnArgumentNoMoreNullableThanThatVariable`** covers a requirement like `? extends T`.
+   - Cases: `S extends @Nullable T` where `T` can't be null, `Box<T>` passed where `Box<? extends @NonNull T>` is required, and the override returning `List<V>`.
+   - Controls: the same-variable return, `S extends T` under both kinds of bound, `Box<@Nullable T>`, the `CompletableFuture` inference example, and both captured-type examples.
 
-```java
-interface Getter<V extends @Nullable Object> { List<? extends V> getAll(); }
-static <W extends @Nullable Object> Getter<W> make() {
-  return new Getter<>() {
-    @Override public List<W> getAll() { ... }   // now: "mismatched type parameter nullability"
-  };
-}
-```
+**New controls.** I added three, each differing from one case in one respect:
+- `<T, S extends T>` with a non-null bound
+- `Box<? extends T>` with a non-null `T`
+- an override returning `List<@NonNull V>`
 
-`List<W>` overriding `List<? extends W>` is correct, and this is not reported on the parent commit. With an explicit `new Getter<W>()`, or a named class that implements `Getter<V>`, it isn't reported either. It matters for the tests: your override test used exactly this diamond form, so it passed whether the report came from the `@NonNull` on `? extends @NonNull V` or from this false positive. In the rewrite, the override case uses `new Getter<V>()` and sits next to a control, `getAll` overriding `List<? extends V>`, which has to stay silent. I suggest a follow-up that fixes the diamond path and adds a diamond-form test. Neither is in this change, since I left the production code alone.
+Each one shows that its case is reported because of the nullable bound, not because of how the source is set up.
 
-**What changed in the tests, and why.** The stack line in `CLAUDE.md` says to write CompilationTestHelper tests as if `doTest()` reported every mismatch and told each marker apart, and to keep one rule's cases in one source. The commit had one test per input: each reported case had its control in a separate test with its own copy of the source, and nothing kept those copies the same. One compilation checks all of them, and each method is checked on its own, so each rule is now one test holding its cases and their controls in one source. The earlier multi-case tests in this file already have that shape.
+**Evidence:**
+- **Before the fix:** both new tests fail at a case marker. One is "Did not see an error on line 13 … `Box<T>` cannot be converted to `Box<? extends Object>`", the other is the same message for `Box<? extends T>` at line 26.
+- **Controls before the fix:** with the 7 case markers removed, both tests pass on the old code. That covers every control, including the three new ones.
+- **The captured-type exception:** replacing the `rhsTypeArgument instanceof Type.CapturedType` check with `false` makes test 2 fail with "Saw unexpected error on line 49", which is `capturedNonNullRequirement`. So the captured examples really do check that exception. I reverted that edit.
 
-- **`aTypeVariableArgumentMeetsANonNullWildcardOnlyWhenItsUseOrItsBoundExcludesNull`**: a concrete requirement, `Box<? extends Object>`.
-  - Four cases are now reported, one for each way a bound can admit null: an explicit `@Nullable` bound; `S extends T` where `T`'s bound admits null; a `? extends T` argument; and `T` declared in `@NullUnmarked` code.
-  - Each case sits next to a control that differs in one respect and passes: a non-null bound, `@NonNull T` at the use, a nullable or unbounded (`?`) requirement, and a `@Marked` holder.
-  - `@Nullable T` at the use, which was already reported before the fix, stays as the use-site control.
-  - Three controls are new: `<T, S extends T>`, `Box<? extends T>` with a non-null `T`, and the marked holder. The commit's only control for those three cases differed from them in more than one respect.
-- **`aWildcardBoundedByATypeVariableRejectsAnArgumentThatMayBeNullWhereTheVariableMayNot`**: a requirement bounded by a type variable, `Box<? extends T>`.
-  - Three cases are now reported: `S extends @Nullable T` with a non-null `T`; `Box<T>` passed where `Box<? extends @NonNull T>` is required; and the override, as described above.
-  - The controls are the same variable, `S extends T` under both kinds of bound, `@Nullable T` (already reported before the fix), the inferred `CompletableFuture` case, the two captured-wildcard cases, and the new `getAll` override.
+**Your call, not done:**
+- I didn't add a new label proposal or an issue for the harness. Its error-reporting behaviour is already covered by the repo's test instructions.
+- The first test's name is over 100 characters. The pre-commit formatter will wrap it the same way it wrapped the old `aWildcardActual…` name.
 
-**Red run on the parent commit.** I ran the commit's original tests against the parent commit's production code. Exactly 7 failed, each with `Did not see an error … There were no errors`, for the 7 inputs listed as cases above; the 13 others passed there too. The rewritten tests also fail on the parent commit and report no unexpected errors, so every control is silent before and after the fix. Each test shows only its first missing marker per run, which the stack line accepts.
-
-**Level.** The tests are small, compiled in memory through `CompilationTestHelper` like their neighbours. Nothing crosses a process boundary, so no larger test is needed.
-
-Proposed and not done: the diamond fix and its test, described above. The stack line already records what the harness does, so I propose nothing about it.
+---

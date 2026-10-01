@@ -15,7 +15,7 @@ that library on top. The rules that use it are in `SKILL.md` §7 and §8.
 The runner prints the function, the subtest, and `file:line:` before every message. So the message never says where, and
 the function name plus the subtest name carry the unit and the scenario. `t.Fail()` with no message prints the name and
 nothing else; `t.Fatal("mismatch")` prints the literal and no values. A test that holds a case with its controls in one
-check (`SKILL.md` §7) is named by the rule they establish.
+act (`SKILL.md` §7) is named by the rule they establish.
 
 ## The failure line
 
@@ -59,12 +59,12 @@ which is §5's row *An assertion weakened until it passes*. An error row compare
 more than the contract where the contract leaves the result undefined on an error. The new error case is a test of its
 own, or a table of its own where there are several, beside the old one. The old table keeps its rows and its assertions
 unless the task is to rewrite them. Where the setup is too long to repeat, the old loop and the new test share it
-through a helper that both call, as §9 lets a twin do. A new table avoids both weaknesses. It carries `wantErr error`
-and compares with `errors.Is`. Where the contract leaves the result undefined on an error, the accepting rows and the
-rejecting rows are two tables, each with its own loop, and only the accepting loop compares `got`. A row field that
-chooses between two blocks of assertions is the condition that decides whether an assertion runs, which §6 rules out.
-Such cases are separate test functions, or separate `t.Run` blocks written out under one parent, that call one helper.
-Many cases of each kind are one table for each kind.
+through a helper that both call, as §9 lets the existing test of the same rule do. A new table avoids both weaknesses.
+It carries `wantErr error` and compares with `errors.Is`. Where the contract leaves the result undefined on an error,
+the accepting rows and the rejecting rows are two tables, each with its own loop, and only the accepting loop compares
+`got`. A row field that chooses between two blocks of assertions is the condition that decides whether an assertion
+runs, which §6 rules out. Such cases are separate test functions, or separate `t.Run` blocks written out under one
+parent, that call one helper. Many cases of each kind are one table for each kind.
 
 ## Keep going, or stop
 

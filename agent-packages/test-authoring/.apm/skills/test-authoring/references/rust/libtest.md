@@ -15,7 +15,7 @@ assertion `left == right` failed
 
 The module path and the test name are printed before the panic, with the file and line. So the module carries the unit,
 the test name carries the scenario and the outcome, and the message never says where. A test that holds a case with its
-controls in one check (`SKILL.md` §7) is named by the rule they establish.
+controls in one act (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which macro prints the operands
 
@@ -42,14 +42,14 @@ not reported. Separate `#[test]` functions, a macro that expands to one `#[test]
 keeps such a loop anyway. Its assertion stops at the first failing row, which §9 lists among the shapes a new test does
 not take. Where the file already has one, the new case is a `#[test]` function of its own, or a row of the file's macro
 where it has one, and the loop stays as it is unless the task is to rewrite it. Where the setup is too long to repeat,
-the loop and the new test share it through a helper that both call, as §9 lets a twin do. The pull request names §7.
-Name an `rstest` case by its condition, `#[case::minus_one(-1)]`, since the default name is an index. Cases that share a
-setup (`SKILL.md` §7) and assert the same way may be the `#[case]` rows of one `rstest` function, or separate `#[test]`
-functions that call one helper which builds the setup from the varying value. The main skill (§7) and the file's
-neighbors (§9) choose between them, and a short setup is repeated in each case. An `Err` and an `Ok` that one
-`assert_eq!` compares assert the same way and stay rows. Where the cases need different assertions, one panicking under
-`#[should_panic]` and one returning a value, they are separate functions on that helper. Many cases of each kind are one
-`rstest` function for each kind.
+the loop and the new test share it through a helper that both call, as §9 lets the existing test of the same rule do.
+The pull request names §7. Name an `rstest` case by its condition, `#[case::minus_one(-1)]`, since the default name is
+an index. Cases that share a setup (`SKILL.md` §7) and assert the same way may be the `#[case]` rows of one `rstest`
+function, or separate `#[test]` functions that call one helper which builds the setup from the varying value. The main
+skill (§7) and the file's neighbors (§9) choose between them, and a short setup is repeated in each case. An `Err` and
+an `Ok` that one `assert_eq!` compares assert the same way and stay rows. Where the cases need different assertions, one
+panicking under `#[should_panic]` and one returning a value, they are separate functions on that helper. Many cases of
+each kind are one `rstest` function for each kind.
 
 ## Grouping assertions
 
