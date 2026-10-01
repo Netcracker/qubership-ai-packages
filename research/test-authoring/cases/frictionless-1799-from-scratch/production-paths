@@ -1,0 +1,3 @@
+frictionless/analyzer/analyzer.py
+frictionless/resources/table.py
+frictionless/table/header.py

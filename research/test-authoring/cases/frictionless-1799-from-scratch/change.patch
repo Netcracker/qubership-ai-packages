@@ -1,0 +1,138 @@
+diff --git a/frictionless/analyzer/analyzer.py b/frictionless/analyzer/analyzer.py
+index f28c8cc..f194890 100644
+--- a/frictionless/analyzer/analyzer.py
++++ b/frictionless/analyzer/analyzer.py
+@@ -35,11 +35,18 @@ class Analyzer:
+         columns_data: Dict[str, List[Any]] = {}
+         numeric = ["integer", "numeric", "number"]
+         with resource:
++            expected_field_names = {
++                field.name for field in resource.header.get_expected_fields()
++            }
++            analysis_fields = [
++                field
++                for field in resource.schema.fields
++                if field.name in expected_field_names
++            ]
+             for row in resource.row_stream:
+                 null_columns = 0
+-                for field_name in row:
+-                    field = resource.schema.get_field(field_name)
+-                    cell = field.read_cell(row.get(field_name))[0]
++                for field in analysis_fields:
++                    cell = field.read_cell(row.get(field.name))[0]
+                     if field.name not in columns_data:
+                         columns_data[field.name] = []
+                     if cell is None:
+@@ -55,7 +62,7 @@ class Analyzer:
+         # Field/Column Stats
+         if columns_data and detailed:
+             analysis_report["correlations"] = {}
+-            for field in resource.schema.fields:
++            for field in analysis_fields:
+                 analysis_report["fieldStats"][field.name] = {}
+ 
+                 if field.type not in analysis_report["variableTypes"]:
+@@ -89,7 +96,7 @@ class Analyzer:
+                     )
+ 
+                     # calculate correlation between variables(columns/fields)
+-                    for field_y in resource.schema.fields:
++                    for field_y in analysis_fields:
+                         if field_y.type in numeric:
+                             # filter rows with nan values, correlation return nan if any of the
+                             # row has nan value.
+diff --git a/frictionless/resources/table.py b/frictionless/resources/table.py
+index 306b360..d830fda 100644
+--- a/frictionless/resources/table.py
++++ b/frictionless/resources/table.py
+@@ -285,22 +285,32 @@ class TableResource(Resource):
+         # those fields, so build them once here and reuse them for every row.
+         expected_fields: List[Field] = self.header.get_expected_fields()
+         handlers = create_cell_handlers(expected_fields)
++        expected_field_names = {field.name for field in expected_fields}
++
++        primary_key_fields = set(self.schema.primary_key)
++        has_primary_key = bool(primary_key_fields) and primary_key_fields.issubset(
++            expected_field_names
++        )
+ 
+-        # Create state
+         memory_unique: Dict[str, Any] = {}
+         memory_primary: Dict[Tuple[Any], Any] = {}
+         foreign_groups: List[Any] = []
+-        is_integrity = bool(self.schema.primary_key)
+-        for field in self.schema.fields:
++        is_integrity = has_primary_key
++
++        for field in expected_fields:
+             if field.constraints.get("unique"):
+                 memory_unique[field.name] = {}
+                 is_integrity = True
++
+         if self.__lookup:
+             for fk in self.schema.foreign_keys:
++                target_key = tuple(fk["fields"])
++                if not set(target_key).issubset(expected_field_names):
++                    continue
+                 group = {}
+                 group["sourceName"] = fk["reference"]["resource"]
+                 group["sourceKey"] = tuple(fk["reference"]["fields"])
+-                group["targetKey"] = tuple(fk["fields"])
++                group["targetKey"] = target_key
+                 foreign_groups.append(group)
+                 is_integrity = True
+ 
+@@ -335,7 +345,7 @@ class TableResource(Resource):
+                                 row.errors.append(error)
+ 
+                 # Primary Key Error
+-                if is_integrity and self.schema.primary_key:
++                if has_primary_key:
+                     try:
+                         cells = self.primary_key_cells(row, self.dialect.header_case)
+                     except KeyError:
+diff --git a/frictionless/table/header.py b/frictionless/table/header.py
+index 0b3477e..ba731bc 100644
+--- a/frictionless/table/header.py
++++ b/frictionless/table/header.py
+@@ -140,7 +140,8 @@ class Header(List[str]):  # type: ignore
+     def get_expected_fields(self) -> List[Field]:
+         """Returns the fields, in the order expected in the data.
+ 
+-        Under `exact`, this is just the schema fields unchanged.
++        Under `exact`, schema fields keep their order and are truncated or
++        extended with `any`-typed fields to match the labels.
+ 
+         Under the name-matched modes, fields are reordered to match the labels;
+         labels without a matching field get a fresh `any`-typed field (even
+@@ -151,10 +152,28 @@ class Header(List[str]):  # type: ignore
+         if self.__expected_fields is not None:
+             return self.__expected_fields
+ 
+-        if not self.__matches_by_name:
++        if self.missing:
+             self.__expected_fields = self.__fields
+             return self.__expected_fields
+ 
++        if not self.__matches_by_name:
++            expected = self.__fields[: len(self.__labels)]
++            used_names = {field.name for field in expected}
++
++            for label in self.__labels[len(expected) :]:
++                name = label
++                suffix = 2
++
++                while name in used_names:
++                    name = f"{label}{suffix}"
++                    suffix += 1
++
++                used_names.add(name)
++                expected.append(Field.from_descriptor({"name": name, "type": "any"}))
++
++            self.__expected_fields = expected
++            return self.__expected_fields
++
+         # ignore_case can make fields ambiguous as their keys are identical,
+         # e.g. "A" and "a"
+         for group in self.__matching.ambiguous_fields:

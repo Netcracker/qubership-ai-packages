@@ -1,30 +1,32 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-index ad70e90..1e94407 100644
+index ad70e90..262c0ae 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-@@ -1857,9 +1857,15 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1857,6 +1857,14 @@ public class FrameworkTests extends NullAwayTestsBase {
                @Nullable
                @Value("#{null}")
                String nullableSpelNullValue;
 +              @Value("#{someBean != null ? someBean.value : 'default'}")
-+              String nullOnlyInComparison;
++              String ternaryNullCheckBeforeDereference;
++              @Value("#{someBean == null ? 'default' : someBean.value}")
++              String ternaryNullEqualityCheckBeforeDereference;
++              @Value("#{null != someBean ? someBean.value : 'default'}")
++              String ternaryNullBeforeNotEqualsCheck;
 +              @Value("#{null == someBean ? someBean.value : 'default'}")
-+              String nullOnlyInReversedComparison;
++              String ternaryNullBeforeEqualsCheck;
                void test() {
                  propertyName.toString();
                  literalValue.toString();
-+                nullOnlyInComparison.toString();
-+                nullOnlyInReversedComparison.toString();
-               }
-             }
-             class ValueFieldWithConstructor {
-@@ -1883,6 +1889,9 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1883,6 +1891,12 @@ public class FrameworkTests extends NullAwayTestsBase {
                @Value("${missing:#{null}}")
                // BUG: Diagnostic contains: @NonNull field 'placeholderWithNullDefault' not initialized
                String placeholderWithNullDefault;
 +              @Value("#{someBean != null ? null : 'default'}")
-+              // BUG: Diagnostic contains: @NonNull field 'nullValueDespiteComparison' not initialized
-+              String nullValueDespiteComparison;
++              // BUG: Diagnostic contains: @NonNull field 'ternaryNullCheckWithNullBranch' not initialized
++              String ternaryNullCheckWithNullBranch;
++              @Value("#{null != someBean ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'ternaryNullBeforeNotEqualsCheckWithNullBranch' not initialized
++              String ternaryNullBeforeNotEqualsCheckWithNullBranch;
              }
              """)
          .doTest();
