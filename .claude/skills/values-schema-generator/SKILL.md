@@ -202,16 +202,17 @@ Read ALL of these before writing a single line of schema:
 5. **All template `.Values` references** — scan every template file including helpers:
 
    ```bash
-   grep -rh '\.Values\.' \
+   grep -rho '\.Values\.[a-zA-Z0-9_.]*' \
      --include="*.yaml" --include="*.tpl" \
      <chart_dir>/templates/ \
      <chart_dir>/tests/ \
      2>/dev/null \
-     | sed -n 's/.*\(\.Values\.[a-zA-Z0-9_.]*\).*/\1/p' \
      | sed 's/^\.Values\.//' \
-     | sed 's/[)}"'"'"'|[:space:]]*$//' \
      | sort -u
    ```
+
+   The `-o` flag extracts ALL matches including multiple per line (e.g. `{{ printf "%s:%s"
+   .Values.image.repository .Values.image.tag }}` yields both `image.repository` and `image.tag`).
 
    Helper files (`_helper.tpl`, `_helpers.tpl`) often reference fields not in values.yaml
    or the guide. These refs are real and must be included.
@@ -219,20 +220,23 @@ Read ALL of these before writing a single line of schema:
    Also extract enum candidates from templates:
 
    ```bash
-   grep -rh 'eq \.Values\.' \
+   grep -rho '\.Values\.[a-zA-Z0-9_.]* *"[^"]*"' \
      --include="*.yaml" --include="*.tpl" \
      <chart_dir>/templates/ 2>/dev/null \
-     | sed -n 's/.*\(\.Values\.[a-zA-Z0-9_.]*\) \+"\([^"]*\)".*/\1 "\2"/p' \
      | sort -u
    ```
+
+   The `-o` flag ensures multiple enum checks per line (e.g. `{{- if or (eq .Values.mode "foo")
+   (eq .Values.mode "bar") }}`) all get extracted.
 
    Also check template fail messages for enum lists:
 
    ```bash
-   grep -rh 'fail\|assert' \
+   grep -rho '"[^"]\+"' \
      --include="*.yaml" --include="*.tpl" \
      <chart_dir>/templates/ 2>/dev/null \
-     | sed -n 's/.*"\([^"]\+\)".*/"\1"/p' | sort -u | head -30
+     | grep -E 'fail|assert' \
+     | sort -u | head -30
    ```
 
 6. **Override/deployment files — extract ALL key paths before writing schema.**
@@ -764,12 +768,28 @@ find <external_override_dir> \( -name "*.yml" -o -name "*.yaml" \) 2>/dev/null |
 
 ```python
 import os, yaml, json, jsonschema
+from copy import deepcopy
+
 schema = json.load(open("values.schema.json"))
+defaults = yaml.safe_load(open("values.yaml")) or {}
 failures = []
+
+def merge_dicts(base, override):
+    """Deep merge override into base (Helm's merge behavior)."""
+    result = deepcopy(base)
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
+
 for fpath in override_files:
-    data = yaml.safe_load(open(fpath)) or {}
+    override = yaml.safe_load(open(fpath)) or {}
+    # Merge override with defaults BEFORE validation (matches Helm behavior)
+    merged = merge_dicts(defaults, override)
     try:
-        jsonschema.validate(instance=data, schema=schema)
+        jsonschema.validate(instance=merged, schema=schema)
     except jsonschema.ValidationError as e:
         path = " -> ".join(str(p) for p in e.absolute_path)
         failures.append((fpath, path, e.message))
@@ -777,6 +797,10 @@ for fpath in override_files:
 if not failures:
     print("All override files pass")
 ```
+
+**CRITICAL:** Override files are validated AFTER merging with `values.yaml` defaults, matching
+Helm's behavior. A partial override like `replicaCount: 2` passes validation because the schema
+is applied to the merged result (with `image` from defaults), not to the override in isolation.
 
 `Additional properties are not allowed` on nested objects = **schema gap** (missing field).
 Add the field using guide/Go type. Only wrong types and invalid enums are errors in the
