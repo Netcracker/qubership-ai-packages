@@ -1,30 +1,31 @@
-I rewrote the 21 tests the commit added to `WildcardTests.java` as 3 tests, one per rule. They all pass on the fix, and each one fails on the base production code. The full `:nullaway:test` run and `:nullaway:buildWithNullAway` both pass. Production code is unchanged and nothing is committed.
+I rewrote the 20 tests from `d55c150` as two tests in `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, one for each rule the fix implements. No production code changed and nothing is committed. `WildcardTests` passes on the fix and `:nullaway:buildWithNullAway` passes.
 
-**Message for the pull request author**
+**Message for the author of the pull request:**
 
-> **What changed in the tests, and why**
->
-> The 21 tests this change added to `WildcardTests` are now 3, one per rule. The repository's stack line asks for the cases of one rule to be kept in one source, written as if `doTest()` reported every mismatch. Before, each input had its own method and its own copy of the class. The 14 silent or already-reporting inputs stood in tests of their own, so nothing showed the silent ones next to an input that reports.
->
-> I ran the original tests against the base production code (`d55c150^`) to sort the inputs. Seven failed there: these are the cases this change makes report. The other 14 behave the same before and after the fix: they are controls. The rewrite keeps every one of them.
->
-> - **`aTypeVariableArgumentIsCheckedAgainstAConcreteWildcardByItsAnnotationOrElseItsBound`**: a requirement like `Box<? extends Object>`.
->   - Cases: a bound that admits null directly, through another type variable, through `? extends T`, or because the variable is declared in `@NullUnmarked` code.
->   - Controls: a non-null bound, `@NonNull T` and `@Nullable T` written at the use, and the `? extends @Nullable Object` and `Box<?>` requirements.
->   - The calls that differ only in the requirement sit on adjacent lines in one method, so the requirement is the only difference.
-> - **`anArgumentForAWildcardBoundedByATypeVariableFailsOnlyWhenItAdmitsANullTheBoundDoesNot`**: a requirement like `Box<? extends T>`.
->   - Cases: `Box<T>` passed to `Box<? extends @NonNull T>`, and `S extends @Nullable T` passed to `Box<? extends T>` where `T` is non-null.
->   - Controls: the same variable, `S extends T`, `@Nullable T`, the return form, and the `CompletableFuture` inference and captured-type inputs, which are now nested interfaces.
->   - The silent captured and inference inputs now share a source with inputs that report.
-> - **`anOverrideMayNotReturnATypeVariableWhereANonNullWildcardOfItWasPromised`**: kept separate because the override check reports a different diagnostic. I added one control: an override returning `List<@NonNull V>`, which stays silent before and after the fix.
->
-> I added two inputs, both controls that stay silent before and after the fix: the override above, and `takeExtendsT(b)` beside `takeExtendsNonNullT(b)`, so the `@NonNull` on the requirement is the only difference. No input was dropped.
->
-> **Evidence:**
-> - On the base production code, all three tests fail on a missing report: lines 13, 19 and 11 respectively.
-> - With the seven case markers removed, the rewritten sources pass on the base, so every control holds there.
-> - On the fix, `:nullaway:test` and `:nullaway:buildWithNullAway` pass.
->
-> **Proposed, not done:** The pull request description should include the base-commit run as its evidence. Proposing nothing about `CompilationTestHelper`: the stack line already accepts this form.
+---
 
-The skill also defers to a writing-style skill and a Javadoc skill, but neither is available in this session, so I didn't load them.
+I rewrote the 20 new tests in `WildcardTests` as two tests, one per rule in `extendsBoundContains`. All 20 inputs are kept, written exactly as before.
+
+- **`aWildcardWithAConcreteBoundJudgesATypeVariableArgumentByItsDeclaredBound`** covers a requirement like `Box<? extends Object>`.
+  - Cases (reports the fix adds): a `T` whose bound is nullable, a `T` declared in `@NullUnmarked` code, `S extends T` where `T`'s bound is nullable, and `Box<? extends T>` with the same `T`.
+  - Controls: a `T` with a non-null bound, `@Nullable T` and `@NonNull T` written at the use site, and the `? extends @Nullable Object` and `?` requirements.
+- **`aWildcardBoundedByATypeVariableAcceptsExactlyTheArgumentsThatVariableAdmits`** covers a requirement like `? extends T` or `? extends @NonNull T`.
+  - Cases: `S extends @Nullable T` where `T` is non-null, `Box<T>` passed to a `Box<? extends @NonNull T>`, and the override that returns `List<V>`.
+  - Controls: the same variable (both directly and through inference), `S extends T`, `@Nullable T`, and the two captured arguments.
+
+**Why:** the repository's `CLAUDE.md` says to write `CompilationTestHelper` tests as if `doTest()` reported every mismatch, and to keep the cases of one rule in one source. The old tests broke that rule in two ways:
+- **Copied setup.** Each test had its own copy of `Box` and the methods that take it, so finding what differed between two tests meant comparing two classes line by line.
+- **Silent tests with no control beside them.** Each silent test stood alone, so nothing showed that the same setup reports when it should.
+
+Now each case sits beside its controls in one class, often with the difference on adjacent lines. For example, in `boundAdmitsNull` the reporting call to `takeNonNull(b)` is followed by silent calls to `takeNullable(b)` and `takeAny(b)`. The methods and nested types inside each source are named for the case they hold, because the harness reports a mismatch only by line number. The interface-based inputs became nested interfaces of `Test`.
+
+**How I checked which inputs are cases:**
+- **Old tests on the base commit:** exactly seven failed, and those seven are the cases above. The other 13 already held before the fix, so they are controls.
+- **New tests on the base commit:** both fail.
+- **Base commit with only the seven case markers removed:** both pass. So every control still holds on the base, and each case is a report the fix adds.
+
+**Proposed, not done:**
+- **Library-model partition is untested.** `typeVariableUpperBound` also treats a bound as nullable when a library model says so (through `upperBoundIsNullable` and the handler), but no test covers that. A case for it would use one of the test library models' type variables with a nullable upper bound, passed to `Box<? extends Object>`, and would belong in the first test.
+- **No control for the `? extends @NonNull T` case.** The case is `Box<T>` passed to `takeExtendsNonNullT`, and it has no control that differs in just one respect. Adding `Box<@NonNull T>` passed to the same method, expected to be silent, would show that the report comes from `T` possibly being null.
+
+---

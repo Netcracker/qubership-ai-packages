@@ -1,5 +1,5 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-index ad70e90..05e9a2c 100644
+index ad70e90..3ed8024 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 @@ -1826,23 +1826,25 @@ public class FrameworkTests extends NullAwayTestsBase {
@@ -43,62 +43,81 @@ index ad70e90..05e9a2c 100644
          .addSourceLines(
              "NegativeCases.java",
              """
-@@ -1888,6 +1890,63 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1888,6 +1890,82 @@ public class FrameworkTests extends NullAwayTestsBase {
          .doTest();
    }
  
 +  @Test
-+  public void springValueSpelNullCountsOnlyAsAResultWhenComparedOnTheRight() {
++  public void springValueNullAfterNotEqualsIsNotAPossibleValue() {
 +    addSpringValueAnnotationStub(defaultCompilationHelper)
 +        .addSourceLines(
-+            "SpelNullComparison.java",
++            "Test.java",
 +            """
 +            package com.uber;
 +            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("#{bean != null ? bean.name : 'default'}")
-+              String comparedOnly;
-+              @Value("#{bean != null ? null : 'default'}")
-+              // BUG: Diagnostic contains: @NonNull field 'comparedAndReturned' not initialized
-+              String comparedAndReturned;
++            class Test {
++              @Value("#{settings != null ? settings.name : 'default'}")
++              String nameOrDefault;
++              @Value("#{settings != null ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenSet' not initialized
++              String nullWhenSet;
 +            }
 +            """)
 +        .doTest();
 +  }
 +
 +  @Test
-+  public void springValueSpelNullCountsOnlyAsAResultWhenComparedOnTheLeft() {
++  public void springValueNullAfterEqualsIsNotAPossibleValue() {
 +    addSpringValueAnnotationStub(defaultCompilationHelper)
 +        .addSourceLines(
-+            "SpelNullComparison.java",
++            "Test.java",
 +            """
 +            package com.uber;
 +            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("#{null == bean ? 'default' : bean.name}")
-+              String comparedOnly;
-+              @Value("#{null == bean ? null : bean.name}")
-+              // BUG: Diagnostic contains: @NonNull field 'comparedAndReturned' not initialized
-+              String comparedAndReturned;
++            class Test {
++              @Value("#{settings == null ? 'default' : settings.name}")
++              String nameOrDefault;
++              @Value("#{settings == null ? null : settings.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenUnset' not initialized
++              String nullWhenUnset;
 +            }
 +            """)
 +        .doTest();
 +  }
 +
 +  @Test
-+  public void springValueSpelNullCountsOnlyAsAResultWhenComparedWithoutSpaces() {
++  public void springValueNullBeforeNotEqualsIsNotAPossibleValue() {
 +    addSpringValueAnnotationStub(defaultCompilationHelper)
 +        .addSourceLines(
-+            "SpelNullComparison.java",
++            "Test.java",
 +            """
 +            package com.uber;
 +            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("#{bean!=null ? bean.name : 'default'}")
-+              String comparedOnly;
-+              @Value("#{bean!=null ? null : 'default'}")
-+              // BUG: Diagnostic contains: @NonNull field 'comparedAndReturned' not initialized
-+              String comparedAndReturned;
++            class Test {
++              @Value("#{null != settings ? settings.name : 'default'}")
++              String nameOrDefault;
++              @Value("#{null != settings ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenSet' not initialized
++              String nullWhenSet;
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueNullBeforeEqualsIsNotAPossibleValue() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{null == settings ? 'default' : settings.name}")
++              String nameOrDefault;
++              @Value("#{null == settings ? null : settings.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenUnset' not initialized
++              String nullWhenUnset;
 +            }
 +            """)
 +        .doTest();

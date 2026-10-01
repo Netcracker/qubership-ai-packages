@@ -1,26 +1,20 @@
-All green. As instructed, I did not commit anything — these changes remain in the working tree for review.
+All 1835 tests pass, production code untouched, nothing committed.
 
 ---
 
-**Message for the PR author:**
+**Message for the author of PR #1799:**
 
-This fix changed `Header.get_expected_fields()` under `fieldsMatch: "exact"` and the two call sites that consume it (`TableResource.__open_row_stream`, `Analyzer`), but no tests were touched, so the diff was carrying two kinds of untested risk. I ran the affected suites (`frictionless/table`, `resources/table`, `resource`, `package`, `analyzer`) before and after this commit to find them, then fixed what the change owes without touching production code:
+The fix changes what `Header.get_expected_fields()` and `TableResource.__open_row_stream` return/check, and that surfaced in five places. I verified every change below is red against the pre-fix code (`44661ad`) and green against your commit, using a throwaway worktree.
 
-**Stale tests updated (they encoded the old, now-wrong behavior and were red on this branch):**
-- `test_header.py::test_get_expected_fields["exact: extra labels get no field"]` — exact mode now *does* synthesize an any-typed field for a trailing extra label, same as the name-matched modes; renamed the case and fixed the expectation.
-- `test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells` — the extra column no longer produces an `extra-cell` per row.
-- `test_validate_schema.py::test_resource_validate_less_actual_fields_with_required_constraint_issue_950` — the missing field no longer produces `constraint-error`/`missing-cell` per row, only the header-level `missing-label`.
-- `test_validate_schema.py::test_resource_validate_fields_match_extra_label["exact"]` and `::test_resource_validate_fields_match_missing_field["exact"]` — same duplicate-row-error removal, parametrized case.
-- `package/test_validate.py::test_package_validate_with_schema_issue_348` — same as above, package-level.
+**Tests whose expectations moved** (they encoded the exact bug you fixed — a header mismatch double-reported as a per-row cell error — so they were silently green before and are the regression evidence for the fix):
+- `test_resource_validate_schema_extra_headers_and_cells` and `test_resource_validate_less_actual_fields_with_required_constraint_issue_950` (`frictionless/resource/__spec__/test_validate_schema.py`) — also dropped a stray `print(...)` left in the second one.
+- `test_package_validate_with_schema_issue_348` (`frictionless/package/__spec__/test_validate.py`).
+- `test_resource_validate_fields_match_extra_label` / `test_resource_validate_fields_match_missing_field`, `exact` case (same file).
+- `test_get_expected_fields[exact: extra labels get no field]` in `frictionless/table/__spec__/test_header.py` — turns out under the new code `exact` *does* now get a field for an extra label (an `any`-typed one, to make the handler count match); I renamed and fixed it.
 
-I confirmed each of these fails against the pre-fix commit (`6d5cd51^`) with the new expectation and passes against this commit, so they're real regression tests for the fix, not just updated literals.
+**New tests for behavior this commit changes but a prior test never pinned:**
+- `test_header.py`: `exact` truncating fields to the label count when the schema has more fields than labels; a missing header (`labels == []`) now short-circuits to the full field list under every `fieldsMatch` mode (previously only `exact` did — the name-matched modes went through the matching logic against an empty label list and silently produced **zero** expected fields, so a headerless resource with e.g. `fieldsMatch: superset` read every row as `{}`); and the new suffix-renaming of an extra label that collides with an already-used field name (`"a2"`).
+- `resources/__spec__/table/test_schema.py`: three regressions I found by reasoning through why `table.py`'s unique/primary-key/foreign-key checks now filter by `expected_fields` instead of `self.schema.fields`. Pre-fix, a `unique`-constrained field or a foreign key's field absent from the header under a tolerant mode (e.g. `superset`) crashed with an unhandled `KeyError` reading `row[field_name]`. A primary-key field absent from the header under `header_case=False` didn't crash but silently compared every row's empty key against every other row's and reported spurious `primary-key` duplicates from row 2 on.
+- `analyzer/__spec__/test_resource.py`: the same root cause breaks `analyze()` — an extra, undeclared label crashed with `FrictionlessException: field ... does not exist` (non-detailed path), and a schema field missing from the header crashed with `KeyError` in the `detailed=True` field-stats/correlation loop.
 
-**New tests added (behavior this commit introduces with no coverage at all):**
-- `test_header.py`: two new `get_expected_fields` cases for a code path that's entirely new in this commit — exact mode's collision-avoiding renaming of synthesized fields (the `used_names`/`while` suffix loop). One case has an extra label collide with a *kept* schema field name (the realistic case — `data/capital-invalid.csv` has exactly this shape, with a duplicated `name` column, and it was incidentally exercising this code via an unrelated analyzer test without ever asserting on it). The other needs two renaming attempts (`dup`, `dup2`, `dup3`) to catch a `while`→`if` or missing-increment mutant that a single collision wouldn't. Also added the "any"-typed assertion for exact mode, mirroring the existing one for the name-matched modes.
-- `test_validate_schema.py::test_resource_validate_schema_extra_header_data_is_still_read` — asserts that `read_rows()` now actually surfaces the extra column's data (`{"id": 1, "name": "english"}`), which used to be silently dropped from every row under `exact`. This is a real, user-visible behavior change nothing else checks.
-
-I also deleted a stray `print(...)` debug line in `test_resource_validate_less_actual_fields_with_required_constraint_issue_950` since I was already rewriting its assertion.
-
-**Proposed, not done:** this repository has no `AGENTS.md`/`CLAUDE.md` naming its test stack. Based on the existing tests, it's pytest with plain `assert`. Worth adding a line such as `Tests: pytest engine, pytest assertions` to a new or existing instructions file, but I didn't create one since there's no explicit go-ahead for that.
-
-I didn't find any owed test for the `resources/table.py` primary-key/unique/foreign-key scoping changes (restricting those checks to `expected_fields`) — I checked several scenarios (a missing composite primary key, a missing unique field, a partially-missing composite foreign key) against both commits and the observable output was identical in both, so that part of the diff is a behavior-preserving refactor riding along with the fix, not something that needs new coverage.
+**What I did not add:** a test with more than one data row demonstrating the "cell error reported for every row" wording from your PR description — the mechanism builds cell handlers once per stream and reuses them unchanged across rows, so a single-row case already pins it; a multi-row variant would be redundant. I also didn't add a stack line for this repo's test harness (pytest/plain `assert`) to `AGENTS.md`/`CLAUDE.md` since neither file exists here and there's no user to confirm with in this session — happy to add `Tests: pytest engine, pytest assertions` to a new `AGENTS.md` if you'd like.

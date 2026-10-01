@@ -1,39 +1,43 @@
-I added three regression tests for the `SpringHandler` fix, all in `FrameworkTests`. They pass with the fix and fail on the commit before it. Nothing is committed and the production code is untouched. The full `:nullaway:test` suite and `:nullaway:buildWithNullAway` both pass.
+I added four regression tests to `FrameworkTests.java` for the SpEL `null`-comparison fix. Production code is unchanged and nothing is committed. `FrameworkTests` passes (74 tests) and so does `:nullaway:buildWithNullAway`. I ran the new tests against the pre-fix `SpringHandler` and they failed, then restored the file.
 
-Here is the message for the PR author:
+Here is the message I'd leave for the author of #1750:
 
 ---
 
-**Tests for #1750 (`SpringHandler`: `null` used in a SpEL comparison)**
+**Tests added (in `FrameworkTests`, beside `springValueFieldTest`)**
 
-The fix changes which `@Value` strings count as "may be null", so it owes a regression test. These are small tests: one compilation through `CompilationTestHelper`, which is the same level the existing `springValueFieldTest` uses.
+The fix changed behavior and came with no test, so I added one test for each comparison form named in the Javadoc of `NULL_COMPARISON_PATTERN`:
 
-Each test holds one case and its control in one source file:
-- **The case** is a field whose SpEL mentions `null` only in a comparison. It must not be flagged.
-- **The control** is the same expression with one branch changed to return `null`. It must still be flagged, which shows the fix didn't just switch the check off.
+- `springValueNullAfterNotEqualsIsNotAPossibleValue`: `settings != null`
+- `springValueNullAfterEqualsIsNotAPossibleValue`: `settings == null`
+- `springValueNullBeforeNotEqualsIsNotAPossibleValue`: `null != settings`
+- `springValueNullBeforeEqualsIsNotAPossibleValue`: `null == settings`
 
-| Test | Case (should not be flagged) | Control (still flagged) |
-| --- | --- | --- |
-| `springValueSpelNullCountsOnlyAsAResultWhenComparedOnTheRight` | `#{bean != null ? bean.name : 'default'}` | `#{bean != null ? null : 'default'}` |
-| `springValueSpelNullCountsOnlyAsAResultWhenComparedOnTheLeft` | `#{null == bean ? 'default' : bean.name}` | `#{null == bean ? null : bean.name}` |
-| `springValueSpelNullCountsOnlyAsAResultWhenComparedWithoutSpaces` | `#{bean!=null ? bean.name : 'default'}` | `#{bean!=null ? null : 'default'}` |
+Each test compiles one class with two `@Value` fields:
+- **The case:** the ternary yields a non-null value, e.g. `#{settings != null ? settings.name : 'default'}`. It must not be reported.
+- **A control:** the same expression with that branch replaced by `null`. It must still be reported as not initialized.
 
-**Evidence:**
-- **Before the fix:** with `SpringHandler.java` reset to `HEAD~1`, all three tests fail with the false positive itself. For example: `Saw unexpected error on line 5 … @NonNull field 'comparedOnly' not initialized`.
-- **Each test catches a different wrong fix.** I tried two broken versions of `NULL_COMPARISON_PATTERN`:
-  - Dropping the `null ==` / `null !=` alternative fails only `…ComparedOnTheLeft`.
-  - Changing `\s*` to `\s+` fails only `…ComparedWithoutSpaces`.
+The control shows that the case goes silent because of the comparison rule, not because of the setup. Fields are checked one at a time, so the two can share one compilation.
 
-**Why three tests, not one source with all the cases:** I broke cases on purpose to see how `CompilationTestHelper` reports them:
-- It lists every unexpected diagnostic, each named by its field.
-- It stops at the first missing `// BUG: Diagnostic contains:` marker, so a second missing marker in the same source would go unreported.
+These are ordinary `CompilationTestHelper` tests that compile in-process, the smallest level where the handler can be seen through the NullAway check. `containsNullSpELExpression` is private, so it is tested only through that check.
 
-So each source has exactly one marker. `springValueFieldTest` already has two markers in one source, so the new cases sit beside it rather than inside it. I left that test's cases and expectations as they were.
+**Evidence**
+- **Red on the base commit:** with `SpringHandler` from `HEAD~1`, all four fail with `Saw unexpected error on line 5 … @NonNull field 'nameOrDefault' not initialized`. That is the false positive from the bug report. All four controls report on both the old and the new code.
+- **They tell the forms apart:** I narrowed the pattern to `!=\s*\bnull\b|\bnull\b\s*==` and exactly `…AfterEquals…` and `…BeforeNotEquals…` failed. With only two cases, that change would have gone unnoticed.
 
-**Inputs covered:** the side of the comparison `null` is on (left or right), and no whitespace between operator and `null`. I treated `==` and `!=` as one class, since both are equality comparisons. The right-side test uses `!=` and the left-side test uses `==`.
+**Why four separate tests instead of one class with all of them**
 
-**One refactor:** `springValueFieldTest` and the new tests now share a new `addSpringValueAnnotationStub` helper (with Javadoc) instead of copying the `@Value` stub. It reuses the file's `ANNOTATION_IMPORTS` and `RETENTION_RUNTIME` constants.
+I checked how `CompilationTestHelper` reports failures by breaking two cases on purpose:
+- It stops at the first mismatch.
+- It identifies that mismatch by line number. A missing diagnostic also shows the marker's text; an unexpected one also lists every diagnostic.
 
-**Proposed, not done:**
-- The repository's instructions (`AGENTS.md` / `CLAUDE.md`) don't say which test libraries the project uses or how the test helper reports failures. I suggest adding: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper with "// BUG: Diagnostic contains:" markers — reports every unexpected diagnostic with its message, stops at the first missing marker (named by its text and line).` I haven't edited either file; tell me if you want the line added.
-- No change to Error Prone's test helper is needed, because one marker per test already gets around the stop-at-first behavior.
+Putting four cases in one compilation would mean a failure in one hides the others. Each `// BUG: Diagnostic contains:` marker names its field, so a missing diagnostic still says which case it was.
+
+**Refactoring of an existing test**
+
+I moved the `@Value` annotation stub into a helper, `addSpringValueAnnotationStub`, written like the existing `addSpringMockAnnotationStubs`. `springValueFieldTest` now calls it, and its expectations are unchanged.
+
+**Proposed, not done**
+- **A stack line for `CLAUDE.md`/`AGENTS.md`**, for example: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper, which stops at the first mismatch and names it by line number (missing diagnostics also show the marker text).` I didn't edit either file.
+- **No-space operators are untested.** Forms like `settings!=null` rely on `\s*` and could get one more case if you want it.
+- **Other comparisons still count as a possible value.** `null` used as a method argument (`#{T(java.util.Objects).equals(a, null)}`) or with `<`, `>`, `<=`, `>=` is still flagged. This is likely a remaining false positive, outside this fix and with no test.

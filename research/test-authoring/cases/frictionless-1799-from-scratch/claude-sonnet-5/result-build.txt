@@ -1,14 +1,21 @@
 on the fix (build.sh exited with 0):
-  170 tests ran, 0 failed
+  194 tests ran, 0 failed
 on the base (build.sh exited with 1):
-  170 tests ran, 10 failed
+  194 tests ran, 17 failed
+    test_resource.test_analyze_resource_with_a_label_not_declared_in_the_schema
+    test_resource.test_analyze_resource_detailed_with_a_field_missing_from_the_header
     test_validate.test_package_validate_with_schema_issue_348
     test_validate_schema.test_resource_validate_schema_extra_headers_and_cells
-    test_validate_schema.test_resource_validate_schema_extra_header_data_is_still_read
     test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
     test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
     test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_schema.test_resource_schema_unique_ignores_a_field_absent_from_the_header
+    test_schema.test_resource_schema_primary_key_ignores_a_field_absent_from_the_header
+    test_schema.test_resource_schema_foreign_keys_ignore_a_field_absent_from_the_header
     test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
-    test_header.test_get_expected_fields[exact: an extra label colliding with a kept field name is renamed]
-    test_header.test_get_expected_fields[exact: extra labels colliding with each other are each renamed]
-    test_header.test_get_expected_fields_exact_default_field_is_any_typed
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
+    test_header.test_get_expected_fields[equal: a missing header keeps every field]
+    test_header.test_get_expected_fields[subset: a missing header keeps every field]
+    test_header.test_get_expected_fields[superset: a missing header keeps every field]
+    test_header.test_get_expected_fields[partial: a missing header keeps every field]
+    test_header.test_get_expected_fields_exact_extra_label_colliding_with_a_field_name_is_renamed

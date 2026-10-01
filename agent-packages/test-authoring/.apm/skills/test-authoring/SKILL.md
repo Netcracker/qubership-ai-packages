@@ -394,19 +394,21 @@ of each entry open (§8). The reference file names the runner option that prints
      differs or many, since copies of it state the difference nowhere and drift apart. A new helper that builds what an
      existing helper builds, the same client, fixture, or document with a few settings or return values different, is
      the copy one level up, however many lines differ: give the existing helper the differences as arguments or options,
-     have both callers use one body, and keep the existing tests' expectations (§9). A helper that builds a textual
-     input takes a value the input's grammar has a slot for (`configWithTimeout("-1")`, one literal in a query or a
-     request body), sets or omits one key of a record (`orderWithout("address")`), or wraps one whole fragment the test
-     writes out in fixed text no expectation depends on (`lintInMethod(body)`). It never assembles the input from two or
-     more pieces of syntax, and never splices a piece into text the expectation depends on: a query built from clauses,
-     or a source built from a type parameter list, a statement, and a marker, shows the reader the input only after the
-     helper has run. Cases that differ in the structure of the input each write it out whole, or stand side by side in
-     one act's input under principle 3; the copy is the price of an input the reader sees whole. An example-based case
-     carries its input and its outcome as literals; a property-based test shows its generator and its property, and its
-     failure carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find
-     what differs; every line the expectation depends on is in the test body in one piece; every argument of a helper
-     that builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in
-     the file build the same thing with a few lines different.
+     have both callers use one body, and keep the existing tests' expectations (§9). Those arguments are settings and
+     values of the object the helper builds; a source or a document the expectation depends on stays out of them, and
+     the rest of this principle says what a helper may take there. A helper that builds a textual input takes a value
+     the input's grammar has a slot for (`configWithTimeout("-1")`, one literal in a query or a request body), sets or
+     omits one key of a record (`orderWithout("address")`), or wraps one whole fragment the test writes out in fixed
+     text no expectation depends on (`lintInMethod(body)`). It never assembles the input from two or more pieces of
+     syntax, and never splices a piece into text the expectation depends on: a query built from clauses, or a source
+     built from a type parameter list, a statement, and a marker, shows the reader the input only after the helper has
+     run. Cases that differ in the structure of the input each write it out whole, or stand side by side in one act's
+     input under principle 3; the copy is the price of an input the reader sees whole. An example-based case carries its
+     input and its outcome as literals; a property-based test shows its generator and its property, and its failure
+     carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find what
+     differs; every line the expectation depends on is in the test body in one piece; every argument of a helper that
+     builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in the
+     file build the same thing with a few lines different.
   3. **A case that expects nothing stands with a control that expects something.** Silence establishes nothing on its
      own, since it may come from the setup rather than from the rule. A silent case (nothing rejected, nothing
      reported) has a nearest control that reports, and the two share one act's input where the unit evaluates several
@@ -481,11 +483,12 @@ before the test is. Each cause below has one fix, and every cause but the last i
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for some values, settings, or
   return values, give it those as arguments or options and have the old callers keep calling it, so that the existing
-  tests stay as they are. Two helpers that build the same thing with a few lines different are the copied setup of §7
-  one level up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds
-  for a helper the change itself added beside an existing one. A helper that assembles an input from pieces of syntax
-  (§7) is neither called by the new test nor copied: the new test writes its input out whole, leaves that helper and its
-  callers as they are, and the pull request says so.
+  tests stay as they are. An argument is a setting or a value, never a piece of a source or a document the expectation
+  depends on (§7). Two helpers that build the same thing with a few lines different are the copied setup of §7 one level
+  up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds for a helper
+  the change itself added beside an existing one. A helper that assembles an input from pieces of syntax (§7) is neither
+  called by the new test nor copied: the new test writes its input out whole, leaves that helper and its callers as they
+  are, and the pull request says so.
 - **A new test goes beside the nearest existing test of the unit it exercises**, in the file or directory named for
   the code under test, not in a file named for the ticket or the author. A test class splits when its fixture no
   longer serves every test in it; a fixture with fields only some tests use is the signal.

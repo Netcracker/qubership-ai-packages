@@ -1,5 +1,5 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-index ad70e90..bfb7481 100644
+index ad70e90..6ff6017 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 @@ -1857,9 +1857,15 @@ public class FrameworkTests extends NullAwayTestsBase {
@@ -7,14 +7,14 @@ index ad70e90..bfb7481 100644
                @Value("#{null}")
                String nullableSpelNullValue;
 +              @Value("#{someBean != null ? someBean.value : 'default'}")
-+              String nullCheckedInTernaryCondition;
-+              @Value("#{someBean == null ? 'default' : someBean.value}")
-+              String reversedNullCheckedInTernaryCondition;
++              String ternaryGuardedByNullCheckOnRight;
++              @Value("#{null == someBean ? 'default' : someBean.value}")
++              String ternaryGuardedByNullCheckOnLeft;
                void test() {
                  propertyName.toString();
                  literalValue.toString();
-+                nullCheckedInTernaryCondition.toString();
-+                reversedNullCheckedInTernaryCondition.toString();
++                ternaryGuardedByNullCheckOnRight.toString();
++                ternaryGuardedByNullCheckOnLeft.toString();
                }
              }
              class ValueFieldWithConstructor {
@@ -23,8 +23,8 @@ index ad70e90..bfb7481 100644
                // BUG: Diagnostic contains: @NonNull field 'placeholderWithNullDefault' not initialized
                String placeholderWithNullDefault;
 +              @Value("#{someBean != null ? null : 'default'}")
-+              // BUG: Diagnostic contains: @NonNull field 'nullStillReachableBesideNullCheck' not initialized
-+              String nullStillReachableBesideNullCheck;
++              // BUG: Diagnostic contains: @NonNull field 'ternaryCanStillReturnNull' not initialized
++              String ternaryCanStillReturnNull;
              }
              """)
          .doTest();
