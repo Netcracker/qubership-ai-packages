@@ -232,12 +232,15 @@ Read ALL of these before writing a single line of schema:
    Also check template fail messages for enum lists:
 
    ```bash
-   grep -rho '"[^"]\+"' \
+   grep -rh 'fail\|assert' \
      --include="*.yaml" --include="*.tpl" \
      <chart_dir>/templates/ 2>/dev/null \
-     | grep -E 'fail|assert' \
+     | grep -o '"[^"]\+"' \
      | sort -u | head -30
    ```
+
+   Filter for fail/assert FIRST, then extract strings. Otherwise `{{ fail "mode must be one of
+   foo, bar" }}` produces no output (the message itself contains neither function name).
 
 6. **Override/deployment files — extract ALL key paths before writing schema.**
    Run this script over every override file collected in Step 1 (in-repo and external):
