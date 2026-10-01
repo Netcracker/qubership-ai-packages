@@ -33,15 +33,25 @@ the root `conftest.py` opts the module in with `pytest.register_assert_rewrite("
 
 ## Parameterized cases
 
-`@pytest.mark.parametrize("n", [-1, -2])` names each case from the value (`test_param[-1]`); for a value with no
-useful `repr`, or where the condition is the name, pass `ids=["minus one", "minus two"]` or `pytest.param(-1,
-id="minus one")`. The id becomes the node id suffix, is printed in the `FAILED` line, and is selectable with `-k`. Two
-cases with the same id are disambiguated by an index, which is a location.
+`@pytest.mark.parametrize("n", [-1, -2])` names each case from the value (`test_param[-1]`); for a value with no useful
+`repr`, or where the condition is the name, pass `ids=["minus one", "minus two"]` or `pytest.param(-1, id="minus one")`.
+The id becomes the node id suffix, is printed in the `FAILED` line, and is selectable with `-k`. Two cases with the same
+id are disambiguated by an index, which is a location. Cases that share a setup (`SKILL.md` §7) and assert the same way
+may be `pytest.param` rows with ids, or separate functions on one fixture or helper. The main skill (§7) and the file's
+neighbors (§9) choose between them, and a short setup is repeated in each case. Where the outcomes differ in kind, one
+raising and one returning, the cases are separate functions on one fixture or helper that builds the setup from the
+varying value. Many cases of each kind are one parametrized function for each kind.
 
 ## Grouping assertions
 
 There is no soft assert in pytest itself; a test with several assertions on one result stops at the first. Where the
-fields are independent, `pytest-check` or a parametrized test over the fields keeps them reporting together.
+fields are independent, `pytest-check` or a parametrized test over the fields keeps them reporting together. Several
+expectations on the result of one act, the errors of one validated batch, are one `assert` on the fields the behavior
+defines, the record and the error code without the message. Where the behavior defines no order and no duplicates,
+compare sets, `{("r2", "EMPTY"), …}`: pytest lists the extra items on each side. A default run cuts a long list after a
+few lines and says `Full output truncated`; `-vv`, or the `CI` environment variable that CI services set, prints it
+whole. Where it defines the order, compare lists, which a default run reports only up to the first differing index and
+`-vv` prints whole. A parametrized test would repeat the act for each expectation.
 
 ## Errors
 

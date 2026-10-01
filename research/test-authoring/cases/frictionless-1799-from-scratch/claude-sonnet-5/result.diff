@@ -1,0 +1,292 @@
+diff --git a/frictionless/analyzer/__spec__/test_resource.py b/frictionless/analyzer/__spec__/test_resource.py
+index fae992d..a7b27f0 100644
+--- a/frictionless/analyzer/__spec__/test_resource.py
++++ b/frictionless/analyzer/__spec__/test_resource.py
+@@ -2,6 +2,7 @@ import sys
+ 
+ import pytest
+ 
++from frictionless import Schema
+ from frictionless.resources import TableResource
+ 
+ pytestmark = pytest.mark.skipif(
+@@ -245,3 +246,39 @@ def test_analyze_resource_detailed_with_invalid_data():
+     assert analysis["rowsWithNullValues"] == 3
+     assert analysis["notNullRows"] == 1
+     assert analysis["variableTypes"] == {"integer": 3, "string": 1}
++
++
++# Fields match: analysis follows the fields the row stream actually reads
++#
++# A label the schema does not declare gets a dynamic field with no entry in
++# `resource.schema.fields` (Header.get_expected_fields); a `fieldsMatch` mode
++# that tolerates a field missing from the header drops it from the row stream
++# the same way. Analysis must read the row stream's own fields instead of the
++# full schema, or it reaches for a field that isn't there.
++
++
++def test_analyze_resource_with_a_label_not_declared_in_the_schema():
++    schema = Schema.from_descriptor(
++        {"fields": [{"name": "a", "type": "integer"}], "fieldsMatch": "equal"}
++    )
++    resource = TableResource(data=[["a", "extra"], [1, "x"], [2, "y"]], schema=schema)
++    analysis = resource.analyze()
++    assert analysis["rows"] == 2
++    assert analysis["notNullRows"] == 2
++    assert analysis["rowsWithNullValues"] == 0
++
++
++def test_analyze_resource_detailed_with_a_field_missing_from_the_header():
++    schema = Schema.from_descriptor(
++        {
++            "fields": [
++                {"name": "a", "type": "integer"},
++                {"name": "b", "type": "integer"},
++            ],
++            "fieldsMatch": "superset",
++        }
++    )
++    resource = TableResource(data=[["a"], [1], [2], [3]], schema=schema)
++    analysis = resource.analyze(detailed=True)
++    assert list(analysis["fieldStats"].keys()) == ["a"]
++    assert analysis["fieldStats"]["a"]["mean"] == 2
+diff --git a/frictionless/package/__spec__/test_validate.py b/frictionless/package/__spec__/test_validate.py
+index c96ce4c..7d1a733 100644
+--- a/frictionless/package/__spec__/test_validate.py
++++ b/frictionless/package/__spec__/test_validate.py
+@@ -282,10 +282,11 @@ def test_package_validate_with_schema_issue_348():
+     }
+     package = Package(descriptor)
+     report = package.validate()
++    # "dob" has no label at all, so it is dropped from the fields the row
++    # stream reads (Header.get_expected_fields); it is reported once as a
++    # header mismatch, not again per row as a missing-cell error.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 4, "missing-label"],
+-        [2, 4, "missing-cell"],
+-        [3, 4, "missing-cell"],
+     ]
+ 
+ 
+diff --git a/frictionless/resource/__spec__/test_validate_schema.py b/frictionless/resource/__spec__/test_validate_schema.py
+index d09527b..e5160ef 100644
+--- a/frictionless/resource/__spec__/test_validate_schema.py
++++ b/frictionless/resource/__spec__/test_validate_schema.py
+@@ -41,10 +41,11 @@ def test_resource_validate_schema_extra_headers_and_cells():
+     # resource with extra label "name"
+     resource = TableResource(path="data/table.csv", schema=schema)
+     report = resource.validate()
++    # The extra label gets a default any-typed field (Header.get_expected_fields),
++    # so it is reported once as a header mismatch and not again as a cell error
++    # on every row.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 2, "extra-label"],
+-        [2, 2, "extra-cell"],
+-        [3, 2, "extra-cell"],
+     ]
+ 
+     extra_label_error = report.task.errors[0]
+@@ -365,13 +366,13 @@ def test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+     schema = Schema.describe("data/table.csv")
+     schema.add_field(fields.AnyField(name="bad", constraints={"required": True}))
+     report = TableResource(path="data/table.csv", schema=schema).validate()
+-    print(report.flatten(["rowNumber", "fieldNumber", "type"]))
++    # "bad" has no label at all, so it is dropped from the fields the row
++    # stream reads (Header.get_expected_fields) the same way a field missing
++    # under "superset"/"partial" already was; it is reported once as a header
++    # mismatch, not again per row as a required-constraint and missing-cell
++    # error.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 3, "missing-label"],
+-        [2, 3, "constraint-error"],
+-        [2, 3, "missing-cell"],
+-        [3, 3, "constraint-error"],
+-        [3, 3, "missing-cell"],
+     ]
+ 
+ 
+@@ -543,7 +544,10 @@ def test_resource_validate_fields_match_reordered_labels(fields_match, expected)
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        ("exact", [[None, 2, "", "extra-label"], [2, 2, "", "extra-cell"]]),
++        # Under every mode, an extra label gets a default any-typed field
++        # (Header.get_expected_fields), so it is reported once as a header
++        # mismatch and never again as a cell error on each row.
++        ("exact", [[None, 2, "", "extra-label"]]),
+         ("equal", [[None, 2, "", "extra-label"]]),
+         ("superset", [[None, 2, "", "extra-label"]]),
+         ("subset", []),
+@@ -558,13 +562,10 @@ def test_resource_validate_fields_match_extra_label(fields_match, expected):
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        (
+-            "exact",
+-            [
+-                [None, 3, "extra", "missing-label"],
+-                [2, 3, "extra", "missing-cell"],
+-            ],
+-        ),
++        # Under every mode, a field with no label is dropped from the row
++        # stream (Header.get_expected_fields), so it is reported once as a
++        # header mismatch and never again as a cell error on each row.
++        ("exact", [[None, 3, "extra", "missing-label"]]),
+         ("equal", [[None, 3, "extra", "missing-label"]]),
+         ("subset", [[None, 3, "extra", "missing-label"]]),
+         ("superset", []),
+diff --git a/frictionless/resources/__spec__/table/test_schema.py b/frictionless/resources/__spec__/table/test_schema.py
+index a7883d1..0a42e55 100644
+--- a/frictionless/resources/__spec__/table/test_schema.py
++++ b/frictionless/resources/__spec__/table/test_schema.py
+@@ -5,6 +5,7 @@ import pytest
+ 
+ from frictionless import (
+     Detector,
++    Dialect,
+     FrictionlessException,
+     Package,
+     Resource,
+@@ -399,3 +400,79 @@ def test_resource_schema_circular_foreign_keys(test_case):
+         test_case["expected_validity_b"],
+         test_case["expected_errors_b"],
+     )
++
++
++# Fields match: integrity checks follow the fields the row stream actually
++# reads, not the full schema
++#
++# A `fieldsMatch` mode that tolerates a field missing from the header (e.g.
++# "superset") drops that field from the row stream entirely (Header,
++# `get_expected_fields`); the unique, primary key, and foreign key checks
++# below must follow that same dropped set, or they reach for a field the row
++# doesn't carry.
++
++
++def test_resource_schema_unique_ignores_a_field_absent_from_the_header():
++    schema = Schema.from_descriptor(
++        {
++            "fields": [
++                {"name": "a", "type": "integer"},
++                {"name": "b", "type": "integer", "constraints": {"unique": True}},
++            ],
++            "fieldsMatch": "superset",
++        }
++    )
++    with TableResource(data=[["a"], [1], [2]], schema=schema) as resource:
++        for row in resource.row_stream:
++            assert row.valid
++
++
++def test_resource_schema_primary_key_ignores_a_field_absent_from_the_header():
++    schema = Schema.from_descriptor(
++        {
++            "fields": [
++                {"name": "a", "type": "integer"},
++                {"name": "b", "type": "integer"},
++            ],
++            "primaryKey": ["b"],
++            "fieldsMatch": "superset",
++        }
++    )
++    # header_case=False looks up "b" among the row's own field names instead
++    # of raising KeyError for it, so every row used to compare equal on an
++    # empty primary key and all but the first were reported as duplicates.
++    resource = TableResource(
++        data=[["a"], [1], [2]], schema=schema, dialect=Dialect(header_case=False)
++    )
++    with resource:
++        for row in resource.row_stream:
++            assert row.valid
++
++
++def test_resource_schema_foreign_keys_ignore_a_field_absent_from_the_header():
++    descriptor = {
++        "resources": [
++            {
++                "name": "main",
++                "data": [["a"], [1], [2]],
++                "schema": {
++                    "fields": [
++                        {"name": "a", "type": "integer"},
++                        {"name": "b", "type": "integer"},
++                    ],
++                    "fieldsMatch": "superset",
++                    "foreignKeys": [
++                        {
++                            "fields": "b",
++                            "reference": {"resource": "other", "fields": "id"},
++                        }
++                    ],
++                },
++            },
++            {"name": "other", "data": [["id"], [1], [2]]},
++        ]
++    }
++    resource = Package.from_descriptor(descriptor).get_table_resource("main")
++    with resource:
++        for row in resource.row_stream:
++            assert row.valid
+diff --git a/frictionless/table/__spec__/test_header.py b/frictionless/table/__spec__/test_header.py
+index 342e6a7..48162c6 100644
+--- a/frictionless/table/__spec__/test_header.py
++++ b/frictionless/table/__spec__/test_header.py
+@@ -83,8 +83,16 @@ def _make_header(labels, field_names, *, fields_match="exact", ignore_case=False
+             ["a"],
+             "exact",
+             False,
++            ["a", "extra"],
++            id="exact: extra labels get a default any-typed field",
++        ),
++        pytest.param(
++            ["a"],
++            ["a", "b"],
++            "exact",
++            False,
+             ["a"],
+-            id="exact: extra labels get no field",
++            id="exact: fields beyond the labels are dropped",
+         ),
+         *[
+             pytest.param(
+@@ -127,6 +135,25 @@ def _make_header(labels, field_names, *, fields_match="exact", ignore_case=False
+             ["b", "a"],
+             id="partial + ignore_case: matching is case-insensitive",
+         ),
++        pytest.param(
++            [],
++            ["a", "b"],
++            "exact",
++            False,
++            ["a", "b"],
++            id="exact: a missing header keeps every field",
++        ),
++        *[
++            pytest.param(
++                [],
++                ["a", "b"],
++                mode,
++                False,
++                ["a", "b"],
++                id=f"{mode}: a missing header keeps every field",
++            )
++            for mode in NAME_MATCHED
++        ],
+     ],
+ )
+ def test_get_expected_fields(
+@@ -189,6 +216,14 @@ def test_get_expected_fields_exact_tolerates_duplicate_labels():
+     assert [f.name for f in header.get_expected_fields()] == ["a", "b"]
+ 
+ 
++def test_get_expected_fields_exact_extra_label_colliding_with_a_field_name_is_renamed():
++    # The second "a" is an extra label beyond the single declared field, so it
++    # gets a default field named after itself; that name already belongs to
++    # the field at position 1, so it is suffixed to keep the two apart.
++    header = _make_header(["a", "a"], ["a"], fields_match="exact")
++    assert [f.name for f in header.get_expected_fields()] == ["a", "a2"]
++
++
+ # Tolerated and reported header mismatches, per fieldsMatch value
+ 
+ 

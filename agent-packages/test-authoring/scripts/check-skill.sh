@@ -25,7 +25,7 @@ if out=$(grep -nE "(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|t
 fi
 
 # 2. A retired term does not survive in a table, a reference, or the README once the body has moved on.
-retired='public API|public method|public accessor|public interface|a human call|latest minor of the major the project names'
+retired='public API|public method|public accessor|public interface|a human call|latest minor of the major the project names|one test per|fragments of a program|program the check compiles|table assertion|a line or two|whether a check runs|rule wins|takes a value, not a piece|and stay in one check'
 if out=$(grep -nE "$retired" "${files[@]}"); then
   report "retired terms (extend the list in this script when a term is renamed):"; echo "$out"
 fi
@@ -47,7 +47,7 @@ ragged=$(for f in "${files[@]}"; do
   awk -v f="$f" '
     function text(l) { sub(/^  +/, "", l); sub(/^(- |[0-9]+\. )/, "", l); return l }
     function prose(l) { return !fence && l != "" && l !~ /^(\||#|---|```|name:|description:)/ }
-    function cont(l) { return prose(l) && l !~ /^(- |[0-9]+\. )/ }
+    function cont(l) { return prose(l) && l !~ /^ *(- |[0-9]+\. )/ }
     NR == 1 && /^---$/ { front = 1; next }
     front && /^---$/ { front = 0; prev_prose = 0; next }
     front { next }

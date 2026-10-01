@@ -1,0 +1,27 @@
+on the fix (build.sh exited with 0):
+  187 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  187 tests ran, 23 failed
+    test_resource.test_analyze_resource_detailed_ignores_fields_absent_from_the_data[exact]
+    test_resource.test_analyze_resource_detailed_ignores_fields_absent_from_the_data[superset]
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_label_is_not_reported_again_per_row
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[extra label]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[missing label]
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_present[key absent from the data]
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_present[part of a composite key absent from the data]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_when_present[field absent from the data]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_when_present[field absent from the data]
+    test_header.test_get_expected_fields[exact: an extra label naming a schema field gets a suffixed name]
+    test_header.test_get_expected_fields[exact: a repeated extra label gets a suffixed name]
+    test_header.test_get_expected_fields[exact: a suffix already in use is skipped]
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
+    test_header.test_get_expected_fields[exact: fields absent from labels are dropped]
+    test_header.test_get_expected_fields[equal: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[subset: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[superset: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[partial: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]

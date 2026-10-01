@@ -1,0 +1,19 @@
+test: assert the API error reason a route operation returns
+
+CreateRoute, UpdateOrCreateRoute, and DeleteRoute wrap the error the API
+server returned instead of replacing it, so a caller in dual mode matches
+the same reason as in single mode (#125). The tests that came with that
+change assert the message text of the unexported dualModeRouteError
+helper, which leaves the wrapping unchecked: replace %w with %v in either
+single-mode branch of resolveRouteResult and all of them still pass.
+
+They are replaced by tests that go through the exported methods and
+assert error semantics: errors.Is on the injected API error, the reason
+paasErrors.ReasonForError reads, and one that counts how often the failed
+resource's error text reaches the message. A table over the three gateway
+system types pins AlreadyExists for a route that is already there in each
+of them.
+
+The delete path had no test that could tell a wrapped error from a
+replaced one; it has three now, one per branch of dualModeDeleteError.
+

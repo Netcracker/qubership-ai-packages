@@ -1,0 +1,6 @@
+on the fix: 166 tests ran, 0 failed
+on the base: 166 tests ran, 4 failed
+  GenericsTests.overrideReturnTypeWithNonNullExtendsBoundWildcard
+  WildcardTests.extendsWildcardWithExplicitNonNullTypeVariableBound
+  WildcardTests.typeVariableActualAdmitsNullIntoNonNullExtendsWildcard
+  WildcardTests.extendsWildcardNamingATypeVariableComparesActualAsWritten
