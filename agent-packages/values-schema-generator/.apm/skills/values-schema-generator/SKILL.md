@@ -325,19 +325,19 @@ Never let the Go struct alone truncate an object's field list.
 
 Map Go types to JSON Schema:
 
-| Go type                    | JSON Schema type                                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `string`                   | `"string"`                                                                                                           |
-| `bool`                     | `"boolean"`                                                                                                          |
-| `int`, `int32`, `int64`    | `"integer"`                                                                                                          |
-| `float32`, `float64`       | `"number"`                                                                                                           |
-| `[]string`                 | `array`, `items: {type: string}`                                                                                     |
-| `[]SomeStruct`             | normally `array`, but if override files set it as plain object → use `oneOf: [{$ref}, {type: array, items: {$ref}}]` |
-| `map[string]string`        | `object`, `additionalProperties: {type: string}`                                                                     |
-| `map[string]SomeStruct`    | `object`, `additionalProperties: true`                                                                               |
-| `*v1.ResourceRequirements` | use `resourceRequirements` $def                                                                                      |
-| `*v1.Affinity`             | use `affinity` $def                                                                                                  |
-| Any other pointer `*T`     | base type is nullable → `["<T>", "null"]`                                                                            |
+| Go type                    | Schema mapping                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `string`                   | `"string"`                                                                              |
+| `bool`                     | `"boolean"`                                                                             |
+| `int`, `int32`, `int64`    | `"integer"`                                                                             |
+| `float32`, `float64`       | `"number"`                                                                              |
+| `[]string`                 | `array`, `items: {type: string}`                                                        |
+| `[]SomeStruct`             | `array`; if override is object: `oneOf: [{$ref}, {type: array, items: {$ref}}]`         |
+| `map[string]string`        | `object`, `additionalProperties: {type: string}`                                        |
+| `map[string]SomeStruct`    | `object`, `additionalProperties: true`                                                  |
+| `*v1.ResourceRequirements` | use `resourceRequirements` $def                                                         |
+| `*v1.Affinity`             | use `affinity` $def                                                                     |
+| Any other pointer `*T`     | base type is nullable → `["<T>", "null"]`                                               |
 
 **Nullability for map types**: absent/null default in values.yaml → `["object", "null"]`.
 Non-null default → plain `"object"`.
@@ -405,7 +405,7 @@ Use whatever is found. If nothing found → use plain `"string"` (no enum). Neve
 
 Collect all such fields, ask in ONE batch after reading all sources:
 
-```
+```text
 Unable to resolve type for N fields — all others resolved automatically:
 
 | Field | Value in values.yaml | Checked | Question |
@@ -444,14 +444,17 @@ Instead, diff what changed:
 1. Load the existing schema into memory.
 2. Compute the new schema from sources (steps 1–5) as a Python dict.
 3. Compare with `deepdiff` or manual key-by-key comparison:
+
    ```bash
    pip install deepdiff --quiet --break-system-packages 2>/dev/null
    ```
+
    ```python
    from deepdiff import DeepDiff
    diff = DeepDiff(existing, new, ignore_order=True)
    print(diff)
    ```
+
 4. Apply **only the changes** using targeted `Edit` tool calls (never full rewrite).
    - New field added → add only that property to the right `$defs` block.
    - Type changed → edit only that field's type.
@@ -573,7 +576,8 @@ Scalar top-level keys (string/boolean/integer) can be inlined in `properties`.
 }
 ```
 
-`nodeAffinity.requiredDuring...` is **object**; `podAffinity`/`podAntiAffinity` both use **arrays** for both preferred and required.
+`nodeAffinity.requiredDuring...` is **object**; `podAffinity`/`podAntiAffinity` both use **arrays** for both
+preferred and required.
 
 **`tolerations`** — for `[]v1.Toleration`:
 
@@ -819,15 +823,15 @@ Fix all failures before reporting done.
 
 ## Step 8 — Fix loop
 
-| Failure pattern                                           | Fix                                                                                                                                        |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Additional properties not allowed: 'X'` on nested object | Add `X` to that $def — it is a real field the schema missed                                                                                |
-| `None is not of type 'string'`                            | Change to `["string", "null"]`                                                                                                             |
-| `'val' is not of type 'array'` on a `[]Struct` field      | Use `oneOf: [{$ref: structDef}, {type: array, items: {$ref: structDef}}]` — override files often set single-element lists as plain objects |
-| `'val' is not of type 'array'` on a `[]string` field      | Use `oneOf: [{type: string}, {type: array, items: {type: string}}]`                                                                        |
-| `'val' is not one of [enum]`                              | Re-check guide/templates for valid values                                                                                                  |
-| `'val' is not of type 'boolean'`                          | YAML `yes`/`no` → schema type `"boolean"` is correct, do not change                                                                        |
-| Key missing under `additionalProperties: false`           | Add the missing key                                                                                                                        |
+| Error pattern                            | Solution                                                             |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| Additional props not allowed: 'X'        | Add `X` to that $def — missing field                                 |
+| `None is not of type 'string'`           | Change to `["string", "null"]`                                       |
+| `not of type 'array'` on `[]Struct`      | Use `oneOf: [{$ref}, {array, items: {$ref}}]` (overrides use object) |
+| `not of type 'array'` on `[]string`      | `oneOf: [{type: string}, {array, items: string}]`                    |
+| `not one of [enum]`                      | Re-check guide/templates for valid values                            |
+| `not of type 'boolean'`                  | YAML `yes`/`no` → `"boolean"` is correct, do not change              |
+| Key missing under `additionalProperties` | Add the missing key                                                  |
 
 ---
 

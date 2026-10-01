@@ -1,6 +1,7 @@
 # Documentation Conventions Reference
 
-This reference describes the format conventions, templates, and style rules used in project documentation. Read this before creating or updating any doc file.
+This reference describes the format conventions, templates, and style rules used in project documentation. Read this
+before creating or updating any doc file.
 
 ## Table of Contents
 
@@ -44,7 +45,8 @@ Docs use an HTML comment-wrapped ToC block:
 <!-- TOC -->
 ```
 
-When adding new sections, add corresponding ToC entries. Anchors are lowercase, spaces replaced with hyphens, special characters removed.
+When adding new sections, add corresponding ToC entries. Anchors are lowercase, spaces replaced with hyphens,
+special characters removed.
 
 ## Parameter Tables
 
@@ -58,7 +60,8 @@ Parameter tables use standard markdown table syntax. Every table has exactly the
 ### Column Specifications
 
 - **Parameter**: Full dot-notation path (e.g., `global.tls.enabled`, `kafka.resources.limits.cpu`)
-- **Type**: One of `string`, `bool`, `int`, `json`, `yaml`, `[]string`, or a Kubernetes type link like `[Kubernetes Sec Context](https://pkg.go.dev/k8s.io/api/core/v1#SecurityContext)`
+- **Type**: One of `string`, `bool`, `int`, `json`, `yaml`, `[]string`, or a Kubernetes type link like
+  `[Kubernetes Sec Context](https://pkg.go.dev/k8s.io/api/core/v1#SecurityContext)`
 - **Mandatory**: `yes` or `no`
 - **Default value**: The actual default, or `n/a` if none
 - **Description**: Starts with a verb — "Specifies ...", "Indicates whether ...", "Defines ..."
@@ -77,9 +80,11 @@ Parameters in `installation.md` are grouped under `##` headings by component. Ea
 
 ### Chart Structure in installation.md
 
-`installation.md` contains **one unified parameter reference** for all Helm charts in the project. Parameters are grouped by component under `##` headings.
+`installation.md` contains **one unified parameter reference** for all Helm charts in the project. Parameters are
+grouped by component under `##` headings.
 
-**Before adding parameters, read `installation.md`'s Table of Contents** to discover the actual component sections for this project. Do not assume section names — they vary between projects.
+**Before adding parameters, read `installation.md`'s Table of Contents** to discover the actual component sections
+for this project. Do not assume section names — they vary between projects.
 
 Common section types (names differ per project):
 
@@ -93,7 +98,9 @@ Common section types (names differ per project):
 - Integration test parameters
 - CRD init / bootstrap job parameters
 
-When adding parameters, find the correct component section and append rows to the existing table. If a genuinely new component needs its own section, create a `##` heading in logical order matching the naming style already used in the file.
+When adding parameters, find the correct component section and append rows to the existing table. If a genuinely new
+component needs its own section, create a `##` heading in logical order matching the naming style already used in
+the file.
 
 ## Feature Documentation Template
 
@@ -157,7 +164,8 @@ Known limitations, caveats, or incompatibilities.
 
 ## Monitoring Documentation Template
 
-Monitoring docs live in `docs/public/monitoring.md` (primary) and component-specific sections within it. Standalone monitoring docs for components (e.g., `docs/public/alerts.md`) follow this structure:
+Monitoring docs live in `docs/public/monitoring.md` (primary) and component-specific sections within it. Standalone
+monitoring docs for components (e.g., `docs/public/alerts.md`) follow this structure:
 
 ```markdown
 # Monitoring Topic
@@ -250,7 +258,7 @@ When adding a new feature doc, ensure it's referenced from:
 
 Images are stored in `docs/public/images/` with subdirectories by topic:
 
-```
+```text
 docs/public/images/
 ├── kafka-monitoring_*.png    # Kafka monitoring dashboard screenshots
 ├── kafka-topics_*.png        # Kafka topics dashboard screenshots
@@ -281,7 +289,9 @@ Typical top-level structure (names will differ):
 9. Additional features / advanced configuration
 10. Frequently asked questions
 
-When adding new parameters, find the appropriate component section (use `docs/README.md` to map file patterns to section names) and append rows to the existing table. If a genuinely new component needs its own section, create a `##` heading in logical order matching the naming style already in the file.
+When adding new parameters, find the appropriate component section (use `docs/README.md` to map file patterns to
+section names) and append rows to the existing table. If a genuinely new component needs its own section, create a
+`##` heading in logical order matching the naming style already in the file.
 
 ## architecture.md Structure
 
@@ -295,4 +305,5 @@ Typical structure (names will differ):
 4. **Components** — one `##` section per major component
 5. **Supported Deployment Schemes** — HA, Non-HA, DR, managed cloud integrations
 
-When adding a new component, add a `##` section under the Components heading and add it to the Delivery and Features bullet list. Cross-reference the feature doc if one exists.
+When adding a new component, add a `##` section under the Components heading and add it to the Delivery and Features
+bullet list. Cross-reference the feature doc if one exists.
