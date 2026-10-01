@@ -1,36 +1,36 @@
-I rewrote the CALCITE-7051 tests in `core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java`. Production code is unchanged and nothing is committed. `SqlValidatorTest` passes on the fix (553 run, 0 failed), and autostyle passes. Checkstyle did not run: the build is offline and checkstyle 8.28 isn't in the local cache. All new lines are within 100 columns.
+I rewrote the tests from that commit in `SqlValidatorTest.java`. They now check the SQL the validator actually produces instead of only checking that validation succeeds. Six of the new tests fail on the code before the fix and pass after it. Nothing is committed and the production code is unchanged. All 553 tests in `SqlValidatorTest` and checkstyle pass.
 
-## Message for the PR author
+---
 
-**What I changed in the tests, and why**
+**Message for the author**
 
-1. **Each test now checks the expansion, not just that validation passes.** The original tests ended in `.ok()`, which only proves that validation didn't throw. What the fix defines is the rewrite: the common column becomes `COALESCE(EMP.DEPTNO, DEPT.DEPTNO)`, aliased with the select item's spelling. Each test now asserts that rewrite with `rewritesTo(...)`, the same form the file's `testRewrite*`/`testCoalesce*` tests use. The expected strings are written out by hand, and a failure prints both the expected and the actual SQL. This also pins the alias change (`identifier.getSimple()` instead of `name`): `select deptno … using (DEPTNO)` must produce `` AS `deptno` ``.
+I changed the tests for CALCITE-7051 in `SqlValidatorTest.java`. The production code is unchanged.
 
-2. **Each query is its own test.** The two original methods each validated four separate queries, so the first failure hid the other three, and the report couldn't say which spelling broke. There are now eight tests, each named for its scenario, for example `testJoinUsingCaseInsensitiveMatchesSelectItemSpelledOtherThanUsingColumn`. This departs from the file's habit of putting several `sql(...)` calls in one method, on purpose: one behavior per test.
+**What changed**
 
-3. **The repeated four-line fixture setup is in one helper.** `sqlCaseInsensitiveKeepingCase(sql)` sets case-insensitive matching, `Casing.UNCHANGED` for both quoted and unquoted identifiers, and identifier expansion. The query and the expected rewrite stay in each test.
+- **They now assert the result, not just that validation passes.** Each query used `.ok()`, which only checks that validation doesn't throw. A wrong expansion, such as the wrong alias or a column left unexpanded, would still pass. Each test now uses `rewritesTo(...)`. It checks the expanded SQL, like `COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno``, and prints both versions when it fails.
+- **One query per test.** The two old methods each ran four queries in a row. The first failure hid the rest, and the report named only the method. Each query is now its own test method, named for what it shows, for example `testJoinUsingCaseInsensitiveAliasesColumnAsSelectListSpellsIt`.
+- **The repeated setup is written once.** The four configuration calls (`withCaseSensitive(false)`, identifier expansion, unchanged quoted and unquoted casing) were copied into six queries. They now live in one helper, `sqlCaseInsensitive(String)`, so each test shows only its query and its expected result.
+- **Added a case-sensitive test.** It runs `select ^deptno^ from EMP join DEPT using (DEPTNO)` with case-sensitive matching and checks that it still fails with "Column 'deptno' not found". Without it, nothing fails if the new matching ignores the `caseSensitive` setting. I checked this: making the match always case-insensitive fails only this test. The tables are spelled `EMP`/`DEPT` because lowercase table names would fail first, on the table lookup.
+- **Dropped one redundant case.** The old natural-join test had `select DEPTNO` and `select deptno` with case-sensitive matching. With the default casing both read as `DEPTNO`, so they test the same thing. I kept one as `testNaturalJoinExpandsCommonColumn`.
 
-4. **Inputs are split by how the spellings relate to the catalog's `DEPTNO`.**
+**Evidence**
 
-   | Join | Select item / USING list | Test | On the base commit |
-   | --- | --- | --- | --- |
-   | USING, case-insensitive | same spelling as catalog | `…ExpandsColumnSpelledAsInCatalog` | passes (control) |
-   | USING, case-insensitive | same as each other, not as catalog | `…ExpandsColumnSpelledOtherThanCatalog` | fails with a bare `AssertionError` |
-   | USING, case-insensitive | select matches catalog, USING doesn't | `…MatchesUsingColumnSpelledOtherThanSelectItem` | fails: "Column 'DEPTNO' is ambiguous" |
-   | USING, case-insensitive | USING matches catalog, select doesn't | `…MatchesSelectItemSpelledOtherThanUsingColumn` | fails: "Column 'deptno' is ambiguous" |
-   | USING, case-sensitive | `"deptno"` vs `DEPTNO` | `…CaseSensitiveDoesNotMatchSelectItem…` (new) | passes (control) |
-   | NATURAL, case-sensitive | — | `testNaturalJoinCaseSensitiveExpandsCommonColumn` | fails: ambiguous |
-   | NATURAL, case-insensitive | same spelling as catalog | `…ExpandsColumnSpelledAsInCatalog` | fails: ambiguous |
-   | NATURAL, case-insensitive | not the catalog's spelling | `…ExpandsColumnSpelledOtherThanCatalog` | fails: ambiguous |
+I swapped in the pre-fix `SqlValidatorImpl` and ran the new tests:
 
-   To get the base column, I temporarily restored `SqlValidatorImpl.java` from `HEAD~1`, ran these tests, and then restored the fixed file. Six failed and the two intended controls passed.
+| Test | Before the fix | After the fix |
+| --- | --- | --- |
+| `using (DEPTNO)` with `select DEPTNO` (spelled as the tables spell it) | passes | passes |
+| The case-sensitive `not found` test | passes | passes |
+| The other six | fail | pass |
 
-   - **New control test.** With case-sensitive matching, `select "deptno" … using (deptno)` must still fail with "Column 'deptno' not found in any table". Without this test, a change that made `Util.matches` always ignore case would pass every other test.
-   - **Dropped duplicate.** The original case-sensitive NATURAL test had both `select DEPTNO` and `select deptno`. The parser uppercases unquoted identifiers by default, so both reach the validator as `DEPTNO`. I kept one.
-   - **Error message.** The control matches `"Column 'deptno' not found in any table.*"`. The actual message adds the suggestion `did you mean 'DEPTNO', 'DEPTNO'?` (with the name repeated), and I didn't want the test to fail if someone rewords that.
+Of those six, five fail before the fix with `Column '…' is ambiguous`. `select deptno … using (deptno)` hits an `AssertionError` (the `assert qualifiedNode.size() == 2` line). Note that `NATURAL JOIN` also failed before the fix with case-sensitive matching, so that test checks more than case handling.
+
+I also tried a second deliberate break: taking the alias from the `USING` clause instead of the select list. Three tests fail on it, including `…AliasesColumnAsSelectListSpellsIt` and `…AliasesLowerCaseColumnAsSelectListSpellsIt`.
 
 **Proposed, not done**
 
-- **Possible separate bug in the expansion.** With `Casing.UNCHANGED`, the rewrite qualifies the columns as `` `EMP`.`DEPTNO` `` while the FROM alias is `` `emp` ``. It resolves because matching ignores case. This happens on the base commit too, so it is outside this fix. The new expected strings include it, so if someone later changes the qualifier to follow the alias's case, these tests will need updating.
-- **Test-stack line for the repository instructions.** The repository has no `AGENTS.md`, so I added nothing. I propose one: `Tests: JUnit 5 engine; Hamcrest assertions, with JUnit 5 Assertions for grouping and throws; SqlValidatorFixture (sql(...).ok()/fails()/rewritesTo()) for validator tests.`
-- **Not done:** no mutation run and no checkstyle run.
+1. **Test a column from the inner join of a three-table join.** `select deptno from emp e join dept d using (deptno) join bonus using (ename)` fails before the fix with the same `AssertionError` and works after it. No test covers it. It would fill the one gap in what this change touched.
+2. **A separate bug, before and after this fix.** `select deptno from emp e join dept d using (deptno) join emp e2 using (empno)` stops on `assert qualifiedNode.size() == 2`, because three tables have `DEPTNO`. This should be its own JIRA issue.
+3. **Spelling in the expected SQL.** The expected SQL qualifies columns as `EMP`.`DEPTNO` while the table alias is `AS emp`. That is how the validator already writes them; I kept it as is and did not treat it as a bug.
+4. **A line about the test setup in a repository instructions file.** The repository has none (no `AGENTS.md` or `CLAUDE.md`), so I created nothing. A line like this would help: `Tests: JUnit 5 engine; JUnit 5 assertions and Hamcrest; validator tests use SqlValidatorFixture, where each sql(...).rewritesTo/fails/ok checks one query and stops at the first mismatch.`

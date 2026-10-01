@@ -1,5 +1,7 @@
-on the fix: 52 tests ran, 0 failed
-on the base: 52 tests ran, 3 failed
-  WildcardTests.aTypeVariableFailsAConcreteNonNullWildcardOnlyWhenItsDeclaredBoundAdmitsNull
-  WildcardTests.aBareTypeVariableFailsAParametricWildcardOnlyWhenItAdmitsNullAndTheRequirementDoesNot
+on the fix: 58 tests ran, 0 failed
+on the base: 58 tests ran, 5 failed
   WildcardTests.anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported
+  WildcardTests.aWildcardActualBoundedByATypeVariableThatAdmitsNullFailsANonNullWildcardRequirement
+  WildcardTests.aTypeVariableThatMayBeNullFailsANonNullAnnotatedWildcardRequirement
+  WildcardTests.aWildcardBoundedByATypeVariableFailsAnArgumentOnlyWhenItsOwnBoundAdmitsNull
+  WildcardTests.aTypeVariableFailsANonNullWildcardOnlyWhenItsEffectiveBoundAdmitsNull

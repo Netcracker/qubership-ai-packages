@@ -1,38 +1,26 @@
-I rewrote the 20 tests the last commit added to `WildcardTests.java` as 13 tests. The production code is unchanged and nothing is committed. `./gradlew :nullaway:test` and `./gradlew :nullaway:buildWithNullAway` both pass.
+I rewrote the 20 tests the commit added to `WildcardTests.java` as 8, and the rewrite turned up a new false positive from the fix. Production code is unchanged and nothing is committed. All 54 tests in `WildcardTests` pass on HEAD, and `./gradlew :nullaway:buildWithNullAway` passes.
 
-Here is the message for the author of the pull request:
+**The false positive:** the fix reports an override that is valid. In a static `<V extends @Nullable Object>` method, an anonymous class written with the diamond, `return new Test<>() { @Override public List<V> get() … }`, is now flagged when `Test.get()` returns `List<? extends V>`. The message is "Method returns List<V>, but overridden method returns List<? extends V>, which has mismatched type parameter nullability". Before the fix this compiled clean. Writing `new Test<V>()` instead, or using a named implementing class, is still silent.
+
+So your test `anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported` passes whether or not `@NonNull` is on the overridden return type. It can't catch the bug it describes. I wrote my override test with `new Test<V>()` so it means something. The diamond false positive needs a fix in `CheckIdenticalNullabilityVisitor` (or wherever the override check gets its substituted `V`), with the diamond form as its regression test. I didn't attempt that, since you asked me to leave production code alone.
+
+Here's the message I'd leave for you as the author:
 
 ---
 
-**What changed in the tests, and why**
+**What changed in the tests and why**
 
-On the code before the fix, 7 of the 20 new tests fail: each one expects a report that the old code never made. The other 13 passed on the base code too. Most of those were the silent twin of a failing case: the same source with one thing changed and the opposite outcome, written as a separate test with its own copy of the source. The skill's rule is that a case and the controls that a single compilation can check go into one source, so the silent side can't drift from the reporting side. I merged them on that basis.
-
-Error Prone's `CompilationTestHelper` stops at the first mismatch (`DiagnosticTestHelper.java:264-268` and `:288` in 2.50.0). So each test holds exactly one input whose outcome the fix moved, plus the controls that narrowly miss it. Each test name now states the rule that the case and its controls establish:
-
-| Case the fix now reports | Silent controls in the same source |
-| --- | --- |
-| `Box<T>`, `T extends @Nullable Object` → `Box<? extends Object>` | `<T>`; `Box<@NonNull T>`; requirement `? extends @Nullable Object`; requirement `Box<?>` |
-| `T` declared in `@NullUnmarked` code | the same `T` in a `@NullMarked` class |
-| `S extends T`, `T extends @Nullable Object` | `S extends T`, `T` non-null |
-| `Box<? extends T>`, `T` admits null | `T` non-null |
-| `Box<S extends @Nullable T>` → `Box<? extends T>`, `T` non-null | `S extends T`; `T extends @Nullable Object` |
-| `Box<T>` → `Box<? extends @NonNull T>` | `Box<@NonNull T>`; requirement `? extends T` |
-| override `List<V>` for `List<? extends @NonNull V>` | override `List<@NonNull V>` |
-
-- **Unchanged-outcome reports:** two inputs with `@Nullable T` at the use site were already reported before the fix. Each got its own test with its silent control, because under a harness that stops at the first mismatch they can't share a test with a moved case.
-- **Kept as standalone tests:** four inputs that must stay silent and aren't a one-change control of any case. These are the two captured-type tests, the inference test, and `aTypeVariableMeetsAWildcardBoundedByTheVariableItExtends`.
-- **Removed:** `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariable` no longer exists as its own test. Its input (`Box<T>` → `Box<? extends T>`) is now a control in two tests, passed as an argument rather than returned.
-- **Distinct argument names:** each input now passes its argument under its own name (`takeNonNull(nonNullUse)`). When a diagnostic appears where none is expected, the harness prints the source line, so the report now names the input by content and not only by line number.
-
-**How I checked it**
-
-- **Base code:** all 7 case tests fail, each on its own case.
-- **Mutant 1**, which judges `@NonNull T` by its bound: the `nonNullUse` control catches it.
-- **Mutant 2**, the naive fix that also reads a type-variable requirement by its bound: 6 tests catch it.
-- **Mutant 3**, which drops the exception for captured types: the captured-type test catches it.
+- **Which inputs are cases.** I ran your 20 tests against the code before the fix. Only the 7 tests that expect a new report fail there, which makes them the cases. The other 13 already pass there, so they are controls: they show a report comes from the bound and not from the setup. That includes the two `Box<@Nullable T>` tests that expect a report.
+- **What the harness can show.** I broke cases on purpose to see how Error Prone's `CompilationTestHelper` reports. It stops at the first missing `// BUG:` marker, which it names by line and expected text. It names an unexpected diagnostic by line number only. So one source can hold one case with its controls, but not two cases.
+- **The new layout.** Each of the 7 cases is now one test that carries its controls in the same source. Each control is a separate method that differs from the case in one respect. The method names say which respect (`nonNullBound`, `nullableRequirement`, `nonNullUse`, `unboundedRequirement`, …).
+  - The test name states the rule, plus the case's variant where one rule has several tests. For example: `aTypeVariableIsRejectedByANonNullWildcardOnlyWhenItsDeclaredBoundAdmitsNull`, `…DeclaredInUnannotatedCode…`, `…BoundedByANullableTypeVariable…`, `aWildcardBoundedByANullableTypeVariable…`.
+  - The two `Box<@Nullable T>` → `Box<? extends Object>` / `Box<? extends @Nullable Object>` tests became one test, `aNullableTypeVariableUseIsRejectedByAWildcardUnlessItsBoundIsNullable`. Neither moved with the fix; together they guard that a `@Nullable` written at the use site is kept.
+  - The inference and captured-type tests that expect silence now share a source with the `? extends @NonNull T` case. Before, each stood alone, with no input next to it that expected a report.
+- **Nothing was dropped.** Every input from the original 20 is still there. I added a control to the four cases that had none: a `@NullMarked` holder, `<T, S extends T>`, `<T> Box<? extends T>`, and an override of a plain `List<? extends V>`. To check the controls, I removed only the 7 case markers and ran against the code before the fix: all 54 tests pass there. So every control held before the fix, and every case line was silent before it.
+- **Two cosmetic changes.** The type parameter of `Box` is `E` everywhere, so it isn't confused with the method's `T`. The override test uses `new Test<V>()`, for the reason above.
 
 **Proposed, not done**
 
-- **Stack line:** add this to `AGENTS.md`/`CLAUDE.md`: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper for checker tests, which stops at the first mismatch and names a case by line number and source line.` I didn't edit either file.
-- **Follow-up for the harness:** `// BUG: Diagnostic contains:` markers can't carry a label. A missing expected diagnostic is reported only by its line and pattern. That could become an Error Prone issue. I couldn't check their tracker for an existing report, because this session had no network access.
+1. **Fix the diamond false positive** described above, with the diamond form as its regression test.
+2. **Add a test stack line to `AGENTS.md`,** for example: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper with // BUG: Diagnostic contains: markers; one compilation stops at the first missing marker, which it names by line and expected text, and names an unexpected diagnostic by line only.` I didn't edit the file; that needs your agreement.
+3. **Open an Error Prone issue** asking `CompilationTestHelper` to report every mismatch in one run, and to name an unexpected diagnostic by its source text rather than only "Saw unexpected error on line N". It has no way to label a marker today. I couldn't check their issue tracker for an existing request, since I had no network tools.
