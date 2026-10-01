@@ -1,19 +1,18 @@
-Everything is green, and only the test file was touched. Here's the message I'd leave for the PR author:
+Clean: only `FrameworkTests.java` is touched, nothing committed, production code untouched.
 
 ---
 
-**What I added**
+**Message for the PR author:**
 
-The fix commit changed `SpringHandler.containsNullSpELExpression` but added no tests, so I added two, alongside the existing `springValueFieldTest` in `FrameworkTests.java`:
+The fix shipped with no tests, so I added three fields to the existing `springValueFieldTest` in `FrameworkTests.java` (nearest existing test of this unit — `SpringHandler`'s `containsNullSpELExpression` is private, so it's exercised the same way its neighbors are: through the full compilation pipeline, via `@Value`-annotated fields and NullAway's "not initialized" diagnostic).
 
-- `nullIsFlaggedOnlyWhenNotMerelyAComparisonOperandTest` — the exact scenario from the bug report (`#{someBean != null ? someBean.value : 'default'}`) now compiles with no diagnostic, paired with a control (`#{someBean != null ? null : 'default'}`) that still reports `field not initialized`, since a comparison null shouldn't hide an actual null-producing branch.
-- `nullIsFlaggedOnlyWhenNotMerelyAReversedComparisonOperandTest` — same pair, but with the operand order flipped (`null != someBean ...`), since `NULL_COMPARISON_PATTERN` is two regex alternatives (`x != null` and `null != x`) and only the first was exercised by the PR's own example. I kept it as a second test rather than folding it into the first because the harness (Error Prone's `CompilationTestHelper`) fails at the first mismatched line per compilation, so two independent regression cases sharing one check could hide one another.
+Added, partitioning the input the diff actually touched (the new `NULL_COMPARISON_PATTERN` stripping):
+- `NegativeCases.nullOnlyInComparison` — `#{someBean != null ? someBean.value : 'default'}`, the exact false positive from the bug report. No diagnostic expected.
+- `NegativeCases.nullOnlyInReversedComparison` — `#{null == someBean ? someBean.value : 'default'}`. The fix's regex has a second alternative specifically for this reversed-operand order, and the new Javadoc calls it out by name, so it gets its own case rather than being assumed from the forward-order one.
+- `PositiveCases.nullValueDespiteComparison` — `#{someBean != null ? null : 'default'}`, the non-regression control the PR description itself names: `null` appears both as a comparison operand and as the actual ternary value, and the field must still be flagged.
 
-**Verification**
+I verified all three the way §1 of the test-authoring skill asks: checked out `SpringHandler.java` as it stood one commit before this fix (production code only, tests kept at HEAD) and reran `springValueFieldTest` — it failed with exactly the bug's symptom, a spurious `@NonNull field 'nullOnlyInComparison'/'nullOnlyInReversedComparison' not initialized` warning on both new negative cases. Restored the fix and reran: `:nullaway:test` and `:nullaway:buildWithNullAway` both pass.
 
-I swapped in the pre-fix `SpringHandler.java` (from the parent commit) and confirmed both new tests go red exactly on the regression field's line (`onlyComparedAgainstNull` incorrectly flagged), then restored the fix and confirmed `./gradlew :nullaway:test` and `:nullaway:buildWithNullAway` are green. No production code was touched.
+I didn't add a second, larger test — this is an in-process regex/string heuristic with no real dependency or process boundary involved, so the compilation-level test is the right (and only) level owed.
 
-**What I propose but didn't do**
-
-- The repo's instructions (`AGENTS.md`/`CLAUDE.md`) don't record a test-stack line (engine/assertions/doubles) for this module. Worth adding one, e.g.: *"Tests: JUnit 4 engine; Error Prone `CompilationTestHelper`/`// BUG: Diagnostic contains:` markers as the assertion form; the harness fails at the first mismatched line per compilation and names a case only by line number and marker text."* That's a repo-wide fact, not something I should decide unilaterally, so I left it as a proposal rather than editing the file.
-- I didn't add a case for the `==` operator specifically (only `!=`, in both orders) — the `[!=]=` character class technically also permits `==`, and a mutant narrowing it to just `!` wouldn't be caught by my two tests. I skipped it to avoid combinatorial bloat for a heuristic regex, but it's a cheap addition if you want tighter coverage.
+One open item I didn't act on: the repository's `AGENTS.md`/`CLAUDE.md` name no test-stack line (engine + assertion library) for this module. I inferred JUnit 4 + Error Prone's `CompilationTestHelper` from the file's existing imports and neighbors rather than from a declared convention. If you'd like, I can propose adding that line to `AGENTS.md`/`CLAUDE.md` in a follow-up, but I didn't touch the instructions file since that's a separate decision for you to confirm.

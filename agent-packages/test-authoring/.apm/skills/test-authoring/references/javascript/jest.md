@@ -9,7 +9,7 @@ The runner prints the `describe` path and the `it` or `test` string as `describe
 matcher's message, then a code frame. So the `describe` string carries the unit and the shared condition, the `it`
 string carries the scenario and the outcome (`it('rejects with AbortError when the signal fires mid-flight')`, not
 `it('handles abort')`, and never `it('works')`), and the message never says where. A test that holds a case with its
-controls in one check (`SKILL.md` §7) is named by the rule they establish.
+controls in one act (`SKILL.md` §7) is named by the rule they establish.
 
 ## Which matcher prints the operands
 
