@@ -1,47 +1,30 @@
-I rewrote the tests the last commit added to `WildcardTests.java`: 20 one-input tests are now 3, one per rule, and all 20 inputs are kept. Production code is unchanged and nothing is committed. `WildcardTests` passes (49 tests, 0 failures) and `:nullaway:buildWithNullAway` passes.
+I rewrote the 21 tests the commit added to `WildcardTests.java` as 3 tests, one per rule. They all pass on the fix, and each one fails on the base production code. The full `:nullaway:test` run and `:nullaway:buildWithNullAway` both pass. Production code is unchanged and nothing is committed.
 
-**Message for the PR author:**
+**Message for the pull request author**
 
-> The fix moves seven of the 20 inputs the commit added: I ran the new tests on the pre-fix production code and exactly those seven failed. The other 13 already held before the fix, so they are controls, and the rewrite keeps every one of them.
+> **What changed in the tests, and why**
 >
-> The repository's test-stack instructions let the cases of one rule share one source, as if `doTest()` reported every mismatch. So I grouped the inputs by rule, three tests in all. Each case now stands next to its controls in one source.
+> The 21 tests this change added to `WildcardTests` are now 3, one per rule. The repository's stack line asks for the cases of one rule to be kept in one source, written as if `doTest()` reported every mismatch. Before, each input had its own method and its own copy of the class. The 14 silent or already-reporting inputs stood in tests of their own, so nothing showed the silent ones next to an input that reports.
 >
-> 1. **`aTypeVariableIsJudgedByItsDeclaredBoundAgainstAConcreteWildcardBound`**
->    - Cases (silent before the fix):
->      - a bound that admits null;
->      - a bound inherited from another variable;
->      - the variable reached through `? extends T`;
->      - a variable declared in `@NullUnmarked` code.
->    - Controls:
->      - a non-null bound;
->      - the same box passed to `? extends @Nullable Object` and to `?`;
->      - `@Nullable T` and `@NonNull T` written at the use.
-> 2. **`aWildcardBoundedByATypeVariableRejectsOnlyAnActualThatMayBeNullWhereTheBoundMayNot`**
->    - Cases:
->      - `S extends @Nullable T` with a non-null `T`;
->      - `Box<T>` passed to `? extends @NonNull T`.
->    - Controls:
->      - the same variable;
->      - `S extends T` under both kinds of bound;
->      - `@Nullable T`;
->      - the inferred `CompletableFuture`;
->      - the two captured actuals.
+> I ran the original tests against the base production code (`d55c150^`) to sort the inputs. Seven failed there: these are the cases this change makes report. The other 14 behave the same before and after the fix: they are controls. The rewrite keeps every one of them.
 >
->    The capture inputs are the exception inside this rule, not a rule of their own, so they sit beside the controls that do report.
-> 3. **`anOverrideIsReportedWhenItsReturnTypeArgumentMayBeNullWhereTheOverriddenOneMayNot`**
->    - Case: the `List<V>` override.
->    - I added one control, a `List<@NonNull V>` override, which is silent before and after the fix. Without it, the test doesn't show that the report comes from `V` rather than from the setup.
+> - **`aTypeVariableArgumentIsCheckedAgainstAConcreteWildcardByItsAnnotationOrElseItsBound`**: a requirement like `Box<? extends Object>`.
+>   - Cases: a bound that admits null directly, through another type variable, through `? extends T`, or because the variable is declared in `@NullUnmarked` code.
+>   - Controls: a non-null bound, `@NonNull T` and `@Nullable T` written at the use, and the `? extends @Nullable Object` and `Box<?>` requirements.
+>   - The calls that differ only in the requirement sit on adjacent lines in one method, so the requirement is the only difference.
+> - **`anArgumentForAWildcardBoundedByATypeVariableFailsOnlyWhenItAdmitsANullTheBoundDoesNot`**: a requirement like `Box<? extends T>`.
+>   - Cases: `Box<T>` passed to `Box<? extends @NonNull T>`, and `S extends @Nullable T` passed to `Box<? extends T>` where `T` is non-null.
+>   - Controls: the same variable, `S extends T`, `@Nullable T`, the return form, and the `CompletableFuture` inference and captured-type inputs, which are now nested interfaces.
+>   - The silent captured and inference inputs now share a source with inputs that report.
+> - **`anOverrideMayNotReturnATypeVariableWhereANonNullWildcardOfItWasPromised`**: kept separate because the override check reports a different diagnostic. I added one control: an override returning `List<@NonNull V>`, which stays silent before and after the fix.
 >
-> Other changes:
-> - Each source reads as one program, and method names such as `boundExcludesNull` and `nullableAtTheUse` say what the input varies.
-> - I named `Box`'s own type parameter `E` everywhere, so it doesn't get confused with the actual `T` in the messages.
-> - The tests now sit before the private `makeHelper()`, as in the rest of the file, instead of after it.
+> I added two inputs, both controls that stay silent before and after the fix: the override above, and `takeExtendsT(b)` beside `takeExtendsNonNullT(b)`, so the `@NonNull` on the requirement is the only difference. No input was dropped.
 >
-> How I checked:
-> - On the fixed code, all three tests pass.
-> - On the pre-fix code, each test fails at a case marker.
-> - On the pre-fix code with only the seven case markers removed, all three pass, so every control holds before the fix.
+> **Evidence:**
+> - On the base production code, all three tests fail on a missing report: lines 13, 19 and 11 respectively.
+> - With the seven case markers removed, the rewritten sources pass on the base, so every control holds there.
+> - On the fix, `:nullaway:test` and `:nullaway:buildWithNullAway` pass.
 >
-> Not done:
-> - Because `doTest()` stops at the first mismatch, the pre-fix run reports one case per test. The instructions accept that ("a second run to see the next mismatch"), so I propose no change to the harness.
-> - Please put the run against the pre-fix code in the PR description. Either put the tests in a commit ahead of the fix, or paste the failure it prints, for example `Did not see an error on line 13 matching incompatible types: Box<T> cannot be converted to Box<? extends Object>`.
+> **Proposed, not done:** The pull request description should include the base-commit run as its evidence. Proposing nothing about `CompilationTestHelper`: the stack line already accepts this form.
+
+The skill also defers to a writing-style skill and a Javadoc skill, but neither is available in this session, so I didn't load them.

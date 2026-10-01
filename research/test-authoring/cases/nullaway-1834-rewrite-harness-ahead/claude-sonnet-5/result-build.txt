@@ -1,9 +1,9 @@
-on the fix: 58 tests ran, 0 failed
-on the base: 58 tests ran, 7 failed
-  WildcardTests.aBareTypeVariableFailsANonNullWildcardRequirementOnlyWhenItsDeclaredBoundAdmitsNull
+on the fix: 59 tests ran, 0 failed
+on the base: 59 tests ran, 7 failed
+  WildcardTests.aWildcardBoundedByATypeVariableRejectsABoundThatAddsNullability
+  WildcardTests.aTypeVariableIsJudgedByItsDeclaredBoundAgainstAConcreteWildcardRequirement
   WildcardTests.aTypeVariableBoundedByAnotherWhoseBoundAdmitsNullFailsANonNullWildcardRequirement
   WildcardTests.anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported
-  WildcardTests.aTypeVariableThatAdmitsNullFailsAWildcardBoundedByOneThatDoesNot
   WildcardTests.aWildcardActualBoundedByATypeVariableThatAdmitsNullFailsANonNullWildcardRequirement
   WildcardTests.aTypeVariableThatMayBeNullFailsANonNullAnnotatedWildcardRequirement
   WildcardTests.aTypeVariableDeclaredInUnannotatedCodeFailsANonNullWildcardRequirement

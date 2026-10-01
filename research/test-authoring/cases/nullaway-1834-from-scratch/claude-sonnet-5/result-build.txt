@@ -1,5 +1,6 @@
-on the fix: 51 tests ran, 0 failed
-on the base: 51 tests ran, 3 failed
-  WildcardTests.typeVariableWithNullableBoundedSubVariableRejectedByExtendsWildcardNamingNonNullVariable
-  WildcardTests.typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard
-  WildcardTests.typeVariableActualRejectedByExtendsWildcardNamingNonNullAnnotatedVariable
+on the fix: 166 tests ran, 0 failed
+on the base: 166 tests ran, 4 failed
+  GenericsTests.overrideReturnTypeWithExtendsBoundWildcardOnTypeVariable
+  WildcardTests.aTypeVariableActualIsRejectedOnlyWhenItsDeclaredBoundAdmitsNull
+  WildcardTests.aParametricWildcardBoundRejectsAnActualWhoseBoundAdmitsNullWhileItsOwnDoesNot
+  WildcardTests.anExplicitNonNullWildcardBoundOnATypeVariableRejectsANullableBoundActual

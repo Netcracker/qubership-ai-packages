@@ -1,15 +1,14 @@
 on the fix (build.sh exited with 0):
-  171 tests ran, 0 failed
+  170 tests ran, 0 failed
 on the base (build.sh exited with 1):
-  171 tests ran, 11 failed
-    test_resource.test_analyze_resource_schema_field_missing_from_header_issue_1791
+  170 tests ran, 10 failed
     test_validate.test_package_validate_with_schema_issue_348
     test_validate_schema.test_resource_validate_schema_extra_headers_and_cells
-    test_validate_schema.test_resource_validate_schema_primary_key_field_missing_from_header_issue_1791
+    test_validate_schema.test_resource_validate_schema_extra_header_data_is_still_read
     test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
     test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
     test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
     test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
-    test_header.test_get_expected_fields[exact: fields absent from labels are dropped]
-    test_header.test_get_expected_fields_default_field_is_any_typed[exact]
-    test_header.test_get_expected_fields_exact_synthetic_field_avoids_name_collision
+    test_header.test_get_expected_fields[exact: an extra label colliding with a kept field name is renamed]
+    test_header.test_get_expected_fields[exact: extra labels colliding with each other are each renamed]
+    test_header.test_get_expected_fields_exact_default_field_is_any_typed

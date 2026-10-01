@@ -1,15 +1,22 @@
-Worktree cleanup confirmed (only the main checkout remains). Here's the note for the PR author:
+Good — only the two test files are modified, nothing committed. Here's the summary for the PR author:
 
----
+## Tests added (no production code touched, nothing committed)
 
-**Tests added (in `WildcardTests.java`, no production code touched):**
+The fix (`CheckIdenticalNullabilityVisitor`/`GenericsUtils`) changed four distinct, independently-verified behaviors with no existing test coverage. For each, I confirmed **red on the base commit** (silently accepted, no diagnostic) and **green on the fix** by compiling isolated repros against both `09fdea5` (base) and `614efcf` (fix) in a disposable worktree before writing the final test.
 
-1. `typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard` — the headline case: `Box<N>` with `N extends @Nullable Object` is now rejected for a `Box<? extends Object>` parameter; `Box<O>` with the default non-null bound stays accepted, as a control.
-2. `explicitlyNonNullAnnotatedTypeVariableActualIsComparedAsWritten` — `Box<@NonNull N>`, same nullable-bounded `N`, is still accepted: guards `typeComparedForNullness`'s `hasNullnessAnnotation` check so the fix doesn't start rejecting type variables that carry their own explicit annotation.
-3. `typeVariableAndItsBoundedSubVariableAreContainedByExtendsWildcardNamingTheVariable` — `Box<T>` and `Box<S extends T>` both still assignable to `Box<? extends T>`; this is the behavior the commit message calls out as deliberately preserved (substituting `T`'s bound there would silence the real report), so I pinned it down as a no-diagnostic test.
-4. `typeVariableWithNullableBoundedSubVariableRejectedByExtendsWildcardNamingNonNullVariable` — `Box<S>` with `S extends @Nullable T` is now rejected for `Box<? extends T>` when `T` itself can't be null, contrasted with the same-variable case from #3 staying green.
-5. `typeVariableActualRejectedByExtendsWildcardNamingNonNullAnnotatedVariable` — `Box<T>` is now rejected for `Box<? extends @NonNull T>`.
+**`WildcardTests.java`** (nearest existing tests of this exact unit — `extendsBoundContains`/`wildcardContains`):
 
-All five were verified red on the parent commit (09fdea5) — I built a throwaway worktree there, dropped in the same test file, and confirmed the three "now rejected" cases silently compiled clean (`Did not see an error... There were no errors`), then removed the worktree. Diagnostic substrings are the exact javac/NullAway messages, captured from a real run rather than guessed. Full `:nullaway:test` and `:nullaway:buildWithNullAway` are green on the fix commit, and `spotlessJavaCheck` is clean.
+- `aTypeVariableActualIsRejectedOnlyWhenItsDeclaredBoundAdmitsNull` — the headline bug: a bare type-variable actual (`Foo<T>`, `T extends @Nullable Object`) passed where `Foo<? extends Object>` is required is now rejected; a non-null-bound `T` is still accepted; the same pair repeated for a wildcard-of-type-variable actual (`Foo<? extends T>`), the other shape the fix touches.
+- `aParametricWildcardBoundRejectsAnActualWhoseBoundAdmitsNullWhileItsOwnDoesNot` — the parametric-requirement extension (`Sink<T>.accept(Foo<? extends T>)`): `Foo<T>` and `Foo<S extends T>` stay assignable (non-regression controls, explicitly called out in the commit message), but `Foo<S>` with `S extends @Nullable T` is rejected only when `T` itself cannot be null, and accepted again once `T` can be null — a minimal pair isolating exactly the condition the fix added.
+- `anExplicitNonNullWildcardBoundOnATypeVariableRejectsANullableBoundActual` — `Box<T>` rejected where `Box<? extends @NonNull T>` is required, with a non-null-bound `T` control.
 
-**What I didn't do:** I didn't write a test for the "captured actual is the exception" branch (`rhsTypeArgument instanceof Type.CapturedType`, guarding against javac's capture conversion stripping `@NonNull` off `? extends @NonNull V`). I looked for a minimal repro — a `Box<? extends T>`-typed value round-tripped through a capturing generic method and reassigned — but everything I tried either didn't route through that branch or didn't produce a case that would actually fail without the guard (not a real test per the skill's "name the production change that would fail it" rule). This is a genuine gap in coverage for a real corner of the fix; someone with a concrete capture-conversion repro (maybe lifted from whatever real-world code motivated that guard) should add it.
+**`GenericsTests.java`** (nearest existing override/wildcard test):
+
+- `overrideReturnTypeWithExtendsBoundWildcardOnTypeVariable` — confirms the fix reaches the override-checking call site too (the CHANGELOG's second bullet): overriding `Box<? extends @NonNull V> getNonNull()` with `Box<V> getNonNull()` now reports, with a same-method non-null-instantiation control (`Holder<Object>`) showing the check isn't just always failing.
+
+All 7 new methods pass `./gradlew :nullaway:test` at HEAD and `buildWithNullAway` is unaffected (test-only change).
+
+## Proposed, not done
+
+1. **Test stack line**: `AGENTS.md`/`CLAUDE.md` name no test engine/assertion-library line (JUnit 4 + `CompilationTestHelper`'s own marker-matching, which reports every mismatched line in one compile and names each only by line number — no label). I didn't add this line myself since adding it is conditioned on your agreement; happy to add `Tests: JUnit 4 engine; CompilationTestHelper diagnostic-marker assertions (reports every mismatched line, names each by line number only, no label)` if you want it.
+2. **The `Type.CapturedType` carve-out** (`rhsTypeArgument instanceof Type.CapturedType` in `extendsBoundContains`) has no dedicated regression test. I couldn't construct a minimal, non-redundant repro that reaches the new parametric-TypeVar branch specifically *through* capture conversion (as opposed to the existing capture tests, which exercise unrelated LHS-capture/F-bounded recursion paths) without more time — worth a follow-up if you want that carve-out locked down.

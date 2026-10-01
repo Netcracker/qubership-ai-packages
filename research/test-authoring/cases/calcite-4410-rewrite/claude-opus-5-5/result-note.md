@@ -1,48 +1,27 @@
-I rewrote the two tests from the CALCITE-7051 commit as seven single-query tests, and each one now checks the expanded SQL instead of only that validation succeeds. The whole `SqlValidatorTest` class passes (552 run, 0 failed, 7 skipped — those were already disabled), and checkstyle and autostyle are clean. Only `SqlValidatorTest.java` changed; the production code is untouched and nothing is committed.
+I rewrote the two tests from the last commit as eight tests: seven cases and one control. All of `SqlValidatorTest` passes with the fix, and checkstyle on the test sources is clean. Six of the new tests fail when run against the production code from before the fix, and they fail with the bug itself. The production code is unchanged and nothing is committed.
 
----
+**Message for the author:**
 
-**Message for the author of the pull request**
-
-**What I changed in the tests, and why**
-
-1. **One query per test.** `testSelectJoinUsingCommonColumnCaseSensitive` and `testNaturalJoinCommonColumn` each ran four queries in a row. The first query that failed stopped the test and hid the rest. On the code before your fix, each test reported only one of its failing queries. Each query is now its own test, named for what it shows. The tests around them in the file use the same chained style, but here it hides failures, so these tests don't follow it.
-
-2. **They now check the expansion itself.** `.ok()` only showed that validation didn't throw. Each test now uses `rewritesTo` with the expected SQL written out by hand, for example `COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno``. This also checks your change that takes the alias from the select list instead of the USING list. Undoing just that change makes three of the new tests fail.
-
-3. **New case: case-sensitive matching still rejects a column spelled in a different case.** `testJoinUsingCaseSensitiveDoesNotMatchCommonColumnInOtherCase` runs `select deptno … using (DEPTNO)` with case-sensitive matching and expects `Column 'deptno' not found`. Your fix made the matching depend on `caseSensitive`. If that code ignored the flag and always matched case-insensitively, the original tests would still pass. This test fails in that case.
-
-4. **Shared setup in one helper.** `sqlExpandedInWrittenCase(sql)` turns on identifier expansion and keeps identifiers in the case they are written. Each test still shows its query, its `withCaseSensitive(...)` setting and the expected SQL in full. Table names are now `EMP`/`DEPT` everywhere, so the only lowercase text left is the column name each case is about.
-
-5. **Two queries dropped as duplicates:**
-   - The case-sensitive `select deptno from emp natural join dept` with default casing. The parser turns it into `DEPTNO`, so it is the same query as the case-sensitive `DEPTNO` one.
-   - The case-insensitive NATURAL `DEPTNO`. Its spelling already matches the catalog, so it runs the same code path as the case-sensitive NATURAL test.
-
-   Both failed before the fix, so dropping them loses no query that passed then. I kept the case-insensitive USING `DEPTNO`/`DEPTNO` query, which did pass before the fix, as `testJoinUsingCaseInsensitiveExpandsCommonColumnInCatalogCase`.
-
-**Evidence**
-
-I ran the new tests against the code before your fix (`SqlValidatorImpl.java` from `HEAD~1`):
-
-| Query | Before the fix | With the fix |
-| --- | --- | --- |
-| USING, case-insensitive, `deptno` / `(deptno)` | `java.lang.AssertionError` (the `qualifiedNode.size() == 2` check) | passes |
-| USING, case-insensitive, `DEPTNO` / `(deptno)` | `Column 'DEPTNO' is ambiguous` | passes |
-| USING, case-insensitive, `deptno` / `(DEPTNO)` | `Column 'deptno' is ambiguous` | passes |
-| NATURAL, case-sensitive, `DEPTNO` | `Column 'DEPTNO' is ambiguous` | passes |
-| NATURAL, case-insensitive, `deptno` | `Column 'deptno' is ambiguous` | passes |
-| USING, case-insensitive, `DEPTNO` / `(DEPTNO)` | passes | passes |
-| USING, case-sensitive, `deptno` / `(DEPTNO)` | passes | passes |
-
-The last two rows passed before the fix too; they check behavior the fix must keep.
-
-I also made two changes to the fix by hand and checked that the tests catch them:
-- **Always matching case-insensitively:** the new case-sensitive test fails.
-- **Taking the alias from the USING list again:** three tests fail.
-
-**Note:** NATURAL JOIN with identifier expansion failed with "ambiguous" even with case-sensitive matching and matching spelling. So that half of the fix is not only about case sensitivity, which the issue title doesn't say.
-
-**Proposed, not done**
-
-- The repository has no `AGENTS.md` or `CLAUDE.md` listing its test libraries. I'd add one line: `Tests: JUnit 5 engine; Hamcrest and JUnit 5 assertions; validator tests go through SqlValidatorFixture (one sql(...) per test, since a chain stops at the first failure)`. I didn't create the file.
-- The neighbouring tests (`testJoinUsing`, `testSelectAmbiguousField`) chain several queries in one method, so they have the same problem as point 1. I left them as they were because that's outside this change.
+> I rewrote the tests for CALCITE-7051 in `SqlValidatorTest` and left the production code alone.
+>
+> **What the old tests could not catch.** They ended in `.ok()`, which only checks that validation doesn't throw. So they couldn't catch the expansion being wrong, for example a different alias on the expanded column. They also put four or five queries in one method, so the first failure hid the rest.
+>
+> **What the new tests check.** Each case is now its own method and checks the expanded SQL with `rewritesTo`. That shows the `COALESCE(EMP.DEPTNO, DEPT.DEPTNO)` and the alias the select item gets.
+>
+> **The new helper.** `sqlCaseInsensitive(sql)` holds the settings the case-insensitive cases share (case-insensitive matching, unchanged casing, identifier expansion) and takes the whole query as its argument.
+>
+> **The cases.** All but `testNaturalJoinExpandsCommonColumn` match names case-insensitively.
+> - `testJoinUsingCaseInsensitiveExpandsColumnSpelledAsInCatalog`: USING with every name spelled as in the catalog. It also passed before the fix, and I kept it.
+> - `testJoinUsingCaseInsensitiveExpandsColumnSpelledUnlikeCatalog`: the USING list spelled unlike the catalog. Before the fix this hit `AssertionError` in `expandExprFromJoin`.
+> - `testJoinUsingCaseInsensitiveAliasesExpansionAsSelectItemSpellsIt`: the select item spelled unlike the USING list. Before the fix: "Column 'DEPTNO' is ambiguous". This test also pins the alias change: the alias follows the select item's spelling, not the USING list's.
+> - `testJoinUsingCaseInsensitiveExpandsSelectItemSpelledUnlikeCatalog`: the USING list spelled as in the catalog, the select item not. Before the fix: "Column 'deptno' is ambiguous".
+> - NATURAL JOIN: one case-sensitive test, plus a case-insensitive test for each spelling. All three said "Column 'DEPTNO' is ambiguous" (or 'deptno') before the fix, because NATURAL JOIN columns were never expanded.
+>
+> **New control.** `testJoinUsingCaseSensitiveRejectsSelectItemSpelledUnlikeCatalog` is the same query as the last USING case, but with case-sensitive matching. It must still fail with "Column 'deptno' not found in any table". It would catch a fix that ignores `caseSensitive`. It passes both before and after the fix. Its table names are uppercase, as case-sensitive matching needs, so the case it controls uses uppercase tables too.
+>
+> **Dropped.** The case-sensitive `select deptno from emp natural join dept` was the same input as its `DEPTNO` twin, because the default casing upper-cases it. It also failed before the fix, so it wasn't a control.
+>
+> **Proposed, not done:**
+> - A case-insensitive test for a chain of joins, such as `... join dept using (deptno) join bonus using (ename)`. It goes through the left-deep recursion in `expandExprFromJoin`, which the fix also changed.
+> - The expected SQL also pins the expanded FROM clause and its `EMP` versus `emp` qualifiers, as the file's other `rewritesTo` tests do. If that turns out to break too easily, `.type("RecordType(INTEGER NOT NULL deptno) NOT NULL")` checks the alias alone.
+> - The repository has no `AGENTS.md` or `CLAUDE.md`. I'd suggest adding a one-line note of the test stack: "Tests: JUnit 5 engine; Hamcrest and JUnit 5 assertions; Calcite's `SqlValidatorFixture` for validator tests."

@@ -1,13 +1,56 @@
-diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-index 31d3188..8610955 100644
---- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-+++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-@@ -1442,6 +1442,108 @@ public class WildcardTests extends NullAwayTestsBase {
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericsTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericsTests.java
+index 7549c92..e713be9 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericsTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/GenericsTests.java
+@@ -2054,6 +2054,38 @@ public class GenericsTests extends NullAwayTestsBase {
          .doTest();
    }
  
 +  @Test
-+  public void typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard() {
++  public void overrideReturnTypeWithExtendsBoundWildcardOnTypeVariable() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.jspecify.annotations.NonNull;
++            import org.jspecify.annotations.Nullable;
++            class Test {
++              class Box<T extends @Nullable Object> {}
++              interface Holder<V extends @Nullable Object> {
++                Box<? extends @NonNull V> getNonNull();
++              }
++              class Impl implements Holder<Object> {
++                @Override
++                public Box<Object> getNonNull() {
++                  throw new RuntimeException();
++                }
++              }
++              class BadImpl<V extends @Nullable Object> implements Holder<V> {
++                @Override
++                // BUG: Diagnostic contains: mismatched type parameter nullability
++                public Box<V> getNonNull() {
++                  throw new RuntimeException();
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   @Test
+   public void overrideWithNestedTypeParametersInParameterType() {
+     makeHelper()
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d3188..00e0a38 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -549,6 +549,98 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void aTypeVariableActualIsRejectedOnlyWhenItsDeclaredBoundAdmitsNull() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -15,12 +58,21 @@ index 31d3188..8610955 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              static class Box<T extends @Nullable Object> {}
-+              static <N extends @Nullable Object, O> void test(
-+                  Box<N> nullableBoundBox, Box<O> nonNullBoundBox) {
-+                // BUG: Diagnostic contains: incompatible types: Box<N> cannot be converted to Box<? extends Object>
-+                Box<? extends Object> bad = nullableBoundBox;
-+                Box<? extends Object> ok = nonNullBoundBox;
++              class Foo<T extends @Nullable Object> {}
++              void nonnullWildcard(Foo<? extends Object> foo) {}
++              <T extends @Nullable Object> void fromNullableBound(Foo<T> foo) {
++                // BUG: Diagnostic contains: incompatible types
++                nonnullWildcard(foo);
++              }
++              <T extends Object> void fromNonnullBound(Foo<T> foo) {
++                nonnullWildcard(foo);
++              }
++              <T extends @Nullable Object> void fromNullableBoundWildcard(Foo<? extends T> foo) {
++                // BUG: Diagnostic contains: incompatible types
++                nonnullWildcard(foo);
++              }
++              <T extends Object> void fromNonnullBoundWildcard(Foo<? extends T> foo) {
++                nonnullWildcard(foo);
 +              }
 +            }
 +            """)
@@ -28,7 +80,7 @@ index 31d3188..8610955 100644
 +  }
 +
 +  @Test
-+  public void explicitlyNonNullAnnotatedTypeVariableActualIsComparedAsWritten() {
++  public void aParametricWildcardBoundRejectsAnActualWhoseBoundAdmitsNullWhileItsOwnDoesNot() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -36,11 +88,28 @@ index 31d3188..8610955 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              static class Box<T extends @Nullable Object> {}
-+              // the bound of N admits null, but the explicit @NonNull on the actual argument
-+              // overrides it
-+              static <N extends @Nullable Object> void test(Box<@NonNull N> nonNullBoxOfN) {
-+                Box<? extends Object> ok = nonNullBoxOfN;
++              class Foo<T extends @Nullable Object> {}
++              class Sink<T extends @Nullable Object> {
++                void accept(Foo<? extends T> foo) {}
++              }
++              // Foo<T> and Foo<S extends T> stay assignable to a Sink<T>, whatever T is, since the
++              // formal admits whatever T is instantiated as.
++              <T extends @Nullable Object> void fromSameTypeVar(Sink<T> sink, Foo<T> foo) {
++                sink.accept(foo);
++              }
++              <T extends @Nullable Object, S extends T> void fromSubtype(Sink<T> sink, Foo<S> foo) {
++                sink.accept(foo);
++              }
++              // A Foo<S> with S extends @Nullable T holds a null a Sink<T> may not accept when T
++              // itself cannot be null.
++              <T, S extends @Nullable T> void fromNullableSubBoundNonNullT(Sink<T> sink, Foo<S> foo) {
++                // BUG: Diagnostic contains: incompatible types
++                sink.accept(foo);
++              }
++              // The same Foo<S> is accepted once the Sink's own T admits null too.
++              <T extends @Nullable Object, S extends @Nullable T> void fromNullableSubBoundNullableT(
++                  Sink<T> sink, Foo<S> foo) {
++                sink.accept(foo);
 +              }
 +            }
 +            """)
@@ -48,7 +117,7 @@ index 31d3188..8610955 100644
 +  }
 +
 +  @Test
-+  public void typeVariableAndItsBoundedSubVariableAreContainedByExtendsWildcardNamingTheVariable() {
++  public void anExplicitNonNullWildcardBoundOnATypeVariableRejectsANullableBoundActual() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -56,58 +125,22 @@ index 31d3188..8610955 100644
 +            import org.jspecify.annotations.*;
 +            @NullMarked
 +            class Test {
-+              static class Box<T extends @Nullable Object> {}
-+              static <T extends @Nullable Object, S extends T> void test(
-+                  Box<T> boxOfT, Box<S> boxOfS) {
-+                Box<? extends T> fromSameVariable = boxOfT;
-+                Box<? extends T> fromBoundedSubVariable = boxOfS;
++              class Foo<T extends @Nullable Object> {}
++              class Sink<T extends @Nullable Object> {
++                void acceptNonNull(Foo<? extends @NonNull T> foo) {}
++              }
++              <T extends @Nullable Object> void fromNullableBound(Sink<T> sink, Foo<T> foo) {
++                // BUG: Diagnostic contains: incompatible types
++                sink.acceptNonNull(foo);
++              }
++              <T> void fromNonnullBound(Sink<T> sink, Foo<T> foo) {
++                sink.acceptNonNull(foo);
 +              }
 +            }
 +            """)
 +        .doTest();
 +  }
 +
-+  @Test
-+  public void
-+      typeVariableWithNullableBoundedSubVariableRejectedByExtendsWildcardNamingNonNullVariable() {
-+    makeHelper()
-+        .addSourceLines(
-+            "Test.java",
-+            """
-+            import org.jspecify.annotations.*;
-+            @NullMarked
-+            class Test {
-+              static class Box<T extends @Nullable Object> {}
-+              static <T, S extends @Nullable T> void test(Box<T> boxOfT, Box<S> boxOfS) {
-+                Box<? extends T> fromSameVariable = boxOfT;
-+                // BUG: Diagnostic contains: incompatible types: Box<S> cannot be converted to Box<? extends T>
-+                Box<? extends T> fromNullableBoundedSubVariable = boxOfS;
-+              }
-+            }
-+            """)
-+        .doTest();
-+  }
-+
-+  @Test
-+  public void typeVariableActualRejectedByExtendsWildcardNamingNonNullAnnotatedVariable() {
-+    makeHelper()
-+        .addSourceLines(
-+            "Test.java",
-+            """
-+            import org.jspecify.annotations.*;
-+            @NullMarked
-+            class Test {
-+              static class Box<T extends @Nullable Object> {}
-+              static <T extends @Nullable Object> void test(Box<T> boxOfT) {
-+                Box<? extends T> ok = boxOfT;
-+                // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends T>
-+                Box<? extends @NonNull T> bad = boxOfT;
-+              }
-+            }
-+            """)
-+        .doTest();
-+  }
-+
-   private CompilationTestHelper makeHelper() {
-     return makeTestHelperWithArgs(
-         JSpecifyJavacConfig.withJSpecifyModeArgs(
+   @Test
+   public void issue1715() {
+     makeHelper()

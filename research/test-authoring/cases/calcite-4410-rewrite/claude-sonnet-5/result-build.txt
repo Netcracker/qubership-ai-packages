@@ -1,10 +1,10 @@
 on the fix (build.sh exited with 0):
-  552 tests ran, 0 failed
+  551 tests ran, 0 failed
 on the base (build.sh exited with 1):
-  552 tests ran, 6 failed
-    SqlValidatorTest.testJoinUsingCommonColumnCaseInsensitiveSelectUpperUsingLower()
-    SqlValidatorTest.testNaturalJoinCommonColumnCaseInsensitiveLowerCase()
-    SqlValidatorTest.testNaturalJoinCommonColumnCaseInsensitiveUpperCase()
-    SqlValidatorTest.testNaturalJoinCommonColumnCaseSensitive()
-    SqlValidatorTest.testJoinUsingCommonColumnCaseInsensitiveSelectLowerUsingUpper()
-    SqlValidatorTest.testJoinUsingCommonColumnCaseInsensitiveSameCasingDifferentFromCatalog()
+  551 tests ran, 6 failed
+    SqlValidatorTest.testJoinUsingCommonColumnMatchedCaseInsensitivelyWhenBothLowercase()
+    SqlValidatorTest.testNaturalJoinCommonColumnMatchedCaseInsensitivelyLowercase()
+    SqlValidatorTest.testNaturalJoinCommonColumnMatchedCaseInsensitivelyUppercase()
+    SqlValidatorTest.testJoinUsingCommonColumnMatchedCaseInsensitivelyWhenUsingClauseIsUppercase()
+    SqlValidatorTest.testJoinUsingCommonColumnMatchedCaseInsensitivelyWhenSelectItemIsUppercase()
+    SqlValidatorTest.testNaturalJoinCommonColumnIsExpandedToCoalesce()

@@ -363,8 +363,9 @@ line accepts: no issue, no change, and no new stack line. A writer's preference 
 neither is the shape of the neighboring tests. A test that asserts on the result of one act itself has no such fact to
 learn: it uses the grouped form that reports every failure (*Several assertions on one behavior report together*), each
 with a message that names its case where the assertion cannot, or, where the library has none, one comparison of the
-whole result reduced to the fields the behavior defines (§6), compared as a set where the behavior defines no order
-(§8). The reference file names the runner option that prints a long comparison whole.
+whole result reduced to the fields the behavior defines (§6). Where the behavior defines no order, it is compared as a
+sorted list or a multiset, so that a duplicated entry still fails; a set fits only where the behavior leaves the count
+of each entry open (§8). The reference file names the runner option that prints a long comparison whole.
 
   1. **Each case fails on its own, under a name of its own.** A failure of one case hides no other case, and the report
      names the failed case without the file. Cases that are separate acts are separate tests, the rows of one
@@ -446,7 +447,7 @@ before the test is. Each cause below has one fix, and every cause but the last i
 | The wall clock | `now()`, `Date()`, `time.Now()` read by the code under test | Inject the clock |
 | Unseeded randomness | `random()` with no seed, in the test or the code | Inject or fix the seed, and print it on failure |
 | The network or the platform | A real host name; a port; a locale, timezone, or path separator assumed | Fake the endpoint; pin the locale and timezone; build paths |
-| Iteration order of an unordered collection | A `set` or hash map compared as a sequence | Sort before comparing, or compare as a set |
+| Iteration order of an unordered collection | A `set` or hash map compared as a sequence | Sort before comparing; compare as a set only where the behavior leaves the count of each element open, since a set passes a duplicate |
 | Exact floating-point equality | `==` on a computed float | Compare within a tolerance the specification allows |
 | An assertion range that excludes valid outputs | `elapsed < 100ms`; a bound tighter than the specification | Widen to the specification's range, or assert the ordering rather than the duration |
 | Order dependence | Not always visible | Run the suite in random order with the seed printed; fix by removing the shared state, never by pinning the order |
