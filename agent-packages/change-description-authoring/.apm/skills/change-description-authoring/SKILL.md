@@ -78,7 +78,7 @@ Five slots, in this order; the fourth is conditional. Verification is not one of
 | # | Slot | Reader | Answers | Skip when |
 | --- | --- | --- | --- | --- |
 | 1 | **Problem** | R2, R1, R3 | What was wrong or missing, before any word about the fix? | Never |
-| 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no observable symptom, and the body says so in one clause |
+| 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no symptom by construction, and the body says so in one clause; for a defect an audit or a code reading found, the body names what found it |
 | 3 | **Change and approach** | R2, R1 | What was done; the constraint that forced it; the alternative a reader would propose and why not; the measured trade-off | The problem statement makes the approach obvious |
 | 4 | **Outcome** | R3, R4 | For each outcome the change adds or alters that a caller can observe (a test's own assertion message is not one): what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them, one line each under the label `User-visible:`; a deliberate non-change a reader would expect, one line under `Not changed:` | The change alters nothing a caller observes and keeps nothing a reader would expect it to change |
 | 5 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
@@ -88,9 +88,17 @@ you did about it. The cheapest shape is "Previously, when X happened, this cause
 in Z."
 
 Slot 2 carries what a person outside the code observes: the exception, the log line, the wrong
-result, the hang, the regression in latency, and the circumstances that provoke it. Where the defect
-has no symptom (a leak on an error path with nothing logged), say so; an empty slot looks like an
+result, the hang, the regression in latency, and the circumstances that provoke it. Where reading
+the code or an audit found the defect, name what found it and end the sentence there. *Before:* `An
+audit found this; it has not been seen to fail.` *After:* `An audit of the retry paths found this.` A
+predicted failure is not known, and neither is the absence of one. Where the defect has no symptom
+by construction (a leak on an error path with nothing logged), say so; an empty slot looks like an
 omission, a stated absence does not.
+
+A consequence derived from the code earns a sentence only after it is traced to the point where a
+caller sees it, through every mechanism on the way (a lazy initialization, a retry, a fallback), and
+is stated as derived, not observed (measured: two of two drafts that predicted a symptom from one
+missing call stopped one step short, and the failure they described cannot happen).
 
 Slot 3 justifies the way the change solves the problem: why the result with the change is better,
 and which alternative was considered and discarded. A rejected alternative earns its sentence only
@@ -188,7 +196,7 @@ Six slots, in order; the last three are conditional.
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
 | 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
 | 4 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
-| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
+| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
 | 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
 
 The Why slot has no skip condition. A fix, a feature, and a refactor each replace a version that
@@ -277,8 +285,9 @@ prose.
 #### What each paragraph must earn
 
 **A reviewer decides, and does not re-investigate.** Carry what changes that decision: what was
-wrong, why this behavior is the right one, what changed, how it was checked, and what scope or risk
-is left. The reader should be able to tell whether to engage and where to look.
+wrong, why this behavior is the right one, what changed that the diff does not show, how it was
+checked, and what scope or risk is left. The reader should be able to tell whether to engage and
+where to look.
 
 **Take the shortest chain that justifies the decision.** Once the problem and the chosen behavior
 stand, add another link only where a reviewer would otherwise need it. Prefer the conclusion the
@@ -330,6 +339,25 @@ wording, which is the part most likely to change before merge. A documentation s
 adds or rewrites is summarized in a sentence and linked; its configuration table or list of setups
 is reviewed in the diff, not copied into the description.
 
+The same holds for the code: a sentence whose content the reviewer recovers from one hunk (`X is
+removed`, `Y now calls Z`, `the accessor asserts W`) is translation, even under a lead-in that
+states a reason. A decision does not exempt the sentence: state the reason for the decision, not the
+edit that carries it. A public identifier the change adds, removes, or renames (a system property, a
+flag, an option) is the exception: name it once, because readers search for the change by that
+string (§5).
+
+*Before:* `With the pool opened at startup, the lazy ensureOpen() calls are removed,
+QueryExecutor.execute now uses sendDirect instead of sendWithRetry, and Pool.acquire() checks that
+the pool is open.`
+
+*After:* `The pool opens at startup, so a caller that runs before startup completes fails at once
+instead of opening the pool on demand. QueryExecutor.execute used sendWithRetry only to reopen a
+closed pool; with the pool open from startup it sends directly.`
+
+The removed `ensureOpen()` calls are gone from the text: the diff shows them, and the first
+sentence says why they are no longer needed. The `IllegalStateException` that the early caller now
+gets from `Pool.acquire()` is an outcome, and it goes on its own line under "User-visible changes".
+
 **Keep a specific value where the decision depends on that value.** A threshold, a version, an
 identifier, or a magnitude stays when changing it would change the behavioral conclusion, the
 compatibility boundary, or what a test discriminates. Being searchable does not make a value
@@ -340,15 +368,18 @@ without loss. The detail and the claim resting on it leave together, or neither 
 
 **An approach you tried and rejected earns a collapsed block, when a reviewer would propose it.**
 The What slot names the alternative a reviewer would raise in one sentence, with the mechanism that
-rules it out. An approach you actually tried, with a measurement, goes in a `<details>` block with a
-one-line `<summary>`, after the What slot and before verification. Each entry states a mechanism or
-a measurement, in one short paragraph: *the watcher's consumer thread needs the same lock, so the
-event cannot arrive while the build waits; measured, 6 timeouts in 6 runs*. An entry that reports
-the alternative as considered and this one preferred is unfalsifiable and belongs nowhere; neither
-do the investigation route, every idea anyone had, or the internal identifiers of the review
-process. This does not contradict `javadoc-authoring` §7a, where cutting a rejected alternative is
-usually the highest-value edit in a diff: a doc comment's reader is using or fixing the thing, while
-a pull request's reader is deciding whether the approach is right.
+rules it out, stated as a fact about the merged code. An obstacle the change itself removes is a step
+the change had to take, not a reason against the alternative; check the mechanism against the code
+after the change, above all when it is retold from someone else's discussion. An approach you
+actually tried, with a measurement, goes in a `<details>` block with a one-line `<summary>`, after
+the What slot and before verification. Each entry states a mechanism or a measurement, in one short
+paragraph: *the watcher's consumer thread needs the same lock, so the event cannot arrive while the
+build waits; measured, 6 timeouts in 6 runs*. An entry that reports the alternative as considered
+and this one preferred is unfalsifiable and belongs nowhere; neither do the investigation route,
+every idea anyone had, or the internal identifiers of the review process. This does not contradict
+`javadoc-authoring` §7a, where cutting a rejected alternative is usually the highest-value edit in a
+diff: a doc comment's reader is using or fixing the thing, while a pull request's reader is deciding
+whether the approach is right.
 
 #### Verification
 
@@ -424,6 +455,15 @@ follow-up exists, name its number; where it does not, state what this change lea
 handling is outside this change`). `A separate pull request follows for that` is unfalsifiable when
 written and stale once the number exists.
 
+**A question the issue or the review left open is answered, kept open, or left out.** Where the code,
+a test, or another source you verified answers it, give the answer and its evidence, and do not
+repeat the question as open. Where only a maintainer can answer it, as with whether a compatibility
+break is intended, keep it in the Scope slot as a question, with the decision it needs and the
+evidence the maintainer needs to make it: the code shows the break, and not whether the break is
+wanted. Leave
+a question out only when it does not bear on this change (measured: three of three drafts repeated
+as open a question the code answered).
+
 ### Changelog entry
 
 Five parts in order, under a category heading. §3 argues the order.
@@ -432,7 +472,7 @@ Five parts in order, under a category heading. §3 argues the order.
 | --- | --- | --- | --- |
 | 1 | **Category**: Added, Changed, Deprecated, Removed, Fixed, Security | R4 | Which kind of change is this? |
 | 2 | **The observable change**, self-describing without the heading | R4 | What can I now do, or what now happens differently? |
-| 3 | **The symptom and the trigger**, diagnostic quoted as a literal, setting or condition named | R3 | Can I grep this with my log line? Does the condition match my deployment? |
+| 3 | **The symptom and the trigger**, diagnostic quoted as a literal, setting or condition named; for a defect an audit or a code reading found, the condition alone (§2, slot 2) | R3 | Can I grep this with my log line? Does the condition match my deployment? |
 | 4 | **References**: pull request or commit, issue, CVE | R3, R2, R5 | Where is the detail? |
 | 5 | **Compatibility and action**: breaking or not, what the reader must do, and for a regression the version that introduced it | R4, R5, R3 | Will my upgrade break? Am I on an affected version? |
 
@@ -720,7 +760,8 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
   is not absent in a change with no tests: its claims about the code are checked in the slot (§2).
 - No verification narrative in the commit body (§4).
 - No paraphrase of the diff. A body whose sentences map one to one onto hunks adds no rationale;
-  R2 has the diff.
+  R2 has the diff. In a description, the same test applies sentence by sentence (§2, the What
+  slot).
 
 ## 7a. Editing an existing description
 
@@ -759,8 +800,10 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 - Reader: for every sentence, which of R1 to R5 asks the question it answers (§1)?
 - Subject: does it name the change, and would it identify the commit in `git log --oneline` (§2)?
 - Problem: does the body open with what was wrong, before the fix (§2)?
-- Symptom: is the diagnostic quoted as a literal, with the trigger condition, or is its absence
-  stated (§2, §3)?
+- Symptom: is the diagnostic quoted as a literal, with the trigger condition (§2, §3)? Is every
+  symptom quoted from an observation, or traced in the code and marked as derived? For a defect found
+  by an audit or a code reading, does the sentence end at what found it? For a defect with no
+  symptom by construction, is that stated?
 - Why: is the slot present, and is there a sentence of reason beside the issue link, not only the
   link (§2)?
 - Approach: is the alternative a reviewer would propose answered with a mechanism or a number (§2)?
@@ -780,12 +823,19 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   or a related or stacked change, and absent from a description that §4 rule 5 makes a commit body
   (§2)?
 - Decision: for every paragraph, which review decision becomes harder without it (§2)?
+- Translation: delete each sentence of the What slot in turn; where the diff still says it, leave it
+  deleted (§2).
 - Length: past about 400 words of prose, or a slot past about 120, was every paragraph re-read
   under the decision question, and is no route in the Why slot, test construction, passing run,
   landed neighbor, copied documentation section, or uncollapsed derivation left (§2)? Were the
   outcome lines and other data lines left out of the count, and left in the description?
 - Alternatives: is an approach a reviewer would propose answered in one sentence, and a tried one in
-  a collapsed block with a mechanism or a measurement (§2)?
+  a collapsed block with a mechanism or a measurement (§2)? Is that mechanism a fact about the
+  merged code, and not an obstacle the change itself removes?
+- Discussion: where verified evidence settles a question from the issue or the review, does the
+  description give the answer rather than repeat the question as open? Is a question that only a
+  maintainer can settle kept in the Scope slot, with the decision it needs and the evidence for it?
+  Is a question dropped only when it does not bear on this change (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
 - Scope: is every gap named as intentional, every follow-up by number, every stacked change by its
   overlap and order (§2)?

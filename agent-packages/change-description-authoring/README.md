@@ -23,7 +23,13 @@ the question it answers.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the shortest chain that justifies that decision, the level of detail each artifact
   owns, and the verification section that names what the tests establish rather than transcribing
-  them.
+  them. A sentence the reviewer recovers from one hunk is cut even when it carries a decision; its
+  reason stays.
+- A rejected alternative answered by a mechanism that still holds in the merged code. A defect that
+  an audit found is described by what found it, with neither a predicted failure nor a claim that
+  none was seen. A question left open in the discussion is answered where the code or other verified
+  evidence settles it, kept with the decision it needs and the evidence for it where only a
+  maintainer can settle it, and dropped only when it does not bear on the change.
 - Why the commit subject is change-first while the body is problem-first, and why the two do not
   conflict.
 - The changelog entry as the artifact the on-call engineer greps as well as the one the upgrading
