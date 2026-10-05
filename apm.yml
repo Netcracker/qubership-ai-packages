@@ -223,25 +223,25 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: bb46660cb0a2fb4ec1bbe30786c6ef09105fc20b  # main
+      ref: d39da3ae03d499969d5b4f59609907df350d476e  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
       source: Netcracker/qubership-apihub-api-diff
       subdir: agent-packages/api-diff-authoring
-      ref: e59a80396e4fbb22d3686ed1f3f69e93cb70d103  # develop
+      ref: 8b4efdeacc65cff54ee32b804466ee9a5feed48d  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:public"]
 
     - name: api-unifier-authoring
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-authoring
-      ref: 7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b  # develop
+      ref: 6fea44a9299cdfd5ae1c20da243ac8ab735d582a  # develop
       tags: ["topic:api", "stack:typescript", "activity:authoring", "audience:internal"]
 
     - name: api-unifier-testing
       source: Netcracker/qubership-apihub-api-unifier
       subdir: agent-packages/api-unifier-testing
-      ref: 7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b  # develop
+      ref: 6fea44a9299cdfd5ae1c20da243ac8ab735d582a  # develop
       tags: ["topic:api", "stack:typescript", "activity:testing", "audience:internal"]
 
     - name: dbaas-mounted-secret-migration
@@ -265,7 +265,7 @@ marketplace:
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: b48af28950b7c56e17eb837809e6c67932b576b6  # main
+      ref: f0015799c5e44ef14f4fbac5e66ef427aef27aaa  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
