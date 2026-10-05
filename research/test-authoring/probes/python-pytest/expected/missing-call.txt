@@ -1,0 +1,22 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 1 item
+
+tests/test_missing_call.py F                                             [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_calls_missing_name ____________________________
+
+    def test_calls_missing_name():
+>       pytest.no_such_call()
+        ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'pytest' has no attribute 'no_such_call'
+
+tests/test_missing_call.py:5: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_missing_call.py::test_calls_missing_name - AttributeError: ...
+============================== 1 failed in <duration> ===============================
+exit code: 1

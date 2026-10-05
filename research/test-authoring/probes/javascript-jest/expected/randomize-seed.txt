@@ -1,0 +1,16 @@
+PASS tests/order.test.js
+  ensureBytes
+    ✓ case -6
+    ✓ case -4
+    ✓ case -3
+    ✓ case -5
+    ✓ case -1
+    ✓ case -2
+
+Seed:        1234
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/order.test.js.
+exit code: 0

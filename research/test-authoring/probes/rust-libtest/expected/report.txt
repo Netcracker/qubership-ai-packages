@@ -1,0 +1,23 @@
+     Running unittests src/lib.rs (target/debug/deps/stream-<hash>)
+
+running 1 test
+test tests::assert_eq_prints_both ... FAILED
+
+failures:
+
+---- tests::assert_eq_prints_both stdout ----
+
+thread 'tests::assert_eq_prints_both' (<tid>) panicked at src/lib.rs:43:9:
+assertion `left == right` failed
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::assert_eq_prints_both
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--lib`
+exit code: 101

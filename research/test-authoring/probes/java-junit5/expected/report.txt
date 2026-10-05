@@ -1,0 +1,25 @@
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.ReportTest$WhenTheStreamIsClosed
+[ERROR] probe.ReportTest.negativeCountIsRefused -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: ensureBytes(-1) ==> expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ReportTest.negativeCountIsRefused(ReportTest.java:13)
+	at <framework frames>
+
+[ERROR] probe.ReportTest.displayName -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ReportTest.displayName(ReportTest.java:19)
+	at <framework frames>
+
+[ERROR] probe.ReportTest.negativeCountIsRefused -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+	at <framework frames>
+	at probe.ReportTest$WhenTheStreamIsClosed.negativeCountIsRefused(ReportTest.java:26)
+	at <framework frames>
+
+[ERROR] Failures:
+[ERROR]   ReportTest.displayName:19 expected: <0> but was: <-1>
+[ERROR]   ReportTest.negativeCountIsRefused:13 ensureBytes(-1) ==> expected: <0> but was: <-1>
+[ERROR]   ReportTest.negativeCountIsRefused expected: <0> but was: <-1>
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0
+exit code: 1

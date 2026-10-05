@@ -1,0 +1,11 @@
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.RuleTest
+[ERROR] m.RuleTest.everyHandlerIsAnnotated -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement m.Handler should be annotated with @Handles' was violated (1 times):
+Class <m.BHandler> is not annotated with @Handles in (BHandler.java:0)
+	at m.RuleTest.everyHandlerIsAnnotated(RuleTest.java:19)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+results:
+  m.RuleTest.everyHandlerIsAnnotated: failure java.lang.AssertionError
+exit code: 1

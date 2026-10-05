@@ -1,0 +1,9 @@
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.SetTest
+[ERROR] m.SetTest.everyKindHasAHandler -- Time elapsed: <duration> <<< FAILURE!
+org.opentest4j.AssertionFailedError: kinds with a Handler implementation ==> expected: <[A, B, C]> but was: <[A]>
+	at m.SetTest.everyKindHasAHandler(SetTest.java:24)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+results:
+  m.SetTest.everyKindHasAHandler: failure org.opentest4j.AssertionFailedError
+exit code: 1

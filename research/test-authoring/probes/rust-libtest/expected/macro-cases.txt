@@ -1,0 +1,32 @@
+     Running tests/macro_cases.rs (target/debug/deps/macro_cases-<hash>)
+
+running 2 tests
+test minus_one ... FAILED
+test minus_two ... FAILED
+
+failures:
+
+---- minus_one stdout ----
+
+thread 'minus_one' (<tid>) panicked at tests/macro_cases.rs:14:1:
+assertion `left == right` failed
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- minus_two stdout ----
+
+thread 'minus_two' (<tid>) panicked at tests/macro_cases.rs:14:1:
+assertion `left == right` failed
+  left: -2
+ right: 0
+
+
+failures:
+    minus_one
+    minus_two
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test macro_cases`
+exit code: 101

@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 8 items / 6 deselected / 2 selected
+
+tests/test_parametrize.py FF                                             [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_ids[minus one] ______________________________
+
+n = -1
+
+    @pytest.mark.parametrize("n", [-1, -2], ids=["minus one", "minus two"])
+    def test_ids(n):
+>       assert ensure_bytes(n) == 0
+E       assert -1 == 0
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_parametrize.py:13: AssertionError
+___________________________ test_param_id[minus one] ___________________________
+
+n = -1
+
+    @pytest.mark.parametrize("n", [pytest.param(-1, id="minus one"), pytest.param(-2, id="minus two")])
+    def test_param_id(n):
+>       assert ensure_bytes(n) == 0
+E       assert -1 == 0
+E        +  where -1 = ensure_bytes(-1)
+
+tests/test_parametrize.py:18: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_parametrize.py::test_ids[minus one] - assert -1 == 0
+FAILED tests/test_parametrize.py::test_param_id[minus one] - assert -1 == 0
+======================= 2 failed, 6 deselected in <duration> ========================
+exit code: 1

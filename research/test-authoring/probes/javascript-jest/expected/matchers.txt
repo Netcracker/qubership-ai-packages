@@ -1,0 +1,143 @@
+FAIL tests/matchers.test.js
+  ✕ toBe
+  ✕ toEqual
+  ✕ boolean toBe(true)
+  ✕ boolean toBeTruthy
+  ✕ toThrow, another type thrown
+  ✕ toThrow, nothing thrown
+  ✕ swapped operands
+
+  ● toBe
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      2 |
+      3 | test('toBe', () => {
+    > 4 |   expect(ensureBytes(-1)).toBe(0);
+        |                           ^
+      5 | });
+      6 |
+      7 | test('toEqual', () => {
+
+      at Object.toBe (tests/matchers.test.js:4:27)
+
+  ● toEqual
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "a": 1,
+    -   "b": 3,
+    +   "b": 2,
+      }
+
+       6 |
+       7 | test('toEqual', () => {
+    >  8 |   expect({ a: 1, b: 2 }).toEqual({ a: 1, b: 3 });
+         |                          ^
+       9 | });
+      10 |
+      11 | test('boolean toBe(true)', () => {
+
+      at Object.toEqual (tests/matchers.test.js:8:26)
+
+  ● boolean toBe(true)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      10 |
+      11 | test('boolean toBe(true)', () => {
+    > 12 |   expect(ensureBytes(-1) === 0).toBe(true);
+         |                                 ^
+      13 | });
+      14 |
+      15 | test('boolean toBeTruthy', () => {
+
+      at Object.toBe (tests/matchers.test.js:12:33)
+
+  ● boolean toBeTruthy
+
+    expect(received).toBeTruthy()
+
+    Received: false
+
+      14 |
+      15 | test('boolean toBeTruthy', () => {
+    > 16 |   expect(ensureBytes(-1) === 0).toBeTruthy();
+         |                                 ^
+      17 | });
+      18 |
+      19 | test('toThrow, another type thrown', () => {
+
+      at Object.toBeTruthy (tests/matchers.test.js:16:33)
+
+  ● toThrow, another type thrown
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: RangeError
+    Received constructor: TypeError
+
+    Received message: "boom"
+
+          19 | test('toThrow, another type thrown', () => {
+          20 |   expect(() => {
+        > 21 |     throw new TypeError('boom');
+             |           ^
+          22 |   }).toThrow(RangeError);
+          23 | });
+          24 |
+
+      at tests/matchers.test.js:21:11
+      at Object.toThrow (tests/matchers.test.js:22:6)
+      at Object.toThrow (tests/matchers.test.js:22:6)
+
+  ● toThrow, nothing thrown
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: RangeError
+
+    Received function did not throw
+
+      24 |
+      25 | test('toThrow, nothing thrown', () => {
+    > 26 |   expect(() => ensureBytes(-1)).toThrow(RangeError);
+         |                                 ^
+      27 | });
+      28 |
+      29 | test('swapped operands', () => {
+
+      at Object.toThrow (tests/matchers.test.js:26:33)
+
+  ● swapped operands
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: -1
+    Received: 0
+
+      28 |
+      29 | test('swapped operands', () => {
+    > 30 |   expect(0).toBe(ensureBytes(-1));
+         |             ^
+      31 | });
+      32 |
+
+      at Object.toBe (tests/matchers.test.js:30:13)
+
+Test Suites: 1 failed, 1 total
+Tests:       7 failed, 7 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/matchers.test.js.
+exit code: 1

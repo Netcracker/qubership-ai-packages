@@ -1,0 +1,123 @@
+╷
+└─ JUnit Jupiter ✔
+   ├─ ParameterizedCasesTest ✔
+   │  ├─ argumentSetName(int) ✔
+   │  │  ├─ [1] minus one ✘ expected: <0> but was: <-1>
+   │  │  └─ [2] minus two ✘ expected: <0> but was: <-2>
+   │  ├─ duplicateName(int) ✔
+   │  │  ├─ [1] same ✘ expected: <0> but was: <-1>
+   │  │  └─ [2] same ✘ expected: <0> but was: <-2>
+   │  ├─ argumentsNamed(List, int) ✔
+   │  │  └─ [1] empty list, 1 ✘ expected: <1> but was: <0>
+   │  ├─ defaultName(int) ✔
+   │  │  ├─ [1] -1 ✘ expected: <0> but was: <-1>
+   │  │  └─ [2] -2 ✘ expected: <0> but was: <-2>
+   │  ├─ argumentsWithNamesPlaceholder(int) ✔
+   │  │  └─ refused: -1 ✘ expected: <0> but was: <-1>
+   │  ├─ customPattern(int) ✔
+   │  │  ├─ 1: ensureBytes(-1) is refused ✘ expected: <0> but was: <-1>
+   │  │  └─ 2: ensureBytes(-2) is refused ✘ expected: <0> but was: <-2>
+   │  ├─ otherPlaceholders(int) ✔
+   │  │  ├─ otherPlaceholders(int) | -1 | minus one | minus one ✘ expected: <0> but was: <-1>
+   │  │  └─ otherPlaceholders(int) | -2 | minus two | minus two ✘ expected: <0> but was: <-2>
+   │  └─ namedOf(List) ✔
+   │     └─ [1] empty list ✘ expected: <1> but was: <0>
+   ├─ ParameterizedFieldsTest ✔
+   │  └─ [1] count = -1 ✔
+   │     └─ negativeCountIsRefused() ✘ expected: <0> but was: <-1>
+   └─ ParameterizedConstructorTest ✔
+      └─ [1] -1 ✔
+         └─ negativeCountIsRefused() ✘ expected: <0> but was: <-1>
+
+Failures (15):
+  JUnit Jupiter:ParameterizedCasesTest:argumentSetName(int):[1] minus one
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'argumentSetName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.argumentSetName(ParameterizedCasesTest.java:58)
+  JUnit Jupiter:ParameterizedCasesTest:argumentSetName(int):[2] minus two
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'argumentSetName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+       <framework frames>
+       probe.ParameterizedCasesTest.argumentSetName(ParameterizedCasesTest.java:58)
+  JUnit Jupiter:ParameterizedCasesTest:duplicateName(int):[1] same
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'duplicateName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.duplicateName(ParameterizedCasesTest.java:80)
+  JUnit Jupiter:ParameterizedCasesTest:duplicateName(int):[2] same
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'duplicateName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+       <framework frames>
+       probe.ParameterizedCasesTest.duplicateName(ParameterizedCasesTest.java:80)
+  JUnit Jupiter:ParameterizedCasesTest:argumentsNamed(List, int):[1] empty list, 1
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'argumentsNamed', methodParameterTypes = 'java.util.List, int']
+    => org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+       <framework frames>
+       probe.ParameterizedCasesTest.argumentsNamed(ParameterizedCasesTest.java:48)
+  JUnit Jupiter:ParameterizedCasesTest:defaultName(int):[1] -1
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'defaultName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.defaultName(ParameterizedCasesTest.java:22)
+  JUnit Jupiter:ParameterizedCasesTest:defaultName(int):[2] -2
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'defaultName', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+       <framework frames>
+       probe.ParameterizedCasesTest.defaultName(ParameterizedCasesTest.java:22)
+  JUnit Jupiter:ParameterizedCasesTest:argumentsWithNamesPlaceholder(int):refused: -1
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'argumentsWithNamesPlaceholder', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.argumentsWithNamesPlaceholder(ParameterizedCasesTest.java:64)
+  JUnit Jupiter:ParameterizedCasesTest:customPattern(int):1: ensureBytes(-1) is refused
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'customPattern', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.customPattern(ParameterizedCasesTest.java:28)
+  JUnit Jupiter:ParameterizedCasesTest:customPattern(int):2: ensureBytes(-2) is refused
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'customPattern', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+       <framework frames>
+       probe.ParameterizedCasesTest.customPattern(ParameterizedCasesTest.java:28)
+  JUnit Jupiter:ParameterizedCasesTest:otherPlaceholders(int):otherPlaceholders(int) | -1 | minus one | minus one
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'otherPlaceholders', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedCasesTest.otherPlaceholders(ParameterizedCasesTest.java:70)
+  JUnit Jupiter:ParameterizedCasesTest:otherPlaceholders(int):otherPlaceholders(int) | -2 | minus two | minus two
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'otherPlaceholders', methodParameterTypes = 'int']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-2>
+       <framework frames>
+       probe.ParameterizedCasesTest.otherPlaceholders(ParameterizedCasesTest.java:70)
+  JUnit Jupiter:ParameterizedCasesTest:namedOf(List):[1] empty list
+    MethodSource [className = 'probe.ParameterizedCasesTest', methodName = 'namedOf', methodParameterTypes = 'java.util.List']
+    => org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+       <framework frames>
+       probe.ParameterizedCasesTest.namedOf(ParameterizedCasesTest.java:38)
+  JUnit Jupiter:ParameterizedFieldsTest:[1] count = -1:negativeCountIsRefused()
+    MethodSource [className = 'probe.ParameterizedFieldsTest', methodName = 'negativeCountIsRefused', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedFieldsTest.negativeCountIsRefused(ParameterizedFieldsTest.java:20)
+  JUnit Jupiter:ParameterizedConstructorTest:[1] -1:negativeCountIsRefused()
+    MethodSource [className = 'probe.ParameterizedConstructorTest', methodName = 'negativeCountIsRefused', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <0> but was: <-1>
+       <framework frames>
+       probe.ParameterizedConstructorTest.negativeCountIsRefused(ParameterizedConstructorTest.java:22)
+
+Test run finished after <duration>
+[        14 containers found      ]
+[         0 containers skipped    ]
+[        14 containers started    ]
+[         0 containers aborted    ]
+[        14 containers successful ]
+[         0 containers failed     ]
+[        15 tests found           ]
+[         0 tests skipped         ]
+[        15 tests started         ]
+[         0 tests aborted         ]
+[         0 tests successful      ]
+[        15 tests failed          ]
+
+exit code: 1

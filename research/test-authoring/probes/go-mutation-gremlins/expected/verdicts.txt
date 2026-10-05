@@ -1,0 +1,17 @@
+Starting...
+Gathering coverage... done in <duration>
+      KILLED CONDITIONALS_BOUNDARY at numbers.go:9:23
+      KILLED CONDITIONALS_NEGATION at numbers.go:9:23
+   TIMED OUT INCREMENT_DECREMENT at numbers.go:9:29
+       LIVED CONDITIONALS_BOUNDARY at numbers.go:17:11
+      KILLED CONDITIONALS_NEGATION at numbers.go:17:11
+ NOT COVERED ARITHMETIC_BASE at numbers.go:22:28
+      KILLED ARITHMETIC_BASE at numbers.go:27:15
+ NOT COVERED ARITHMETIC_BASE at other/other.go:6:11
+
+Mutation testing completed in <duration>
+Killed: 4, Lived: 1, Not covered: 2
+Timed out: 1, Not viable: 0, Skipped: 0
+Test efficacy: 80.00%
+Mutator coverage: 71.43%
+exit code: 0

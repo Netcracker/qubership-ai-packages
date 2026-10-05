@@ -1,0 +1,32 @@
+     Running tests/grouping.rs (target/debug/deps/grouping-<hash>)
+
+running 2 tests
+test two_asserts ... FAILED
+test whole_struct ... FAILED
+
+failures:
+
+---- two_asserts stdout ----
+
+thread 'two_asserts' (<tid>) panicked at tests/grouping.rs:6:5:
+assertion `left == right` failed: first
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- whole_struct stdout ----
+
+thread 'whole_struct' (<tid>) panicked at tests/grouping.rs:12:5:
+assertion `left == right` failed
+  left: Limits { min: 4096, max: 0 }
+ right: Limits { min: 0, max: 4096 }
+
+
+failures:
+    two_asserts
+    whole_struct
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test grouping`
+exit code: 101

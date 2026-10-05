@@ -1,0 +1,33 @@
+▶ ensureBytes
+  ▶ with a negative count
+    ✖ returns zero (<duration>)
+  ✖ with a negative count (<duration>)
+  ✔ passes a positive count through (<duration>)
+✖ ensureBytes (<duration>)
+ℹ tests 2
+ℹ suites 2
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/report.test.mjs:7:5
+✖ returns zero (<duration>)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  -1 !== 0
+
+      at TestContext.<anonymous> (file://<probe>/tests/report.test.mjs:8:14)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: -1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+exit code: 1

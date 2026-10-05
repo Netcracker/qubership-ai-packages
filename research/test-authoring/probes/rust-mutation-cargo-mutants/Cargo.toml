@@ -1,0 +1,9 @@
+# Probe crate for the cargo-mutants claims in the test-authoring skill; see ../README.md.
+# cargo-mutants itself is a binary installed by probe.sh, which pins its version.
+[package]
+name = "test-authoring-probes-cargo-mutants"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]

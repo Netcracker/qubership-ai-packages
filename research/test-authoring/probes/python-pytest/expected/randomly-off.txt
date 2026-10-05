@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform <platform> -- Python <version>, pytest-<version>, pluggy-<version>
+rootdir: <probe>
+configfile: pyproject.toml
+plugins: check-<version>
+collected 1 item
+
+tests/test_one.py .                                                      [100%]
+
+============================== 1 passed in <duration> ===============================
+exit code: 0

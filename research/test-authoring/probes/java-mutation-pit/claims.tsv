@@ -1,0 +1,12 @@
+id	probe	check	pattern	reference	quote	note
+killed	verdicts	contains	ConditionalsBoundaryMutator,sumBelow,10,KILLED,probe.NumbersTest	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	
+survived	verdicts	contains	ConditionalsBoundaryMutator,isPositive,18,SURVIVED,none	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	
+survived-no-test-failed	verdicts	contains	isPositive,18,SURVIVED,none	references/mutation-tools.md	every name below means the same thing: no test failed with the mutation applied	
+survivor-name	verdicts	contains	,SURVIVED,	references/mutation-tools.md	The tools name the survivor differently (*survived*, *lived*, *missed*, and go-mutesting's *failed*)	
+no-coverage	verdicts	contains	EmptyObjectReturnValsMutator,label,23,NO_COVERAGE,none	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	
+timed-out	verdicts	contains	MathMutator,sumBelow,10,TIMED_OUT,none	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	
+non-viable	verdicts	contains	> KILLED 1 SURVIVED 1 TIMED_OUT 0 NON_VIABLE 0	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	refines: NON_VIABLE is a status PIT counts in every per-mutator summary, for bytecode the JVM rejects; no default mutator produced one here, so the verdict itself is not provoked
+more-statuses	verdicts	contains	> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0\n> NO_COVERAGE 0 EQUIVALENT 0	references/mutation-tools.md	`KILLED`, `SURVIVED`, `NO_COVERAGE`, `TIMED_OUT`, `NON_VIABLE`	refines: PIT 1.30 also counts EQUIVALENT, MEMORY_ERROR, RUN_ERROR, NOT_STARTED, and STARTED, which the table does not list
+history-needs-plugin	history	contains	History has been enabled but no history plugin has been installed/activated.	references/mutation-tools.md	Incremental analysis re-runs only mutants whose class or killing test changed	contradicts: open-source PIT 1.30.0 has no incremental analysis; historyInputFile and historyOutputFile fail the run until a history plugin (arcmutate's, commercial) is added
+target-classes-keeps	target-classes	contains	Other.java,probe.Other,org.pitest.mutationtest.engine.gregor.mutators.MathMutator,twice,8,NO_COVERAGE,none	references/mutation-tools.md	`targetClasses` narrows the run	
+target-classes-drops	target-classes	absent	probe\.Numbers	references/mutation-tools.md	`targetClasses` narrows the run	

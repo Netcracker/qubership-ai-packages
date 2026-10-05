@@ -1,0 +1,18 @@
+✖ calls an assertion that does not exist (<duration>)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/missing-call.test.mjs:5:1
+✖ calls an assertion that does not exist (<duration>)
+  TypeError [Error]: assert.noSuchCall is not a function
+      at TestContext.<anonymous> (file://<probe>/tests/missing-call.test.mjs:6:10)
+      at <node internals>
+exit code: 1

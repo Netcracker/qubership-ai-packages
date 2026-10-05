@@ -1,0 +1,45 @@
+✖ throws with another error type (<duration>)
+✖ throws when nothing is thrown (<duration>)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms <duration>
+
+✖ failing tests:
+
+test at tests/throws.test.mjs:5:1
+✖ throws with another error type (<duration>)
+  AssertionError [ERR_ASSERTION]: The error is expected to be an instance of "RangeError". Received "TypeError"
+
+  Error message:
+
+  Cannot read properties of undefined (reading 'name')
+      at TestContext.<anonymous> (file://<probe>/tests/throws.test.mjs:7:10)
+      at <node internals> {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: Cannot read properties of undefined (reading 'name')
+        at file://<probe>/tests/throws.test.mjs:7:43
+        at <node internals>
+        at TestContext.<anonymous> (file://<probe>/tests/throws.test.mjs:7:10)
+        at <node internals>
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/throws.test.mjs:10:1
+✖ throws when nothing is thrown (<duration>)
+  AssertionError [ERR_ASSERTION]: Missing expected exception (RangeError).
+      at TestContext.<anonymous> (file://<probe>/tests/throws.test.mjs:11:10)
+      at <node internals> {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+exit code: 1

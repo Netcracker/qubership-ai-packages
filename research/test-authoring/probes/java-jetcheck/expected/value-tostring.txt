@@ -1,0 +1,19 @@
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.ValueToStringTest
+[ERROR] m.ValueToStringTest.ensureBytesNeverReturnsANegativeCount -- Time elapsed: <duration> <<< ERROR!
+org.jetbrains.jetCheck.PropertyFalsified:
+Falsified on Count[n=-1]
+Shrunk in 30 stages, by trying 33 examples
+
+To re-run the minimal failing case, run
+  PropertyChecker.customized().rechecking("ACoB/////x8=")
+    .forAll(...)
+To re-run the test with all intermediate shrinking steps, use `recheckingIteration(42L, 1)` instead for last iteration, or `withSeed(42L)` for all iterations
+
+	at m.ValueToStringTest.ensureBytesNeverReturnsANegativeCount(ValueToStringTest.java:15)
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+results:
+  m.ValueToStringTest.ensureBytesNeverReturnsANegativeCount: error org.jetbrains.jetCheck.PropertyFalsified
+output of m.ValueToStringTest:
+  <time>: failed on iteration 1 (use `recheckingIteration(42L, 1)` or `withSeed(42L)` to reproduce), shrinking...
+exit code: 1

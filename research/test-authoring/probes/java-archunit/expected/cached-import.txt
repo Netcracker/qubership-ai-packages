@@ -1,0 +1,25 @@
+[ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.FreshImportTest
+[ERROR] m.FreshImportTest.handlersAreAnnotated -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement m.Handler should be annotated with @Handles' was violated (1 times):
+Class <m.BHandler> is not annotated with @Handles in (BHandler.java:0)
+	at m.FreshImportTest.handlersAreAnnotated(FreshImportTest.java:23)
+
+[ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in m.CachedImportTest
+[ERROR] m.CachedImportTest.handlersAreAnnotated -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement m.Handler should be annotated with @Handles' was violated (1 times):
+Class <m.BHandler> is not annotated with @Handles in (BHandler.java:0)
+
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0
+results:
+  CachedImportTest.handlersAreAnnotated: failure java.lang.AssertionError
+  CachedImportTest.handlersArePublic: passed
+  m.FreshImportTest.handlersAreAnnotated: failure java.lang.AssertionError
+  m.FreshImportTest.handlersArePublic: passed
+output of m.CachedImportTest:
+  import read m/AHandler.class
+output of m.FreshImportTest:
+  import read m/AHandler.class
+  import read m/AHandler.class
+exit code: 1

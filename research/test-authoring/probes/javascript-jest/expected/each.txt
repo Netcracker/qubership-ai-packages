@@ -1,0 +1,117 @@
+FAIL tests/each.test.js
+  ensureBytes
+    ✕ ensureBytes(-1) is refused
+    ✕ ensureBytes(-2) is refused
+    ✕ minus one: -1 {"n":-1} { n: -1 }, case 0
+    ✕ minus one via -1
+    ✕ duplicate -1
+    ✕ duplicate -1
+
+  ● ensureBytes › ensureBytes(-1) is refused
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      3 | describe('ensureBytes', () => {
+      4 |   test.each([[-1], [-2]])('ensureBytes(%d) is refused', (n) => {
+    > 5 |     expect(ensureBytes(n)).toBe(0);
+        |                            ^
+      6 |   });
+      7 |
+      8 |   test.each([['minus one', -1, { n: -1 }, { n: -1 }]])('%s: %p %j %o, case %#', (name, n) => {
+
+      at toBe (tests/each.test.js:5:28)
+
+  ● ensureBytes › ensureBytes(-2) is refused
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -2
+
+      3 | describe('ensureBytes', () => {
+      4 |   test.each([[-1], [-2]])('ensureBytes(%d) is refused', (n) => {
+    > 5 |     expect(ensureBytes(n)).toBe(0);
+        |                            ^
+      6 |   });
+      7 |
+      8 |   test.each([['minus one', -1, { n: -1 }, { n: -1 }]])('%s: %p %j %o, case %#', (name, n) => {
+
+      at toBe (tests/each.test.js:5:28)
+
+  ● ensureBytes › minus one: -1 {"n":-1} { n: -1 }, case 0
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+       7 |
+       8 |   test.each([['minus one', -1, { n: -1 }, { n: -1 }]])('%s: %p %j %o, case %#', (name, n) => {
+    >  9 |     expect(ensureBytes(n)).toBe(0);
+         |                            ^
+      10 |   });
+      11 |
+      12 |   test.each([{ name: 'minus one', value: { path: -1 } }])('$name via $value.path', ({ value }) => {
+
+      at toBe (tests/each.test.js:9:28)
+
+  ● ensureBytes › minus one via -1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      11 |
+      12 |   test.each([{ name: 'minus one', value: { path: -1 } }])('$name via $value.path', ({ value }) => {
+    > 13 |     expect(ensureBytes(value.path)).toBe(0);
+         |                                     ^
+      14 |   });
+      15 |
+      16 |   test.each([[-1], [-1]])('duplicate %d', (n) => {
+
+      at toBe (tests/each.test.js:13:37)
+
+  ● ensureBytes › duplicate -1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      15 |
+      16 |   test.each([[-1], [-1]])('duplicate %d', (n) => {
+    > 17 |     expect(ensureBytes(n)).toBe(0);
+         |                            ^
+      18 |   });
+      19 | });
+      20 |
+
+      at toBe (tests/each.test.js:17:28)
+
+  ● ensureBytes › duplicate -1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: -1
+
+      15 |
+      16 |   test.each([[-1], [-1]])('duplicate %d', (n) => {
+    > 17 |     expect(ensureBytes(n)).toBe(0);
+         |                            ^
+      18 |   });
+      19 | });
+      20 |
+
+      at toBe (tests/each.test.js:17:28)
+
+Test Suites: 1 failed, 1 total
+Tests:       6 failed, 6 total
+Snapshots:   0 total
+Time:        <duration>
+Ran all test suites matching tests/each.test.js.
+exit code: 1

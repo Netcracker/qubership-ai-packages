@@ -1,0 +1,38 @@
+id	probe	check	pattern	reference	quote	note
+report-node-id	report	contains	FAILED tests/test_stream.py::TestEnsureBytes::test_negative_count - assert -1	references/python/pytest.md	The progress line and the short summary carry the node id (`test_stream.py::TestEnsureBytes::test_negative_count`) and the first line of the failure	
+report-source-marker	report	contains	>       assert ensure_bytes(-1) == 0\nE       assert -1 == 0	references/python/pytest.md	the failure section prints the test's source with a `>` at the failing line	
+report-docstring	report	contains	"""A negative count is refused."""\n>       assert ensure_bytes(-1) == 0\nE       assert -1 == 0	references/python/pytest.md	the docstring included, then the `E` lines	
+bare-assert	assert-forms	contains	E       assert -1 == 0\nE        +  where -1 = ensure_bytes(-1)	references/python/pytest.md	| `assert ensure_bytes(-1) == 0` | `assert -1 == 0` and `+  where -1 = ensure_bytes(-1)` |	
+boolean-computed-earlier	assert-forms	contains	>       assert ok\nE       assert False\n	references/python/pytest.md	| `ok = ensure_bytes(-1) == 0` then `assert ok` | `assert False` |	
+message-above-introspection	assert-forms	contains	E       AssertionError: ensure_bytes(-1)\nE       assert -1 == 0\nE        +  where -1 = ensure_bytes(-1)	references/python/pytest.md	`AssertionError: ensure_bytes(-1)` above the same two lines	
+message-never-instead	assert-forms	contains	E       AssertionError: ensure_bytes(-1)\nE       assert -1 == 0\nE        +  where -1 = ensure_bytes(-1)	references/python/pytest.md	it is printed above the introspection, never instead of it	
+fail	assert-forms	contains	>       pytest.fail()\nE       Failed\n	references/python/pytest.md	| `pytest.fail()` | `Failed` |	
+fail-with-message	assert-forms	contains	E       Failed: ensure_bytes(-1) returned instead of throwing	references/python/pytest.md	| `pytest.fail()` | `Failed` |	refines: with an argument, `Failed: <message>`
+did-not-raise	assert-forms	contains	E       Failed: DID NOT RAISE ValueError	references/python/pytest.md	`Failed: DID NOT RAISE ValueError`	
+operand-order	assert-forms	contains	E       assert 0 == -1\nE        +  where -1 = ensure_bytes(-1)	references/python/pytest.md	There is no operand order to keep; write the call on whichever side reads better.	
+diff-string	diffs	contains	E         - Hello, world\nE         ?      -\nE         + Hello world	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	
+diff-list	diffs	contains	E         At index 2 diff: 3 != 4	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	
+diff-dict	diffs	contains	E         Differing items:\nE         {'b': 2} != {'b': 3}	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	
+diff-set	diffs	contains	E         Extra items in the left set:\nE         3\nE         Extra items in the right set:\nE         4	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	
+diff-withheld-locally	diffs	contains	E         At index 19 diff: 19 != 99\nE         Use -v to get more diff	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	refines: at the default verbosity a local run prints the first differing index and `Use -v to get more diff`, not the diff
+diff-truncated-locally-at-v	diffs-v	contains	...Full output truncated (22 lines hidden), use '-vv' to show	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	refines: with `-v` a local run truncates the diff after 8 lines unless `CI` or `BUILD_NUMBER` is set, or `-vv`
+diff-full-on-ci	diffs-ci	contains	E         Full diff:\nE           [\nE               0,	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	refines: with `CI` set the full diff is printed at the default verbosity
+diff-untruncated-on-ci	diffs-ci	absent	Full output truncated	references/python/pytest.md	Strings, sequences, dicts, and sets get a diff.	
+helper-plain	helper-rewrite	regex	helper_plain\.check\(ensure_bytes\(-1\)\)[\s\S]*?E       AssertionError\n\ntests/helper_plain\.py	references/python/pytest.md	A bare `assert` in a helper module the test imports raises a plain `AssertionError` with no operands	
+helper-rewritten	helper-rewrite	regex	helper_rewritten\.check\(ensure_bytes\(-1\)\)[\s\S]*?E       assert -1 == 0\n\ntests/helper_rewritten\.py	references/python/pytest.md	opts the module in with `pytest.register_assert_rewrite("helper")` before it is imported	
+param-id-from-value	parametrize	contains	test_param[-1]	references/python/pytest.md	names each case from the value (`test_param[-1]`)	
+param-ids-keyword	parametrize	contains	test_ids[minus one]	references/python/pytest.md	pass `ids=["minus one", "minus two"]`	
+param-pytest-param	parametrize	contains	test_param_id[minus one]	references/python/pytest.md	`pytest.param(-1, id="minus one")`	
+param-id-in-failed-line	parametrize	contains	FAILED tests/test_parametrize.py::test_ids[minus one] - assert -1 == 0	references/python/pytest.md	The id becomes the node id suffix, is printed in the `FAILED` line	
+param-k-select	parametrize-k	contains	collected 8 items / 6 deselected / 2 selected	references/python/pytest.md	and is selectable with `-k`	contradicts: an id with a space is not one `-k` term; `-k "minus one"` is rejected with `Wrong expression passed to '-k'`, and `-k "minus and one"` selects the cases whose id holds both words
+param-duplicate-index	parametrize	contains	test_duplicate_ids[same0]	references/python/pytest.md	Two cases with the same id are disambiguated by an index, which is a location.	
+param-duplicate-index-second	parametrize	contains	test_duplicate_ids[same1]	references/python/pytest.md	Two cases with the same id are disambiguated by an index, which is a location.	
+stop-at-first-assert	grouping	contains	E       AssertionError: first\nE       assert -1 == 0	references/python/pytest.md	a test with several assertions on one result stops at the first	
+stop-at-first-assert-no-second	grouping	absent	AssertionError: second	references/python/pytest.md	a test with several assertions on one result stops at the first	
+pytest-check-reports-both	grouping	regex	FAILURE: check -1 == 0: first[\s\S]*FAILURE: check -1 > 0: second[\s\S]*Failed Checks: 2	references/python/pytest.md	`pytest-check` or a parametrized test over the fields keeps them reporting together	
+raises-match	raises	contains	E       AssertionError: Regex pattern did not match.\nE         Expected regex: 'positive'\nE         Actual message: 'count must not be negative: -1'	references/python/pytest.md	with `match=`, a regular expression over the message	
+raises-other-type	raises	contains	FAILED tests/test_raises.py::test_wrong_type - ValueError: count must not be	references/python/pytest.md	`pytest.raises(ValueError, match=r"negative")` asserts the type	refines: an exception of another type propagates and fails the test as itself, not as `DID NOT RAISE`
+randomly-seed	randomly	contains	Using --randomly-seed=<seed>	references/python/pytest.md	prints `Using --randomly-seed=…`	
+randomly-off	randomly-off	absent	randomly	references/python/pytest.md	`pytest -p no:randomly` disables it for one run	
+missing-call-at-run	missing-call	contains	E       AttributeError: module 'pytest' has no attribute 'no_such_call'	SKILL.md	pytest, Jest, Vitest, and `node:test` say so at collection or on the first run	
+missing-call-at-collection	missing-at-import	contains	ERROR collecting tests/test_missing_at_import.py	SKILL.md	pytest, Jest, Vitest, and `node:test` say so at collection or on the first run	

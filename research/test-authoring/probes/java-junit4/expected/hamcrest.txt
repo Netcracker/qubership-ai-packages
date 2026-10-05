@@ -1,0 +1,68 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running probe.HamcrestTest
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: <duration> <<< FAILURE! -- in probe.HamcrestTest
+[ERROR] probe.HamcrestTest.booleanWithReason -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError: ensureBytes(-1)
+	at probe.HamcrestTest.booleanWithReason(HamcrestTest.java:19)
+
+[ERROR] probe.HamcrestTest.hasItemMatcher -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expected: a collection containing <4>
+     but: mismatches were: [was <1>, was <2>, was <3>]
+	at probe.HamcrestTest.hasItemMatcher(HamcrestTest.java:24)
+
+[ERROR] probe.HamcrestTest.isMatcher -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expected: is <0>
+     but: was <-1>
+	at probe.HamcrestTest.isMatcher(HamcrestTest.java:29)
+
+[ERROR] probe.HamcrestTest.isMatcherSwapped -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+
+Expected: is <-1>
+     but: was <0>
+	at probe.HamcrestTest.isMatcherSwapped(HamcrestTest.java:34)
+
+[ERROR] probe.HamcrestTest.isMatcherWithReason -- Time elapsed: <duration> <<< FAILURE!
+java.lang.AssertionError:
+ensureBytes(-1)
+Expected: is <0>
+     but: was <-1>
+	at probe.HamcrestTest.isMatcherWithReason(HamcrestTest.java:39)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   HamcrestTest.booleanWithReason:19 ensureBytes(-1)
+[ERROR]   HamcrestTest.hasItemMatcher:24
+Expected: a collection containing <4>
+     but: mismatches were: [was <1>, was <2>, was <3>]
+[ERROR]   HamcrestTest.isMatcher:29
+Expected: is <0>
+     but: was <-1>
+[ERROR]   HamcrestTest.isMatcherSwapped:34
+Expected: is <-1>
+     but: was <0>
+[ERROR]   HamcrestTest.isMatcherWithReason:39 ensureBytes(-1)
+Expected: is <0>
+     but: was <-1>
+[INFO]
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0
+=== Surefire XML report
+--- TEST-probe.HamcrestTest.xml
+  <testcase name="booleanWithReason" classname="probe.HamcrestTest">
+    <failure message="ensureBytes(-1)" type="java.lang.AssertionError">
+  <testcase name="hasItemMatcher" classname="probe.HamcrestTest">
+    <failure message="&#10;Expected: a collection containing &lt;4&gt;&#10;     but: mismatches were: [was &lt;1&gt;, was &lt;2&gt;, was &lt;3&gt;]" type="java.lang.AssertionError">
+  <testcase name="isMatcher" classname="probe.HamcrestTest">
+    <failure message="&#10;Expected: is &lt;0&gt;&#10;     but: was &lt;-1&gt;" type="java.lang.AssertionError">
+  <testcase name="isMatcherSwapped" classname="probe.HamcrestTest">
+    <failure message="&#10;Expected: is &lt;-1&gt;&#10;     but: was &lt;0&gt;" type="java.lang.AssertionError">
+  <testcase name="isMatcherWithReason" classname="probe.HamcrestTest">
+    <failure message="ensureBytes(-1)&#10;Expected: is &lt;0&gt;&#10;     but: was &lt;-1&gt;" type="java.lang.AssertionError">
+exit code: 1

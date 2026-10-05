@@ -1,0 +1,10 @@
+id	probe	check	pattern	reference	quote	note
+killed	verdicts	contains	numbers_probe.numbers.x_sum_below__mutmut_1: killed	references/mutation-tools.md	killed, survived, suspicious, timeout	
+survived	verdicts	contains	numbers_probe.numbers.x_is_positive__mutmut_1: survived	references/mutation-tools.md	killed, survived, suspicious, timeout	
+survivor-name	verdicts	contains	: survived	references/mutation-tools.md	The tools name the survivor differently (*survived*, *lived*, *missed*, and go-mutesting's *failed*)	
+timeout	verdicts	contains	numbers_probe.numbers.x_sum_below__mutmut_8: timeout	references/mutation-tools.md	killed, survived, suspicious, timeout	
+suspicious	verdicts	regex	16/16  🎉 7 🫥 4  ⏰ 2  🤔 0  🙁 3  🔇 0  🧙 0	references/mutation-tools.md	killed, survived, suspicious, timeout	refines: suspicious (🤔, a test run much slower than the baseline but under the timeout) is counted in the progress line but not provoked here; the line also counts no tests (🫥), skipped (🔇), and caught by type check (🧙)
+no-tests	verdicts	contains	numbers_probe.numbers.x_label__mutmut_1: no tests	references/mutation-tools.md	killed, survived, suspicious, timeout	refines: a mutant in a function no test reaches is reported as `no tests`, a verdict the table does not list
+no-tests-is-no-coverage	verdicts	contains	numbers_probe.numbers.x_label__mutmut_1: no tests	SKILL.md	*no coverage* is a missing test	refines: mutmut's name for no coverage is `no tests`
+rerun-changed-only	rerun	regex	--- is_positive changed, the rest did not\n14/16  🎉 7 🫥 4  ⏰ 2  🤔 0  🙁 1  🔇 0  🧙 0	references/mutation-tools.md	Re-tests by default only the functions whose source changed	
+rerun-same-result	rerun	regex	16/16  🎉 7 🫥 4  ⏰ 2  🤔 0  🙁 3  🔇 0  🧙 0	references/mutation-tools.md	Re-tests by default only the functions whose source changed	

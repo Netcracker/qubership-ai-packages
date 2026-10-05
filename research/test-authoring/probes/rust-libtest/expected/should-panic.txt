@@ -1,0 +1,27 @@
+     Running tests/should_panic.rs (target/debug/deps/should_panic-<hash>)
+
+running 3 tests
+test matching_substring - should panic ... ok
+test no_panic - should panic ... FAILED
+test other_message - should panic ... FAILED
+
+failures:
+
+---- no_panic stdout ----
+note: test did not panic as expected at tests/should_panic.rs:17:4
+---- other_message stdout ----
+
+thread 'other_message' (<tid>) panicked at src/lib.rs:21:9:
+boom
+note: panic did not contain expected string
+      panic message: "boom"
+ expected substring: "negative"
+
+failures:
+    no_panic
+    other_message
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in <duration>
+
+error: test failed, to rerun pass `--test should_panic`
+exit code: 101

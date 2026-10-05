@@ -1,0 +1,9 @@
+--- FAIL: TestErrorContinues (<duration>)
+    m_test.go:14: first: ensureBytes(-1) = -1, want 0
+    m_test.go:17: second: ensureBytes(-2) = -2, want 0
+--- FAIL: TestFatalStops (<duration>)
+    m_test.go:24: first: ensureBytes(-1) = -1, want 0
+FAIL
+FAIL	probes.example/gotesting/keepgoing	<duration>
+FAIL
+exit code: 1

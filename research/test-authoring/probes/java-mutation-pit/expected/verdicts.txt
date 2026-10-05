@@ -1,0 +1,60 @@
+- Mutators
+================================================================================
+> org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator
+>> Generated 2 Killed 1 (50%)
+> KILLED 1 SURVIVED 1 TIMED_OUT 0 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 0 EQUIVALENT 0
+--------------------------------------------------------------------------------
+> org.pitest.mutationtest.engine.gregor.mutators.returns.PrimitiveReturnsMutator
+>> Generated 2 Killed 1 (50%)
+> KILLED 1 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 1 EQUIVALENT 0
+--------------------------------------------------------------------------------
+> org.pitest.mutationtest.engine.gregor.mutators.returns.BooleanTrueReturnValsMutator
+>> Generated 1 Killed 1 (100%)
+> KILLED 1 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 0 EQUIVALENT 0
+--------------------------------------------------------------------------------
+> org.pitest.mutationtest.engine.gregor.mutators.MathMutator
+>> Generated 3 Killed 2 (67%)
+> KILLED 1 SURVIVED 0 TIMED_OUT 1 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 1 EQUIVALENT 0
+--------------------------------------------------------------------------------
+> org.pitest.mutationtest.engine.gregor.mutators.returns.EmptyObjectReturnValsMutator
+>> Generated 1 Killed 0 (0%)
+> KILLED 0 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 1 EQUIVALENT 0
+--------------------------------------------------------------------------------
+> org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator
+>> Generated 2 Killed 2 (100%)
+> KILLED 2 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0
+> NO_COVERAGE 0 EQUIVALENT 0
+--------------------------------------------------------------------------------
+================================================================================
+================================================================================
+- Statistics
+================================================================================
+>> Line Coverage (for mutated classes only): 5/9 (56%)
+>> 3 tests examined
+>> Generated 11 mutations Killed 7 (64%)
+>> Mutations with no coverage 3. Test strength 88%
+>> Ran 7 tests (0.64 tests per mutation)
+--- target/pit-reports/mutations.csv, sorted
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator,isPositive,18,SURVIVED,none
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator,sumBelow,10,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:sumsBelowFour()]
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.MathMutator,sumBelow,10,TIMED_OUT,none
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.MathMutator,sumBelow,11,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:sumsBelowFour()]
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,isPositive,18,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:positiveAndNegative()]
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,sumBelow,10,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:sumsBelowFour()]
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.returns.BooleanTrueReturnValsMutator,isPositive,18,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:positiveAndNegative()]
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.returns.EmptyObjectReturnValsMutator,label,23,NO_COVERAGE,none
+Numbers.java,probe.Numbers,org.pitest.mutationtest.engine.gregor.mutators.returns.PrimitiveReturnsMutator,sumBelow,13,KILLED,probe.NumbersTest.[engine:junit-jupiter]/[class:probe.NumbersTest]/[method:sumsBelowFour()]
+Other.java,probe.Other,org.pitest.mutationtest.engine.gregor.mutators.MathMutator,twice,8,NO_COVERAGE,none
+Other.java,probe.Other,org.pitest.mutationtest.engine.gregor.mutators.returns.PrimitiveReturnsMutator,twice,8,NO_COVERAGE,none
+exit code: 0

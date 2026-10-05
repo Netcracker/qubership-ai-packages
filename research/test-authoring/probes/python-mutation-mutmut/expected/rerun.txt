@@ -1,0 +1,21 @@
+--- is_positive changed, the rest did not
+14/16  🎉 7 🫥 4  ⏰ 2  🤔 0  🙁 1  🔇 0  🧙 0
+16/16  🎉 7 🫥 4  ⏰ 2  🤔 0  🙁 3  🔇 0  🧙 0
+--- mutmut results --all true
+    numbers_probe.numbers.x_sum_below__mutmut_1: killed
+    numbers_probe.numbers.x_sum_below__mutmut_2: killed
+    numbers_probe.numbers.x_sum_below__mutmut_3: killed
+    numbers_probe.numbers.x_sum_below__mutmut_4: survived
+    numbers_probe.numbers.x_sum_below__mutmut_5: killed
+    numbers_probe.numbers.x_sum_below__mutmut_6: killed
+    numbers_probe.numbers.x_sum_below__mutmut_7: killed
+    numbers_probe.numbers.x_sum_below__mutmut_8: timeout
+    numbers_probe.numbers.x_sum_below__mutmut_9: timeout
+    numbers_probe.numbers.x_sum_below__mutmut_10: killed
+    numbers_probe.numbers.x_is_positive__mutmut_1: survived
+    numbers_probe.numbers.x_is_positive__mutmut_2: survived
+    numbers_probe.numbers.x_label__mutmut_1: no tests
+    numbers_probe.numbers.x_label__mutmut_2: no tests
+    numbers_probe.numbers.x_label__mutmut_3: no tests
+    numbers_probe.numbers.x_label__mutmut_4: no tests
+exit code: 0

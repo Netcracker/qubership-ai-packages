@@ -1,0 +1,21 @@
+# Probe project for the mutmut claims in the test-authoring skill; see ../README.md.
+# Renovate's pep621 manager bumps the pins below and refreshes uv.lock.
+[project]
+name = "test-authoring-probes-mutmut"
+version = "0.0.0"
+description = "A tiny module whose mutants the test-authoring skill's mutmut claims are measured on"
+requires-python = ">=3.12"
+dependencies = [
+  "mutmut==3.8.0",
+  "pytest==9.1.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.mutmut]
+source_paths = ["src/"]
+pytest_add_cli_args_test_selection = ["tests/"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

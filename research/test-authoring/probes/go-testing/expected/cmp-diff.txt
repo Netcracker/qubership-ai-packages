@@ -1,0 +1,22 @@
+--- FAIL: TestParseHeader (<duration>)
+    m_test.go:21: parseHeader() mismatch (-want +got):
+          cmpdiff.Header{
+          	Name:  "stream",
+        - 	Count: 0,
+        + 	Count: -1,
+          	Tags: []string{
+          		"a",
+        - 		"b",
+        + 		"c",
+          	},
+          }
+--- FAIL: TestRawDiff (<duration>)
+    m_test.go:27:   int(
+        - 	0,
+        + 	-1,
+          )
+
+FAIL
+FAIL	probes.example/gotesting/cmpdiff	<duration>
+FAIL
+exit code: 1
