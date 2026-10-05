@@ -32,7 +32,7 @@ jobs:
             exit 1
           fi
       - name: Validate the index
-        run: uvx --python 3.12 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
+        run: uvx --python 3.14 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
