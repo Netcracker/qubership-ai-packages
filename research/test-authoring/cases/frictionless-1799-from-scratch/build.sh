@@ -12,7 +12,7 @@ base=$(cat "$case_dir/base")
 py=$repo/.python/case/bin/python
 if [ ! -x "$py" ]; then
   uv venv -q --python 3.11 "$repo/.python/case"
-  uv pip install -q --python "$py" -e "$repo[sql]" pytest pytest-lazy-fixtures pytest-mock \
+  uv pip install -q --python "$py" -e "${repo}[sql]" pytest pytest-lazy-fixtures pytest-mock \
     pytest-vcr requests-mock pytest-dotenv pytest-timeout
 fi
 

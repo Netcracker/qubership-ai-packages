@@ -1,3 +1,3 @@
-cost_usd: 1.28
-turns: 35
-duration_s: 532
+cost_usd: 0.75
+turns: 25
+duration_s: 264

@@ -1,78 +1,137 @@
 diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-index 958be01..1e9a21a 100644
+index 958be01..bc322f0 100644
 --- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
 +++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-@@ -5486,6 +5486,77 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+@@ -5486,6 +5486,136 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
          .ok();
    }
  
-+  /** Returns a fixture that expands identifiers and keeps every identifier
-+   * in the case it is written in, so that {@code deptno} reaches the name
-+   * matcher in lower case while the catalog spells the column {@code DEPTNO}.
-+   *
-+   * <p>Used by the tests for
++  /** Returns a fixture that matches names case-insensitively, keeps the case
++   * of identifiers as written, and expands identifiers, so that the rewrite
++   * shows how a common column of a join is expanded. */
++  private SqlValidatorFixture sqlCaseInsensitive(String sql) {
++    return sql(sql)
++        .withCaseSensitive(false)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .withValidatorIdentifierExpansion(true);
++  }
++
++  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive
 +   * is false</a>. */
-+  private SqlValidatorFixture sqlExpandedInWrittenCase(String sql) {
-+    return sql(sql)
-+        .withValidatorIdentifierExpansion(true)
++  @Test void testJoinUsingCaseInsensitiveExpandsColumnSpelledAsInCatalog() {
++    sqlCaseInsensitive("select DEPTNO from emp join dept using (DEPTNO)")
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`DEPTNO`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsColumnSpelledInLowerCase() {
++    sqlCaseInsensitive("select deptno from emp join dept using (deptno)")
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`deptno`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsColumnSpelledDifferentlyInUsing() {
++    sqlCaseInsensitive("select DEPTNO from emp join dept using (deptno)")
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`deptno`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>.
++   *
++   * <p>The expanded column takes the name as the select list spells it, not
++   * as the USING clause does. */
++  @Test void testJoinUsingCaseInsensitiveNamesColumnAsSpelledInSelect() {
++    sqlCaseInsensitive("select deptno from emp join dept using (DEPTNO)")
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`DEPTNO`)");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>.
++   *
++   * <p>The control of
++   * {@link #testJoinUsingCaseInsensitiveNamesColumnAsSpelledInSelect()}: the
++   * same spellings do not match when names are case-sensitive. */
++  @Test void testJoinUsingCaseSensitiveRejectsColumnSpelledDifferentlyInSelect() {
++    sql("select ^deptno^ from EMP join DEPT using (DEPTNO)")
++        .withCaseSensitive(true)
 +        .withQuotedCasing(Casing.UNCHANGED)
-+        .withUnquotedCasing(Casing.UNCHANGED);
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .withValidatorIdentifierExpansion(true)
++        .fails("Column 'deptno' not found in any table; "
++            + "did you mean 'DEPTNO', 'DEPTNO'\\?");
 +  }
 +
-+  @Test void testJoinUsingCaseInsensitiveExpandsCommonColumnInCatalogCase() {
-+    sqlExpandedInWrittenCase("select DEPTNO from EMP join DEPT using (DEPTNO)")
-+        .withCaseSensitive(false)
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveExpandsColumnSpelledAsInCatalog() {
++    sqlCaseInsensitive("select DEPTNO from emp natural join dept")
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
-+            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT` USING (`DEPTNO`)");
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept`");
 +  }
 +
-+  @Test void testJoinUsingCaseInsensitiveExpandsCommonColumnInOtherCase() {
-+    sqlExpandedInWrittenCase("select deptno from EMP join DEPT using (deptno)")
-+        .withCaseSensitive(false)
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveExpandsColumnSpelledInLowerCase() {
++    sqlCaseInsensitive("select deptno from emp natural join dept")
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
-+            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT` USING (`deptno`)");
++            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
++            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept`");
 +  }
 +
-+  @Test void testJoinUsingCaseInsensitiveExpandsColumnSpelledOtherwiseInUsing() {
-+    sqlExpandedInWrittenCase("select DEPTNO from EMP join DEPT using (deptno)")
-+        .withCaseSensitive(false)
-+        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
-+            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT` USING (`deptno`)");
-+  }
-+
-+  /** The expanded column takes its alias from the select list, not from the
-+   * USING list. */
-+  @Test void testJoinUsingCaseInsensitiveAliasesCommonColumnAsSelectListSpellsIt() {
-+    sqlExpandedInWrittenCase("select deptno from EMP join DEPT using (DEPTNO)")
-+        .withCaseSensitive(false)
-+        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
-+            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT` USING (`DEPTNO`)");
-+  }
-+
-+  @Test void testJoinUsingCaseSensitiveDoesNotMatchCommonColumnInOtherCase() {
-+    sqlExpandedInWrittenCase("select ^deptno^ from EMP join DEPT using (DEPTNO)")
-+        .withCaseSensitive(true)
-+        .fails("Column 'deptno' not found in any table.*");
-+  }
-+
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>.
++   *
++   * <p>Before the fix, the validator expanded the common column of USING but
++   * not of NATURAL JOIN, and reported the column as ambiguous. */
 +  @Test void testNaturalJoinCaseSensitiveExpandsCommonColumn() {
-+    sqlExpandedInWrittenCase("select DEPTNO from EMP natural join DEPT")
++    sql("select DEPTNO from emp natural join dept")
 +        .withCaseSensitive(true)
++        .withValidatorIdentifierExpansion(true)
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
 +            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
 +            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
 +  }
 +
-+  @Test void testNaturalJoinCaseInsensitiveExpandsCommonColumnInOtherCase() {
-+    sqlExpandedInWrittenCase("select deptno from EMP natural join DEPT")
-+        .withCaseSensitive(false)
-+        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>.
++   *
++   * <p>The parser converts the unquoted {@code deptno} to upper case, so it
++   * matches {@code DEPTNO} even though names are case-sensitive. */
++  @Test void testNaturalJoinCaseSensitiveExpandsUnquotedLowerCaseColumn() {
++    sql("select deptno from emp natural join dept")
++        .withCaseSensitive(true)
++        .withValidatorIdentifierExpansion(true)
++        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
 +            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
 +            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
 +  }

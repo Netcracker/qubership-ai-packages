@@ -363,8 +363,9 @@ line accepts: no issue, no change, and no new stack line. A writer's preference 
 neither is the shape of the neighboring tests. A test that asserts on the result of one act itself has no such fact to
 learn: it uses the grouped form that reports every failure (*Several assertions on one behavior report together*), each
 with a message that names its case where the assertion cannot, or, where the library has none, one comparison of the
-whole result reduced to the fields the behavior defines (§6), compared as a set where the behavior defines no order
-(§8). The reference file names the runner option that prints a long comparison whole.
+whole result reduced to the fields the behavior defines (§6). Where the behavior defines no order, it is compared as a
+sorted list or a multiset, so that a duplicated entry still fails; a set fits only where the behavior leaves the count
+of each entry open (§8). The reference file names the runner option that prints a long comparison whole.
 
   1. **Each case fails on its own, under a name of its own.** A failure of one case hides no other case, and the report
      names the failed case without the file. Cases that are separate acts are separate tests, the rows of one
@@ -393,19 +394,21 @@ whole result reduced to the fields the behavior defines (§6), compared as a set
      differs or many, since copies of it state the difference nowhere and drift apart. A new helper that builds what an
      existing helper builds, the same client, fixture, or document with a few settings or return values different, is
      the copy one level up, however many lines differ: give the existing helper the differences as arguments or options,
-     have both callers use one body, and keep the existing tests' expectations (§9). A helper that builds a textual
-     input takes a value the input's grammar has a slot for (`configWithTimeout("-1")`, one literal in a query or a
-     request body), sets or omits one key of a record (`orderWithout("address")`), or wraps one whole fragment the test
-     writes out in fixed text no expectation depends on (`lintInMethod(body)`). It never assembles the input from two or
-     more pieces of syntax, and never splices a piece into text the expectation depends on: a query built from clauses,
-     or a source built from a type parameter list, a statement, and a marker, shows the reader the input only after the
-     helper has run. Cases that differ in the structure of the input each write it out whole, or stand side by side in
-     one act's input under principle 3; the copy is the price of an input the reader sees whole. An example-based case
-     carries its input and its outcome as literals; a property-based test shows its generator and its property, and its
-     failure carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find
-     what differs; every line the expectation depends on is in the test body in one piece; every argument of a helper
-     that builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in
-     the file build the same thing with a few lines different.
+     have both callers use one body, and keep the existing tests' expectations (§9). Those arguments are settings and
+     values of the object the helper builds; a source or a document the expectation depends on stays out of them, and
+     the rest of this principle says what a helper may take there. A helper that builds a textual input takes a value
+     the input's grammar has a slot for (`configWithTimeout("-1")`, one literal in a query or a request body), sets or
+     omits one key of a record (`orderWithout("address")`), or wraps one whole fragment the test writes out in fixed
+     text no expectation depends on (`lintInMethod(body)`). It never assembles the input from two or more pieces of
+     syntax, and never splices a piece into text the expectation depends on: a query built from clauses, or a source
+     built from a type parameter list, a statement, and a marker, shows the reader the input only after the helper has
+     run. Cases that differ in the structure of the input each write it out whole, or stand side by side in one act's
+     input under principle 3; the copy is the price of an input the reader sees whole. An example-based case carries its
+     input and its outcome as literals; a property-based test shows its generator and its property, and its failure
+     carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find what
+     differs; every line the expectation depends on is in the test body in one piece; every argument of a helper that
+     builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in the
+     file build the same thing with a few lines different.
   3. **A case that expects nothing stands with a control that expects something.** Silence establishes nothing on its
      own, since it may come from the setup rather than from the rule. A silent case (nothing rejected, nothing
      reported) has a nearest control that reports, and the two share one act's input where the unit evaluates several
@@ -446,7 +449,7 @@ before the test is. Each cause below has one fix, and every cause but the last i
 | The wall clock | `now()`, `Date()`, `time.Now()` read by the code under test | Inject the clock |
 | Unseeded randomness | `random()` with no seed, in the test or the code | Inject or fix the seed, and print it on failure |
 | The network or the platform | A real host name; a port; a locale, timezone, or path separator assumed | Fake the endpoint; pin the locale and timezone; build paths |
-| Iteration order of an unordered collection | A `set` or hash map compared as a sequence | Sort before comparing, or compare as a set |
+| Iteration order of an unordered collection | A `set` or hash map compared as a sequence | Sort before comparing; compare as a set only where the behavior leaves the count of each element open, since a set passes a duplicate |
 | Exact floating-point equality | `==` on a computed float | Compare within a tolerance the specification allows |
 | An assertion range that excludes valid outputs | `elapsed < 100ms`; a bound tighter than the specification | Widen to the specification's range, or assert the ordering rather than the duration |
 | Order dependence | Not always visible | Run the suite in random order with the seed printed; fix by removing the shared state, never by pinning the order |
@@ -480,11 +483,12 @@ before the test is. Each cause below has one fix, and every cause but the last i
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for some values, settings, or
   return values, give it those as arguments or options and have the old callers keep calling it, so that the existing
-  tests stay as they are. Two helpers that build the same thing with a few lines different are the copied setup of §7
-  one level up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds
-  for a helper the change itself added beside an existing one. A helper that assembles an input from pieces of syntax
-  (§7) is neither called by the new test nor copied: the new test writes its input out whole, leaves that helper and its
-  callers as they are, and the pull request says so.
+  tests stay as they are. An argument is a setting or a value, never a piece of a source or a document the expectation
+  depends on (§7). Two helpers that build the same thing with a few lines different are the copied setup of §7 one level
+  up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds for a helper
+  the change itself added beside an existing one. A helper that assembles an input from pieces of syntax (§7) is neither
+  called by the new test nor copied: the new test writes its input out whole, leaves that helper and its callers as they
+  are, and the pull request says so.
 - **A new test goes beside the nearest existing test of the unit it exercises**, in the file or directory named for
   the code under test, not in a file named for the ticket or the author. A test class splits when its fixture no
   longer serves every test in it; a fixture with fields only some tests use is the signal.
