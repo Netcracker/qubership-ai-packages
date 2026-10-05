@@ -111,8 +111,9 @@ Read `result.diff` and `result-note.md` against all of them.
    which may be a parametrize row or a test of its own, an existing one included; it does not join the missing-label
    table if that table holds other cases.
 4. **One comparison of the whole report, reduced to defined fields** (§7, pytest reference). The assertion is
-   `report.flatten([...]) == ...` over the row number, the field number or name, and the error type, as a list (the
-   report orders errors by row, and the neighbors compare lists) or as a set. A comparison of `message` or `note` text
+   `report.flatten([...]) == ...` over the row number, the field number or name, and the error type, as a list: the
+   report orders errors by row, and the neighbors compare lists. A comparison as a set or as a sorted list fails: either
+   one passes an error out of order, and a set also passes a duplicated error. A comparison of `message` or `note` text
    fails. Only `report.valid`, an error count, or `"missing-cell" not in types` in place of the whole report fails (§5,
    *An assertion weakened until it passes*). Several asserts on one report where one comparison would do are partial.
    The `analyze()` result is check 10's.

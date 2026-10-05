@@ -1,21 +1,20 @@
-Everything checks out. Here's the message for the PR author:
+No production code touched, nothing committed, full suite (1881 tests) green.
 
 ---
 
-**Tests for #1799**
+**Message for the author of #1799:**
 
-The commit changed behavior in three places but shipped with no tests, and it left five existing tests asserting the *old* behavior — they were passing by accident only because nothing re-ran them. I added the regression line (found via `uv venv` + running the base commit against the new/updated tests) and updated the stale ones.
+Your fix changes `Header.get_expected_fields()` so that under `exact` fieldsMatch the expected fields follow the header's length rather than the full schema — which is exactly right, but it also **silently broke 6 existing tests** that still encoded the old double-reporting behavior, and it leaves a **new crash** in `Analyzer` unexercised. I fixed the stale tests and added the regression test that was actually owed:
 
-**Updated (encoded the old double-reporting behavior, now red on the base commit / green on yours):**
-- `test_header.py::test_get_expected_fields` — the `"exact: extra labels get no field"` case asserted the pre-fix truncation; folded it into the existing `"{mode}: extra labels get a default any-typed field"` and `"...dropped"` parametrize groups, since `exact` now produces the same outcome as the name-matched modes for both cases (just via position, not name).
-- `test_get_expected_fields_default_field_is_any_typed` — extended to cover `exact` too.
-- `test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells`, `test_resource_validate_fields_match_extra_label[exact]`, `test_resource_validate_fields_match_missing_field[exact]`, `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`, and `package/__spec__/test_validate.py::test_package_validate_with_schema_issue_348` — all asserted the duplicate `extra-cell`/`missing-cell`/`constraint-error` rows your fix removes. Updated expectations and added a one-line comment pointing at #1791.
+- **Updated 6 tests whose expectation moved** (confirmed red on `5cca11c~1`, green on `5cca11c`), each now asserting only the header-level error with no repeated per-row cell error:
+  - `test_header.py::test_get_expected_fields` — the `"exact: extra labels get no field"` case was asserting the *old* behavior (`["a"]`); it now expects `["a", "extra"]`, renamed to say so. I also added the mirror case for the "fewer labels than fields" side (`"exact: fields beyond the labels are dropped too"`), since that partition of the same change had no unit-level case at all, and widened `test_get_expected_fields_default_field_is_any_typed` to cover `exact` too.
+  - `test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells` → renamed to `..._is_reported_once`, dropped the two `extra-cell` rows it asserted.
+  - `test_validate_schema.py::test_resource_validate_less_actual_fields_with_required_constraint_issue_950` → dropped the `constraint-error`/`missing-cell` rows (the field is gone from every row now, not just under-filled).
+  - `test_validate_schema.py::test_resource_validate_fields_match_extra_label` and `..._missing_field` (`exact` cases) → dropped their trailing cell-error rows.
+  - `package/__spec__/test_validate.py::test_package_validate_with_schema_issue_348` → dropped its two `missing-cell` rows.
 
-**Added (new behavior with zero prior coverage):**
-- `test_get_expected_fields_exact_synthetic_field_avoids_name_collision` — the `while name in used_names` suffixing loop in `get_expected_fields` had no test exercising it at all (every existing extra-label case used a non-colliding label).
-- `test_resource_validate_schema_primary_key_field_missing_from_header_issue_1791` — `table.py`'s new `has_primary_key` guard. Before the fix, a primary-key field missing from the header produced a spurious `primary-key` error on *every row* (cells read as all-`None`), on top of the header's own `missing-label` — a third flavor of the same double-report bug, undetected by any existing test.
-- `test_analyze_resource_schema_field_missing_from_header_issue_1791` — the analyzer change. Before the fix, a schema field beyond the header's length was still analyzed as an all-null "ghost" column, showing up in `variableTypes` and `fieldStats` with a half-built stats dict (`{"type": "numeric"}` only, no mean/median/etc.).
+- **Added two new regression tests**, both confirmed red on `5cca11c~1` and green on `5cca11c`:
+  - `test_validate_schema.py::test_resource_validate_primary_key_missing_from_the_header_issue_1791` — a primary-key field absent from the header under `exact` used to additionally report a `missing-cell` *and* a spurious `primary-key` error on every row; this path wasn't touched by any of the 6 tests above (none of them declared a `primaryKey`), so it was completely unguarded.
+  - `analyzer/__spec__/test_resource.py::test_analyze_resource_detailed_skips_a_field_missing_from_the_header_issue_1791` — this one isn't a double-report, it's a **`KeyError` crash**: `Analyzer.analyze_table_resource(detailed=True)` still iterates `resource.schema.fields` (the *full* schema) when building correlations/field stats, but `columns_data` is now only populated for the header's expected fields. I verified this throws `KeyError: 'bad'` when `analyzer.py`'s own part of your diff is reverted while `header.py`/`table.py` keep the fix — so your `analysis_fields` filter in `analyzer.py` is independently load-bearing and was previously untested.
 
-**Considered and not added:** the foreign-key `target_key`/`expected_field_names` skip in `table.py` (lines 307–309). I built a scenario (self-referencing FK whose target field is missing from the header) and compared base vs. fix: the report is identical either way, because the pre-existing `if set(cells) == {None}: continue` guard already suppressed any per-row FK error in that case. I couldn't find an input where this skip changes observable output — looks like an equivalent mutant (likely a performance/cleanliness change, not a behavior fix), so I left it untested rather than writing a test that can't fail.
-
-All four touched files pass (`171 passed, 5 skipped`), and a full-suite diff against the base commit shows no new failures beyond the 11 I added/fixed (the remaining ~89 failures are pre-existing environment gaps — missing optional extras like `duckdb`, `shapely`, `xlrd`, etc. — unrelated to this change).
+What I didn't do, and propose instead of doing myself: the repository has no `AGENTS.md`/`CLAUDE.md` stack line for its test stack (pytest, plain `assert`). Per the test-authoring skill, I'm flagging this as a one-line proposal rather than creating the file: `Tests: pytest engine, pytest/plain-assert assertions.` Worth adding if you want future sessions to skip re-deriving it.

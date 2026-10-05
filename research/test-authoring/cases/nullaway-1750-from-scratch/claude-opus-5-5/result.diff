@@ -1,8 +1,8 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-index ad70e90..5b0213c 100644
+index ad70e90..3ed8024 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-@@ -1826,23 +1826,32 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1826,23 +1826,25 @@ public class FrameworkTests extends NullAwayTestsBase {
          .doTest();
    }
  
@@ -15,18 +15,11 @@ index ad70e90..5b0213c 100644
 +  private static CompilationTestHelper addSpringValueAnnotationStub(CompilationTestHelper helper) {
 +    return helper.addSourceLines(
 +        "Value.java",
-+        """
-+        package org.springframework.beans.factory.annotation;
-+        import java.lang.annotation.ElementType;
-+        import java.lang.annotation.Retention;
-+        import java.lang.annotation.RetentionPolicy;
-+        import java.lang.annotation.Target;
-+        @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
-+        @Retention(RetentionPolicy.RUNTIME)
-+        public @interface Value {
-+          String value();
-+        }
-+        """);
++        "package org.springframework.beans.factory.annotation;",
++        ANNOTATION_IMPORTS,
++        "@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})",
++        RETENTION_RUNTIME,
++        "public @interface Value { String value(); }");
 +  }
 +
    @Test
@@ -50,66 +43,84 @@ index ad70e90..5b0213c 100644
          .addSourceLines(
              "NegativeCases.java",
              """
-@@ -1888,6 +1897,64 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1888,6 +1890,82 @@ public class FrameworkTests extends NullAwayTestsBase {
          .doTest();
    }
  
-+  /**
-+   * Checks a class with two Spring {@code @Value} fields: {@code comparisonOnly}, whose SpEL
-+   * expression mentions {@code null} only as a comparison operand and must not be reported, and
-+   * {@code nullResult}, whose expression can evaluate to {@code null} and must be reported as not
-+   * initialized.
-+   *
-+   * @param comparisonOnlySpel the {@code @Value} string of {@code comparisonOnly}
-+   * @param nullResultSpel the {@code @Value} string of {@code nullResult}
-+   */
-+  private void checkOnlyNullResultSpelIsReported(String comparisonOnlySpel, String nullResultSpel) {
++  @Test
++  public void springValueNullAfterNotEqualsIsNotAPossibleValue() {
 +    addSpringValueAnnotationStub(defaultCompilationHelper)
 +        .addSourceLines(
-+            "SpelNullComparison.java",
++            "Test.java",
 +            """
 +            package com.uber;
 +            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("%s")
-+              String comparisonOnly;
-+              @Value("%s")
-+              // BUG: Diagnostic contains: @NonNull field 'nullResult' not initialized
-+              String nullResult;
++            class Test {
++              @Value("#{settings != null ? settings.name : 'default'}")
++              String nameOrDefault;
++              @Value("#{settings != null ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenSet' not initialized
++              String nullWhenSet;
 +            }
-+            """
-+                .formatted(comparisonOnlySpel, nullResultSpel))
++            """)
 +        .doTest();
 +  }
 +
 +  @Test
-+  public void springValueSpelWithBeanNotEqualsNullIsNullableOnlyWithANullResult() {
-+    checkOnlyNullResultSpelIsReported(
-+        "#{bean != null ? bean.name : 'default'}", "#{bean != null ? null : 'default'}");
++  public void springValueNullAfterEqualsIsNotAPossibleValue() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{settings == null ? 'default' : settings.name}")
++              String nameOrDefault;
++              @Value("#{settings == null ? null : settings.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenUnset' not initialized
++              String nullWhenUnset;
++            }
++            """)
++        .doTest();
 +  }
 +
 +  @Test
-+  public void springValueSpelWithBeanEqualsNullIsNullableOnlyWithANullResult() {
-+    checkOnlyNullResultSpelIsReported(
-+        "#{bean == null ? 'default' : bean.name}", "#{bean == null ? null : bean.name}");
++  public void springValueNullBeforeNotEqualsIsNotAPossibleValue() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{null != settings ? settings.name : 'default'}")
++              String nameOrDefault;
++              @Value("#{null != settings ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenSet' not initialized
++              String nullWhenSet;
++            }
++            """)
++        .doTest();
 +  }
 +
 +  @Test
-+  public void springValueSpelWithNullNotEqualsBeanIsNullableOnlyWithANullResult() {
-+    checkOnlyNullResultSpelIsReported(
-+        "#{null != bean ? bean.name : 'default'}", "#{null != bean ? null : 'default'}");
-+  }
-+
-+  @Test
-+  public void springValueSpelWithNullEqualsBeanIsNullableOnlyWithANullResult() {
-+    checkOnlyNullResultSpelIsReported(
-+        "#{null == bean ? 'default' : bean.name}", "#{null == bean ? null : bean.name}");
-+  }
-+
-+  @Test
-+  public void springValueSpelWithUnspacedNotEqualsNullIsNullableOnlyWithANullResult() {
-+    checkOnlyNullResultSpelIsReported(
-+        "#{bean!=null ? bean.name : 'default'}", "#{bean!=null ? null : 'default'}");
++  public void springValueNullBeforeEqualsIsNotAPossibleValue() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "Test.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("#{null == settings ? 'default' : settings.name}")
++              String nameOrDefault;
++              @Value("#{null == settings ? null : settings.name}")
++              // BUG: Diagnostic contains: @NonNull field 'nullWhenUnset' not initialized
++              String nullWhenUnset;
++            }
++            """)
++        .doTest();
 +  }
 +
    @Test

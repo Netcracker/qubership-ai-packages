@@ -56,7 +56,7 @@ act per call, testify on `go test`, and cases that expect the same outcome.
 | `change-message.txt` | The message of `67c0e6a0`. |
 | `production-paths` | The non-test files of `service/internal/kubernetes`, one per line. |
 | `build.sh` | Runs `go test -json` over `service/internal/kubernetes` and every package whose `_test.go` files differ from `base`, and prints the count (a subtest counts) and the failed tests. |
-| `mutants.sh` | Replaces each `%w` of `route.go` with `%v`, one at a time, and prints which top-level tests fail on each. |
+| `mutants.sh` | Replaces each `%w` of `route.go` with `%v`, one at a time, and prints which top-level tests fail on each; a mutant the package does not build with is reported as unviable, not killed. |
 | `prompt.md` | The task, with `<skill>` replaced by the path of the skill copy. |
 | `<model>/…` | The outputs `run-case.sh` writes; its header lists them. |
 
@@ -112,7 +112,8 @@ Read `result.diff`, `result-note.md`, and `result-build.txt` against all of them
    base's earlier version of the same scenario), or an assertion of it weakened (an `ErrorIs` replaced by `Error`),
    fails.
 2. **No mutant the submitted tests kill survives** (§1). `mutants.sh` on the result reports 100:1, 106:1, 117:1, 117:2,
-   122:1, 462:1, 462:2, 465:1, and 467:1 killed. A rewrite that kills 451:1 as well passes with credit.
+   122:1, 462:1, 462:2, 465:1, and 467:1 killed. A rewrite that kills 451:1 as well passes with credit. A mutant
+   reported as `unviable` or `no result` was not tested, and the check fails until a rerun reports it killed.
 3. **One client constructor** (§7 principle 2, §9). The submitted tests and `newGatewayAPIOnlyKubeClient` reach the
    builder chain through one helper that takes the gateway system type: the old helper calls the new one, or its callers
    call the new one. Two helpers that build the same client with a few settings or return values different fail, however

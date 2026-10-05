@@ -1,28 +1,30 @@
 on the fix (build.sh exited with 0):
-  187 tests ran, 0 failed
+  191 tests ran, 0 failed
 on the base (build.sh exited with 1):
-  187 tests ran, 24 failed
-    test_resource.test_analyze_resource_detailed_skips_a_field_whose_label_is_missing
+  191 tests ran, 26 failed
+    test_resource.test_analyze_resource_detailed_covers_only_fields_in_the_header[missing label]
     test_validate.test_package_validate_with_schema_issue_348
-    test_validate_schema.test_resource_validate_schema_extra_header_reports_no_extra_cells
+    test_validate_schema.test_resource_validate_schema_extra_headers_and_cells
     test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
-    test_validate_schema.test_resource_validate_exact_checks_row_length_against_the_header[header shorter than the schema]
-    test_validate_schema.test_resource_validate_exact_checks_row_length_against_the_header[header longer than the schema]
-    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_label_is_present[key on the missing field]
-    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_label_is_present[key on a present field]
-    test_validate_schema.test_resource_validate_unique_is_checked_only_when_its_label_is_present
-    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_when_its_label_is_present
     test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
     test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
-    test_validate_schema.test_resource_validate_fields_match_without_header_matches_fields_by_order[equal]
-    test_validate_schema.test_resource_validate_fields_match_without_header_matches_fields_by_order[subset]
-    test_validate_schema.test_resource_validate_fields_match_without_header_matches_fields_by_order[superset]
-    test_validate_schema.test_resource_validate_fields_match_without_header_matches_fields_by_order[partial]
+    test_validate_schema.test_resource_validate_fields_match_unique_is_checked_only_on_fields_in_the_header[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_unique_is_checked_only_on_fields_in_the_header[equal-expected1]
+    test_validate_schema.test_resource_validate_fields_match_unique_is_checked_only_on_fields_in_the_header[subset-expected2]
+    test_validate_schema.test_resource_validate_fields_match_unique_is_checked_only_on_fields_in_the_header[superset-expected3]
+    test_validate_schema.test_resource_validate_fields_match_unique_is_checked_only_on_fields_in_the_header[partial-expected4]
+    test_validate_schema.test_resource_validate_header_mismatch_reports_cell_errors_only_for_irregular_rows[missing label]
+    test_validate_schema.test_resource_validate_header_mismatch_reports_cell_errors_only_for_irregular_rows[extra label]
+    test_validate_schema.test_resource_extra_label_repeating_a_field_name_is_read_as_its_own_cell
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_fields_are_in_the_header[key not in the header]
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_fields_are_in_the_header[part of a composite key not in the header]
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_fields_are_in_the_header[key not in the header, ignoring case]
+    test_validate_schema.test_resource_validate_primary_key_is_checked_only_when_its_fields_are_in_the_header[part of a composite key not in the header, ignoring case]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_when_its_fields_are_in_the_header[exact, key not in the header]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_when_its_fields_are_in_the_header[partial, key not in the header]
     test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
-    test_header.test_get_expected_fields[exact: an extra label named like a field gets a numeric suffix]
-    test_header.test_get_expected_fields[exact: the suffix skips the names already taken]
     test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
-    test_header.test_get_expected_fields[equal: without a header every schema field is expected]
-    test_header.test_get_expected_fields[subset: without a header every schema field is expected]
-    test_header.test_get_expected_fields[superset: without a header every schema field is expected]
-    test_header.test_get_expected_fields[partial: without a header every schema field is expected]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]
+    test_header.test_get_expected_fields_exact_names_each_extra_label_apart[an extra label repeats a field name]
+    test_header.test_get_expected_fields_exact_names_each_extra_label_apart[an extra label repeats another extra label]
+    test_header.test_get_expected_fields_exact_names_each_extra_label_apart[the first suffixed name is taken by a field]

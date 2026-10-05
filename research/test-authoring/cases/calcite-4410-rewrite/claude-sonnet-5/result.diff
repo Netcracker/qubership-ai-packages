@@ -1,36 +1,22 @@
 diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-index 958be01..abebf5d 100644
+index 958be01..67444d8 100644
 --- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
 +++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
-@@ -5486,6 +5486,127 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+@@ -5486,6 +5486,99 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
          .ok();
    }
  
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * The common column's casing, as written in the USING clause, already matches the
-+   * casing of the catalog's physical column, so this case already worked; it guards
-+   * against a regression in the other cases below, where the casing differs. */
-+  @Test void testJoinUsingCommonColumnCaseInsensitiveMatchingCatalogCasing() {
-+    sql("select DEPTNO from emp join dept using (DEPTNO)")
-+        .withCaseSensitive(false)
-+        .withValidatorIdentifierExpansion(true)
-+        .withQuotedCasing(Casing.UNCHANGED)
-+        .withUnquotedCasing(Casing.UNCHANGED)
-+        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
-+            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`DEPTNO`)");
-+  }
-+
-+  /** Test case for
-+   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
-+   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * The select item and the USING clause spell the common column the same way, but that
-+   * spelling differs from the casing of the catalog's physical column ({@code DEPTNO}); with
-+   * {@code caseSensitive=false} the column must still be recognized as the join's common
-+   * column and coalesced, keeping the alias the select item used. */
-+  @Test void testJoinUsingCommonColumnCaseInsensitiveSameCasingDifferentFromCatalog() {
++   *
++   * <p>Before the fix, a common column written in the USING list was looked up, in the row
++   * type of each side of the join, with a case-sensitive {@code List.contains}, regardless of
++   * the configured name matcher; with a case-insensitive catalog and identifiers left in their
++   * original case (so that the written column name does not already equal the catalog's
++   * upper-case field name), that lookup silently failed on both sides, tripping the {@code
++   * assert qualifiedNode.size() == 2} a few lines below. */
++  @Test void testJoinUsingCommonColumnCaseInsensitive() {
 +    sql("select deptno from emp join dept using (deptno)")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
@@ -44,10 +30,16 @@ index 958be01..abebf5d 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * The select item is upper case and the USING clause is lower case; with
-+   * {@code caseSensitive=false} the two must still be recognized as the same common column, and
-+   * the result keeps the select item's casing ({@code DEPTNO}), not the USING clause's. */
-+  @Test void testJoinUsingCommonColumnCaseInsensitiveSelectUpperUsingLower() {
++   *
++   * <p>Before the fix, the common column named in the USING list was matched against each
++   * SELECT identifier with a case-sensitive {@code String.equals}, regardless of the
++   * configured name matcher; with a case-insensitive catalog, a SELECT identifier spelled in
++   * another case than the USING list failed to match, fell through to ordinary (unqualified)
++   * resolution, and was reported as ambiguous because both joined tables have a DEPTNO column.
++   * The two cases below write the mismatch in each direction, because the alias of the
++   * resulting {@code COALESCE} takes the case of the SELECT identifier, not of the USING
++   * list, so the two directions produce different expected output. */
++  @Test void testJoinUsingCommonColumnCaseInsensitiveSelectUppercase() {
 +    sql("select DEPTNO from emp join dept using (deptno)")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
@@ -58,13 +50,7 @@ index 958be01..abebf5d 100644
 +            + "INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept` USING (`deptno`)");
 +  }
 +
-+  /** Test case for
-+   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
-+   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * The select item is lower case and the USING clause is upper case; with
-+   * {@code caseSensitive=false} the two must still be recognized as the same common column, and
-+   * the result keeps the select item's casing ({@code deptno}), not the USING clause's. */
-+  @Test void testJoinUsingCommonColumnCaseInsensitiveSelectLowerUsingUpper() {
++  @Test void testJoinUsingCommonColumnCaseInsensitiveUsingUppercase() {
 +    sql("select deptno from emp join dept using (DEPTNO)")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
@@ -78,17 +64,16 @@ index 958be01..abebf5d 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * A NATURAL JOIN's common column, selected unqualified, must be recognized and coalesced the
-+   * same way a USING clause's is; before the fix, {@code expandExprFromJoin} handled only
-+   * {@code USING} and left a NATURAL JOIN's select item unexpanded, which this test's base
-+   * commit shows as an ambiguous-column error even though the column is case-sensitively
-+   * unambiguous. */
-+  @Test void testNaturalJoinCommonColumnCaseSensitive() {
-+    sql("select deptno from emp natural join dept")
++   *
++   * <p>Before the fix, {@code expandExprFromJoin} special-cased only {@code
++   * JoinConditionType.USING} and returned a NATURAL JOIN's SELECT identifier unexpanded; the
++   * identifier then resolved as an ordinary (unqualified) reference and was reported as
++   * ambiguous, regardless of case sensitivity, because both joined tables have a DEPTNO
++   * column. This is therefore a regression test even with a case-sensitive name matcher. */
++  @Test void testNaturalJoinCommonColumn() {
++    sql("select DEPTNO from emp natural join dept")
 +        .withCaseSensitive(true)
 +        .withValidatorIdentifierExpansion(true)
-+        .withQuotedCasing(Casing.UNCHANGED)
-+        .withUnquotedCasing(Casing.TO_UPPER)
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
 +            + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`\n"
 +            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
@@ -97,32 +82,19 @@ index 958be01..abebf5d 100644
 +  /** Test case for
 +   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
 +   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * With {@code caseSensitive=false}, a NATURAL JOIN's common column, selected unqualified in
-+   * lower case, is coalesced and keeps the select item's casing. */
-+  @Test void testNaturalJoinCommonColumnCaseInsensitiveLowerCase() {
++   *
++   * <p>Beyond {@link #testNaturalJoinCommonColumn()}, a case-insensitive name matcher must
++   * also match a SELECT identifier spelled in another case than the natural common column
++   * name (which {@code deriveNaturalJoinColumnList} takes from the row type, i.e. upper
++   * case); see {@link #testJoinUsingCommonColumnCaseInsensitiveSelectUppercase()} for the same
++   * distinction in a USING join. */
++  @Test void testNaturalJoinCommonColumnCaseInsensitive() {
 +    sql("select deptno from emp natural join dept")
 +        .withCaseSensitive(false)
 +        .withValidatorIdentifierExpansion(true)
 +        .withQuotedCasing(Casing.UNCHANGED)
 +        .withUnquotedCasing(Casing.UNCHANGED)
 +        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `deptno`\n"
-+            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
-+            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept`");
-+  }
-+
-+  /** Test case for
-+   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
-+   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>.
-+   * With {@code caseSensitive=false}, a NATURAL JOIN's common column, selected unqualified in
-+   * upper case, is coalesced and keeps the select item's casing; together with the lower-case
-+   * case above, this shows the alias follows the select item and not the physical column. */
-+  @Test void testNaturalJoinCommonColumnCaseInsensitiveUpperCase() {
-+    sql("select DEPTNO from emp natural join dept")
-+        .withCaseSensitive(false)
-+        .withValidatorIdentifierExpansion(true)
-+        .withQuotedCasing(Casing.UNCHANGED)
-+        .withUnquotedCasing(Casing.UNCHANGED)
-+        .rewritesTo("SELECT COALESCE(`EMP`.`DEPTNO`, `DEPT`.`DEPTNO`) AS `DEPTNO`\n"
 +            + "FROM `CATALOG`.`SALES`.`EMP` AS `emp`\n"
 +            + "NATURAL INNER JOIN `CATALOG`.`SALES`.`DEPT` AS `dept`");
 +  }

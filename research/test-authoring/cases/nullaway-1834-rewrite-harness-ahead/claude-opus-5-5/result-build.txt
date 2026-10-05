@@ -1,5 +1,4 @@
-on the fix: 49 tests ran, 0 failed
-on the base: 49 tests ran, 3 failed
-  WildcardTests.aTypeVariableIsJudgedByItsDeclaredBoundAgainstAConcreteWildcardBound
-  WildcardTests.anOverrideIsReportedWhenItsReturnTypeArgumentMayBeNullWhereTheOverriddenOneMayNot
-  WildcardTests.aWildcardBoundedByATypeVariableRejectsOnlyAnActualThatMayBeNullWhereTheBoundMayNot
+on the fix: 48 tests ran, 0 failed
+on the base: 48 tests ran, 2 failed
+  WildcardTests.aWildcardWithAConcreteBoundJudgesATypeVariableArgumentByItsDeclaredBound
+  WildcardTests.aWildcardBoundedByATypeVariableAcceptsExactlyTheArgumentsThatVariableAdmits

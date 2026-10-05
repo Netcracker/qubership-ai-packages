@@ -1,45 +1,37 @@
-I added the missing tests and fixed six existing ones that the commit left failing. Production code is unchanged and nothing is committed. The relevant test folders now pass (474 tests). In the full suite, 17 tests still fail, all `test_string_read_cell_wkt` cases. They fail the same way on the parent commit, so they come from this environment, not from the change.
+I added and updated tests for #1799 and committed nothing. The full suite passes on HEAD (1902 passed, 292 skipped); with the old production code restored, 24 of the new or updated cases fail and the controls still pass. `ruff check` and `ruff format --check` are clean on the four files I touched. The new tests are small: each one makes a single in-process call to `validate()`, `read_rows()`, `analyze()` or `Header.get_expected_fields()`.
+
+The old code did more than double-report. Under `equal`, `subset`, `superset` and `partial`, a field with `unique` or a foreign key that is missing from the header made `validate()` crash with `KeyError: 'Row does not have a field key'`. The commit message doesn't mention this crash. The tests below now cover it.
 
 ---
 
 **Message for the PR author**
 
-This change left six tests failing, and it changes more than the commit message says. When the header doesn't match the schema under `exact`:
+**Existing tests whose expectations moved (5).** Each one expected a header mismatch to also produce a cell error on every row, which is exactly what this PR removes. They now expect only the header error:
+- `test_resource_validate_schema_extra_headers_and_cells`: no more `extra-cell` on rows 2–3.
+- `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`: no more per-row `missing-cell`. Also no more per-row `constraint-error` for a required field the header doesn't have.
+- `test_resource_validate_fields_match_extra_label[exact]` and `test_resource_validate_fields_match_missing_field[exact]`.
+- `test_package_validate_with_schema_issue_348`.
 
-- **What it fixes:** per-row `missing-cell`, `extra-cell` and `constraint-error` errors are gone.
-- **Primary keys:** per-row `primary-key` errors on a key whose column has no label are gone too.
-- **Rows checked against the header:** a row with a cell under no label now gets `extra-cell`, and a row shorter than the header gets `missing-cell`.
-- **Extra labels:** their cells are now read under the label's name, with a numeric suffix if the name is taken.
-- **The analyzer** skips fields that have no label.
-- **Not in the commit message:** with `header=False`, the name-matched modes (`equal`, `subset`, `superset`, `partial`) reported every row as `blank-row`. They now read cells by position.
+**`frictionless/table/__spec__/test_header.py`**
+- In `test_get_expected_fields`, the case `exact: extra labels get no field` described the old behaviour. It is now `exact: extra labels get a default any-typed field`. I also added two cases:
+  - `exact: fields beyond the labels are dropped`.
+  - `exact: without a header, every field is expected`. This passes on the old code too and guards the new `self.missing` branch.
+- `test_get_expected_fields_default_field_is_any_typed` now runs for `exact` as well.
+- New `test_get_expected_fields_exact_names_each_extra_label_apart`, with three cases: an extra label that repeats a field name, one that repeats another extra label, and one whose first suffixed name is already a field's name. I assert the exact names because they show up as keys in the rows users read.
 
-All tests are small (one process, inline data or files from `data/`). Every new or changed test except the two noted below fails on the parent commit, and each failure shows the problem itself, not a crash.
+**`frictionless/resource/__spec__/test_validate_schema.py`** (each test pairs a case with a control that still reports something):
+- `..._header_mismatch_reports_cell_errors_only_for_irregular_rows`, for a missing label and for an extra label. Regular rows report nothing, while rows shorter or longer than the header still get `missing-cell` / `extra-cell`.
+- `test_resource_extra_label_repeating_a_field_name_is_read_as_its_own_cell`: `[{"a": 1, "a2": "x"}]`. The old code dropped the cell.
+- `..._primary_key_is_checked_only_when_its_fields_are_in_the_header`. It covers a single key and a composite key, both with `header_case` on and off, plus a control where the key is present. The case-insensitive cases matter: with case-sensitive matching, the `KeyError` fallback hides the new `has_primary_key` guard. Without these two cases, replacing the guard with `self.schema.primary_key`, or `issubset` with `intersection`, left every test green.
+- `..._fields_match_unique_is_checked_only_on_fields_in_the_header`, across all five `fieldsMatch` values. It covers the crash above, and a duplicate in the field that is present still raises `unique-error`.
+- `..._foreign_key_is_checked_only_when_its_fields_are_in_the_header`, for `exact` and `partial`, each with a control where the key is present and points to nothing.
 
-**Existing tests I updated**, because the behaviour they checked has changed:
-- `test_resource_validate_schema_extra_headers_and_cells`, renamed `…_extra_header_reports_no_extra_cells`: no per-row `extra-cell`.
-- `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`: a missing required field is now only `missing-label`; per-row `constraint-error` and `missing-cell` are gone.
-- `test_resource_validate_fields_match_extra_label[exact]` and `…_missing_field[exact]`: no per-row cell error.
-- `test_package_validate_with_schema_issue_348`: no per-row `missing-cell`.
-- `test_get_expected_fields[exact: extra labels get no field]`: now expects a default `any`-typed field for each extra label, and is renamed to say so.
+**`frictionless/analyzer/__spec__/test_resource.py`**
+- New `test_analyze_resource_detailed_covers_only_fields_in_the_header`. When the header lacks a declared field, that field gets no `fieldStats` or `variableTypes` entry and no longer marks every row as null. The extra-label case is a control and passes on the old code too.
 
-**New tests:**
-- **`test_header.py::test_get_expected_fields`**, new cases for `exact`:
-  - fields beyond the labels are dropped;
-  - an extra label named like a field gets a numeric suffix;
-  - the suffix skips names already taken;
-  - with no header, every schema field is expected, in all five modes.
-- **`test_validate_schema.py`:**
-  - `test_resource_validate_exact_checks_row_length_against_the_header`: a header shorter and a header longer than the schema. Each table holds one matching row (no error) next to irregular rows that still report, so the silence can't come from the setup.
-  - `…_primary_key_is_checked_only_when_its_label_is_present`: key on the missing field, plus a control with the key on a present field that still reports `primary-key`.
-  - `…_unique_…` and `…_foreign_key_…`: in one validation, a constraint on the missing field stays silent while the same constraint on a present field still reports.
-  - `…_fields_match_without_header_matches_fields_by_order`: all five modes, with a row of three cells as the control. I added an optional `dialect` argument to the existing `_validate_fields_match` helper rather than writing a second helper.
-- **`analyzer/__spec__/test_resource.py`:**
-  - `…_skips_a_field_whose_label_is_missing`: `fieldStats`, `rowsWithNullValues` and `notNullRows`; one truly empty row is the control.
-  - `…_skips_a_column_the_schema_does_not_declare`: passes on the parent commit too. It guards the new path, because extra columns now appear in rows: going back to iterating the row's keys makes it fail.
+**Mutation check (done by hand, scoped to the diff).** Every guard I mutated is caught except one. Initialising `is_integrity` from `self.schema.primary_key` instead of `has_primary_key` changes nothing anyone can observe, because `is_integrity` only gates the unique and foreign-key checks. Those checks also need `memory_unique` or `foreign_groups` to be non-empty.
 
-**Mutation check, by hand, on the lines that changed:** removing the unique filter, the foreign-key filter, the suffix loop, the no-header branch, or either analyzer filter makes at least one of these tests fail. Removing the primary-key filter (`has_primary_key = bool(primary_key_fields)`) changes nothing anyone can observe. `primary_key_cells` raises `KeyError` for a field the row doesn't have, and the existing `except KeyError` branch swallows it. So no test can tell the two versions apart, and I didn't write one.
-
-**Proposed, not done:**
-- That `except KeyError` branch in `TableResource.__open_row_stream` can no longer run and could be removed in a follow-up.
-- The repository has no `AGENTS.md` or `CLAUDE.md`. I suggest adding one with the line `Tests: pytest engine and assertions; report.flatten reports every error of a validation and names it by row and field number`. I'll only add it if you agree.
-- The `print(...)` in the issue-950 test was already there. I left it alone.
+**Proposals I did not act on:**
+- The repository has no `AGENTS.md` or `CLAUDE.md`. I'd propose adding this line to a new `AGENTS.md`: `Tests: pytest engine and assertions; no doubles or property-based libraries.` I didn't create the file. Should I?
+- The composite-key case behaves differently from before. If any field of a composite key is missing, the whole primary-key check is now skipped. The old code compared the partial key with `None` filled in for the missing part. The tests pin the new behaviour, so if that wasn't intended, say so before merging.
+- The fix for the `KeyError` crash under name-matched modes deserves a line in the changelog.
