@@ -406,8 +406,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "bb46660cb0a2fb4ec1bbe30786c6ef09105fc20b",
-        "sha": "bb46660cb0a2fb4ec1bbe30786c6ef09105fc20b"
+        "ref": "d39da3ae03d499969d5b4f59609907df350d476e",
+        "sha": "d39da3ae03d499969d5b4f59609907df350d476e"
       }
     },
     {
@@ -424,8 +424,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
-        "ref": "e59a80396e4fbb22d3686ed1f3f69e93cb70d103",
-        "sha": "e59a80396e4fbb22d3686ed1f3f69e93cb70d103"
+        "ref": "8b4efdeacc65cff54ee32b804466ee9a5feed48d",
+        "sha": "8b4efdeacc65cff54ee32b804466ee9a5feed48d"
       }
     },
     {
@@ -442,8 +442,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
-        "ref": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b",
-        "sha": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b"
+        "ref": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a",
+        "sha": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a"
       }
     },
     {
@@ -460,8 +460,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
-        "ref": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b",
-        "sha": "7afb445347f0e8326a5bf9d65c565f5f5dc3ba2b"
+        "ref": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a",
+        "sha": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a"
       }
     },
     {
@@ -534,8 +534,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "b48af28950b7c56e17eb837809e6c67932b576b6",
-        "sha": "b48af28950b7c56e17eb837809e6c67932b576b6"
+        "ref": "f0015799c5e44ef14f4fbac5e66ef427aef27aaa",
+        "sha": "f0015799c5e44ef14f4fbac5e66ef427aef27aaa"
       }
     },
     {
