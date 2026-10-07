@@ -83,8 +83,9 @@ every handling point the row applies to. The lists are starting points, not comp
 - `strings.TrimSpace` strips Unicode whitespace; `strings.Split` keeps every empty part; `strings.Fields` drops them.
 - `strconv.Atoi` rejects whitespace and accepts a sign; `ParseFloat` accepts `NaN`, `Inf` and hex floats.
 - Map iteration order is deliberately randomized per iteration.
-- `encoding/json` matches field names case-insensitively, ignores unknown fields by default, decodes numbers into
-  `float64` in `interface{}` values (precision loss above 2^53), and turns `null` into the zero value.
+- `encoding/json` matches field names case-insensitively, ignores unknown fields by default, and decodes numbers into
+  `float64` in `interface{}` values (precision loss above 2^53). `null` sets an interface, map, pointer, or slice to
+  `nil` and leaves a field of any other type as it was, so a reused or prefilled struct keeps its old value.
 - `fmt` prints maps sorted by key; `%v` of a nil slice is `[]`.
 - `regexp` is RE2: no backreferences or lookaround, so patterns that use them fail at compile time.
 

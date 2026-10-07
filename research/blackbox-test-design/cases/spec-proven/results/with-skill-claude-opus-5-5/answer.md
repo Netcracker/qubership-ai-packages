@@ -1,150 +1,129 @@
-# Is the spec "proven"?
+# Is the executable spec "proven"?
 
-**No.** All three numbers are real and worth having. But each one measures the spec against the spec itself, or
-against answers that were chosen without trying to break it. None of them shows that the spec's *structure* matches
-the legacy service. They only show it is consistent inside its own vocabulary. So don't stop asking the stand yet.
-Change *what* you ask it.
+**No.** All three numbers are real, but they share one weakness. Each one measures the spec **against itself**, or
+against inputs somebody already thought to record. None of them can show a rule the spec does not have. "Proven" means
+"no input exists on which the spec and the legacy service disagree", and none of the three numbers supports that
+claim. Stopping questions to the legacy stand now would freeze the spec's blind spots into the replacement.
 
-(Note: the repository has no code yet, so this is based on what you described, not on reading the spec.)
+For an authorization-like service this matters more than usual. A wrong "allow" is the costly kind of error, and it
+tends to sit in exactly the places these measures cannot see: evaluation order, how a failure is handled, odd spellings
+of identities, and duplicate rules.
 
-## Why each number falls short
+## What each number actually shows
 
-| Evidence | What it does show | What it cannot show |
+| Claim | What it shows | What it cannot show |
 | --- | --- | --- |
-| 5,000/5,000 goldens match | On those inputs, the spec and the service agree *after the comparator normalizes both answers* | Anything about inputs nobody sent. Goldens recorded from ordinary traffic are mostly typical cases, and the corners are where ports break. Anything the comparator erases (order, null vs absent, error kind, message text) is not pinned at all |
-| 98% mutation score over config knobs | Among the alternatives *someone wrote down*, the goldens rule out nearly all of them | Rules nobody wrote down. If the real service has a rule the spec lacks (evaluation order, short-circuiting, first-match vs last-match on duplicate ids, trimming), no mutant points at it, so nothing can "kill" it. The 2% survivors are open questions, not noise |
-| Complete pairwise coverage over 14 dimensions | Every pair of values *of the spec's own concepts* appears in some golden | The 14 dimensions come from the spec. A feature the spec does not compute is not a dimension: a rule's position, sibling order, how a value is spelled, a dependency failing, state from an earlier request. A pair also counts as "covered" when *the spec says* an input reaches it, which assumes the spec is right |
+| Matches all 5,000 goldens | The spec agrees with the service on those 5,000 inputs, **as the comparator sees them** | Anything outside the recorded inputs. Anything the comparator normalizes away (order, null versus absent, error detail). Whether the goldens came from the build that runs today |
+| 98% mutation score over config knobs | For almost every alternative value **someone listed** for each knob, some golden tells it apart | Alternatives nobody listed, and above all **missing knobs**: a rule the spec lacks has no mutant. The surviving 2% are alternatives no golden rules out, which makes them open questions, not noise |
+| Complete pairwise coverage over 14 dimensions | Every pair of values of the spec's **own** 14 concepts shows up in some case | Features that are not among the 14: the position of a rule, the order of entries, the outcome of a sibling rule, duplicate names, how a value is spelled. A pair also counts as "covered" when the **spec says** a case reaches it, which is circular |
 
-In short, you have strong evidence that the spec has no wrong values among the choices it knows about. You have
-almost no evidence that it isn't missing whole choices. For an authorization-like service, a missing choice is
-exactly what turns into a wrong **allow**.
+The 5,000 goldens also do not give a statistical bound. "n random agreements bound the disagreement rate at about
+3/n" holds only when the inputs are independent draws from a stated distribution. Goldens are usually captured from
+whatever traffic or scenarios came to hand, so they say little about the input space as a whole, and nothing about
+inputs nobody sends today.
 
-A quick check you can run yourself: look at the last 10–20 corrections the spec needed. Did each one flip an
-existing knob, or add a *new* rule nobody had written down? If they were mostly new rules, the measures above
-were blind to the errors that actually happened, and there is no reason to think those errors have run out.
+A quick self-check for your team: look at the last ten fixes to the spec. If most of them **added a new rule or
+decision**, rather than changing the value of a knob that already existed, then the mutation and pairwise measures
+could not have predicted those bugs. The same will hold for the next ones.
 
-## What's missing, and what I'd add
+## What is missing, concretely
 
-Ordered by roughly value per cost.
+1. **A provenance list of decisions.** For each place where the service could have behaved more than one way: the
+   choice the spec made, and the golden that forces it, or "inferred" if none does. Decisions pinned by one golden or
+   by none are guesses, and they are where to start asking.
+2. **Oracle strength.**
+   - Audit the comparator. Feed it pairs of responses that differ in one detail each (order, null versus missing, case,
+     whitespace, error code versus message) and record which pairs it treats as equal. No golden can pin a spec
+     decision whose alternatives differ only inside one of those merged classes.
+   - Check that the goldens tell apart outcomes that look the same in the verdict: "rule denied", "rule did not apply",
+     and "rule errored and was skipped" can all come out as the same final deny or allow. Each probe needs a context
+     that separates them, such as a fallback rule or a sibling whose effect depends on whether evaluation reached it.
+   - Record every side channel the stand offers: error text, trace or debug logs, which dependencies were called.
+3. **Evaluation order and laziness.** Use sentinels (a dependency or attribute lookup that logs the call and changes
+   nothing) and poisons (one that fails, or a reference to something absent) at each position: each rule, each
+   condition operand, each list element, each pipeline stage. Then ask: is this position evaluated at all? In what
+   order? When two positions fail, which failure decides the answer: fail-open or fail-closed, first error or last?
+   "Error in rule 3 while rule 1 already decided" is a classic place where a spec and a legacy service disagree on
+   allow versus deny.
+4. **Structural metamorphic relations.** The relation itself is the oracle, so you need no expected value:
+   - reorder rules, policy entries, and list items (first-match versus all-match versus last-wins);
+   - add a rule that never applies, before and after the existing ones;
+   - split an `A or B` rule into two rules, or merge two rules into one;
+   - wrap a condition in a group of one, or flatten such a group;
+   - move a setting to another level where the documentation says it means the same thing;
+   - cross-endpoint checks: a batch call versus single calls, a "list what I can access" call versus individual checks.
 
-### 1. Make the decision list explicit, with provenance (cheap; do first)
-For every place where the service could have behaved in more than one way, list:
-- the choice the spec made;
-- the golden that forced it, or "inferred" if none did.
+   Add a negative control: deliberately break the spec's composition (reverse one order) and check that the relation
+   suite catches it.
+5. **Identity collisions.** Two rules, roles, or groups with the same name in one configuration. The same id reused
+   across tenants or scopes. One identity in two spellings: case, surrounding whitespace, leading zeros, Unicode case
+   folding. A service built on a map keeps either the first or the last entry; one built on a list keeps both. Your
+   spec probably never had to decide, which makes this a prime source of privilege escalation.
+6. **Platform idioms at each handling point.** Find out what the legacy service runs on (JVM, .NET, and so on). At
+   each place where it trims, splits, compares case-insensitively, parses numbers or dates, binds JSON, or matches a
+   pattern, list the common behaviors of that platform as standing hypotheses next to the one your Python spec uses.
+   Python's `str.strip()`, `lower()`, `int()` and `re` all behave differently from Java's `trim()`,
+   `toLowerCase(Locale)`, `Integer.parseInt` and `matches()` on edge input.
+7. **Representation boundaries.** For every field, build a state matrix from the input format, not from the spec:
+   absent, `null`, `""`, blank (space, tab, NBSP, and other whitespace), the value with padding, the value as another
+   JSON type (number versus string, scalar versus one-element list), plus leading zeros, exponents, very long values,
+   and non-ASCII case mappings. Ask in **opposite pairs**, two spellings of the same value in the same position, so
+   that any difference is a finding.
+8. **Combinatorial coverage over raw input features.** Use factors that can be computed without running the spec:
+   the number of rules, a rule's position among its siblings, the kinds of its neighbors, nesting depth, which fields
+   are present, caller and tenant shape, and **an order index**. Cover pairs, plus triples that involve order or
+   sibling kind. Then list the cases the 14-dimension measure calls covered but the raw measure does not. Those are
+   places where the spec merges inputs the service may treat differently.
+9. **Hand-written exception lists.** Collect every `if x in (…)` and every special-case table in the spec. Several such
+   lists are usually the footprints of one mechanism (a phase, a conversion, an order). Propose general rules that fit
+   all 5,000 goldens but predict more exceptions than the lists do, and ask the question that tells each rule apart
+   from the list.
+10. **State and sequences.** Caches, sessions, revocation, role changes taking effect, retries, re-uploading a
+    configuration. No single-request golden can show these. Ask short sequences instead: grant, check, revoke, check.
+11. **The version of the reference.** Record which legacy build produced each golden. A contradiction you find later
+    has to be told apart from a spec bug.
+12. **An independent second model.** Have someone build a second spec, ideally in a separate session or by another
+    person, from the goldens, the input format and the docs only, without reading the first spec. Give it a different
+    architecture: if the current spec is a declarative table, write the second one as an imperative interpreter in
+    the style of the legacy platform. Run both on the generators from items 3 to 8. Every input where they disagree
+    and no golden covers it is a question for the stand.
 
-Mark the decisions pinned by only one weak golden. Those are half-guesses, and the next round of questions starts
-with them. Also record the legacy build or version with each golden batch. That way a later contradiction can be
-told apart from a spec bug.
+## What I would add, in order
 
-### 2. Audit the oracle and the comparator
-- Feed the parity comparator pairs of answers that differ in exactly one way: list order, `null` vs absent, error
-  code vs error text, extra fields, number format. Record which pairs it merges. Every spec decision whose
-  alternatives differ only inside a merged class is unpinned, even with 5,000 green goldens.
-- Separate outcomes that look the same in a final verdict: **deny because a rule said no**, **deny because no rule
-  applied**, and **deny because evaluation failed**. Use a separating context, for example a fallback rule that
-  allows only if evaluation reaches it, or a combining mode where these three outcomes produce different verdicts.
-  Authorization systems usually treat these three differently, and specs often collapse them.
-- Capture side channels with each answer: error messages (which rule fired), downstream call logs (what was
-  evaluated, and in what order), and debug traces if the stand allows them.
+The cheap items come first, and they are the ones worth doing this week.
 
-### 3. Evaluation order and laziness (sentinels and poison)
-For each position the *input format* allows, such as each rule in a policy, each condition in a rule, each attribute
-lookup, or each external call:
-- a **sentinel**, a dependency that logs that it was called and returns a neutral value;
-- **poison**, a dependency that fails or references something missing.
+1. **Turn the surviving 2% of mutants into questions.** Each surviving mutant is an alternative no golden rules out.
+   Its minimal input that tells it apart from the spec is a question that is ready to send.
+2. **Run the spec's own pairwise and property suites against the stand**, not just against the spec.
+3. **Run shadow traffic** if production or staging traffic can be mirrored. Mirror reads only, or isolate any writes.
+   Compare responses **raw**, not through the parity normalizer.
+4. **Audit the comparator** (item 2 above), and write a helper that wraps any probe in a context that separates
+   "denied" from "did not apply" from "errored".
+5. **Probe evaluation order and failures** with sentinels and poisons (item 3), weighted towards inputs where a wrong
+   answer would be an "allow".
+6. **Run the identity-collision and field state-matrix probes** (items 5 and 7), plus platform-idiom hypotheses
+   (item 6) once you know the legacy stack.
+7. **Add structural metamorphic relations** with a negative control (item 4), and raw-feature combinatorial coverage
+   including order (item 8).
+8. **Start the second model now** (item 12). It needs nothing else to begin, and the harness that compares the two
+   models can be wired in last.
 
-These questions tell you whether the position is evaluated at all, in what order, which failure wins when two
-fail, and whether the service short-circuits. Write the spec's prediction before sending each one. "The spec has no
-opinion here" is itself a gap you've found.
+Run each round on a fixed budget. Score candidate questions by how many live alternatives each answer would rule out,
+weighted by the cost of a wrong allow. Tier them (must, should, may) so that a budget cut drops the weakest ones.
+Replay a few already-answered questions at the start and end of each round to detect drift on the stand. Run anything
+that changes configuration in an isolated tenant.
 
-### 4. Structural metamorphic relations
-Here the relation itself is the oracle: you don't need to know the right answer, only that two answers must agree.
-- **Permutation**: reorder rules, conditions, list items, config entries, JSON keys.
-- **Irrelevant addition**: add a rule that never matches, before and after the existing ones.
-- **Wrap/flatten**: a group of one vs the bare rule.
-- **Split/merge**: `A or B` as one rule vs two rules.
-- **Placement**: the same condition at policy level vs rule level.
-- **Identity collisions**: two rules with the same id, the same role name in two scopes, `Admin` vs `admin`,
-  ids with leading zeros or surrounding whitespace. Map-backed implementations silently keep the first or the last
-  one, and your spec probably never had to decide which.
-- **Cross-endpoint**: a batch check vs single checks; a "list what I can access" filter vs per-item checks.
+## When it *would* be reasonable to stop asking
 
-Classify each pair. **Assumed** means the spec keeps the relation but nothing pins it; ask these first.
-**Predicted** means the spec predicts a quirk; ask to confirm it. **Pinned** means both sides already have
-goldens. Add a negative control: break the spec on purpose (for example, reverse its rule order) and confirm the
-relation generator notices.
+Stop on a rule about the **questions**, never on a score the spec gives itself. For example:
 
-### 5. Exception lists are probably one mechanism
-Inventory every hand-written list of special cases in the spec ("these operators behave differently", "these
-resource types skip X"). Each list was fitted to the goldens one element at a time, and mutation testing only tries
-adding or removing an element. Cluster the lists and propose a general rule for each cluster: a phase, an ordering,
-or a value conversion. Then find the minimal question that tells the rule apart from the list.
+- the last round or two produced no **new** decisions, only changed values of existing ones, or nothing at all;
+- every open hypothesis has been asked: surviving mutants, the comparator's merged classes, order and failure
+  probes, collisions, spelling classes, and disagreements between the two models;
+- `n` independent random inputs drawn from a **stated** input distribution all agreed with the stand. That bounds the
+  disagreement rate at about `3/n` (95% confidence) **for that distribution only**, so pick a distribution that
+  includes the adversarial shapes listed above, not just typical traffic.
 
-### 6. Platform idioms as standing hypotheses
-Find out what the legacy service is built on: its language, JSON library, database collation, and regex engine.
-Each one has a short list of usual edge behaviors: trimming, case folding (including the Turkish dotless i),
-number parsing (`"01"`, `"1.0"`, `"1e0"`, `"+1"`), empty vs blank checks, collection order, regex full-match
-vs find. At every point where the spec handles such a value, keep the other common behaviors as live hypotheses.
-Run them against the goldens, and turn the ones that survive into questions.
-
-### 7. Boundaries on spelling, not meaning
-Take input classes from the request schema or grammar, not from the spec's value rules. For every field, cover the
-state matrix: absent, `null`, `""`, `" "`, each whitespace class (tab, NBSP, line separator), the value with
-padding, the value as a number vs a string, and a one-element array. Ask in **opposite pairs**, two spellings of
-the same value in one round. Then any difference between them is a finding, whatever the right answer turns out to
-be.
-
-### 8. Combinatorial coverage over raw features
-Recompute coverage using factors read off the **input alone**, never through the spec: policy depth, rules per
-policy, a rule's index among its siblings, the kinds of rules before and after it, which positions hold external
-references, caller kind, tenant shape, and an order index. Cover pairs, plus triples that involve order or sibling
-kind. Wherever the spec-derived measure says "covered" and the raw measure says "not covered", the spec is
-treating different inputs as the same. That is where to ask.
-
-### 9. An independent second model (most expensive, most valuable; start now in parallel)
-Have someone (a person or a separate agent session) build a second model from the goldens, the input format, and
-the docs only. They should not see the spec's code or its decision list. Give it a deliberately different
-architecture: if the spec is a declarative rule table, write an imperative interpreter in the legacy platform's
-style, or the other way round. Run both on every generator from steps 3, 4, 7 and 8, shrink each disagreement to a
-minimal input, and cluster them. Each cluster no golden covers is a question for the stand.
-
-### 10. Free questions to harvest first
-- **The 2% surviving mutants.** Each one is an alternative no golden rules out. Its minimal distinguishing input is
-  a ready-made question.
-- **Send your pairwise suite to the stand**, not only to the spec.
-- **Shadow traffic**, if you can mirror production or staging reads to both. Compare the raw answers, not the
-  normalized ones. Mirror only reads, or isolate writes and stub their downstream effects.
-- **Ask the legacy owners** about config flags, library versions, and known quirks. Treat what they say as a
-  hypothesis until the stand confirms it.
-
-## How to run the remaining questions
-
-- **Score each candidate question by how many live alternatives its answer separates, weighted by the cost of being
-  wrong.** A wrong *allow* outweighs a wrong error message, so questions near allow/deny boundaries, default-deny
-  fallbacks, and error→verdict mapping go first.
-- **Ask stateful sequences**, because single requests can't see state: grant → check → revoke → check;
-  cache warm vs cold; first upload vs re-upload of a policy; retries.
-- Give each round a fixed budget, must/should/may tiers so a budget cut drops the least useful questions, control
-  replays of a few known goldens at the start and end (to detect drift on the stand), and an isolated tenant for
-  config-changing questions.
-- Classify each contradiction you find as a **flipped** decision (another value of an existing knob) or a **new**
-  decision. New decisions show the old measures were blind there.
-- Label each finding **observed** (a golden or answer shows it), **inferred** (it follows from observed answers
-  under a stated assumption), or **hypothesis** (no answer has separated it yet). Change the spec only when an
-  answer forces it.
-
-## A stopping rule your lead can defend
-
-Base the decision to stop on the questions and answers, not on a score of the spec against itself. Stop when all of
-these hold:
-
-1. The last round produced **no new decisions**: only flipped values, or nothing.
-2. Every open hypothesis from steps 2–9 (surviving mutants, assumed relations, unasked spelling classes, raw
-   combinations not yet covered, second-model disagreements) has been asked, or explicitly accepted as a risk.
-3. `n` independent random requests drawn from a **stated** input distribution, compared raw, all agreed. That bounds
-   the disagreement rate on *that distribution* at about `3/n` with 95% confidence. For example, 1,000 clean draws
-   give about 0.3%. It says nothing about inputs outside the distribution, so state the distribution.
-
-Until then, a fair way to put it: "the spec matches every recorded answer, and we have no known open questions *in
-its current vocabulary*." That is a solid result. It is not "proven", and the gap matters most on the allow side
-of an authorization service.
+Even then, describe the result as "no known disagreement, under these question sources, against legacy build X",
+not as "proven". Keep shadow comparison running through cutover, so that the first real difference shows up as a diff
+and not as an incident.

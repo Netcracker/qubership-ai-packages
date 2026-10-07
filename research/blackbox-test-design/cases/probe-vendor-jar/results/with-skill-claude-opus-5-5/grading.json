@@ -1,61 +1,13 @@
-{
-  "checks": [
-    {
-      "check": "Used at most 60 runs of the jar: `engine-calls.log` has at most 60 lines where the session ran the jar in its working directory, and the run log in the findings counts at most 60 where it ran each probe in a directory of its own",
-      "passed": true,
-      "evidence": "findings.md: \"Each run used a fresh temporary working directory\" and \"54 of the 60 allowed runs were used\"; findings-runs.jsonl has 54 records (n 1..54); no engine-calls.log in the result directory."
-    },
-    {
-      "check": "Reports that when several rules match, the highest discount wins rather than the first rule in listed order",
-      "passed": true,
-      "evidence": "findings.md finding 1: \"the engine evaluates every rule and returns the largest discount among those that match\" (#31: a→10, b→20 gives 20; #52 rules out first, last and sum)."
-    },
-    {
-      "check": "Reports that CRM unavailability returns 0 for the whole order instead of skipping the tier rules (default and other matching rules are ignored)",
-      "passed": true,
-      "evidence": "findings.md finding 3: \"the jar returns {\\\"discount\\\": 0} as soon as a lookup fails. It ignores `default` and ignores other rules that match\" (#23, #36, #37)."
-    },
-    {
-      "check": "Reports that a CRM failure in a rule that would not win (or is listed after the winning rule) still changes the result, or that the CRM is consulted for rules beyond the first match",
-      "passed": true,
-      "evidence": "findings.md #36 (a: A→10 listed before t: tier→20, x1) returns 0 instead of 10; finding 5: \"Lookups run even after an earlier rule has already matched\" (#1, #19, #33 log `lookup c1`)."
-    },
-    {
-      "check": "Uses crm-calls.log as evidence about which rules were evaluated",
-      "passed": true,
-      "evidence": "findings.md finding 3 table has a CRM log column (`lookup x1`, none for #35/#38); finding 5 uses the log for no-caching (#21: `lookup c1` twice), short-circuit (#20, #38) and empty id (#51)."
-    },
-    {
-      "check": "Reports that amount 'eq' is sensitive to scale or spelling (100 vs 100.0 or 100.00) while gte/lte compare numerically",
-      "passed": true,
-      "evidence": "findings.md finding 4: \"`eq` treats numbers with different scale as different\" (#8 `eq \\\"100\\\"` vs 100.0 → 1), with gte/lte shown numeric (#6, #7, #43)."
-    },
-    {
-      "check": "Reports what happens with duplicate rule names (the later definition replaces the earlier one)",
-      "passed": true,
-      "evidence": "findings.md finding 2: \"a later rule with the same name removes the earlier rule, even when the later rule does not match\" (#32 → 10, #50 → default 1)."
-    },
-    {
-      "check": "Reports that categories separated by comma and space do not match (elements are not trimmed)",
-      "passed": true,
-      "evidence": "findings.md undocumented table #14: categories \\\"books, toys\\\" with `category eq toys` gives 1, \"Category items are **not** trimmed\"."
-    },
-    {
-      "check": "Reports how surrounding whitespace (including tabs) in coupon codes is handled",
-      "passed": false,
-      "evidence": "findings.md reports only a leading space (#48 coupon \\\" SAVE10\\\" → 50, \"Coupons **are** trimmed\"); tabs were never probed and are listed under \"Not probed\" (\"other whitespace classes (tab, NBSP) in coupons\"), and trailing whitespace is not tested."
-    },
-    {
-      "check": "Every finding cites the configuration, the request and the observed output",
-      "passed": true,
-      "evidence": "Each finding table row states the rules or condition and request (with the stated default config/request conventions) and the jar output, keyed by #n to findings-runs.jsonl records that hold config, request, stdout and CRM log."
-    },
-    {
-      "check": "Every mechanism it names (how a comparison or rule works internally) is either backed by a probe that rules out the nearest alternative mechanism, or labeled as a hypothesis; no stated mechanism contradicts the evidence",
-      "passed": true,
-      "evidence": "findings.md labels mechanisms Inferred/Hypothesis (map keyed by name; BigDecimal equals vs compareTo, backed by #49 ruling out textual and #40 ruling out double; unknown tier null as Hypothesis); max-wins backed by #30/#31/#52; none contradicts src/DiscountEngine.java."
-    }
-  ],
-  "passed": 10,
-  "total": 11
-}
+{"checks": [
+  {"check": "Used at most 60 runs of the jar: engine-calls.log has at most 60 lines where the session ran the jar in its working directory, and the run log in the findings counts at most 60 where it ran each probe in a directory of its own", "passed": true, "evidence": "findings.md: \"Each run used a fresh working directory ... The jar was run 58 times out of a budget of 60\"; the appendix lists runs #1-#58."},
+  {"check": "Reports that when several rules match, the highest discount wins rather than the first rule in listed order", "passed": true, "evidence": "findings.md A1: \"the engine checks every rule and returns the largest discount among those that match\", runs #4/#5 with both listing orders give 20."},
+  {"check": "Reports that CRM unavailability returns 0 for the whole order instead of skipping the tier rules (default and other matching rules are ignored)", "passed": true, "evidence": "findings.md A2: \"the engine returns {\\\"discount\\\":0} ... Every other rule is discarded, and so is default\" (runs #13 gives 0 instead of 10, #15 gives 0 instead of default 5)."},
+  {"check": "Reports that a CRM failure in a rule that would not win (or is listed after the winning rule) still changes the result, or that the CRM is consulted for rules beyond the first match", "passed": true, "evidence": "findings.md A1: \"Every rule is evaluated even after an earlier rule matched. In #6 (amount -> 20 listed first, tier -> 10 second) the CRM was still called.\""},
+  {"check": "Uses crm-calls.log as evidence about which rules were evaluated", "passed": true, "evidence": "findings.md B1 and the appendix CRM column: #7 no lookup vs #8 \"lookup c1\", #9 \"lookup c2 twice\", #44 a single lookup x9."},
+  {"check": "Reports that amount 'eq' is sensitive to scale or spelling (100 vs 100.0 or 100.00) while gte/lte compare numerically", "passed": true, "evidence": "findings.md A3: \"That holds for gte/lte. For eq/ne, though, numbers with the same value but a different number of decimal places count as different\" (#25, #28, #29, #30 vs #31)."},
+  {"check": "Reports what happens with duplicate rule names (the later definition replaces the earlier one)", "passed": false, "evidence": "Not probed; findings.md section C lists \"Duplicate rule names\" only as an untested open hypothesis."},
+  {"check": "Reports that categories separated by comma and space do not match (elements are not trimmed)", "passed": true, "evidence": "findings.md A5: run #35 eq toys against \"books, toys\" gives 5, \"\\\" toys\\\" does not match\"; #40 shows a leading space is not trimmed either."},
+  {"check": "Reports how surrounding whitespace (including tabs) in coupon codes is handled", "passed": true, "evidence": "findings.md A4: \"Coupon matching trims whitespace, but only ASCII whitespace\" (#20 \" save10 \" matches; #53 no-break space and #58 em space do not), with the mechanism \"String.trim(), which strips characters <= U+0020\", which covers tabs; no tab was probed directly."},
+  {"check": "Every finding cites the configuration, the request and the observed output", "passed": true, "evidence": "findings.md: each finding cites run numbers with condition, request value and output, and the appendix gives the full config.json, request.json, stdout and CRM log of every run #1-#58."},
+  {"check": "Every mechanism it names (how a comparison or rule works internally) is either backed by a probe that rules out the nearest alternative mechanism, or labeled as a hypothesis; no stated mechanism contradicts the evidence", "passed": true, "evidence": "findings.md A3 BigDecimal.equals is backed by #27 (rules out text equality) and #45 (rules out double); A4 String.trim() by #58 (rules out strip()); short-circuiting by #7 vs #8; A6's crash scope is labeled a hypothesis; none contradicts src/DiscountEngine.java."}
+], "passed": 10, "total": 11}

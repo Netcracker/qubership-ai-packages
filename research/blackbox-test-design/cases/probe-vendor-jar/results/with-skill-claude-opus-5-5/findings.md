@@ -1,165 +1,216 @@
-# discount-engine.jar: behaviour vs. README
+# discount-engine.jar: where its behaviour differs from README.md
 
-The jar was treated as a black box and run only through its CLI (`java -jar discount-engine.jar config.json request.json`).
-54 of the 60 allowed runs were used.
+I treated the jar as a black box and only ran its CLI (`java -jar discount-engine.jar config.json request.json`). Each
+run used a fresh working directory, so every `crm-calls.log` belongs to exactly one run. The jar was run 58 times out of a
+budget of 60, on OpenJDK 21.0.9 (Corretto). Runs #56 and #57 repeated runs #1 and #9 at the end of the session and gave
+identical answers, so the engine behaved the same from start to finish.
 
-- Reference: `discount-engine.jar`, sha256 `3d51449345a79e5172dc45b94058961c90c9fd6dc98e384b5483110c719aba76`
-- Runtime: OpenJDK 21.0.9 (Corretto), macOS
-- Each run used a fresh temporary working directory, so every `crm-calls.log` belongs to exactly one run.
-- The raw record of every run (config, request, stdout, stderr, exit code, CRM log) is in `findings-runs.jsonl`.
-  The `#n` references below are the `n` field in that file.
-- Every run exited with code 0 and wrote nothing to stderr.
-- The first run (#1) was repeated as the last run (#53) and gave the same answer, so the engine behaved the same
-  throughout.
+Unless a finding says otherwise, configs use `default: 5` and give each rule its own discount, so the output shows which
+rule fired. Run numbers (#N) point to the full log in the appendix.
 
-**Conventions used below.** Unless a finding says otherwise:
-- the request is `{"customerId":"c9","coupon":"SAVE10","amount":120,"categories":"books,toys"}`. `c9` is an unknown
-  customer.
-- the config is `{"default":1,"rules":[{"name":"r","when":[<cond>],"discount":50}]}`.
+Each claim is labelled:
+- **Observed**: a run shows it directly.
+- **Inferred**: it follows from runs under a stated assumption.
+- **Hypothesis**: no run has tested it yet.
 
-So `50` means the rule matched and `1` means it did not. `A` means the condition `amount gte "100"`, which this request
-always meets.
+## A. Contradictions of the README
 
-**Evidence labels:**
-- *Observed*: a run shows it directly.
-- *Inferred*: follows from runs under the stated assumption.
-- *Hypothesis*: not yet separated by any run.
+### A1. The highest matching discount wins, not the first matching rule (Observed)
+The README says the first rule whose conditions all hold gives the discount. In fact the engine checks every rule and
+returns the largest discount among those that match.
 
----
-
-## Differences from the documentation
-
-### 1. The highest matching discount wins, not the first matching rule (Observed)
-
-The README says the first rule whose conditions all hold gives the discount. In practice the engine evaluates every
-rule and returns the largest discount among those that match.
-
-| # | Rules (in order) | README | Jar |
+| # | Rules (in listed order) | Request | Out |
 |---|---|---|---|
-| 30 | a: A → 20, b: A → 10 | 20 | 20 |
-| 31 | a: A → 10, b: A → 20 | 10 | **20** |
-| 52 | a: A → 10, b: A → 30, c: A → 20 | 10 | **30** |
-| 1 / 53 | README example config, request `c1`, amount 120 | 10 (big-orders) | **20** (vip) |
-| 19 | a: A → 10, t: `tier eq gold` → 20, request `c1` | 10 | **20** |
-| 33 | a: A → 20, t: `tier eq gold` → 10, request `c1` | 20 | 20 |
+| 1 | README example: big-orders (amount gte 100 → 10), vip (tier eq gold → 20) | README example request (c1, 120) | **20** (README implies 10) |
+| 4 | amount≥100 → 10, coupon eq SAVE10 → 20 | both hold | 20 |
+| 5 | amount≥100 → 20, coupon eq SAVE10 → 10 | both hold | 20 |
+| 41 | amount≥100 → 2 (default 5) | holds | 2 |
 
-- #31 rules out "first match wins".
-- #30 rules out "last match wins".
-- #52 rules out both, and also rules out summing.
-- #33 rules out "tier rules take priority".
+- Runs #4 and #5 rule out "last match wins".
+- Run #41 shows that `default` is only a fallback. A matching rule below the default still wins, so the result is not
+  max(default, rules).
+- Every rule is evaluated even after an earlier rule matched. In #6 (amount → 20 listed first, tier → 10 second) the CRM
+  was still called.
 
-The README's own example therefore gives 20, not 10, for its own sample request.
+### A2. If the CRM is unavailable, the whole result becomes 0 (Observed)
+The README says rules with a `tier` condition are skipped. In fact, as soon as a tier lookup fails, the engine returns
+`{"discount":0}` with exit code 0. Every other rule is discarded, and so is `default`.
 
-`default` is not part of the maximum. It applies only when no rule matches: in #34 (`default` 30, one matching rule
-→ 10) the jar returned 10.
-
-### 2. Rules with the same `name`: the later one silently replaces the earlier one (Observed)
-
-The README says nothing about rule names. In practice a later rule with the same name removes the earlier rule, even
-when the later rule does not match.
-
-| # | Rules | Result if both are kept (max-wins) | Jar |
+| # | Setup | Out | CRM log |
 |---|---|---|---|
-| 29 | r: A → 10, r: A → 20 | 20 | 20 |
-| 32 | r: A → 20, r: A → 10 | 20 | **10** |
-| 50 | r: A → 20, r: `coupon eq NOPE` → 10 | 20 | **1** (default) |
+| 13 | amount≥100 → 10 (holds), tier eq gold → 30; customer `x9` | **0** (README: 10) | lookup x9 |
+| 10 | same, but tier **ne** gold | **0** | lookup x9 |
+| 15 | only tier eq gold → 30; customer `x9` | **0** (README: default 5) | lookup x9 |
+| 44 | two tier rules; customer `x9` | 0 | lookup x9 (**one** call: evaluation stops at the first failure) |
+| 14 | amount≥100 → 10; second rule `amount≥1000 AND tier eq gold` | **10** | none (no lookup was made, so no failure) |
 
-- #50 shows that the first `r` is gone completely, not just outranked.
-- Inferred: rules are stored in a map keyed by name, with the last definition winning.
+Run #14 shows that the outcome depends on whether a lookup actually happens. Short-circuiting (B1) decides that.
 
-### 3. CRM unavailable: the whole result becomes 0, instead of tier rules being skipped (Observed)
+Only ids that start with a lowercase `x` make the CRM unavailable. `X9` was treated as an unknown customer (#51:
+default 5, lookup X9).
 
-The README says that if the CRM is unavailable, rules with a `tier` condition are skipped. In practice the jar
-returns `{"discount": 0}` as soon as a lookup fails. It ignores `default` and ignores other rules that match.
+### A3. Amount `eq`/`ne` depend on how many decimal places are written (Observed)
+The README says amounts are compared numerically. That holds for `gte`/`lte`. For `eq`/`ne`, though, numbers with the
+same value but a different number of decimal places count as different.
 
-| # | Request | Rules | README | Jar | CRM log |
-|---|---|---|---|---|---|
-| 23 | `x1` | t: `tier eq gold` → 20, a: A → 10 | 10 | **0** | `lookup x1` |
-| 36 | `x1` | a: A → 10, t: `tier eq gold` → 20 | 10 | **0** | `lookup x1` |
-| 37 | `x1` | t: `tier eq gold` → 20, default 7 | 7 | **0** | `lookup x1` |
-| 22 | `x1` | `tier ne gold` → 50, default 1 | 1 | **0** | `lookup x1` |
-| 35 | `x1` | a: A → 10 only (no tier rule) | 10 | 10 | none |
-| 38 | `x1` | t: [`amount gte 1000`, `tier eq gold`] → 20, default 7 | 7 | 7 | none |
-
-- The zero result only appears when a lookup actually happens: see #35, and #38, where the lookup was skipped because
-  of short-circuiting (finding 5).
-- Exit code is 0 and stderr is empty, so callers cannot tell this 0 apart from a real "no discount".
-
-### 4. `amount eq` / `ne` depend on decimal scale, not just numeric value (Observed)
-
-The README says amounts are compared numerically. That holds for `gte` and `lte`, but `eq` treats numbers with
-different scale as different.
-
-| # | Condition | Request amount | README | Jar |
+| # | Condition | Request amount | Out | Numeric expectation |
 |---|---|---|---|---|
-| 39 | `eq "100"` | `100` | 50 | 50 |
-| 49 | `eq "0100"` | `100` | 50 | 50 |
-| 8 | `eq "100"` | `100.0` | 50 | **1** |
-| 9 | `eq "100.0"` | `100` | 50 | **1** |
-| 40 | `eq "100.5"` | `100.50` (raw JSON text) | 50 | **1** |
-| 41 | `ne "100"` | `100.0` | 1 | **50** |
+| 26 | eq "100" | 100 | 30 (match) | match |
+| 27 | eq "+100" | 100 | 30 (match) | match. So it is not a plain text comparison |
+| 25 | eq "100.0" | 100 | 5 (no match) | **match** |
+| 28 | eq "100" | 100.0 | 5 (no match) | **match** |
+| 29 | eq "100.5" | 100.50 | 5 (no match) | **match** |
+| 30 | ne "100.0" | 100 | 30 (holds) | **does not hold** |
+| 31 | lte "100.0" | 100 | 30 (holds) | holds |
 
-- #49 shows the comparison is not textual: `"0100"` equals `100`.
-- #8, #9 and #40 show that scale matters.
-- #40 also shows that the request number keeps its original text: if it had been parsed as a `double`, `100.50` would
-  have become `100.5` and matched.
-- Inferred mechanism: both sides are parsed as `BigDecimal`. `eq`/`ne` use `BigDecimal.equals`, which also compares
-  scale, while `gte`/`lte` use `compareTo`.
-- The ordering operators really are numeric:
-  - #6: `gte "100"` with amount 20 → no match (a text comparison would match).
-  - #7: `lte "50"` with amount 100 → no match.
-  - #43: `gte "1e2"` with amount 100 → match.
-  - #4, #5: both boundaries are inclusive.
-  - #10, #11: 99.5 and 99.99 are not ≥ 100.
+**Mechanism (inferred):** `eq` uses `BigDecimal.equals`, which compares scale (the number of decimal places), while
+`gte`/`lte` use `compareTo`. The request amount keeps the scale it was written with in the JSON. Run #54's stack trace
+shows that the config value is parsed with `new BigDecimal(String)`. #27 rules out plain text equality. #45 rules out a
+`double` conversion: 99.99999999999999999 is not ≥ 100, although as a `double` it would round to 100.
 
-### 5. CRM lookups are not cached, and they run for every rule (Observed)
+### A4. Coupon matching trims whitespace, but only ASCII whitespace (Observed)
+The README only mentions case-insensitivity. The engine also trims the coupon.
 
-The README says only that the CRM is asked "only for rules with a `tier` condition". In practice:
-
-- **Lookups run even after an earlier rule has already matched.** This follows from finding 1, where every rule is
-  evaluated. Runs #1, #19 and #33 each log `lookup c1`, although a non-tier rule matched earlier.
-- **No caching.** Two tier rules for the same customer cause two lookups: in #21 the log is `lookup c1` twice.
-- **Conditions short-circuit left to right inside a rule.** With [`amount gte 1000`, `tier eq gold`] no lookup
-  happened (#20, #38).
-  - Hypothesis, not tested: putting the tier condition first would make it look up anyway.
-- **The lookup happens even without a `customerId`.** In #51, with the key absent, the log is `lookup ` (empty id). The
-  customer is treated as unknown and the result is 1.
-
-For the reimplementation, this matters because of finding 3: an unavailable CRM zeroes the result whenever *any*
-tier condition is reached, whatever the rule order.
-
----
-
-## Behaviour the README does not mention (Observed; decide whether to copy it)
-
-| # | Input | Jar | Note |
+| # | Config | Request coupon | Out |
 |---|---|---|---|
-| 15 | `category eq "Toys"`, categories `books,toys` | 50 | Categories are case-insensitive. The README only says this for coupons |
-| 14 | `category eq "toys"`, categories `"books, toys"` | 1 | Category items are **not** trimmed, so `" toys"` does not equal `"toys"` |
-| 48 | `coupon eq "SAVE10"`, coupon `" SAVE10"` | 50 | Coupons **are** trimmed. This is not a substring match: #54, `"XSAVE10"`, gave 1 |
-| 46 | `tier eq "GOLD"`, `c1` | 50 | Tier comparison is case-insensitive |
-| 24 | `tier ne "gold"`, unknown customer `c9` | 1 | For an unknown customer, `ne` does not hold. Hypothesis: unknown tier is null, and every tier condition is false |
-| 47 | `coupon ne "X"`, no `coupon` key | 1 | A missing field makes `ne` false, not true |
-| 44 | `amount lte "100"`, no `amount` key | 1 | A missing amount is not treated as 0 |
-| 42 | `amount gte "100"`, amount `"120"` (JSON string) | 50 | A numeric string is accepted as the amount |
+| 18 | eq "save10" | "SAVE10" | 30 (case-insensitive, as documented) |
+| 19 | ne "save10" | "SAVE10" | 5 (ne is case-insensitive too) |
+| 20 | eq "save10" | " save10 " | **30**: surrounding spaces are ignored |
+| 53 | eq "save10" | " SAVE10" (no-break space) | 5: not trimmed |
+| 58 | eq "save10" | " SAVE10" (em space) | 5: not trimmed |
 
-## Documented behaviour that held (Observed)
+**Mechanism (inferred):** Java `String.trim()`, which strips characters ≤ U+0020. `strip()` would have removed the em
+space in #58. I did not test whether the config side is trimmed too.
 
-- Coupon `eq` and `ne` are case-insensitive (#2, #3).
-- Category `eq` means "the order has the category". `ne` means "the order lacks it" (#12, #13, #45), not "some category
-  differs". `eq` is not a substring match (#16).
-- All conditions in a rule must hold (AND, #25). An empty `when` list always matches (#26).
-- If `default` is omitted, the result is 0 (#27).
-- Tier lookups return the documented tiers (#17 `c1` = gold, #18 `c2` ≠ gold). A rule with a tier condition triggers
-  the lookup, and a config without one does not (#35).
+### A5. Category matching is case-insensitive, and items are not trimmed (Observed)
+The README says nothing about case or whitespace for categories. Unlike coupons, category items are **not** trimmed.
 
-## Not probed (open questions for a later round, 6 runs left)
+| # | Condition | Request categories | Out |
+|---|---|---|---|
+| 38 | eq toys | "books,toys" | 30 (control: the second item matches) |
+| 35 | eq toys | "books, toys" | **5**: " toys" does not match |
+| 39 | ne toys | "books, toys" | **30**: the order "lacks" toys |
+| 40 | eq books | " books,toys" | **5**: the whole string is not trimmed either |
+| 37 | eq books | "Books,toys" | **30**: case-insensitive |
+| 36 | eq book | "books,toys" | 5: whole items only, no substring match |
+| 34 | ne books | "books,toys" | 5: `ne` means "the order does not have it", as documented |
 
-- Unknown fields or operators, malformed JSON, a non-numeric `value` for amount, and fractional or negative
-  `discount` values. These are error-path questions. Not one run checked what the jar does on invalid input.
-- The tie-break between two matching rules with equal discounts. It is invisible in the output unless a later
-  feature exposes the rule name.
-- Whether a condition order of [`tier`, falsy condition] still looks up. This is the twin of #20.
-- Case-folding locale (for example Turkish `İ`/`ı` in coupons), other whitespace classes (tab, NBSP) in coupons and
-  categories, and empty items in `categories` such as `"books,,toys"`.
-- The case of `customerId` (`C1` vs `c1`) as sent to the CRM.
+### A6. A non-numeric amount in the config crashes the run (Observed)
+Run #54: one rule used `amount gte "abc"`, and a second, independent coupon rule would have matched. The jar exited
+with **code 1** and printed nothing on stdout, only a `java.lang.NumberFormatException` stack trace on stderr (from
+`BigDecimal.<init>`, called by `DiscountEngine.holds`). The README does not mention errors, and the good rule's discount
+was lost. Because amount conditions are short-circuited (B1), the crash probably happens only when the bad condition is
+actually evaluated. That is a hypothesis; I did not test it.
+
+## B. Undocumented behaviour (the README is silent)
+
+### B1. Conditions are short-circuited left to right, and the CRM is called once per evaluated tier condition (Observed)
+- #7 `[amount≥100, tier eq gold]` with amount 50: no CRM call.
+- #8 `[tier eq gold, amount≥100]` with amount 50: `lookup c1`.
+- #9 two tier rules: `lookup c2` twice. Results are not cached.
+- #4 and #5, with no tier conditions: no CRM calls, as documented.
+
+The order of conditions matters both for the CRM call log and for A2 (whether an outage zeroes the result).
+
+### B2. Missing fields make both `eq` and `ne` false (Observed)
+- #21 coupon ne "save10" with no coupon: 5.
+- #33 amount ne "100" with no amount: 5.
+
+An empty string counts as present: #52 coupon `""` ne "save10" gave 30.
+
+### B3. Tier and customer id handling (Observed)
+- Tier values compare case-insensitively: #16 eq "GOLD" with c1 gave 30.
+- Customer ids are case-sensitive: #17 `C1` is an unknown customer.
+- For an unknown customer, `tier ne gold` does **not** hold (#11, c9). Neither `eq` nor `ne` hold for an unknown tier.
+- With no `customerId`, the engine still calls the CRM with an empty id (#12, `lookup ` followed by an empty id) and
+  treats the customer as unknown.
+
+### B4. Fractional discounts are truncated (Observed)
+- Discount 12.5 gave 12 (#46).
+- Discount 12.7 gave 12 (#49). So it truncates rather than rounds.
+- Default 7.9 gave 7 (#55).
+- Output is always an integer. I did not test negative values, so floor and truncation toward zero are both still
+  possible.
+
+### B5. Other observations (all Observed)
+- An unknown `op` (#47, `gt`) or an unknown `field` (#48, `country`) is silently false. There is no error.
+- An empty `when: []` always matches (#43).
+- Discounts are not capped: 150 gave 150 (#50).
+- A request amount given as a JSON string works numerically (#32, `"120"` gte 100).
+- With `default` omitted the result is 0, as documented (#42).
+
+## C. Open hypotheses (not tested; budget left: 2 runs)
+- A tier rule that matches but has a lower discount: with all rules evaluated, its lookup still happens (#6), so A2
+  applies even when the tier rule could not have won.
+- Whether the config coupon or category values are trimmed or lower-cased (only the request side was tested).
+- A trailing comma or empty item in `categories` (`"books,"`, `eq ""`). Java `split` drops trailing empty items.
+- A `null` value for a request field, and a request coupon sent as a JSON number.
+- A bad config number in a condition that is never evaluated (does A6 still crash?).
+- Duplicate rule names, and two tier conditions in one rule (expected: 2 lookups).
+- Negative discounts (truncate vs floor).
+- Whether case-insensitivity depends on the locale (`toLowerCase()` vs `equalsIgnoreCase`, e.g. the Turkish dotless i).
+
+## Appendix: every run
+
+The CRM column shows the contents of `crm-calls.log` (`—` means the file was not created).
+
+| # | Probe | config.json | request.json | stdout | CRM |
+|---|---|---|---|---|---|
+| 1 | readme-example | `{"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId": "c1", "coupon": "SAVE10", "amount": 120, "categories": "books,toys"}` | `{"discount":20}` | lookup c1 |
+| 2 | readme-small-gold | `{"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId": "c1", "amount": 50}` | `{"discount":20}` | lookup c1 |
+| 3 | readme-small-silver | `{"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId": "c2", "amount": 50}` | `{"discount":5}` | lookup c2 |
+| 4 | order-two-plain-lowfirst | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"b","when":[{"field":"coupon","op":"eq","value":"SAVE10"}],"discount":20}]}` | `{"customerId":"c3","coupon":"SAVE10","amount":120}` | `{"discount":20}` | — |
+| 5 | order-two-plain-highfirst | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":20},{"name":"b","when":[{"field":"coupon","op":"eq","value":"SAVE10"}],"discount":10}]}` | `{"customerId":"c3","coupon":"SAVE10","amount":120}` | `{"discount":20}` | — |
+| 6 | order-tier-second-lower | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":20},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}` | `{"customerId":"c1","amount":120}` | `{"discount":20}` | lookup c1 |
+| 7 | crm-after-failing-cond | `{"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"},{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId":"c1","amount":50}` | `{"discount":5}` | — |
+| 8 | crm-before-failing-cond | `{"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"},{"field":"amount","op":"gte","value":"100"}],"discount":20}]}` | `{"customerId":"c1","amount":50}` | `{"discount":5}` | lookup c1 |
+| 9 | crm-two-tier-rules | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20},{"name":"s","when":[{"field":"tier","op":"eq","value":"silver"}],"discount":15}]}` | `{"customerId":"c2"}` | `{"discount":15}` | lookup c2;lookup c2 |
+| 10 | crm-unavail-ne | `{"default":5,"rules":[{"name":"plain","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"notgold","when":[{"field":"tier","op":"ne","value":"gold"}],"discount":30}]}` | `{"customerId":"x9","amount":120}` | `{"discount":0}` | lookup x9 |
+| 11 | crm-unknown-ne | `{"default":5,"rules":[{"name":"plain","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"notgold","when":[{"field":"tier","op":"ne","value":"gold"}],"discount":30}]}` | `{"customerId":"c9","amount":120}` | `{"discount":10}` | lookup c9 |
+| 12 | crm-missing-customer-ne | `{"default":5,"rules":[{"name":"plain","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"notgold","when":[{"field":"tier","op":"ne","value":"gold"}],"discount":30}]}` | `{"amount":120}` | `{"discount":10}` | lookup  |
+| 13 | crm-unavail-eq-other-rule | `{"default":5,"rules":[{"name":"plain","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":30}]}` | `{"customerId":"x9","amount":120}` | `{"discount":0}` | lookup x9 |
+| 14 | crm-unavail-shortcircuited | `{"default":5,"rules":[{"name":"plain","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"g","when":[{"field":"amount","op":"gte","value":"1000"},{"field":"tier","op":"eq","value":"gold"}],"discount":30}]}` | `{"customerId":"x9","amount":120}` | `{"discount":10}` | — |
+| 15 | crm-unavail-nomatch-default | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":30}]}` | `{"customerId":"x9","amount":120}` | `{"discount":0}` | lookup x9 |
+| 16 | tier-value-uppercase | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"GOLD"}],"discount":30}]}` | `{"customerId":"c1"}` | `{"discount":30}` | lookup c1 |
+| 17 | tier-custid-uppercase | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":30}]}` | `{"customerId":"C1"}` | `{"discount":5}` | lookup C1 |
+| 18 | coupon-eq-case | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"eq","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":"SAVE10"}` | `{"discount":30}` | — |
+| 19 | coupon-ne-case | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"ne","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":"SAVE10"}` | `{"discount":5}` | — |
+| 20 | coupon-eq-ws | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"eq","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":" save10 "}` | `{"discount":30}` | — |
+| 21 | coupon-ne-missing | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"ne","value":"save10"}],"discount":30}]}` | `{"customerId":"c3"}` | `{"discount":5}` | — |
+| 22 | amt-gte-boundary | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":30}` | — |
+| 23 | amt-gte-99-lexico | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":99}` | `{"discount":5}` | — |
+| 24 | amt-gte-1000 | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"200"}],"discount":30}]}` | `{"customerId":"c3","amount":1000}` | `{"discount":30}` | — |
+| 25 | amt-eq-scale | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"eq","value":"100.0"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":5}` | — |
+| 26 | amt-eq-control | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"eq","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":30}` | — |
+| 27 | amt-eq-plus | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"eq","value":"+100"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":30}` | — |
+| 28 | amt-eq-req-decimal | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"eq","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":100.0}` | `{"discount":5}` | — |
+| 29 | amt-eq-both-decimal | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"eq","value":"100.5"}],"discount":30}]}` | `{"customerId":"c3","amount":100.50}` | `{"discount":5}` | — |
+| 30 | amt-ne-scale | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"ne","value":"100.0"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":30}` | — |
+| 31 | amt-lte-scale-boundary | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"lte","value":"100.0"}],"discount":30}]}` | `{"customerId":"c3","amount":100}` | `{"discount":30}` | — |
+| 32 | amt-req-string | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":"120"}` | `{"discount":30}` | — |
+| 33 | amt-missing-ne | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"ne","value":"100"}],"discount":30}]}` | `{"customerId":"c3"}` | `{"discount":5}` | — |
+| 34 | cat-ne-has | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"ne","value":"books"}],"discount":30}]}` | `{"customerId":"c3","categories":"books,toys"}` | `{"discount":5}` | — |
+| 35 | cat-eq-second-space | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"eq","value":"toys"}],"discount":30}]}` | `{"customerId":"c3","categories":"books, toys"}` | `{"discount":5}` | — |
+| 36 | cat-eq-substring | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"eq","value":"book"}],"discount":30}]}` | `{"customerId":"c3","categories":"books,toys"}` | `{"discount":5}` | — |
+| 37 | cat-eq-case | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"eq","value":"books"}],"discount":30}]}` | `{"customerId":"c3","categories":"Books,toys"}` | `{"discount":30}` | — |
+| 38 | cat-eq-second-nospace | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"eq","value":"toys"}],"discount":30}]}` | `{"customerId":"c3","categories":"books,toys"}` | `{"discount":30}` | — |
+| 39 | cat-ne-space-item | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"ne","value":"toys"}],"discount":30}]}` | `{"customerId":"c3","categories":"books, toys"}` | `{"discount":30}` | — |
+| 40 | cat-eq-leading-space-first | `{"default":5,"rules":[{"name":"k","when":[{"field":"category","op":"eq","value":"books"}],"discount":30}]}` | `{"customerId":"c3","categories":" books,toys"}` | `{"discount":5}` | — |
+| 41 | match-below-default | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":2}]}` | `{"customerId":"c3","amount":120}` | `{"discount":2}` | — |
+| 42 | default-omitted | `{"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":2}]}` | `{"customerId":"c3","amount":50}` | `{"discount":0}` | — |
+| 43 | empty-when | `{"default":5,"rules":[{"name":"a","when":[],"discount":7}]}` | `{"customerId":"c3","amount":50}` | `{"discount":7}` | — |
+| 44 | crm-unavail-two-tier-rules | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20},{"name":"s","when":[{"field":"tier","op":"eq","value":"silver"}],"discount":15}]}` | `{"customerId":"x9"}` | `{"discount":0}` | lookup x9 |
+| 45 | amt-precision | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":99.99999999999999999}` | `{"discount":5}` | — |
+| 46 | discount-fraction | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":12.5}]}` | `{"customerId":"c3","amount":120}` | `{"discount":12}` | — |
+| 47 | unknown-op | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gt","value":"100"}],"discount":30}]}` | `{"customerId":"c3","amount":120}` | `{"discount":5}` | — |
+| 48 | unknown-field | `{"default":5,"rules":[{"name":"a","when":[{"field":"country","op":"eq","value":"DE"}],"discount":30}]}` | `{"customerId":"c3","amount":120,"country":"DE"}` | `{"discount":5}` | — |
+| 49 | discount-fraction-12.7 | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":12.7}]}` | `{"customerId":"c3","amount":120}` | `{"discount":12}` | — |
+| 50 | discount-over-100 | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"100"}],"discount":150}]}` | `{"customerId":"c3","amount":120}` | `{"discount":150}` | — |
+| 51 | crm-unavail-uppercase-X | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId":"X9"}` | `{"discount":5}` | lookup X9 |
+| 52 | coupon-empty-ne | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"ne","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":""}` | `{"discount":30}` | — |
+| 53 | coupon-nbsp | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"eq","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":" SAVE10"}` | `{"discount":5}` | — |
+| 54 | amt-config-garbage | `{"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"abc"}],"discount":30},{"name":"b","when":[{"field":"coupon","op":"eq","value":"SAVE10"}],"discount":9}]}` | `{"customerId":"c3","amount":120,"coupon":"SAVE10"}` | `(exit 1, NumberFormatException)` | — |
+| 55 | default-fraction | `{"default":7.9,"rules":[]}` | `{"customerId":"c3","amount":120}` | `{"discount":7}` | — |
+| 56 | control-replay-1 | `{"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}` | `{"customerId": "c1", "coupon": "SAVE10", "amount": 120, "categories": "books,toys"}` | `{"discount":20}` | lookup c1 |
+| 57 | control-replay-9 | `{"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20},{"name":"s","when":[{"field":"tier","op":"eq","value":"silver"}],"discount":15}]}` | `{"customerId":"c2"}` | `{"discount":15}` | lookup c2;lookup c2 |
+| 58 | coupon-emspace | `{"default":5,"rules":[{"name":"c","when":[{"field":"coupon","op":"eq","value":"save10"}],"discount":30}]}` | `{"customerId":"c3","coupon":" SAVE10"}` | `{"discount":5}` | — |

@@ -1,51 +1,11 @@
-{
-  "checks": [
-    {
-      "check": "Flags that sorting every array hides order a client can observe (line items, the order of errors), and proposes sorting only where the contract says order does not matter",
-      "passed": true,
-      "evidence": "normalizer-review.md rule 1: UIs \"show `errors[0]` or render line items in response order\"; recommends \"Sort only at named paths where order really is unspecified\"."
-    },
-    {
-      "check": "Flags that dropping nulls merges `null` with an absent field, which a client or a later deserializer can tell apart",
-      "passed": true,
-      "evidence": "normalizer-review.md rule 2: hides \"the difference between `null` and an absent key\"; a Kotlin client with a non-nullable property \"fails on a missing key\"."
-    },
-    {
-      "check": "Flags that comparing numbers as doubles hides scale and precision (money such as `10.10` against `10.1`, large ids or amounts past 2^53), and proposes a decimal comparison or a per-field rule",
-      "passed": true,
-      "evidence": "normalizer-review.md rule 5: \"Integers above 2^53. Different values become equal\" and scale `10.1` vs `10.10` on money; recommends \"compare numbers as exact decimals\" with a per-field scale bucket."
-    },
-    {
-      "check": "Flags that a case-insensitive `status` hides a real contract change for clients that compare the string",
-      "passed": true,
-      "evidence": "normalizer-review.md rule 6: \"This is not noise; it's a bug in the new service\"; `if (status === \"SHIPPED\")` in a frontend stops matching."
-    },
-    {
-      "check": "Flags that ignoring every `id`, the HTTP status, or the headers hides differences a client depends on (201 against 200 on a POST, a `Location` header, a foreign key in a nested `id`)",
-      "passed": true,
-      "evidence": "normalizer-review.md: `$..id` hides `customer.id`, `lineItems[*].product.id`; \"200 vs 201 is also a real contract change\"; headers section names `Location`."
-    },
-    {
-      "check": "Proposes checking each rule's merged classes, by feeding the normalizer pairs that differ in one aspect or by counting how many raw differences each rule erases, rather than trusting the 1% figure",
-      "passed": true,
-      "evidence": "normalizer-review.md \"Map the equivalence classes empirically\": \"feed the tool pairs that differ in exactly one aspect\", plus \"Count hits per rule\" and a planted-difference test."
-    },
-    {
-      "check": "Keeps the raw diff, or a record of what each rule erased, next to the normalized one",
-      "passed": true,
-      "evidence": "normalizer-review.md: \"Keep the raw diff for every request\" and \"Review a sample of what each rule erased\"."
-    },
-    {
-      "check": "Raises the safety of mirrored writes: shadowed POST or PUT requests must not reach shared side effects (Oracle rows, payments, emails), or must go to an isolated environment",
-      "passed": true,
-      "evidence": "normalizer-review.md \"Shadow writes\": new service must stub \"payments, emails, inventory reservations\"; a create reaching \"shared Oracle tables\" duplicates orders and payments."
-    },
-    {
-      "check": "Orders its findings by the cost of being wrong, with money and status fields first",
-      "passed": false,
-      "evidence": "normalizer-review.md walks the rules in file order (sort_arrays, drop_nulls, timestamps, numbers, status, ...) and the verdict table leads with list order; money and status are not put first, only the severity bucket table lists status and amounts as critical."
-    }
-  ],
-  "passed": 8,
-  "total": 9
-}
+{"checks": [
+{"check": "Flags that sorting every array hides order a client can observe (line items, the order of errors), and proposes sorting only where the contract says order does not matter", "passed": true, "evidence": "normalizer-review.md: line items 'must too, because a UI or an invoice renders that order', list endpoints' sort order and status history hidden; proposes sort_arrays only on $.errors by (field, code) and on line items 'only if A/A shows the order varies. No other arrays.'"},
+{"check": "Flags that dropping nulls merges `null` with an absent field, which a client or a later deserializer can tell apart", "passed": true, "evidence": "normalizer-review.md: 'This merges \"discount\": null with an absent discount. That matters to JavaScript clients ... and to schema validators that require the key.'"},
+{"check": "Flags that comparing numbers as doubles hides scale and precision (money such as `10.10` against `10.1`, large ids or amounts past 2^53), and proposes a decimal comparison or a per-field rule", "passed": true, "evidence": "normalizer-review.md: 'Integers above 2^53 merge (9007199254740993 == 9007199254740992)', rounding-mode cents; proposes 'compare as exact decimals, ignoring scale (BigDecimal.compareTo == 0), on money/quantity fields only' and reporting 10.10 vs 10.1 as a separate class."},
+{"check": "Flags that a case-insensitive `status` hides a real contract change for clients that compare the string", "passed": true, "evidence": "normalizer-review.md: '\"SHIPPED\" -> \"Shipped\" is a change to the API contract, not noise. Any client doing status == \"SHIPPED\" ... will break'."},
+{"check": "Flags that ignoring every `id`, the HTTP status, or the headers hides differences a client depends on (201 against 200 on a POST, a `Location` header, a foreign key in a nested `id`)", "passed": true, "evidence": "normalizer-review.md: '200 vs 201 is a real difference: clients ... may check == 200'; headers allowlist includes 'Location'; '$..id matches every nested id ... a child attached to the wrong parent'."},
+{"check": "Proposes checking each rule's merged classes, by feeding the normalizer pairs that differ in one aspect or by counting how many raw differences each rule erases, rather than trusting the 1% figure", "passed": true, "evidence": "normalizer-review.md: 'Add tests that feed it pairs differing in one aspect, and assert which ones it must not merge' with a list of planted bugs, plus 'For each rule, publish how many responses it changed'."},
+{"check": "Keeps the raw diff, or a record of what each rule erased, next to the normalized one", "passed": true, "evidence": "normalizer-review.md: 'publish how many responses it changed, next to the raw diff rate and the normalized one, per endpoint' and 'Spot-check the raw diff, not only the normalized one'."},
+{"check": "Raises the safety of mirrored writes: shadowed POST or PUT requests must not reach shared side effects (Oracle rows, payments, emails), or must go to an isolated environment", "passed": true, "evidence": "normalizer-review.md: 'comparable only if the shadow side's writes go to isolated storage and its downstream calls (payments, notifications, events) are stubbed ... A mirrored write that reaches shared state duplicates real orders.'"},
+{"check": "Orders its findings by the cost of being wrong, with money and status fields first", "passed": false, "evidence": "normalizer-review.md walks the rules in YAML file order (sort_arrays, drop_nulls, timestamps, numbers, status, ...) with a severity column; the findings are not ordered by cost, and money (rule 5) and status (rules 6, 9) do not come first."}
+], "passed": 8, "total": 9}

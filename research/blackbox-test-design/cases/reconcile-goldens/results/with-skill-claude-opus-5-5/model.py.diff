@@ -1,23 +1,40 @@
---- /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/inputs/model.py	2026-10-07 10:34:44.587300514 +0500
-+++ /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/task/model.py	2026-10-07 10:36:05.378248768 +0500
-@@ -7,9 +7,6 @@
+--- /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.rO96LMM6Rg/inputs/model.py	2026-10-07 10:57:28.797662736 +0500
++++ /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.rO96LMM6Rg/task/model.py	2026-10-07 10:59:00.344632093 +0500
+@@ -3,12 +3,15 @@
+ points(order) must return what POST /points returns on the legacy stand. DECISIONS.md lists each rule and the goldens
+ it came from.
+ """
++import re
+ from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
  
  BASE_RATE = Decimal("0.05")
  
 -# D4: member codes in these regions are normalized by stripping leading zeros (goldens r3-07, r5-14, r8-02, r10-11).
 -STRIP_ZEROS_REGIONS = ("NL", "BE", "LU")
--
++# D4: all-digit member codes lose their leading zeros in every region (goldens r3-07, r5-14, r8-02, r10-11, r12-03,
++# r12-09, r12-17, r12-22, r12-40, r12-51); codes with a letter keep them (r4-02, DE `0A12`). Inferred: ASCII digits
++# only, and stripping happens after trimming; see reconcile.md for the open alternatives.
++NUMERIC_CODE = re.compile(r"[0-9]+")
+ 
  # D6: these tiers earn double points (goldens r2-01, r4-09).
  DOUBLE_TIERS = ("GOLD", "PLATINUM")
+@@ -24,16 +27,16 @@
+ }
  
-@@ -26,7 +23,9 @@
  
- def member_key(region: str, code: str) -> str:
+-def member_key(region: str, code: str) -> str:
++def member_key(code: str) -> str:
      code = code.strip()
 -    if region in STRIP_ZEROS_REGIONS:
-+    # D4: an all-digit code loses its leading zeros in every region, as if read as a number (goldens r3-07, r5-14,
-+    # r8-02, r10-11, r12-03, r12-09, r12-17, r12-22, r12-40, r12-51); a code with a letter is kept as sent (r4-02).
-+    if code.isascii() and code.isdigit():
++    if NUMERIC_CODE.fullmatch(code):
          code = code.lstrip("0") or "0"
      return code
  
+ 
+ def points(order: dict) -> dict:
+     region = order["region"]
+-    key = member_key(region, order["memberCode"])
++    key = member_key(order["memberCode"])
+     tier = KNOWN_MEMBERS.get(key)
+     if tier is None:
+         return {"status": "UNKNOWN_MEMBER", "points": 0}
