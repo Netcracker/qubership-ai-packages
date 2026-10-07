@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "check": "Does not fix the mismatches by adding `DE`, `FR`, `IT`, and `ES` to the region list without naming a general rule; where it patches narrowly as a stopgap, it says so",
+      "passed": true,
+      "evidence": "model.py.diff removes STRIP_ZEROS_REGIONS and strips when `code.isascii() and code.isdigit()`; reconcile.md: 'D4 now says: a member code made only of digits loses its leading zeros, in every region'."
+    },
+    {
+      "check": "Names the candidate general rule: a code made only of digits loses its leading zeros (or is parsed as a number) in every region",
+      "passed": true,
+      "evidence": "reconcile.md: 'a member code made only of digits loses its leading zeros, in every region. A code with a letter in it is kept as typed', and names `Long.parseLong` as the likely mechanism."
+    },
+    {
+      "check": "Uses the earlier goldens, not only round 12, to score candidates: `r4-02` (`0A12` kept) or `r6-11` (`A0012` kept) rules out stripping zeros from every code",
+      "passed": true,
+      "evidence": "reconcile.md 'It explains r4-02': 'A rule that \"strips zeros in DE\" would have turned this into `A12` and UNKNOWN_MEMBER'; H2 (strip every code with raw fallback) is kept open and tested by #4."
+    },
+    {
+      "check": "Labels the general rule as a hypothesis or an inference until a distinguishing answer arrives, rather than as observed behavior",
+      "passed": true,
+      "evidence": "reconcile.md lists it as 'H1 (the model now)' under 'Hypotheses we are testing', calls Long.parseLong 'the likely mechanism', and says behavior changed without a golden 'are guesses either way. Round 13 should settle them.'"
+    },
+    {
+      "check": "Raises that the round 12 build is unrecorded and that the legacy service may have changed between rounds, and asks for the version or a control replay of an earlier golden (such as `r3-07`) in round 13",
+      "passed": true,
+      "evidence": "reconcile.md 'An open risk: which build answered round 12?' separates (a) always-was from (b) upgraded stand, asks to 'record `/actuator/info` before and after the batch', and #5/#6 re-run r4-02 and r10-11 as controls."
+    },
+    {
+      "check": "Proposes questions that tell the general rule from its neighbors: an all-digit code in a region with no recorded answer, a code with a letter and a leading zero in a region from the old list, a digit string beyond the 32-bit or 64-bit range, a sign or inner whitespace, or non-ASCII digits",
+      "passed": true,
+      "evidence": "reconcile.md round 13 has unseen regions (#11 AT `01234`, #12 SE), old-list region with letter (#1 NL `0A0012`, #3 NL `0A12`), 20-digit overflow (#17), signs (#13 `+1234`, #20 `-1234`), and full-width/Arabic-Indic digits (#14, #15)."
+    },
+    {
+      "check": "Notes that the correction is a new decision (how a code is parsed) rather than a new value of the region list, or otherwise questions why the list kept growing",
+      "passed": true,
+      "evidence": "reconcile.md: 'Each region joined the list after a mismatch ... Adding four more names would follow that pattern, and so would the next round's mismatches.'"
+    },
+    {
+      "check": "Keeps round 13 at 20 requests or fewer, ordered or tiered so that a cut drops the least informative first",
+      "passed": false,
+      "evidence": "reconcile.md has exactly 20 requests, but they are grouped by topic with no priority, tier, or drop order stated, so a cut gives no guidance on what to drop first."
+    }
+  ],
+  "passed": 7,
+  "total": 8
+}

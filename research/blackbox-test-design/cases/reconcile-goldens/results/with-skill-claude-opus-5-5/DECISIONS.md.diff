@@ -1,0 +1,20 @@
+--- /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/inputs/DECISIONS.md	2026-10-07 10:34:44.587673836 +0500
++++ /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/task/DECISIONS.md	2026-10-07 10:36:14.022113090 +0500
+@@ -2,7 +2,7 @@
+ 
+ | Id | Decision | Source |
+ | --- | --- | --- |
+-| D4 | Member codes in `NL`, `BE`, `LU` are normalized by stripping leading zeros | r3-07 (NL, `0778`), r5-14 (BE, `001234`), r8-02 (LU, `0778`), r10-11 (BE, `0001234`); each was a mismatch fixed by adding the region |
++| D4 | An all-digit member code loses its leading zeros in every region; a code with a letter is kept as sent. Inferred, replacing the list `NL`, `BE`, `LU` (see reconcile.md) | r3-07 (NL, `0778`), r5-14 (BE, `001234`), r8-02 (LU, `0778`), r10-11 (BE, `0001234`), r12-03 and r12-22 (DE), r12-09 and r12-51 (FR), r12-17 (IT), r12-40 (ES); r4-02 (DE, `0A12` kept) |
+ | D5 | Member codes are trimmed of surrounding spaces | r1-04 (DE, `" 1234"`) |
+ | D6 | `GOLD` and `PLATINUM` earn double points | r2-01, r4-09 |
+ | D9 | `PT` and `GR` round points up | r7-03, r9-15 |
+@@ -20,3 +20,8 @@
+ 
+ The legacy build that answered rounds 1 to 11 reported `loyalty-points 4.2.7` on `/actuator/info`. Nobody recorded the
+ version for round 12.
++
++## Goldens that involve member codes with a leading zero, round 12
++
++r12-03 (DE `01234`), r12-09 (FR `0778`), r12-17 (IT `00778`), r12-22 (DE `0001234`), r12-40 (ES `01234`),
++r12-51 (FR `00778`): all OK with the tier of the code without its zeros. Details in round-12-mismatches.md.

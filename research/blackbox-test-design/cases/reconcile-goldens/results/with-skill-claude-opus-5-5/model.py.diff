@@ -1,0 +1,23 @@
+--- /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/inputs/model.py	2026-10-07 10:34:44.587300514 +0500
++++ /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.vkrPTwblKN/task/model.py	2026-10-07 10:36:05.378248768 +0500
+@@ -7,9 +7,6 @@
+ 
+ BASE_RATE = Decimal("0.05")
+ 
+-# D4: member codes in these regions are normalized by stripping leading zeros (goldens r3-07, r5-14, r8-02, r10-11).
+-STRIP_ZEROS_REGIONS = ("NL", "BE", "LU")
+-
+ # D6: these tiers earn double points (goldens r2-01, r4-09).
+ DOUBLE_TIERS = ("GOLD", "PLATINUM")
+ 
+@@ -26,7 +23,9 @@
+ 
+ def member_key(region: str, code: str) -> str:
+     code = code.strip()
+-    if region in STRIP_ZEROS_REGIONS:
++    # D4: an all-digit code loses its leading zeros in every region, as if read as a number (goldens r3-07, r5-14,
++    # r8-02, r10-11, r12-03, r12-09, r12-17, r12-22, r12-40, r12-51); a code with a letter is kept as sent (r4-02).
++    if code.isascii() and code.isdigit():
+         code = code.lstrip("0") or "0"
+     return code
+ 
