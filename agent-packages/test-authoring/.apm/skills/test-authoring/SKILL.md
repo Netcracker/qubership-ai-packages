@@ -24,6 +24,10 @@ to the doc-comment skill of its programming language (`javadoc-authoring`, `godo
 `rustdoc-authoring`, `jsdoc-authoring`). The commit message and the pull request description belong to
 `change-description-authoring`.
 
+Where the expected value is unknown and has to be learned by querying another system (a legacy service being ported, a
+vendor binary without source, a reference stand that answers a parity or golden suite), which questions to send it is
+`blackbox-test-design`'s subject; load it too. This skill still governs each test that carries a question.
+
 ## 0. Which references to open
 
 The rules below hold in every framework. What each framework prints, which of its assertions carry the values, where

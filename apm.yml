@@ -177,7 +177,13 @@ marketplace:
     - name: test-authoring
       description: "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report."
       source: ./agent-packages/test-authoring
-      version: 1.1.0
+      version: 1.1.1
+      tags: ["topic:testing", "activity:authoring", "activity:code-review", "audience:public"]
+
+    - name: blackbox-test-design
+      description: "Rules for choosing the questions to send a system whose behavior is learned by querying it: a legacy service being ported, a vendor binary or API without source, a reference stand that answers a parity or golden suite. Covers where test dimensions come from, what an answer can tell apart, how a round of questions is chosen and budgeted, when to stop, and how findings are labeled."
+      source: ./agent-packages/blackbox-test-design
+      version: 1.0.0
       tags: ["topic:testing", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: final-review

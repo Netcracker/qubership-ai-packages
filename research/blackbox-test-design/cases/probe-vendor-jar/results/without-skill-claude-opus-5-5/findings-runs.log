@@ -1,0 +1,235 @@
+=== run 1 [readme] rc=0
+cfg: {"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}
+req: {"customerId":"c1","coupon":"SAVE10","amount":120,"categories":"books,toys"}
+out: {"discount":20}
+crm: lookup c1|
+=== run 2 [readme-small] rc=0
+cfg: {"default":5,"rules":[{"name":"big-orders","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":20}]}
+req: {"customerId":"c1","coupon":"SAVE10","amount":50,"categories":"books,toys"}
+out: {"discount":20}
+crm: lookup c1|
+=== run 3 [nodefault] rc=0
+cfg: {"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":0}
+=== run 4 [coupon-eq-case] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"coupon","op":"eq","value":"save10"}],"discount":10}]}
+req: {"customerId":"c9","coupon":"SAVE10","amount":50}
+out: {"discount":10}
+=== run 5 [coupon-ne-case] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"coupon","op":"ne","value":"save10"}],"discount":10}]}
+req: {"customerId":"c9","coupon":"SAVE10","amount":50}
+out: {"discount":5}
+=== run 6 [amount-9-gte-100] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":9}
+out: {"discount":5}
+=== run 7 [amount-gte-bound] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100}
+out: {"discount":10}
+=== run 8 [amount-lte-bound] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"lte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100}
+out: {"discount":10}
+=== run 9 [amount-eq-decimal] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"eq","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100.0}
+out: {"discount":5}
+=== run 10 [cat-eq-second] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"eq","value":"toys"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"categories":"books,toys"}
+out: {"discount":10}
+=== run 11 [amount-eq-int] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"eq","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100}
+out: {"discount":10}
+=== run 12 [order-10-30-20] rc=0
+cfg: {"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"1"}],"discount":10},{"name":"b","when":[{"field":"amount","op":"gte","value":"1"}],"discount":30},{"name":"c","when":[{"field":"amount","op":"gte","value":"1"}],"discount":20}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":30}
+=== run 13 [order-amt20-tier10] rc=0
+cfg: {"default":5,"rules":[{"name":"a","when":[{"field":"amount","op":"gte","value":"1"}],"discount":20},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"c1","amount":50}
+out: {"discount":20}
+crm: lookup c1|
+=== run 14 [default-vs-rule] rc=0
+cfg: {"default":50,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":10}
+=== run 15 [amount-eq-dec-both] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"eq","value":"100.0"}],"discount":10}]}
+req: {"customerId":"c9","amount":100.0}
+out: {"discount":10}
+=== run 16 [amount-ne-dec] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"ne","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100.0}
+out: {"discount":10}
+=== run 17 [amount-gte-frac] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"99.5"}],"discount":10}]}
+req: {"customerId":"c9","amount":99.7}
+out: {"discount":10}
+=== run 18 [amount-gte-9999] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":99.99}
+out: {"discount":5}
+=== run 19 [amount-req-string] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":"120"}
+out: {"discount":10}
+=== run 20 [two-tier-rules] rc=0
+cfg: {"default":5,"rules":[{"name":"g","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10},{"name":"s","when":[{"field":"tier","op":"ne","value":"silver"}],"discount":15}]}
+req: {"customerId":"c1","amount":50}
+out: {"discount":15}
+crm: lookup c1|lookup c1|
+=== run 21 [tier-unknown-ne] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"ne","value":"gold"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":5}
+crm: lookup c9|
+=== run 22 [tier-unavail-ne] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"ne","value":"gold"}],"discount":10}]}
+req: {"customerId":"x1","amount":50}
+out: {"discount":0}
+crm: lookup x1|
+=== run 23 [tier-unavail-eq] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"x1","amount":50}
+out: {"discount":0}
+crm: lookup x1|
+=== run 24 [tier-case] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"GOLD"}],"discount":10}]}
+req: {"customerId":"c1","amount":50}
+out: {"discount":10}
+crm: lookup c1|
+=== run 25 [tier-no-customer] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"amount":50}
+out: {"discount":5}
+crm: lookup |
+=== run 26 [tier-shortcircuit] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1000"},{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"c1","amount":50}
+out: {"discount":5}
+=== run 27 [amount-eq-leading0] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"eq","value":"0100"}],"discount":10}]}
+req: {"customerId":"c9","amount":100}
+out: {"discount":10}
+=== run 28 [unavail-amt-first] rc=0
+cfg: {"default":5,"rules":[{"name":"big","when":[{"field":"amount","op":"gte","value":"1"}],"discount":30},{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"x1","amount":50}
+out: {"discount":0}
+crm: lookup x1|
+=== run 29 [unavail-tier-first] rc=0
+cfg: {"default":5,"rules":[{"name":"vip","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10},{"name":"big","when":[{"field":"amount","op":"gte","value":"1"}],"discount":30}]}
+req: {"customerId":"x1","amount":50}
+out: {"discount":0}
+crm: lookup x1|
+=== run 30 [tier-cond-first] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"},{"field":"amount","op":"gte","value":"1000"}],"discount":10}]}
+req: {"customerId":"c1","amount":50}
+out: {"discount":5}
+crm: lookup c1|
+=== run 31 [coupon-missing-ne] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"coupon","op":"ne","value":"save10"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":5}
+=== run 32 [cat-case] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"eq","value":"Toys"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"categories":"books,toys"}
+out: {"discount":10}
+=== run 33 [cat-space] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"eq","value":"toys"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"categories":"books, toys"}
+out: {"discount":5}
+=== run 34 [cat-ne] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"ne","value":"toys"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"categories":"books,toys"}
+out: {"discount":5}
+=== run 35 [cat-substr] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"eq","value":"toy"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"categories":"books,toys"}
+out: {"discount":5}
+=== run 36 [unavail-shortcircuit] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1000"},{"field":"tier","op":"eq","value":"gold"}],"discount":10},{"name":"big","when":[{"field":"amount","op":"gte","value":"1"}],"discount":30}]}
+req: {"customerId":"x1","amount":50}
+out: {"discount":30}
+=== run 37 [amount-lte-1000-200] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"lte","value":"200"}],"discount":10}]}
+req: {"customerId":"c9","amount":1000}
+out: {"discount":5}
+=== run 38 [amount-missing-lte] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"lte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9"}
+out: {"discount":5}
+=== run 39 [cat-missing-ne] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"category","op":"ne","value":"toys"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":5}
+=== run 40 [empty-when] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":10}
+=== run 41 [discount-frac] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1"}],"discount":12.5}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":12}
+=== run 42 [discount-150] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1"}],"discount":150}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":150}
+=== run 43 [silver-bronze] rc=0
+cfg: {"default":5,"rules":[{"name":"s","when":[{"field":"tier","op":"eq","value":"silver"}],"discount":10},{"name":"b","when":[{"field":"tier","op":"eq","value":"bronze"}],"discount":20}]}
+req: {"customerId":"c2","amount":50}
+out: {"discount":10}
+crm: lookup c2|lookup c2|
+=== run 44 [discount-12.7] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"1"}],"discount":12.7}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":12}
+=== run 45 [custid-upper-X] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"X1","amount":50}
+out: {"discount":5}
+crm: lookup X1|
+=== run 46 [custid-upper-C] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"tier","op":"eq","value":"gold"}],"discount":10}]}
+req: {"customerId":"C1","amount":50}
+out: {"discount":5}
+crm: lookup C1|
+=== run 47 [unknown-op] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gt","value":"10"}],"discount":10}]}
+req: {"customerId":"c9","amount":50}
+out: {"discount":5}
+=== run 48 [unknown-field] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"country","op":"eq","value":"de"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"country":"de"}
+out: {"discount":5}
+=== run 49 [coupon-gte] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"coupon","op":"gte","value":"A"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"coupon":"B"}
+out: {"discount":5}
+=== run 50 [value-as-number] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":100}],"discount":10}]}
+req: {"customerId":"c9","amount":120}
+out: {"discount":10}
+=== run 51 [coupon-space] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"coupon","op":"eq","value":"SAVE10"}],"discount":10}]}
+req: {"customerId":"c9","amount":50,"coupon":" SAVE10 "}
+out: {"discount":10}
+=== run 52 [amount-nonnumeric] rc=1
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"gte","value":"100"}],"discount":10}]}
+req: {"customerId":"c9","amount":"abc"}
+out: 
+err: Exception in thread "main" java.lang.NumberFormatException: Character a is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+	at java.base/java.math.BigDecimal.<init>(BigDecimal.java:608)
+	at java.base/java.math.BigDecimal.<init>(BigDecimal.java:497)
+	at java.base/java.math.BigDecimal.<init>(BigDecimal.java:903)
+	at DiscountEngine.holds(DiscountEngine.java:96)
+=== run 53 [crm-append] pre-seeded crm-calls.log with PREEXISTING
+out: {"discount":10} (rc=0)
+crm: PREEXISTING|lookup c1|
+=== run 54 [amount-eq-scale] rc=0
+cfg: {"default":5,"rules":[{"name":"r","when":[{"field":"amount","op":"eq","value":"100.0"}],"discount":10}]}
+req: {"customerId":"c9","amount":100.00}
+out: {"discount":5}

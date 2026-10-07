@@ -71,7 +71,8 @@ others. The rules below exist so that the next edit does not repeat them.
 1. Run `scripts/check-skill.sh --index` before the edit: it prints, per section, every line in the package that
    cites it, which is the list of places the edit has to visit. Run it again after: it fails on an ordinal
    cross-reference, a retired term, a version number in a reference, or a short line followed by a continuation.
-   `make test` runs it over this package and over `final-review`, which shares the rules.
+   `make test` runs it over this package and over `final-review` and `blackbox-test-design`, which share the rules,
+   so a term retired here is retired there too.
 2. Run `make check-descriptions` and the markdownlint configuration the repository's CI uses.
 3. For every rule the edit touched, answer in the pull request which of its five places moved, and why the others
    did not need to.

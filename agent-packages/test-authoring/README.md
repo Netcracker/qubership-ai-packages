@@ -126,6 +126,9 @@ Unit tests sit beside the code under test; tests that need the server live under
 - The five doc-comment packages above own the comment on a test.
 - [`change-description-authoring`](../change-description-authoring/) owns the commit message and the pull request
   description, including the sentence that names the level a change was tested at.
+- [`blackbox-test-design`](../blackbox-test-design/) decides which questions to send a system whose expected values
+  are unknown and learned by querying it, such as a legacy service being ported. This package governs each test that
+  carries one of those questions.
 
 ## Install
 
