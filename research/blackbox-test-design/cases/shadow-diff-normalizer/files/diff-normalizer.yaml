@@ -1,0 +1,21 @@
+# Applied to both responses before comparing them. Added in the order the noise showed up.
+rules:
+  - match: "$..*"
+    sort_arrays: true            # line items and errors came back in different orders
+  - match: "$..*"
+    drop_nulls: true             # old service writes "discount": null, new one omits it
+  - match: "$..createdAt"
+    ignore: true
+  - match: "$..updatedAt"
+    ignore: true
+  - match: "$..*"
+    numbers: double              # 10.10 vs 10.1, 1E+1 vs 10
+  - match: "$..status"
+    case_insensitive: true       # "SHIPPED" vs "Shipped"
+  - match: "$.errors[*].message"
+    ignore: true                 # wording differs
+  - match: "$..id"
+    ignore: true                 # new service generates ids differently
+compare:
+  http_status: false             # some 200 vs 201 on POST, ignore for now
+  headers: false

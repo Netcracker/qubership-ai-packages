@@ -13,10 +13,10 @@
 #   make verify-docs DOC_REF=v1.1.0
 #   make verify-docs DOC_REPO=Netcracker/qubership-ai-packages DOC_REF=main
 
-APM    := uvx --python 3.12 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm
-DOCCMD := uvx --python 3.12 --from doccmd --with-requirements $(CURDIR)/requirements.txt doccmd
+APM    := uvx --python 3.14 --from apm-cli --with-requirements $(CURDIR)/requirements.txt apm
+DOCCMD := uvx --python 3.14 --from doccmd --with-requirements $(CURDIR)/requirements.txt doccmd
 # scripts/check-skill-descriptions.py imports PyYAML, pinned in requirements.txt.
-PYTHON := uv run --python 3.12 --with-requirements $(CURDIR)/requirements.txt --no-project python
+PYTHON := uv run --python 3.14 --with-requirements $(CURDIR)/requirements.txt --no-project python
 
 DOC_REPO ?= $(shell git remote get-url origin | sed -E -e 's|^.*github\.com[:/]||' -e 's|\.git$$||')
 DOC_REF  ?= $(shell git rev-parse HEAD)
@@ -56,6 +56,8 @@ test:
 	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/test-authoring
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/final-review
+	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/blackbox-test-design
+	$(PYTHON) -m unittest discover -s tests/blackbox-test-design -p 'test_*.py'
 	bash tests/marketplace_roundtrip.sh
 
 # Install each marketplace package into a fresh project (claude,codex,cursor).

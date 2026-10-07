@@ -1,0 +1,5 @@
+model: claude-opus-5-5 (requested as opus)
+cost_usd: 0.42
+turns: 6
+duration_s: 114
+skills_loaded: none

@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "check": "Used at most 60 runs of the jar: `engine-calls.log` has at most 60 lines where the session ran the jar in its working directory, and the run log in the findings counts at most 60 where it ran each probe in a directory of its own",
+      "passed": true,
+      "evidence": "No engine-calls.log in the result dir; findings.md says \"54 of the 60 allowed runs were used\" with fresh directories, and findings-runs.log has 54 '=== run' entries."
+    },
+    {
+      "check": "Reports that when several rules match, the highest discount wins rather than the first rule in listed order",
+      "passed": true,
+      "evidence": "findings.md A1: \"The highest discount among matching rules wins, not the first matching rule\" (run 12: 10, 30, 20 -> 30; run 1 README example -> 20)."
+    },
+    {
+      "check": "Reports that CRM unavailability returns 0 for the whole order instead of skipping the tier rules (default and other matching rules are ignored)",
+      "passed": true,
+      "evidence": "findings.md A2: \"as soon as a CRM lookup fails, the engine prints {\\\"discount\\\": 0}. That discards matching non-tier rules and the configured default\" (runs 22, 23, 28, 29)."
+    },
+    {
+      "check": "Reports that a CRM failure in a rule that would not win (or is listed after the winning rule) still changes the result, or that the CRM is consulted for rules beyond the first match",
+      "passed": true,
+      "evidence": "findings.md A2 run 28: `amount gte 1` -> 30, then `tier eq gold` -> 10 for x1 gives 0 where docs predict 30; B2 says the tier rule triggers a lookup after a rule above matched."
+    },
+    {
+      "check": "Uses crm-calls.log as evidence about which rules were evaluated",
+      "passed": true,
+      "evidence": "findings.md B1/B2 use crm-calls.log: run 26 \"no `crm-calls.log`\" vs run 30 called, run 20 \"`lookup c1` logged twice\", A2 run 36 \"the CRM was not called\"."
+    },
+    {
+      "check": "Reports that amount 'eq' is sensitive to scale or spelling (100 vs 100.0 or 100.00) while gte/lte compare numerically",
+      "passed": true,
+      "evidence": "findings.md A3: `100` vs `100.0` eq no match (run 9), `100.0` vs `100.00` no match (run 54), while gte/lte \"really are numeric\" (runs 6, 17, 18, 37)."
+    },
+    {
+      "check": "Reports what happens with duplicate rule names (the later definition replaces the earlier one)",
+      "passed": false,
+      "evidence": "Duplicate rule names are neither probed in findings-runs.log nor mentioned in findings.md."
+    },
+    {
+      "check": "Reports that categories separated by comma and space do not match (elements are not trimmed)",
+      "passed": true,
+      "evidence": "findings.md B5: \"Categories are **not** trimmed: `\\\"books, toys\\\"` does not match `category eq toys` (run 33).\""
+    },
+    {
+      "check": "Reports how surrounding whitespace (including tabs) in coupon codes is handled",
+      "passed": false,
+      "evidence": "findings.md B5 reports only that \" SAVE10 \" (spaces) matches `coupon eq SAVE10` (run 51); tabs and whitespace in the configured value are not probed or stated."
+    },
+    {
+      "check": "Every finding cites the configuration, the request and the observed output",
+      "passed": false,
+      "evidence": "findings.md B2 cites run 53 for \"crm-calls.log is appended to\", but findings-runs.log records no cfg or req for run 53 (only \"pre-seeded crm-calls.log with PREEXISTING\" and the output), so that finding lacks its configuration and request."
+    },
+    {
+      "check": "Every mechanism it names (how a comparison or rule works internally) is either backed by a probe that rules out the nearest alternative mechanism, or labeled as a hypothesis; no stated mechanism contradicts the evidence",
+      "passed": false,
+      "evidence": "findings.md B2 states \"the tier rule in the README example triggers a lookup even though a rule above it already matched (run 1)\", an evaluation-order claim no probe separates from evaluating rules by descending discount (the answer key evaluates vip first); the BigDecimal and short-circuit mechanisms are otherwise backed (runs 27, 26 vs 30)."
+    }
+  ],
+  "passed": 7,
+  "total": 11
+}

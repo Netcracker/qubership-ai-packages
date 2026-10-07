@@ -1,0 +1,822 @@
+{
+ "model": "claude-sonnet-5-5",
+ "model_requested": "sonnet",
+ "runs": 3,
+ "failed_runs": 0,
+ "description": "Load before deciding what to ask a system whose behavior you must learn by querying it, not by reading its code: a legacy service you are porting or rewriting, a vendor jar or third-party API without source, another team's undocumented service, a stand that answers a parity or golden suite, an executable spec checked against recorded answers. Also load when a parity suite or dual run is green before cutover and someone asks what it could still miss; when a recorded answer contradicts the model; when planning the next round of probes or deciding to stop asking; when building a comparator, shadow-traffic diff, metamorphic or fuzzing campaign against a reference; when a suite that matched the reference missed a production difference; and when asked whether the model's mutation score or coverage proves it matches the reference. Not for tests of your own code whose expected values you can state (test-authoring); load both when a suite compares your code with a reference.",
+ "recall": 0.9803921568627451,
+ "false_positive_rate": 0.0,
+ "passed": 88,
+ "total": 89,
+ "rows": [
+  {
+   "query": "we're migrating our billing calc from the old .NET 4 service to Kotlin. parity tests in tests/parity all pass against recorded responses (we diff the json after sorting keys). cutover is next sprint. what else should we hit the old service with before we turn it off?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "I only have the vendor's libpricing.so and its PDF manual, no source. I need to rewrite it in Rust. How do I systematically find where it deviates from the manual without burning through my 200-call trial license?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our executable spec (python, ~8k lines) matches every golden we recorded from the legacy authz server and mutmut says 97% killed. my manager wants to call it done. is there any reason to keep sending probes to the staging stand?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "got round 12 goldens back from the stand and 14 of them disagree with our model in lang.py. before I patch special cases into the knobs, how should I think about these disagreements?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "plan the next round of questions for the legacy stand. we have budget for ~80 requests and decisions.md lists 30 decisions that no golden has pinned yet",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "I'm setting up shadow traffic between the old payments-api and the new one (mirror at the gateway, diff responses offline). what should the diff normalize, and what must it not hide?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "every test passed in our rewrite of the geofencing service and we still had an incident after go-live: overlapping zones were resolved in a different order than the old system. how did our parity suite miss this and what should change in how we pick cases?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "third-party shipping-rates API, docs say nothing about edge cases. before we build a cache in front of it I want to characterize how it handles weird postal codes, duplicate parcel ids and retries. how do I go about that?",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "help me design metamorphic tests comparing our reimplementation of the legacy rules engine against the original jar. we can't compute expected outputs ourselves, only run both",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "how many more random requests have to agree between the old and new tax engine before we can reasonably stop asking the old one? we've done 1,800 so far, all matched",
+   "should_trigger": true,
+   "kind": "original",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "add a jest snapshot test for the InvoiceTable component in src/components/InvoiceTable.tsx, covering the empty state and the overdue badge",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "write property-based tests with hypothesis for our own parse_duration() in utils/time.py, it should round-trip with format_duration()",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "set up go-fuzz for the json config parser we wrote in pkg/config, we want crash coverage in CI",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our pitest mutation score dropped from 85 to 71 after refactoring OrderService. which tests should I add to get it back?",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "the legacy inventory service returns 500 when the X-Tenant header is missing. write a bug report for the team that owns it, I have the curl and the response",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "english-developer-style",
+    "problem-report-authoring"
+   ]
+  },
+  {
+   "query": "write integration tests for our Stripe client against their sandbox using the documented test card numbers",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "port LegacyDateUtils.java to Kotlin and keep the behaviour identical, the source is in src/main/java/util",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "review this PR that regenerates the golden files under testdata/ for our code formatter. are the new goldens right?",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "how do I record HTTP interactions with VCR in our rspec suite so the tests stop hitting the network?",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "for my software testing lecture, explain what metamorphic testing is and give the classic sin(x) example from the literature",
+   "should_trigger": false,
+   "kind": "original",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "we're strangling the old Perl order-routing service route by route. /quote and /reserve are already on the Go version and the replay suite (12k captured requests from GoReplay) is green. /cancel goes next week. what kinds of requests is a replay of real traffic structurally unlikely to contain that I should craft by hand before we flip it?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "1",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "cutover checklist for loyalty-points rewrite: dual-run has been on for 3 weeks, 0.02% mismatches all explained as rounding. PM asks 'are we safe'. what would you still want to send to the old one before decommission",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "1",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "porting the COBOL premium calculator to java. we have copybooks + the batch job we can run on the mainframe test LPAR maybe twice a week, ~500 records a run. how do I pick which 500 records go into each run so we learn the most?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "1",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "dual run of old vs new pricing svc keeps agreeing on everything and that honestly makes me nervous. how do i know the inputs we're feeding both are actually able to show a difference",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "1",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "we license a closed-source address normalization SDK (just a .dll and a CHM help file). want to replace it with libpostal + our own rules. the vendor eval license gives 5k calls/month. help me plan how to map its behaviour on whitespace, unicode, abbreviations etc without wasting calls",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "2",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "Need to figure out how the Avalara-style tax API we use rounds per-line vs per-invoice and in what order it applies exemptions. no docs on this. sandbox is rate limited to 100 req/hour. what requests should I send",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "2",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "the vendor jar `risk-scoring-3.4.1.jar` is obfuscated so decompiling is useless. I can call score(Map<String,Object>) from a junit harness as much as I want. how do I build a faithful python reimplementation from just calling it",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "2",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "we're about to build a WireMock stub for the partner's KYC SaaS so CI stops hitting it. recordings so far are happy paths only. before freezing the stubs which calls should we record against the real thing so the stub doesn't lie about edge cases",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "2",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "spec/ruleset_model.py now reproduces 2,940 of 2,941 goldens. the last one: a rule with two conditions where the second references a missing attribute returns ALLOW on the legacy box but our model says ERROR. i could just add an `if missing and position > 0` special case... should i?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "3",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "looking at our model's git log, the last 9 fixes were all 'add X to SKIP_TRIM_FIELDS' or 'add op to LAZY_OPS'. feels like whack-a-mole. how do i get from these lists to whatever the real system is actually doing",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "3",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "two goldens recorded a month apart contradict each other for the same input (one says 422, one says 200 with empty body). the model can only match one. how do I handle this",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "3",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our approval tests capture output of the legacy report generator and we wrote a TS reimplementation that passes all 600 approved files. someone pointed out the approved files were all generated from 4 template configs. what's a sensible way to widen what the approvals actually pin down",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "3",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "setting up Diffy between prod catalog-api and the new one. Diffy's noise filtering is dropping fields that differ between two prod instances. worried we're also hiding real diffs that way, how do i check what the comparison can't see",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "4",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our parity comparator does json.loads on both sides, sorts all arrays, strips nulls and compares floats with 1e-9 tolerance. is that too aggressive? which old-vs-new differences can it never catch",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "4",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "the diff ignores ordering of `errors[]` in the validation response. turns out clients show only errors[0]. what else could our normalization be hiding and how do i find out without re-reading the normalizer code line by line",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "4",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "write the response comparator for the legacy vs new invoices endpoint in tests/parity/compare.py. legacy returns amounts as strings like \"10.50\", new returns numbers. I don't want false alarms but I also don't want to paper over real differences",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "4",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "postmortem: new auth gateway went live, parity suite 100% green, but users with a trailing tab in their tenant code got 401 instead of being matched like before. how did 4000 parity cases not include that and how do we stop the next one",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "5",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "incident INC-2231: the rewritten notification scheduler fires reminders in different order than the old cron-based one when two rules share a name. all our contract tests (Pact) passed. why didnt we catch it, what class of cases are we systematically missing",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "5",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "after go-live the new discount engine double-applied a coupon when the cart had the same SKU twice. the golden suite had 1,200 carts, none with duplicate SKUs. can you go through tests/goldens and tell me what other shapes of input we never sent to the old system",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "5",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "we get one slot per day on the shared UAT env of the legacy claims system, ~60 requests max. here's decisions.md with the open items. pick tomorrow's 60 and order them so if ops cuts us to 30 we still get the important ones",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "6",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "how do I know when to stop collecting reference answers from the old system? we've been doing rounds of 50 for 2 months, last 3 rounds found nothing new",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "6",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "10k randomly generated requests, old and new geocoder agree on all of them. what can I actually claim from that? our generator draws addresses from the prod distribution",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "6",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "the legacy stand is shared with QA and some of my probes need to change tenant config. how do i structure the batch so i don't break their stuff and so i can tell if the stand drifted mid-run",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "6",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our reimplementation of the entitlement checker has 100% branch coverage and mutmut kills 94%. the architect says that's proof it matches the legacy one. I'm not convinced but can't articulate why",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "7",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "is pairwise coverage over our model's own enums (region x plan x status) good enough evidence the port behaves the same as the old billing service? the enums come from our code",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "7",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "pitest on the spec module says the surviving mutants are all 'equivalent'. but these are mutants of a model of someone else's system, so 'equivalent' to what? how should i be using mutation results here",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "7",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "ok, now generate the next round of cases for the stand",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "8",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "goldens from round 7 are in under goldens/r7/, reconcile them with the model and tell me what changed",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "8",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "3 of the new answers contradict model.py. before you edit anything, write up what we actually know vs what we're guessing",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "8",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "before i send this batch to the stand, sanity check it: are all of these valid uploads, and does any of them depend on another one running first?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "8",
+   "rate": 0.0,
+   "pass": false,
+   "other_skills": []
+  },
+  {
+   "query": "the platform team's /v2/accounts validation has no docs and they're slow to answer. i need to replicate its rules in our frontend form. what's a systematic way to work out its validation rules by sending it requests from staging",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "9",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "another team's feature-flag service evaluates targeting rules and we need to replicate it client-side for offline mode. we can hit their staging but can't see the code. how do I figure out precedence when multiple rules match and what happens with missing attributes",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "9",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "the internal CSV import endpoint rejects some files with a generic 'invalid row' and accepts others that look the same to me. I want to know exactly what it accepts. plan the requests",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "9",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "переписываем легаси-сервис расчёта тарифов с джавы 8 на котлин, исходники старого есть только частично. эталонные ответы снимаем со стенда, раз в неделю. как выбрать, что слать на стенд в следующей пачке, чтобы не тратить её на очевидное?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "10",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "у нас модель на питоне сходится со всеми 3к эталонами со стенда, mutmut 96%. тимлид говорит хватит гонять стенд. как аргументировать, что ещё рано (или что он прав)?",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "10",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "сравнилка ответов старого и нового сервиса сортирует массивы и выкидывает null-поля. после релиза всплыл баг именно с порядком элементов. что ещё наш дифф может прятать и как это проверить",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "10",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "вендорская либа без исходников, только .so и pdf. надо понять, как она парсит числа и тримит строки, вызовов у нас ограниченно. с чего начать, какие запросы слать",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "10",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "пришли ответы со стенда по 9 раунду, 5 штук не сходятся с моделью. не хочу опять городить исключения в списке, помоги понять что там на самом деле за механизм",
+   "should_trigger": true,
+   "kind": "situation",
+   "cluster": "10",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "write a flyway migration that moves customer addresses from the legacy `addr` table into the new `customer_address` schema, and a test that row counts match afterwards",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Legacy + migration + 'match' wording, but it is a data/schema migration script with a known expected result (counts equal); ordinary test-authoring at most.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our nightly ETL from the old Oracle warehouse to Snowflake drops ~200 rows a day. can you help me write a reconciliation query that finds which ones are missing?",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Old vs new system diff, but it is a data reconciliation query, not designing probes against an unknown behavior.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "POST /v2/orders on the legacy order-service returns 422 for this one payload and I can't see why, here's the request and response. what's wrong with my request?",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Querying a legacy service, but the need is debugging one failing request, not planning a question campaign or building a model.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "file an issue on the acme-geo SDK repo: their reverse-geocode endpoint returns lat/lon swapped for southern hemisphere coords. I have a minimal curl repro",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Vendor API and a behavior discrepancy, but the task is writing the bug report (problem-report-authoring).",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "english-developer-style",
+    "problem-report-authoring"
+   ]
+  },
+  {
+   "query": "set up a k6 load test against the new pricing-api, 500 rps ramp for 10 min, and compare p99 latency with the old service's numbers from grafana",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Old vs new comparison, but performance/load testing with a numeric target, not behavior discovery.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "mock the Twilio client in our NotificationService unit tests so they don't send real SMS. we use mockito",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Third-party API, but faking a dependency in our own unit tests is test-authoring territory.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "write a pact consumer test for the web frontend's calls to our own accounts-api (GET /accounts/{id}, PATCH /accounts/{id}/email) and wire the provider verification in the accounts-api CI",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Contract testing between services, but we own both sides and can state expected values.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "upgrade jackson from 2.13 to 2.17 and fix whatever breaks in the build",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Third-party library and behavior change risk, but the task is a dependency upgrade and compile fixes.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "the approval tests in ReportRendererTest fail after I changed the date format on purpose. how do I regenerate the .approved.txt files with ApprovalTests.Java and check them in?",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Golden/approval files, but of our own code with an intended change; mechanical regeneration plus test-authoring's 'snapshot accepted unread' rule.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "do a quick security pass on our public /graphql endpoint — introspection, depth limits, auth bypass via aliases. it's our service, source is in this repo",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Probing an endpoint with crafted requests, but it is a security review of our own code (security-review).",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "add playwright e2e tests for the checkout flow: add to cart, apply coupon SAVE10, pay with the test card, see the confirmation page",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "'Black-box' UI testing in the QA sense, but expected behavior is known from the product spec.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "what's the difference between black-box, white-box and grey-box testing? need a slide for onboarding new QA engineers",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Keyword 'black-box' as a QA term; conceptual explanation for teaching.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "ParityIT is flaky in CI, fails about 1 in 15 runs with a timeout talking to the testcontainers postgres. logs attached",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "The test is named 'parity', but the question is CI flakiness (test-authoring §8 determinism).",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "increase the mutation score for src/rules/discount.ts, stryker says 23 survivors in applyTiers(). write the tests that kill them",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Mutation score on our own readable code with stated expectations; test-authoring reads mutation reports.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "add metamorphic tests for our image resize function: resizing to 2x then 0.5x should give the original within tolerance, and resize should commute with horizontal flip",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Metamorphic relations, but over our own function with no reference system; property-based test in test-authoring.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "write jest snapshot tests for the CLI's --help output so we notice when someone changes the flags",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Snapshot keyword, our own code; also a change-detector concern for test-authoring.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "generate a typed client for the Stripe-like vendor OpenAPI spec they sent us (openapi.yaml) and wrap the retry logic",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Vendor API without source, but the task is client code generation, not learning its behavior.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "we're moving from mysql 5.7 to 8.0. which of our queries will behave differently? here's the slow log and our schema",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Platform migration with behavior-difference worry, but answerable from documented release notes and SQL review; no probe design asked. Weak candidate for borderline.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "refactor the 900-line OrderCalculator.process() into smaller methods. tests exist in OrderCalculatorTest and cover most branches, keep them green",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "Legacy code refactoring, source readable and tests exist; test-authoring §6 (keeping tests green across a refactoring).",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "напиши юнит-тесты на наш TariffCalculator, там три ветки по типу клиента и граничные значения по сумме 10000 и 50000",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "RU. Ordinary unit tests for our own code with known boundaries.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "нужно перенести данные из старой CRM (Postgres 9.6) в новую, напиши скрипт миграции и проверку, что ничего не потерялось",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "RU. 'Старая система', 'миграция', проверка полноты, но это перенос данных с известным ожидаемым результатом.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "замокай вызовы к API Сбера в интеграционных тестах платёжного модуля, сейчас они ходят в песочницу и падают по таймауту",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "RU. Third-party API, but the need is a test double for our tests and flakiness.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "объясни на лекции для студентов, что такое differential testing и чем он отличается от метаморфного тестирования, с примером про компиляторы",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "RU. Concept explanation for teaching; no system to probe.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "напиши баг-репорт для команды legacy-биллинга: при пустом поле region сервис возвращает 200 и пустой счёт вместо 400. curl и ответ ниже",
+   "should_trigger": false,
+   "kind": "near-miss",
+   "why": "RU. Legacy service behavior, but the task is writing a problem report.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "characterization tests for LegacyPayrollEngine.java before we refactor it — we have the source, ~4k lines, no tests at all, nobody knows what half of it is supposed to do",
+   "should_trigger": false,
+   "kind": "borderline",
+   "why": "Source is readable, so expected values can be obtained by running it and pinned (Feathers-style golden master) — test-authoring §6. Lean false; but if they ask which inputs to choose because the code is unreadable in practice, input-space techniques from blackbox-test-design (positions from the input format, comparator audit) become relevant.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "we're rewriting our own python 2 report generator in go. the python code is in the repo but it's spaghetti; I want to run both on last month's 40k inputs and diff the outputs. what should the diff ignore?",
+   "should_trigger": true,
+   "kind": "borderline",
+   "why": "Source exists, but the old system acts as the reference oracle and the question is comparator normalization (section 2 'audit the comparator'). Lean true; 'load both' applies.",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "set up hypothesis to compare our new fast_tokenize() against the slow reference tokenize() in the same module, they should produce identical tokens",
+   "should_trigger": false,
+   "kind": "borderline",
+   "why": "Differential test against a reference, but both are our readable code and the reference is a trusted oracle with cheap answers; ordinary property-based test (test-authoring). Lean false; true only if the question becomes 'how many inputs before we trust it' or the generator is derived from the model.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": [
+    "test-authoring"
+   ]
+  },
+  {
+   "query": "the vendor's PDF says the `/quote` endpoint rounds HALF_UP but our reconciliation shows a few cents off on ~0.3% of quotes. how do I figure out what rounding they actually use with as few calls as possible? each call costs money",
+   "should_trigger": true,
+   "kind": "borderline",
+   "why": "Looks like debugging a discrepancy, but it is a vendor black box with a budget on answers and competing hypotheses to separate: exactly probe-round design. Lean true.",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "our golden test suite for the SQL formatter has 600 cases and all pass. a user just reported a formatting bug with nested CTEs. how did the suite miss it?",
+   "should_trigger": false,
+   "kind": "borderline",
+   "why": "'Every test passed, why did we miss this' phrasing is a listed trigger, but the formatter is our own code and goldens were our outputs; it is test adequacy for our code (test-authoring). Lean false; true if the goldens were recorded from another formatter being reimplemented.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "мы переписываем легаси-сервис расчёта скидок с PHP на Java. исходники PHP есть, но логика размазана по 30 файлам и хранимкам. как понять, что новая версия ведёт себя так же?",
+   "should_trigger": true,
+   "kind": "borderline",
+   "why": "RU. Source nominally available, but behavior spread across code and stored procedures is unreadable in practice; parity goal and 'how do we know it behaves the same' is the skill's core question. Lean true, load both.",
+   "rate": 1.0,
+   "pass": true,
+   "other_skills": []
+  },
+  {
+   "query": "record the responses of the payments sandbox with wiremock so our integration tests can run offline",
+   "should_trigger": false,
+   "kind": "borderline",
+   "why": "Recording answers from a third-party system resembles building goldens, but the purpose is a replay fixture for our tests, not learning its behavior. Lean false.",
+   "rate": 0.0,
+   "pass": true,
+   "other_skills": []
+  }
+ ]
+}

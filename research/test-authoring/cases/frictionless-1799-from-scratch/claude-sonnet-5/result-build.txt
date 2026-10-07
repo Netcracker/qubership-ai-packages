@@ -1,0 +1,14 @@
+on the fix (build.sh exited with 0):
+  170 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  170 tests ran, 10 failed
+    test_resource.test_analyze_resource_detailed_skips_a_field_missing_from_the_header_issue_1791
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_header_is_reported_once
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_primary_key_missing_from_the_header_issue_1791
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field too]
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped too]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]

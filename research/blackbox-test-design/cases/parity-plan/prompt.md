@@ -1,0 +1,1 @@
+We're porting our tax engine from the legacy Java service to Go and cut over in three weeks. Status and the decisions list are in STATUS.md. Everything is green, but I'm nervous. Where could we still be blind, and what should the last round of at most 50 requests to the legacy stand be? Write the plan to plan.md so I can attach it to the change ticket.

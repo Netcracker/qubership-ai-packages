@@ -1,0 +1,461 @@
+diff --git a/service/internal/kubernetes/route_test.go b/service/internal/kubernetes/route_test.go
+index 4dcaad2..e61d599 100644
+--- a/service/internal/kubernetes/route_test.go
++++ b/service/internal/kubernetes/route_test.go
+@@ -4,12 +4,14 @@ import (
+ 	"context"
+ 	"encoding/json"
+ 	"fmt"
++	"strings"
+ 	"testing"
+ 
+ 	certClient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
+ 	"github.com/netcracker/qubership-core-lib-go-paas-mediation-client/v8/entity"
+ 	"github.com/netcracker/qubership-core-lib-go-paas-mediation-client/v8/service/backend"
+ 	"github.com/netcracker/qubership-core-lib-go-paas-mediation-client/v8/service/internal/cache"
++	"github.com/stretchr/testify/assert"
+ 	"github.com/stretchr/testify/require"
+ 	"k8s.io/api/extensions/v1beta1"
+ 	v1 "k8s.io/api/networking/v1"
+@@ -482,17 +484,8 @@ func Test_UpdateOrCreateRoute_GatewayAPIOnly_Error(t *testing.T) {
+ 
+ func newGatewayAPIOnlyKubeClient(t *testing.T) (*Kubernetes, *gatewayclientfake.Clientset) {
+ 	t.Helper()
+-	gwClient := gatewayclientfake.NewSimpleClientset()
+-	kubeClient, err := NewKubernetesClientBuilder().
+-		WithNamespace(testNamespace1).
+-		WithClient(&backend.KubernetesApi{
+-			KubernetesInterface:  fake.NewClientset(),
+-			CertmanagerInterface: &certClient.Clientset{},
+-			GatewayInterface:     gwClient,
+-		}).
+-		WithGatewaySystemType(GatewayApiDefault).
+-		Build()
+-	require.NoError(t, err)
++	kubeClient, _, gwClient := newRouteKubeClient(t, GatewayApiDefault)
++	kubeClient.UseNetworkingV1Ingress = false
+ 	return kubeClient, gwClient
+ }
+ 
+@@ -560,24 +553,47 @@ func dualModeTestRoute() *entity.Route {
+ }
+ 
+ func newDualModeKubeClient(t *testing.T) (*Kubernetes, *fake.Clientset, *gatewayclientfake.Clientset) {
++	t.Helper()
++	return newRouteKubeClient(t, LegacyIngress+","+GatewayApiDefault)
++}
++
++// newRouteKubeClient builds a client for gatewaySystemType over fake Kubernetes and gateway API backends, with
++// networking/v1 ingresses. Both backends are returned so that a test can inject an error into either one and read
++// back what was created.
++func newRouteKubeClient(t *testing.T, gatewaySystemType string) (*Kubernetes, *fake.Clientset, *gatewayclientfake.Clientset) {
+ 	t.Helper()
+ 	kubeClientSet := fake.NewClientset()
+ 	gwClient := gatewayclientfake.NewSimpleClientset()
+-	certClientSet := &certClient.Clientset{}
+ 	kubeClient, err := NewKubernetesClientBuilder().
+ 		WithNamespace(testNamespace1).
+ 		WithClient(&backend.KubernetesApi{
+ 			KubernetesInterface:  kubeClientSet,
+-			CertmanagerInterface: certClientSet,
++			CertmanagerInterface: &certClient.Clientset{},
+ 			GatewayInterface:     gwClient,
+ 		}).
+-		WithGatewaySystemType(LegacyIngress + "," + GatewayApiDefault).
++		WithGatewaySystemType(gatewaySystemType).
+ 		Build()
+ 	require.NoError(t, err)
+ 	kubeClient.UseNetworkingV1Ingress = true
+ 	return kubeClient, kubeClientSet, gwClient
+ }
+ 
++// failingReactor builds a reactor that returns err instead of letting the fake client's object tracker handle the
++// action.
++func failingReactor(err error) kube_test.ReactionFunc {
++	return func(kube_test.Action) (bool, runtime.Object, error) {
++		return true, nil, err
++	}
++}
++
++func httpRoutesResource() schema.GroupResource {
++	return schema.GroupResource{Group: "gateway.networking.k8s.io", Resource: "httproutes"}
++}
++
++func ingressesResource() schema.GroupResource {
++	return schema.GroupResource{Resource: "ingresses"}
++}
++
+ func Test_CreateRoute_DualMode_HTTPRouteCreated_IngressFailed_ReturnsPartialCreateError(t *testing.T) {
+ 	assertions := require.New(t)
+ 	ctx := context.Background()
+@@ -636,105 +652,102 @@ func Test_CreateRoute_DualMode_BothFailed_ReturnsFullStatusError(t *testing.T) {
+ 	assertions.NotContains(err.Error(), "try using Update endpoint")
+ }
+ 
+-func Test_dualModeRouteError_BothSucceeded_ReturnsNil(t *testing.T) {
+-	err := dualModeRouteError(
+-		routeResourceResult{status: routeStatusCreated},
+-		routeResourceResult{status: routeStatusCreated},
+-	)
+-	require.NoError(t, err)
++// Test_CreateRoute_ExistingRoute_ReturnsAlreadyExistsInEveryGatewayMode pins the reason a caller matches with
++// paasErrors.IsAlreadyExists, whichever resources the gateway system type asks for. Each mode reaches its own branch
++// of resolveRouteResult, so each row fails on its own when that branch replaces the API error instead of wrapping it.
++func Test_CreateRoute_ExistingRoute_ReturnsAlreadyExistsInEveryGatewayMode(t *testing.T) {
++	gatewayModes := []struct {
++		name              string
++		gatewaySystemType string
++	}{
++		{"legacy ingress only", LegacyIngress},
++		{"gateway api only", GatewayApiDefault},
++		{"dual mode", LegacyIngress + "," + GatewayApiDefault},
++	}
++
++	for _, mode := range gatewayModes {
++		t.Run(mode.name, func(t *testing.T) {
++			ctx := context.Background()
++			kubeClient, k8sClient, gwClient := newRouteKubeClient(t, mode.gatewaySystemType)
++			gwClient.PrependReactor("create", "httproutes",
++				failingReactor(paasErrors.NewAlreadyExists(httpRoutesResource(), testIngress)))
++			k8sClient.PrependReactor("create", "ingresses",
++				failingReactor(paasErrors.NewAlreadyExists(ingressesResource(), testIngress)))
++
++			_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++
++			assert.Equal(t, metav1.StatusReasonAlreadyExists, paasErrors.ReasonForError(err),
++				"reason of the CreateRoute error %v", err)
++		})
++	}
+ }
+ 
+-func Test_dualModeRouteError_ShowsHintOnCreatePartialFailure(t *testing.T) {
+-	err := dualModeRouteError(
+-		routeResourceResult{status: routeStatusCreated},
+-		routeResourceResult{status: routeStatusCreated, err: paasErrors.NewInternalError(fmt.Errorf("ingress create failed"))},
+-	)
++// Test_CreateRoute_DualMode_IngressAlreadyExists_ReturnsAlreadyExistsWithUpdateHint covers a create that got as far
++// as the HTTPRoute: the error the API server returned for the ingress reaches the caller in the chain, and the hint
++// names the endpoint that finishes the job. That the HTTPRoute is left in place is
++// Test_CreateRoute_DualMode_HTTPRouteCreated_IngressFailed_ReturnsPartialCreateError's.
++func Test_CreateRoute_DualMode_IngressAlreadyExists_ReturnsAlreadyExistsWithUpdateHint(t *testing.T) {
++	ctx := context.Background()
++	kubeClient, k8sClient, _ := newDualModeKubeClient(t)
++	ingressExists := paasErrors.NewAlreadyExists(ingressesResource(), testIngress)
++	k8sClient.PrependReactor("create", "ingresses", failingReactor(ingressExists))
++
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++
+ 	require.Error(t, err)
+-	require.Contains(t, err.Error(), "try using Update endpoint")
++	assert.ErrorIs(t, err, ingressExists)
++	assert.Equal(t, metav1.StatusReasonAlreadyExists, paasErrors.ReasonForError(err),
++		"reason of the CreateRoute error %v", err)
++	assert.Contains(t, err.Error(), "try using Update endpoint")
+ }
+ 
+-func Test_CreateRoute_DualMode_BothAlreadyExists_ReturnsAlreadyExistsError(t *testing.T) {
+-	assertions := require.New(t)
++// Test_CreateRoute_DualMode_IngressCreateFailed_ReportsTheIngressErrorOnce guards the summary that the message
++// carries before the wrapped error: a summary built from the full per-resource status prints the failed resource's
++// error a second time.
++func Test_CreateRoute_DualMode_IngressCreateFailed_ReportsTheIngressErrorOnce(t *testing.T) {
+ 	ctx := context.Background()
+-	gwClient := gatewayclientfake.NewSimpleClientset()
+-	gwClient.PrependReactor("create", "httproutes", func(action kube_test.Action) (bool, runtime.Object, error) {
+-		return true, nil, paasErrors.NewAlreadyExists(
+-			schema.GroupResource{Group: "gateway.networking.k8s.io", Resource: "httproutes"}, testIngress)
+-	})
+-	kubeClientSet := fake.NewClientset()
+-	kubeClientSet.PrependReactor("create", "ingresses", func(action kube_test.Action) (bool, runtime.Object, error) {
+-		return true, nil, paasErrors.NewAlreadyExists(schema.GroupResource{Resource: "ingresses"}, testIngress)
+-	})
+-	kubeClient, err := NewKubernetesClientBuilder().
+-		WithNamespace(testNamespace1).
+-		WithClient(&backend.KubernetesApi{
+-			KubernetesInterface:  kubeClientSet,
+-			CertmanagerInterface: &certClient.Clientset{},
+-			GatewayInterface:     gwClient,
+-		}).
+-		WithGatewaySystemType(LegacyIngress + "," + GatewayApiDefault).
+-		Build()
+-	require.NoError(t, err)
+-	kubeClient.UseNetworkingV1Ingress = true
++	kubeClient, k8sClient, _ := newDualModeKubeClient(t)
++	k8sClient.PrependReactor("create", "ingresses",
++		failingReactor(paasErrors.NewInternalError(fmt.Errorf("ingress create failed"))))
+ 
+-	_, err = kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
+-	assertions.Error(err)
+-	assertions.True(paasErrors.IsAlreadyExists(err))
+-	assertions.False(paasErrors.IsInternalError(err))
+-	assertions.Contains(err.Error(), "httproute: error:")
+-	assertions.Contains(err.Error(), "already exists")
+-	assertions.Contains(err.Error(), "ingress: error:")
+-	assertions.NotContains(err.Error(), "try using Update endpoint")
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++
++	require.Error(t, err)
++	assert.Equal(t, 1, strings.Count(err.Error(), "ingress create failed"),
++		"occurrences of the ingress error in %q", err)
+ }
+ 
+-func Test_CreateRoute_DualMode_AlreadyExistsAndInternalError_ReturnsAlreadyExistsError(t *testing.T) {
+-	assertions := require.New(t)
++func Test_CreateRoute_DualMode_HTTPRouteCreateFailed_ReportsTheHTTPRouteErrorOnce(t *testing.T) {
+ 	ctx := context.Background()
+-	gwClient := gatewayclientfake.NewSimpleClientset()
+-	gwClient.PrependReactor("create", "httproutes", func(action kube_test.Action) (bool, runtime.Object, error) {
+-		return true, nil, paasErrors.NewAlreadyExists(
+-			schema.GroupResource{Group: "gateway.networking.k8s.io", Resource: "httproutes"}, testIngress)
+-	})
+-	kubeClientSet := fake.NewClientset()
+-	kubeClientSet.PrependReactor("create", "ingresses", func(action kube_test.Action) (bool, runtime.Object, error) {
+-		return true, nil, paasErrors.NewInternalError(fmt.Errorf("ingress create failed"))
+-	})
+-	kubeClient, err := NewKubernetesClientBuilder().
+-		WithNamespace(testNamespace1).
+-		WithClient(&backend.KubernetesApi{
+-			KubernetesInterface:  kubeClientSet,
+-			CertmanagerInterface: &certClient.Clientset{},
+-			GatewayInterface:     gwClient,
+-		}).
+-		WithGatewaySystemType(LegacyIngress + "," + GatewayApiDefault).
+-		Build()
+-	require.NoError(t, err)
+-	kubeClient.UseNetworkingV1Ingress = true
++	kubeClient, _, gwClient := newDualModeKubeClient(t)
++	gwClient.PrependReactor("create", "httproutes",
++		failingReactor(paasErrors.NewInternalError(fmt.Errorf("httproute create failed"))))
+ 
+-	_, err = kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
+-	assertions.Error(err)
+-	assertions.True(paasErrors.IsAlreadyExists(err))
+-	assertions.Contains(err.Error(), "httproute: error:")
+-	assertions.Contains(err.Error(), "ingress: error:")
+-	assertions.Contains(err.Error(), "ingress create failed")
+-	assertions.NotContains(err.Error(), "try using Update endpoint")
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++
++	require.Error(t, err)
++	assert.Equal(t, 1, strings.Count(err.Error(), "httproute create failed"),
++		"occurrences of the HTTPRoute error in %q", err)
+ }
+ 
+-func Test_CreateRoute_DualMode_PartialCreate_IngressAlreadyExists_ReturnsAlreadyExistsWithHint(t *testing.T) {
+-	assertions := require.New(t)
++// Test_CreateRoute_DualMode_BothCreatesFailed_WrapsBothErrorsWithoutUpdateHint covers a create that produced neither
++// resource: both API errors stay in the chain, and the hint stays out because there is nothing for an update to
++// finish. The two errors have different reasons, so that each errors.Is can match only its own.
++func Test_CreateRoute_DualMode_BothCreatesFailed_WrapsBothErrorsWithoutUpdateHint(t *testing.T) {
+ 	ctx := context.Background()
+-	kubeClient, k8sClient, _ := newDualModeKubeClient(t)
+-
+-	k8sClient.PrependReactor("create", "ingresses", func(action kube_test.Action) (bool, runtime.Object, error) {
+-		return true, nil, paasErrors.NewAlreadyExists(schema.GroupResource{Resource: "ingresses"}, testIngress)
+-	})
++	kubeClient, k8sClient, gwClient := newDualModeKubeClient(t)
++	httpRouteForbidden := paasErrors.NewForbidden(httpRoutesResource(), testIngress,
++		fmt.Errorf("httproutes are read-only"))
++	ingressExists := paasErrors.NewAlreadyExists(ingressesResource(), testIngress)
++	gwClient.PrependReactor("create", "httproutes", failingReactor(httpRouteForbidden))
++	k8sClient.PrependReactor("create", "ingresses", failingReactor(ingressExists))
+ 
+ 	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
+-	assertions.Error(err)
+-	assertions.True(paasErrors.IsAlreadyExists(err))
+-	assertions.Contains(err.Error(), "httproute: created")
+-	assertions.Contains(err.Error(), "ingress: error")
+-	assertions.Contains(err.Error(), "try using Update endpoint")
++
++	require.Error(t, err)
++	assert.ErrorIs(t, err, httpRouteForbidden)
++	assert.ErrorIs(t, err, ingressExists)
++	assert.NotContains(t, err.Error(), "try using Update endpoint")
+ }
+ 
+ func Test_CreateRoute_DualMode_HTTPRouteFailed_IngressCreated_ReturnsPartialCreateError(t *testing.T) {
+@@ -869,6 +882,25 @@ func Test_UpdateOrCreateRoute_DualMode_HTTPRouteUpdated_IngressUpdateError_Retur
+ 	assertions.Len(ingressList.Items, 1)
+ }
+ 
++// Test_UpdateOrCreateRoute_DualMode_IngressUpdateConflict_ReturnsConflict pins the reason a caller matches with
++// paasErrors.IsConflict to retry the update. The injected error is not an internal error, so that an update which
++// replaced it with an internal error of its own fails here, while the test above still passes.
++func Test_UpdateOrCreateRoute_DualMode_IngressUpdateConflict_ReturnsConflict(t *testing.T) {
++	ctx := context.Background()
++	kubeClient, k8sClient, _ := newDualModeKubeClient(t)
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++	require.NoError(t, err)
++	ingressConflict := paasErrors.NewConflict(ingressesResource(), testIngress,
++		fmt.Errorf("the ingress was modified"))
++	k8sClient.PrependReactor("update", "ingresses", failingReactor(ingressConflict))
++
++	_, err = kubeClient.UpdateOrCreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++
++	assert.ErrorIs(t, err, ingressConflict)
++	assert.Equal(t, metav1.StatusReasonConflict, paasErrors.ReasonForError(err),
++		"reason of the UpdateOrCreateRoute error %v", err)
++}
++
+ func Test_UpdateOrCreateRoute_DualMode_UpdatesBoth(t *testing.T) {
+ 	assertions := require.New(t)
+ 	ctx := context.Background()
+@@ -978,6 +1010,61 @@ func Test_DeleteRoute_DualMode_BothDeleteFailed_ReturnsFullStatusError(t *testin
+ 	assertions.Contains(err.Error(), "ingress delete failed")
+ }
+ 
++// Test_DeleteRoute_DualMode_IngressDeleteRefused_ReturnsForbidden pins the reason a caller matches with
++// paasErrors.IsForbidden. The injected error is not an internal error, so that a delete which replaced it with an
++// internal error of its own fails here, while the internal-error tests above still pass.
++func Test_DeleteRoute_DualMode_IngressDeleteRefused_ReturnsForbidden(t *testing.T) {
++	ctx := context.Background()
++	kubeClient, k8sClient, _ := newDualModeKubeClient(t)
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++	require.NoError(t, err)
++	ingressForbidden := paasErrors.NewForbidden(ingressesResource(), testIngress,
++		fmt.Errorf("ingresses are read-only"))
++	k8sClient.PrependReactor("delete", "ingresses", failingReactor(ingressForbidden))
++
++	err = kubeClient.DeleteRoute(ctx, testIngress, testNamespace1)
++
++	assert.ErrorIs(t, err, ingressForbidden)
++	assert.Equal(t, metav1.StatusReasonForbidden, paasErrors.ReasonForError(err),
++		"reason of the DeleteRoute error %v", err)
++}
++
++func Test_DeleteRoute_DualMode_HTTPRouteDeleteRefused_ReturnsForbidden(t *testing.T) {
++	ctx := context.Background()
++	kubeClient, _, gwClient := newDualModeKubeClient(t)
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++	require.NoError(t, err)
++	httpRouteForbidden := paasErrors.NewForbidden(httpRoutesResource(), testIngress,
++		fmt.Errorf("httproutes are read-only"))
++	gwClient.PrependReactor("delete", "httproutes", failingReactor(httpRouteForbidden))
++
++	err = kubeClient.DeleteRoute(ctx, testIngress, testNamespace1)
++
++	assert.ErrorIs(t, err, httpRouteForbidden)
++	assert.Equal(t, metav1.StatusReasonForbidden, paasErrors.ReasonForError(err),
++		"reason of the DeleteRoute error %v", err)
++}
++
++// Test_DeleteRoute_DualMode_BothDeletesRefused_WrapsBothErrors covers the branch that reports two failures: each
++// API error stays in the chain, so a caller can match either one.
++func Test_DeleteRoute_DualMode_BothDeletesRefused_WrapsBothErrors(t *testing.T) {
++	ctx := context.Background()
++	kubeClient, k8sClient, gwClient := newDualModeKubeClient(t)
++	_, err := kubeClient.CreateRoute(ctx, dualModeTestRoute(), testNamespace1)
++	require.NoError(t, err)
++	httpRouteForbidden := paasErrors.NewForbidden(httpRoutesResource(), testIngress,
++		fmt.Errorf("httproutes are read-only"))
++	ingressConflict := paasErrors.NewConflict(ingressesResource(), testIngress,
++		fmt.Errorf("the ingress was modified"))
++	gwClient.PrependReactor("delete", "httproutes", failingReactor(httpRouteForbidden))
++	k8sClient.PrependReactor("delete", "ingresses", failingReactor(ingressConflict))
++
++	err = kubeClient.DeleteRoute(ctx, testIngress, testNamespace1)
++
++	assert.ErrorIs(t, err, httpRouteForbidden)
++	assert.ErrorIs(t, err, ingressConflict)
++}
++
+ func Test_DeleteRoute_DualMode_BothNotFound_ReturnsNotFound(t *testing.T) {
+ 	assertions := require.New(t)
+ 	ctx := context.Background()
+@@ -1532,96 +1619,3 @@ func Test_UpdateOrCreateRoute_DualMode_SetsIgnoreAnnotationOnIngressUpdate(t *te
+ 	assertions.NoError(err)
+ 	assertions.Equal("true", ingress.Annotations[IgnoreApiConverterAnnotation])
+ }
+-
+-func Test_dualModeRouteError_NoErrorDuplication(t *testing.T) {
+-	t.Parallel()
+-	assertions := require.New(t)
+-
+-	tests := []struct {
+-		name           string
+-		httpRouteRes   routeResourceResult
+-		ingressRes     routeResourceResult
+-		wantErrContain string
+-		wantNoContain  string
+-	}{
+-		{
+-			name: "HTTPRoute success, Ingress failed - no duplication",
+-			httpRouteRes: routeResourceResult{
+-				route:  &entity.Route{Metadata: entity.Metadata{Name: "test"}},
+-				status: routeStatusCreated,
+-				err:    nil,
+-			},
+-			ingressRes: routeResourceResult{
+-				route:  nil,
+-				status: "",
+-				err:    fmt.Errorf("ingress creation failed"),
+-			},
+-			wantErrContain: "httproute: created, ingress: error - try using Update endpoint: ingress creation failed",
+-			wantNoContain:  "ingress creation failed - try using Update endpoint: ingress creation failed",
+-		},
+-		{
+-			name: "HTTPRoute failed, Ingress success - no duplication",
+-			httpRouteRes: routeResourceResult{
+-				route:  nil,
+-				status: "",
+-				err:    fmt.Errorf("httproute creation failed"),
+-			},
+-			ingressRes: routeResourceResult{
+-				route:  &entity.Route{Metadata: entity.Metadata{Name: "test"}},
+-				status: routeStatusCreated,
+-				err:    nil,
+-			},
+-			wantErrContain: "httproute: error, ingress: created - try using Update endpoint: httproute creation failed",
+-			wantNoContain:  "httproute creation failed - try using Update endpoint: httproute creation failed",
+-		},
+-		{
+-			name: "Both failed - both errors wrapped",
+-			httpRouteRes: routeResourceResult{
+-				route:  nil,
+-				status: "",
+-				err:    fmt.Errorf("httproute error"),
+-			},
+-			ingressRes: routeResourceResult{
+-				route:  nil,
+-				status: "",
+-				err:    fmt.Errorf("ingress error"),
+-			},
+-			wantErrContain: "httproute: error: httproute error, ingress: error: ingress error",
+-			wantNoContain:  "",
+-		},
+-		{
+-			name: "Both success - no error",
+-			httpRouteRes: routeResourceResult{
+-				route:  &entity.Route{Metadata: entity.Metadata{Name: "test"}},
+-				status: routeStatusCreated,
+-				err:    nil,
+-			},
+-			ingressRes: routeResourceResult{
+-				route:  &entity.Route{Metadata: entity.Metadata{Name: "test"}},
+-				status: routeStatusCreated,
+-				err:    nil,
+-			},
+-			wantErrContain: "",
+-			wantNoContain:  "",
+-		},
+-	}
+-
+-	for _, tt := range tests {
+-		t.Run(tt.name, func(t *testing.T) {
+-			t.Parallel()
+-			err := dualModeRouteError(tt.httpRouteRes, tt.ingressRes)
+-
+-			if tt.wantErrContain == "" {
+-				assertions.NoError(err)
+-				return
+-			}
+-
+-			assertions.Error(err)
+-			assertions.Contains(err.Error(), tt.wantErrContain)
+-
+-			if tt.wantNoContain != "" {
+-				assertions.NotContains(err.Error(), tt.wantNoContain, "error message should not contain duplicated error text")
+-			}
+-		})
+-	}
+-}

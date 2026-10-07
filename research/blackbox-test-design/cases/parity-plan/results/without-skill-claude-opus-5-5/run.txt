@@ -1,0 +1,5 @@
+model: claude-opus-5-5 (requested as opus)
+cost_usd: 1.13
+turns: 7
+duration_s: 327
+skills_loaded: test-authoring

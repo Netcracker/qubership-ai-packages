@@ -1,0 +1,1 @@
+Round 12 goldens from the legacy loyalty-points stand are in, and six of them disagree with our spec in model.py (see round-12-mismatches.md; decisions and earlier goldens are in DECISIONS.md). Reconcile the model with round 12. We get 20 requests in round 13 next week, so also say what to ask. Write what you changed, why, and the round 13 list to reconcile.md.

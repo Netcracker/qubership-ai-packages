@@ -18,7 +18,7 @@ rule can be satisfied by a test worth nothing.
   is observable through the unit's interface, when a second level is owed, what a change made for speed owes, which
   existing tests a deliberate behavior change updates, and the three questions that tell a chosen level from a
   defaulted one.
-- Which inputs the test set uses: one test per equivalence partition, each invalid partition alone, the boundaries and
+- Which inputs the test set uses: one case per equivalence partition, each invalid partition alone, the boundaries and
   their neighbors, a decision table for combinations, a state-transition test for history, a property-based test for an
   invariant over a large domain, a test that enumerates an open set when the change adds a member to one.
 - The shapes of a test that cannot fail, each visible in the diff: no assertion, an expected value computed by the code
@@ -29,14 +29,22 @@ rule can be satisfied by a test worth nothing.
   and why a coverage figure is neither.
 - Keeping a test green across a refactoring: the unit's interface, state over interactions, real before fake before stub,
   no mock of a type the repository does not own, the fields the behavior defines, no logic in the test.
-- The failure report and its four parts, container, name, assertion, message, with what each carries and what it may
-  not repeat; the assertion that prints the operands; the framework's operand order; parameterized case names;
-  grouped assertions; error semantics over message strings; what a failed wait reports.
+- The failure report and its four parts, container, name, assertion, message, with what each carries and what it may not
+  repeat; the assertion that prints the operands; the framework's operand order; parameterized case names; grouped
+  assertions; error semantics over message strings; what a failed wait reports; related cases under four principles:
+  each case fails on its own under its own name, so cases share one act only where the harness reports every mismatch
+  and names each by content, a fact learned once per harness and proposed for the repository's instructions, which may
+  accept a form ahead of the harness; the reader sees each input whole and the difference between cases on one line,
+  through a helper that takes the varying value or one act's input, never a helper that assembles the input from pieces;
+  a silent case stands with a control that reports; and the form follows the assertions.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
-- Organization: values in the test body rather than in a fixture, where a new test goes, when a class splits.
-- The four buckets a review finding falls into: decidable from the diff, needs a run, needs a tool's verdict, or a
-  question for a human.
+- Organization: the varying input and the expected value in the test body and the shared part written once, in one
+  input, a helper that leaves the reader the whole input, a table, or a per-test fixture, where a new test goes, in
+  which shape, when it joins an ecosystem's idiom table, when a new case joins the existing test of its rule, the helper
+  it reuses before adding one, and when a class splits.
+- The four buckets a review finding falls into: decidable from the diff, needs a run or a citation of the harness,
+  needs a tool's verdict, or a question for a human.
 
 ## Scope
 
@@ -68,7 +76,7 @@ test itself.
 
 - `.apm/instructions/test-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and three worked examples.
+- `.apm/skills/test-authoring/SKILL.md`: the rules, a review checklist, and five worked examples.
 - `.apm/skills/test-authoring/references/`: one file per role and library, grouped by ecosystem.
 
 The research behind the rules, with the sources and the evidence label of each, is in
@@ -82,17 +90,27 @@ version and nothing finer:
 ```text
 Tests: JUnit 5 engine, JUnit 5 assertions; Mockito for doubles; jetCheck for property-based tests; ArchUnit for structural tests.
 Tests: JUnit 5 engine, AssertJ assertions; no Hamcrest in new tests.
-Tests: JUnit 4 engine with Hamcrest matchers; the module cannot move to JUnit 5 yet.
+Tests: JUnit 4 engine with Hamcrest matchers; new tests stay on JUnit 4.
 Tests: pytest; Hypothesis for property-based tests; no unittest.TestCase classes in new tests.
 Tests: Go testing with testify require; fake clients from k8s.io/client-go/kubernetes/fake, with PrependReactor for injected errors.
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names each mismatch, missing or unexpected, by line, and offers no label (the issue asking for one: <link>).
+Tests: JUnit 4 engine; Error Prone's CompilationTestHelper stops at the first mismatch, names a missing marker by line, and offers no label; write its tests as if it reported every mismatch.
 ```
 
-The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test
-to find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines
-save the same search again: the command that runs one test, and where a new test goes.
+The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
+find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines save the
+same search again: the command that runs one test, and where a new test goes. Where the line is missing, the skill
+proposes it in one sentence: to you in a session, or in the pull request description when it runs unattended. It edits
+an instructions file only after you agree, and then it edits the source where that file is generated. It creates no such
+file without being asked. Unattended, in a repository somebody else maintains, and in a review it only proposes the
+line. The `lint(...)` example carries one more fact, which the line owes for a harness that has no reference file in the
+skill. It says whether one call of the harness reports every mismatch and how it names each case. The Error Prone
+example also accepts a form ahead of the harness: its maintainers group the cases of one rule in one source for the
+reader, and accept a second run to see the next mismatch until the harness reports them all. The skill then writes the
+tests that way and proposes no change to the harness.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.
@@ -108,6 +126,9 @@ Unit tests sit beside the code under test; tests that need the server live under
 - The five doc-comment packages above own the comment on a test.
 - [`change-description-authoring`](../change-description-authoring/) owns the commit message and the pull request
   description, including the sentence that names the level a change was tested at.
+- [`blackbox-test-design`](../blackbox-test-design/) decides which questions to send a system whose expected values
+  are unknown and learned by querying it, such as a legacy service being ported. This package governs each test that
+  carries one of those questions.
 
 ## Install
 

@@ -1,0 +1,5 @@
+model: claude-opus-5-5
+cost_usd: 1.05
+turns: 9
+duration_s: 315
+skills_loaded: blackbox-test-design
