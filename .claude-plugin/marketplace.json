@@ -325,7 +325,7 @@
     {
       "name": "blackbox-test-design",
       "description": "Rules for choosing the questions to send a system whose behavior is learned by querying it: a legacy service being ported, a vendor binary or API without source, a reference stand that answers a parity or golden suite. Covers where test dimensions come from, what an answer can tell apart, how a round of questions is chosen and budgeted, when to stop, and how findings are labeled.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "topic:testing",
         "activity:authoring",

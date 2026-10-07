@@ -1,366 +1,260 @@
-# Review: `diff-normalizer.yaml` (orders-api shadow diff)
+# Review: `diff-normalizer.yaml`
 
-## Verdict
+## Summary
 
-Don't use this normalizer to decide the read cutover yet. A diff rate under 1% after
-this normalizer says little about parity. Most rules apply to `$..*` or to a key name
-anywhere in the document, so each erases a whole class of differences across every
-endpoint. That class includes some of the regressions the shadow run is meant to catch:
+The normalizer gets the diff rate down by turning off comparison of the things a Java 8 → Kotlin port most often
+gets wrong: enum spelling, money precision, timestamp format, ids, status codes and headers. With this config,
+**"under 1%" doesn't show that the two services match. It shows that whatever differences remain are ones this
+normalizer can't see.** Several rules hide differences that clients will notice (`"Shipped"` vs `"SHIPPED"`, 200 vs
+201, a missing `Location` header, a different timestamp format). Most rules also apply to every field (`$..*`,
+`$..id`, `$..status`). So they hide fields and nested objects the team never looked at, including fields added later.
 
-| Regression in the new service | Visible after this normalizer? |
-| --- | --- |
-| `GET /orders?sort=...` returns the wrong order, or pages overlap | **No** (`sort_arrays` on `$..*`) |
-| Order shows the wrong customer, address or product (nested `{"id": ...}`) | **No** if the other fields match (`$..id`) |
-| Status enum spelled `"Shipped"` instead of `"SHIPPED"` (breaks Jackson clients) | **No** (`case_insensitive`) |
-| Endpoint returns 500, 404 or 422 where the old one returned 400 | **No** if the bodies have the same shape (`http_status: false`) |
-| Dates shift by the server time zone, or change from epoch millis to ISO strings | **No** for `createdAt`/`updatedAt` (ignored) |
-| Large integer (above 2^53) changes in its last digits | **No** (`numbers: double`) |
-| `Location` header missing on create, `Content-Type` or pagination headers changed | **No** (`headers: false`) |
-| Different validation error returned (other field, other rule) | Only if a field besides `message` differs |
+Don't use this config to decide the read switch-over. The specific changes are below. Most of them come from four
+principles:
 
-Every rule in the file has a real noise source behind it. The problem is that each one
-is broader than its noise. The rest of this review goes through what each rule should
-normalize, what it must keep visible, and how to show the normalizer is hiding only noise.
+1. **Measure the noise floor first.** Diff the old service against itself (A/A): mirror each request to two old
+   instances, or replay it to one old instance twice. Any difference that shows up in A/A is real noise and can be
+   normalized. A difference that shows up only in A/B (old vs new) is a behavior change. Someone has to decide each
+   one: fix the new service, or accept it in writing.
+2. **For reads, both sides must read the same data.** If the new service reads its own database, filled by mirrored
+   writes, then its ids and timestamps *will* differ on GETs, and those rules are hiding a data mismatch, not a
+   serialization difference. For the GET comparison, point the new service at the same Oracle data (or a replica of
+   it). Then on a GET, `id`, `createdAt` and `updatedAt` must match **exactly**.
+3. **Scope every rule to a path, plus a method/route where it applies.** Use no `$..*` and no recursive key-name match
+   unless the rule is safe for every field that exists now and every field added later.
+4. **Report what each rule absorbed.** For each rule, publish how many responses it changed, next to the raw diff rate
+   and the normalized one, per endpoint. When a rule that should be rare starts absorbing 20% of traffic, that's a
+   finding.
 
-Labels used below: **observed** means the comment in the YAML reports it; **likely**
-follows from the stack (Java 8 / Spring Boot / Jackson / Oracle) but nobody has checked it
-against traffic yet; **question** means the team has to answer it.
+## Rule-by-rule
 
----
+Severity is how much harm the rule can hide, given that this diff gates the read switch-over.
 
-## Rule by rule
+| # | Rule | Verdict | Severity |
+|---|------|---------|----------|
+| 1 | `$..*` `sort_arrays` | Too broad. Keep it for `errors` only, and for line items only if A/A shows their order varies | High |
+| 2 | `$..*` `drop_nulls` | Fix the new service to emit nulls instead (parity). At most, list specific fields | Medium |
+| 3–4 | `$..createdAt` / `$..updatedAt` `ignore` | Wrong for GETs. Hides format, timezone and precision bugs | **High** |
+| 5 | `$..*` `numbers: double` | Wrong tool. Use exact decimal comparison that ignores scale, on money fields only | **High** |
+| 6 | `$..status` `case_insensitive` | Remove. This is a contract break; fix the new service | **High** |
+| 7 | `$.errors[*].message` `ignore` | Acceptable if error `code`/`field`/count are compared. Report message diffs separately | Low |
+| 8 | `$..id` `ignore` | Remove for GETs. For POSTs, check id type/format and that ids are used consistently | **Critical** |
+| 9 | `http_status: false` | Remove. Allowlist specific (route, old→new) pairs only after someone decides | **Critical** |
+| 10 | `headers: false` | Compare an allowlist of headers that carry meaning | High |
+| — | Rule order ("added in the order the noise showed up") | Order changes the result; see below | Medium |
 
-### 1. `sort_arrays: true` on `$..*`
+### 1. `sort_arrays` on everything
 
-*Noise (observed):* line items and errors come back in different orders.
+The comment justifies this for line items and errors. It applies to every array:
 
-*What it hides:*
-- **Order on list endpoints.** Anything that returns a sorted or paged list
-  (`/orders?sort=createdAt&page=2`, order history, a customer's orders) has order as
-  part of its contract. A broken `ORDER BY`, the wrong sort direction or an unstable
-  tiebreaker all disappear. Unstable tiebreakers also cause duplicate or skipped rows
-  between pages.
-- **Order that clients rely on.** UIs and clients often show `errors[0]` or render line
-  items in response order. If the old service sorted line items (by line number or
-  insertion), that order is part of the contract even if nobody wrote it down.
-- **Duplicates, possibly.** Whether the tool's sort keeps duplicates is unknown. If it
-  dedups, a doubled line item disappears. *Question:* check this.
+- **List endpoints** (`GET /orders?customer=…&sort=…`, search, pagination). If the new service returns the wrong sort
+  order, this rule hides it. Pages of results stay comparable element-wise but not order-wise. If a status history,
+  shipment timeline or audit trail is an array, its order is the meaning.
+- **Line items.** Order is noise only if the old service's order is not deterministic (e.g. an Oracle query without
+  `ORDER BY`, or a Java `HashSet`). If old always returns `ORDER BY line_no`, then the new service must too, because a
+  UI or an invoice renders that order. Run A/A to find out. Don't assume.
+- **Errors.** Order is genuinely unspecified (Hibernate Validator collects violations in a `HashSet`). Sorting is
+  right here, but sort by a key: `(field, code)`.
 
-*Rule-order bug:* sorting is rule 1, so it sorts on **raw** values, before ids,
-timestamps and number spellings are normalized. Two lists that differ only by noise
-(other `id`s, `10.10` vs `10.1`) can sort differently, and then elements are compared
-against the wrong partner. That creates spurious diffs, which push the team toward
-adding more ignore rules.
+What it should be: `sort_arrays` on `$.errors` by `(field, code)`, and on `$.lineItems` by `lineNumber`/`sku`
+**only if A/A shows the order varies**. No other arrays.
 
-*Recommendation:*
-- Remove the global rule. Sort only at named paths where order really is unspecified,
-  and sort **by an explicit key** (for example `lineItems` by `lineNumber` or `sku`, and
-  `errors` by `code`+`field`).
-- First find out whether the old order is specified at all. *Likely:* the old order comes
-  from an Oracle query with no `ORDER BY` (unspecified, usually insertion order) or from
-  a Java `HashMap`/`HashSet` (hash order). If clients can see it, keep it, or document it
-  as an intended change.
-- Never sort the top-level array of a list endpoint.
-- Run sorting **last**, after all value normalization.
+### 2. `drop_nulls` on everything
 
-### 2. `drop_nulls: true` on `$..*`
+This merges `"discount": null` with an absent `discount`. That matters to JavaScript clients (`'discount' in o`,
+`o.discount === null` vs `undefined`) and to schema validators that require the key. The cheapest fix is usually in
+the new service, not the normalizer: one Jackson setting gives you old-style output (`default-property-inclusion:
+always`, or check where the Kotlin side sets `NON_NULL`/`NON_ABSENT`). Then this rule can go.
 
-*Noise (observed):* the old service writes `"discount": null` and the new one omits it.
+If the team accepts the difference instead, list the fields it applies to.
 
-*What it hides:* the difference between `null` and an absent key, everywhere. This is
-usually harmless for JSON consumers, but not always:
-- A client written in Kotlin (kotlinx.serialization, or Jackson with the Kotlin module)
-  that declares a non-nullable property without a default fails on a missing key.
-  JavaScript code using `'discount' in obj` or `hasOwnProperty` behaves differently.
-- If the tool also drops `null` **elements** of arrays, `[null, x]` becomes `[x]`. That
-  hides a broken mapping that produces null entries.
+Also be aware:
 
-It does **not** hide `null` vs `""`. That difference will show up soon because of
-Oracle: Oracle stores `''` as `NULL`, so the old service can never return an empty
-string. If the new service uses a different database, or maps differently, it will
-return `""` where the old one returned `null` (*likely*). Decide that case per field and
-don't fold it into a global rule.
+- With `$..*`, the rule probably also removes `null` *elements* from arrays, which would merge `[null, x]` with
+  `[x]`. Check what the tool does.
+- Oracle stores `''` as `NULL`, so the old service returns `null` where a Kotlin service with non-null `String` types
+  may return `""`. Today that still shows up as a diff, which is correct. When it does, don't add a rule for it. It's
+  a real difference for clients doing `if (x == null)`.
 
-*Recommendation:* keep the rule, but limit it to object members (never array elements),
-and ideally to a list of fields known to be optional. Ask the main consumers whether
-they tolerate a missing key. If any of them don't, configure the new service's Jackson
-or kotlinx inclusion to match instead of normalizing the difference away.
+### 3–4. Ignoring `createdAt` / `updatedAt`
 
-### 3–4. Ignore `$..createdAt` and `$..updatedAt`
+Timestamps are where a Java 8 → Kotlin port is most likely to differ, and this rule removes them completely:
 
-*Legitimate noise:* on **mirrored writes**, the two services create the record at
-slightly different moments, so the timestamps differ.
+- **Format.** Java 8 `Date` + Jackson defaults give epoch millis. `java.time` gives ISO-8601 text. Kotlin services
+  often differ in offset (`Z` vs `+00:00` vs none) and in fractional digits.
+- **Timezone.** The JVM default zone, Oracle `DATE` (no zone) vs `TIMESTAMP WITH TIME ZONE`, and DST.
+- **Precision.** Oracle `DATE` truncates to seconds. `TIMESTAMP` gives micro/nanoseconds. The new code may round
+  differently.
+- `$..` also matches nested `createdAt`s: line items, payments, shipments.
 
-*What it hides:* on **reads of the same stored order**, these values must be identical.
-The rule also matches at every depth (line items, shipments, payments). Date handling
-is one of the most likely places for a Java 8 → Kotlin port to differ:
-- **Format.** Jackson writes `java.util.Date` and `java.sql.Timestamp` as epoch
-  milliseconds by default (`WRITE_DATES_AS_TIMESTAMPS` is on). The Kotlin service
-  probably writes ISO-8601 strings. Every client parsing the field breaks.
-- **Time zone.** Oracle `DATE` and `TIMESTAMP` without a time zone are read in the
-  JVM's default zone. A different default zone in the new deployment, or
-  `LocalDateTime` vs `Instant`, shifts every value by hours.
-- **Precision.** Milliseconds vs microseconds vs seconds, and trailing zeros.
+What it should be:
 
-*Recommendation:*
-- For reads: don't ignore these fields. Parse both sides to an instant and compare
-  exactly. Report a **format** difference (epoch vs ISO, offset vs `Z`, precision) as
-  its own diff category, not as noise.
-- For mirrored creates and updates: allow a time window (for example ±5 s) rather than
-  ignoring the field. Still require the same format, and the same presence of the field.
-- Apply the same handling to the other timestamps (`shippedAt`, `deliveredAt`,
-  `cancelledAt`, and so on) rather than adding ignore rules for them when they show up.
+- **GET:** compare exactly. If the formats differ, add a rule that parses both sides to an instant and compares those
+  for equality. Report every format difference as its own diff class; consumers parse these strings.
+- **POST / PUT responses** for an entity the shadow side just created or changed: check that both are the same JSON
+  type and format, and that the value falls within the request's time window. Don't ignore them.
 
-### 5. `numbers: double` on `$..*`
+### 5. `numbers: double` on everything
 
-*Noise (observed):* `10.10` vs `10.1`, and `1E+1` vs `10`. *Likely:* the old service
-serializes `BigDecimal` with `toString()`, which uses scientific notation after
-`stripTrailingZeros()`, because Jackson's `WRITE_BIGDECIMAL_AS_PLAIN` is off by default.
+The comment's examples are real old-service behavior: Java's `BigDecimal.toString()` prints `1E+1`, and scale is
+kept (`10.10`). But converting to `double` is the wrong way to compare them:
 
-*What it hides:*
-- **Integers above 2^53.** Different values become equal. Oracle `NUMBER(19)` keys,
-  external references, and epoch micro- or nanoseconds can all exceed 2^53. Ids are
-  already ignored (rule 8), but any other long field is exposed.
-- **Scale and notation as a contract difference.** A consumer that binds amounts into
-  `BigDecimal` and prints them, or compares them with `equals` (where `10.1` ≠ `10.10`),
-  or a downstream system that expects two decimals for money, sees a real change. It
-  may be an acceptable change, but someone should decide that.
-- Converting through `double` is the wrong model for money in any case. It happens not
-  to merge distinct two-decimal amounts, but it does merge distinct values once a
-  number has about 16 significant digits.
+- Integers above 2^53 merge (`9007199254740993` == `9007199254740992`). That matters for long ids, order numbers and
+  amounts in minor units.
+- Decimals beyond about 15–17 significant digits merge.
+- If the comparison uses a tolerance (check the tool), it also hides rounding-mode differences. `HALF_UP` vs
+  `HALF_EVEN` on `x.xx5`, or rounding per line vs per total, is exactly the kind of one-cent difference a money diff
+  must catch.
+- Check what happens to `"10.10"` (string) vs `10.1` (number). That changes the JSON type, and clients care.
 
-*Question:* does the tool also turn numeric **strings** into numbers? If so, it hides
-`"10.10"` (string) vs `10.1` (number), which is a type change that breaks typed
-clients. Test it (see "Audit the normalizer" below).
+What it should be: compare as exact decimals, ignoring scale (`BigDecimal.compareTo == 0`), on money/quantity fields
+only. Integers must be equal exactly. Report scale and notation differences (`10.10` vs `10.1`, `1E+1` vs `10`) as a
+separate low-severity class, and confirm they're harmless. A client that shows `amount` as text would show "10.1".
 
-*Recommendation:* compare numbers as exact decimals (equal when
-`BigDecimal.compareTo` returns 0), never through `double`. Report scale and notation
-differences on money fields (`price`, `amount`, `total`, `tax`, `discount`) in a
-separate, low-severity bucket rather than erasing them. Keep JSON types strict.
+### 6. `status` case-insensitive
 
-### 6. `case_insensitive` on `$..status`
+`"SHIPPED"` → `"Shipped"` is a change to the API contract, not noise. Any client doing `status == "SHIPPED"`, a
+`switch` on it, or Jackson deserializing it into a Java enum (case-sensitive by default) will break or fall into a
+default branch. It looks like the new service serializes enums with a different naming strategy or a `@JsonValue`.
+Fix the new service, and remove this rule.
 
-*Noise (observed):* `"SHIPPED"` vs `"Shipped"`.
+`$..status` also matches every nested `status` field (payment, shipment, line item), so it hides the same bug there.
 
-**This is not noise; it's a bug in the new service.** Jackson matches enums by exact
-name by default (`ACCEPT_CASE_INSENSITIVE_ENUMS` is off). Any Java or Kotlin client
-with an `OrderStatus` enum fails to deserialize `"Shipped"`, and any
-`if (status === "SHIPPED")` in a frontend stops matching. The likely cause is a
-`@JsonValue` or `@SerialName` display name, or `toString()`, on the Kotlin enum.
+### 7. Ignoring `errors[*].message`
 
-The rule also matches every `status` key: payment status, shipment status, and the
-`status` member of a Spring-style error body.
+This is reasonable if clients don't parse the message text. But keep comparing the number of errors, each error's
+`code`/`field`, and the HTTP status (rule 9). Otherwise "an error happened" is the only thing left to compare. Log
+message differences to a separate report, so someone can check them once for clients that show or match on the
+message.
 
-*Recommendation:* delete the rule and fix the new service to emit the exact old enum
-names. Also check enum values the old service emits that the new one doesn't know
-about (and the reverse), using the rarest statuses in traffic.
+### 8. Ignoring `$..id`
 
-### 7. Ignore `$.errors[*].message`
+This is the most dangerous rule.
 
-*Noise (observed):* wording differs.
+- **On GETs, ids must be equal.** A different `id` on a GET means the wrong record, the wrong join, or a child
+  attached to the wrong parent. "Generates ids differently" can only apply to entities the shadow side created
+  itself. If GET ids differ, the two services aren't reading the same data (see principle 2).
+- `$..id` matches every nested `id`: line items, addresses, products, customer. With rule 1, a line item can be
+  matched against a *different* line item and still pass.
+- If the new service uses a different id scheme (UUID vs Oracle sequence number), then the id's JSON type and format
+  changed. That's a contract break, and this rule hides it.
 
-*What it hides:* the rule is fine by itself, as long as clients don't parse messages
-(*question:* does any UI display them, or does any client match on them?). What makes
-it dangerous is how it combines with rule 1 (errors sorted) and `http_status: false`. If
-an error entry has no fields besides `message`, every error response reduces to "a
-list of N empty objects". Then a 400 for a missing field and a 500 from a
-`NullPointerException` compare as equal whenever both return one error.
+What it should be:
 
-*Recommendation:* keep comparing everything else in the error entries (`code`, `field`,
-`rejectedValue`, the error count). If the entries have no machine-readable code,
-compare the HTTP status and the error count at least. Put message differences in a
-separate low-severity bucket and sample it periodically instead of discarding it.
+- **GET:** compare exactly.
+- **POST** (newly created entities only): check the id's type and format. Check that ids are used consistently:
+  build an old-id ↔ new-id map from the response, and verify the same entity has the same mapped id everywhere it
+  appears in the body, in `Location`, and in any links.
 
-### 8. Ignore `$..id`
+### 9. `http_status: false`
 
-*Noise (observed):* the new service generates ids differently.
+200 vs 201 is a real difference: clients written against the old service may check `== 200`. Turning off the status
+comparison entirely also hides:
 
-*What it hides:* this is the most dangerous rule in the file. `$..id` matches **every**
-key named `id` at any depth: `customer.id`, `shippingAddress.id`,
-`lineItems[*].product.id`, `payment.id`. If the new service joins to the wrong
-customer, attaches the wrong address, or links a line item to the wrong product, the
-diff stays clean as long as the denormalized fields happen to match.
+- 404 vs 200 with an empty or default body;
+- 400 vs 422;
+- 409 vs 200, where both bodies are the order;
+- 500 vs 503;
+- 204 vs 200.
 
-The noise also only exists for **newly created** records:
-- On a mirrored `POST`, the new service creates its own row and assigns its own id.
-  That difference is real and expected.
-- On a `GET` of an existing order, the id is the key you looked it up by. It must be
-  identical. If the two sides return different ids for a read, they're reading
-  different data, and the whole comparison for that request is invalid.
+After the rules above have stripped messages, ids and timestamps, an error response and a success response can look
+much more alike than they should.
 
-*Recommendation:* don't ignore ids. Build an **id map** from the responses to mirrored
-creates (old id → new id). Rewrite new-side ids through that map before comparing
-later responses, and treat any id that doesn't map as a diff. That covers newly
-created records and keeps referential correctness visible. On reads of records created
-before the shadow run, compare ids exactly.
+What it should be: always compare the status. Add an allowlist of exact `(method, route, old, new)` entries, e.g.
+`POST /orders 200→201`. Add an entry only after someone has decided to accept the change (and checked the clients) or
+filed a ticket to fix it. For a read switch-over, GETs should have no status entries at all.
 
-### `compare.http_status: false`
+### 10. `headers: false`
 
-*Noise (observed):* some 200 vs 201 on POST.
+Compare an allowlist:
 
-*What it hides:* every status difference, on every endpoint, including 200 vs 404,
-400 vs 500, 409 vs 200 (a duplicate check that's missing), and 422 vs 400. Status is
-the first thing every client checks.
+- `Content-Type` (media type and charset; `application/json;charset=UTF-8` vs `application/json` is a real Spring
+  Boot version difference);
+- `Location`;
+- `ETag` / `Last-Modified` / `Cache-Control`, if used;
+- pagination headers (`Link`, `X-Total-Count`, …);
+- `Retry-After`;
+- any custom `X-` header a client reads.
 
-200 vs 201 is also a real contract change. Clients that check `== 200` break, and a
-201 should come with a `Location` header (see headers).
-
-*Recommendation:* always compare status. Allow exactly one known difference,
-`POST <create endpoints>: 200 ↔ 201`, and record it as an intended change with the
-consumers' agreement, or make the new service return 200.
-
-### `compare.headers: false`
-
-*What it hides:* `Content-Type` (including charset), `Location`, `Cache-Control`,
-`ETag`/`Last-Modified`, `Content-Disposition`, pagination headers (`Link`,
-`X-Total-Count`), CORS headers, and `Vary`.
-
-*Recommendation:* compare an allow-list of those headers. Ignore the rest, such as
-`Date`, trace and request ids, `Server`, `Content-Length`, and the transfer encoding.
-
----
-
-## What the normalizer should normalize (noise it's missing)
-
-The current rules hide too much in some places and miss some genuine noise in others.
-Expect these to show up and inflate the raw diff. Handle each narrowly:
-
-- Per-request values in bodies: `timestamp`, `path` and `traceId` in Spring Boot's
-  default error body. Ignore them only in error bodies.
-- Hostnames or ports inside `Location` headers and HATEOAS links (old host vs new
-  host). Rewrite the host, then compare the path.
-- Key order inside objects. It doesn't matter in JSON; check that the tool already
-  ignores it.
-- Number spelling, as exact decimals (rule 5, replaced).
-- Ids of records created during the shadow run, through the id map (rule 8, replaced).
-- Timestamps of records created during the shadow run, within a window (rules 3–4,
-  replaced).
-- Error message wording (rule 7, kept but reported in its own bucket).
-
----
-
-## Process problems (more important than any single rule)
-
-### The normalizer itself has never been tested
-
-So far the only measure of the normalizer is the diff rate it produces. That's
-circular: a normalizer that erased everything would score 0%. Before relying on it:
-
-1. **Planted-difference test (negative controls).** Take a sample of real response
-   pairs that come out equal. Inject one known regression at a time and confirm the
-   pipeline reports each one:
-   - swap two rows of a list endpoint
-   - remove a line item
-   - change one amount by 0.01
-   - change `customer.id`
-   - change the case of a status
-   - turn a 400 into a 500
-   - turn an epoch timestamp into an ISO one, and shift a timestamp by one hour
-   - change `"10.10"` into `10.10`
-   - drop the `Location` header
-
-   Any planted difference that comes out equal is something the normalizer hides. Run
-   this in CI whenever `diff-normalizer.yaml` changes.
-2. **Map the equivalence classes empirically** for each rule: feed the tool pairs that
-   differ in exactly one aspect (null vs absent, null in an array, numeric string vs
-   number, duplicate array elements, `1E+1` vs `10`) and record which pairs it merges.
-3. **Count hits per rule.** For each rule, log how many responses it changed, by
-   endpoint. A rule that changes 20% of responses either covers one large, real source
-   of noise, which is fine once someone has looked, or is hiding a defect. Review a
-   sample of what each rule erased.
+Ignore `Date`, `Server`, request/trace ids, `Content-Length`/`Transfer-Encoding`/`Connection`, and `Vary` (only
+after checking it).
 
 ### Rule order
 
-Rules run "in the order the noise showed up". Normalization should run in a fixed,
-deliberate order: id mapping → value canonicalization (numbers, timestamps) → field
-ignores → null handling → keyed sorting **last**.
+The file applies rules in the order the noise was discovered. But the order changes the result:
 
-### Rate the diffs by severity, not one number
+- Sorting happens *before* `id`/`createdAt` are dropped and numbers are canonicalized. So if sorting uses the whole
+  element as its key, the two sides sort on values known to differ (ids, `10.10` vs `10.1`). Elements then end up
+  matched against the wrong partners, which produces fake diffs and pressure to add more `ignore` rules.
+- The canonical order is: remove fields → canonicalize values (nulls, numbers, timestamps) → sort arrays by an
+  explicit key.
 
-Keep the raw diff for every request, and report several categories instead of a single
-percentage:
+Confirm how the tool applies rules, with a test (below).
 
-| Bucket | Examples | Cutover gate |
-| --- | --- | --- |
-| Critical | status code, amounts, ids/references, enum values, list order on sorted endpoints, missing/extra items | **0** unexplained cases |
-| Contract | date/number format, null vs absent, `""` vs null, headers | each class decided as "fix" or "accepted change" with consumers |
-| Cosmetic | error message wording, number scale on non-money fields | tracked, not gating |
+## What else the diff can't see
 
-A 1% overall diff rate can still contain hundreds of wrong totals per day. Gate on
-critical diffs per endpoint, not on the overall rate.
+- **The normalizer itself is untested.** Add tests that feed it pairs differing in one aspect, and assert which ones
+  it must *not* merge. Planted bugs make good negative controls:
+  - two line items swapped on an endpoint where order matters;
+  - `SHIPPED` → `Shipped`;
+  - a GET with a different `id`;
+  - `10.125` rounded two ways;
+  - a 200 that became a 404;
+  - an epoch-millis vs ISO `createdAt`;
+  - `"10"` vs `10`;
+  - `null` vs `""`.
 
-### Coverage of the traffic
+  Each must produce a diff. Run these in CI whenever the YAML changes.
+- **The 1% is an average over the traffic mix.** Report it per endpoint and per response class (2xx/4xx/5xx). Rare
+  paths can be broken with no effect on the total: cancellations, refunds, partial shipments, multi-currency, large
+  orders, the last page of a list, legacy orders with odd data. For those, replay targeted requests in addition to
+  the mirrored traffic. Use a clean run of *n* agreeing requests on an endpoint as a bound: it limits that endpoint's
+  disagreement rate to about 3/*n* (95%), and only for inputs like the ones sent.
+- **Spot-check the raw diff, not only the normalized one.** Each week, take a random sample of normalized-equal pairs
+  and look at their raw diff. That's how a rule that's too broad gets noticed.
+- **Mirrored writes.** POST/PUT/DELETE responses are comparable only if the shadow side's writes go to isolated
+  storage and its downstream calls (payments, notifications, events) are stubbed. Confirm that's the case. A mirrored
+  write that reaches shared state duplicates real orders. Response diffs also don't show what was *written*. If writes
+  will move later, compare the stored rows and the emitted events too, not just the responses.
+- **Record the build.** Store the old and new build/version with each diff batch, so a change in the diff rate can be
+  traced to a deploy rather than to traffic.
 
-Mirrored traffic is dominated by the common `GET`s. Cancellations, refunds, partial
-shipments, validation failures, and old orders with legacy data (nulls in old columns,
-retired statuses) are rare in the traffic but are where a port is most likely wrong.
-Report the number of compared requests **per endpoint and per status code**. As a rule
-of thumb, if `n` requests of a kind compared clean, the disagreement rate for that kind
-of traffic is below about `3/n` (95% confidence). Fewer than a few hundred clean
-comparisons on an endpoint therefore proves little, and the bound says nothing about
-inputs the traffic never sent. Add targeted replays for the rare paths.
-
-### Shadow writes (question for the team)
-
-The 200 vs 201 note means **POSTs are being mirrored**. Confirm that the new service
-writes to its own storage and stubs every downstream side effect: payments, emails,
-inventory reservations, and events or messages to other services. A mirrored create
-that reaches shared Oracle tables or a real downstream system duplicates orders and
-payments for real. Also confirm what data the new service *reads*. If it reads the
-same Oracle schema, ids on reads must match exactly (see rule 8). If it reads a copy,
-replication lag explains some diffs, and those should be measured, not ignored.
-
----
-
-## Proposed replacement (sketch)
-
-The tool's DSL may not support all of this (keyed sort, an id map, time windows,
-per-endpoint scoping, severity buckets). Where it doesn't, those features are worth
-adding to the tool rather than falling back to global ignores.
+## Proposed shape (sketch)
 
 ```yaml
-# Order is deliberate: map ids → canonicalize values → ignore → nulls → sort.
+# Order matters: remove → canonicalize → sort.
 rules:
-  - endpoints: ["POST /orders", "POST /orders/*/..."]
-    capture_id_map: { old: "$.id", new: "$.id" }   # feeds later comparisons
-  - match: "$..*"
-    remap_ids_through_map: true                    # unmapped id => diff
-  - match: "$..[?(@ is number)]"
-    numbers: exact_decimal                         # compareTo, never double; JSON types strict
-    report_scale_diff: { paths: ["$..price", "$..amount", "$..total", "$..tax", "$..discount"], bucket: contract }
-  - match: ["$..createdAt", "$..updatedAt", "$..*At"]
-    timestamps: { compare: instant, report_format_diff: contract }
-  - endpoints: [mirrored writes]
-    match: ["$..createdAt", "$..updatedAt"]
-    timestamps: { tolerance: 5s }
   - match: "$.errors[*].message"
-    bucket: cosmetic                               # reported, not erased
-  - endpoints: [error responses]
-    match: ["$.timestamp", "$.path", "$.traceId"]
-    ignore: true
-  - match: "$..*"
-    drop_nulls: { members_only: true }             # never array elements; bucket: contract
+    ignore: true                      # wording only; code/field/count still compared
+    report: error-message-wording
+  - match: "$..[createdAt,updatedAt]"
+    when: { method: [POST, PUT] , created_by_request: true }
+    compare_as: timestamp_shape       # same JSON type/format, within request window
+  - match: "$..[createdAt,updatedAt]"
+    when: { method: GET }
+    compare_as: instant               # parse both, compare equality; report format diffs
+    report: timestamp-format
+  - match: "$..id"
+    when: { method: POST, created_by_request: true }
+    compare_as: id_mapping            # same type/format, consistent old↔new mapping
+  - match: ["$..total", "$..amount", "$..price", "$..discount"]   # explicit list
+    numbers: decimal_compare          # BigDecimal.compareTo; never double, never epsilon
+    report: number-scale-or-notation
   - match: "$.errors"
-    sort_by: ["code", "field"]
-  - match: "$..lineItems"                          # only if the old order is shown to be unspecified
-    sort_by: ["lineNumber"]
-  # no sort on top-level arrays of list endpoints
-  # no case-insensitive status: fix the new service's enum serialization
+    sort_arrays: { key: [field, code] }
+  # - match: "$.lineItems"            # only if A/A shows old order is nondeterministic
+  #   sort_arrays: { key: [lineNumber] }
 compare:
   http_status: true
-  http_status_allowed: [{ endpoint: "POST /orders", old: 200, new: 201 }]   # only after consumers agree
-  headers: { compare: [Content-Type, Location, Cache-Control, ETag, Link, X-Total-Count, Content-Disposition, Vary] }
+  http_status_allow: []               # e.g. {method: POST, route: /orders, old: 200, new: 201, ticket: ORD-123}
+  headers: [Content-Type, Location, ETag, Cache-Control, Link, X-Total-Count]
 ```
 
-## Action list
+The `when`, `compare_as` and `report` keys are made up for this sketch. Check what the diff tool supports, and
+implement whatever it lacks as a pre-processing step.
 
-1. Fix the new service: enum names (`status`), and the 201/`Location` decision.
-2. Delete `case_insensitive` on `status`, the global `sort_arrays`, `ignore $..id`,
-   and `http_status: false`.
-3. Replace `numbers: double` with exact decimal comparison, and replace the timestamp
-   ignores with instant comparison on reads and a time window on writes.
-4. Add the planted-difference test and per-rule hit counts. Re-run the shadow diff and
-   expect the rate to go **up**. Triage what appears; that's the point of the exercise.
-5. Gate the cutover on zero unexplained critical diffs per endpoint, with stated
-   per-endpoint volumes, and not on the overall rate.
-6. Confirm shadow write isolation and what data the new service reads.
+The fixes belong in the new service, not here:
+
+- `status` enum spelling;
+- `null` vs absent;
+- 201 vs 200 (unless someone decides to keep 201).

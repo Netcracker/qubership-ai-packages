@@ -1,110 +1,113 @@
 # Reconciling model.py with round 12
 
-## What the six mismatches have in common
-
-All six are all-digit member codes with leading zeros, sent from regions that were not in the D4 list (DE, FR, IT, ES).
-The legacy stand found each one under the code without its zeros (`01234` → `1234` GOLD, `0778` → `778` SILVER), and
-the points match what the model already computes for that tier. D5, D6 and D9 are not involved.
-
-D4 was an exception list that grew one region at a time: NL after r3-07, BE after r5-14, LU after r8-02. Each patch was
-the narrowest change that fixed the latest mismatch. Round 12 adds four more regions in one go. That pattern suggests a
-single rule that never depended on the region, not a list that happens to get longer.
-
 ## What changed
 
-- `model.py`: `STRIP_ZEROS_REGIONS` is gone. `member_key` now strips leading zeros from a code that is all ASCII digits
-  (after trimming), in **every** region. A code containing a letter is kept as sent.
-- `DECISIONS.md`: D4 rewritten with the new rule and all ten goldens behind it, plus a round 12 section in the
-  leading-zero table.
+D4 changed shape. It used to be a list of regions; now it is a rule about what a member code looks like:
 
-**Checked:** a scratch script runs all 13 leading-zero and trimming goldens recorded in DECISIONS.md and
-round-12-mismatches.md (r1-04, r3-07, r4-02, r5-14, r6-11, r8-02, r10-11, r12-03/09/17/22/40/51) against the new
-model. All 13 match, including the points of the six round 12 cases.
+| | Before | After |
+| --- | --- | --- |
+| D4 | Codes in `NL`, `BE`, `LU` lose their leading zeros | Codes made only of ASCII digits lose their leading zeros, in every region; codes with a letter keep them |
 
-**Not checked:** the 74 other round 12 answers and the full goldens from rounds 1 to 11, because they are not in this
-repo. The new rule gives a different answer from the old one in only one case: a code with a leading zero *and* a letter,
-sent from NL, BE or LU (for example NL `0A12`). The old model stripped it to `A12` and answered UNKNOWN_MEMBER. The new
-model keeps it and answers PLATINUM. DECISIONS.md lists no such golden for rounds 1 to 11. **Please rerun the full
-golden suite before relying on this change.**
+In `model.py`, `STRIP_ZEROS_REGIONS` is replaced by `NUMERIC_CODE`. `member_key` no longer takes the region. DECISIONS.md
+row D4 is updated to match. Nothing else changed: D5 (trim), D6 (double tiers) and D9 (round up in PT/GR) already gave
+the right points for all six goldens once the member was found.
 
-### Why this rule and not "add DE, FR, IT, ES to the list"
+The new model gives the recorded answer for all six round 12 mismatches and for every golden listed in DECISIONS.md
+(r1-04, r3-07, r4-02, r5-14, r6-11, r8-02, r10-11). I checked this with a one-off script. The repository has no golden
+suite, so **the other 74 round 12 answers and rounds 1 to 11 have not been re-run against the new model.** Do that
+before relying on it. In particular, if any round 12 answer that "matched" was `UNKNOWN_MEMBER` for an all-digit code
+with a leading zero (say PT `0778`), the new rule contradicts it.
 
-Both fit every recorded answer. The list predicts that PT, GR, AT, PL and any other region not yet seen keep the zeros
-(UNKNOWN_MEMBER). Seven out of seven regions that have been sent a leading-zero numeric code stripped the zeros, so the
-list has been wrong every time it was tested. The all-digit condition is there because of r4-02: DE `0A12` was found as
-`0A12`, so the zeros are not stripped from every code. This is the behavior you would get from the Java service reading
-digit-only codes as numbers (for example `Long.parseLong`, or a numeric key column). That mechanism is a
-**hypothesis**: nothing observed so far separates it from the alternatives below.
+## Why not just add DE, FR, IT, ES to the list
 
-## Status of the claims
+That was the cheapest patch, and it is wrong. **r4-02** (DE, `0A12` → OK, PLATINUM) shows that DE does not strip
+`0A12` down to `A12`. If DE were on the list, that golden would come back `UNKNOWN_MEMBER`.
 
-| Claim | Status |
-| --- | --- |
-| DE, FR, IT, ES strip leading zeros from all-digit codes | observed (r12-03, -09, -17, -22, -40, -51) |
-| NL, BE, LU strip leading zeros from all-digit codes | observed (r3-07, r5-14, r8-02, r10-11) |
-| DE keeps a leading zero when the code has a letter | observed (r4-02, rounds 1 to 11 build) |
-| Every region strips the zeros, including ones never asked | inferred, assuming the rule ignores region |
-| Only all-ASCII-digit codes are stripped | hypothesis (H1, adopted) |
+The list was also a footprint, not a rule. All four entries (r3-07, r5-14, r8-02, r10-11) were added one region at a
+time, each when a golden failed. No golden before round 12 sent an all-digit code with a leading zero in any other
+region (see the table in DECISIONS.md), so nothing ever supported "only these regions". Round 12 is the first time
+other regions were asked, and four of four strip.
 
-Live alternatives, all of which fit every recorded answer:
+## Evidence for each part of the new D4
 
-- **H1 (adopted):** strip the zeros from an all-digit code in any region; keep codes with a letter as sent.
-- **H2:** in any region, look up the exact code first, then the code with its zeros stripped. This also explains r4-02.
-  It differs from H1 on `0A0012`, which H2 finds as `A0012` SILVER.
-- **H3:** the list is real and is now NL, BE, LU, DE, FR, IT, ES. It differs from H1 in any other region.
-- **H4:** NL, BE, LU strip zeros from every code, as the old model did; the other regions strip only all-digit codes.
-  It differs from H1 on NL `0A12`.
-- **H5: the build changed.** Rounds 1 to 11 came from `loyalty-points 4.2.7`. Nobody recorded the version for round 12.
-  If round 12 ran on a newer build, the region list could have been right for 4.2.7 and been dropped later. In that case
-  the model has to target one version on purpose. No question sent to the current stand can rule this out; recording
-  the version and replaying controls can.
+- **observed**: all-digit codes with leading zeros resolve in NL, BE, LU, DE, FR, IT, ES (10 goldens).
+- **observed**: DE `0A12` resolves as `0A12`, so the zero is kept when the code contains a letter (r4-02).
+- **inferred**: the same holds in every region, including PT, GR and regions never asked. Assumption: there is one
+  rule, not a per-region table that just happens to cover the 7 regions asked so far.
+- **inferred** (the model had to pick one): only ASCII `0-9` count as digits, there is no sign, and zeros are stripped
+  after trimming.
+- **hypothesis**, live and not yet told apart by any answer:
+  - **H-parse**: the Java service parses all-digit codes as integers (`Long.parseLong` or similar). That would also
+    accept `+778` and non-ASCII digits such as `０７７８`, and could fail or reject codes that are too long.
+  - **H-fallback**: the code is looked up as sent, and if that misses, looked up again with leading zeros stripped,
+    letters or not. This fits every golden too: `0A12` hits on the first lookup. It differs from the model on
+    `0A0012`, which would fall back to `A0012` (SILVER).
+  - **H-build**: round 12 ran on a different legacy build from rounds 1 to 11 (`4.2.7`). Nobody recorded the version
+    for round 12. If the build changed, r4-02 may not hold on it any more, and "strip leading zeros from every code"
+    becomes possible.
 
-## Round 13: what to ask (20 requests)
+A second handling point came up while checking this. It is not new from round 12, but it is untested:
 
-Before the round, at no cost against the budget:
+- **hypothesis**: D5 trims with Python `str.strip()`, which also removes non-breaking space and other Unicode
+  whitespace. Java's `String.trim()` removes only characters up to U+0020. On a Java service the model probably
+  accepts `" 1234"` when the legacy service would not.
+- **model gap**: a `memberCode` sent as a JSON number (`778`) crashes the model. Jackson would usually coerce it to
+  `"778"`.
 
-- Read `/actuator/info` before and after the round and store the version with the answers. Also ask whoever ran round
-  12 which build it was. That answers H5.
-- Ask the vendor or the stand owners whether member codes are stored or looked up as numbers.
+## Round 13: 20 questions
 
-Model predictions come from the updated model.py. Amounts are picked so that rounding or the double-points tier would
-show in the points.
+Before you start and after you finish, record `/actuator/info` (this costs no questions). Ask the vendor whether member
+code handling changed after 4.2.7 (also free). Use an amount that keeps the expected points unambiguous. "Model" is the
+prediction of the updated `model.py`.
 
-| # | Tier | Region | memberCode | amount | Model predicts | Separates |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | must | DE | `0A12` | 100 | OK PLATINUM 10 | control, replays r4-02; anchors "letters keep zeros" on this build (H5) |
-| 2 | must | DE | `01234` | 100 | OK GOLD 10 | control, replays r12-03 |
-| 3 | must | NL | `0778` | 100 | OK SILVER 5 | control, replays r3-07 |
-| 4 | must | PT | `0778` | 30 | OK SILVER 2 | H1 vs H3 (region not yet asked); also D9 rounding up after stripping (1.5 → 2) |
-| 5 | must | AT | `01234` | 100 | OK GOLD 10 | H1 vs H3, region that has never appeared in any golden |
-| 6 | must | NL | `0A12` | 100 | OK PLATINUM 10 | H1 vs H4 and the old model (UNKNOWN_MEMBER) |
-| 7 | must | DE | `0A0012` | 100 | UNKNOWN_MEMBER | H1 vs H2 (H2: SILVER) |
-| 8 | must | NL | `0A0012` | 100 | UNKNOWN_MEMBER | with #6 and #7, tells H2 from H4 (H4: SILVER in NL only) |
-| 9 | should | GR | `001234` | 15 | OK GOLD 2 | H1 vs H3 in the other round-up region (1.5 → 2) |
-| 10 | should | PL | `0778` | 40 | OK SILVER 2 | H1 vs H3, a third region outside the list |
-| 11 | should | DE | `+1234` | 100 | UNKNOWN_MEMBER | `Long.parseLong` accepts `+` (GOLD); a digit-only check does not |
-| 12 | should | DE | ` 1234` (no-break space) | 100 | OK GOLD 10 | D5 trimming: Python `strip` (the model) removes NBSP, Java `trim` does not |
-| 13 | should | DE | `" 01234 "` | 100 | OK GOLD 10 | whether trimming happens before stripping zeros (order of D5 and D4) |
-| 14 | should | DE | `1234` as a JSON number, not a string | 100 | model crashes (`.strip` on int) | Jackson converts it to `"1234"` by default; the model has no opinion. Fix the model whatever the answer |
-| 15 | may | DE | `١٢٣٤` (Arabic-Indic digits) | 100 | UNKNOWN_MEMBER | `Long.parseLong` reads non-ASCII digits as 1234 (GOLD) |
-| 16 | may | DE | `０１２３４` (full-width digits) | 100 | UNKNOWN_MEMBER | same, with a leading full-width zero |
-| 17 | may | DE | `99999999999999999999` | 100 | UNKNOWN_MEMBER | overflows a `long`: watch for a 500 or another error status instead of UNKNOWN_MEMBER |
-| 18 | may | DE | `00000000000000000001234` (23 chars) | 100 | OK GOLD 10 | a numeric reading versus a length or format check on the raw string |
-| 19 | must | DE | `0A12` | 100 | OK PLATINUM 10 | end control, repeats #1 |
-| 20 | must | DE | `01234` | 100 | OK GOLD 10 | end control, repeats #2 |
+### Must (9)
 
-**Drop order if the budget is cut:** drop `may` first (15–18), then `should` from the bottom up (14 → 9). Keep both
-end controls if possible; if only one fits, keep #19. Questions 1–8 are the minimum that decides between H1 to H4.
+| # | Region | memberCode | amount | Model | What the answer tells apart |
+| --- | --- | --- | --- | --- | --- |
+| 1 | DE | `0A12` | 100 | OK, PLATINUM, 10 | Control at the start: replays r4-02. A change means H-build, and every answer below needs a second look |
+| 2 | DE | `01234` | 100 | OK, GOLD, 10 | Control at the start: replays r12-03 |
+| 3 | NL | `0A12` | 100 | OK, PLATINUM, 10 | Did the old NL rule strip codes with letters? The old model and "strip everything" say UNKNOWN_MEMBER |
+| 4 | DE | `0A0012` | 40 | UNKNOWN_MEMBER | H-fallback and "strip everything" say OK, SILVER, 2 |
+| 5 | LU | `0A0012` | 40 | UNKNOWN_MEMBER | Same as 4, in a region from the old list |
+| 6 | PT | `0778` | 30 | OK, SILVER, 2 | Is the rule region-wide? This region has not been asked yet; the answer also checks round-up (1.5 → 2) |
+| 7 | DE | `+778` | 40 | UNKNOWN_MEMBER | H-parse says OK, SILVER, 2 |
+| 8 | DE | `" 1234"` (NBSP) | 100 | OK, GOLD, 10 | Java `trim()` says UNKNOWN_MEMBER (D5 is wrong for NBSP) |
+| 9 | DE | `" 01234 "` | 100 | OK, GOLD, 10 | Stripping zeros before trimming would say UNKNOWN_MEMBER |
 
-**How to read the answers:**
+### Should (5)
 
-- If any control answers differently from before, or the version is not 4.2.7, check H5 before changing the model.
-- If #4, #5, #9 or #10 answer UNKNOWN_MEMBER, H3 holds: put back a region list and record exactly which regions strip.
-- If #6 or #8 differ from #7, the region does matter for codes with letters (H4).
-- If #11, #15 or #16 answer GOLD, the service parses the code as a number. Then the model should copy Java's
-  `Long.parseLong` (sign, Unicode digits) and not just `isdigit`.
-- If #12 answers UNKNOWN_MEMBER, change D5 to Java `trim()` semantics (strip only characters ≤ U+0020).
+| # | Region | memberCode | amount | Model | What the answer tells apart |
+| --- | --- | --- | --- | --- | --- |
+| 10 | GR | `001234` | 15 | OK, GOLD, 2 | Second round-up region not yet asked (1.5 → 2) |
+| 11 | DE | `０７７８` (fullwidth) | 40 | UNKNOWN_MEMBER | H-parse (`Character.digit` accepts these) says OK, SILVER, 2 |
+| 12 | DE | `778` as a JSON number | 40 | crashes | Jackson coercion says OK, SILVER, 2; a type check gives an error. The model needs a decision either way |
+| 13 | DE | `00000000000000001234` | 100 | OK, GOLD, 10 | Is there a length limit or a validation error on long codes? |
+| 14 | DE | `0000` | 100 | UNKNOWN_MEMBER | Is an all-zero code `UNKNOWN_MEMBER`, or rejected as invalid? |
 
-Each change in round 13 should go back through this process: decide whether it changes the value of an existing
-decision or adds a new one. Another round that turns up a new decision means the questions are still finding structure
-the model doesn't have.
+### May (3)
+
+| # | Region | memberCode | amount | Model | What the answer tells apart |
+| --- | --- | --- | --- | --- | --- |
+| 15 | DE | `٠٧٧٨` (Arabic-Indic) | 40 | UNKNOWN_MEMBER | Same as 11, with another Unicode digit block |
+| 16 | DE | `0a12` | 100 | UNKNOWN_MEMBER | Case-insensitive lookup says OK, PLATINUM, 10 |
+| 17 | IT | `-0778` | 40 | UNKNOWN_MEMBER | H-parse gives -778; this shows whether the sign is rejected or the code is unknown |
+
+### Controls at the end (3)
+
+| # | Golden replayed | Expected |
+| --- | --- | --- |
+| 18 | r4-02 (DE `0A12`) | OK, PLATINUM |
+| 19 | r12-09 (FR `0778`, 40) | OK, SILVER, 2 |
+| 20 | r3-07 (NL `0778`, as originally sent) | OK, SILVER |
+
+If the budget is cut, drop the May questions first, then the Should questions from the bottom up. Keep the controls:
+without them, a build change between rounds looks the same as a model error.
+
+### How the answers would change the model
+
+- 1 or 18 changes: H-build. Redo the whole D4 analysis against the new build. Do not mix its answers with those from
+  4.2.7.
+- 3 is UNKNOWN_MEMBER: NL really does strip codes with letters, and region does matter. Ask BE and LU the same way.
+- 4 or 5 is SILVER: go with H-fallback, or "strip everything" if 1 also changed.
+- 7, 11 or 15 resolves: go with H-parse. Make D4 a numeric parse and ask about overflow next round.
+- 8 is UNKNOWN_MEMBER: change D5 to trim only characters up to U+0020.
