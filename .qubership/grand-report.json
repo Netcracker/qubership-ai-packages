@@ -1,0 +1,64 @@
+{
+  "exclusions": [
+    {
+      "t-hash": "00000000",
+      "f-hash": "0fa73e65b2e015e8ad64018d4723506e9b094d9dbeab95504392c3f0a7a0a93a"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "1e95eefc766298d65055e0c5938b57734d695490119463c2c484d602d0182b61"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "38ae5eeb7ea996ba9300f07a65b4a6ccda7570c04d2695ebbe95a6f6f113cb29"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "483a42d061f924606662d210891b1dad871aff1bba3b5e701a8d89ccc60d7ef1"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "6194351eb80b01141c7458522a64ddbe335ff5fe0ffdb182c08452fc1bb1ccc6"
+    },
+    {
+      "t-hash": "a71116b37d7fcc695fdb82934e046229b77e5334618cb82965e3473dd3f2e1af",
+      "f-hash": "61de7509a4cfe74a3a594096830d124065ae3074c844d73f512e4b80a466c1f6"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "8c1a1a65338d756025b483afce8658b0b6a15b301286eedd2b709b9f32e9e23c"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "9780d0e8b1e60d93c6ff40bbe1b48cd9261628c81be28cecc7b1246a2e8330ad"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "99a6343b5f5d47c8c64f211fdc3d95f165dba72f26d47e36289bb5bb53e53edf"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "a991e2024c4e3102303ed64afb0db8c13a0aba93c783dfbb67411185dc5cb092"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "c6bb44c9b1201f23c9908d013a3b94ee2253df4cbc98b1e70172287d1db54d8f"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "d15c96fa381bb212bc32c6cc415418e286b4e6ca220c0355cf99f9abfef8657c"
+    },
+    {
+      "t-hash": "a71116b37d7fcc695fdb82934e046229b77e5334618cb82965e3473dd3f2e1af",
+      "f-hash": "d58b3a9861aea4647d68c1aa9f4e5581539bd810241def21b2d1680b0a517913"
+    },
+    {
+      "t-hash": "fab313a94604a96150cd1eb009b7486a12b0c9fda83de27f0d9efb61f8b955a7",
+      "f-hash": "d7c9520333503debe53ae95537b160c9dcea1c9ec80b0f948701e2f19db47195"
+    },
+    {
+      "t-hash": "00000000",
+      "f-hash": "f6f2201d24118002a07f63c676d428314d8fc3504c8bad835a63df83bde91c39"
+    }
+  ]
+}
