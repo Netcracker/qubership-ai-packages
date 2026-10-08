@@ -1,0 +1,113 @@
+{
+ "key": "uber_NullAway_1837",
+ "summary": "Fixes false-positive nullable-argument errors by preserving explicit @NonNull on type-variable uses when NullAway restores annotations through captured unbounded, extends and super wildcards, copying bounds instead of mutating javac's shared types.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix owes regression tests; WildcardTests adds the Caffeine reproducer across five wildcard shapes and a negative-control test for shared-bound mutation. Codecov reports 79% patch coverage (7 lines in TypeSubstitutionUtils uncovered), worth a glance at the untested branches."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New private helpers carry Javadoc and the visitCapturedType comment was updated for super wildcards; reviewer's only comment asked for a clarifying comment in the test, already applied."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description explains cause, fix and tests; NullAway compiles its changelog at release time."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Allocates detached wildcard/type-variable copies during type substitution only when a bound changes."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Removes false positives; explicit bound annotations now take precedence over library-model nullability, which could change results for some users."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial changes to RestoreNullnessAnnotationsVisitor (super wildcards now fall through to the lower bound, non-wildcard counterpart handling, cycle guard generalized) and to precedence of explicit bound annotations in GenericsUtils.wildcardUpperBound."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Explicit @NonNull on a formal upper bound now overrides a library model's @Nullable; stated in the description."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comments and Javadoc updated alongside the code (UNBOUND -> UNBOUND or SUPER); consistent."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Implements JSpecify nullness semantics for wildcard implicit upper bounds and explicit @NonNull on type-variable uses."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "A focused type-system fix whose correctness, spec and test coverage are best judged together by one reviewer."
+ }
+}

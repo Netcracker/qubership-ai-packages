@@ -1,0 +1,124 @@
+{
+ "key": "apache_calcite_5266",
+ "summary": "Hardens identifier and literal escaping against injection: backslash escaping in eight SQL dialects and in the unknown-product ANSI fallback (with a system property to restore legacy behavior), and identifier allowlists or quoting in the Geode, Elasticsearch, MongoDB, Cassandra, and Splunk adapters.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Many new unit tests; mihaibudiu asked why SplunkPushDownRuleTest uses reflection (method made package-private) and found a Cassandra test comment vague. Elasticsearch and Mongo tests exercise helpers directly, not the generated request through ElasticsearchProject/MongoAggregate."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New system property; history.md gets an entry, but security_threat_model.md, which lists the other operator-set properties, is not updated, and the Geode/Splunk/Elasticsearch push-down behavior changes are not mentioned."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "mihaibudiu asked for several Javadoc fixes: the Elasticsearch helper's Javadoc talks about JSON (renamed to escapeJsonString), explain possessive quantifiers, state the script language (Painless/Groovy), GeodeUtils Javadoc should not name callers, and a Cassandra comment was on the wrong line."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Deliberately generic title for a security hardening; the body lists the affected dialects and adapters and the history.md entry covers the default change."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Regex matching per identifier during planning; possessive quantifiers already avoid backtracking."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "The purpose of the change is preventing SQL/OQL/SPL/JSON/Painless injection through quoting and escaping; every escaping routine and allowlist regex (including ReDoS-safe possessive quantifiers) needs a focused security pass."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Changes the default of the unknown-product fallback dialect to double backslashes (new property calcite.sql.dialect.unknown.escapes.backslash, default true) and changes the literals emitted for Hive, Spark, Snowflake, Netezza, and others; on a standard-lexing backend a value containing a backslash is now a different value, not 'at worst rendered verbatim' as the Javadoc claims."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New error paths with inconsistent types: GeodeUtils.checkSafeOqlIdentifier throws bare RuntimeException, GeodeTable.checkOql throws IllegalArgumentException, GeodeRules throws IllegalArgumentException, where refusing pushdown would avoid a user-visible failure."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial escaping logic across many dialects; Netezza's own comment says backslash escapes apply only when standard-conforming-strings is off, yet the override doubles unconditionally; the Hive/Spark TRIM regex test changed expected output, which mihaibudiu called 'very complicated'."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Security hardening; the value is clear, only the opt-out property's usefulness is worth a glance."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Existing deployments on an unrecognized JDBC product silently get different string literals; Geode queries with non-identifier aliases now throw at implement time rather than falling back to Calcite evaluation, unlike Splunk and the Geode rules which refuse pushdown."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "ElasticsearchRulesTest still says callers route through escapeSpecialSymbols, a name this PR removed; GeodeTable's comment says unsafe names 'refuse pushdown' while GeodeTable/GeodeAggregate/GeodeProject throw; Geode gets three overlapping identifier regexes (GeodeUtils, GeodeTable, GeodeRules) that disagree on shape and exception type."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Refused pushdowns (Splunk, Geode rules) fall back silently with no debug log; minor."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Each dialect override encodes the target database's lexical rules; the reviewer said he did not verify the rules per dialect, and Netezza's and Snowflake's rules depend on session settings the dialect ignores."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "security",
+    "correctness",
+    "spec_conformance"
+   ],
+   [
+    "backward_compat",
+    "surprising_behavior",
+    "user_docs",
+    "error_model"
+   ],
+   [
+    "tests",
+    "doc_comments",
+    "contradictions"
+   ]
+  ],
+  "why": "Large multi-module change: escaping logic per dialect, user-facing compatibility of the new default and throws, and test/comment consistency are separable passes."
+ }
+}

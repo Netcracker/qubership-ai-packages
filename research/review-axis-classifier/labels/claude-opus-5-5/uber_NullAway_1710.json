@@ -1,0 +1,113 @@
+{
+ "key": "uber_NullAway_1710",
+ "summary": "Extends JSpecify diamond-operator nullability handling to anonymous classes, recovering the instantiated supertype from assignment, return, and parameter contexts so override checks in the anonymous body use it.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Feature/bug fix mandates tests; after rebase the initial approach caused a stack overflow with no covering test (commits 'Fix stackoverflow', 'Add regression test for stackoverflow'), and CodeRabbit asked for a generic-method-with-concrete-parameter case; a test comment was later found out of date and the test renamed."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No option or docs page; behavior of existing JSpecify mode extends to a new construct."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "CodeRabbit asked for Javadoc on isCallNeedingInference; the final version documents the new getConstructedTypeAtCallSite; minor."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description links the issue and lists the contexts; includes AI disclosure; fine."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds context lookups on the inference path; the stack overflow was a recursion defect, not a cost issue."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No security surface."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Previously skipped anonymous diamond classes now get checked, so users may see new errors under JSpecify mode; expected for this mode."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Diagnostics for overrides in anonymous diamond bodies change (GenericsTests expectations adjusted)."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Initial design mixed anonymous-class handling into inference; msridhar pointed out the body does not influence diamond inference, the approach produced a stack overflow and a false positive, and the final fix was rewritten around getConstructedTypeAtCallSite using the class identifier."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Closes a requested issue (#1475); worth it, API unchanged."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New warnings on anonymous diamond bodies; strict-supertype cases kept conservative to avoid false positives."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Removes obsolete TODOs; one test comment left stale in the reviewed version (msridhar: 'this comment is out of date')."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging involved."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Interprets JLS diamond inference for anonymous classes (JLS 15.9.3) and JSpecify; reviewer noted the initial structure treated anonymous diamond inference differently from plain diamond calls, contrary to the language rule."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "One file of logic plus tests; the required axes all hinge on the same inference reasoning, so one reviewer covers them best."
+ }
+}

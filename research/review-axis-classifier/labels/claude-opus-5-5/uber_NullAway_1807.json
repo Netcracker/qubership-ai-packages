@@ -1,0 +1,118 @@
+{
+ "key": "uber_NullAway_1807",
+ "summary": "Keeps array types whose component type is raw (instead of dropping them as raw) when computing tree types in JSpecify mode, and (via the stacked base) resolves unbound generic method-reference qualifiers from the functional-interface receiver.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Behavior change in type computation; CodeRabbit (2026-09-07) noted no assignment/argument/return cases with a raw-array *target* (e.g. @Nullable Test<String>[] into Test[]), which the initial tests still lack; test issue1800 etc. cover only raw-array sources."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "JSpecify-mode checking behavior changes but NullAway documents such rules only in the wiki; no option or version change."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Public getTreeType/getMemberReferenceMethodType contracts changed (new parameter, raw-array exemption) and new public record ResolvedMethodReference; Javadoc updated, minor typo 'javac compute'."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Body explains why for the raw-array part, but the diff also carries the stacked method-reference changes (b2ae9c77..34c02819) that the description does not mention; git-spice stack explains it."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No hot-path or complexity change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New diagnostics appear where NullAway was silent (raw array to parameterized array), but only in JSpecify mode, which is still evolving."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Newly reachable diagnostic reads 'incompatible types: @Nullable Test [] cannot be converted to Test<String> []' (JSpecifyArrayTests.rawArrayToParameterizedArray), which reads like a missing-type-argument error though only component nullability differs."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial change across getTreeType callers; CodeRabbit flagged that raw-array targets still hit isRaw() shortcuts in GenericsChecks (assignment, return, parameter, override paths), so the policy is applied to sources only; not changed in final."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes a reported false negative (#1800); clearly worthwhile."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Users see new errors on raw arrays (array writes, raw-to-parameterized conversions, generic inference failure) that previously passed silently."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comments on the bail-out in generateConstraintsForPseudoAssignment and isRaw() in inferConditionalExpressionType were already corrected in the submitted commits (db526577, 7d397c8d)."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Only a JDK-version guard inside a test; no build change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Interprets how JSpecify nullness applies to array types with raw components and to method-reference qualifier types."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "spec_conformance",
+    "tests"
+   ],
+   [
+    "error_model",
+    "surprising_behavior",
+    "doc_comments"
+   ]
+  ],
+  "why": "Type-system logic across many call sites needs its own pass separate from the user-facing diagnostics and contract docs."
+ }
+}

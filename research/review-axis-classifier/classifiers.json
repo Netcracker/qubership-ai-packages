@@ -1,0 +1,171 @@
+[
+ {
+  "id": "heuristic",
+  "family": "rules",
+  "model": "none",
+  "input": "title, description, files",
+  "runner": "scripts/classify_heuristic.py",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-score-meta",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata; 0-2 score per axis",
+  "runner": "scripts/classify_jev.py score-meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-score-diff8k",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + 8k diff; 0-2 score",
+  "runner": "scripts/classify_jev.py score-diff8k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-score-diff24k",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + 24k diff; 0-2 score",
+  "runner": "scripts/classify_jev.py score-diff24k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-noul-diff8k",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + 8k diff; yes/no",
+  "runner": "scripts/classify_jev.py noul-diff8k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-profile-score-meta",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + project profile; 0-2 score",
+  "runner": "scripts/classify_jev.py profile-score-meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-profile-score-diff8k",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + profile + 8k diff; 0-2 score",
+  "runner": "scripts/classify_jev.py profile-score-diff8k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "jev-1.13.0-profile-noul-diff8k",
+  "family": "system-one",
+  "model": "jev-1.13.0",
+  "input": "metadata + profile + 8k diff; yes/no",
+  "runner": "scripts/classify_jev.py profile-noul-diff8k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "clm-v0.1-8b-profile-score-meta",
+  "family": "system-one",
+  "model": "CLM-v0.1-8B (local, M1 Max)",
+  "input": "metadata + profile; 0-2 score",
+  "runner": "scripts/classify_clm.py profile-score-meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "clm-v0.1-8b-profile-score-diff4k",
+  "family": "system-one",
+  "model": "CLM-v0.1-8B (local, M1 Max)",
+  "input": "metadata + profile + 4k diff; 0-2 score",
+  "runner": "scripts/classify_clm.py profile-score-diff4k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "clm-v0.1-8b-profile-noul-meta",
+  "family": "system-one",
+  "model": "CLM-v0.1-8B (local, M1 Max)",
+  "input": "metadata + profile; yes/no",
+  "runner": "scripts/classify_clm.py profile-noul-meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "clm-v0.1-8b-profile-noul-diff4k",
+  "family": "system-one",
+  "model": "CLM-v0.1-8B (local, M1 Max)",
+  "input": "metadata + profile + 4k diff; yes/no",
+  "runner": "scripts/classify_clm.py profile-noul-diff4k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "clm-v0.1-8b-profile-noul-default-meta",
+  "family": "system-one",
+  "model": "CLM-v0.1-8B (local, M1 Max)",
+  "input": "metadata + profile; yes/no, CLM's default candidates",
+  "runner": "scripts/classify_clm.py profile-noul-default-meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "claude-haiku-4-5-meta",
+  "family": "llm",
+  "model": "claude-haiku-4-5-20251001",
+  "input": "metadata",
+  "runner": "scripts/classify_claude.py claude-haiku-4-5-20251001 meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "claude-haiku-4-5-diff24k",
+  "family": "llm",
+  "model": "claude-haiku-4-5-20251001",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_claude.py claude-haiku-4-5-20251001 diff24k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "claude-sonnet-5-diff24k",
+  "family": "llm",
+  "model": "claude-sonnet-5",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_claude.py claude-sonnet-5 diff24k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "claude-opus-5-5-diff24k",
+  "family": "llm",
+  "model": "claude-opus-5-5",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_claude.py claude-opus-5-5 diff24k",
+  "run_date": "2026-09-25",
+  "note": "same model as the labeler: likely biased upward"
+ },
+ {
+  "id": "gpt-6-luna-high-meta",
+  "family": "llm",
+  "model": "gpt-6-luna, reasoning high",
+  "input": "metadata",
+  "runner": "scripts/classify_codex.py gpt-6-luna high meta",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "gpt-6-luna-high-diff24k",
+  "family": "llm",
+  "model": "gpt-6-luna, reasoning high",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_codex.py gpt-6-luna high diff24k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "gpt-6-luna-medium-diff24k",
+  "family": "llm",
+  "model": "gpt-6-luna, reasoning medium",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_codex.py gpt-6-luna medium diff24k",
+  "run_date": "2026-09-25"
+ },
+ {
+  "id": "gpt-6-luna-low-diff24k",
+  "family": "llm",
+  "model": "gpt-6-luna, reasoning low",
+  "input": "metadata + 24k diff",
+  "runner": "scripts/classify_codex.py gpt-6-luna low diff24k",
+  "run_date": "2026-09-25"
+ }
+]

@@ -1,0 +1,113 @@
+{
+ "key": "apache_calcite_5203",
+ "summary": "Corrects the Pig adapter's string-literal escaping to use backslash escapes for quotes and backslashes instead of doubled quotes, updating tests.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Tests assert generated strings only and cannot detect a wrong escaping rule (the previous patch passed them); reviewer asked that validated tests be marked as checked against Pig. No case for other Pig escapes such as newline."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The method comment explaining the rule was reduced to 'Escape before wrapping'; a short note on the Pig rule would help."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description explains the previous mistake and links the Pig docs."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Quoting/escaping of literals pushed into generated Pig Latin FILTER statements; escaping backslash before quote is required to prevent breaking out of the literal, and the initial version does it in the right order."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Generated Pig scripts change for literals containing quotes or backslashes."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Escape order (backslash then quote) is right and tests cover trailing and adjacent backslashes."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Test comment updated from 'doubled' to 'escaped'; consistent."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "The follow-up exists because the previous patch misread Pig Latin literal syntax; mihaibudiu's approval was conditional on validating the output against a real Pig installation, which the author then did manually."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "security",
+    "spec_conformance",
+    "tests"
+   ]
+  ],
+  "why": "Tiny escaping change; one reviewer covers escaping, spec, and test adequacy together."
+ }
+}
