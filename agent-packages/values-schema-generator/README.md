@@ -12,7 +12,8 @@ schema; it does not fire on its own.
 1. Lists the charts in the repository and asks which one to process when the user has not named it.
 1. Collects the sources, and each deployment's ordered stack of override files from CI jobs, scripts, `helmfile`
    releases, and Argo CD applications. It asks when the order cannot be found.
-1. Merges Go structs that several `*_types.go` files define, so a short copy of a struct cannot drop fields.
+1. Identifies Go types by package, and combines same-named structs only when they are verified to be one logical
+   type, so a short copy of a struct cannot drop fields and an unrelated struct cannot add them.
 1. Resolves each field's type in a fixed priority order: Go type, guide, `values.yaml` default, then a safe fallback.
    It asks only when every fallback would reject `values.yaml` itself.
 1. Writes the schema, or edits only the changed nodes of an existing one.

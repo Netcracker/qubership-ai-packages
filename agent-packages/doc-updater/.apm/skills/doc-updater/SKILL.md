@@ -60,25 +60,35 @@ new page beside it.
 
 ## Step 2. Gather the changes
 
-Find the default branch, then collect the changes this branch introduces plus the changes staged for the next commit:
+Find the default branch as a remote ref, then collect the changes this branch introduces plus the changes staged for
+the next commit. Keep two values: `base_ref`, the remote ref you diff against, and `base`, its branch name, which you
+compare with the current branch. Diff against `base_ref`, never against `base`: a checkout can have `origin/main`
+without a local `main`.
 
 ```bash
-base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+base_ref=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+if [ -z "$base_ref" ]; then
+  for name in main master; do
+    git rev-parse --verify --quiet "origin/$name" >/dev/null && base_ref="${base_ref:+$base_ref }origin/$name"
+  done
+fi
+echo "base_ref=$base_ref"
 git rev-parse --abbrev-ref HEAD
 ```
 
-If `base` is empty because `origin/HEAD` is not set, use `main` or `master` when exactly one of `origin/main` and
-`origin/master` exists (`git rev-parse --verify --quiet origin/<name>`). Otherwise ask the user for the base branch.
+`base_ref` must name exactly one ref, such as `origin/main`. If it is empty, or lists both `origin/main` and
+`origin/master`, ask the user for the base branch and use the ref they name. Then set `base` to `base_ref` without its
+`origin/` prefix.
 
-- On a branch other than the base, take the union of both scopes:
+- On a branch other than `base`, take the union of both scopes:
 
   ```bash
-  git diff "$base"...HEAD
+  git diff "$base_ref"...HEAD
   git diff --cached
   git status --short
   ```
 
-- On the base branch, take only the staged scope and `git status --short`.
+- On `base` itself, take only the staged scope and `git status --short`.
 
 `git status --short` lists untracked files, which neither diff shows. Read the new files it lists that match the
 categories in the analysis guide. If the combined diff exceeds about 500 lines, summarize it by file group and read in

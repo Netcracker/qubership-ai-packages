@@ -90,16 +90,23 @@ Read all of these before you write any schema.
    in sibling modules, and the chart's own types file often carries a shorter copy of a struct that another module
    defines in full.
 
-   For a struct defined in more than one file, the field set is the union of every definition. Save this script in a
-   scratch directory outside the repository (`mktemp -d`), as `<scratch>/go_struct_union.py`, and run it with the
-   repository root. It prints, for every struct defined in more than one file, the union of its JSON fields and the
-   files that define it:
+   A Go type is identified by its package directory and its name, such as `operator/api/v1.FooSpec`. Two structs
+   with the same name in different packages are different types unless you verify otherwise: `first.Config` and
+   `second.Config` can be unrelated. Combine definitions only when they are the same logical type, such as a services
+   module carrying a shorter copy of the struct the operator's CRD defines in full.
+
+   Save this script in a scratch directory outside the repository (`mktemp -d`), as `<scratch>/go_structs.py`, and
+   run it with the repository root. It prints every struct with its JSON fields, then a verdict for each name that
+   several packages define:
 
    ```python
-   """Union the JSON fields of Go structs defined in several *_types.go files.
+   """List Go structs by package and check schema definitions against them.
 
-   Usage: go_struct_union.py <repo_root> [<values.schema.json>]
-   With a schema path, report union fields missing from the matching $defs entries.
+   Usage:
+     go_structs.py <repo_root>                          list structs and same-name groups
+     go_structs.py <repo_root> <schema.json> <map.txt>  check each mapped $defs entry
+   map.txt holds one line per $defs entry: <$defs key> = <type> [<type> ...],
+   with each <type> written as <package dir>.<StructName>, as the first form prints it.
    """
    import json
    import re
@@ -111,11 +118,12 @@ Read all of these before you write any schema.
    FIELD = re.compile(r'^\s*\w+\s+([\w\[\]*.]+)\s+`[^`]*json:"([^,"]+)')
    ANONYMOUS_END = re.compile(r'^\s*\}()\s*`[^`]*json:"([^,"]+)')  # tag of an inline struct field
 
-   repo_root = Path(sys.argv[1])
-   structs = defaultdict(dict)  # struct name -> {file: {json name: Go type}}
+   repo_root = Path(sys.argv[1]).resolve()
+   types = {}  # "<package dir>.<StructName>" -> {json name: Go type}
    for path in sorted(repo_root.rglob("*_types.go")):
        if "vendor" in path.parts:
            continue
+       package = path.parent.relative_to(repo_root).as_posix()
        name, depth, fields = None, 0, {}
        for line in path.read_text(encoding="utf-8").splitlines():
            if name is None:
@@ -133,25 +141,32 @@ Read all of these before you write any schema.
            depth += line.count("{") - line.count("}")
            if depth <= 0:
                if fields:
-                   structs[name][str(path)] = fields
+                   types[f"{package}.{name}"] = fields
                name = None
 
-   unions = {}
-   for name, definitions in structs.items():
-       if len(definitions) > 1:
-           union = {}
-           for fields in definitions.values():
-               for json_name, go_type in fields.items():
-                   union.setdefault(json_name, go_type)
-           unions[name] = union
+   def base_type(go_type):
+       return re.sub(r"\w+\.", "", go_type.replace("*", ""))
 
-   if len(sys.argv) < 3:
-       for name, union in sorted(unions.items()):
-           print(f"=== {name}: {len(union)} fields from {len(structs[name])} files")
-           for path in sorted(structs[name]):
-               print(f"  defined in {path}")
-           for json_name, go_type in sorted(union.items()):
-               print(f"  {json_name:30} {go_type}")
+   if len(sys.argv) == 2:
+       groups = defaultdict(list)
+       for type_id, fields in sorted(types.items()):
+           print(f"{type_id}: {', '.join(sorted(fields))}")
+           groups[type_id.rsplit(".", 1)[1]].append(type_id)
+       for name, members in sorted(groups.items()):
+           if len(members) < 2:
+               continue
+           sets = sorted((set(types[m]) for m in members), key=len)
+           shared = set.intersection(*sets)
+           conflicts = sorted(f for f in shared if len({base_type(types[m][f]) for m in members}) > 1)
+           if not shared or conflicts:
+               verdict = "DIFFERENT"
+           elif all(a <= b for a, b in zip(sets, sets[1:])):
+               verdict = "SAME"
+           else:
+               verdict = "UNCERTAIN"
+           print(f"=== {name}: {verdict}; shared {sorted(shared)}; conflicting types {conflicts}")
+           for member in members:
+               print(f"  {member}")
        sys.exit(0)
 
    def properties(node):
@@ -163,20 +178,40 @@ Read all of these before you write any schema.
 
    defs = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8")).get("$defs", {})
    failed = False
-   for name, union in sorted(unions.items()):
-       wanted = {name.lower(), name.lower().removesuffix("spec")}
-       key = next((k for k in defs if k.lower() in wanted), None)
-       if key is None:
-           print(f"UNMAPPED {name}: no $defs entry with this name; check the property that uses it by hand")
+   for line in Path(sys.argv[3]).read_text(encoding="utf-8").splitlines():
+       if not line.strip() or line.lstrip().startswith("#"):
            continue
-       missing = sorted(set(union) - properties(defs[key]))
+       key, _, refs = (part.strip() for part in line.partition("="))
+       unknown = [ref for ref in refs.split() if ref not in types]
+       if key not in defs or unknown or not refs:
+           failed = True
+           print(f"FAIL {key}: missing $defs entry or unknown types {unknown}")
+           continue
+       missing = sorted(set().union(*(types[ref] for ref in refs.split())) - properties(defs[key]))
        if missing:
            failed = True
-           print(f"FAIL {name} -> $defs/{key}: missing {missing}")
+           print(f"FAIL $defs/{key} ({refs}): missing {missing}")
    print("FAIL" if failed else "PASS")
    ```
 
-   Every field in the union table appears in the schema. Do not write a `$defs` entry before the table is printed.
+   Decide which types to combine from the verdicts:
+
+   - `DIFFERENT`: the definitions share no field, or a shared field has a different Go type. Never combine them.
+   - `SAME`: each definition's fields are a subset of the next, with matching Go types. Combine them only after you
+     confirm both are behind the same chart value: the chart's templates render a resource whose `kind` is the CRD
+     that the other package defines, or the chart's types file imports that package. Otherwise keep them separate.
+   - `UNCERTAIN`: the definitions overlap without one containing the other. Add the group to the step 5 batch of
+     questions; until the user answers, use only the definition in the package the chart's own values map to.
+
+   Then write `<scratch>/defs-map.txt`, one line per `$defs` entry backed by Go types, listing the type or the
+   combined types it represents:
+
+   ```text
+   foo = operator/api/v1.FooSpec services/api.FooSpec
+   storage = operator/api/v1.StorageSpec
+   ```
+
+   Every field of the mapped types appears in that `$defs` entry. Do not write a `$defs` entry before the map exists.
 
    Find enum values in `const` blocks:
 
@@ -343,8 +378,9 @@ If no source lists values, use `"string"` without `enum`.
 
 ## Step 5. Ask only when stuck
 
-Ask only when the step 4 rules resolve no type and every fallback type would make `values.yaml` fail validation. Ask
-once, in one batch, after reading every source:
+Ask only when the step 4 rules resolve no type and every fallback type would make `values.yaml` fail validation, or
+when step 2 marks a group of same-named Go types `UNCERTAIN`. Ask once, in one batch, after reading every source; for
+an `UNCERTAIN` group, ask whether its types are one logical type and list the package of each:
 
 ```text
 Unable to resolve the type of N fields; all other fields were resolved automatically.
@@ -529,17 +565,17 @@ every field name against the struct the repository's `go.mod` pins:
 TLS certificate keys (such as `tls_key`, `tls_crt`, `ca_crt`) come from the Go struct or the guide; each one is
 `["string", "null"]`.
 
-## Step 7. Cross-check the union fields
+## Step 7. Cross-check the Go fields
 
-Run this step right after writing the schema, before step 8. Run the step 2 script again with the schema path:
+Run this step right after writing the schema, before step 8. Run the step 2 script again with the schema and the map:
 
 ```bash
-python3 <scratch>/go_struct_union.py <repo_root> <chart_dir>/values.schema.json
+python3 <scratch>/go_structs.py <repo_root> <chart_dir>/values.schema.json <scratch>/defs-map.txt
 ```
 
-On any `FAIL` line, add the missing fields to that `$defs` entry and run the script again until it prints `PASS`. For
-each `UNMAPPED` line, find the property that uses the struct and check its fields by hand. This catches fields that
-were in the union table but were dropped while writing the schema.
+On any `FAIL` line, add the missing fields to that `$defs` entry, or correct the map if it names the wrong type, and
+run the script again until it prints `PASS`. This catches fields that a mapped type has but that were dropped while
+writing the schema. List the map, and every combined group, in the final report.
 
 ## Step 8. Validate through Helm
 
