@@ -1,3 +1,3 @@
 name: values-schema-generator
 version: 1.0.0
-description: Generate a strict values.schema.json for a Helm chart. Triggers when the user says "generate schema", "create schema.json", "values schema", "schema for my chart", "validate helm values", or points at a chart directory and asks for schema generation. Always use this skill for schema generation tasks — do not write ad-hoc schema logic inline.
+description: Skill that generates a strict values.schema.json for a Helm chart from the repository's own sources and validates it through helm lint.

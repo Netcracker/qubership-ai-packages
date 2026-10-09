@@ -1,470 +1,374 @@
 ---
 name: values-schema-generator
-description: >
-  Generate a strict values.schema.json for a Helm chart. Triggers when the user says:
-  "generate schema", "create schema.json", "values schema", "schema for my chart",
-  "validate helm values", or points at a chart directory and asks for schema generation.
-  Always use this skill for schema generation tasks — do not write ad-hoc schema logic inline.
+description: Generate or update a strict values.schema.json for one Helm chart, with field names, types, and enum values taken from the repository's own values.yaml, Go API types, templates, installation guide, and override files, then validate it through helm lint against every deployment's ordered values stack. Use only when the user asks to generate, create, or update a values schema for a Helm chart, or to validate Helm values against one.
 ---
 
-# Helm values.schema.json Generator
+# Helm values schema generator
 
-Generates a strict, validated `values.schema.json` for one Helm chart at a time.
-Schema lives next to `values.yaml` in the chart directory.
+Generate a strict, validated `values.schema.json` for one Helm chart at a time. The schema sits next to the chart's
+`values.yaml`.
 
-This skill is fully generic — it discovers all field names, types, and enum values
-from the repo's own sources (values.yaml, Go types, installation guide, templates).
-It never assumes field names or enum values specific to any one service.
+Every field name, type, and enum value comes from the repository: `values.yaml`, Go `*_types.go`, CRDs, templates, the
+installation guide, and the override files. Never assume a field or an enum value that the repository does not show.
 
-**Default behavior: discover everything, ask nothing.**
-Every field in values.yaml or templates gets a type — always via the priority rules
-or safe fallback below. Only ask when a field's default VALUE itself cannot be
-validated by any safe fallback type. When in doubt, write the schema and fix
-failures in the validation loop rather than asking upfront.
+Discover everything and ask almost nothing. Every field gets a type from the priority rules in step 4 or from the safe
+fallback. Ask only when a default value in `values.yaml` fails every fallback type (step 5). When in doubt, write the
+schema and let the validation loop in step 8 expose the gap.
 
----
+## Requirements
 
-## How to invoke
+- `helm` on the `PATH`. Step 8 validates through `helm lint`, because Helm's own value coalescing (defaults, then each
+  `-f` file in order, with `null` deleting a key) is what the schema is checked against at install time. If `helm` is
+  missing, stop and tell the user; do not substitute a hand-written merge.
+- `python3` with PyYAML for the extraction scripts. If PyYAML is missing, ask the user to install it.
 
-If the user has not specified which chart to work on, use `AskUserQuestion` to present
-all discovered charts as selectable options (one option per chart, label = chart directory
-path relative to repo root). Let the user pick with up/down arrow keys. Do NOT proceed
-until a chart is selected. Process one chart per invocation. After completing, offer to
-do the next chart via another `AskUserQuestion`.
+## Pick the chart
 
----
+If the user has not named a chart, list every directory that holds a `Chart.yaml` (path relative to the repository
+root) and ask the user to pick one. Do not start until a chart is chosen. Process one chart per invocation; when it is
+done, offer to continue with the next one.
 
-## Step 1 — Locate sources
+## Step 1. Locate the sources
 
 ```bash
-# Chart directories
-find <repo_root> -name "Chart.yaml" | sort
+# Charts and their values files
+find <repo_root> -name Chart.yaml | sort
+find <repo_root> -name values.yaml | sort
 
-# values.yaml candidates
-find <repo_root> -name "values.yaml" | sort
+# Go API types and the module that pins their external packages
+find <repo_root> -name '*_types.go' -not -path '*/vendor/*' | sort
+find <repo_root> -maxdepth 3 -name go.mod | sort
 
-# Go type files
-find <repo_root> -name "*_types.go" | sort
+# CRDs
+grep -rl --include='*.yaml' --include='*.yml' 'openAPIV3Schema' <repo_root> | sort
 
-# go.mod — find external package versions for shared types
-find <chart_dir>/.. -name "go.mod" -maxdepth 3 | head -5
+# Installation guides with a parameters section
+grep -rlE --include='*.md' '^#{1,3} .*Parameters' <repo_root> | sort
 
-# CRD yamls
-find <repo_root> -name "*.yaml" | xargs grep -l "openAPIV3Schema" 2>/dev/null | sort
-
-# Installation guide (any .md with a Parameters section)
-find <repo_root>/docs -name "*.md" 2>/dev/null | xargs grep -l "## Parameters\|# Parameters" 2>/dev/null
-find <repo_root> -name "*.md" | xargs grep -l "## Parameters\|# Parameters" 2>/dev/null | sort
-
-# Override / deployment values files — scan both in-repo and any user-provided path
-# In-repo: test values, named overrides
-find <repo_root> \( -path "*/tests/values/*.yaml" -o -path "*/tests/values/*.yml" \
-  -o -name "*-values.yaml" -o -name "values-*.yaml" \) 2>/dev/null | sort
-# If the user mentioned an external override directory, list it now too:
-# find <external_override_dir> \( -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | sort
+# Override files: test values and named overrides; never files under templates/
+find <repo_root> \( -path '*/tests/values/*.yaml' -o -path '*/tests/values/*.yml' \
+  -o -name '*-values.yaml' -o -name 'values-*.yaml' \) -not -path '*/templates/*' | sort
 ```
 
-Print all found paths before proceeding.
+If the user named an external override directory (a pipeline or infrastructure repository), list its files too:
 
-**If the user provided an external override directory** (e.g. a pipeline/infra repo path),
-collect all `.yaml`/`.yml` files from it now and include them in the field-discovery step
-below — treat every key path in those files as a real field the schema must accept.
-Do not wait until Step 7D to discover those fields; discover them here so the schema is
-built correctly from the start.
+```bash
+find <external_override_dir> \( -name '*.yaml' -o -name '*.yml' \) -not -path '*/templates/*' | sort
+```
 
----
+Print every path found before you continue.
 
-## Step 2 — Read all sources in parallel
+### Find each deployment's values stack
 
-Read ALL of these before writing a single line of schema:
+Override files are layers, not complete deployments. A production deployment can take `values-common.yaml` and then
+`values-prod.yaml`, and only the two together are valid. Record, for each deployment, the ordered list of files Helm
+receives:
 
-1. **`values.yaml`** — full file, all keys and defaults.
+```bash
+grep -rnE --include='*.yml' --include='*.yaml' --include='*.sh' --include='Makefile' --include='*.mk' \
+  -e '(-f|--values)[ =][^ ]+\.ya?ml' <repo_root> <external_override_dir> 2>/dev/null
+grep -rnE --include='helmfile*.yaml' --include='*application*.yaml' \
+  -e 'valueFiles:|values:' <repo_root> <external_override_dir> 2>/dev/null
+```
 
-2. **Installation guide** — locate the `## Parameters` section (or `# Parameters`).
-   Each parameter table row gives: key path, type, default, description, mandatory flag.
-   Read every subsection in the guide that covers this chart's parameters.
-   If no guide exists, proceed without it.
+These cover `helm install|upgrade|template` calls in CI and scripts, `helmfile` releases, and Argo CD `valueFiles`.
+If the order of an override file cannot be found, ask the user once, in a single batch, which files each deployment
+stacks and in what order. A file the user calls standalone is a one-file stack.
 
-3. **Go `*_types.go`** — the main `Spec` struct and every struct it references.
-   This is authoritative for field types.
-   Do not assume which struct is the entry point; grep for it:
+Every key path in every override file is a real field that the schema must accept. Collect them in step 2 so the
+schema is built with them from the start, not patched in step 8.
 
-   ```bash
-   grep -rn "type.*Spec struct" <repo_root> --include="*_types.go"
-   ```
+## Step 2. Read all sources
 
-   Also grep for `const` blocks to find enum values:
+Read all of these before you write any schema.
 
-   ```bash
-   grep -B2 -A 20 "^const (" <types_file>
-   ```
+1. **`values.yaml`**: the whole file, every key and default.
+1. **Installation guide**: the parameters section. Each table row gives the key path, type, default, description, and
+   whether it is mandatory. Read every subsection that covers this chart. If there is no guide, continue without one.
+1. **Go types**: the authoritative source of field types. Read every `*_types.go` in the repository, not only the one
+   nearest to the chart. A chart that deploys an operator and also creates the CRs it consumes maps values to types
+   in sibling modules, and the chart's own types file often carries a shorter copy of a struct that another module
+   defines in full.
 
-   **Read ALL `*_types.go` files in the repo — not just the one nearest to the chart.**
-   A superset chart (one that deploys an operator AND creates CRs consumed by that
-   operator) will have values that map to types defined in sibling modules. The chart's
-   own types file may contain a simplified version of a struct while another module in
-   the repo contains the full version with more fields.
-
-   For any struct name defined in more than one `*_types.go` file across the repo,
-   take the **union of all fields** across every definition. The richer definition
-   extends the simpler one — never let a shorter definition truncate fields that exist
-   in another file.
-
-   Detection — scan ALL struct names, not just \*Spec:
-
-   ```bash
-   # Step A: collect every struct name defined in the chart's own types file
-   sed -n 's/^type \([A-Za-z0-9_]*\) struct/\1/p' <chart_types_file>
-
-   # Step B: for EACH struct name found above, find every other *_types.go in the
-   # repo that also defines it — these files contain the richer union definition
-   for s in $(sed -n 's/^type \([A-Za-z0-9_]*\) struct/\1/p' <chart_types_file>); do
-     grep -rn "type $s struct" <repo_root> --include="*_types.go" \
-       | grep -v "<chart_types_file>"
-   done
-   ```
-
-   Read every file that produces output in Step B.
-   Apply the field union (all fields from all definitions) before resolving types.
-
-   **Why this matters**: a services chart and its sibling operator chart often share
-   struct names (e.g. domain objects, nested config structs). The services module
-   carries a minimal version of these structs (only the fields it reads), while the
-   operator module owns the CRD and carries the full definition with more fields.
-   Limiting detection to `*Spec struct` silently drops any fields that only appear in
-   the operator's richer definition. Scanning all struct names catches these gaps
-   regardless of naming convention.
-
-   **MANDATORY — produce a union field table before writing any schema.**
-   For every struct that appears in more than one `*_types.go`, run this script to
-   extract every json tag from every definition and merge them:
-
-   ```bash
-   python3 - <<'EOF'
-   import re, sys
-   from pathlib import Path
-   from collections import defaultdict
-
-   repo_root = "<repo_root>"
-   files = list(Path(repo_root).rglob("*_types.go"))
-
-   # parse: struct name → {file → {json_tag: go_type}}
-   structs = defaultdict(dict)
-   for f in files:
-       src = f.read_text()
-       for m in re.finditer(r'type (\w+) struct \{([^}]+)\}', src, re.S):
-           sname, body = m.group(1), m.group(2)
-           fields = {}
-           for line in body.splitlines():
-               tm = re.search(r'json:"([^,"]+)', line)
-               gm = re.search(r'^\s+\w+\s+([\w\[\]*./]+)', line)
-               if tm:
-                   fields[tm.group(1)] = gm.group(1) if gm else "?"
-           if fields:
-               structs[sname][str(f)] = fields
-
-   # print structs defined in more than one file
-   for sname, fdefs in structs.items():
-       if len(fdefs) > 1:
-           union = {}
-           for fpath, fields in fdefs.items():
-               for tag, gotype in fields.items():
-                   if tag not in union:
-                       union[tag] = (gotype, fpath)
-                   # keep entry from richer file (more fields wins)
-           print(f"\n=== {sname} UNION ({len(union)} fields from {len(fdefs)} files) ===")
-           for tag, (gotype, src) in sorted(union.items()):
-               print(f"  {tag:30s} {gotype:30s}  ({Path(src).name})")
-   EOF
-   ```
-
-   **Do not write a single `$defs` entry until this table is produced.**
-   Every field in the union table must appear in the schema. Missing fields = schema gap.
-   A field seen in ANY definition of a struct is a valid field for that struct's $def.
-
-   **After writing the schema in Step 6, a mandatory cross-check (Step 6B) verifies
-   that every union-table field was actually written. Do not skip Step 6B.**
-
-   **External packages**: if a struct field references a type from an external package
-   (e.g. `types.StorageRequirements`, `types.Recycler`), read `go.mod` to find the
-   package version, then read that package's types file from the Go module cache:
-
-   ```bash
-   find $GOPATH/pkg/mod -path "*<package-name>@<version>*" -name "*.go" | head -5
-   ```
-
-   Read every relevant external type file before writing the schema.
-
-4. **CRD yaml** — for k8s complex types (Affinity, Tolerations, etc.).
-   Read the `openAPIV3Schema` section. Do not copy the full CRD — extract only
-   property shapes needed.
-
-5. **All template `.Values` references** — scan every template file including helpers:
-
-   ```bash
-   grep -rho '\.Values\.[a-zA-Z0-9_.]*' \
-     --include="*.yaml" --include="*.tpl" \
-     <chart_dir>/templates/ \
-     <chart_dir>/tests/ \
-     2>/dev/null \
-     | sed 's/^\.Values\.//' \
-     | sort -u
-   ```
-
-   The `-o` flag extracts ALL matches including multiple per line (e.g. `{{ printf "%s:%s"
-   .Values.image.repository .Values.image.tag }}` yields both `image.repository` and `image.tag`).
-
-   Helper files (`_helper.tpl`, `_helpers.tpl`) often reference fields not in values.yaml
-   or the guide. These refs are real and must be included.
-
-   Also extract enum candidates from templates:
-
-   ```bash
-   grep -rho '\.Values\.[a-zA-Z0-9_.]* *"[^"]*"' \
-     --include="*.yaml" --include="*.tpl" \
-     <chart_dir>/templates/ 2>/dev/null \
-     | sort -u
-   ```
-
-   The `-o` flag ensures multiple enum checks per line (e.g. `{{- if or (eq .Values.mode "foo")
-   (eq .Values.mode "bar") }}`) all get extracted.
-
-   Also check template fail messages for enum lists:
-
-   ```bash
-   grep -rh 'fail\|assert' \
-     --include="*.yaml" --include="*.tpl" \
-     <chart_dir>/templates/ 2>/dev/null \
-     | grep -o '"[^"]\+"' \
-     | sort -u | head -30
-   ```
-
-   Filter for fail/assert FIRST, then extract strings. Otherwise `{{ fail "mode must be one of
-   foo, bar" }}` produces no output (the message itself contains neither function name).
-
-6. **Override/deployment files — extract ALL key paths before writing schema.**
-   Run this script over every override file collected in Step 1 (in-repo and external):
+   For a struct defined in more than one file, the field set is the union of every definition. Save this script in a
+   scratch directory outside the repository (`mktemp -d`), as `<scratch>/go_struct_union.py`, and run it with the
+   repository root. It prints, for every struct defined in more than one file, the union of its JSON fields and the
+   files that define it:
 
    ```python
-   import yaml, glob
+   """Union the JSON fields of Go structs defined in several *_types.go files.
+
+   Usage: go_struct_union.py <repo_root> [<values.schema.json>]
+   With a schema path, report union fields missing from the matching $defs entries.
+   """
+   import json
+   import re
+   import sys
+   from collections import defaultdict
    from pathlib import Path
 
-   override_files = [
-       # add paths from Step 1 here
-   ]
+   STRUCT_START = re.compile(r"^type (\w+) struct \{")
+   FIELD = re.compile(r'^\s*\w+\s+([\w\[\]*.]+)\s+`[^`]*json:"([^,"]+)')
+   ANONYMOUS_END = re.compile(r'^\s*\}()\s*`[^`]*json:"([^,"]+)')  # tag of an inline struct field
 
-   def extract_paths(obj, prefix=""):
-       paths = set()
-       if isinstance(obj, dict):
-           for k, v in obj.items():
-               full = f"{prefix}.{k}" if prefix else k
-               paths.add(full)
-               paths |= extract_paths(v, full)
-       elif isinstance(obj, list):
-           for item in obj:
-               paths |= extract_paths(item, prefix)
-       return paths
+   repo_root = Path(sys.argv[1])
+   structs = defaultdict(dict)  # struct name -> {file: {json name: Go type}}
+   for path in sorted(repo_root.rglob("*_types.go")):
+       if "vendor" in path.parts:
+           continue
+       name, depth, fields = None, 0, {}
+       for line in path.read_text(encoding="utf-8").splitlines():
+           if name is None:
+               start = STRUCT_START.match(line)
+               if start:
+                   name, depth, fields = start.group(1), 1, {}
+               continue
+           field = None
+           if depth == 1:
+               field = FIELD.match(line)
+           elif depth == 2:
+               field = ANONYMOUS_END.match(line)
+           if field and field.group(2) != "-":
+               fields[field.group(2)] = field.group(1) or "struct"
+           depth += line.count("{") - line.count("}")
+           if depth <= 0:
+               if fields:
+                   structs[name][str(path)] = fields
+               name = None
 
-   all_paths = set()
-   for fpath in override_files:
-       data = yaml.safe_load(open(fpath)) or {}
-       all_paths |= extract_paths(data)
+   unions = {}
+   for name, definitions in structs.items():
+       if len(definitions) > 1:
+           union = {}
+           for fields in definitions.values():
+               for json_name, go_type in fields.items():
+                   union.setdefault(json_name, go_type)
+           unions[name] = union
 
-   # Print paths not already in values.yaml to surface schema gaps early
-   base = yaml.safe_load(open("values.yaml")) or {}
-   base_paths = extract_paths(base)
-   extra = sorted(all_paths - base_paths)
-   print(f"{len(extra)} key paths in overrides not in values.yaml:")
-   for p in extra:
-       print(f"  {p}")
+   if len(sys.argv) < 3:
+       for name, union in sorted(unions.items()):
+           print(f"=== {name}: {len(union)} fields from {len(structs[name])} files")
+           for path in sorted(structs[name]):
+               print(f"  defined in {path}")
+           for json_name, go_type in sorted(union.items()):
+               print(f"  {json_name:30} {go_type}")
+       sys.exit(0)
+
+   def properties(node):
+       found = set(node.get("properties", {}))
+       for key in ("oneOf", "anyOf", "allOf"):
+           for branch in node.get(key, []):
+               found |= properties(branch)
+       return found
+
+   defs = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8")).get("$defs", {})
+   failed = False
+   for name, union in sorted(unions.items()):
+       wanted = {name.lower(), name.lower().removesuffix("spec")}
+       key = next((k for k in defs if k.lower() in wanted), None)
+       if key is None:
+           print(f"UNMAPPED {name}: no $defs entry with this name; check the property that uses it by hand")
+           continue
+       missing = sorted(set(union) - properties(defs[key]))
+       if missing:
+           failed = True
+           print(f"FAIL {name} -> $defs/{key}: missing {missing}")
+   print("FAIL" if failed else "PASS")
    ```
 
-   Every key path in the output is a field the schema MUST accept. Resolve its type
-   using the same priority rules (Go struct union → guide → infer from value → fallback).
-   Do NOT skip or ignore any path — "Additional properties not allowed" failures in Step 7D
-   mean a path was missed here.
+   Every field in the union table appears in the schema. Do not write a `$defs` entry before the table is printed.
 
----
+   Find enum values in `const` blocks:
 
-## Step 3 — Classify ALL_CAPS keys
+   ```bash
+   grep -n -A 20 '^const (' <types_file>
+   ```
 
-Before resolving types, classify every ALL_CAPS (or mixed-case flat) key found in
-templates and values.yaml. Apply these rules silently — never ask:
+   For a field whose type comes from an external package (such as `types.StorageRequirements`), read the package
+   version from `go.mod`, then read the type from the module cache:
 
-**Include as schema field** (regardless of casing):
+   ```bash
+   find "$(go env GOMODCACHE)" -path '*<module-path>@<version>*' -name '*.go' | head
+   ```
 
-- Key is present in `values.yaml` (any casing) → include with correct type from values.yaml default
-- Key uses dot-notation (`.Values.foo.bar`) → always a real field
+1. **CRDs**: for complex Kubernetes types (affinity, tolerations), read only the `openAPIV3Schema` property shapes
+   you need. Do not copy a whole CRD.
+1. **Template references**: every `.Values` path in the templates and helpers, including several on one line:
 
-**Skip (deploy-time injection)**:
+   ```bash
+   grep -rhoE --include='*.yaml' --include='*.yml' --include='*.tpl' \
+     '\.Values(\.[A-Za-z0-9_]+)+' <chart_dir>/templates <chart_dir>/tests 2>/dev/null \
+     | sed 's/^\.Values\.//' | sort -u
+   ```
 
-- Flat ALL*CAPS key NOT present in values.yaml: `[A-Z]A-Z0-9*]+`with no dots
-  (e.g.`NAMESPACE`, `DB_PASSWORD`, `CLOUD_HOST`)
-- `deployDescriptor`, `deployDescriptorBase64`
-- CamelCase flat keys that shadow a dot-notation sub-field already included
-  (e.g. `fooImage` if `foo.image` is already in schema)
+   Helpers (`_helpers.tpl`) often reference fields that neither `values.yaml` nor the guide lists. They are real
+   fields. Look up `index .Values "<key>"` calls by hand; the pattern above does not match them.
 
-**Rule of thumb**: if the key is in `values.yaml` → include, regardless of name format.
-If it's only in templates and is flat ALL_CAPS → skip.
+   Enum candidates from comparisons, in either argument order:
 
----
+   ```bash
+   grep -rhoE --include='*.yaml' --include='*.yml' --include='*.tpl' \
+     'eq \.Values(\.[A-Za-z0-9_]+)+ "[^"]*"|eq "[^"]*" \.Values(\.[A-Za-z0-9_]+)+' \
+     <chart_dir>/templates 2>/dev/null | sort -u
+   ```
 
-## Step 4 — Resolve types (strict priority order)
+   Enum lists in `fail` and `required` messages. Filter the calls first, then extract their strings:
 
-For every field, resolve type by stopping at the first matching rule.
-**Never ask the user if any rule resolves the type.**
+   ```bash
+   grep -rhwE --include='*.yaml' --include='*.yml' --include='*.tpl' 'fail|required' \
+     <chart_dir>/templates 2>/dev/null | grep -oE '"[^"]+"' | sort -u
+   ```
 
-### Priority 1 — Go struct (most authoritative for types) + guide (authoritative for field set)
+1. **Override files**: every key path in every file from step 1, compared with `values.yaml`:
 
-**Critical rule — Go struct defines types; the union of Go struct AND guide defines the
-complete field set for each object.** The Go struct only models the operator's CR spec.
-The Helm chart values.yaml may carry additional deployment parameters (e.g. `mongodb.storage`,
-`mongodb.dataResources`) that flow to a different CR and are documented only in the guide.
-If the guide lists sub-fields for `foo.*` beyond what the Go struct has, include ALL of them.
-Never let the Go struct alone truncate an object's field list.
+   ```python
+   import sys
+   import yaml
 
-Map Go types to JSON Schema:
+   def paths(node, prefix=""):
+       found = set()
+       if isinstance(node, dict):
+           for key, value in node.items():
+               full = f"{prefix}.{key}" if prefix else str(key)
+               found.add(full)
+               found |= paths(value, full)
+       elif isinstance(node, list):
+           for item in node:
+               found |= paths(item, prefix)
+       return found
 
-| Go type                    | Schema mapping                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| `string`                   | `"string"`                                                                              |
-| `bool`                     | `"boolean"`                                                                             |
-| `int`, `int32`, `int64`    | `"integer"`                                                                             |
-| `float32`, `float64`       | `"number"`                                                                              |
-| `[]string`                 | `array`, `items: {type: string}`                                                        |
-| `[]SomeStruct`             | `array`; if override is object: `oneOf: [{$ref}, {type: array, items: {$ref}}]`         |
-| `map[string]string`        | `object`, `additionalProperties: {type: string}`                                        |
-| `map[string]SomeStruct`    | `object`, `additionalProperties: true`                                                  |
-| `*v1.ResourceRequirements` | use `resourceRequirements` $def                                                         |
-| `*v1.Affinity`             | use `affinity` $def                                                                     |
-| Any other pointer `*T`     | base type is nullable → `["<T>", "null"]`                                               |
+   def load(path):
+       with open(path, encoding="utf-8") as stream:
+           return yaml.safe_load(stream) or {}
 
-**Nullability for map types**: absent/null default in values.yaml → `["object", "null"]`.
-Non-null default → plain `"object"`.
+   chart_values, *override_files = sys.argv[1:]
+   extra = set().union(*(paths(load(f)) for f in override_files)) - paths(load(chart_values))
+   print(f"{len(extra)} key paths in overrides are not in values.yaml:")
+   for path in sorted(extra):
+       print(f"  {path}")
+   ```
 
-**`[]string` with scalar default in values.yaml**: if Go type is `[]string` but
-values.yaml sets default to a scalar string (e.g. `''`, `"5Gi"`, any string), both
-string and array are valid → use:
+   Run it as `python3 <script> <chart_dir>/values.yaml <override files...>`. Resolve the type of every printed path
+   with the step 4 priorities. A path missed here shows up in step 8 as `additional properties ... not allowed`.
+
+## Step 3. Classify flat upper-case keys
+
+Before you resolve types, classify every flat key in upper case or mixed case found in the templates or in
+`values.yaml`. Apply these rules without asking.
+
+Include as a schema field:
+
+- any key present in `values.yaml`, whatever its case;
+- any dot-notation path (`.Values.foo.bar`).
+
+Skip, because the deployer injects them at deploy time:
+
+- a flat upper-case key (`^[A-Z][A-Z0-9_]*$`, no dots) that is not in `values.yaml`, such as `NAMESPACE`,
+  `DB_PASSWORD`, or `CLOUD_HOST`;
+- `deployDescriptor` and `deployDescriptorBase64`;
+- a flat camel-case key that shadows a dot-notation field already in the schema, such as `fooImage` when `foo.image`
+  exists.
+
+## Step 4. Resolve types
+
+For every field, stop at the first rule that resolves its type. Never ask when a rule resolves it.
+
+### Priority 1: Go struct for types, Go struct plus guide for the field set
+
+The Go struct defines field types. The field set of an object is the union of the Go struct and the guide: a chart's
+`values.yaml` can carry deployment parameters (such as `<component>.storage` or `<component>.resources`) that feed a
+different resource and appear only in the guide. Never let the Go struct alone truncate an object's fields.
+
+| Go type | JSON Schema |
+| --- | --- |
+| `string` | `"string"` |
+| `bool` | `"boolean"` |
+| `int`, `int32`, `int64` | `"integer"` |
+| `float32`, `float64` | `"number"` |
+| `[]string` | `array`, `items: {type: string}` |
+| `[]SomeStruct` | `array`; if an override sets it as a single object, `oneOf: [{$ref}, {type: array, items: {$ref}}]` |
+| `map[string]string` | `object`, `additionalProperties: {type: string}` |
+| `map[string]SomeStruct` | `object`, `additionalProperties: true` |
+| `*v1.ResourceRequirements` | the `resourceRequirements` definition below |
+| `*v1.Affinity` | the `affinity` definition below |
+| any other pointer `*T` | the type of `T`, nullable: `["<T>", "null"]` |
+
+A map type whose default is absent or `null` is `["object", "null"]`; with a non-null default it is `"object"`.
+
+A `[]string` field whose `values.yaml` default is a scalar string (`''`, `"5Gi"`) accepts both forms:
 
 ```json
 "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }]
 ```
 
-### Priority 2 — Installation guide type column
+### Priority 2: the guide's type column
 
-Use if field not in Go struct. Trust default value over type column when they conflict.
-**Also use for completeness**: after resolving types from Go struct, scan every guide
-table row whose key path starts with the same object prefix (e.g. `mongodb.*`) and add
-any fields the struct missed.
+Use it for a field the Go struct does not have. When the type column and the default disagree, trust the default.
+After resolving types from the Go struct, also scan every guide row under the same object prefix and add the fields
+the struct missed.
 
-### Priority 3 — Infer from values.yaml default
+### Priority 3: the default in `values.yaml`
 
-| Default in values.yaml          | JSON Schema type     |
-| ------------------------------- | -------------------- |
-| `true` / `false` / `yes` / `no` | `"boolean"`          |
-| Integer literal                 | `"integer"`          |
-| Float literal                   | `"number"`           |
-| Quoted string                   | `"string"`           |
-| `[]`                            | `"array"`            |
-| `{}`                            | `"object"`           |
-| `null` or absent                | `["string", "null"]` |
+| Default | JSON Schema |
+| --- | --- |
+| `true`, `false`, `yes`, `no` | `"boolean"` |
+| integer literal | `"integer"` |
+| float literal | `"number"` |
+| quoted string | `"string"` |
+| `[]` | `"array"` |
+| `{}` | `"object"` |
+| `null` or absent | `["string", "null"]` |
 
-YAML `yes`/`no` → `"boolean"`. Never change.
+YAML 1.1 `yes` and `no` are booleans; keep them `"boolean"`.
 
-### Priority 4 — Safe fallback (no ask)
+### Priority 4: safe fallback
 
-| Situation                                                                       | Fallback             |
-| ------------------------------------------------------------------------------- | -------------------- |
-| Dot-notation field in templates only, no type info anywhere                     | `["string", "null"]` |
-| Enum-like field (mode/type/state) but no values found in templates/guide/consts | plain `"string"`     |
-| Field only in guide, no type column, no default                                 | `"string"`           |
-| Field not in guide, not in Go struct, not in values.yaml                        | skip                 |
+| Situation | Type |
+| --- | --- |
+| Dot-notation field only in templates, no type information anywhere | `["string", "null"]` |
+| Enum-like field (`mode`, `type`, `state`) with no values found | `"string"`, no `enum` |
+| Field only in the guide, with no type column and no default | `"string"` |
+| Field not in the guide, the Go struct, or `values.yaml` | skip |
 
-Only escalate to Step 5 (ask) if the fallback would cause `values.yaml` validation FAIL.
+### Enum values
 
-### Enum detection — use what repo provides, never ask
+Take enum values from the first source that has them:
 
-Discover valid enum values in this priority order (stop at first hit):
+1. the Go `const` block for the field's type;
+1. template comparisons (`eq .Values.foo "value"`);
+1. template `fail` or `required` messages that list the valid values;
+1. the guide's "Possible values" or "One of" text.
 
-1. Go `const` block for the field's custom type
-2. Template `if eq .Values.foo "val1"` comparisons
-3. Template `fail` / `assert` messages listing valid values
-4. Guide "Possible values" / "One of" text
+If no source lists values, use `"string"` without `enum`.
 
-Use whatever is found. If nothing found → use plain `"string"` (no enum). Never ask.
+## Step 5. Ask only when stuck
 
----
-
-## Step 5 — Ask only when truly stuck
-
-**Ask only when ALL of the following are true:**
-
-1. Type cannot be resolved by Steps 3-4 priorities
-2. Safe fallback would cause `values.yaml` validation to FAIL
-3. No inference possible from field name + context
-
-Collect all such fields, ask in ONE batch after reading all sources:
+Ask only when the step 4 rules resolve no type and every fallback type would make `values.yaml` fail validation. Ask
+once, in one batch, after reading every source:
 
 ```text
-Unable to resolve type for N fields — all others resolved automatically:
+Unable to resolve the type of N fields; all other fields were resolved automatically.
 
 | Field | Value in values.yaml | Checked | Question |
-|---|---|---|---|
-| foo.bar | "xyz" | Go: not found, guide: not found | What type? |
+| --- | --- | --- | --- |
+| foo.bar | "xyz" | Go: not found; guide: not found | Which type? |
 
-Please clarify, or say "skip" to exclude.
+Answer per field, or reply "skip" to leave a field out of the schema.
 ```
 
-**Never ask about:**
+Do not ask about fields with any Go, guide, or default information; standard Kubernetes types; YAML booleans; enum
+values the repository lists; or upper-case keys that step 3 classifies. When you apply a fallback, list it at the end of
+the report as `Auto-resolved with fallback: <field> -> <type>`. A well-formed chart needs no questions.
 
-- Fields with any type info from Go/guide/default
-- k8s standard types — patterns are known and built into this skill
-- YAML `yes`/`no` booleans
-- Enum values already found in templates/guide/consts
-- Whether discovered enum values are "correct" — trust the repo
-- Whether to skip ALL_CAPS deploy injections — classify per Step 3
-- Anything in values.yaml — always has enough info for a type
+## Step 6. Write `values.schema.json`
 
-**Default bias: apply fallback, never ask.**
-If you feel the urge to ask about a field, stop — apply the fallback type instead
-and note it at the end of the output as "Auto-resolved with fallback: field → type".
-Asking is a last resort only when `values.yaml` itself fails validation against every
-possible fallback type. In practice, this should be zero questions for any well-formed
-Helm chart.
+### Updating an existing schema
 
----
-
-## Step 6 — Write values.schema.json
-
-### Idempotency — re-run safety
-
-If `values.schema.json` already exists for the chart, **do not rewrite it from scratch**.
-Instead, diff what changed:
-
-1. Load the existing schema into memory.
-2. Compute the new schema from sources (steps 1–5) as a Python dict.
-3. Compare with `deepdiff` or manual key-by-key comparison:
-
-   ```bash
-   pip install deepdiff --quiet --break-system-packages 2>/dev/null
-   ```
-
-   ```python
-   from deepdiff import DeepDiff
-   diff = DeepDiff(existing, new, ignore_order=True)
-   print(diff)
-   ```
-
-4. Apply **only the changes** using targeted `Edit` tool calls (never full rewrite).
-   - New field added → add only that property to the right `$defs` block.
-   - Type changed → edit only that field's type.
-   - Enum value added → edit only that enum array.
-5. If diff is empty → schema is already up to date, report that and stop.
-
-**Never reorder or reformat unchanged content.** Cosmetic churn (key reordering,
-whitespace, moving `$defs` around) makes diffs unreadable and hides real changes.
-Preserve the existing file's structure and ordering exactly; only append/modify
-the specific JSON nodes that changed.
+If the chart already has a `values.schema.json`, do not rewrite it. Build the new schema in memory from steps 1 to 5,
+compare it with the existing file key by key, and edit only the nodes that differ: add a missing property to its
+`$defs` entry, change one field's type, extend one `enum`. Keep the existing key order, formatting, and placement of
+`$defs`; reformatting unchanged nodes hides the real change in the diff. If nothing differs, report that the schema is
+up to date and stop.
 
 ### Structure
 
@@ -478,30 +382,29 @@ the specific JSON nodes that changed.
     "topLevelKey": { "$ref": "#/$defs/topLevelKey" }
   },
   "$defs": {
-    "topLevelKey": { "type": "object", ... }
+    "topLevelKey": { "type": "object", "additionalProperties": false, "properties": {} }
   }
 }
 ```
 
-Every top-level key that is an object gets its own `$defs` block.
-Scalar top-level keys (string/boolean/integer) can be inlined in `properties`.
+Every top-level object key gets its own `$defs` entry. Scalar top-level keys can be inlined in `properties`.
 
 ### Rules
 
-- Root object uses `additionalProperties: true` — unknown top-level keys (deploy-time
-  injections, tooling flags) are allowed without validation. Known top-level keys are
-  still strictly validated via their `$defs` entries.
-- `additionalProperties: false` on every object inside `$defs` (strict for known fields)
-- `additionalProperties: true` only for k8s open-ended types (affinity sub-terms,
-  seLinuxOptions, any Go struct the CRD marks as x-kubernetes-preserve-unknown-fields)
-- `additionalProperties: {type: string}` for `map[string]string` fields
-- `"default"`: only from values.yaml. Do not invent.
-- `"description"`: from guide. If absent, derive from field name.
-- `"required"`: only when guide explicitly says Mandatory.
+- The root object has `additionalProperties: true`, so deploy-time keys pass. Known top-level keys are still checked
+  through their `$defs` entries.
+- Every object inside `$defs` has `additionalProperties: false`.
+- Use `additionalProperties: true` only for open-ended Kubernetes types: affinity terms, `seLinuxOptions`, and any
+  struct the CRD marks `x-kubernetes-preserve-unknown-fields`.
+- A `map[string]string` field has `additionalProperties: {type: string}`.
+- `default` comes only from `values.yaml`.
+- `description` comes from the guide; without one, derive it from the field name.
+- `required` only where the guide marks the field mandatory. Helm checks `required` against the merged values, so a
+  key that `values.yaml` supplies never fails it.
 
-### Schema Patterns for k8s standard types
+### Kubernetes type definitions
 
-**`resourceRequirements`** — for `*v1.ResourceRequirements`:
+`resourceRequirements`, for `*v1.ResourceRequirements`:
 
 ```json
 {
@@ -526,7 +429,8 @@ Scalar top-level keys (string/boolean/integer) can be inlined in `properties`.
 }
 ```
 
-**`affinity`** — for `*v1.Affinity`:
+`affinity`, for `*v1.Affinity`. `nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution` is an object; every other
+term is an array:
 
 ```json
 {
@@ -576,10 +480,7 @@ Scalar top-level keys (string/boolean/integer) can be inlined in `properties`.
 }
 ```
 
-`nodeAffinity.requiredDuring...` is **object**; `podAffinity`/`podAntiAffinity` both use **arrays** for both
-preferred and required.
-
-**`tolerations`** — for `[]v1.Toleration`:
+`tolerations`, for `[]v1.Toleration`:
 
 ```json
 {
@@ -598,9 +499,8 @@ preferred and required.
 }
 ```
 
-**`storageRequirements`** — for `*types.StorageRequirements` or equivalent:
-Always verify field names against the actual Go struct (external packages can differ).
-Standard shape (verify field names against the actual Go struct — external packages vary):
+`storageRequirements`, for `*types.StorageRequirements` or an equivalent struct. External packages differ, so check
+every field name against the struct the repository's `go.mod` pins:
 
 ```json
 {
@@ -622,221 +522,93 @@ Standard shape (verify field names against the actual Go struct — external pac
 }
 ```
 
-`matchLabelSelectors` is `[]map[string]string` — **array**, NOT object.
-`size` is `[]string` but YAML accepts scalar `"5Gi"` → oneOf string/array.
-`mountSettings` is `*v1.VolumeMount` → open object.
+- `matchLabelSelectors` is `[]map[string]string`: an array, not an object.
+- `size` is `[]string`, but YAML also accepts a scalar such as `"5Gi"`, hence the `oneOf`.
+- `mountSettings` is `*v1.VolumeMount`: an open object.
 
-**TLS certificates block**:
-Keys (e.g. `tls_key`, `tls_crt`, `ca_crt`) come from Go struct or guide. All `["string","null"]`.
+TLS certificate keys (such as `tls_key`, `tls_crt`, `ca_crt`) come from the Go struct or the guide; each one is
+`["string", "null"]`.
 
----
+## Step 7. Cross-check the union fields
 
-## Step 6B — Cross-check union fields against written schema
-
-**MANDATORY. Run immediately after writing values.schema.json, before Step 7.**
-
-For every struct that appeared in the union table, verify the written `$defs` entry
-contains every field from the union. Run this script:
-
-```python
-import re, json
-from pathlib import Path
-from collections import defaultdict
-
-repo_root = "<repo_root>"
-schema_path = "<chart_dir>/values.schema.json"
-
-# Re-extract union table (same logic as Step 2 script)
-files = list(Path(repo_root).rglob("*_types.go"))
-structs = defaultdict(dict)
-for f in files:
-    src = f.read_text()
-    for m in re.finditer(r'type (\w+) struct \{([^}]+)\}', src, re.S):
-        sname, body = m.group(1), m.group(2)
-        fields = {}
-        for line in body.splitlines():
-            tm = re.search(r'json:"([^,"]+)', line)
-            gm = re.search(r'^\s+\w+\s+([\w\[\]*./]+)', line)
-            if tm:
-                fields[tm.group(1)] = gm.group(1) if gm else "?"
-        if fields:
-            structs[sname][str(f)] = fields
-
-union_tables = {}
-for sname, fdefs in structs.items():
-    if len(fdefs) > 1:
-        union = {}
-        for fpath, fields in fdefs.items():
-            for tag, gotype in fields.items():
-                if tag not in union:
-                    union[tag] = gotype
-        union_tables[sname] = union
-
-# Load written schema and collect all property keys per $def
-schema = json.load(open(schema_path))
-defs = schema.get("$defs", {})
-
-def collect_props(defn):
-    props = set(defn.get("properties", {}).keys())
-    # also check oneOf/anyOf branches
-    for branch_key in ("oneOf", "anyOf", "allOf"):
-        for branch in defn.get(branch_key, []):
-            props |= collect_props(branch)
-    return props
-
-failures = []
-for sname, union in union_tables.items():
-    # find matching $def by struct name lowercased or camelCase match
-    def_key = None
-    sname_lower = sname.lower()
-    for k in defs:
-        if k.lower() == sname_lower or k.lower() == sname_lower.replace("spec", ""):
-            def_key = k
-            break
-    if def_key is None:
-        # struct may map to a nested property — skip if not a top-level $def
-        continue
-    written = collect_props(defs[def_key])
-    missing = set(union.keys()) - written
-    if missing:
-        failures.append((sname, def_key, sorted(missing)))
-
-if not failures:
-    print("Union cross-check: PASS — all union fields present in schema")
-else:
-    for sname, def_key, missing in failures:
-        print(f"CROSS-CHECK FAIL: {sname} -> $defs/{def_key}")
-        print(f"  Missing fields: {missing}")
-        print(f"  Fix: add these to the $defs/{def_key} properties block before proceeding.")
-```
-
-**If any CROSS-CHECK FAIL is printed: stop, add the missing fields to the schema, re-run
-this script until it prints PASS. Only then proceed to Step 7.**
-
-This catches the exact failure mode where the union table was produced but fields were
-silently dropped when writing the schema.
-
----
-
-## Step 7 — Validate schema
+Run this step right after writing the schema, before step 8. Run the step 2 script again with the schema path:
 
 ```bash
-pip install jsonschema pyyaml --quiet --break-system-packages 2>/dev/null
+python3 <scratch>/go_struct_union.py <repo_root> <chart_dir>/values.schema.json
 ```
 
-### 7A. values.yaml must pass
+On any `FAIL` line, add the missing fields to that `$defs` entry and run the script again until it prints `PASS`. For
+each `UNMAPPED` line, find the property that uses the struct and check its fields by hand. This catches fields that
+were in the union table but were dropped while writing the schema.
 
-```python
-import yaml, json, jsonschema
-schema = json.load(open("values.schema.json"))
-data = yaml.safe_load(open("values.yaml")) or {}
-jsonschema.validate(instance=data, schema=schema)
-```
+## Step 8. Validate through Helm
 
-### 7B. Valid edge cases must pass
+Validate with `helm lint`. It merges the chart's `values.yaml` with each `-f` file in order, deletes keys set to
+`null`, and checks the schema against the result, which is what `helm install` does. If `Chart.yaml` declares
+dependencies and `<chart_dir>/charts/` is missing them, run `helm dependency build <chart_dir>` first, or ask the user
+when it needs credentials.
 
-- `{}` — empty override
-- Each enum with every valid value from the repo
-- `null` for all nullable fields
-- Arrays with multiple items for every array field
-- Affinity with all three sub-types
-- resourceRequirements with non-standard resource key
-- oneOf fields with both variants
+Read only the schema errors. Helm prints them as `values don't meet the specifications of the schema(s)`, followed by
+one line per violation with its path. Report any other lint error to the user, but do not change the schema for it.
 
-### 7C. Invalid values must be rejected
+Write edge-case files to the scratch directory, never into the chart.
 
-- Unknown top-level key — NOTE: root `additionalProperties: true`, so only nested unknown keys fail
-- Invalid enum value
-- Wrong type
-- Unknown nested field in strict object
-- `[]map[string]string` field set to plain object
-
-### 7D. Validate override/deployment files
-
-After values.yaml passes, scan the repo for real deployment override files and validate
-each. These files expose fields that values.yaml defaults leave empty.
-
-**IMPORTANT:** Exclude template files - they contain `{{ }}` syntax that breaks yaml.safe_load.
-Only validate actual values override files:
+### 8A. The chart defaults pass
 
 ```bash
-find <repo_root> \
-  \( -name "*-values.yaml" -o -name "values-*.yaml" \) \
-  ! -path "*/templates/*" \
-  2>/dev/null | sort
+helm lint <chart_dir>
 ```
 
-If the user provides an external override directory (e.g. a separate pipeline/infra
-repo), include all `.yml` / `.yaml` files from that path in the same validation loop:
+### 8B. Valid edge cases pass
+
+Write each case as a small override file and lint it alone on top of the defaults (`helm lint <chart_dir> -f <case>`):
+
+- an empty file;
+- every enum field set to each value the repository lists;
+- `null` for each nullable field;
+- several items in each array field;
+- an affinity with all three term types;
+- `resources` with a non-standard resource name;
+- each `oneOf` field in both forms.
+
+### 8C. Invalid values fail
+
+Each case must make `helm lint` fail with a schema error:
+
+- an unknown key inside a strict object (an unknown top-level key passes, because the root allows additional keys);
+- a value outside an enum;
+- a value of the wrong type;
+- a plain object for a `[]map[string]string` field.
+
+### 8D. Every deployment's values stack passes
+
+Lint each stack recorded in step 1 with its files in deployment order:
 
 ```bash
-find <external_override_dir> \( -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | sort
+helm lint <chart_dir> -f <first layer> -f <second layer>
 ```
 
-```python
-import os, yaml, json, jsonschema
-from copy import deepcopy
+Lint an override file that belongs to no known stack on its own (`-f <file>`). If it fails only on a value that
+another layer would supply, such as a field required once a feature is turned on, ask the user which files the
+deployment stacks. Do not weaken the schema to make a partial layer pass.
 
-schema = json.load(open("values.schema.json"))
-defaults = yaml.safe_load(open("values.yaml")) or {}
-failures = []
+An `additional properties ... not allowed` error on a nested object is a gap in the schema: add the field with its
+type from the Go struct or the guide. A wrong type or an invalid enum value is an error in the override file; report
+it to the user. Fix every schema gap before you report the work as done.
 
-def merge_dicts(base, override):
-    """Deep merge override into base (Helm's merge behavior with null handling)."""
-    result = deepcopy(base)
-    for key, value in override.items():
-        if value is None:
-            # Helm behavior: null in override removes/unsets optional fields
-            if key in result:
-                del result[key]
-        elif key in result and isinstance(result[key], dict) and isinstance(value, dict):
-            result[key] = merge_dicts(result[key], value)
-        else:
-            result[key] = value
-    return result
+## Step 9. Fix loop
 
-for fpath in override_files:
-    override = yaml.safe_load(open(fpath)) or {}
-    # Merge override with defaults BEFORE validation (matches Helm behavior)
-    merged = merge_dicts(defaults, override)
-    try:
-        jsonschema.validate(instance=merged, schema=schema)
-    except jsonschema.ValidationError as e:
-        path = " -> ".join(str(p) for p in e.absolute_path)
-        failures.append((fpath, path, e.message))
-        print(f"FAIL {fpath}: [{path}] {e.message}")
-if not failures:
-    print("All override files pass")
-```
-
-**CRITICAL:** Override files are validated AFTER merging with `values.yaml` defaults, matching
-Helm's behavior. A partial override like `replicaCount: 2` passes validation because the schema
-is applied to the merged result (with `image` from defaults), not to the override in isolation.
-
-`Additional properties are not allowed` on nested objects = **schema gap** (missing field).
-Add the field using guide/Go type. Only wrong types and invalid enums are errors in the
-override file itself.
-
-Fix all failures before reporting done.
-
----
-
-## Step 8 — Fix loop
-
-| Error pattern                            | Solution                                                             |
-| ---------------------------------------- | -------------------------------------------------------------------- |
-| Additional props not allowed: 'X'        | Add `X` to that $def — missing field                                 |
-| `None is not of type 'string'`           | Change to `["string", "null"]`                                       |
-| `not of type 'array'` on `[]Struct`      | Use `oneOf: [{$ref}, {array, items: {$ref}}]` (overrides use object) |
-| `not of type 'array'` on `[]string`      | `oneOf: [{type: string}, {array, items: string}]`                    |
-| `not one of [enum]`                      | Re-check guide/templates for valid values                            |
-| `not of type 'boolean'`                  | YAML `yes`/`no` → `"boolean"` is correct, do not change              |
-| Key missing under `additionalProperties` | Add the missing key                                                  |
-
----
+| Failure | Fix |
+| --- | --- |
+| Additional property `X` not allowed on a nested object | Add `X` to that `$defs` entry; it is a real field the schema missed |
+| `null` where a string is expected | Change the type to `["string", "null"]` |
+| Object where an array is expected, on a `[]Struct` field | `oneOf: [{$ref: <def>}, {type: array, items: {$ref: <def>}}]`; overrides often set a single item as an object |
+| String where an array is expected, on a `[]string` field | `oneOf: [{type: string}, {type: array, items: {type: string}}]` |
+| Value not in `enum` | Check the templates, consts, and guide again for valid values |
+| String where a boolean is expected | YAML `yes`/`no` is a boolean in `values.yaml`; keep `"boolean"` and report the quoted value in the override |
+| Missing required property | Check that the guide marks it mandatory and that a layer of the deployment supplies it |
 
 ## Output
 
-Single file: `<chart_dir>/values.schema.json`
-Never modify `values.yaml`.
-Never create test files — run validation inline with Python.
+The only file you write is `<chart_dir>/values.schema.json`. Never modify `values.yaml`, and never add test files to
+the repository; edge-case files live in the scratch directory and are deleted at the end.

@@ -1,260 +1,136 @@
 ---
 name: doc-updater
-description: >
-  Analyze code changes and update project documentation. Run this skill only when the user explicitly asks to
-  update or sync documentation, mentions that docs are outdated, or uses a command like /doc-updater. Do NOT run
-  automatically before commits.
+description: Update a repository's documentation to match the code changes on the current branch and in the staging area. Classify each change, map it to the page that documents it, and edit that page in the format the page already uses. Use only when the user asks to update or sync the documentation, says the docs are out of date, or invokes doc-updater by name. Do not run it automatically before a commit.
 ---
 
-# Documentation Updater
+# Documentation updater
 
-Keep project documentation in sync with code changes. This skill analyzes staged git changes, determines which
-documentation files need creating or updating, and applies the changes following established project conventions.
+Bring a repository's documentation in line with the code changes on the current branch. Find the documentation the
+repository already has, map each change to the page that documents it, and edit that page in its own format.
 
-The reason this skill exists is simple: documentation drift is one of the biggest sources of confusion and wasted
-time in software projects. By catching doc updates at commit time, every behavior change ships with its
-documentation in the same commit.
+No documentation path is fixed in this skill. Every page you read or edit comes from the documentation map you build
+in step 1, so the skill works the same in a repository with `docs/public/installation.md`, one with
+`docs/installation.md`, and one with only a root `README.md`.
 
-Documentation updates should be performed using `english-us-developer-style` skill. If the skill is not available
-locally, notify the user and recommend installing it.
+Write all prose with the repository's English style skill (`english-us-developer-style` or
+`english-uk-developer-style`). If neither is installed, tell the user and recommend installing one.
 
-## Self-Adaptation
+## Step 1. Build the documentation map
 
-**Check this first on every invocation**: run `test -f docs/README.md && echo EXISTS || echo MISSING` to detect
-whether adaptation has already been performed.
+The map assigns each documentation role to the page, section, or directory that plays it in this repository:
 
-- **If `docs/README.md` EXISTS** — skip the adaptation block entirely and go straight to the workflow.
-- **If `docs/README.md` is MISSING** — perform adaptation now, before doing anything else:
+| Role | What it holds |
+| --- | --- |
+| `index` | The page that lists every documentation page |
+| `parameters` | The reference table of Helm values or other configuration parameters |
+| `installation` | Prerequisites, install, upgrade, and rollback procedures |
+| `architecture` | Components, how they interact, deployment schemes |
+| `features` | One page per feature, usually a directory |
+| `monitoring` | Metrics and dashboards |
+| `alerts` | Alert rules |
+| `troubleshooting` | Failure modes and recovery procedures |
+| `security` | TLS, authentication, authorization, RBAC |
+| `developer` | Build, CI, and development workflow for contributors |
+| `images` | Screenshots and diagrams |
 
-1. Infer the repository layout from the filesystem: read `README.md` and run `ls` on the root directory. If
-  `AGENTS.md` exists (`test -f AGENTS.md && echo EXISTS || echo MISSING`), read it as supplementary context only —
-  it is **not** authoritative and may be out of date.
-2. Run `find docs/ -type f -name '*.md' | sort` to enumerate actual doc files. If the output exceeds 120 files,
-  note it to the user but use the full list.
-3. Create `docs/README.md` — a navigable index of the project's documentation. Do **not** modify
-  `references/analysis-guide.md` or `references/doc-conventions.md`. The file must contain:
-   - **Navigation** section: a bulleted list with a clickable link to every doc file discovered in step 2, grouped
-     by subdirectory (e.g., `docs/public/`, `docs/internal/`), with a one-line description for each file.
-   - **Project layout** section: the doc-file tree (without links) derived from the `find` output and filesystem
-     inspection, annotated with short descriptions.
-4. After `docs/README.md` is created, continue with the normal workflow for this invocation.
+A role can map to a section of a page (parameters often live in the installation page), to several pages, or to
+nothing. Build the map from the repository every time; do not carry one over from another repository.
 
----
+1. List the documentation and the sources that most often need it:
 
-## Workflow
+   ```bash
+   # Every tracked or new Markdown page, outside vendored and generated trees
+   { git ls-files '*.md'; git ls-files --others --exclude-standard '*.md'; } \
+     | grep -vE '(^|/)(node_modules|vendor|apm_modules|\.github|\.claude|\.cursor|\.codex|\.agents)/' | sort -u
 
-1. **Discover** the project's doc structure
-2. **Analyze** the staged diff and classify documentation impact
-3. **Plan and confirm** (for major changes) or auto-apply (for small updates)
-4. **Write** the documentation following existing conventions
-5. **Verify** the result
+   # Helm values files and operator API types, the usual source of new parameters
+   git ls-files '*values.yaml' '*_types.go'
+   ```
 
----
+1. If an `index` page exists (a `README.md` in the documentation root that links the other pages, or a site config
+   such as `mkdocs.yml`), read it first.
+1. For each candidate page, read its headings (`grep -n '^#' <page>`) and assign it to every role it plays. Decide
+   by content, not by file name alone: a `README.md` with a parameters table plays `parameters`.
+1. Show the map to the user in the plan (step 4), with the roles that map to nothing.
 
-## Step 1: Discover Project Structure
+When a change needs a role that maps to nothing, do not invent a path. Propose a page next to the existing
+documentation, named in the style the repository already uses, and treat it as a new file that needs confirmation in
+step 4. In a repository with no documentation directory, propose the section of the root `README.md` that fits, or a
+new page beside it.
 
-Read `docs/README.md` first — it is the primary source of truth for the documentation structure. It lists all doc
-files with descriptions and the project layout tree. Use it to understand which topics are already documented and
-what section names to use.
+## Step 2. Gather the changes
 
-Then run the following commands **in parallel** to get the current filesystem state (to catch any files not yet
-reflected in `docs/README.md`):
+Find the default branch, then collect the changes this branch introduces plus the changes staged for the next commit:
 
 ```bash
-# All doc files — verify against docs/README.md and catch any new additions
-find docs/ -type f -name '*.md' | sort
-
-# All Helm chart values files — primary source of new parameters
-find . -path './.git' -prune -o -name 'values.yaml' -print | grep -v '.git'
-
-# Operator API type files — CRD spec changes create new parameters
-find . -path './.git' -prune -o -name '*_types.go' -print | grep -v '.git'
-```
-
-**Derive documentation targets from `docs/README.md`** — identify installation, architecture, and feature docs
-from the navigation section. Do NOT assume hardcoded paths like `docs/public/installation.md`. Instead, search for
-docs by topic keywords (installation, architecture, monitoring, troubleshooting, security) in the file list from
-docs/README.md. Use those discovered paths for all subsequent operations.
-
-- Which components are already documented (so you know what section names to use when adding parameter rows)
-- Which components exist architecturally (so you know where to add new ones)
-
-Do not assume a fixed doc layout. Every project using this skill has a similar _shape_ (public docs, internal docs,
-installation params, architecture, monitoring, security) but different component names and feature files.
-
-## Step 2: Analyze Changes
-
-**Read `references/analysis-guide.md` now** — it contains the complete classification rules, file-pattern mapping
-table, and worked examples for this step. Apply those rules throughout Step 2.
-
-First, determine the current branch:
-
-```sh
+base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
 git rev-parse --abbrev-ref HEAD
 ```
 
-**If on a non-`main` branch**, gather two scopes of changes and union them:
+If `base` is empty because `origin/HEAD` is not set, use `main` or `master` when exactly one of `origin/main` and
+`origin/master` exists (`git rev-parse --verify --quiet origin/<name>`). Otherwise ask the user for the base branch.
 
-1. **Branch scope** — all changes introduced by this branch since it diverged from `main`:
-   ```sh
-   git diff main...HEAD
-   ```
-2. **Staged scope** — changes staged for the current commit:
-   ```sh
-   git diff --cached
-   ```
+- On a branch other than the base, take the union of both scopes:
 
-Use the union of both scopes for classification. This ensures the skill catches undocumented changes that were made
-earlier in the branch and not yet documented, not just the current staged diff. Also run `git status --short` to
-catch new untracked files that may be staged.
+  ```bash
+  git diff "$base"...HEAD
+  git diff --cached
+  git status --short
+  ```
 
-**If on `main`**, only analyze the staged scope:
+- On the base branch, take only the staged scope and `git status --short`.
 
-```sh
-git diff --cached
-git status --short
-```
+`git status --short` lists untracked files, which neither diff shows. Read the new files it lists that match the
+categories in the analysis guide. If the combined diff exceeds about 500 lines, summarize it by file group and read in
+full only the files that match a category.
 
-If the diff exceeds ~500 lines, summarize by file group rather than line-by-line — focus on files matching the
-classification categories in `references/analysis-guide.md`.
+## Step 3. Classify the changes
 
-Classify each changed file into documentation impact categories using the rules in `references/analysis-guide.md`.
+Read `references/analysis-guide.md` now and apply it to every changed file. It maps each kind of change to a
+documentation role, and step 1 maps each role to a page.
 
-### No Documentation Needed
+Tell the user what you found even when the result is empty:
 
-After classifying all changed files, if none of them fall into a documentation-relevant category, **tell the user
-explicitly**: "I analyzed the diff — no documentation changes are required." Do not silently skip; the user should
-know you checked.
+- No change matches a category: say "I analyzed the diff; no documentation changes are required."
+- The changes are an internal refactor (renamed private code, restructured code with the same behavior, dependency
+  bumps without configuration changes): say that you found a refactor and that it needs no documentation.
 
-### Detecting Refactors
+When a new parameter's type or default cannot be read from the code, ask the user before you add its row. A wrong
+parameter row is worse than a missing one.
 
-If the changes are purely internal — renaming private functions, restructuring code without changing behavior,
-updating dependencies without config changes — mention to the user that you detected a refactor and confirm no
-documentation updates are needed. Don't silently skip; the user should know you checked.
+## Step 4. Plan and confirm
 
-### Change Categories
+Apply small edits without asking:
 
-**Helm chart parameters** — Changes to any `values.yaml` under `*/charts/helm/*/`, Helm templates introducing new
-parameters, CRD type definitions with new spec fields.
+- adding one or two rows to an existing parameter table;
+- fixing a cross-reference or a table-of-contents entry;
+- rewording a sentence to reflect a changed default.
 
-- Action: update parameter tables in the installation documentation under the matching component section
-- Read `references/doc-conventions.md` for exact table format
+Show a plan and wait for approval before you:
 
-**New feature** — A substantial new capability: new controller, new CRD feature field, new service component, new
-integration.
+- create a page or a directory;
+- remove a section or a parameter row;
+- rewrite an existing section, or change a page's structure;
+- add three or more parameter rows at once.
 
-- Action: create a new feature doc following repository layout conventions discovered from docs/README.md
-- Cross-reference from installation docs if it has configurable parameters
-- Cross-reference from architecture docs if it adds a new component
+The plan lists the documentation map, the pages to create (with the proposed paths), the pages to update (with a
+one-line summary each), and the cross-references to add.
 
-**Existing feature change** — Modifications to behavior, configuration options, or defaults of an existing feature.
+## Step 5. Write
 
-- Action: update the corresponding feature documentation file
-- Also update installation parameter tables if params changed
+Read `references/doc-conventions.md` before you write. It holds the default formats for parameter rows, feature pages,
+and the other page types, and the rule that the target page's own format wins over those defaults.
 
-**Metrics and monitoring** — Changes to Telegraf/Prometheus config, Grafana dashboard JSON/ConfigMaps in
-`monitoring/`, alert rules.
+- Read the whole target page before you edit it, and keep its heading levels, heading case, table columns, link style,
+  and note style.
+- When you add a section to a page that has a table of contents, add the matching entry.
+- When you create, rename, move, or delete a page, update the `index` page if the repository has one.
 
-- Action: update monitoring or alerting documentation (discovered from docs/README.md)
+## Step 6. Verify
 
-**Architecture** — New components, changed component interactions, new deployment schemes, CRD structure changes.
-
-- Action: update architecture documentation (discovered from docs/README.md)
-
-**Installation / Prerequisites** — New dependencies, changed versions, new permissions, changed install steps.
-
-- Action: update relevant sections in installation documentation (discovered from docs/README.md)
-
-**Troubleshooting / Maintenance** — New failure modes, changed recovery procedures, new maintenance operations.
-
-- Action: update troubleshooting documentation or scenario-specific docs (discovered from docs/README.md)
-
-**Security** — New auth mechanisms, TLS changes, new RBAC requirements.
-
-- Action: update security documentation (discovered from docs/README.md)
-
-**Removed or deprecated parameters** — Parameters removed from `values.yaml`, CRD fields removed or deprecated,
-features disabled or deleted.
-
-- Action: remove or strike the parameter row from `installation.md`; if a feature doc exists, add a deprecation
-  notice or remove the doc and clean up cross-references
-- Do not silently leave stale rows — incorrect documentation is worse than no documentation
-
-**Internal docs** — Changes to CI config, Makefile internals, operator development patterns, or dev workflows.
-
-- Action: update `docs/internal/developing.md` or `docs/internal/operator-guide.md` as appropriate
-
-**New or moved doc files** — A new `.md` file added under `docs/`, an existing doc file renamed or moved, or a doc
-file deleted.
-
-- Action: update `docs/README.md` — add, rename, or remove the corresponding entry in both the Navigation section
-  and the Project layout tree
-
-### Handling Unknown Parameter Details
-
-When you detect a new Helm parameter but can't determine its Type or Default from the code alone, ask the user for
-the missing information before adding the parameter row. Don't guess — incorrect parameter documentation is worse
-than no documentation.
-
-## Step 3: Plan and Apply
-
-Use a **hybrid approach** for confirmation:
-
-- **Auto-apply** (no confirmation needed): adding 1–2 rows to an existing parameter table, fixing cross-references,
-  updating ToC entries, minor wording adjustments to reflect changed defaults.
-- **Confirm with the user** before: creating a new file, removing a section or parameter row, rewriting an existing
-  section, making structural changes to existing docs, or adding 3 or more parameter rows at once.
-
-For the confirmation case, present a concise plan:
-
-- Which files will be **created** (with proposed filenames)
-- Which files will be **updated** (with a summary of changes)
-- Any cross-references to add
-
-Wait for user approval before proceeding with those changes.
-
-## Step 4: Write Documentation
-
-Read `references/doc-conventions.md` before writing — it contains the exact table formats, templates, and style rules.
-
-Key principles:
-
-1. Invoke the `english-us-developer-style` skill before producing any prose.
-
-2. **Match the existing style.** Always read the target file before editing. Preserve heading hierarchy, table
-  column widths, link conventions, and note formatting.
-
-3. **Always update the Table of Contents.** When adding new sections to a file, add corresponding ToC entries at
-  the top of the file — whether or not the file already has a ToC.
-
-4. **Parameter tables**: see `references/doc-conventions.md` for the exact column spec and formatting rules. Do not
-  guess the format from memory.
-
-5. **Feature docs**: use the feature documentation template defined in `references/doc-conventions.md` — do not
-  invent structure from memory, as it is the single source of truth for templates and style.
-
-6. **Use repo-root-relative links** for cross-references: `[Feature Name](/docs/public/feature-name.md)`.
-
-7. **Image references**: `![Alt Text](/docs/public/images/path/to/image.png)`.
-
-## Step 5: Verify
-
-After applying changes:
-
-- Read each modified file to confirm formatting is correct
-- Check that parameter table column separators are consistent
-- Verify cross-references point to existing files: for each internal link added or updated, confirm the target path
-  exists with `find docs/ -name '<filename>'`
-- If new feature files were created, confirm they're referenced from `installation.md` (if they have parameters)
-- If any doc files were created, renamed, moved, or deleted, confirm `docs/README.md` reflects the current structure
-  (Navigation links and Project layout tree)
-- Run `git diff -- docs/` to show the user what changed
-
----
-
-## Reference Files
-
-- `docs/README.md` — Navigable index of the project's doc files with descriptions; created during adaptation.
-- `references/doc-conventions.md` — Templates, table formats, and style rules. Read this before writing any doc.
-- `references/analysis-guide.md` — How to classify changed files and map them to documentation updates. Read this
-  during Step 2.
+- Read each edited page again and check that tables still have the same number of columns in every row.
+- For every link you added or changed, check that the target file exists, resolving the path the way the page's link
+  style does (relative to the page, or to the repository root).
+- Check that a new feature page is linked from the `parameters` page when it has parameters, and from the `index`
+  page when one exists.
+- Show the user the result with `git diff` limited to the pages you edited.

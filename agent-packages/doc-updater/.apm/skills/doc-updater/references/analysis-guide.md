@@ -1,254 +1,118 @@
-# Change Analysis Guide
+# Change analysis guide
 
-This reference describes how to systematically analyze staged git changes and map them to documentation updates.
+Map each changed file to the documentation roles it affects. The roles are defined in step 1 of `SKILL.md`, and the
+documentation map built there tells you which page plays each role in this repository. This guide never names a page
+path; when it says "the `parameters` page", use the page the map assigns to `parameters`.
 
-## Table of Contents
+## Contents
 
-- [Step 1: Gather the diff](#step-1-gather-the-diff)
-- [Step 2: Classify changed files](#step-2-classify-changed-files)
-- [Step 3: Extract documentation-relevant details](#step-3-extract-documentation-relevant-details)
-- [Step 4: Map to doc files](#step-4-map-to-doc-files)
-- [File pattern to documentation mapping](#file-pattern-to-documentation-mapping)
+- [Classify changed files](#classify-changed-files)
+- [Extract the details each role needs](#extract-the-details-each-role-needs)
+- [Decide which pages to touch](#decide-which-pages-to-touch)
 - [Examples](#examples)
 
----
+## Classify changed files
 
-## Step 1: Gather the Diff
+Classify by path and content. Look up the exact chart directories, API packages, and service directories in the
+repository itself (`git ls-files`, `ls`); the patterns below are shapes, not paths.
 
-First, determine the current branch:
+| Changed file | Category | Primary role | Secondary roles |
+| --- | --- | --- | --- |
+| `values.yaml` of any Helm chart | Helm parameters | `parameters` | `features` page of that feature |
+| Helm template (`templates/*.yaml`, `templates/*.tpl`) | New parameter or changed behavior | `parameters` | `features`, `architecture` |
+| Operator API types (`*_types.go`) or generated CRD YAML | CRD fields | `parameters` | `architecture`, `features` |
+| Controller or reconciler code | Feature or behavior change | `features` | `parameters`, `troubleshooting` |
+| Builders of Kubernetes objects (Deployments, Services, RBAC) | Deployment shape | `architecture` | `installation`, `security` |
+| Dashboards, Prometheus or Telegraf configuration | Monitoring | `monitoring` | `parameters` |
+| Alert rules | Alerts | `alerts` | `troubleshooting` |
+| Container image sources (`Dockerfile`, `docker-*/`) | Component or version change | `architecture` | `installation` |
+| Bootstrap or CRD init jobs | Prerequisites | `installation` | `troubleshooting` |
+| TLS, authentication, or RBAC code and templates | Security | `security` | `parameters` |
+| CI configuration, `Makefile`, contributor scripts | Developer workflow | `developer` | |
+| Documentation pages | Consistency | The page itself | `index` |
 
-```bash
-git rev-parse --abbrev-ref HEAD
-```
+A directory that matches no row: read its `README` or nearest `values.yaml` to learn what it does, then classify it by
+purpose. A change that matches no row at all needs no documentation; say so, as `SKILL.md` step 3 requires.
 
-**If on a non-`main` branch**, gather two scopes and union them:
+## Extract the details each role needs
 
-```bash
-# Branch scope — all changes since this branch diverged from main
-git diff main...HEAD
+### Parameters
 
-# Staged scope — changes staged for the current commit
-git diff --cached
-```
+For each added key, record:
 
-Use the union of both scopes for classification. This ensures the skill catches undocumented changes made earlier in
-the branch, not just the current staged diff.
+- the full dot-notation path, such as `backupDaemon.s3.enabled`;
+- the type (`string`, `bool`, `int`, `[]string`, `json`, `yaml`, or a Kubernetes type);
+- whether it is mandatory;
+- the default from `values.yaml`, or `n/a`;
+- what it configures, from the templates that read it and the comments beside it.
 
-**If on `main`**, only analyze the staged scope:
+For a changed default, record the old and new value. For a removed or renamed key, remove or rename its row, search
+every documentation page for the old name, and fix each reference. When a whole feature goes away, add a deprecation
+note to its page or remove the page and the links to it. Do not leave a stale row behind.
 
-```bash
-git diff --cached
-```
+### Features
 
-Also check for new untracked files that may be staged:
+A feature is new when the diff adds a controller, a CRD field that turns on new behavior, a new Deployment or Service,
+or a new `*.enabled` or `*.install` flag. Record its purpose, prerequisites, parameters, how the user turns it on, and
+its limitations.
 
-```bash
-git status --short
-```
+### Monitoring and alerts
 
-## Step 2: Classify Changed Files
+Record new or changed dashboard panels, exporter queries, Telegraf inputs and outputs, and alert rules with their
+severity.
 
-Group each changed file into categories based on its path using the generic rules below. For exact chart directories,
-API paths, and service names, inspect the filesystem directly (run `ls` on relevant directories and use `find`). For
-the exact doc files and component section names to use, read the ToC of `installation.md` and consult the
-[File pattern to documentation mapping](#file-pattern-to-documentation-mapping) table in this file.
+### Architecture
 
-Generic category rules:
+Record new images or services, new CRDs, new ports or calls between components, and new deployment modes.
 
-- **Helm values files** (`values.yaml` under any chart directory) → Helm parameters category
-- **Helm templates** (`templates/*.yaml` under any chart directory) → may introduce new params or change behavior
-- **CRD type definitions** (`*_types.go` under any API directory) → CRD types category; new fields = new params,
-  removed fields = stale rows
-- **Controller logic** (`controllers/**/*.go`) → may introduce features or change behavior
-- **Kubernetes object builders** (provider/builder code in controllers) → may affect architecture or install docs
-- **Monitoring config** (Telegraf, Grafana, Prometheus files in any monitoring directory) → monitoring category
-- **Service directories** (backup, exporter, replication, UI, etc.) → classify by purpose using the project's
-  `docs/README.md` mapping
-- **Container image directories** (`docker-*/`) → may affect architecture or installation
-- **Bootstrap/init jobs** → update installation prerequisites
-- **Integration test suites** → may affect installation parameters section
-- **Documentation files** (`docs/**`) → review for consistency with code changes
+## Decide which pages to touch
 
-**How to handle unknown service directories**: if a directory doesn't match any of the above categories, read its
-`README` or nearest `values.yaml` to determine what it does, then classify it using the mapping table below.
+- New parameter: add a row to the `parameters` page, in the section for its component.
+- Removed or renamed parameter: update the row, fix references on every page, and deprecate the feature page if the
+  feature is going away.
+- New feature: create a page in the `features` location, link it from the `parameters` page if it has parameters, and
+  add it to the `architecture` page if it adds a component.
+- Changed feature: update its `features` page, and the `parameters` and `troubleshooting` pages if parameters or
+  failure modes changed.
+- Changed monitoring or alerts: update the `monitoring` or `alerts` page.
+- Changed components or interactions: update the `architecture` page.
+- Changed install or upgrade steps: update the `installation` page.
+- Changed failure modes or recovery: update the `troubleshooting` page.
+- Changed TLS, authentication, or RBAC: update the `security` page.
+- Changed contributor workflow: update the `developer` page.
+- A page created, renamed, moved, or deleted: update the `index` page if the repository has one.
 
-**If no changed files match any category**, tell the user explicitly: "I analyzed the diff — no documentation changes
-are required." Do not silently finish.
-
-## Step 3: Extract Documentation-Relevant Details
-
-For each category of changes, extract specific details:
-
-### Helm Parameter Changes
-
-Look for:
-
-- New keys added to `values.yaml`
-- Changed default values
-- Removed or renamed parameters
-
-For **removed or renamed parameters**:
-
-- Remove the corresponding row(s) from the parameter table in `installation.md`
-- If the removal affects a whole feature section, add a deprecation notice or remove the section
-- Check for cross-references to the removed parameter in other docs and clean them up
-- Do not leave stale rows — incorrect documentation is worse than no documentation
-
-For each **new parameter**, determine:
-
-- Full dot-notation path (e.g., `backupDaemon.s3.enabled`)
-- Type (string, bool, int, []string, json, yaml)
-- Whether it's mandatory
-- Default value
-- What it configures (read surrounding code/comments)
-
-### Feature Changes
-
-Look for:
-
-- New controller files or significant new logic in existing controllers
-- New CRD spec fields (in `*_types.go` or generated CRD YAML in `operator/charts/helm/*/crds/`)
-- New services or Deployments added to Helm templates
-- New feature flags (new `*.enabled` or `*.install` parameters)
-
-For each new feature, determine:
-
-- Feature name and purpose
-- Prerequisites (new CRDs, permissions, external dependencies)
-- Configuration parameters
-- How users interact with it
-- Limitations or caveats
-
-### Metrics / Monitoring Changes
-
-Look for:
-
-- New or modified Grafana dashboard ConfigMaps in any monitoring chart directory (see `docs/README.md` for the exact
-  path)
-- Changed Telegraf input/output config
-- New Prometheus alert rules
-- New or changed exporter queries
-
-### Architecture Changes
-
-Look for:
-
-- New Docker images or services (new `docker-*` dirs or Dockerfiles)
-- New CRDs (new files under `operator/api/`)
-- Changed component interactions (new API calls, new ports, new dependencies)
-- New deployment modes (new values sections, new Helm templates)
-
-## Step 4: Map to Doc Files
-
-Based on classification, determine exactly which doc files to touch:
-
-### Decision Tree
-
-- Is there a new Helm parameter?
-  - YES → Update `installation.md` parameter table in the correct component section
-- Is a Helm parameter removed or renamed?
-  - YES → Remove or update the row in `installation.md`; clean up cross-references; add deprecation notice if the
-    whole feature is going away
-- Is there a new feature?
-  - YES → Create `docs/public/<feature-name>.md`
-  - Add cross-reference in `installation.md` prerequisites or parameters
-  - Add to `architecture.md` feature list if it's a major component
-- Is an existing feature changed?
-  - YES → Update the existing `docs/public/<feature>.md`
-  - Update `installation.md` if parameters changed
-  - Update `troubleshooting.md` if failure modes changed
-- Are metrics, dashboards, or alerts changed?
-  - YES → Update `docs/public/monitoring.md` or `docs/public/alerts.md`
-- Is the architecture affected?
-  - YES → Update `docs/public/architecture.md`
-- Are install or upgrade steps affected?
-  - YES → Update relevant sections in `docs/public/installation.md`
-- Are troubleshooting procedures affected?
-  - YES → Update `docs/public/troubleshooting.md` or `docs/public/scenarios/`
-- Is security affected (TLS, auth, RBAC)?
-  - YES → Update `docs/public/security.md` or `docs/public/security/<topic>.md`
-- Are internal developer workflows affected?
-  - YES → Update `docs/internal/developing.md` or `docs/internal/operator-guide.md`
-- None of the above?
-  - → Tell the user: "I analyzed the diff — no documentation changes are required."
-
-## File Pattern to Documentation Mapping
-
-Quick reference for common change type → doc mappings. File path patterns are intentionally generic globs — inspect
-the filesystem directly for the exact chart directories, API paths, and service dirs in this project. Check the ToC
-of `installation.md` for the exact component section names to use.
-
-| Changed file type                 | Primary doc to update                 | Secondary docs                        |
-| --------------------------------- | ------------------------------------- | ------------------------------------- |
-| Any `*/charts/helm/*/values.yaml` | `installation.md` (component section) | Feature doc if feature-specific       |
-| Any `*/api/**/*_types.go`         | `installation.md`                     | `architecture.md`, feature docs       |
-| Backup/restore controller         | Feature doc for that service          | `installation.md` (backup)            |
-| Monitoring/metrics controller     | `monitoring.md`                       | `installation.md` (monitoring)        |
-| Replication/mirroring controller  | Replication feature doc               | `installation.md` (replication)       |
-| UI controller                     | `architecture.md`                     | `installation.md` (UI)                |
-| Auto-rebalancing controller       | Rebalancing feature doc               | `installation.md` (rebalancing)       |
-| Monitoring config dir changes     | `monitoring.md` or `alerts.md`        |                                       |
-| Exporter service dir changes      | `monitoring.md` (exporter)            | `installation.md` (exporter)          |
-| `docker-*/` image changes         | `architecture.md`                     | `installation.md` if version changes  |
-| CRD init / bootstrap job changes  | `installation.md` (Prerequisites)     | `troubleshooting.md`                  |
+When the role a change needs maps to nothing, follow `SKILL.md` step 1: propose a page and confirm it before you create
+it.
 
 ## Examples
 
-### Example 1: New parameter Added to values.yaml
+### New key in `values.yaml`
 
-Diff shows `backupDaemon.s3.aliases` added to a chart's `values.yaml`.
-
-Action:
-
-1. Open `docs/public/installation.md`
-2. Find the backup daemon component section under `# Parameters` (the exact heading depends on this project — read
-  the ToC)
-3. Add a row to the parameter table:
+The diff adds `backupDaemon.s3.aliases` to a chart's `values.yaml`. Open the `parameters` page, find the section for the
+backup daemon, and add a row in the table's existing column order:
 
 ```markdown
-| backupDaemon.s3.aliases | yaml | no | n/a | Specifies S3 bucket aliases for backup daemon to use in backup/restore. |
+| backupDaemon.s3.aliases | yaml | no | n/a | Specifies S3 bucket aliases the backup daemon uses for backup and restore. |
 ```
 
-### Example 2: New Feature — Encrypted External Access
+### New feature
 
-Diff shows new Helm template `encrypted-access.yaml`, new values section `encryptedAccess:`, and new controller file
-`encrypted_access_reconciler.go`.
+The diff adds a template `encrypted-access.yaml`, an `encryptedAccess:` section in `values.yaml`, and a reconciler
+`encrypted_access_reconciler.go`. Plan, and confirm with the user:
 
-Actions:
+1. A new page in the `features` location, named like its neighbors (for example `encrypted-access.md`).
+1. Parameter rows for `encryptedAccess.*` on the `parameters` page.
+1. A line in the feature list of the `architecture` page.
+1. A link from the `security` page, because the feature concerns TLS.
 
-1. Create `docs/public/encrypted-access.md` using the feature template
-2. Add parameter rows in `installation.md` under a new `## Encrypted Access` section (or append to the primary
-  service section if minimal)
-3. Add a bullet point to the feature list in `architecture.md`
-4. Cross-reference from `security.md` since it relates to TLS/encryption
+### Changed dashboard
 
-### Example 3: Changed Grafana Dashboard ConfigMap
+The diff adds panels to a Grafana dashboard ConfigMap. Describe the new panels in the matching dashboard section of the
+`monitoring` page. If the page shows screenshots and you cannot produce one, say so in the plan instead of linking an
+image that does not exist.
 
-Diff shows new panels added to a Grafana dashboard ConfigMap inside a monitoring chart directory.
+### New alert rule
 
-Actions:
-
-1. Open `docs/public/monitoring.md`
-2. Add descriptions for the new panels in the appropriate dashboard section
-3. Note that screenshots may need updating (add a TODO comment in the doc)
-
-### Example 4: New Alert Rule Added
-
-Diff shows a new Prometheus alert in the monitoring chart.
-
-Actions:
-
-1. Open `docs/public/alerts.md`
-2. Add a row to the alerts table with the alert name, severity, and description
-3. If the alert relates to an existing troubleshooting scenario, cross-reference it from `troubleshooting.md`
-
-### Example 5: New Engine Mode or Major Migration Path
-
-Diff shows changes to a controller implementing a new operational mode (e.g., a migration from one storage/consensus
-backend to another).
-
-Actions:
-
-1. Update or create a feature doc in `docs/public/` describing the migration
-2. Update `installation.md` if mode-specific parameters changed
-3. Update `architecture.md` if the deployment scheme description changes
+The diff adds a Prometheus alert. Add a row with the alert name, severity, and meaning to the `alerts` page, and link
+the matching `troubleshooting` entry if one exists.
