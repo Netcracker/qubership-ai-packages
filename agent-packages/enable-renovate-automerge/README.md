@@ -17,6 +17,8 @@ updates. It applies per repository and verifies one pilot before a broader rollo
    inapplicable validation jobs can skip while the final gate succeeds. By default, gated workflows accept branch pushes
    only to the default branch. It explains which branch checks, builds, and publication stop and offers event-specific
    gate names or manual branch publication when needed.
+   For Docker builds, it checks detector coverage against every build context, COPY/ADD source, and both ignore-file
+   forms, including newly added ignore files, and records input-path verification before declaring the gate complete.
 4. Evaluates the combined protection policy, recommends one strict ruleset, and shows a candidate consolidated policy.
    Consolidation happens only after agreement and preserves human bypass actors and modes.
 5. Compares the current effective Renovate policy with `github>Netcracker/renovate-config:automerge`, including the

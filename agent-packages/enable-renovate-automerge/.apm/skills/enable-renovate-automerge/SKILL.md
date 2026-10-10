@@ -121,8 +121,26 @@ An absent workflow/check differs from an internal skipped job. Workflow filters 
 **Implement.** Reuse gates or add an aggregator with `needs` on the relevant jobs and `if: always()`.
 Move `on.pull_request.paths` and `paths-ignore` into an internal detector controlling validation jobs. Reuse an existing
 detector; unconditional validation needs none. Preserve the actual validation steps and effective applicability.
-Treat Dockerfiles, image configs, `.dockerignore`, and files copied into the image as applicable. Capture `git diff`
-with a checked command before iterating so a failed listing cannot report the change as inapplicable.
+Capture `git diff` with a checked command before iterating so a failed listing cannot report the change as inapplicable.
+
+For each detector-controlled Docker build, add this required input check to the coverage map:
+
+| Build target | Context / Dockerfile | Applicable input paths | Detector verification |
+| --- | --- | --- | --- |
+| Each matrix target | Resolve the actual paths | Dockerfile, image configs, ignore files, local COPY/ADD sources | Changed path, output, build run/skip, expected gate result |
+
+Read local `COPY`/`ADD` sources in every build stage relative to that target's context. Include copied docs, assets,
+and configs. Include the context-root `.dockerignore` and the selected Dockerfile's adjacent
+`<Dockerfile>.dockerignore`, even when absent: adding or deleting either file changes build inputs.
+Fix the existing detector to cover these paths.
+Unconditional builds need no detector; record that their inputs always trigger validation.
+
+Verify the actual detector with one changed path from each copied source path or directory and both ignore-file names,
+including an added ignore file. Record its output, the validation job's run/skip decision, and the expected gate result.
+Also check an unrelated path and detector failure. For example, `COPY docs /docs` requires a docs-only change to trigger
+the build; adding `Dockerfile.dockerignore` must trigger it too. YAML/actionlint checks alone leave this input check
+unconfirmed. Report requirement 2 as met only after these input checks pass; keep live PR confirmation separate.
+
 Keep schedule, manual, and default-branch push behavior. PR branch filters must include the protected branch.
 By default, set `on.push.branches` to the default branch only for workflows that publish required gates. A push to a
 Renovate branch uses the same SHA as the PR. GitHub accepts a skipped job as a passing required check, so a push gate
@@ -171,7 +189,8 @@ cannot be skipped without failing the gate. Extend the final parenthesized claus
 validation jobs; do not add inverse checks that require each job to be `skipped` when validation is inapplicable.
 
 **Confirm.** Compare applicable and inapplicable PR changes: validation keeps its intended conditions and gates report
-in both cases. Read exact check names and producer integration IDs on the candidate SHA; reusable workflows may report
+in both cases. Include the Docker input check and its detector evidence in the result.
+Read exact check names and producer integration IDs on the candidate SHA; reusable workflows may report
 compound names. Avoid duplicate contexts. Preserve extra gates and required checks until a reporting replacement proves
 equivalent coverage. Default-branch runs alone do not establish PR or bot behavior.
 
