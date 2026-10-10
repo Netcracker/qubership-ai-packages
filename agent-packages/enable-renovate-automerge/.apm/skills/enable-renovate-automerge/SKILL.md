@@ -124,13 +124,32 @@ detector; unconditional validation needs none. Preserve the actual validation st
 Treat Dockerfiles, image configs, `.dockerignore`, and files copied into the image as applicable. Capture `git diff`
 with a checked command before iterating so a failed listing cannot report the change as inapplicable.
 Keep schedule, manual, and default-branch push behavior. PR branch filters must include the protected branch.
-A workflow that publishes a required gate must not run on push to a pull request head branch. Set `on.push.branches`
-to the default branch only. A push to a Renovate branch uses the same SHA as the PR. GitHub reports a skipped job as
-success, so a gate job skipped by `if: github.event_name == 'pull_request'` satisfies the required check before the
-pull_request run finishes.
+By default, set `on.push.branches` to the default branch only for workflows that publish required gates. A push to a
+Renovate branch uses the same SHA as the PR. GitHub accepts a skipped job as a passing required check, so a push gate
+skipped by `if: github.event_name == 'pull_request'` can satisfy it before the PR run finishes.
 Use detector outputs and `needs.*.result` in the gate rather than duplicating path matching.
 
-Give each gate one stable check name from the pull_request run. Do not add a second name such as `Gate (push)`.
+Before applying this default and in the result, explicitly tell the owner which workflows lose branch-push checks,
+builds, or image publication. Explain that this repository policy change prevents skipped branch-push gates from
+permitting early merge; PR validation remains. Keep this default unless the owner chooses another publication path:
+
+1. **Event-specific gate names.** Keep the needed push branches and give the gate a different name outside PRs:
+
+   ```yaml
+   name: >-
+     ${{ github.event_name == 'pull_request' && 'Build Gate'
+         || format('Build Gate ({0})', github.event_name) }}
+   ```
+
+   Keep the gate's `needs`, PR condition, and result checks. Require only the exact PR check name and verified producer
+   ID, never `Build Gate (push)` or another event's name. Verify the names actually reported before changing protection.
+2. **Manual branch publication.** Keep gated push runs on the default branch. Add `workflow_dispatch: {}` to a separate
+   publishing workflow without required gates, or reuse such a workflow. Its file must exist on the default branch;
+   the owner selects `Actions > workflow > Run workflow > Branch`. Checkout that selected ref and enable publishing for
+   the manual event under existing actor restrictions and job permissions. PR builds still use no registry login or
+   push.
+
+Each required gate has one stable PR check name; branch-push runs must not report that name on a PR head SHA.
 
 Keep the gate contract minimal: require the detector to succeed, require applicable validation jobs to succeed, and
 otherwise let the gate succeed. Compare required results with `success`; this rejects failure, cancellation, timeout,
@@ -349,6 +368,7 @@ while the branch is behind the base.
 
 Show the coverage map and report each golden rule as met, unmet, or unconfirmed, with evidence and the remaining action.
 Distinguish source changes prepared, live settings applied, and runtime verified. Link the diff/source PR and settings
-evidence separately. Record the selected scope and exact required gate set. Name remaining owner actions, missing
-events, and the next authorization stage. Audit requests report remedies. Setup requests prepare and verify local
-changes, then continue only through explicitly authorized publication, live-setting, and runtime stages.
+evidence separately. Record the selected scope, exact required gate set, and branch-push restrictions or chosen
+publication alternative. Name remaining owner actions, missing events, and the next authorization stage. Audit requests
+report remedies. Setup requests prepare and verify local changes, then continue only through explicitly authorized
+publication, live-setting, and runtime stages.

@@ -14,7 +14,9 @@ updates. It applies per repository and verifies one pilot before a broader rollo
    merge. It shows the failure-detection and recovery tradeoff; the owner chooses whether to accept it, add a safe smoke
    or dry run, or keep that update class manual.
 3. Makes each required workflow report on every PR. It moves `pull_request.paths` decisions into the workflow so
-   inapplicable validation jobs can skip while the final gate succeeds.
+   inapplicable validation jobs can skip while the final gate succeeds. By default, gated workflows accept branch pushes
+   only to the default branch. It explains which branch checks, builds, and publication stop and offers event-specific
+   gate names or manual branch publication when needed.
 4. Evaluates the combined protection policy, recommends one strict ruleset, and shows a candidate consolidated policy.
    Consolidation happens only after agreement and preserves human bypass actors and modes.
 5. Compares the current effective Renovate policy with `github>Netcracker/renovate-config:automerge`, including the
