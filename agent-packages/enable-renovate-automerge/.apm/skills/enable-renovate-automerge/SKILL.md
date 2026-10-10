@@ -123,13 +123,14 @@ Move `on.pull_request.paths` and `paths-ignore` into an internal detector contro
 detector; unconditional validation needs none. Preserve the actual validation steps and effective applicability.
 Treat Dockerfiles, image configs, `.dockerignore`, and files copied into the image as applicable. Capture `git diff`
 with a checked command before iterating so a failed listing cannot report the change as inapplicable.
-Keep unrelated push, schedule, manual, and branch behavior; PR branch filters must include the protected branch.
+Keep schedule, manual, and default-branch push behavior. PR branch filters must include the protected branch.
+A workflow that publishes a required gate must not run on push to a pull request head branch. Set `on.push.branches`
+to the default branch only. A push to a Renovate branch uses the same SHA as the PR. GitHub reports a skipped job as
+success, so a gate job skipped by `if: github.event_name == 'pull_request'` satisfies the required check before the
+pull_request run finishes.
 Use detector outputs and `needs.*.result` in the gate rather than duplicating path matching.
 
-Give each gate one stable check name. If a gate applies only to pull requests, keep the name constant and use a
-job-level `if: ${{ always() && github.event_name == 'pull_request' }}` condition. Do not add event-specific names such
-as `Gate (push)`: a successful push check with the same name and SHA does not replace a failed pull-request check.
-Introduce different names only after reproducing a ruleset decision that incorrectly accepts the push check.
+Give each gate one stable check name from the pull_request run. Do not add a second name such as `Gate (push)`.
 
 Keep the gate contract minimal: require the detector to succeed, require applicable validation jobs to succeed, and
 otherwise let the gate succeed. Compare required results with `success`; this rejects failure, cancellation, timeout,
