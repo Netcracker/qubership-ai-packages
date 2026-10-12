@@ -418,8 +418,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "d39da3ae03d499969d5b4f59609907df350d476e",
-        "sha": "d39da3ae03d499969d5b4f59609907df350d476e"
+        "ref": "2655c6eb0c873ece10dd71fdbecd1e3c21fea682",
+        "sha": "2655c6eb0c873ece10dd71fdbecd1e3c21fea682"
       }
     },
     {
@@ -436,8 +436,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
-        "ref": "8b4efdeacc65cff54ee32b804466ee9a5feed48d",
-        "sha": "8b4efdeacc65cff54ee32b804466ee9a5feed48d"
+        "ref": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
+        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5"
       }
     },
     {
@@ -454,8 +454,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
-        "ref": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a",
-        "sha": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a"
+        "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
       }
     },
     {
@@ -472,8 +472,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
-        "ref": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a",
-        "sha": "6fea44a9299cdfd5ae1c20da243ac8ab735d582a"
+        "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
       }
     },
     {
@@ -527,8 +527,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "faf6c63d2a7db1b540ff8e4bc35726d8990f16d6",
-        "sha": "faf6c63d2a7db1b540ff8e4bc35726d8990f16d6"
+        "ref": "f974e5e5daa83330b8db7695b38ac5383b4d555f",
+        "sha": "f974e5e5daa83330b8db7695b38ac5383b4d555f"
       }
     },
     {
@@ -546,8 +546,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "f0015799c5e44ef14f4fbac5e66ef427aef27aaa",
-        "sha": "f0015799c5e44ef14f4fbac5e66ef427aef27aaa"
+        "ref": "e70b5e7001ac487d90501be28cf72b07c89565db",
+        "sha": "e70b5e7001ac487d90501be28cf72b07c89565db"
       }
     },
     {
