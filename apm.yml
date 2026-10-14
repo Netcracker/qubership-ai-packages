@@ -229,7 +229,7 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: 2655c6eb0c873ece10dd71fdbecd1e3c21fea682  # main
+      ref: ecec18704ac27dd74845a94c41521454b0c41c0f  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
