@@ -265,13 +265,13 @@ marketplace:
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: f974e5e5daa83330b8db7695b38ac5383b4d555f  # main
+      ref: 93a4ff0542012e0839b4261f109c38fdc2f275f0  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: c3964df42c79ce5da58d98b1b3cb21918fdfda87  # main
+      ref: 7cec756af409f1fc2c9f377f1b86c10a088cf817  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
