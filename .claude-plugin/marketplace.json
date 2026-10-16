@@ -419,7 +419,8 @@
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
         "ref": "ecec18704ac27dd74845a94c41521454b0c41c0f",
-        "sha": "ecec18704ac27dd74845a94c41521454b0c41c0f"
+        "sha": "ecec18704ac27dd74845a94c41521454b0c41c0f",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -437,7 +438,8 @@
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
         "ref": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
-        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5"
+        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -455,7 +457,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -473,7 +476,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -491,7 +495,8 @@
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
         "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
-        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
+        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -509,7 +514,8 @@
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
         "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
-        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
+        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -528,7 +534,8 @@
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
         "ref": "f974e5e5daa83330b8db7695b38ac5383b4d555f",
-        "sha": "f974e5e5daa83330b8db7695b38ac5383b4d555f"
+        "sha": "f974e5e5daa83330b8db7695b38ac5383b4d555f",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -547,7 +554,8 @@
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
         "ref": "e70b5e7001ac487d90501be28cf72b07c89565db",
-        "sha": "e70b5e7001ac487d90501be28cf72b07c89565db"
+        "sha": "e70b5e7001ac487d90501be28cf72b07c89565db",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -564,7 +572,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
         "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -581,7 +590,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
         "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "tag_pattern": "v{version}"
       }
     }
   ]
