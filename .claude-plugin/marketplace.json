@@ -418,8 +418,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "2655c6eb0c873ece10dd71fdbecd1e3c21fea682",
-        "sha": "2655c6eb0c873ece10dd71fdbecd1e3c21fea682",
+        "ref": "ecec18704ac27dd74845a94c41521454b0c41c0f",
+        "sha": "ecec18704ac27dd74845a94c41521454b0c41c0f",
         "tag_pattern": "v{version}"
       }
     },
