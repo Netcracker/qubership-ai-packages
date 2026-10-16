@@ -418,8 +418,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "ecec18704ac27dd74845a94c41521454b0c41c0f",
-        "sha": "ecec18704ac27dd74845a94c41521454b0c41c0f"
+        "ref": "8c2c44b419f1977d570cd4fdc7bc3db854d99555",
+        "sha": "8c2c44b419f1977d570cd4fdc7bc3db854d99555"
       }
     },
     {
@@ -546,8 +546,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "e70b5e7001ac487d90501be28cf72b07c89565db",
-        "sha": "e70b5e7001ac487d90501be28cf72b07c89565db"
+        "ref": "c3964df42c79ce5da58d98b1b3cb21918fdfda87",
+        "sha": "c3964df42c79ce5da58d98b1b3cb21918fdfda87"
       }
     },
     {
