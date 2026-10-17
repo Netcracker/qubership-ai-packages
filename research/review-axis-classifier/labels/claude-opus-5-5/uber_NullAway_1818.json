@@ -1,0 +1,111 @@
+{
+ "key": "uber_NullAway_1818",
+ "summary": "Adds the merge_group trigger to the CI workflow and keys the concurrency group on the PR number (falling back to run_id) so only pull request runs are cancelled.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description lists both changes; internal CI change owes no changelog entry."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Touches CI run cancellation (concurrency group), not code concurrency; github.run_id fallback correctly makes master and merge-queue runs unique."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Expression `github.event.pull_request.number || github.run_id` is small; a glance confirms master pushes no longer cancel each other, matching the comment."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New YAML comment 'cancel for PRs, not master or merge queue' agrees with the run_id fallback."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Only file is .github/workflows/continuous-integration.yml: new merge_group trigger and a new concurrency group expression; CodeRabbit's head_ref-collision finding was already addressed before the initial snapshot, initial and final diffs are identical."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "build_ci"
+   ]
+  ],
+  "why": "A four-line CI config change with one axis to check."
+ }
+}
