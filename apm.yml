@@ -121,9 +121,9 @@ marketplace:
       tags: ["topic:devops", "topic:dependencies", "activity:maintenance", "audience:public"]
 
     - name: enable-renovate-automerge
-      description: Skill that enables Renovate automerge on a repository behind a real test/style required check.
+      description: Configure GitHub Renovate automerge with required review, Renovate Approver, and verified CI coverage.
       source: ./agent-packages/enable-renovate-automerge
-      version: 1.0.0
+      version: 2.0.0
       tags: ["topic:devops", "topic:dependencies", "stack:github-actions", "activity:maintenance", "audience:public"]
 
     - name: adr-authoring
