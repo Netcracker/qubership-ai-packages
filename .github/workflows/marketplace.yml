@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
       # Claude truncates a skill's description at 1024 chars, silently dropping
@@ -71,7 +71,7 @@ jobs:
       # --check-clean: the committed marketplace.json matches what apm.yml would produce.
       # --dry-run is required: without it, pack rewrites the file first and the drift check always passes.
       - name: Check versions aligned and index in sync
-        run: uvx --python 3.14 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
+        run: uvx --python 3.15 --from apm-cli --with-requirements requirements.txt apm pack --check-versions --check-clean --dry-run
 
   verify-docs:
     needs: changes
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
       # Extract the "verify" group from the consumer guide with doccmd and run those
@@ -97,7 +97,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .claude  # a harness marker so `apm install` has a deploy target
-          uvx --python 3.14 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
+          uvx --python 3.15 --from doccmd --with-requirements "$GITHUB_WORKSPACE/requirements.txt" doccmd --language=bash --group-marker=verify --command="$GITHUB_WORKSPACE/scripts/verify-doc-block.sh" "$GITHUB_WORKSPACE/docs/consuming-packages.md"
 
   test:
     needs: changes
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
       # Run the skill unit tests and the network-free producer -> consumer
@@ -126,7 +126,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0 # need the base commit to diff changed packages on a PR
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
       # Pull request: install only packages whose entry or source changed.
