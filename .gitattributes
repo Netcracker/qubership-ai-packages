@@ -7,3 +7,5 @@
 /.cursor/hooks.json linguist-generated=true
 /.cursor/rules/** linguist-generated=true
 /agent-packages/** text=auto eol=lf
+/agent-packages/**/*.bat text eol=crlf
+/agent-packages/**/*.cmd text eol=crlf
