@@ -747,7 +747,7 @@ consumer decides whether it is worth writing.
   `V3ReplicationProtocol.configureSocketTimeout`), never `here`; one link per identifier, at its
   first mention. Code in a JDK or another project is named with its version and linked only where
   the URL was opened, and no link is written whose URL was neither built from one of these patterns
-  nor opened (`english-developer-style` §7).
+  nor opened, as `english-developer-style` §7 rules out an invented issue or pull request number.
 - In a commit body, or in a description that a squash of "title and description" copies into one
   (§4 rule 5), code of this repository is named by path and identifier and carries no URL: the
   reader has `git show` and `git blame`. A specification, another project's documentation, or
@@ -794,9 +794,9 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 
 ## 7a. Editing an existing description
 
-The "which review decision becomes harder" test, the rule that each causal link is stated once, and
-the literal treatment of a quoted diagnostic are `english-developer-style` §7's and apply here
-unchanged. The growth budget is the authoring skills' shared rule: **restructuring is free, and growth
+The "which review decision becomes harder" test and the rule that each causal link is stated once
+(§2), and the literal treatment of a quoted diagnostic (§3, and `english-developer-style` §5), apply
+here unchanged. The growth budget is the authoring skills' shared rule: **restructuring is free, and growth
 is paid for by a fact the old version did not carry** (a symptom, a condition, a version, a measured
 value, a named test, a dependency between changes); name the fact, or keep the old wording. A
 description under roughly 300 words is presumed not to grow. Two rules are this skill's own:
