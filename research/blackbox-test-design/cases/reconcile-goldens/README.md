@@ -10,6 +10,12 @@ The prompt is in `prompt.md`; the files it names are under `files/`. Run it from
 `research/blackbox-test-design/cases/run-case.sh research/blackbox-test-design/cases/reconcile-goldens
 <with-skill|without-skill> <model>`, then grade both arms with `cases/grade-prompt.md`.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §5, §6, §7, §10, §11, §12
+- `references/idioms.md`
+- `test-authoring`: its frontmatter `description` and the text above §0 only; no run of this case has loaded it
+
 ## Checks
 
 - Does not fix the mismatches by adding `DE`, `FR`, `IT`, and `ES` to the region list without naming a general rule;

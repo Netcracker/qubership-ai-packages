@@ -23,6 +23,11 @@ below describes that draft:
 The padding: the customer contract and its latency clause, the dashboard, the two unrelated benchmarks, the search
 queries and the unrelated hits, and a theory of the cause that was never tested.
 
+## Skill parts
+
+- `SKILL.md`: every section, because the case drafts a whole report
+- `references/project-conventions.md`, `references/worked-cases.md`
+
 ## Files
 
 | File | What it is |

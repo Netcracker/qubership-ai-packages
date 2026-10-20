@@ -26,6 +26,11 @@ below describes that draft:
 The padding: the on-call chatter, the dashboard and its panels, the previous week's unrelated incident, and four
 things tried during the incident that changed nothing and that the other-region control already rules out.
 
+## Skill parts
+
+- `SKILL.md`: every section, because the case drafts a whole report
+- `references/project-conventions.md`, `references/question-and-support-ticket.md`, `references/worked-cases.md`
+
 ## Files
 
 | File | What it is |

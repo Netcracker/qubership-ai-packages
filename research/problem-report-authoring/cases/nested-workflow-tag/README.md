@@ -2,8 +2,9 @@
 
 A regression case for `problem-report-authoring`. The input is the notes of a real investigation, the output is the
 issue body a model drafted from them with the skill, and the checks below come from what the maintainers of the target
-repository said about a report written from the same notes. Re-run the case when the skill or the model changes, commit
-the new output over the old one, and read the diff.
+repository said about a report written from the same notes. Re-run the case when a change touches the parts listed under
+[Skill parts](#skill-parts), before a release of the skill, or when the model changes; commit the new output over the old
+one, and read the diff.
 
 ## What happened
 
@@ -25,6 +26,11 @@ qubership-core-infra before filing. The problem it describes is real; the report
   organization's pinning conventions, two GitHub documentation quotes, the list of search queries, a log of a push that
   succeeded, the empty rulesets and releases listings, a caller-side workaround nobody tried, and repositories nobody
   checked. The problem fits in three sentences.
+
+## Skill parts
+
+- `SKILL.md`: every section, because the case drafts a whole report
+- `references/project-conventions.md`, `references/worked-cases.md`
 
 ## Files
 

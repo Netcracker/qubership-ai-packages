@@ -39,6 +39,11 @@ query in its message.
 - **The stack line is proposed** (§0). Calcite has no `AGENTS.md` or `CLAUDE.md`; the session proposes the line and
   creates no file.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §4, §5, §6, §7, §9
+- `references/java/junit5.md`, `references/java/junit5-assertions.md`, `references/java/hamcrest.md`
+
 ## Files
 
 | File | What it is |
