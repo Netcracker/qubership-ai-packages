@@ -533,8 +533,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "f974e5e5daa83330b8db7695b38ac5383b4d555f",
-        "sha": "f974e5e5daa83330b8db7695b38ac5383b4d555f",
+        "ref": "93a4ff0542012e0839b4261f109c38fdc2f275f0",
+        "sha": "93a4ff0542012e0839b4261f109c38fdc2f275f0",
         "tag_pattern": "v{version}"
       }
     },
@@ -553,8 +553,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "c3964df42c79ce5da58d98b1b3cb21918fdfda87",
-        "sha": "c3964df42c79ce5da58d98b1b3cb21918fdfda87",
+        "ref": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
+        "sha": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
         "tag_pattern": "v{version}"
       }
     },
