@@ -81,9 +81,10 @@ The arm with the skill loaded `blackbox-test-design` from its description in all
 `test-authoring` in two and no skill in three. In `probe-vendor-jar` the arm with the skill left duplicate rule names
 untested, as the arm without it did. Both arms of `reconcile-goldens` replaced the region list with the general rule and
 asked for the build that answered round 12, so that case separates the arms only on how the round is budgeted. The arms
-without the skill depend only on `test-authoring`, so a change to `blackbox-test-design` re-runs the arms with it;
-`skill-tree` and `skill-tree-test-authoring` in each result name the trees that produced it. The runs committed here
-cost about $7.
+without the skill depend only on `test-authoring`, so a change to `blackbox-test-design` re-runs the arms with it, in
+the cases whose `## Skill parts` it touches, and a change to `test-authoring` re-runs both arms of the cases whose
+`test-authoring` line it touches; `skill-tree` and `skill-tree-test-authoring` in each result name the trees that
+produced it. The runs committed here cost about $7.
 
 `parity-plan`, `probe-vendor-jar`, and `spec-proven` were written with the skill, and an earlier revision of it scored
 34 of 34 checks with the skill against 25 of 34 without, one Opus run each. `reconcile-goldens` and

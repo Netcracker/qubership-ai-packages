@@ -23,6 +23,11 @@ its own, and whether it finds the cases the change owes.
 - **A new test takes the shape of its neighbors** (§9). `WildcardTests.java` writes each source as one text block
   passed to `makeHelper().addSourceLines(...)`.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §3, §4, §5, §7, §9
+- `references/java/junit4.md`
+
 ## Files
 
 | File | What it is |

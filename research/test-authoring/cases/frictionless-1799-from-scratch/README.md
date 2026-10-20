@@ -61,6 +61,11 @@ Measured with `TableResource(data=…, schema=…).validate()` and `report.flatt
 `analyze(detailed=True)` on header `a` with integer fields `a`, `b` and two rows: on the base `fieldStats` has `a` and
 `b` and `rowsWithNullValues` is 2; on the fix `fieldStats` has `a` alone and `rowsWithNullValues` is 0.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §8, §9
+- `references/python/pytest.md`
+
 ## Files
 
 | File | What it is |

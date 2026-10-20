@@ -7,6 +7,11 @@ result-shape change under "What the caller sees", after Why and What, and keeps 
 case tests the rule in SKILL.md §2, "A break leads the description where the next release from the target branch
 promises compatibility".
 
+## Skill parts
+
+- `SKILL.md`: §1, §2, §3, §4, §5, §7, §7a
+- `english-developer-style`: `SKILL.md` §5
+
 ## Checks
 
 1. **Lead.** The description opens, before the Why slot, with the break lines, after at most a short paragraph that says

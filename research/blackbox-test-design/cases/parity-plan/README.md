@@ -10,6 +10,12 @@ The prompt is in `prompt.md`; the files it names are under `files/`. Run it from
 `research/blackbox-test-design/cases/run-case.sh research/blackbox-test-design/cases/parity-plan
 <with-skill|without-skill> <model>`, then grade both arms with `cases/grade-prompt.md`.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §2, §4, §5, §6, §7, §10, §11, §12
+- `references/idioms.md`
+- `test-authoring`: `SKILL.md` §1, §4, §5, §10, `references/mutation-tools.md`
+
 ## Checks
 
 - Explains that the mutation score, the property-test generators and/or the pairwise coverage measure the port against

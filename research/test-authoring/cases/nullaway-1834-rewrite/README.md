@@ -23,6 +23,11 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
 - **The stack line is proposed, not written** (§0). NullAway has an `AGENTS.md`; the skill proposes the line that
   records the harness's stop-at-first behavior, and the session does not add it.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §4, §5, §7, §9
+- `references/java/junit4.md`
+
 ## Files
 
 | File | What it is |

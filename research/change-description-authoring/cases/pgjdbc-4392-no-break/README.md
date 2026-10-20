@@ -6,6 +6,11 @@ before fails or returns a different result. The target is the same `master` as i
 the negative control for the rule "A break leads the description where the next release from the target branch
 promises compatibility".
 
+## Skill parts
+
+- `SKILL.md`: §1, §2, §3, §4, §5, §7, §7a
+- `english-developer-style`: `SKILL.md` §5
+
 ## Checks
 
 1. **No lead.** The description opens with the problem, not with a compatibility statement.

@@ -43,25 +43,23 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   checkout, with `git archive <rev> <path to the skill> | tar -x -C <dir> --strip-components=<depth>`, and start the
   session outside the checkout too. A session that reads the skill inside the checkout also loads the `CLAUDE.md` and
   `AGENTS.md` files on the way, and a drafting agent should not see instructions for editing the skill.
-- **A change to a skill is a change to a file under `agent-packages/<package>/.apm/skills/<skill>/`**, the `SKILL.md` or
-  a reference file. It re-runs every case of that skill, and the results go into the same commit as the change, so that
-  every commit holds results generated from its own skill and the diff of the result shows what the change did to each
-  case. A change to the package README, `apm.yml`, or an `AGENTS.md` is not a change to the skill. A change to a case's
-  checks re-runs that case's snippet over the committed results, not the models; a change to a case's `prompt.md`
-  re-runs that case.
-- **Each result records the skill it came from.** Write `scripts/skill-tree.sh <skill directory> <rev>` (or, before
-  the skill is committed, `scripts/skill-tree.sh <skill directory>`) to `<model>/skill-tree` beside the result. Before
-  re-running a case, compare that file with `git rev-parse HEAD:<skill directory>`: where they match, the result is
-  current, and a rebase, an amend, or a regrouping of commits that leaves the skill unchanged needs no new run. A
-  reviewer checks the same way, without reading the history.
-- **The commit message says which checks each result fails,** not only how long it is. Grade every check of the case
-  README by reading the result; the snippet counts only the checks a marker can catch, and a result that passes the
-  snippet can still fail a check it does not count. An edit that improves one case and makes another worse says so.
-- **One run per cell is noisy.** The same model on the same skill has produced reports whose length differed by
-  nearly a factor of two. Before calling a change a fix or a regression, run the cell the conclusion rests on at
-  least twice.
-- **A run costs money.** One Opus run of a case costs about a dollar at list API prices, most of it in writing the
-  skill into the prompt cache. A full pass over several cases and three models costs several dollars; say what you
-  ran in the commit message.
+- **A change to a skill re-runs the cases whose `## Skill parts` it touches.** A change to a skill is a change under
+  `agent-packages/<package>/.apm/skills/<skill>/`. The frontmatter and the text above the first numbered section count
+  for every case; a checklist item, a table row, or a worked example counts as the section whose rule it restates.
+  Commit the results with the change, and say in the pull request which cases ran and why the others did not. A change
+  to a case's checks re-runs its snippet over the committed results; a change to its `prompt.md` re-runs the case.
+- **Before a version bump, run every case** on every model it has results for, and commit the results. A model with no
+  results yet runs every case.
+- **Every case declares its `## Skill parts`:** the `SKILL.md` sections and reference files whose rules its checks
+  test, with a line of its own for each other skill the case runs with. Find each rule in the skill text, not from the
+  section number the check cites. Update the declarations in the same commit that adds a check, renumbers the
+  sections, or finds a check testing a part the list omits.
+- **Write `scripts/skill-tree.sh <skill directory> [<rev>]` to `<model>/skill-tree` beside each result.** A result whose
+  file matches `git rev-parse HEAD:<skill directory>` is current and needs no new run.
+- **Grade every check by reading the result, not by the snippet's count,** and say in the commit message which checks
+  each result fails, which cases improved or got worse, and what you ran.
+- **Commit results and draw conclusions from the target models (Opus, Sonnet), at least two runs per cell.** Haiku is
+  fine for iterating on wording against the checks a marker can catch; revert an edit that helps Haiku and hurts a
+  target model.
 - **Before publishing,** run `make check` and `make check-descriptions`, and run `final-review` in a fresh session
   over the change.
