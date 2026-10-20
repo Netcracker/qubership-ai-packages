@@ -1,0 +1,17 @@
+JDK-8391022 added the missing `ValueObjectMethods` initialization before the upcall from `JVM_IHashCode`. An automated post-integration audit of that change confirmed the fix and flagged one more upcall without it. `JNIHandles::is_same_object` upcalls `ValueObjectMethods.isSubstitutable` through `JavaCalls::call`, with the method from `Universe::is_substitutable_method()`, the way `InterpreterRuntime::is_substitutable` does. It skips the `method_holder()->initialize(...)` call that `InterpreterRuntime::is_substitutable` makes first, and `JavaCalls::call` runs the pre-resolved method without initializing its holder class. Nobody has reported `is_same_object` failing, and what a JNI caller would see if it ran first has not been worked out.
+
+Instead of adding another initialization call, this change initializes `ValueObjectMethods` at startup. When Valhalla preview is enabled, `Threads::initialize_java_lang_classes` initializes it right after `UnsafeConstants`, before `initPhase1()`. With the class initialized at startup, the `initialize` calls in `InterpreterRuntime::is_substitutable` and `JVM_IHashCode` are redundant and removed. `Runtime1::substitutability_check` used `JavaCalls::call_static`, which initialized the class as a side effect of resolving the method. It now calls through `Universe::is_substitutable_method()`, like the other sites. `Universe::is_substitutable_method()` and `Universe::value_object_hash_code_method()` assert that the class is initialized, so an early use fails in debug builds.
+
+Initializing right after `initPhase1()` was the first proposal. It left Java code that runs earlier free to compare value objects as more of the JDK adopts value classes. A reviewer answered that lazy initialization before `initPhase1()` has the same bootstrapping problem either way, and that eager initialization with the asserts makes an early use fail reliably. That exposes future bootstrapping bugs instead of hiding them. Eager initialization was blocked by the static initializer, which read `value.bsm.debug` to set `VERBOSE`. System properties are not set up before `initPhase1()`, so the initializer threw `NullPointerException`. `VERBOSE` is now the constant `false`. A reviewer asked whether to remove it. It stays, so debug output is turned on by changing one line rather than adding the logging code back. Once `VERBOSE` stops reading a property, `jdk.internal.misc.Unsafe` is the only prerequisite of `ValueObjectMethods`. With preview enabled, `Unsafe` is now initialized before `initPhase1()`. Before this change it was initialized during `initPhase1()`, as a dependency of `LazyConstantImpl`.
+
+User-visible changes:
+- Setting the system property `value.bsm.debug` no longer has any effect. Debug output is enabled by changing `VERBOSE` in `ValueObjectMethods.java` and rebuilding.
+- In debug builds, a value object comparison or hash code that runs before `ValueObjectMethods` is initialized fails an assertion with the message `value object comparison occurring too early` or `value object hashcode occurring too early`.
+
+Not changed:
+- Without preview, the startup sequence is unchanged.
+- `jniHandles.cpp` is not changed. With the class initialized at startup, `is_same_object` needs no call of its own.
+
+No test is new: the new asserts check every upcall in debug builds. All Valhalla tests were run locally, tiers 1 to 3, and the `--enable-preview` subset of tier 7.
+
+- [x] I confirm that I make this contribution in accordance with the [OpenJDK Interim AI Policy](https://openjdk.org/legal/ai).
