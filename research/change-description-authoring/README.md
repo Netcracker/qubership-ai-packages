@@ -46,6 +46,7 @@ phase2_prompt.md, phase2_result.md     deep evaluation, contradictions, transfer
 phase3_prompt.md, phase3_result.md     synthesis: candidate rule set with sources, and a test on real changes
 phase4_merge_model.md                  addendum: rebase and merge, merge commits, the first-parent classifier
 check-classifier-target-ref.sh         runs the section 4 classifier against branch names that carry shell syntax
+cases/                                 regression cases: a prompt, the checks, and each model's result
 ```
 
 The phase prompts use one H1 and H2 sections; the result files are pasted unedited and are excluded from markdownlint
@@ -81,3 +82,6 @@ skill, which lives in the APM package
 [`change-description-authoring`](../../agent-packages/change-description-authoring/) and is kept canonical there, not
 duplicated here; `phase4_merge_model.md` extends section 4 of the synthesis and carries its own sources. The prose of
 the synthesis runs to about 4,700 words, plus tables.
+
+The regression cases under `cases/` were added on 2026-10-20 with the rule that a break leads the pull request
+description: `pgjdbc-4367-breaks` tests the rule, and `pgjdbc-4392-no-break` is its negative control.

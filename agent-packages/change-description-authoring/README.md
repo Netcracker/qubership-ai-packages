@@ -20,6 +20,9 @@ the question it answers.
   "user-visible changes" are present only when the change alters something a caller observes, and
   list each outcome on its own line, with the exact text and its error code or exception class where
   the outcome emits them.
+- Where a change breaks code that works on the released version: the description opens with the
+  breaks unless the next release from the target branch is a major, read from the branch's version
+  file, milestone, or name, and the commit body keeps them first in its outcome slot.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the shortest chain that justifies that decision, the level of detail each artifact
   owns, and the verification section that names what the tests establish rather than transcribing

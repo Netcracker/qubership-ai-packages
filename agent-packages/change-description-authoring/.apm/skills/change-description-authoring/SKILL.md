@@ -83,9 +83,10 @@ Five slots, in this order; the fourth is conditional. Verification is not one of
 | 4 | **Outcome** | R3, R4 | For each outcome the change adds or alters that a caller can observe (a test's own assertion message is not one): what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them, one line each under the label `User-visible:`; a deliberate non-change a reader would expect, one line under `Not changed:` | The change alters nothing a caller observes and keeps nothing a reader would expect it to change |
 | 5 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
 
-Slot 1 opens the body. Convince the reader that there is a problem worth fixing before saying what
-you did about it. The cheapest shape is "Previously, when X happened, this caused Y, which resulted
-in Z."
+Slot 1 opens the body. A description that §4 rule 5 copies into the body and that leads with its
+breaks (§2, pull request description) puts the problem right after them. Convince the reader that
+there is a problem worth fixing before saying what you did about it. The cheapest shape is
+"Previously, when X happened, this caused Y, which resulted in Z."
 
 Slot 2 carries what a person outside the code observes: the exception, the log line, the wrong
 result, the hang, the regression in latency, and the circumstances that provoke it. Where reading
@@ -194,7 +195,7 @@ Six slots, in order; the last three are conditional.
 | --- | --- | --- | --- | --- |
 | 1 | **Why** | R1; R2 and R3 where the description becomes the commit body | The problem, the symptom, the condition that reaches it | *R1 asks: is there a problem worth fixing?* |
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
-| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
+| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it; ahead of slot 1 unless the next release is a major (below) | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
 | 4 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
 | 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
 | 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
@@ -229,6 +230,34 @@ many commits produce it, so eleven commits yield the eight or ten outcomes they 
 lines. A line is carried over as written, not summarized; a commit whose outcome lines are missing
 is the place to fix, not the description. A change that alters nothing a caller observes has no
 slot 3 and does not write an empty one. A fact stated in slot 3 is not restated in slot 2.
+
+**A break leads the description unless the next release from the target branch is a major.** A
+break changes what code that works on the released version gets: a call that succeeded and now
+fails, a different return value or result shape (`getUpdateCount()` returning `-1` where it returned
+a count), a removed or renamed option, a changed default, a changed error code for a failure a
+caller may catch. A failure the change extends to inputs that worked before is a break for those
+inputs, even though other inputs failed the same way already; it goes with the breaks, not in the
+Scope slot. Whether the old behavior was right does not decide it, and a failure that now succeeds
+is a fix, not a break.
+
+In a release that is not a major, the reviewer's first decision is whether the change may ship in it
+at all. A Why and a What read before that decision are wasted on a reviewer who decides no. Read the
+next release from the target branch: its version file (`gradle.properties`, `pom.xml`,
+`package.json`, `Cargo.toml`), its milestone, or the name of a maintenance branch (`release/1.4`,
+`REL_17_STABLE`). Where a release tool bumps the major on a `BREAKING CHANGE:` trailer or a `!` (§5),
+the trailer decides, and it is written whatever the description does. Where nothing says which
+release it is, the breaks lead: a break read first in a major release costs a paragraph, and a break
+missed in a patch release ships.
+
+The description then opens with slot 3's break lines, under a `Breaking changes` heading where the
+description has headings, after at most a short paragraph that says which code breaks. Slot 3 keeps
+the other outcomes, and the Why slot follows the breaks. Where the next release is a major, the
+breaks stay first in slot 3. A change with no break has neither the lead nor an empty heading (§7).
+
+The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
+slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
+rule 5 makes the description the commit body, the lead stays, because the reviewer reads the
+description before it becomes a body; that body opens with its breaks and then its problem.
 
 *Before:*
 
@@ -799,7 +828,8 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 
 - Reader: for every sentence, which of R1 to R5 asks the question it answers (§1)?
 - Subject: does it name the change, and would it identify the commit in `git log --oneline` (§2)?
-- Problem: does the body open with what was wrong, before the fix (§2)?
+- Problem: does the body open with what was wrong, before the fix, or right after the breaks where
+  §4 rule 5 copies a description that leads with them (§2)?
 - Symptom: is the diagnostic quoted as a literal, with the trigger condition (§2, §3)? Is every
   symptom quoted from an observation, or traced in the code and marked as derived? For a defect found
   by an audit or a code reading, does the sentence end at what found it? For a defect with no
@@ -816,6 +846,10 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   commit that adds one carry it under `User-visible:` (§2)? Does a line carry the exact text and its
   error code or exception class only where the outcome emits them? Is a deliberate non-change a
   reader would expect stated under `Not changed:`?
+- Breaks: where the change breaks code that works on the released version and the next release
+  from the target branch is not a major, or is unknown, does the description open with the break
+  lines, and does slot 3 keep only the other outcomes (§2)? Where nothing breaks, is there no lead
+  and no empty heading?
 - Tests named: is every test class the description names there for one of the four claims (fails without
   the change, guards a future change, needs a precondition, removed or narrowed), and is no list of tests
   characterized by one clause (§2)?
