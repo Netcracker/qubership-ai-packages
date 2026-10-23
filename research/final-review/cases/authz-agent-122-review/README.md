@@ -52,11 +52,24 @@ Grade each by reading `result.md`; the grep only finds the candidates.
    `grep -niE -- '--logs' result.md`
 3. **The fixed timeout.** Pass: a finding that the 15-minute `helm test` timeout does not follow
    `suite.activeDeadlineSeconds`. `grep -niE '15m|timeout|activeDeadline' result.md`
+4. **`E2E_HELM_ARGS` reaches the stand.** Pass: a substantive finding that `E2E_HELM_ARGS` now reaches the test-stand
+   install, which reads `TAG` (or `IMAGE_PULL_POLICY`) as the product charts do, so a value meant for them makes the
+   stand ask for images nothing builds. Partial: the report names the shared keys and files nothing. Fail: neither, or
+   a report that settles the question on the documented `IMAGE_PULL_POLICY` example.
+   `grep -niE 'E2E_HELM_ARGS|TAG' result.md`
+5. **A hunk no commit message claims.** Pass: a substantive finding that the SVT Compose stack moves Keycloak from 26.0
+   to 26.3.5 and no commit message says so. Partial: the same, filed as taste. `grep -niE 'svt|26\.3' result.md`
+6. **A count that the change made stale.** Pass: a substantive finding on `README.md` "CI builds both" or
+   `.github/docs-for-publication-task.md` "the two-entry array", now that `.github/docker-dev-config.json` lists five
+   components. `grep -niE 'builds both|two-entry' result.md`
+
+Checks 4 to 6 come from the reviewer's general comment on the same commit, which reported six more defects; they are
+the defects the questions of `research/final-review/change-reach.md` were written from.
 
 ## Skill parts
 
-- `final-review`: `SKILL.md` §2 items *Claimed cases covered* and *Boundaries, partitions, and the negative control*,
-  §2a
+- `final-review`: `SKILL.md` §2 items *Claimed cases covered*, *Boundaries, partitions, and the negative control*, and
+  *Siblings of the change*, §2a
 - `test-authoring`: `SKILL.md` §3, §4, §11
 - `english-developer-style`: loaded, not checked
 
@@ -66,7 +79,7 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 | --- | --- |
 | `repo`, `base`, `head` | The repository, `58316ca6ca5d0d91932873de01fb40397d5dd4df` (the parent of the pull request's first commit), and `17b17fcf373d8d3716aa45bd7a66b5fa2d4aba9c` (the commit the human reviewed). |
 | `prompt.md` | The task, with `<skills>` and `<base>` replaced by `run-review-case.sh`. |
-| `<model>/<label>/…` | The outputs of one run; `run-review-case.sh` lists them. `main-<n>` ran the skills at `0706dc5` (before the rule on inherited state), `pr180-<n>` at `1f1f5ec` (with it), `doccmd-<n>` and `trim-<n>` with the rule on documented commands as well, and `draft1-<n>` and `draft2-<n>` (Haiku) with two earlier wordings of it. |
+| `<model>/<label>/…` | The outputs of one run; `run-review-case.sh` lists them. `main-<n>` ran the skills at `0706dc5` (before the rule on inherited state), `pr180-<n>` at `1f1f5ec` (with it), `doccmd-<n>` and `trim-<n>` with the rule on documented commands as well, and `draft1-<n>` and `draft2-<n>` (Haiku) with two earlier wordings of it. `reach-<n>` ran with the rules on documented commands and coupled limits and the questions of `change-reach.md`: `reach-1` and `reach-2` with the first wording of the question on values users already pass, `reach-3` and `reach-4` with the committed one, and `reach-5` and `reach-6` with it after two sentences were cut. `reach-1` to `reach-4` had an earlier wording of the paragraph on parallel paths, which no check of this case grades. |
 
 ## How to run
 
@@ -190,3 +203,34 @@ not run either.
 Both `cut` runs list the chain and judge it correct because the inner limits fire first at the defaults; neither
 considers a raised deadline. Both `committed` runs file the cap as substantive and say that raising
 `suite.activeDeadlineSeconds` past 900 has no effect.
+
+## Results of the `reach` arm, 2026-10-23
+
+Checks 4 to 6, Opus. The control is every earlier Opus run in this directory (`main`, `pr180`, `coupled`, `final`,
+`doccmd`, `trim`, 16 runs), graded on the same checks; none of their skills asked these questions.
+
+| Arm | Check 1 | Check 4 | Check 5 | Check 6 | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Control, 16 runs | 14 pass | 0 | 3 pass, 1 partial | 0 | 1.88 to 2.90 |
+| `reach-1`, `reach-2` (first wording) | pass, pass | fail, fail | pass, pass | pass, pass | 3.77, 2.41 |
+| `reach-3`, `reach-4` (committed wording of the graded paragraphs, before the trim) | pass, pass | pass, pass | pass, pass | pass, pass | 2.29, 2.07 |
+| `reach-5`, `reach-6` (committed) | pass, pass | pass, pass | pass, pass | pass, pass | 3.02, 2.14 |
+
+- **Check 4.** `reach-1` and `reach-2` ask the question and settle it on the documented example, `--set
+  IMAGE_PULL_POLICY=Never`, which means the same to both charts. The committed wording asks for the names the new
+  consumer shares with the old ones; both runs list `TAG`, say that `--set TAG=x` makes the stand ask for
+  `local/pip-stub:x`, which `e2e-images` does not build, and ask for a setting of the stand's own, the fix the author
+  made.
+- **Check 5.** The control files the SVT bump as substantive in `coupled-2`, `doccmd-2`, and `doccmd-3`, and as taste in
+  `main-2`; `main-1` mentions it and calls it correct. Every `reach` run files it as substantive, with the request to
+  claim it or split it out.
+- **Check 6.** No control run names the stale count. `reach-2` and `reach-3` name `README.md` and not the other file,
+  which the check's pass allows.
+- **The trim.** `reach-5` and `reach-6` ran after two sentences that told the reviewer nothing to do were cut from the
+  paragraphs on values users already pass and on parallel paths. Both runs pass every check, and both settle check 4 on
+  `TAG`, not on the documented `IMAGE_PULL_POLICY`. A first `reach-5` session ended on an addendum to its report
+  instead of the report and was run again.
+- **Checks 2 and 3** are not regraded here; the questions of `change-reach.md` do not address them, and every `reach`
+  run reports the coupled limits of check 3.
+- **Cost.** The `reach` runs cost 2.07 to 3.77; `reach-1` (3.77, 58 turns) is the dearest run in this directory, and the
+  other five are within the control's range or just above it.
