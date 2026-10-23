@@ -144,3 +144,49 @@ control is the `pr180` arm above. Its skill trees match apart from that rule, an
   the same without the rule. It is the same class, in the same pull request.
 - **Cost.** Haiku takes 53 and 42 turns in `doccmd` against 33 and 32 in `pr180`, and Opus 33 to 50 against 33 and
   37. The `doccmd` runs also loaded `english-developer-style`, so the extra turns are not the rule's alone.
+
+## Results, 2026-10-23: the rule on two limits on one quantity
+
+Check 3 has its own rule now (`research/final-review/coupled-limits.md`). The control arm is `pr180-<n>` above: the
+skills at `1f1f5ec` are the skills of `1b34f27`, the commit the rule's branch starts from. Three texts of the rule ran,
+all with `english-developer-style`: `coupled-1` and `coupled-2` the first draft; `coupled-3` and `coupled-4` a second,
+which adds that a limit on another stretch of work is not one of the pair; `final-1` and `final-2` the committed text,
+which says how to tell such a limit (its expiry ends the same work, counted from the same start), what to request for a
+limit outside the repository, and adds the rule to test-authoring §10 and to the default-order case of §4.
+
+| Model | Arm | Check 1 | Check 3 | Cost, USD | Turns | Minutes |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus | pr180 | pass, pass | fail, fail | 2.22, 2.31 | 33, 37 | 5.0, 6.0 |
+| Opus | first draft | pass, pass | pass, pass | 2.21, 2.08 | 35, 31 | 5.3, 6.7 |
+| Opus | second draft | pass, pass | pass, pass | 1.88, 1.93 | 30, 33 | 4.6, 5.1 |
+| Opus | committed | pass, pass | pass, pass | 2.14, 2.85 | 32, 44 | 5.2, 6.0 |
+| Haiku | pr180 | pass, pass | fail, fail | 0.39, 0.32 | 33, 32 | 6.3, 4.8 |
+| Haiku | first draft | pass, pass | pass, weak | 0.29, 0.46 | 27, 32 | 4.2, 5.9 |
+| Haiku | second draft | pass, pass | fail, weak | 0.41, 0.43 | 34, 31 | 5.3, 6.1 |
+| Haiku | committed | pass, pass | weak, pass | 0.27, 0.52 | 23, 42 | 4.0, 6.6 |
+
+- **Check 3, Opus.** Every run with the rule lists the chain: `-test.timeout 600s` in `suite.args`,
+  `suite.activeDeadlineSeconds: 900`, and `helm test --timeout 15m` fixed in the Makefile and the chart README. Each
+  says that raising the deadline past 900 s has no effect, or that helm's timeout hides the Job's `DeadlineExceeded`,
+  and asks to derive the helm timeout from the deadline.
+- **Check 3, Haiku.** A pass files the cap as substantive (`coupled-1`, `final-2`). A weak pass says only that the
+  deadline and the timeout are equal, so the Job's deadline does not fire first, and asks to derive one from the other,
+  without saying that the deadline cannot be raised. `coupled-3` lists the pair and files it as taste, judging the order
+  correct because `-test.timeout` fires first: a fail.
+- **Check 1** holds in all twelve runs with the rule: it did not crowd out the inherited-state finding.
+
+### The shortened text, Haiku only
+
+The rule was then shortened to cut repeats. `trimmed-1` and `trimmed-2` ran a cut that also dropped the sentence that
+treats a documented setting just past another limit as a boundary; `trimmed-3` and `trimmed-4` ran the committed text,
+which puts it back as a step: raise each documented setting past each other limit, not only at its default. Opus did
+not run either.
+
+| Arm | Check 1 | Check 3 | Cost, USD |
+| --- | --- | --- | --- |
+| cut | pass, pass | fail, fail | 0.68, 0.61 |
+| committed | pass, pass | pass, pass | 0.36, 0.42 |
+
+Both `cut` runs list the chain and judge it correct because the inner limits fire first at the defaults; neither
+considers a raised deadline. Both `committed` runs file the cap as substantive and say that raising
+`suite.activeDeadlineSeconds` past 900 has no effect.
