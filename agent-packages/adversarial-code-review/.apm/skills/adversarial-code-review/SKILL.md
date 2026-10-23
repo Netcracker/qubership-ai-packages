@@ -111,6 +111,13 @@ parameterization and context-appropriate output encoding where relevant.
 Check timeouts, retries, recovery, failure isolation, resource cleanup, actionable logs and metrics, and safe operator
 controls.
 
+For each limit the change sets or exposes, find the other limits on the same work in the caller or the wrapper, in what
+the code starts, and in the environment; a limit on one operation inside that work, or on work that only overlaps it,
+does not count, and an enclosing limit that starts earlier does, with the time spent before this work starts taken from
+its budget. Raise each documented setting just past each other limit, not only at its default, and flag one that a limit
+fixed elsewhere caps, and an inner limit that does not fire first at the defaults. For a limit in a program outside the
+repository, ask for the line that sets it or a run that reaches it.
+
 ### Performance, capacity, and cost
 
 Look for N+1 access, unbounded loops or fetches, missing pagination, synchronous or blocking work on concurrent paths,

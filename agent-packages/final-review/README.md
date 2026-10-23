@@ -12,10 +12,11 @@ demands an answer to every item can, and the form is short enough that the items
 2. Every case the task statement, the commit message, and the test class comments claim, covered by a named test,
    including the test that separates the chosen design from its alternative, and every command the change tells
    someone to run, matched to a script or CI job that runs that exact form.
-3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and,
-   where the change reads or replaces state an earlier version left behind, a test or run that starts from it.
-   Then the level: a test that runs in every job, beside the existing tests of the unit, that skips with a reason
-   where the test policy treats a prerequisite as optional and fails where CI promises it.
+3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and, where
+   the change reads or replaces state an earlier version left behind, a test or run that starts from it. Where the
+   change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one
+   fires first. Then the level: a test that runs in every job, beside the existing tests of the unit, that skips with a
+   reason where the test policy treats a prerequisite as optional and fails where CI promises it.
 4. Names and comments that refer by position or ordinal where a content name exists.
 5. Assertions that hide the operands, messages that repeat the name, case ids that are indexes.
 6. Whether the evidence that the tests can fail is stated.
