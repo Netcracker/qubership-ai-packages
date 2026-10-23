@@ -76,6 +76,11 @@ supports. That a flag exists does not settle its outcome: compare what its help 
 on with what this configuration has. The finding is substantive, and the request is a run of that form on that
 configuration and those versions, or the documented form replaced by the one that runs.
 
+Then read the claims the other way: every hunk of the diff belongs to a sentence of the commit message or the
+description. A hunk no sentence claims is a finding, however small: a version bump carried over from another branch, a
+dependency moved in a file the change otherwise does not touch. The request is a sentence that claims it, with the run
+that checks it, or the hunk moved to a change of its own.
+
 ### Item 3: boundaries, partitions, and the negative control
 
 For every input the test set varies: the boundary values and the value just outside them; each invalid partition
@@ -85,6 +90,13 @@ suite that tests only the failing corner is a finding, named as such. Where the 
 earlier version left behind (a configuration file, keys, a persisted format, a cache, deployed objects), ask which
 pre-existing state the change will meet. A change whose every test and run starts from a fresh install is a finding;
 the request is a test or a run that starts from that state, or the documented remedy, run on that state.
+
+The values users already pass are such state too. Where an existing setting (a pass-through variable, a flag, an
+environment variable) now reaches a consumer it did not reach before, check the values users pass through it, not only
+the documented example: list the names the new consumer reads that the old consumers also read, such as a values key
+both charts define or a variable both programs read, and for each say what a value meant for the old consumers does to
+the new one. A value that means something else there, or makes it ask for something nothing builds or provides, is a
+finding. The request is a setting of the new consumer's own, or a run with that value.
 
 Where the change sets, exposes, or moves a limit, list the other limits on the same work: in whatever starts or wraps
 this code, in what this code starts, and in the environment, each with the place that sets it (a documented setting, a
@@ -143,6 +155,19 @@ description, never to leave it unsaid. Where a helper has more call sites than y
 and read the ones the change's own condition can reach: the callers that pass the value, the state, or the argument
 shape the defect needed. Report the count and the criterion, so that the reader knows what was not read.
 
+A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
+build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
+matrix, a schema. Search for two existing members by name (the one, where the set had one), and read every file that
+names both; a list that names the others and not the new member is a finding. Then search the prose for the set's old
+size, in digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a
+finding too.
+
+The sites of a fix include the other paths that show the same symptom, which `git grep` on a helper does not find: a
+twin target, the other major version of a tool, the other operating system. Then read every remedy, troubleshooting
+row, and step the change writes: list the paths its symptom or its cause names, and check that its action names a step
+for each. A row whose symptom names two targets and whose action names one is a finding. A fix made in answer to a
+review comment is where this is missed: the comment names one path, and the fix covers that one.
+
 ## 2a. A change with no code
 
 A skill, a documentation page, a configuration, or a research directory has no members, no tests, and nothing for
@@ -160,14 +185,16 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
   README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
-  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*.
+  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*. Every hunk belongs to a claim of
+  the description, as in the same item.
 - **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the change
   claims; the negative control is the statement of what does not apply, and the control arm of any trial the change
   carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the finding
   names them. For a configuration, a deployment definition, or a package installed over an earlier version, the state
   that version left on the target is one more partition. For a configuration or a script, the paragraph on limits in
   item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
-  file or in the program it starts.
+  file or in the program it starts. For a setting that now reaches another consumer, the values users already pass are
+  one more partition.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline.
@@ -181,7 +208,9 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   the change's own worked example is a finding.
 - **Siblings of the change.** The siblings are the places that enumerate or route to the artifact: an index, a
   marketplace entry, a sibling package's cross-reference, an umbrella that pins it. A scope widened in the artifact's
-  body and not on the surface that decides whether it loads is the classic miss.
+  body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
+  the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
+  still counts the set as before.
 
 ## 3. Sorting the findings
 
