@@ -220,6 +220,13 @@ form.
 - **Each boundary and its neighbors.** For an ordered input, test the minimum, the maximum, and the value just outside
   each (two-value analysis); add the value just inside where a wrong operator is plausible, since `x <= 10` written as
   `x == 10` passes 10 and 11 and fails only on 9.
+- **A limit set elsewhere on the same work.** Where the change sets or moves a limit and another layer bounds the same
+  work (the caller or the wrapper, what the code starts, the environment), two cases are owed: the changed limit set
+  just past the other, asserting which one fires and what the user sees, and the defaults, asserting that the inner
+  limit fires first. A limit on one operation inside the work, or on work that only overlaps it, is not such a layer.
+  For a duration, control the clock (§8) or assert the relation between the configured values where the code reads them,
+  rather than waiting the duration out. Where the first case cannot pass because the other limit is fixed outside the
+  documented configuration, the defect is in the code, not in the test.
 - **A decision table when the outcome depends on a combination of conditions.** One case per feasible column, so the
   happy column is not the only one tested.
 - **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid transition
@@ -520,7 +527,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -542,6 +549,8 @@ Run this over a test you wrote or one you are reviewing.
   project does not automate the transition, is the documented remedy shown run on that state (§3, §4)?
 - Is there one case per partition, as a test of its own or in a form §7 allows, each invalid partition alone, and a
   case at each boundary and its neighbors (§4)?
+- Where the change sets or moves a limit, is there a case just past each other limit on the same work, and one showing
+  that the inner limit fires first at the defaults (§4)?
 - Where another argument can influence the changed behavior, is it varied, one case per partition the behavior
   distinguishes, and would each fail with the changed behavior wrong for that value alone (§4)?
 - Does the change add a member to an open set, and does a test enumerate the set from the code (§4)?

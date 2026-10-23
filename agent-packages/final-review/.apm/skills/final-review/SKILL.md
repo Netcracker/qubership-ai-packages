@@ -86,6 +86,17 @@ earlier version left behind (a configuration file, keys, a persisted format, a c
 pre-existing state the change will meet. A change whose every test and run starts from a fresh install is a finding;
 the request is a test or a run that starts from that state, or the documented remedy, run on that state.
 
+Where the change sets, exposes, or moves a limit, list the other limits on the same work: in whatever starts or wraps
+this code, in what this code starts, and in the environment, each with the place that sets it (a documented setting, a
+value fixed in a script or a wrapper, a default, another program's code). A limit counts where the work it bounds
+contains this work or lies inside it as a whole; one on a single operation inside the work, after which the work goes
+on, or on work that only overlaps it, does not. An enclosing limit that starts earlier still counts, with the time spent
+before this work starts taken from its budget. Then raise each documented setting just past each of the other limits,
+not only at its default: where a limit fixed elsewhere fires first, so that the raised value has no effect, that is a
+finding. So is an inner limit that does not fire first at the defaults. The request is to derive one limit from the
+other. Where the other limit is in a program the repository does not contain, the request is the line that sets it or a
+run that reaches it.
+
 ### Item 3a: level, placement, and the environment
 
 Is there a test at the smallest level that can observe the changed behavior through the unit's interface? Where the
@@ -150,11 +161,13 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
   README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
   to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*.
-- **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the
-  change claims; the negative control is the statement of what does not apply, and the control arm of any trial the
-  change carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the
-  finding names them. For a configuration, a deployment definition, or a package installed over an earlier version,
-  the state that version left on the target is one more partition.
+- **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the change
+  claims; the negative control is the statement of what does not apply, and the control arm of any trial the change
+  carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the finding
+  names them. For a configuration, a deployment definition, or a package installed over an earlier version, the state
+  that version left on the target is one more partition. For a configuration or a script, the paragraph on limits in
+  item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
+  file or in the program it starts.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline.
