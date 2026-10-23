@@ -169,6 +169,16 @@ asserted is the behavior that moved, or kept, because it caught a defect in the 
 test whose expectation moved and the behavior that moved with it. A test edited until the suite is green, with no such
 sentence, is §5 arriving through the diff of the tests.
 
+**A change to how the system reads or replaces what an earlier version left behind owes a test or a run that starts
+from that state, not only from a fresh install.** The state is whatever the earlier version created and the new one
+meets: a configuration file, keys or certificates, a persisted format or schema, a cache, a lock file, Kubernetes
+objects that an older chart or `kubectl apply` created. Name what the earlier version leaves behind, where the test
+gets a faithful copy of it, and the outcome the change promises: it keeps working, it migrates, or it fails with a
+message that names the remedy. A faithful copy is a fixture recorded from the earlier version, or the earlier version
+installed first and the change applied over it. A fixture that the new code writes and then reads back is not one,
+because it tests the format the change agreed with itself. Where the project decides not to automate a one-time
+transition, the change owes the documented remedy, verified by running it on the inherited state.
+
 The rows below are examples, not a list to match a change against. Write the row a change needs from the rule: name
 what the changed behavior is observable through, then ask what a larger test would establish that the small one
 cannot.
@@ -180,6 +190,7 @@ cannot.
 | A change to an error or failure path | Small, on the input that triggers it, asserting the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
 | A change to what crosses a process boundary: bytes on a wire, a schema, a message format, a serialized value | Small, feeding recorded or hand-built bytes or records to the reader with no socket or file | Medium, against the real peer or its wire-level fake, because the contract crossed a process boundary | The expected bytes are literals or captures, not produced by the writer under test; the medium test exists or is named |
 | A change in a configuration default | Small, asserting the behavior the code shows when nothing is set, through the accessor the rest of the code reads | Medium or large, where the default is read at deployment and the change altered the deployment path | The test asserts the behavior that depends on the default, not that the constant equals itself |
+| A change to how state an earlier version created is read or replaced: a file, a key, a schema, a cache, deployed objects | Where code reads the state: small, feeding the reader a copy recorded from the earlier version | Medium or large, installing the earlier version first and the change over it, where the replacement happens at deployment | The copy comes from the earlier version, not from the code under test; the promised outcome is asserted: keeps working, migrates, or fails naming the remedy |
 
 Three questions tell a chosen level from a defaulted one: does the pull request name the level; does the small test
 mock the very boundary the change altered, which establishes nothing about that boundary; does an existing larger
@@ -213,6 +224,9 @@ form.
   happy column is not the only one tested.
 - **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid transition
   as a case of its own.
+- **The state the system starts from, where the change reads or replaces what an earlier version left behind.** A
+  fresh install and the inherited state are two partitions of that input, and a suite whose every run starts clean
+  tests one of them. §3 says what the inherited-state case carries.
 - **A property-based test for an invariant over a large domain**, where enumeration would list examples forever. It
   costs the T1 reader a reproducer. A failure carries what replays it: the seed or the reproduce blob the framework
   prints, or a seed the test pins where the framework prints none. Each shrunk counterexample the tool ever found
@@ -506,7 +520,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -523,6 +537,9 @@ Run this over a test you wrote or one you are reviewing.
 - Is the level named, and is it the smallest at which the behavior is observable through the unit's interface (§3)?
 - Is every existing test whose expectation moved named, with the behavior that moved with it (§3)?
 - Does a small test mock the boundary the change altered (§3)?
+- Where the change reads or replaces state an earlier version left behind, does a test or a run start from a copy
+  taken from that version, with the outcome named: keeps working, migrates, or fails naming the remedy? Where the
+  project does not automate the transition, is the documented remedy shown run on that state (§3, §4)?
 - Is there one case per partition, as a test of its own or in a form §7 allows, each invalid partition alone, and a
   case at each boundary and its neighbors (§4)?
 - Where another argument can influence the changed behavior, is it varied, one case per partition the behavior

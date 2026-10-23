@@ -89,6 +89,10 @@ Check backward and forward compatibility across old and new callers, stored data
   valid. New fields and parameters must be optional or have compatibility-preserving defaults.
 - **Dependencies:** Do not make new external services or runtime integrations mandatory. Keep them disabled by default
   and require explicit opt-in.
+- **Inherited state:** Ask which pre-existing state the change will meet: configuration files, keys or certificates,
+  persisted data or schemas, caches, lock files, and objects an earlier chart or `kubectl apply` created. Check that a
+  test or a run starts from that state, not only from a fresh install, or that the change documents the remedy and
+  shows it run on that state.
 - **Exceptions and evidence:** Evaluate technology replacements case by case. When exact compatibility is impractical,
   require an explicit migration path. Anchor findings in repository evidence; missing history is a context gap, not a
   defect.
