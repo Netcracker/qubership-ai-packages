@@ -71,7 +71,10 @@ the test that would fail if the design were replaced by the alternative is the o
 For every input the test set varies: the boundary values and the value just outside them; each invalid partition
 tested alone; the empty value where the type admits one. For every setting or mode that triggers the defect: the
 other value of that setting, or the other mode, present as the control that stays green on the base commit. A
-suite that tests only the failing corner is a finding, named as such.
+suite that tests only the failing corner is a finding, named as such. Where the change reads or replaces something an
+earlier version left behind (a configuration file, keys, a persisted format, a cache, deployed objects), ask which
+pre-existing state the change will meet. A change whose every test and run starts from a fresh install is a finding;
+the request is a test or a run that starts from that state, or the documented remedy, run on that state.
 
 ### Item 3a: level, placement, and the environment
 
@@ -139,7 +142,8 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
 - **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the
   change claims; the negative control is the statement of what does not apply, and the control arm of any trial the
   change carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the
-  finding names them.
+  finding names them. For a configuration, a deployment definition, or a package installed over an earlier version,
+  the state that version left on the target is one more partition.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline.
