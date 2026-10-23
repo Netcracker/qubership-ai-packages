@@ -1,0 +1,4 @@
+cost_usd: 0.45
+turns: 9
+duration_s: 90
+claude-opus-5-5: cost_usd 0.45, input 18, output 7946, cache_read 356919, cache_write 27231

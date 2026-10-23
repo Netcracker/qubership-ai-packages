@@ -1,0 +1,4 @@
+cost_usd: 0.03
+turns: 14
+duration_s: 130
+claude-haiku-5-5: cost_usd 0.03, input 26, output 21942, cache_read 601326, cache_write 54753
