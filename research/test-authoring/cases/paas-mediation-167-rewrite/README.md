@@ -47,6 +47,11 @@ act per call, testify on `go test`, and cases that expect the same outcome.
   shape breaks §7 (§9). The neighbors build the client inline and use `require.New(t)`.
 - **The stack line is proposed** (§0). The repository has no `AGENTS.md` or `CLAUDE.md`.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §4, §5, §6, §7, §9
+- `references/go/testing.md`, `references/go/testify.md`, `references/mutation-tools.md`
+
 ## Files
 
 | File | What it is |

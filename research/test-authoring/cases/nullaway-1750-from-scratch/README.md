@@ -36,6 +36,11 @@ Before the fix, `SpringHandler` treated a Spring `@Value` field as possibly unin
   a class fails.
 - **The stack line** (§0). NullAway's `AGENTS.md` has none, so the session proposes one and edits no instructions file.
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §3, §4, §7, §9
+- `references/java/junit4.md`
+
 ## Files
 
 | File | What it is |

@@ -52,10 +52,11 @@ The test that follows from this, applied to every sentence: **name the reader an
 answers.** A sentence that answers none of the questions above belongs in another artifact, or
 nowhere.
 
-**The permanent record is the commit, not the pull request.** In a repository that merges with merge
-commits, the description never reaches `git log`; in a repository that squashes with the default
-setting, the body is the list of branch commit messages, not the description. Write the commit
-message as if the pull request did not exist, and let the description repeat it.
+**The permanent record is the commit, not the pull request.** In a repository that rebases, or
+merges with merge commits that carry only the title, the description never reaches `git log`; in a
+repository that squashes with the default setting, the body of a multi-commit squash is the list of
+branch commit messages, not the description. Write the commit message as if the pull request did
+not exist, and let the description repeat it.
 
 ## 2. The slots
 
@@ -72,28 +73,62 @@ length limit are house style (§6).
 
 ### Commit body
 
-Four slots, in this order. Verification is not one of them (§4).
+Five slots, in this order; the fourth is conditional. Verification is not one of them (§4).
 
 | # | Slot | Reader | Answers | Skip when |
 | --- | --- | --- | --- | --- |
 | 1 | **Problem** | R2, R1, R3 | What was wrong or missing, before any word about the fix? | Never |
-| 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no observable symptom, and the body says so in one clause |
+| 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no symptom by construction, and the body says so in one clause; for a defect an audit or a code reading found, the body names what found it |
 | 3 | **Change and approach** | R2, R1 | What was done; the constraint that forced it; the alternative a reader would propose and why not; the measured trade-off | The problem statement makes the approach obvious |
-| 4 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
+| 4 | **Outcome** | R3, R4 | For each outcome the change adds or alters that a caller can observe (a test's own assertion message is not one): what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them, one line each under the label `User-visible:`; a deliberate non-change a reader would expect, one line under `Not changed:` | The change alters nothing a caller observes and keeps nothing a reader would expect it to change |
+| 5 | **References** | R5, R2, R3, tools | Issue, report, discussion, introducing commit, backport range, as trailers (§5) | Nothing to reference |
 
-Slot 1 opens the body. Convince the reader that there is a problem worth fixing before saying what
-you did about it. The cheapest shape is "Previously, when X happened, this caused Y, which resulted
-in Z."
+Slot 1 opens the body. A description that §4 rule 5 copies into the body and that leads with its
+breaks (§2, pull request description) puts the problem right after them. Convince the reader that
+there is a problem worth fixing before saying what you did about it. The cheapest shape is
+"Previously, when X happened, this caused Y, which resulted in Z."
 
 Slot 2 carries what a person outside the code observes: the exception, the log line, the wrong
-result, the hang, the regression in latency, and the circumstances that provoke it. Where the defect
-has no symptom (a leak on an error path with nothing logged), say so; an empty slot looks like an
+result, the hang, the regression in latency, and the circumstances that provoke it. Where reading
+the code or an audit found the defect, name what found it and end the sentence there. *Before:* `An
+audit found this; it has not been seen to fail.` *After:* `An audit of the retry paths found this.` A
+predicted failure is not known, and neither is the absence of one. Where the defect has no symptom
+by construction (a leak on an error path with nothing logged), say so; an empty slot looks like an
 omission, a stated absence does not.
+
+A consequence derived from the code earns a sentence only after it is traced to the point where a
+caller sees it, through every mechanism on the way (a lazy initialization, a retry, a fallback), and
+is stated as derived, not observed (measured: two of two drafts that predicted a symptom from one
+missing call stopped one step short, and the failure they described cannot happen).
 
 Slot 3 justifies the way the change solves the problem: why the result with the change is better,
 and which alternative was considered and discarded. A rejected alternative earns its sentence only
 where a reader would propose it, and a mechanism or a measurement makes it checkable where a
 preference does not. A performance claim carries its number and its cost.
+
+Slot 4 is where the pull request's "User-visible changes" slot and the changelog entry take their
+outcomes from, so it is written to be lifted, not summarized. A caller is whoever uses what the
+change ships: the code that calls a library, the client of a service, the user of a command. The
+slot is a paragraph that opens with `User-visible:` and holds one line per outcome, followed by any
+`Not changed:` lines; a commit that only keeps an outcome has the `Not changed:` lines alone. Each
+line names what the caller observes and the condition under which they get it. An outcome that
+emits a diagnostic also carries the text as emitted and its identifier: the SQLState, the HTTP
+status, the exit code, or the exception class. A return value, a timing, a side effect, or a
+protocol exchange often has no such text, and its line gives the value or the behavior itself:
+
+```text
+User-visible:
+When every connection is in use, Pool.acquire() waits up to acquireTimeout instead of failing at once.
+```
+
+The symptom a fix removes is slot 2's and is not repeated here.
+
+A commit that deliberately leaves an outcome alone that a reader would expect it to change (a
+message type left unbounded, a SQLState kept where a sibling's changed) states that in one line
+under `Not changed:`. Both labels are plain text, not trailers, and sit after slot 3 and before the
+trailers. A fact in slot 4 is not also buried in slot 3's prose, where a later reader summarizing
+the body will drop it (measured: eleven drafts of one description dropped every SQLState that sat
+inside a slot 3 paragraph, and kept the ones the changelog listed on their own line).
 
 **The one-line why is not replaced by the issue link.** Links rot, trackers move, and a good share
 of
@@ -131,15 +166,18 @@ Backpatch-through: 14
 ```
 
 Slot 1 is the first paragraph, slot 2 the literal `TRAP:` line and the condition "from a backup
-without a signal file", slot 3 the fix and the rejected shortcut, slot 4 the trailers. R3 greps the
-`TRAP:` line; R5 reads `Backpatch-through:`; R2 gets the why without opening a tracker.
+without a signal file", slot 3 the fix and the rejected shortcut, slot 5 the trailers. Slot 4 is
+absent: the one outcome that changes is the assertion failure slot 2 quotes, which no longer
+happens. R3 greps the `TRAP:` line; R5 reads `Backpatch-through:`; R2 gets the why without opening a tracker.
 
 ### Pull request title
 
-One slot: **a searchable, accurate summary**, which a squash merge turns into the commit subject and
-a merge commit carries as its second line. Reader R1, then R2. Test: *R1, reading a list of thirty
-open pull requests, asks which one this is.* Accuracy beats brevity here, because the title is read
-in a list and searched; the commit subject's limit belongs to the subject.
+One slot: **a searchable, accurate summary**. A squash merge turns it into the commit subject,
+except under GitHub's default message for a single-commit pull request; a merge commit carries it
+as its subject or its first body line, as the setting decides; a rebase and merge leaves it on the
+platform (§4). Reader R1, then R2. Test: *R1, reading a list of thirty open pull requests, asks
+which one this is.* Accuracy beats brevity here, because the title is read in a list and searched;
+the commit subject's limit belongs to the subject.
 
 The imperative form, the prefix, and the absent trailing period carry over from the commit subject;
 the length limit does not. A pull request title has about 100 characters, and below that ceiling
@@ -151,24 +189,75 @@ platform may append or strip the number (§4).
 
 ### Pull request description
 
-Five slots, in order; the last two are conditional.
+Six slots, in order; the last three are conditional.
 
 | # | Slot | Reader | Answers | Test |
 | --- | --- | --- | --- | --- |
 | 1 | **Why** | R1; R2 and R3 where the description becomes the commit body | The problem, the symptom, the condition that reaches it | *R1 asks: is there a problem worth fixing?* |
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
-| 3 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed | *R1 asks: what would fail if this were wrong?* |
-| 4 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
-| 5 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
+| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it; ahead of slot 1 unless the next release is a major (below) | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
+| 4 | **Verification** | R1 only | What the tests establish; which tests are new; a manual check and what it showed; for a claim about the code that no test establishes, the command or file that checks it | *R1 asks: what would fail if this were wrong?* |
+| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
+| 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
 
-Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open; where
-the merge model copies the description into the commit, they *are* the commit body (§4). Slot 3
+The Why slot has no skip condition. A fix, a feature, and a refactor each replace a version that
+worked for someone, and the reviewer's first question is why that version should change.
+
+Slots 1 and 2 are the commit body's slots 1 to 3 written for a reader who has the diff open, and
+slot 3 is the body's slot 4; where the merge model copies the description into the commit, they
+*are* the commit body, and slot 3 is written there as `User-visible:` and `Not changed:` lines (§4).
+Slot 4
 serves the reviewer and no one else: name what the tests establish and which are new, and do not
-transcribe assertions. Slot 4 answers the two questions a reviewer finds hardest to settle from the
+transcribe assertions. Slot 5 answers the two questions a reviewer finds hardest to settle from the
 diff alone, whether this breaks something elsewhere and whether other places need the same change;
 a sentence in it is falsifiable when it names a number or a path, and "a follow-up will handle that"
-is not. Slot 5 is project-specific: Kubernetes reads a fenced `release-note` block from its
+is not. Slot 6 is project-specific: Kubernetes reads a fenced `release-note` block from its
 template, Prometheus a `release-notes` block.
+
+Slot 3 carries what the changelog entry's symptom and compatibility parts carry, written where the
+reviewer and the on-call reader look before release notes exist. It is present whenever the change
+adds or alters an outcome a caller can observe: a new error text, a changed SQLState or status code,
+a value that is now refused, a different return value, a behavior that worked before and now fails.
+A new error is an outcome even where nothing that worked before breaks; the slot is not a list of
+breaks only.
+
+Its lines are data, not prose: one line per distinct outcome, with what the caller observes and the
+condition, and, for an outcome that emits a diagnostic, the text quoted as emitted and its error code
+or exception class. Breaks come first and add the version the old behavior had and the action the
+reader takes, such as the property to raise. Under rebase and merge the lines are taken from the
+commits' `User-visible:` and `Not changed:` lines, deduplicated: one line per distinct outcome however
+many commits produce it, so eleven commits yield the eight or ten outcomes they share, not forty
+lines. A line is carried over as written, not summarized; a commit whose outcome lines are missing
+is the place to fix, not the description. A change that alters nothing a caller observes has no
+slot 3 and does not write an empty one. A fact stated in slot 3 is not restated in slot 2.
+
+**A break leads the description unless the next release from the target branch is a major.** A
+break changes what code that works on the released version gets: a call that succeeded and now
+fails, a different return value or result shape (`getUpdateCount()` returning `-1` where it returned
+a count), a removed or renamed option, a changed default, a changed error code for a failure a
+caller may catch. A failure the change extends to inputs that worked before is a break for those
+inputs, even though other inputs failed the same way already; it goes with the breaks, not in the
+Scope slot. Whether the old behavior was right does not decide it, and a failure that now succeeds
+is a fix, not a break.
+
+In a release that is not a major, the reviewer's first decision is whether the change may ship in it
+at all. A Why and a What read before that decision are wasted on a reviewer who decides no. Read the
+next release from the target branch: its version file (`gradle.properties`, `pom.xml`,
+`package.json`, `Cargo.toml`), its milestone, or the name of a maintenance branch (`release/1.4`,
+`REL_17_STABLE`). Where a release tool bumps the major on a `BREAKING CHANGE:` trailer or a `!` (§5),
+the trailer decides, and it is written whatever the description does. Where nothing says which
+release it is, the breaks lead: a break read first in a major release costs a paragraph, and a break
+missed in a patch release ships.
+
+The description then opens with slot 3's break lines, under a `Breaking changes` heading where the
+description has headings, after at most a short paragraph that says which code breaks. Slot 3 keeps
+the other outcomes, and the Why slot follows the breaks. Where the next release is a major, the
+breaks stay first in slot 3. A change with no break has neither the lead nor an empty heading (§7).
+
+The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
+slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
+rule 5 makes the description the commit body, the lead stays, because the reviewer reads the
+description before it becomes a body; that body opens with its breaks and then its problem.
 
 *Before:*
 
@@ -206,17 +295,28 @@ of this change.
 
 Reviewer-only content is not a slot. Checklists, screenshots, the template's own comments, and
 round-by-round history live in comments or in a collapsed block, and never in a description that a
-squash setting will copy into the commit body (§4).
+squash or merge-commit setting will copy into the commit body (§4).
 
-The heading names are house style. `Why`, `What`, `How to verify`, and `Scope` is one set that
-matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
+The heading names are house style. `Why`, `What`, `User-visible changes`, `How to verify`, and
+`Scope` is one set that matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
 template, use its headings and fill them with the slots' content.
+
+Where the repository has no template, headings are the exception, not the default. A description of
+up to four paragraphs, each plainly answering one slot's question, is prose without headings, and
+that is the shape most changes take. A check that a claim about the code was made can sit in the
+sentence that makes the claim (`the tests under pgjdbc/src/test are all JUnit 5; git grep finds no
+org.junit.Test there`) and needs no section of its own. Use headings where the description carries
+a fenced command or output, names several tests, or describes a related or stacked pull request.
+Under §4 rule 5 the description is the commit body and takes the body's shape instead. The *After*
+above carries headings only to label its slots; without a template, its four paragraphs stand as
+prose.
 
 #### What each paragraph must earn
 
 **A reviewer decides, and does not re-investigate.** Carry what changes that decision: what was
-wrong, why this behavior is the right one, what changed, how it was checked, and what scope or risk
-is left. The reader should be able to tell whether to engage and where to look.
+wrong, why this behavior is the right one, what changed that the diff does not show, how it was
+checked, and what scope or risk is left. The reader should be able to tell whether to engage and
+where to look.
 
 **Take the shortest chain that justifies the decision.** Once the problem and the chosen behavior
 stand, add another link only where a reviewer would otherwise need it. Prefer the conclusion the
@@ -230,6 +330,20 @@ paragraph with no concrete decision. This is sharper than whether the reader nee
 because almost any true fact can be argued to be needed. *Whether `n <= 0` is the right condition*
 is a decision; *whether `Long.MIN_VALUE` needs handling of its own* is one; *that a sibling pull
 request touches the same class* usually is. Six assertion messages and a parameter matrix are not.
+
+**Length is the signal to run that question again.** Past about 400 words, or a slot past about
+120, re-read the description paragraph by paragraph under the decision question before posting it;
+a fix in one class rarely needs more (measured: a fix in one class was described in 807 words, its
+maintainer called it verbose, and 420 kept every fact a reviewer decides on). The usual surplus is
+the route in the Why slot, the construction of the tests, a passing run narrated, a neighbor that
+has landed, a documentation section copied in, and a derivation whose conclusion is one sentence and
+whose table is a collapsed block.
+
+The count is of prose: the sentences in Why, What, Verification, and Scope. Outcome lines in slot
+3, lines that carry a literal, compatibility bullets with the old and the new behavior, and quoted
+commands are data and are outside the count; cutting one loses a fact one to one and is never
+how a description gets shorter. Where the prose is over the signal, the surplus is in the mechanics
+the diff shows, the test construction, and the route to a conclusion, not in the outcome lines.
 
 **State each causal link once.** The Why slot carries the symptom, the condition that makes it
 reachable, and the decision that was wrong. The What slot carries the new behavioral boundary. The
@@ -250,7 +364,28 @@ needs it to understand or challenge the decision.
 **In the What slot, name the behavioral change, not the artifacts that carry it.** `Javadoc records
 the rule` and `changelog entry added` are changed files the diff already shows. A doc comment earns
 a line only where the contract it states is itself under review, and even then do not quote its
-wording, which is the part most likely to change before merge.
+wording, which is the part most likely to change before merge. A documentation section the change
+adds or rewrites is summarized in a sentence and linked; its configuration table or list of setups
+is reviewed in the diff, not copied into the description.
+
+The same holds for the code: a sentence whose content the reviewer recovers from one hunk (`X is
+removed`, `Y now calls Z`, `the accessor asserts W`) is translation, even under a lead-in that
+states a reason. A decision does not exempt the sentence: state the reason for the decision, not the
+edit that carries it. A public identifier the change adds, removes, or renames (a system property, a
+flag, an option) is the exception: name it once, because readers search for the change by that
+string (§5).
+
+*Before:* `With the pool opened at startup, the lazy ensureOpen() calls are removed,
+QueryExecutor.execute now uses sendDirect instead of sendWithRetry, and Pool.acquire() checks that
+the pool is open.`
+
+*After:* `The pool opens at startup, so a caller that runs before startup completes fails at once
+instead of opening the pool on demand. QueryExecutor.execute used sendWithRetry only to reopen a
+closed pool; with the pool open from startup it sends directly.`
+
+The removed `ensureOpen()` calls are gone from the text: the diff shows them, and the first
+sentence says why they are no longer needed. The `IllegalStateException` that the early caller now
+gets from `Pool.acquire()` is an outcome, and it goes on its own line under "User-visible changes".
 
 **Keep a specific value where the decision depends on that value.** A threshold, a version, an
 identifier, or a magnitude stays when changing it would change the behavioral conclusion, the
@@ -262,15 +397,18 @@ without loss. The detail and the claim resting on it leave together, or neither 
 
 **An approach you tried and rejected earns a collapsed block, when a reviewer would propose it.**
 The What slot names the alternative a reviewer would raise in one sentence, with the mechanism that
-rules it out. An approach you actually tried, with a measurement, goes in a `<details>` block with a
-one-line `<summary>`, after the What slot and before verification. Each entry states a mechanism or
-a measurement, in one short paragraph: *the watcher's consumer thread needs the same lock, so the
-event cannot arrive while the build waits; measured, 6 timeouts in 6 runs*. An entry that reports
-the alternative as considered and this one preferred is unfalsifiable and belongs nowhere; neither
-do the investigation route, every idea anyone had, or the internal identifiers of the review
-process. This does not contradict `javadoc-authoring` §7a, where cutting a rejected alternative is
-usually the highest-value edit in a diff: a doc comment's reader is using or fixing the thing, while
-a pull request's reader is deciding whether the approach is right.
+rules it out, stated as a fact about the merged code. An obstacle the change itself removes is a step
+the change had to take, not a reason against the alternative; check the mechanism against the code
+after the change, above all when it is retold from someone else's discussion. An approach you
+actually tried, with a measurement, goes in a `<details>` block with a one-line `<summary>`, after
+the What slot and before verification. Each entry states a mechanism or a measurement, in one short
+paragraph: *the watcher's consumer thread needs the same lock, so the event cannot arrive while the
+build waits; measured, 6 timeouts in 6 runs*. An entry that reports the alternative as considered
+and this one preferred is unfalsifiable and belongs nowhere; neither do the investigation route,
+every idea anyone had, or the internal identifiers of the review process. This does not contradict
+`javadoc-authoring` §7a, where cutting a rejected alternative is usually the highest-value edit in a
+diff: a doc comment's reader is using or fixing the thing, while a pull request's reader is deciding
+whether the approach is right.
 
 #### Verification
 
@@ -279,24 +417,50 @@ read position after a refused skip, the minimum signed value, and zero as the bo
 three paragraphs of parameter sets and assertion output. A measured result earns a sentence where it
 shows test discrimination, the intended boundary, or another property the test names do not: `revert
 the guard and six of the seven fail, while zero still passes because it pins the boundary` does; `17
-of 23 tests fail without the change` does not.
+of 23 tests fail without the change` does not, and neither does `8184 tests pass` or an unrelated
+failure explained away.
+
+**Name a test only where the description makes a claim that only that test carries.** Four claims
+qualify:
+
+- that a test fails without the change (the regression test for the reported symptom);
+- that a test guards a future change (a test that fails when a constant is added without being
+  classified);
+- that a test has a precondition the reviewer must know (a server, a JVM flag, a CI matrix axis);
+- that a test was removed or narrowed, with the coverage lost.
+
+Every other test is covered by one sentence stating the property the tests establish, with no class
+name: `each limit is taken at its boundary and one byte past it, in both hardening modes` covers nine
+classes, and the diff lists them. A list of test classes followed by one clause about all of them is
+the shape to avoid twice over: the list is the diff read aloud, and the clause is false for the
+first class in the list that differs (measured: two of three drafts on one branch said `all drive a
+scripted socket` over a list that included three tests that need a server).
 
 **Say which tests are new where that changes the coverage question.** Mark it once, as *two new
 tests* or a `New tests:` label above them, and say nothing further about the ones that did not
-change. The marking stays while the change is under review and may go on a settled diff.
+change. The marking stays while the change is under review and may go on a settled diff. A test
+removed or narrowed earns one sentence naming the coverage lost and the reason; the matrix, the
+payload, or the offsets that replaced it are the test file's.
 
 **What a test establishes is a property, not the construction that reaches it.** Fixture shape,
 parameter sets, and the harness belong to the tests unless one of them is itself under review: an
 integration path chosen to prove that the real caller sees a checked exception is a property; the
 buffer state that makes a branch reachable is construction, and its reason has usually been given in
-the Why slot already. Name the test or the class either way, so a reviewer who wants the
-construction has somewhere to go.
+the Why slot already. The class names are in the diff; the description names one only under the
+rule above.
 
 **Follow-the-link test.** Where a paragraph only demonstrates a fact that a named test, a diff hunk,
 or a documented contract already carries, delete the demonstration and name the artifact instead.
 Keep the demonstration where the reviewer needs it *before* judging that artifact: four lines of the
 old code that make the bug obvious earn their space; six lines of output proving the new tests fail
 without the fix do not.
+
+**A change with no tests still fills the slot.** A claim about the code that neither a hunk in the
+diff nor a named test establishes names how it was checked: the command that checks it, or the file
+that carries the fact. A docs-only or configuration change is made of such claims
+(*every test under this directory is JUnit 5*, *the module rejects JUnit 4 on its test classpath*),
+and a reviewer who is not told how they were checked takes them on trust or repeats the search.
+*Documentation only* names the kind of change, not what was checked.
 
 **Do not narrate an obvious command.** Give the command and one sentence on what success, or an
 intentional failure, establishes. Where the command names `RetryPolicyTest` and `RetryFailureTest`,
@@ -320,6 +484,15 @@ follow-up exists, name its number; where it does not, state what this change lea
 handling is outside this change`). `A separate pull request follows for that` is unfalsifiable when
 written and stale once the number exists.
 
+**A question the issue or the review left open is answered, kept open, or left out.** Where the code,
+a test, or another source you verified answers it, give the answer and its evidence, and do not
+repeat the question as open. Where only a maintainer can answer it, as with whether a compatibility
+break is intended, keep it in the Scope slot as a question, with the decision it needs and the
+evidence the maintainer needs to make it: the code shows the break, and not whether the break is
+wanted. Leave
+a question out only when it does not bear on this change (measured: three of three drafts repeated
+as open a question the code answered).
+
 ### Changelog entry
 
 Five parts in order, under a category heading. §3 argues the order.
@@ -328,7 +501,7 @@ Five parts in order, under a category heading. §3 argues the order.
 | --- | --- | --- | --- |
 | 1 | **Category**: Added, Changed, Deprecated, Removed, Fixed, Security | R4 | Which kind of change is this? |
 | 2 | **The observable change**, self-describing without the heading | R4 | What can I now do, or what now happens differently? |
-| 3 | **The symptom and the trigger**, diagnostic quoted as a literal, setting or condition named | R3 | Can I grep this with my log line? Does the condition match my deployment? |
+| 3 | **The symptom and the trigger**, diagnostic quoted as a literal, setting or condition named; for a defect an audit or a code reading found, the condition alone (§2, slot 2) | R3 | Can I grep this with my log line? Does the condition match my deployment? |
 | 4 | **References**: pull request or commit, issue, CVE | R3, R2, R5 | Where is the detail? |
 | 5 | **Compatibility and action**: breaking or not, what the reader must do, and for a regression the version that introduced it | R4, R5, R3 | Will my upgrade break? Am I on an affected version? |
 
@@ -381,37 +554,105 @@ the project versions its releases: the one that introduced the defect and the on
 
 ## 4. The merge model decides where the text ends up
 
-Detect it before applying anything in §5 or §6. Read the last twenty or so subjects and bodies from
-`git log --format='%s%n%b'`:
+The merge model changes three things: which line becomes the subject of the permanent commit, what
+becomes its body, and which of the branch commits survive as commits of their own. Detect it before
+applying anything in §5 or §6.
 
-| Signal in history | Model | Consequence |
-| --- | --- | --- |
-| Subjects end in `(#123)`, no `Merge pull request` lines | Squash merge | The title becomes the subject; the body is whatever the setting copies (below) |
-| `Merge pull request #123 from` lines | Merge commits | The description never reaches `git log`; only the branch commits do |
-| `Change-Id:` or `Reviewed-on:` trailers | Gerrit | One commit per change; the commit message is the review description |
-| `Signed-off-by:` chains with `Link: https://patch.msgid.link` or `lore.kernel.org` | Email patches | Text below `---` is stripped on apply; trailers are the routing layer |
+Count the last forty commits on the target branch by shape. Read the branch the pull request
+merges into, first-parent only, so that neither the branch's own unmerged commits nor the commits
+behind a merge commit enter the count. The second line takes the name of that branch from the pull
+request; before the pull request exists, it takes the remote's default branch, the usual target and
+the best guess at the merge setting, though a ruleset can allow other methods on another branch.
 
-For a squash repository, the platform setting decides what the body is. GitHub's default uses the
-commit title and message for a single-commit pull request, and the pull request title plus the list
-of commit messages for two or more; a repository can instead choose the title alone, the title and
-commit details, or the title and description. GitLab's default squash template is the title alone,
-and a project can compose the description, the first commit, all commits, and the closing issues.
-The merging maintainer can edit the message before merging on both.
+```bash
+remote=origin
+target=$(gh pr view --json baseRefName --jq .baseRefName 2>/dev/null) && target=$remote/$target || target=$(git rev-parse --abbrev-ref "$remote/HEAD")
+git log -n 40 --first-parent --format='%P%x09%s' "$target" -- | awk -F'\t' '$1 ~ / / {m++; next} $2 ~ / \(#[0-9]+\)$/ {s++; next} {p++} END {if (NR == 0) {print "no commits read: the target branch is not on the remote"; exit 1} printf "merge %d squash %d plain %d\n", m, s, p}'
+```
 
-1. Write the title as the commit subject it will become.
-2. Under "title and description", the description is the body: shape it as §2's commit body, and
-   keep reviewer-only content out of it.
-3. Under the default or "commit details", the body is the list of branch commit messages, so the
-   durable why must be in the first branch commit, or the maintainer must edit at merge. Write the
-   first branch commit as a full commit body regardless of how good the description is.
-4. Compress verification to one line naming what the tests establish where the description will
-   become the body; move transcripts and checklists to comments.
-5. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
+`remote` is the remote of the repository the pull request merges into: `origin` in a clone of that
+repository, usually `upstream` where `origin` is a fork, whose copy of the branch may be stale. Set
+it, and type nothing else into the lines; in particular, never a branch name. Whoever creates a
+branch chooses its name, and git accepts names that contain `'`, `;`, or `$(`: typed into the
+command, even between quotes, such a name can close the quote and run the rest as shell. Expanded
+from the variable, the name reaches git as one argument and is never parsed as shell, and the `--`
+after it makes git read it as a revision even where a file of the same name exists. Where
+`$remote/HEAD` is missing, `git remote set-head "$remote" --auto` sets it; where the count reports
+no commits, fetch the remote.
+
+The squash settings, and the merge commit settings rule 5 depends on, differ only in the body. In
+the same shell, `git log -n 10 --first-parent --format='%h %P%n%b%n' "$target" --` prints the bodies
+of the latest ones.
+
+A commit with two parents is a merge whatever its subject says; the parent count is what tells a
+merge commit under GitHub's "pull request title" setting from a squash, since both end in `(#n)`.
+
+| Shapes in the count | Model |
+| --- | --- |
+| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
+| `plain` only | Rebase and merge, or a repository pushed to directly; the shape is the same and the consequences are too. On GitLab, also a squash under the default template, which appends no number, and only a house rule tells that apart; without one, the default at the end of this section |
+| `squash` and `plain` both | Ambiguous: squash and rebase both allowed and chosen per pull request (below), or squash beside direct pushes; without a house rule, the default at the end of this section |
+| `merge` present | Merge commits are enabled; a `squash` or `plain` line beside them is another method also enabled, or a direct push |
+
+The shapes are evidence of what the maintainers did, not of what the repository setting allows: a
+maintainer can type `(#n)` into a rebased subject or strip it from a squash, and a direct push
+looks like a rebase. A `CONTRIBUTING.md` or `AGENTS.md` line that names the method wins over the
+count; `references/merge-model.md` has the lines.
+
+| Model | Subject of the permanent commit | Body of the permanent commit | Branch commits that survive |
+| --- | --- | --- | --- |
+| Squash, default message | For a single-commit pull request, that commit's subject, number appended; otherwise the title, number appended | That commit's body; otherwise the branch commit messages as a bulleted list | None, and every message lands as a bullet, `Fix lint` included |
+| Squash, "pull request title" | The pull request title, number appended | Nothing | None, and no message reaches `git log` |
+| Squash, "title and commit details" | The pull request title, number appended, for one commit or many | That commit's message for one commit; the branch commit messages as a bulleted list for several | None, and every message lands as a bullet, `Fix lint` included |
+| Squash, "title and description" | The pull request title, number appended | The description | None |
+| Merge commit | Each branch commit keeps its own; the merge commit's subject is `Merge pull request #n from …` under the default message, with the title as its body, and the title with the number appended under "pull request title" and "pull request title and description" | Each branch commit keeps its own; the merge commit's body is the description under "pull request title and description" and nothing under "pull request title" | Every one, behind a merge commit that a `--first-parent` reader sees instead |
+| Rebase and merge | Each branch commit keeps its own; nothing is appended | Each branch commit keeps its own; the description is never copied | Every one with changes, as a separate commit that `git bisect` can stop on; GitHub rewrites the SHA and the committer, keeps the message, and drops a commit that was empty |
+
+GitHub's default squash setting is the first row, and GitHub lets a repository allow several
+methods at once, with the merging maintainer choosing one per pull request. GitLab's default squash
+template is the title alone, and a project can compose the description, the first commit, all
+commits, and the closing issues. The merging maintainer can edit the message before merging on both.
+
+1. Every commit that will survive is a full commit message (§2). Under rebase and merge, and under
+   a merge commit, that is every commit on the branch; under the default squash and under "title
+   and commit details" it is the first, since the messages land as bullets; under "title and
+   description" it is none, and the description takes the role; under "pull request title" it is
+   none, and the title is all that lands.
+2. Under rebase and merge, and under merge commits, tidy the branch before review. A `Fix lint` or
+   `Apply suggestion` commit lands on the default branch as a commit of its own, so squash it into
+   the commit it corrects before the merge. Under the default squash the same commit lands as a
+   bullet in the body.
+3. Under rebase and merge, the platform appends nothing. Where an issue exists, put its number in
+   the commit body, as `Fixes #n` or in prose, or `git log` will never link the commit to its
+   discussion. The issue number is known before the pull request exists; the pull request number
+   reaches a commit only by amending after the pull request is opened, so the issue is the
+   reference to rely on. Without an issue the body carries the problem itself, and no reference is
+   invented for it.
+4. Write the title as the commit subject it may become: under "pull request title", "title and
+   commit details", and "title and description" it is the subject of every squash, under the
+   default message it is the subject of a multi-commit squash, under a merge commit it is the
+   subject or the first body line as the setting decides, and under rebase and merge it is the
+   line the reviewer picks from a list. A prefix a release tool reads (rule 7) goes on the title
+   for the same reason.
+5. Under a squash or a merge commit with "title and description", the description is the body of
+   the commit a `--first-parent` reader sees: shape it as §2's commit body, keep reviewer-only
+   content out of it, and compress verification to one line naming what the tests establish, with
+   transcripts and checklists moved to comments. Under every other setting the description stays
+   on the platform, and a template's checklist may stay in it. Which merge commit setting a
+   repository uses shows in the body of any merge commit in the count.
+6. `Fixes #n` and `Closes #n` close the issue only when the change merges into the default branch;
    on any other target the keywords are ignored, so a backport carries the reference for humans.
-6. Where a release tool parses the squash subject (release-please, semantic-release), the title's
-   prefix is what it reads; the branch commits are invisible to it.
+7. A release tool reads either the commits on the default branch (release-please, semantic-release:
+   the squash subject, or under rebase and merge every commit) or the pull request titles and labels
+   (release-drafter, GitHub's generated release notes). Find out which tool the repository runs, and
+   put the prefix or the label where that tool reads it.
 
-What rule 3 prevents, from a squash under "title and commit details" of a pull request whose
+**Where squash and rebase are both allowed**, the maintainer picks one per pull request, and the
+author cannot tell in advance. Write for both: every commit self-standing with its number (rules 1
+to 3) and the title as a subject (rule 4). Rule 5 applies only if the squash setting turns out to
+be "title and description"; under the default it does not.
+
+What rule 1 prevents, from a squash under "title and commit details" of a pull request whose
 description ran to five paragraphs of mechanism and measurements:
 
 ```text
@@ -426,19 +667,26 @@ fix(cache): re-add cacache.verify() to garbage collect orphaned content (#44987)
 * Apply suggestion from @reviewer
 ```
 
-That is all `git blame` will ever show. The same happens under merge commits, where the description
-is never copied at all: the commit message carries problem, impact, and approach whether or not the
-description repeats them, because the description is reachable only while the platform is.
+That is all `git blame` will ever show. Under rebase and merge the same pull request lands as four
+commits, three of them `Fix lint` and `Apply suggestion from @reviewer`, and under merge commits
+the four sit behind a merge commit whose body, under GitHub's default message, is the title and
+nothing more; in each case the description is never copied, so the commit messages carry problem,
+impact, and approach whether or not the description repeats them, because the description is
+reachable only while the platform is.
 
-**Default when detection fails**: treat the repository as squashing with "title and description".
-Write the description so it can stand as a commit body and write the first branch commit the same
-way. This costs one paragraph of duplication when the repository turns out to merge, and loses
-nothing in every other case.
+**Default when detection fails**: write every branch commit as a full commit message, with the
+issue number in its body where an issue exists, and write the description so it can stand as a
+commit body. This is what the strictest rows above demand at once; it costs one paragraph of
+duplication when the repository turns out to merge or rebase, and loses nothing in every other
+case.
 
 **Verification does not belong in `git log`.** Email workflows strip it below `---`; pull request
 templates ask for it in the description; a squash setting can copy it into the body. R1's need is
 met in the pull request; R2's noise is kept out of the history. Where the description will become
-the body, rule 4 applies.
+the body, rule 5 applies.
+
+Where every commit says `See #n` and none says `Fixes #n`, the description says in one sentence why
+the issue stays open; the trailer choice was a decision and the reader should not have to infer it.
 
 ## 5. Trailers and the identifiers a reader greps
 
@@ -465,6 +713,48 @@ consumer decides whether it is worth writing.
   as the code spells it. Future readers search the history by these strings. A private helper is
   named only where its name is what the reader will grep for.
 - The issue identifier, beside the one-line why, never instead of it (§2).
+- A section of a document in the repository, with its heading text at the first mention:
+  `TESTING.md §4 Running the test suite` where the headings are numbered, or `the "Running the test
+  suite" section of TESTING.md`; later mentions may say `§4` or `that section`. The number changes
+  with the next inserted section and the description outlives it; the heading text is what the
+  reader searches the file for. A published specification is cited by its own number, `RFC 9110
+  §15.5.1`, `JLS §5.1.2`: the numbering is frozen with the document, and the number is what its
+  readers search for.
+- A link, in a pull request or issue description, to what the diff does not show. The diff shows
+  changed lines as source, so a link is owed at the first mention of the rendered section a docs
+  change edits, of code outside the diff, of a specification, of another project's documentation,
+  and of a pull request or issue by number. Not of text inside the diff: the reviewer has it open.
+  A specification links by its own anchor (`https://www.rfc-editor.org/rfc/rfc9110#section-15.5.1`,
+  the JLS or PostgreSQL page with the release in its path). A file in the repository links by a
+  permalink, `https://github.com/<owner>/<repo>/blob/<sha>/<path>`, with `#L<from>-L<to>` for code
+  and the heading anchor for rendered Markdown (the heading lowercased, punctuation other than
+  hyphens dropped, spaces turned into hyphens: `## 5 - Extending the test suite with new tests` is
+  `#5---extending-the-test-suite-with-new-tests`). `<owner>/<repo>` is the repository the file lives
+  in, and `<sha>` a tag or a full commit hash that repository has. For another repository, that is
+  the tag or commit whose code the sentence is about. For the repository the pull request targets,
+  the commit follows from whether the pull request changes what the link shows. Content the pull
+  request leaves unchanged links at `git merge-base` with the target branch, which stays fixed while
+  the branch is reworked. Content it adds or changes, such as the rendered section a docs change
+  edits, is not there in that form at the merge base and links at the head commit of the pull
+  request, still under the target repository's `<owner>/<repo>` when the branch lives in a fork,
+  since GitHub serves a fork's commits there. A later push that changes the linked content leaves
+  the link on a superseded version, which GitHub may also garbage-collect once a force-push leaves
+  it unreachable, so rebuild those links from the new head after each such push; GitHub keeps the
+  last head of a pull request under `refs/pull/<n>/head` after the merge. A branch name is never the
+  `<sha>`: it moves with every push and is gone once the branch is deleted. Code in another
+  repository is always a full permalink, never a bare path. The link text is the citation itself
+  (`TESTING.md §5 Extending the test suite with new tests`,
+  `V3ReplicationProtocol.configureSocketTimeout`), never `here`; one link per identifier, at its
+  first mention. Code in a JDK or another project is named with its version and linked only where
+  the URL was opened, and no link is written whose URL was neither built from one of these patterns
+  nor opened, as `english-developer-style` §7 rules out an invented issue or pull request number.
+- In a commit body, or in a description that a squash of "title and description" copies into one
+  (§4 rule 5), code of this repository is named by path and identifier and carries no URL: the
+  reader has `git show` and `git blame`. A specification, another project's documentation, or
+  code in another repository keeps its full URL, moved out of the sentence into a `Link:` trailer,
+  one per line, or into a `[1]` footnote above the trailers where the project writes them; the
+  citation text stays in the sentence. Each footnote is referenced once in the body and each
+  reference has its footnote.
 - Identical messages across branches when back-patching, where tooling groups them; where the
   branches diverge in behavior, one branch-specific line beats a misdescription.
 
@@ -495,16 +785,18 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 - No changelog entry for maintenance noise: dotfiles, development-only dependencies, formatting,
   CI. Where the tooling demands a line, `NONE` is the line.
 - No section for an absent concern. A description with no breaking change, no follow-up, and no
-  rejected alternative has no such sections; an empty heading is not a gap to fill.
+  rejected alternative has no such sections; an empty heading is not a gap to fill. Verification
+  is not absent in a change with no tests: its claims about the code are checked in the slot (§2).
 - No verification narrative in the commit body (§4).
 - No paraphrase of the diff. A body whose sentences map one to one onto hunks adds no rationale;
-  R2 has the diff.
+  R2 has the diff. In a description, the same test applies sentence by sentence (§2, the What
+  slot).
 
 ## 7a. Editing an existing description
 
-The "which review decision becomes harder" test, the rule that each causal link is stated once, and
-the literal treatment of a quoted diagnostic are `english-developer-style` §7's and apply here
-unchanged. The growth budget is the authoring skills' shared rule: **restructuring is free, and growth
+The "which review decision becomes harder" test and the rule that each causal link is stated once
+(§2), and the literal treatment of a quoted diagnostic (§3, and `english-developer-style` §5), apply
+here unchanged. The growth budget is the authoring skills' shared rule: **restructuring is free, and growth
 is paid for by a fact the old version did not carry** (a symptom, a condition, a version, a measured
 value, a named test, a dependency between changes); name the fact, or keep the old wording. A
 description under roughly 300 words is presumed not to grow. Two rules are this skill's own:
@@ -536,28 +828,68 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 
 - Reader: for every sentence, which of R1 to R5 asks the question it answers (§1)?
 - Subject: does it name the change, and would it identify the commit in `git log --oneline` (§2)?
-- Problem: does the body open with what was wrong, before the fix (§2)?
-- Symptom: is the diagnostic quoted as a literal, with the trigger condition, or is its absence
-  stated (§2, §3)?
-- Why: is there a sentence of reason beside the issue link, not only the link (§2)?
+- Problem: does the body open with what was wrong, before the fix, or right after the breaks where
+  §4 rule 5 copies a description that leads with them (§2)?
+- Symptom: is the diagnostic quoted as a literal, with the trigger condition (§2, §3)? Is every
+  symptom quoted from an observation, or traced in the code and marked as derived? For a defect found
+  by an audit or a code reading, does the sentence end at what found it? For a defect with no
+  symptom by construction, is that stated?
+- Why: is the slot present, and is there a sentence of reason beside the issue link, not only the
+  link (§2)?
 - Approach: is the alternative a reviewer would propose answered with a mechanism or a number (§2)?
-- Verification: does the description say what the tests establish and which are new, and is none of
-  it in the commit body (§2, §4)? Does any sentence narrate an obvious command or transcribe
-  assertions?
+- Verification: does the description say what the tests establish, which are new, and which were
+  removed or narrowed and what coverage went, and is none of it in the commit body (§2, §4)? Does
+  any sentence narrate an obvious command or transcribe assertions? In a change with no tests, does
+  each claim about the code name the command or the file that checks it?
+- Caller: where the change adds or alters an outcome a caller can observe, does the description
+  carry one line per distinct outcome under "User-visible changes", breaks first, and does each
+  commit that adds one carry it under `User-visible:` (§2)? Does a line carry the exact text and its
+  error code or exception class only where the outcome emits them? Is a deliberate non-change a
+  reader would expect stated under `Not changed:`?
+- Breaks: where the change breaks code that works on the released version and the next release
+  from the target branch is not a major, or is unknown, does the description open with the break
+  lines, and does slot 3 keep only the other outcomes (§2)? Where nothing breaks, is there no lead
+  and no empty heading?
+- Tests named: is every test class the description names there for one of the four claims (fails without
+  the change, guards a future change, needs a precondition, removed or narrowed), and is no list of tests
+  characterized by one clause (§2)?
+- Headings: absent unless the description carries a fenced command or output, several named tests,
+  or a related or stacked change, and absent from a description that §4 rule 5 makes a commit body
+  (§2)?
 - Decision: for every paragraph, which review decision becomes harder without it (§2)?
+- Translation: delete each sentence of the What slot in turn; where the diff still says it, leave it
+  deleted (§2).
+- Length: past about 400 words of prose, or a slot past about 120, was every paragraph re-read
+  under the decision question, and is no route in the Why slot, test construction, passing run,
+  landed neighbor, copied documentation section, or uncollapsed derivation left (§2)? Were the
+  outcome lines and other data lines left out of the count, and left in the description?
 - Alternatives: is an approach a reviewer would propose answered in one sentence, and a tried one in
-  a collapsed block with a mechanism or a measurement (§2)?
+  a collapsed block with a mechanism or a measurement (§2)? Is that mechanism a fact about the
+  merged code, and not an obstacle the change itself removes?
+- Discussion: where verified evidence settles a question from the issue or the review, does the
+  description give the answer rather than repeat the question as open? Is a question that only a
+  maintainer can settle kept in the Scope slot, with the decision it needs and the evidence for it?
+  Is a question dropped only when it does not bear on this change (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
 - Scope: is every gap named as intentional, every follow-up by number, every stacked change by its
   overlap and order (§2)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
-- Merge model: detected, and the first branch commit written as a full body where the squash setting
-  or a merge commit would otherwise leave `git log` with a title (§4)?
+- Merge model: read from the history; every commit that survives the merge written as a full body,
+  with the issue number where an issue exists; no `Fix lint` commit left to land on its own under
+  rebase and merge (§4)?
 - Trailers: each one has a consumer in this repository, and the closing keyword targets the default
   branch (§5)?
+- Open issue: where every commit says `See #n` and none says `Fixes #n`, does the description say in
+  one sentence why the issue stays open (§4)?
 - Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
-  placeholder (`english-developer-style` §7)?
+  placeholder (`english-developer-style` §7)? Does the first mention of a section of a repository
+  document carry its heading text (§5)? Links: does each first mention of a rendered section, code
+  outside the diff, a specification, or another project's documentation carry a link built from a
+  known pattern, at the merge-base commit for content the pull request leaves unchanged and at its
+  head for content it adds or changes, rebuilt after a push that changes it, never at a branch name,
+  none to text inside the diff, and in a commit body or under §4 rule 5 none to this repository's
+  code and the external ones only as a `Link:` trailer or a footnote (§5)?
 - House style: prefix, limit, sign-off applied only where the workflow consumes them (§6)?
 - Nothing: no entry for noise, no empty section, no diff paraphrase, no predicted merge difficulty
   (§7)?

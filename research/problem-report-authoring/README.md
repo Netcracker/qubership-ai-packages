@@ -126,8 +126,9 @@ A case is a regression test for the skill: frozen investigation notes as the inp
 as the output, one directory per model with the `skill-tree` of the skill that produced it, and checks. The checks of
 `nested-workflow-tag` come from what the target project's maintainers said about a report written from the same notes;
 the four synthetic cases have fictional projects and vendors, and their checks come from a review of a first draft of
-version 1.1.0 that found rules overfit to the first case. Re-run every case when the skill or the model changes and
-commit the new output, so the diff shows how each report moved.
+version 1.1.0 that found rules overfit to the first case. A change to the skill re-runs the cases whose `## Skill parts`
+it touches, and a release re-runs every case; `agent-packages/AGENTS.md` has the rule. Commit the new output, so the
+diff shows how each report moved.
 
 The synthetic cases letter the rules of that draft they test:
 

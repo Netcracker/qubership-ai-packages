@@ -28,6 +28,11 @@ below describes that draft:
 The padding: the full listing of 23 paths, the scanner's generic findings, the advisories in other products, the
 internal review ID, and the private hostnames and addresses in the transcripts.
 
+## Skill parts
+
+- `SKILL.md`: every section, because the case drafts a whole report
+- `references/project-conventions.md`, `references/request-genre.md`, `references/worked-cases.md`
+
 ## Files
 
 | File | What it is |

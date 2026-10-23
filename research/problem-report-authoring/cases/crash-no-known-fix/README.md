@@ -27,6 +27,11 @@ The padding: the business context and its cost, the partner's name and schedule,
 names, three JDKs that behave the same, the list of search queries, the unrelated closed issue, the mirror's error
 message, and a reading of the source that was never checked.
 
+## Skill parts
+
+- `SKILL.md`: every section, because the case drafts a whole report
+- `references/project-conventions.md`, `references/machine-authorship.md`, `references/worked-cases.md`
+
 ## Files
 
 | File | What it is |

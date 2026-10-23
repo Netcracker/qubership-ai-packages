@@ -12,6 +12,12 @@ The prompt is in `prompt.md`; the files it names are under `files/`. Run it from
 `research/blackbox-test-design/cases/run-case.sh research/blackbox-test-design/cases/probe-vendor-jar
 <with-skill|without-skill> <model>`, then grade both arms with `cases/grade-prompt.md`.
 
+## Skill parts
+
+- `SKILL.md`: §0, §2, §3, §4, §6, §7, §11, §12
+- `references/idioms.md`
+- `test-authoring`: its frontmatter `description` and the text above §0 only; no run of this case has loaded it
+
 ## Checks
 
 - Used at most 60 runs of the jar: `engine-calls.log` has at most 60 lines where the session ran the jar in its working

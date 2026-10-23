@@ -1,0 +1,4 @@
+cost_usd: 0.0151
+tokens: 71129
+turns: 4
+duration_s: 48

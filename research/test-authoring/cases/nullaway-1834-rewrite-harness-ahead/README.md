@@ -22,6 +22,11 @@ harness's current behavior.
 - **A helper that takes a value, not pieces of syntax** (§7), as in `nullaway-1834-rewrite`.
 - **No case is lost when the tests collapse** (§4).
 
+## Skill parts
+
+- `SKILL.md`: §0, §1, §4, §5, §7, §9
+- `references/java/junit4.md`
+
 ## Files
 
 The files are those of `nullaway-1834-rewrite`, plus `instructions.md`, which `run-nullaway-case.sh` appends to

@@ -90,4 +90,6 @@ no citation; a rule stands on its own detection and repair, and the evidence is 
 
 The cases are under `research/test-authoring/cases/`, and the procedure for running them is in
 `agent-packages/AGENTS.md`, under "Testing a skill against its cases". A NullAway case runs with
-`research/test-authoring/cases/run-nullaway-case.sh`, and its README says how.
+`research/test-authoring/cases/run-nullaway-case.sh`, and its README says how. A change here also re-runs both arms of
+the `blackbox-test-design` cases whose `test-authoring` line it touches, and a version bump re-runs both arms of all of
+them.

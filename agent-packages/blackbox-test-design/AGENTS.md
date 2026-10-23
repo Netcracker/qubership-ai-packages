@@ -33,7 +33,8 @@ The behavioral cases are under `research/blackbox-test-design/cases/`. They foll
 "Testing a skill against its cases", with one difference in layout: each case runs twice, with the skill and without it,
 so a result goes to `results/<arm>-<model>/` rather than `<model>/`. Run a case with `cases/run-case.sh`, which copies
 the skill from the working tree, and grade both arms with a separate agent given `cases/grade-prompt.md`. A change to
-this skill re-runs the arm with the skill in every case and commits the results with it; a change to `test-authoring`
-re-runs both arms. `skill-tree` and `skill-tree-test-authoring` in each result show which trees produced it. The
-`probe-vendor-jar` case keeps the source of its jar under `src/`, and its `build.sh` compiles the jar into the session's
-directory; the source is the answer key, and the repository holds no binary.
+this skill re-runs the arm with the skill in the cases whose `## Skill parts` it touches; a change to `test-authoring`
+re-runs both arms of the cases whose `test-authoring` line it touches. `skill-tree` and `skill-tree-test-authoring` in
+each result show which trees produced it. The `probe-vendor-jar` case keeps the source of its jar under `src/`, and its
+`build.sh` compiles the jar into the session's directory; the source is the answer key, and the repository holds no
+binary.

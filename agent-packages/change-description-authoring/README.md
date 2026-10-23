@@ -14,13 +14,25 @@ the question it answers.
 ## What it covers
 
 - The five readers, what each one holds, which artifact each one opens, and what each one asks.
-- The slots of a commit body (problem, impact and trigger, change and approach, references) and of a
-  pull request description (why, what, verification, scope, release note), with the question each
-  slot answers and when it is skipped.
+- The slots of a commit body (problem, impact and trigger, change and approach, outcome, references)
+  and of a pull request description (why, what, user-visible changes, verification, scope, release
+  note), with the question each slot answers and when it is skipped. The outcome slot and
+  "user-visible changes" are present only when the change alters something a caller observes, and
+  list each outcome on its own line, with the exact text and its error code or exception class where
+  the outcome emits them.
+- Where a change breaks code that works on the released version: the description opens with the
+  breaks unless the next release from the target branch is a major, read from the branch's version
+  file, milestone, or name, and the commit body keeps them first in its outcome slot.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the shortest chain that justifies that decision, the level of detail each artifact
   owns, and the verification section that names what the tests establish rather than transcribing
-  them.
+  them. A sentence the reviewer recovers from one hunk is cut even when it carries a decision; its
+  reason stays.
+- A rejected alternative answered by a mechanism that still holds in the merged code. A defect that
+  an audit found is described by what found it, with neither a predicted failure nor a claim that
+  none was seen. A question left open in the discussion is answered where the code or other verified
+  evidence settles it, kept with the decision it needs and the evidence for it where only a
+  maintainer can settle it, and dropped only when it does not bear on the change.
 - Why the commit subject is change-first while the body is problem-first, and why the two do not
   conflict.
 - The changelog entry as the artifact the on-call engineer greps as well as the one the upgrading
@@ -28,8 +40,9 @@ the question it answers.
 - The trailers and identifiers that make text searchable, each with the tool that consumes it and the
   reader it serves: `Fixes:`, closing keywords, `Backpatch-through:`, the diagnostic quoted as a
   literal, both versions of a regression.
-- What a squash merge or a merge commit copies into the permanent history, how to detect the merge
-  model from `git log`, and the default when detection fails.
+- What a squash merge, a merge commit, and a rebase and merge each leave in the permanent history,
+  how to read the merge model from `git log`, what to write where the maintainers may pick either,
+  and the default when detection fails.
 - Which prescriptions are house style gated on a workflow (a type prefix, a subject limit,
   `Signed-off-by:`, `Change-Id:`, Prow commands, news fragments) rather than reader-serving rules.
 - When to write nothing, how far a rewrite may grow, and how to compare two versions of a description
@@ -42,6 +55,49 @@ the question it answers.
 - `.apm/skills/change-description-authoring/SKILL.md`: the on-demand rules, before/after examples for
   each artifact, and a review checklist. It carries no citations; the evidence stays in the research
   directory below.
+- `.apm/skills/change-description-authoring/references/merge-model.md`: a paste-ready `AGENTS.md`
+  block for each common merge setup, for whoever configures a repository.
+
+## Telling the skill how the repository merges
+
+Left to itself, the skill reads the merge model from `git log`. A line in `AGENTS.md` or `CLAUDE.md`
+is already in the agent's context, so it saves the detection when it names both the method and what
+the method expects of the branch. Three lines cover most open-source repositories; the reference
+file above has the rest, including the three squash settings that keep the title and the
+merge-commit setup.
+
+Squash only, GitHub's default squash message:
+
+```markdown
+Every pull request is squashed into one commit. A single-commit pull request keeps that commit's
+subject and body, with the pull request number appended; with several commits the squash takes
+the pull request title as the subject and the branch commit messages as bullets in the body. The
+description itself is not copied. Write the
+title as a commit subject, write the first commit with a full body (problem, symptom, approach,
+issue number where one exists), and keep later commits short: each one lands as a bullet in the
+body.
+```
+
+Rebase only:
+
+```markdown
+Every pull request is rebased onto the default branch: each commit lands with its message as it
+is, under a new SHA, with no merge commit and no pull request number appended, and an empty commit
+is dropped. Write every commit to stand alone in git log, with a full body and the issue number
+where one exists, and squash fix-up commits (`Fix lint`, `Apply suggestion`) into the commit they
+correct before the merge. The description stays on the platform and is never copied.
+```
+
+Squash or rebase, chosen per pull request, the setup GitHub's defaults produce once merge commits
+are turned off:
+
+```markdown
+Maintainers squash or rebase each pull request as they see fit, so every commit on the branch may
+land on the default branch with its message as it is. Write every commit to stand alone in git
+log, with a full body and the issue number where one exists; squash fix-up commits before the
+merge; write the pull request title as a commit subject. The description is never copied into git
+log under either method.
+```
 
 ## Pairs with
 
