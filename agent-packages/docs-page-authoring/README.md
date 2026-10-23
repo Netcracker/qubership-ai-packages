@@ -22,8 +22,8 @@ Every rule names the reader whose question it answers.
 - One primary purpose per section, the failure mode of each genre, and where a fact lives when a docs set carries it in
   several places: one copy is the record, the others summarize and link.
 - Headings as URL anchors, and why a heading rename is a separate change with its redirect.
-- Claims a machine could check: names, numbers, quoted errors, and fenced examples, with the doctest harnesses that turn
-  a fence into a test.
+- Claims a machine could check: names, numbers, quoted errors, fenced examples with the doctest harnesses that turn a
+  fence into a test, and commands no job runs in the form the page gives.
 - What a change owes the documentation: a scan table from the kind of change in the diff to the reader and the page it
   owes an entry.
 - The two editing modes (a prose pass and a structural revision), how far a rewrite may grow, and how to compare two

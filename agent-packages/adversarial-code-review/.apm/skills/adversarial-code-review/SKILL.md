@@ -130,7 +130,12 @@ already-large file are inspection signals, not automatic findings.
 Check that tests have descriptive names, cover behavior and regression paths, and would catch an incorrect
 implementation. Check that documentation covers compatibility promises, operational steps, and user-visible effects.
 Distinguish evidence supplied by CI, builds, manual checks, screenshots, benchmarks, and before/after comparisons from
-verification actually performed during this review. Treat CI status as supporting evidence, not the review result.
+verification actually performed during this review. Treat CI status as supporting evidence, not the review result. For
+every command the change tells someone to run in a page, a comment, a help text, or a recipe, find the script, build
+target, or CI job that runs that exact form, flags included; a form that differs by a flag, a tool, or a version does
+not count. Where none does, compare what the tool's help text, reference, or source says the command acts on with the
+configuration the change creates, in each version the change supports. Where that does not settle it, the missing run is
+itself the observed fact: report it and ask for a run of that form or for the form a job runs.
 
 ### Structural defects
 

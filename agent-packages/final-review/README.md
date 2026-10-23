@@ -10,7 +10,8 @@ demands an answer to every item can, and the form is short enough that the items
    the first sentence of an added or changed comment, the list a comment carries, the sibling that delegates with a
    fixed argument, history narration.
 2. Every case the task statement, the commit message, and the test class comments claim, covered by a named test,
-   including the test that separates the chosen design from its alternative.
+   including the test that separates the chosen design from its alternative, and every command the change tells
+   someone to run, matched to a script or CI job that runs that exact form.
 3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and,
    where the change reads or replaces state an earlier version left behind, a test or run that starts from it.
    Then the level: a test that runs in every job, beside the existing tests of the unit, that skips with a reason
