@@ -29,8 +29,8 @@ cases that expect the same outcome.
   the rule's text still names the check a reviewer applies to any kind.
 - **A new case goes to a kind the cases do not cover yet**, where the edit rests on a kind they miss. The cases so far
   are `uber/NullAway#1834` and `#1750` and `apache/calcite#4410` (compiler-like harnesses),
-  `qubership-core-lib-go-paas-mediation-client#167` (a Go service client), and `frictionless-py#1799` (a batch
-  validator).
+  `qubership-core-lib-go-paas-mediation-client#167` (a Go service client), `frictionless-py#1799` (a batch validator),
+  and `qubership-authz-agent#122` (a Makefile recipe that waits for a Kubernetes Job).
 
 ## One rule, five places
 
