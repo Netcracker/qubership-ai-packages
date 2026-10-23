@@ -14,11 +14,12 @@ rule can be satisfied by a test worth nothing.
 - The four readers of a test: the person holding a red build and nothing else, the reviewer holding the diff, the
   refactorer who expects the suite to stay green, and the next author looking for where a case goes.
 - What a change owes in tests: nothing where the change cannot alter behavior, and for a dependency bump or a
-  regeneration the surface the green suite covers, named; otherwise the smallest level at which the changed behavior
-  is observable through the unit's interface, when a second level is owed, what a change made for speed owes, which
+  regeneration the surface the green suite covers, named; otherwise the smallest level at which the changed behavior is
+  observable through the unit's interface, when a second level is owed, what a change made for speed owes, which
   existing tests a deliberate behavior change updates, the test or run that starts from the state an earlier version
-  left behind where the change reads or replaces it, and the three questions that tell a chosen level from a
-  defaulted one.
+  left behind where the change reads or replaces it, the runs of a replaced mechanism's failures on the mechanism that
+  replaces it, with how long each takes to fail and what each prints, and the three questions that tell a chosen level
+  from a defaulted one.
 - Which inputs the test set uses: one case per equivalence partition, each invalid partition alone, the boundaries and
   their neighbors, the value just past another limit set at another layer on the same work, and the order those limits
   fire in at the defaults, a decision table for combinations, a state-transition test for history, a property-based test
