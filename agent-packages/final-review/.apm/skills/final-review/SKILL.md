@@ -66,6 +66,16 @@ that exercises it, by name. A claimed case with no test, or a test whose name pr
 exercise, is a finding. Where the statement names a reason for the design (a warning avoided, a value preserved),
 the test that would fail if the design were replaced by the alternative is the one to name.
 
+A command the change tells someone to run is a claimed case too: a command line in a page, a comment, a help text, or a
+recipe, with the outcome it promises. List every such command line in the changed files with its outcome. Beside each,
+put the script, build target, or CI job that runs the same command with the same flags on the configuration the change
+creates, or `none`. A documented form that differs from every form that runs, by a flag, a tool, or a version, is
+`none`. For each `none`, name the property of this configuration the outcome depends on (the kind of object the command
+acts on, a flag combination, the platform) and say what the tool does with it in each version the change says it
+supports. That a flag exists does not settle its outcome: compare what its help text, reference, or source says it acts
+on with what this configuration has. The finding is substantive, and the request is a run of that form on that
+configuration and those versions, or the documented form replaced by the one that runs.
+
 ### Item 3: boundaries, partitions, and the negative control
 
 For every input the test set varies: the boundary values and the value just outside them; each invalid partition
@@ -136,9 +146,10 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   or standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read,
   not remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow.
 - **Claimed cases covered.** The claimed cases are the cases the task statement names and the artifacts or situations
-  the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection:
-  a rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test.
-  A README's claim about the repository is covered by the file that makes it true.
+  the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
+  rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
+  README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
+  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*.
 - **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the
   change claims; the negative control is the statement of what does not apply, and the control arm of any trial the
   change carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the
