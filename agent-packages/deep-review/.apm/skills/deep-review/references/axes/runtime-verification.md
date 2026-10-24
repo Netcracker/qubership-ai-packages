@@ -19,7 +19,8 @@ Then choose. A finding is worth an execution when a runtime would change what th
 - it is `CONFIRMED` by code reading alone, and it is severe enough that the maintainers will argue — a demonstration
   ends the argument in one command;
 - its verification used a simulator: a fake clientset, a mock server, a stubbed transport. Those verdicts are the
-  least trustworthy in the whole report, in both directions;
+  least trustworthy in the whole report, in both directions. A `TLVL` finding that a double hides the real peer's
+  behavior belongs here too;
 - it concerns behavior a simulator structurally cannot model: validation and admission, defaulting, immutability,
   garbage collection and cascade, leader election, restart and requeue, resource limits.
 

@@ -28,11 +28,16 @@ The unit of work is a **dossier** — a directory under the reviewed repository 
 the generated prompts, the per-axis reports, and a normalized findings file. Nothing passes between stages as chat
 text, so any stage can be re-run on its own, and a review survives the session that started it.
 
-Eighteen axis definitions ship with the skill, covering correctness, tests, concurrency and lifecycle, the error model,
-API compatibility and API UX, protocol conformance, security, performance, data lifecycle, dependencies, build and
-release, deployment config, observability and operability, runtime verification, upgrade and migration, docs and
-onboarding, and architecture. Six surface packs cover `cli`, `helm`, `helm-qubership`, `kubernetes`,
-`gitops-argocd`, and `mcp`.
+Twenty-four axis definitions ship with the skill, covering correctness, tests and test levels, concurrency and
+lifecycle, the error model, API compatibility, internal contracts between components, API UX, protocol conformance,
+security, performance, data lifecycle, dependencies, build and release, deployment config, telemetry, observability and
+operability, runtime verification, upgrade and migration, docs and onboarding, documentation pages, frontend web, least
+surprise, and architecture. Seven surface packs cover `cli`, `helm`, `helm-qubership`, `kubernetes`, `gitops-argocd`,
+`mcp`, and `rest-http`.
+
+On a monorepo, or any repository whose parts differ in language, runtime, or owner, an axis can run as several slices,
+one agent per part (`paths`) or per join between parts (`seams`). The questions file proposes the slices, each slice
+gets its own report and verifier, and a digest per sliced axis feeds the consolidator.
 
 ## Install
 
@@ -66,12 +71,19 @@ repository) at `depth: coarse`. Default every phase to a cheaper model while you
 
 ## Reports
 
+A run writes two reports for two readers. `README.md`, one card per root-cause problem under `issues/`, and
+`findings.csv` are for the team that fixes the code: the README says what the review is and what the team is asked to
+do, and lists the problems in three priorities, each linked to a card that can be copied into a tracker.
+`audit/synthesis.md` is for the person who ran the review: disagreements between axes, coverage, refutations, and the
+verification rate. `scripts/findings-csv.py` rebuilds `findings.csv` and the generated blocks of the cards after a
+manual edit of `findings.jsonl`.
+
 The reports are written in Russian, with identifiers and paths in English. The section headings are fixed as
 `references/report-format.md` writes them, some in English and some in Russian, because the workflow and the
 completeness critic find sections by heading text. The Russian headings and labels live in `workflow/deep-review.js`,
-`references/report-format.md`, `references/axes/architecture.md`, and `SKILL.md`; the English ones the pipeline
-searches for are named in `workflow/deep-review.js`. Change the report language by renaming them in all of these
-files at once.
+`references/report-format.md`, `references/axes/architecture.md`, `scripts/findings-csv.py`, and `SKILL.md`; the
+English ones the pipeline searches for are named in `workflow/deep-review.js`. Change the report language by renaming
+them in all of these files at once.
 
 ## Paths
 

@@ -10,12 +10,15 @@ agents should dig. Make that list explicit and specific.
 
 ## What counts as a finding
 
-- A behavior that the code promises (in its API, its docs, or its error messages) and no test pins.
+- A behavior that the code promises (in its API, its docs, or its error messages) and no test pins at any level. A
+  behavior pinned only at the wrong level, or only through a double of the peer whose behavior is the risk, is
+  `test-strategy`'s.
 - A test that cannot fail: asserts nothing meaningful, asserts the mock, catches everything, or is skipped.
 - A defect class the suite is structurally blind to — concurrency, timeouts, partial failure, resource cleanup,
   large inputs, malformed inputs — because there is no harness that could express it.
 - A test that will fail for reasons unrelated to the code: wall-clock time, ordering, network, ports, locale,
-  file-system layout. Flakiness is a correctness problem in the suite.
+  file-system layout. Flakiness is a correctness problem in the suite. Where the cause is the level itself, a check
+  that would be deterministic one level down, route it to `test-strategy`.
 - A missing regression test for something the history says already broke (search the changelog and fix commits).
 - Tests that lock in the implementation rather than the contract, so any refactor breaks them. This makes the code
   unchangeable and is a real cost, not a style preference.
@@ -37,8 +40,9 @@ target — say which behavior is untested and why it matters.
    full-tool route and the manual one. Surviving mutants in core logic are the strongest evidence this axis can
    produce — quote each one as the exact edit that no test noticed.
 5. Look for the harnesses that should exist and do not: property-based tests where invariants are stated in prose,
-   fuzzing for parsers, integration tests against a real peer for protocol code, race detection in CI, deterministic
-   clocks and injected schedulers for timeout logic.
+   fuzzing for parsers, race detection in CI, deterministic clocks and injected schedulers for timeout logic. Whether a
+   behavior is tested at the right level, including a test against a real peer where only a double exists today,
+   belongs to `test-strategy`; note it under *Cross-axis notes*.
 6. Read CI: which of these actually runs on a pull request, on which platforms and versions, and what is allowed to
    fail.
 

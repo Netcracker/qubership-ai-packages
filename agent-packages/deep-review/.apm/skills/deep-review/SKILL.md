@@ -1,6 +1,6 @@
 ---
 name: deep-review
-description: Run a multi-axis adversarial review of a repository, a microservice, or a system of interacting components — profile the target, agree the focus with the user in a questions file, then fan out independent review axes (tests, correctness, error model, concurrency, API compatibility, API/agent UX, protocol conformance, security, operability, architecture and others), refute every finding before it is reported, and consolidate the survivors into one ranked report. Use when the user asks for a deep, adversarial, architecture, or multi-axis review of a repository, a service, an operator, a library, or a system of services, or runs /deep-review. Not for anything smaller than a repository or a deployable — a pull request, a diff, a class, a file, or a package. For those use adversarial-code-review (a pull request or merge request), codex-review (a branch diff or a commit), or a direct review. Runs only in Claude Code, through its Workflow tool.
+description: Run a multi-axis adversarial review of a repository, a monorepo, a microservice, or a system of interacting components — profile the target, agree the focus with the user in a questions file, then fan out independent review axes (tests, test levels, correctness, error model, concurrency, API compatibility, internal contracts, API/agent UX, protocol conformance, security, telemetry, operability, documentation pages, frontend web, least surprise, architecture and others), refute every finding before it is reported, and consolidate the survivors into a prioritized report for the team that fixes the code, with one tracker-ready card per root-cause problem. Use when the user asks for a deep, adversarial, architecture, or multi-axis review of a repository, a service, an operator, a library, or a system of services, or runs /deep-review. Not for anything smaller than a repository or a deployable — a pull request, a diff, a class, a file, or a package. Runs only in Claude Code, through its Workflow tool.
 ---
 
 # Deep review
@@ -58,7 +58,13 @@ a Kubernetes operator has `kubernetes` and usually `code-library`; a service may
 and a `cli`. Each form has its own naming conventions, its own definition of a breaking change, and its own normative
 source, and none of that can be derived from general principles. Available packs live in `references/surfaces/`; if a
 form has no pack yet, say so in the profile rather than pretending the generic axis covers it — then write the pack
-when the review proves what it needs to contain.
+when the review proves what it needs to contain. Where a pack asks for a profile line before any axis starts, write it
+now: for `rest-http`, the published spec file, whether it is hand-written or generated, the previous release tag, and
+the gateway in front of the server (`surfaces/rest-http.md`, "The contract artifact, first").
+
+**For a repository with more than one component, list the seams**: one row per contract between two of its
+components, with the producer and the consumer by `path`, the contract artifact, and the release unit of each side.
+The profiler only records; `contracts` checks the seams, and a sliced run passes them as `seams`.
 
 Create the dossier:
 
@@ -107,11 +113,14 @@ agent re-derives the build incantation, several get it wrong, and one reports a 
 flag. Most repositories do not document this correctly; a few have it in `AGENTS.md`, and where they do, verify it
 rather than copying it.
 
-Cover: build, unit tests, a single test, lint, coverage, and whatever else the axes will need. For each, give the
-exact command, the working directory, the expected wall-clock time, and — this is the part that saves the agents —
-every non-obvious flag with one line on why it is needed. Record the toolchain you used (JDK, Go, Node, Python
-version) and any version constraint you hit. Where a command does not work at all, say so explicitly, so an agent
-does not spend its budget rediscovering the failure.
+Cover: build, unit tests, a single test, lint, coverage, and whatever else the axes will need. Also cover each test
+level the repository has (unit, integration, contract, end-to-end or UI) with its infrastructure; the docs site build in
+its strict mode where one exists (`mkdocs build --strict`, `sphinx-build -W`, `hugo --panicOnWarning`); and, for a
+browser application, the development server, the production build behind the server it ships with, and how the backend
+is provided (real, compose, or the repository's mocks). For each, give the exact command, the working directory, the
+expected wall-clock time, and — this is the part that saves the agents — every non-obvious flag with one line on why it
+is needed. Record the toolchain you used (JDK, Go, Node, Python version) and any version constraint you hit. Where a
+command does not work at all, say so explicitly, so an agent does not spend its budget rediscovering the failure.
 
 A command in this file that turns out to be wrong is worse than an absent one. Run every line before you write it —
 and record the exit status the way the axes will read it. **Never take `$?` from the end of a pipeline**: it is the
@@ -123,11 +132,11 @@ This exact mistake was made on a real run and an axis built a recommendation on 
 **Where a tool is missing, do not accept the gap — close it.** A review that reports "helm is not installed, so the
 chart was not rendered" has spent a full agent to produce nothing. Work out what the axes will need from the
 repository's own build files: `helm`, `helmfile`, `kustomize`, `controller-gen`, `kubeconform`, `kind`, `terraform`,
-`vals`, `sops`, a JDK of a particular major version, a coverage or mutation plugin, a language server, a fuzzer, a
-protocol reference implementation. Then, in the questions file, list what is missing, what each unlocks, and how you
-would install it — and install the approved ones **before** the workflow starts, never from inside an axis. An agent
-that installs a toolchain mid-run burns its budget on setup, and a second agent installing the same thing
-concurrently is a race nobody debugs.
+`vals`, `sops`, `playwright` with its Chromium, a JDK of a particular major version, a coverage or mutation plugin, a
+language server, a fuzzer, a protocol reference implementation. Then, in the questions file, list what is missing, what
+each unlocks, and how you would install it — and install the approved ones **before** the workflow starts, never from
+inside an axis. An agent that installs a toolchain mid-run burns its budget on setup, and a second agent installing the
+same thing concurrently is a race nobody debugs.
 
 **Probe for a runtime; never assert its absence.** The most damaging thing this file can say is "no cluster / no
 database / no device is available", because every axis then falls back to a simulator and qualifies its conclusions
@@ -201,8 +210,15 @@ Cover, at minimum: archetype; surfaces; axes in and out with a one-line reason e
 incidents; what is explicitly out of scope; the stability contract (may the API change?); the depth — `coarse`
 (contracts, boundaries, deployables; executes only what already exists) or `deep` (adds reproduction tests, mutation
 runs, stress tests), which step 3 passes to every axis as `args.depth`; models per phase; whether to include a second
-opinion on the top findings. For a system, also: which interactions matter most, and which components are in scope
-only as far as they carry an interaction.
+opinion on the top findings; and who reads the report. For a system, also: which interactions matter most, and which
+components are in scope only as far as they carry an interaction.
+
+**Ask who the report is for.** The team that receives it did not take part in the review and opens it with one
+question: what is this, and what do you want from me. Ask for the readers, the decision expected of them (fix before a
+release, plan the next quarter, accept or reject the findings), the deadline, and whom they ask. `00-focus.md` carries
+the answer under a `## Report audience` heading, and the consolidator turns it into the "Что от вас нужно" line at the
+top of `README.md`. Without it that line falls back to a generic request for triage, which tells the reader nothing
+about urgency.
 
 **And a runtime section, always — even when you found nothing.** Probing (step 1) tells you what exists; only the
 user can tell you what may be touched, and the two questions have different answers far more often than not. Report
@@ -279,12 +295,13 @@ axis and verifier prompt: at `coarse`, an axis executes only what already exists
 and boundaries; at `deep`, the unit-level work the axis files describe is in scope.
 
 `surfaces` holds the forms from step 1 that have a pack in `references/surfaces/`: `cli`, `gitops-argocd`, `helm`,
-`helm-qubership`, `kubernetes`, `mcp`. The script refuses any other name. Every axis is told to read those packs and to
-obey the ownership table inside them; the distiller additionally carries their architectural questions into the
-synthesis prompt. Leave it out only when the repository genuinely exposes no API — which is rarer than it looks.
+`helm-qubership`, `kubernetes`, `mcp`, `rest-http`. The script refuses any other name. Every axis is told to read those
+packs and to obey the ownership table inside them; the distiller additionally carries their architectural questions
+into the synthesis prompt. Leave it out only when the repository genuinely exposes no API — which is rarer than it
+looks.
 
-`surfacesWithoutPack` holds the other forms from step 1, e.g. `["code-library", "rest-http"]` for a service that serves
-a REST API and also publishes a client library. The workflow names these forms to every axis as reviewed by the
+`surfacesWithoutPack` holds the other forms from step 1, e.g. `["code-library", "grpc"]` for a service that serves a
+gRPC API and also publishes a client library. The workflow names these forms to every axis as reviewed by the
 form-independent rules, so the gap shows up in coverage instead of disappearing.
 
 `components` is for a system review, one entry per row of the profile's components table:
@@ -313,27 +330,52 @@ axis: `refuteModel` (the verifier's model, over `models.refute`), `effort`, `att
 `distill: false` for a synthesis axis that reads the verified findings directly instead of a distilled prompt
 (`runtime-verification` is the one that does).
 
+**Slice an axis when one agent cannot cover its territory.** On a monorepo, or any repository whose parts differ in
+language, runtime, or owner, one agent per axis reads a sample and reports it as the whole. Give such an axis several
+entries, one per part:
+
+```json
+{ "key": "telemetry", "phase": "evidence", "slice": "pb", "paths": ["backend/portal-backend"] },
+{ "key": "telemetry", "phase": "evidence", "slice": "ui", "paths": ["frontend/ui"], "focus": "browser error reporting" },
+{ "key": "contracts", "phase": "evidence", "slice": "seams", "seams": ["APIHUB_API.yaml vs portal-backend routes"] }
+```
+
+Each entry is its own agent with its own report (`reports/<key>--<slice>.md`), findings file, worktree, and verifier;
+finding ids carry the slice (`TEL-PB-01`, or `idTag` when the slice name is long). `focus` narrows one agent within
+the same axis file, which is how one axis can still be split by concern. `seams` replaces `paths` for an axis that
+attacks the joins between parts. Before consolidation, every axis with more than one slice gets a digest
+(`work/digest-<key>.md`, model `models.digest`), and the consolidator reads digests instead of every slice report.
+The slices and the axis-by-slice matrix are proposed in the questions file and agreed with the user like everything
+else there: the partition is the most expensive decision of a monorepo run.
+
 Set `needsWriteAccess: true` for any axis that has to change the project to measure it — `tests` (coverage plugin,
 mutation run), `correctness` (reproduction tests), `performance` (benchmark harness), `protocol-conformance` (fuzzer),
-`api-compatibility` (building against the previous release). Axes that only read leave it off. At `depth: coarse`
-the unit-level measurements are off, so only an axis that has to edit the project to render or run an existing
-artifact (a coverage plugin for `tests`, a build against the previous release for `api-compatibility`) needs it.
+`api-compatibility` (building against the previous release), `test-strategy` (breaking a peer-facing artifact),
+`telemetry` (linters, a registry dump, a run with no host configuration), `contracts` (regenerated clients, replay
+tests), `frontend-web` (production build, framework lint), `docs-pages` (the docs site build). Axes that only read
+leave it off. At `depth: coarse` the unit-level measurements are off, so only an axis that has to edit the project to
+render or run an existing artifact (a coverage plugin for `tests`, a build against the previous release for
+`api-compatibility`, the docs site build for `docs-pages`) needs it.
 
 **Also pass `sessionRepoIsTarget: true` when, and only when, this session's own repository is the one under review.**
-Harness worktree isolation copies the *session's* repository, so on a cross-repository review it drops the agent into
-an unrelated checkout. With the flag absent, the workflow skips harness isolation and instructs each write-access axis
-to create its own worktree of the target repository under `work/<axis>-wt` instead. Getting this wrong is not a
-cosmetic problem: an agent either reviews the wrong codebase or silently writes into the user's real working tree.
+Harness worktree isolation copies the *session's* repository, so on a cross-repository review it drops the agent into an
+unrelated checkout. With the flag absent, the workflow skips harness isolation and instructs each write-access axis to
+create its own worktree of the target repository under `work/<axis>-wt` (`work/<key>--<slice>-wt` for a slice) instead.
+Getting this wrong is not a cosmetic problem: an agent either reviews the wrong codebase or silently writes into the
+user's real working tree.
 
 `phase` is one of three:
 
 - `scout` — cheap and broad, runs first behind a barrier because the others read its output. `tests` and
   `dependencies` belong here.
-- `evidence` — the main axes. They run concurrently and each is refuted as soon as it finishes.
+- `evidence` — the main axes. They run concurrently and each is refuted as soon as it finishes. `test-strategy`
+  belongs here, not in `scout`: it reads the `tests` scout report.
 - `synthesis` — `architecture`; `api-ux` when there is review history to distill from; `runtime-verification`, which
   settles the verified findings of the other axes against a running system. For `architecture` and `api-ux` a
   distiller agent writes `prompts/<axis>.md` from the evidence reports first, then the axis runs on that prompt.
-  `runtime-verification` is passed with `distill: false` and reads `work/findings-<axis>.jsonl` directly.
+  `runtime-verification` is passed with `distill: false` and reads `work/findings-<axis>.jsonl` directly. When
+  `telemetry` and `observability-operability` both run, put `observability-operability` here: it reads the signal
+  inventory of the `telemetry` report, and its distilled prompt carries that inventory.
 
 Order inside a phase does not matter. Every axis that reports at least one finding is followed by an adversarial
 verifier that writes `work/findings-<axis>.jsonl` (moving an earlier version into `work/history/`) and moves refuted
@@ -354,11 +396,12 @@ Models: default everything to `sonnet` while debugging the pipeline. For a real 
 { "default": "opus", "refute": "opus", "consolidate": "opus", "critic": "opus" }
 ```
 
-`models` also takes a key per phase (`scout`, `evidence`, `synthesis`), which an axis's own `model` overrides.
-
 with `"model": "fable"` on `correctness`, `concurrency-lifecycle`, `protocol-conformance`, and `architecture`;
 `"model": "opus"` on `security` (fable declines vulnerability work); `"model": "sonnet"` on the tool-driving axes —
 `tests`, `dependencies`, `docs-onboarding`, `build-release`.
+
+`models` also takes a key per phase (`scout`, `evidence`, `synthesis`), which an axis's own `model` overrides, and
+`digest` for the per-axis digests of a sliced run.
 
 `models.refute` deserves its own thought. Measured on a 12-axis run, the verifiers cost 35% of the whole budget and
 returned zero rejections and two downgrades out of 128 findings, because half of them "verified" by re-reading the
@@ -372,13 +415,28 @@ something itself. That is what makes the label mean anything, and it is also the
 can always decide whether it ran something, whereas "is this finding wrong" invites agreement.
 
 The workflow writes `reports/<axis>.md`, `prompts/<axis>.md` for the distilled synthesis axes, `findings.jsonl`, and
-`synthesis.md`.
-It returns counts only — read the files.
+two reports for two readers:
+
+- `README.md`, `issues/<NN>-<slug>.md`, and `findings.csv` are for the team that fixes the code. `README.md` is the
+  entry point: what the review is, what the team is asked to do, and the problems in three priorities, each linked to
+  a card that can be copied into a tracker. A card is a group of findings with one root cause; its generated block
+  links each finding to the place in every axis report that raised it, and lists the other axis reports that mention
+  it. A root-cause finding from `architecture` is the card itself, not a separate row beside its symptoms.
+- `audit/synthesis.md` is for you: disagreements between axes, coverage, refutations, the verification rate. Read it
+  before you trust the README.
+
+`scripts/findings-csv.py <dossier>` builds `findings.csv` and the generated blocks from `findings.jsonl`. The
+consolidator runs it, and you run it again after editing `findings.jsonl` by hand; it prints a `PROBLEM:` line for
+every broken link or inconsistent field. It refuses to overwrite `findings.csv` while that file holds decisions
+`findings.jsonl` lacks, so import those first. The workflow itself returns counts only — read the files.
 
 ### 4. Triage
 
-Read `synthesis.md`, then the reports behind anything that matters. For each finding, set `verdict` and, when
-rejecting, a typed `rejection_reason` in `findings.jsonl`:
+Read `audit/synthesis.md` and the "Первое прочтение" section of `work/completeness.md`, fix what the README gets
+wrong, then read the reports behind anything that matters. For each finding, set `verdict` (`fix`, `backlog`, or
+`reject`) and, when rejecting, a typed `rejection_reason` in `findings.jsonl`. When the team triages instead, they fill
+the same two columns in `findings.csv`; `scripts/findings-csv.py <dossier> --import-csv` copies them back into
+`findings.jsonl`.
 
 | `rejection_reason` | Meaning | Where the fix goes |
 | --- | --- | --- |
@@ -417,9 +475,10 @@ changed call on, so the axes sequenced before the bumped one come back from cach
 every axis sequenced after it, the distillers, the consolidator, and the critic run again. A re-run of an early axis
 therefore costs most of the run; a re-run of a synthesis axis costs little.
 
-To re-run one axis in a fresh run instead, pass only that axis in `axes` and the keys of every other axis whose report
-is already in the dossier in `priorAxes`; the consolidator then covers all of them. Without `priorAxes`, a fresh run
-consolidates the one axis it ran and writes a `synthesis.md` that covers nothing else.
+To re-run one axis in a fresh run instead, pass only that axis in `axes` and the report names (`<key>`, or
+`<key>--<slice>` for a sliced axis) of every other axis whose report is already in the dossier in `priorAxes`; the
+consolidator then covers all of them. Without `priorAxes`, a fresh run consolidates the one axis it ran and writes a
+README and an `audit/synthesis.md` that cover nothing else.
 
 ### 6. Post-mortem
 
@@ -450,7 +509,9 @@ grain step did not run on that row.
   that owns it. Cross-cutting by design: several axes read the same pack. Adding a pack means adding its name to
   `KNOWN_PACKS` in the workflow as well.
 - `workflow/deep-review.js` — the pipeline.
-- `scripts/new-dossier.sh` — dossier layout.
+- `scripts/new-dossier.sh` — dossier layout; the file map goes to `audit/dossier.md`.
+- `scripts/findings-csv.py` — `findings.csv` and the generated blocks of `README.md` and `issues/`; `--import-csv`
+  copies the team's decisions back.
 
 ## Rules for this skill itself
 

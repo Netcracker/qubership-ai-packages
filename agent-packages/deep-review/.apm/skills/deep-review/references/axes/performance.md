@@ -12,6 +12,8 @@ would notice a regression before a customer did.
 - **Allocation on the hot path** where the language makes it avoidable: per-message buffers, defensive copies of data
   that is never mutated, boxing in a tight loop, string concatenation in a formatter that is called for every event.
   Quantify — allocations per operation, not adjectives.
+- **Logging and telemetry cost.** `telemetry` reports a record per item and an unguarded argument as a rate defect.
+  Report here only the measured cost: allocations, throughput, or latency attributable to the emission.
 - **Contention.** A single lock, a single-threaded stage, or a shared counter on the path every request takes. Say
   what the ceiling is in concurrent callers.
 - **Unbounded growth.** Memory that scales with something the operator does not control: number of peers, in-flight
@@ -40,3 +42,5 @@ would notice a regression before a customer did.
   an explicit complexity class. "This is inefficient" is not a finding.
 - Do not propose an optimization that trades away clarity for an unmeasured gain. If you cannot say what it buys, it
   is not a finding.
+- Rendering cost in the browser, bundle size, and what a long list does to the main thread belong to `frontend-web`.
+  Report server-side latency here.

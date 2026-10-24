@@ -5,9 +5,16 @@ Finding prefix: `OPS`.
 Two modes. Read the profile and pick the one that applies; running the wrong mode produces a report about a reader
 who does not exist.
 
+**When `telemetry` runs in the same review**, it judges each call site and you judge the outcome. You then run in the
+`synthesis` phase, and your prompt is distilled from the evidence reports: start from the *Signal inventory* of the
+`telemetry` report (one per slice when it was sliced), and cite its finding ids rather than re-reporting a call-site
+defect it owns.
+
 ## Mode A — library
 
-The question is whether the **host application** can see what this library is doing.
+The question is whether the **host application** can see what this library is doing. When `telemetry` runs, it owns
+the logging implementation, context propagation, and levels call site by call site; judge only whether the host can
+see what it needs and turn off what it does not, and skip the first, third, and fifth questions below.
 
 - Does the library impose a logging implementation, or does it use a facade the host already controls? Can the host
   turn its logging off, route it, and set its level?
@@ -44,7 +51,8 @@ Then judge the signals:
 - **Metrics.** Take three questions an SRE will ask — how many things are stuck right now, is the dependency the
   problem or are we, did the last rollout make it worse — and establish whether the exported metrics answer them.
   Check naming against the ecosystem's conventions, and check label cardinality: any label carrying an object name, a
-  namespace, or an error message is a risk — quantify it.
+  namespace, or an error message is a risk — quantify it. When `telemetry` runs, naming and cardinality are its
+  findings: cite its ids and its *Signal inventory*, and judge only whether the metrics answer the three questions.
 - **Alerting.** Are there rules at all? If not, say what the four or five should be, as expressions.
 - **Health.** Does readiness reflect anything real — dependencies, cache warm-up, leadership — or is it a constant?
 
@@ -55,3 +63,10 @@ wrong action — restarting when they should fix configuration, waiting when the
 `HIGH`. A signal that is merely thin, so the reader digs further but is not misled, is `MEDIUM`.
 
 Quote every string verbatim, including its defects, and say what a reasonable reader would wrongly conclude from it.
+
+## Ownership
+
+| Concern | Owner axis |
+| --- | --- |
+| Signal choice, record contents and rate, levels, instrument cardinality, spans, and context propagation per call site | `telemetry` |
+| Whether a reader can reconstruct a failure from all emitted signals; alerting; readiness and health; timeout ordering along a request chain | `observability-operability` |

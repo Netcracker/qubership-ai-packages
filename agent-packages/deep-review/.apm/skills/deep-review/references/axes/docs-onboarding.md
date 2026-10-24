@@ -24,8 +24,16 @@ read the source, guess, or search elsewhere is a finding.
 
 ## Then check
 
+When `docs-pages` runs in the same review, it owns every page off the drill path, the reference-completeness gap
+list, operations material (troubleshooting and runbook pages), and links and anchors. This axis then applies the
+checks below to the README, the getting-started page, and the first tutorial only, and records a gap it trips over
+elsewhere as one line under *Cross-axis notes*. When `docs-pages` does not run, the checks below cover all
+documentation.
+
 - **Accuracy.** Documented behavior against actual behavior: defaults, units, option names, output formats, exit
-  codes. Documentation that is wrong is worse than documentation that is missing, and rates higher.
+  codes. Documentation that is wrong is worse than documentation that is missing, and rates higher. When a page and
+  the behavior disagree, the owner is the side the fix must change, by the rule in `least-surprise.md`: a wrong page
+  is yours, a behavior that must change is `least-surprise`.
 - **Coverage of the contract in the pages.** Every public entry point appears in the reference material with what it
   does, what it requires, and what it returns. Whether the doc comment on the declaration itself states the contract
   (units, nullability, thread-safety, what throws) is `api-ux`'s question; this axis owns the pages, the README, and

@@ -20,7 +20,8 @@ connection library this is usually the axis with the most severe findings.
   invoked under a lock are a design defect: the caller's code can now deadlock you.
 - **Executors and threads.** Who creates them, who owns them, who shuts them down, and what happens to queued work at
   shutdown. Unbounded queues, unbounded thread creation, and `newFixedThreadPool` sized by a constant that assumes a
-  machine size are all findings.
+  machine size are all findings. Trace context and MDC carried across those boundaries belong to `telemetry`;
+  cancellation and deadlines stay here.
 - **Callback and listener threads.** Which thread runs user code, is it documented, and can slow user code stall the
   I/O loop?
 - **Async composition.** Futures that drop exceptions, `whenComplete` without a return, unhandled rejection,
@@ -50,3 +51,6 @@ detector proves the tests did not exercise the path, not that the path is safe â
 Where a race is plausible but unproven, write the stress test. A hundred iterations with a barrier is usually enough
 to make it reproduce, which turns a `traced` finding into an `executed` one â€” and that is what the verifier needs
 before it can call the finding `CONFIRMED`.
+
+In browser code, out-of-order responses that overwrite newer state, and subscriptions or timers a component does not
+clean up, belong to `frontend-web`.

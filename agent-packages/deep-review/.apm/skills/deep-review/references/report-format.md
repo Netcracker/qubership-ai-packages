@@ -22,7 +22,8 @@ with what you tried and what would settle it. Before the findings, so a reader w
 Ordered by proposed severity, then by how firmly you established each one. One block each:
 
 ```markdown
-### <AXIS>-01 <one-line claim, stated as a defect> — HIGH
+<a id="conc-01"></a>
+### CONC-01 <one-line claim, stated as a defect> — HIGH
 
 - **Where:** `path/to/file.go:123-141`
 - **Trigger:** what has to happen — inputs, ordering, scale, or failure mode
@@ -45,6 +46,10 @@ the only stage that sees every axis. A finding that arrives pre-labelled tells t
 which is exactly what these splits are meant to prevent.
 
 Use the axis key as the finding prefix: `CONC-01`, `SEC-03`, `ARCH-02`.
+
+Put the anchor line `<a id="conc-01"></a>`, with the finding id in lowercase (not the axis key), directly above each
+finding heading. The team's report links to `reports/<axis>.md#conc-01` from every problem the finding supports, and
+a heading's automatic anchor changes whenever its wording does.
 
 ## Отклонено автором
 

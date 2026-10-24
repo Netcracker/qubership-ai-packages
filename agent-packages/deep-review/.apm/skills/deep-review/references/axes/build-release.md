@@ -20,7 +20,8 @@ Whether the thing can be built, tested, and shipped reliably by someone who is n
 
 ## CI
 
-- What runs on a pull request versus on the default branch versus on a release, and what is allowed to fail.
+- What runs on a pull request versus on the default branch versus on a release, and what is allowed to fail. Which
+  level a behavior is tested at is `test-strategy`'s; which of those suites CI runs, and when, is yours.
 - The matrix: which language versions, platforms, and dependency versions are actually exercised against the ones the
   project claims to support. A supported combination nobody tests is a finding.
 - Required checks: does a green pull request mean the tests ran? A check that is skipped when no files match, and is
@@ -48,3 +49,6 @@ Whether the thing can be built, tested, and shipped reliably by someone who is n
 
 Findings must name what breaks and for whom. A build detail that never causes a failure is not a finding. Where you
 could not run something (no credentials, no network), say so explicitly rather than reporting it as absent.
+
+What a production frontend build contains (source maps, debug flags, development framework builds, chunk layout)
+belongs to `frontend-web`. Whether the build is reproducible and published correctly stays here.

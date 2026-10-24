@@ -34,7 +34,7 @@ const depth = A.depth || 'coarse'
 const components = A.components || []
 // The packs that ship under references/surfaces/. Every entry of `surfaces` becomes a path agents are told to read, so
 // an unknown name is refused here rather than sending every axis to a missing file.
-const KNOWN_PACKS = ['cli', 'gitops-argocd', 'helm', 'helm-qubership', 'kubernetes', 'mcp']
+const KNOWN_PACKS = ['cli', 'gitops-argocd', 'helm', 'helm-qubership', 'kubernetes', 'mcp', 'rest-http']
 const PHASES = ['scout', 'evidence', 'synthesis']
 const DEPTHS = ['coarse', 'deep']
 
@@ -74,6 +74,31 @@ const evidenceAxes = allAxes.filter((a) => a.phase === 'evidence' || !a.phase)
 const synthAxes = allAxes.filter((a) => a.phase === 'synthesis')
 const axisKeys = allAxes.map((a) => a.key)
 
+// A sliced axis runs one axis file as several agents, each on one part of the repository (`slice`, `paths`,
+// optional `focus`; `seams` instead of `paths` for an axis that attacks the joins between parts). Everything an
+// agent writes is named by its instance, never by the axis key alone, so two slices cannot overwrite each other.
+const inst = (axis) => (axis.slice ? `${axis.key}--${axis.slice}` : axis.key)
+const sliceTag = (axis) => (axis.idTag || axis.slice || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+const keyOf = (instance) => instance.split('--')[0]
+
+const sliceNote = (axis) => {
+  if (!axis.slice) return ''
+  const scope =
+    axis.seams && axis.seams.length
+      ? `these seams between parts of the repository:\n${axis.seams.map((s) => `   - ${s}`).join('\n')}`
+      : `these paths: ${(axis.paths || []).join(', ')}`
+  const focus = axis.focus ? `\nWithin that scope, concentrate on: ${axis.focus}` : ''
+  return `
+
+**This axis is sliced.** Several agents run the "${axis.key}" axis, each on one part of the repository. You are the
+"${axis.slice}" slice and you cover ${scope}${focus}
+
+Read outside your scope only to understand a caller, a dependency, or the other side of a seam; report a defect
+outside it as one line under "Cross-axis notes" naming the slice it belongs to. Your coverage must say which parts of
+your scope you examined and which you did not. Give your findings ids of the form \`<axis prefix>-${sliceTag(axis)}-01\`,
+so they stay unique across slices, and use the same lowercase form in the report anchors.`
+}
+
 const modelFor = (axis) => axis.model || models[axis.phase || 'evidence'] || models.default || 'sonnet'
 
 // The verifier must not inherit the finder's model: the same reasoning that produced a finding is
@@ -82,7 +107,7 @@ const modelForStage = (axis, phase) =>
   phase === 'Refute' ? axis.refuteModel || models.refute || modelFor(axis) : modelFor(axis)
 
 const optsFor = (axis, phase) => {
-  const o = { label: `${phase}:${axis.key}`, phase, model: modelForStage(axis, phase) }
+  const o = { label: `${phase}:${inst(axis)}`, phase, model: modelForStage(axis, phase) }
   if (axis.agentType) o.agentType = axis.agentType
   if (axis.effort) o.effort = axis.effort
   // Harness-level worktree isolation copies the SESSION's repository, which is only the right
@@ -106,7 +131,7 @@ const checkouts = components.length ? components : [{ name: 'the repository', re
 const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`
 const slug = (s) => String(s).replace(/[^A-Za-z0-9.-]+/g, '-')
 const worktreePath = (axis, prefix, c) =>
-  `${dossier}/work/${prefix}${axis.key}-wt${components.length ? `-${slug(c.name)}` : ''}`
+  `${dossier}/work/${prefix}${inst(axis)}-wt${components.length ? `-${slug(c.name)}` : ''}`
 
 const worktreeCommands = (axis, prefix) =>
   checkouts.map((c) => `git -C ${q(c.repo)} worktree add ${q(worktreePath(axis, prefix, c))} HEAD`).join('\n')
@@ -376,7 +401,7 @@ Stay inside your axis — anything real that belongs elsewhere goes in one
 line under "Cross-axis notes".
 
 **If 00-focus.md carries a directed question addressed to "${axis.key}", answering it is not optional.** Each such
-question is addressed to exactly one axis, and yours is the only agent that will look at it. Answer it under a
+question is addressed to exactly one axis, and yours is the only agent that will look at it${axis.slice ? ' within your slice: answer it for your scope, and say which part of the question your scope cannot settle' : ''}. Answer it under a
 "Направленные вопросы" heading in your report, one subsection per question, before the findings. If you could not
 settle it, say that in the same place and say what you tried and what would settle it — a question you leave out
 entirely reads downstream as a question nobody needed to ask. A directed question that turns out to have an answer
@@ -394,11 +419,11 @@ that work is invisible: the verifier only ever sees what survived your own filte
 rates look suspiciously clean. List the defects you suspected and dropped, each with the mechanism that made it a
 non-issue. A short report with ten rejected candidates says something very different from a short report with none.
 
-Write the full report to ${dossier}/reports/${axis.key}.md in Russian, with identifiers and paths in English. Give
+Write the full report to ${dossier}/reports/${inst(axis)}.md in Russian, with identifiers and paths in English. Give
 each finding a "Проверка:" line carrying your \`method\` and \`evidence\`; leave the confidence line out — the verifier
 stamps it in afterwards.
 Then write your findings, exactly as you are about to return them, one JSON object per line to
-${dossier}/work/raw-${axis.key}.jsonl, replacing the file if it exists. This is the untouched pre-verification record:
+${dossier}/work/raw-${inst(axis)}.jsonl, replacing the file if it exists. This is the untouched pre-verification record:
 the verifier writes a separate file, and with both on disk a reader can check afterwards which claims came from you
 and which judgements came from the verification stage. Write it even if it duplicates what you return.
 
@@ -407,7 +432,7 @@ If you genuinely found nothing after doing the work, return an empty findings ar
 "Checked and sound" section is what tells the next reader your axis was covered.
 
 **The structured output is your final act, not a checkpoint.** Emitting it ends your turn immediately: there is no
-second chance to do the work afterwards. Call it exactly once, only after ${dossier}/reports/${axis.key}.md exists on
+second chance to do the work afterwards. Call it exactly once, only after ${dossier}/reports/${inst(axis)}.md exists on
 disk with the finished report in it. Never emit a placeholder, a progress note, or a "about to start" value — that
 silently destroys the axis, and the pipeline will record it as an axis that ran and found nothing.${attemptNote(axis)}`
 
@@ -426,10 +451,10 @@ Read these, in order, and follow them:
    axes, and they are often the difference between a tool that runs and an hour lost.
 
    If a command fails for you, needs another flag, or you found one worth passing on, write your own
-   ${dossier}/work/commands-${axis.key}.md — one file per axis, so parallel axes cannot overwrite each other. Create it
+   ${dossier}/work/commands-${inst(axis)}.md — one file per axis, so parallel axes cannot overwrite each other. Create it
    only if you have something to say. State what you ran, what happened, and the fix.
 6. ${dossier}/00-focus.md — the agreed focus and what is explicitly out of scope
-${extraInputs}${surfaceNote}
+${extraInputs}${surfaceNote}${sliceNote(axis)}
 
 Then do the work. Prefer executing things over reasoning about them: run the build, run the tests, run the
 ecosystem's analyzer.${axisTail(axis)}`
@@ -440,8 +465,8 @@ You are the adversarial verifier for the "${axis.key}" axis. Another agent produ
 
 ${JSON.stringify(payload.findings, null, 2)}
 
-Its report is at ${dossier}/reports/${axis.key}.md, and the findings exactly as it raised them are in
-${dossier}/work/raw-${axis.key}.jsonl. The rules it worked under are at ${skill}/references/common-rules.md; its axis
+Its report is at ${dossier}/reports/${inst(axis)}.md, and the findings exactly as it raised them are in
+${dossier}/work/raw-${inst(axis)}.jsonl. The rules it worked under are at ${skill}/references/common-rules.md; its axis
 definition is at ${skill}/references/axes/${axis.key}.md.
 
 That report also carries a "Отклонено автором" section: the defects the author suspected and dropped. **Read it, and
@@ -497,17 +522,17 @@ anything. Reserve \`CONFIRMED\` and it will start to mean something to the reade
 
 Then do two things.
 
-1. Write ${dossier}/work/findings-${axis.key}.jsonl, one JSON object per line — every finding, refuted ones included,
+1. Write ${dossier}/work/findings-${inst(axis)}.jsonl, one JSON object per line — every finding, refuted ones included,
    and every finding you raised yourself. If the file already exists, first move it to
-   ${dossier}/work/history/findings-${axis.key}.<n>.jsonl with the next free <n> (create the directory if it is
-   missing), so the current file holds exactly this verification and the history stays readable. Field names are snake_case and fixed, because the consolidator
-   and the post-mortem read them by name:
+   ${dossier}/work/history/findings-${inst(axis)}.<n>.jsonl with the next free <n> (create the directory if it is
+   missing), so the current file holds exactly this verification and the history stays readable. Field names are
+   snake_case and fixed, because the consolidator and the post-mortem read them by name:
    - the author's, copied from the structured finding: \`id\`, \`axis\`, \`title\`, \`file\`, \`component\`, \`trigger\`,
      \`actual\`, \`expected\`, \`consequence\`, \`fix\`, \`tool_limit\` (from \`toolLimit\`), \`proposed_severity\` (from
      \`proposedSeverity\`), \`method\`, \`evidence\`, and \`fit\`, \`settles\`, \`runtime_verdict\` where present;
    - yours: \`severity\` (the proposal, or your \`newSeverity\` where you changed it), \`confidence\`, \`verified_by\`,
      \`verify_verdict\`, \`verify_reason\`.
-2. Edit ${dossier}/reports/${axis.key}.md: stamp your \`confidence\` onto each finding block, move refuted findings
+2. Edit ${dossier}/reports/${inst(axis)}.md: stamp your \`confidence\` onto each finding block, move refuted findings
    into a closing section "## Отклонено при проверке" with the reason for each, and apply downgrades in place.
    Nothing disappears silently.
 
@@ -523,7 +548,7 @@ Read:
 3. ${dossier}/00-profile.md and ${dossier}/00-focus.md
 4. Every evidence report that exists: ${evidenceKeys.map((k) => `${dossier}/reports/${k}.md`).join(', ')}
 
-Write a single self-contained prompt to ${dossier}/prompts/${axis.key}.md. It must:
+Write a single self-contained prompt to ${dossier}/prompts/${inst(axis)}.md. It must:
 
 - restate the axis filter in the concrete terms of THIS repository, with examples of what to reject;
 - name the load-bearing mechanisms of this system, with file paths, so the reviewer can find them fast — describe them
@@ -553,31 +578,59 @@ you framed and the path you wrote.${attemptNote(axis)}`
 
 const runDistilledPrompt = (axis) => `${preamble}
 
-You own the "${axis.key}" axis. Your instructions are in ${dossier}/prompts/${axis.key}.md — read that file and execute
+You own the "${axis.key}" axis. Your instructions are in ${dossier}/prompts/${inst(axis)}.md — read that file and execute
 it exactly. It supersedes the generic axis file where the two differ; where it is silent, fall back to
 ${skill}/references/axes/${axis.key}.md, ${skill}/references/common-rules.md, and
 ${skill}/references/report-format.md. Read ${dossier}/00-commands.md and any ${dossier}/work/commands-*.md before you
-run anything.${surfaceNote}${axisTail(axis)}`
+run anything.${surfaceNote}${sliceNote(axis)}${axisTail(axis)}`
+
+// Before consolidation, each sliced axis gets one digest across its slices. Without it the consolidator reads every
+// slice report in full, and on a monorepo that is more text than one agent can hold.
+const digestPrompt = (key, instances) => `${preamble}
+
+You are writing the digest of the "${key}" axis, which ran as ${instances.length} slices: ${instances.join(', ')}. You do
+not review code and you do not change any finding.
+
+Read, for each slice, ${dossier}/reports/<slice>.md and ${dossier}/work/findings-<slice>.jsonl. Write
+${dossier}/work/digest-${key}.md with:
+
+- one line per slice: what it covered and what it says it could not reach;
+- a table of every finding: id, slice, severity, confidence, verify verdict, title, file;
+- defects reported by two slices that are one defect, typically in code the slices share, with both ids;
+- one defect shape found in several slices, with the ids: a candidate for a single problem card across components;
+- cross-axis notes from the slices, merged and deduplicated;
+- the answers to directed questions from the slices' "Направленные вопросы" sections, merged into one answer per
+  question, with what each slice settled and what none of them did.
+
+Return a two-sentence summary.`
 
 const consolidatePrompt = (keys, cleanAxes, unverifiedAxes) => `${preamble}
 
 You are consolidating the whole review. Read ${dossier}/00-focus.md, every report in ${dossier}/reports/, and every
 per-axis findings file in ${dossier}/work/findings-*.jsonl.${componentNote}
 
-Do four things.
+Some axes may have run as slices, one agent per part of the repository: their reports are named
+\`<axis>--<slice>.md\`. For each such axis read ${dossier}/work/digest-<axis>.md instead of every slice report in full,
+and open a slice report only for the findings you put on a problem card. In \`sources\`, \`axis\` is the report name
+without \`.md\`, slice included, because that is where the finding's anchor lives. A defect shape found in several
+slices is usually one problem card, with the slices' components listed in "Где".
+
+Do these things, in order.
 
 0. **Audit the run before you summarize it.** For every axis in the covered list, check that
    ${dossier}/reports/<axis>.md exists and holds a real report. An axis with no report file, or with a stub, did NOT
    run — whatever its findings file says. Report it as **failed**, never as "found nothing": the two look identical
    downstream and only one of them is good news. An axis with a report and no findings file is one of two things:
    ${cleanAxes.length ? `these axes completed with zero findings, so no verifier ran and the report's "Checked and sound" section is their evidence: ${cleanAxes.join(', ')}. ` : ''}${unverifiedAxes.length ? `for these axes the verifier failed, so their findings are unverified — carry them at PLAUSIBLE, say so on every one, and list the axis under verification failures: ${unverifiedAxes.join(', ')}. ` : ''}Any other axis with a report and no findings file failed
-   between report and verification; report it as failed. List every such axis at the top of the Покрытие section.
+   between report and verification; report it as failed. List every such axis at the top of the Покрытие section of the audit file, and name it in the
+   Итог of README.md as well: the team has to know which areas the review did not cover.
 
    **Then audit the directed questions the same way.** Read the \`## Directed questions\` section of
-   ${dossier}/00-focus.md and list every question it carries with its owning axis. For each, find the answer in that
-   axis's report — normally under its "Направленные вопросы" heading. A question with no answer anywhere is a hole in
-   the run, not a question that turned out to be uninteresting, and it must appear in the Вердикт as an explicit
-   "не отвечено", not merely in Покрытие. This is the one gap a reader cannot detect from the findings, because an
+   ${dossier}/00-focus.md (an older focus file may title it differently, such as "Затравки для осей": take the
+   section that addresses questions to named axes) and list every question it carries with its owning axis. For each, find the answer in that
+   axis's report — normally under its "Направленные вопросы" heading; for a sliced axis, in its digest. A question with no answer anywhere is a hole in
+   the run, not a question that turned out to be uninteresting, and it must appear in the Итог of README.md as an
+   explicit "не отвечено", not merely in Покрытие. This is the one gap a reader cannot detect from the findings, because an
    unanswered question produces no output at all.
 
 1. Write ${dossier}/findings.jsonl: one JSON object per line, merged from the per-axis files. Deduplicate — the same
@@ -600,24 +653,151 @@ Do four things.
    Keep \`proposed_severity\` alongside \`severity\` so the disagreement stays visible, and explain each adjudication
    in the Противоречия section. A synthesizing axis that bundled two defects under one severity is the usual reason
    its number differs from the specialist's; say so when that is what happened.
-2. Write ${dossier}/synthesis.md in Russian (identifiers and paths in English):
-   - **Вердикт** — at most fifteen lines: is this safe to ship, the three things to fix first, and the single biggest
-     risk. No hedging.
-   - **Сводная таблица** — every surviving finding: id, axis, severity, confidence, one-line claim, file${components.length ? ', component' : ''}.
-   - **Кластеры** — groups of findings that share a root cause, each with the cause named. This is the most valuable
-     section; spend your budget here. A \`FIT\` finding names the evidence findings it explains: cluster those under
-     it, and carry the \`tool_limit\` line of each.${components.length ? `
-   - **Взаимодействия компонентов** — every finding that names two components, grouped by the pair, and every
-     interaction the profile names that no finding and no "Checked and sound" line covers.` : ''}
+
+   Every line also carries the fields the team's report is built from:
+   - \`title\` — one line, in Russian. Where the axis wrote it in another language, keep the original in
+     \`title_en\`; this is the one field whose value you replace.
+   - \`sources\` — \`[{"axis": "<report name>", "id": "<the id that axis used>"}]\`, one entry per axis whose finding
+     was merged into this line, the line's own id first. The links from the team's report into the axis reports are
+     built from this field, so it must name the id under which each axis report carries the finding, and the report
+     name without \`.md\`: the axis key, or \`<key>--<slice>\` for a sliced axis.
+   - \`issue\` — the name of the problem file in ${dossier}/issues/ this finding belongs to (step 2), without
+     \`.md\`, such as \`01-default-secrets\`; or \`null\`.
+   - \`priority\` — the finding's own: \`now\`, \`plan\`, or \`later\`; \`null\` only for a refuted finding. \`now\` is
+     what has to be fixed before the next release: a CRITICAL, or a CONFIRMED HIGH that the default configuration or
+     a documented operation reaches. \`plan\` is the rest of HIGH and MEDIUM; \`later\` is LOW and
+     \`ACCEPTED-DEBT\`. A finding keeps its own priority inside a problem: a LOW symptom in an urgent card stays
+     \`later\`, so the team can fix the cause first and leave the minor symptoms for later.
+   - \`component\` — ${components.length ? `the component name from the list above, as the axis set it; a finding
+     about an interaction names the component where the fix lands` : `the part of the repository its owner would
+     recognize: a chart, a controller, the dashboards, CI, the docs. Derive it from the path, use the profile's
+     vocabulary, and keep the whole run to about eight values`}.
+   - \`effort\` — \`S\` (hours, one place), \`M\` (days, several files and tests), or \`L\` (a design change). It is an
+     estimate; the README says so.
+
+   An architecture finding that names the root cause of other findings is not a separate line next to its symptoms:
+   it becomes the problem in step 2, and its line carries the same \`issue\` as the symptoms. A reader who sees the
+   cause and each symptom as unrelated rows reads them as duplicates.
+
+2. Write one file per problem to ${dossier}/issues/<NN>-<slug>.md, where \`NN\` is the rank (01, 02, …) and the slug is
+   a few English words. A problem is a group of findings with one root cause, the unit a team files as one ticket and
+   fixes in one change. This is the most valuable part of the run; spend your budget here. A \`FIT\` finding names
+   the evidence findings it explains: they form one problem, and the card carries the \`tool_limit\` line of each.
+   Rank the problems by what the cause costs, not by how many findings it collects.
+
+   A problem's priority is the most urgent priority among its findings, and it decides which README table the card
+   goes in. At most five problems are \`now\`, the few a team can start on this week. Where more qualify, the cap
+   wins: the most damaging five stay \`now\`, the others move to \`plan\` together with their \`now\` findings, and
+   the Итог says how many were moved. The card's \`Компонент\` is the one component where most of the fix lands;
+   the README index lists the card under that component only.
+
+   Each card, in Russian, in this order. The reader is a developer who did not take part in the review and will
+   copy the card into a tracker:
+
+   \`\`\`markdown
+   # <the problem in one sentence, in terms of what breaks for whom>
+
+   **Приоритет:** Чинить первым · **Объём:** M · **Компонент:** chart · **Находок:** 11
+
+   ## Что не так
+   <two or three sentences: who is affected, under which ordinary operation, with what result>
+
+   ## Как воспроизвести
+   <the command and its decisive output, taken from the strongest executed evidence; or "не воспроизводилось,
+   прослежено по коду:" and the path that was traced>
+
+   ## Что сделать
+   <the minimal fix; then, if it differs, the right fix and its trade-off>
+
+   ## Как проверить исправление
+   <the test, command, or observation that shows the fix works>
+
+   ## Где
+   <\`path:line\` list>
+
+   ## Находки и области проверки
+   <!-- BEGIN generated:evidence -->
+   <!-- END generated:evidence -->
+   \`\`\`
+
+   Leave the generated block empty: step 4 fills it with every finding of the problem, a link to the place in each
+   axis report that raised it, and the other axis reports that mention it.
+
+3. Write ${dossier}/README.md, in Russian. It is the entry point: a reader who opens the dossier sees it first, and
+   the folder view on GitHub renders it. Hold it to about 150 lines and to words a developer outside the review
+   understands. Do not use "ось", "верификатор", "затравка", \`CONFIRMED\`, \`PLAUSIBLE\`, \`refuted\`, or
+   \`executed\`/\`traced\` there or in the cards; write "область проверки", "воспроизведено", "по коду",
+   "снято при проверке". Every finding id you mention is a link. Structure:
+
+   \`\`\`markdown
+   # Ревью <repository> — что чинить
+
+   **Что это.** <two sentences: a review of the whole repository at <commit> on <date>, not of a pull request;
+   N areas were checked (link to the list in audit/synthesis.md), each finding was re-checked separately, and how many
+   of them were reproduced on a running system>
+
+   **Что от вас нужно.** <from the "Report audience" section of 00-focus.md: who is asked to do what, by when, and
+   whom to ask. Where the focus file has no such section, write: разобрать раздел «Чинить первым», а по остальным
+   находкам проставить решение в findings.csv>
+
+   **Итог.** <at most five lines: is this safe to ship, the single biggest risk, every area that failed to run, every
+   directed question left unanswered>
+
+   ## Чинить первым
+   | # | Проблема | Чем грозит | Что сделать | Объём | Компонент |
+   <one row per problem with priority now; the problem cell links to issues/<file>.md>
+
+   ## Запланировать
+   <the same table for priority plan>
+
+   ## На усмотрение
+   <one line: how many findings, and that they are in findings.csv with priority later>
+
+   ## Отдельные находки
+   <!-- BEGIN generated:standalone -->
+   <!-- END generated:standalone -->
+
+   ## Ответы на вопросы, заданные перед ревью
+   <one line per directed question from 00-focus.md: the question, the answer in a sentence, and a link to the
+   problem or the report section that settles it; or "не отвечено">
+
+   ## По компонентам
+   <!-- BEGIN generated:components -->
+   <!-- END generated:components -->
+
+   ## Как разобрать отчёт
+   - Решения по находкам: findings.csv, колонки \`verdict\` (\`fix\`, \`backlog\`, \`reject\`) и, для \`reject\`,
+     \`rejection_reason\` (\`convention\`, \`guard-missed\`, \`out-of-scope\`, \`model-error\`, \`accepted-debt\`).
+   - Подробности и доказательства по каждой находке: reports/<область>.md, ссылки есть в карточках проблем.
+   - Как проводилось ревью, где области разошлись и что осталось непроверенным: audit/synthesis.md.
+   - Что за проект и как его собрать: 00-profile.md, 00-commands.md.
+
+   ## Словарь
+   <five or six lines: область проверки, воспроизведено, по коду, серьёзность (CRITICAL, HIGH, MEDIUM, LOW), the id
+   prefix (DATA-02 is the second finding of the data-lifecycle area), объём S/M/L>
+   \`\`\`
+
+   Leave the two generated blocks empty; step 4 fills them.
+
+4. Run \`python3 ${skill}/scripts/findings-csv.py ${dossier}\`. It writes ${dossier}/findings.csv, fills the generated
+   blocks, and prints a \`PROBLEM:\` line for every inconsistency: a finding that points at a missing issue file, an
+   issue file no finding points at, a missing marker, a priority outside \`now\`/\`plan\`/\`later\`, a link to an
+   anchor the axis report lacks. Add a missing \`<a id="...">\` line to the axis report above the finding heading. Fix each one in
+   findings.jsonl or the card and run it again until it prints none.
+
+5. Write ${dossier}/audit/synthesis.md, in Russian. It is the record of how the review went, for the person who ran
+   it; the team does not need it to act. Sections:
    - **Противоречия между осями** — where two axes disagree about the same code, with your reading of who is right.
-   - **Направленные вопросы** — one row per question from 00-focus.md: the question, its owning axis, and the
-     answer or the word "не отвечено". Put this section directly after Вердикт, not at the end: an unanswered
-     directed question is more actionable than most findings, and burying it is how it gets lost twice.
-   - **Покрытие** — which axes ran, what each says it could not reach, which axes did not run at all, and every
-     concern a surface pack routes to an axis that was not in the run (the axes list them under "Cross-axis notes").
-     Include the negative checks the axes actually executed and the count of candidates each one rejected on its own:
-     an axis that reported five findings and no rejections either got lucky or did not look hard, and the reader
-     should be able to tell those apart.
+${components.length ? `   - **Взаимодействия компонентов** — every finding that names two components, grouped by the pair, and every
+     interaction the profile names that no finding and no "Checked and sound" line covers.
+` : ''}   - **Покрытие** — which axes ran, what each says it could not reach, and which axes did not run at all. Include
+     the negative checks the axes actually executed and the count of candidates each one rejected on its own: an axis
+     that reported five findings and no rejections either got lucky or did not look hard, and the reader should be
+     able to tell those apart. Name every concern a surface pack routes to an axis that was not in the run (the axes
+     list them under "Cross-axis notes"). Some axes leave a table this section must carry forward: from \`contracts\`, every
+     row of its *Seams* table whose result is \`not checked\`; from \`frontend-web\`, every journey in *Journeys
+     driven* that was only read, not driven; from \`test-strategy\`, the *Test levels by component* table as is. A
+     seam nobody checked and a journey nobody drove look like clean code unless this section names them.
    - **Отклонено при проверке** — the count per axis, and the three most interesting refutations, because they say
      something about the reviewers as well as the code. Report the verification rate here too: how many findings a
      verifier actually executed something for (\`verified_by: executed\`) versus merely read, and the resulting
@@ -625,7 +805,8 @@ Do four things.
      finding — if a per-axis file carries a confidence the verifier did not set, say so, because it means an agent
      went around the rule. A run where almost nothing was executed is a run whose CONFIRMED labels mean little, and
      the reader is entitled to know that before acting on them.
-3. Return the counts.
+
+6. Return the counts: findings, problems, and findings per priority.
 
 Rank by severity, then confidence, then blast radius. Do not soften anything; do not invent anything that is not in
 the inputs. Axes covered: ${keys.join(', ')}.`
@@ -633,8 +814,9 @@ the inputs. Axes covered: ${keys.join(', ')}.`
 const criticPrompt = (keys) => `${preamble}
 
 You are the completeness critic, and you run last: the consolidator has already written
-${dossier}/findings.jsonl and ${dossier}/synthesis.md, so critique what is actually there. Read
-${dossier}/00-profile.md, ${dossier}/00-focus.md, every report in ${dossier}/reports/, and those two outputs.
+${dossier}/findings.jsonl, ${dossier}/README.md, the problem cards in ${dossier}/issues/, and
+${dossier}/audit/synthesis.md, so critique what is actually there. Read ${dossier}/00-profile.md,
+${dossier}/00-focus.md, every report in ${dossier}/reports/, and those outputs.
 Axes that ran: ${keys.join(', ')}.${componentNote}
 
 ${dossier}/00-commands.md was written by a human before the run and is not above suspicion — if a claim in it turns
@@ -649,12 +831,18 @@ Answer one question: what is missing? Specifically —
 - which finding rests on an assumption nobody verified, and what one command would settle it;
 - which axis should have run and did not, given the archetype in the profile.
 
-Be specific and short. Write ${dossier}/work/completeness.md, then return a two-sentence summary. Do not review the
-code yourself and do not add findings.`
+Then read ${dossier}/README.md once more, as a developer on the team who did not take part in the review and opens
+it first. From the first 40 lines alone, can that reader say what the document is, what they are asked to do, and
+which problem to start on? Follow two links from the README into problem cards and one link from a card into an axis
+report: does each land on the place it names? Name every term in the README or the cards that this reader would have
+to ask about.
+
+Be specific and short. Write ${dossier}/work/completeness.md, with the reader check under its own heading
+"Первое прочтение", then return a two-sentence summary. Do not review the code yourself and do not add findings.`
 
 // ---------------------------------------------------------------- pipeline
 
-const scoutKeys = scoutAxes.map((a) => a.key)
+const scoutKeys = scoutAxes.map(inst)
 const scoutInputs = scoutKeys.length
   ? `7. The scout reports already written: ${scoutKeys.map((k) => `${dossier}/reports/${k}.md`).join(', ')} — read
    "Where the suite is blind" first if it is there; it says where defects survive.`
@@ -674,13 +862,13 @@ const runAxis = (axis, extra) => agent(axisPrompt(axis, extra), { ...optsFor(axi
 const refuteStage = (result, axis) => {
   if (!result) return null
   if (!result.findings || result.findings.length === 0) {
-    log(`${axis.key}: no findings, skipping refutation`)
-    return { axis: axis.key, findings: [], verdicts: [], clean: true, coverage: result.coverage }
+    log(`${inst(axis)}: no findings, skipping refutation`)
+    return { axis: inst(axis), findings: [], verdicts: [], clean: true, coverage: result.coverage }
   }
   return agent(refutePrompt(axis, result), { ...optsFor(axis, 'Refute'), schema: VERDICTS_SCHEMA }).then((v) => {
-    if (!v || !v.verdicts) log(`${axis.key}: verifier returned nothing; findings are unverified`)
+    if (!v || !v.verdicts) log(`${inst(axis)}: verifier returned nothing; findings are unverified`)
     return {
-      axis: axis.key,
+      axis: inst(axis),
       coverage: result.coverage,
       findings: result.findings,
       verdicts: (v && v.verdicts) || [],
@@ -716,13 +904,13 @@ if (scoutAxes.length) {
 let evidenceResults = []
 if (evidenceAxes.length) {
   phase('Evidence')
-  log(`Evidence axes: ${evidenceAxes.map((a) => a.key).join(', ')}`)
+  log(`Evidence axes: ${evidenceAxes.map(inst).join(', ')}`)
   evidenceResults = await pipeline(evidenceAxes, (a) => runAxis(a, scoutInputs), refuteStage)
 }
 
 const scoutResults = scoutRefutation ? (await scoutRefutation).filter(Boolean) : []
 
-const doneKeys = [...scoutAxes, ...evidenceAxes].map((a) => a.key)
+const doneKeys = [...scoutAxes, ...evidenceAxes].map(inst)
 log(`Evidence complete: ${doneKeys.length} axes, ${[...scoutResults, ...evidenceResults].reduce((n, r) => n + survivors(r), 0)} findings survived refutation`)
 
 let synthResults = []
@@ -732,11 +920,11 @@ if (synthAxes.length) {
     synthAxes,
     (a) => {
       if (a.distill === false) return Promise.resolve({ summary: 'no distillation for this axis' })
-      return agent(distillPrompt(a, doneKeys), { label: `distill:${a.key}`, phase: 'Distill', model: modelFor(a), schema: NOTE_SCHEMA })
+      return agent(distillPrompt(a, doneKeys), { label: `distill:${inst(a)}`, phase: 'Distill', model: modelFor(a), schema: NOTE_SCHEMA })
     },
     (note, a) => {
       if (!note) {
-        log(`${a.key}: distillation failed, skipping the axis`)
+        log(`${inst(a)}: distillation failed, skipping the axis`)
         return null
       }
       if (a.distill === false) {
@@ -752,10 +940,26 @@ phase('Consolidate')
 // `priorAxes` lets a targeted re-run of one axis consolidate over reports an earlier run left in
 // the dossier, instead of producing a synthesis that silently covers only the axis just executed.
 const priorAxes = A.priorAxes || []
-const allKeys = [...priorAxes, ...doneKeys, ...synthAxes.map((a) => a.key)]
+const allKeys = [...priorAxes, ...doneKeys, ...synthAxes.map(inst)]
 const all = [...scoutResults, ...evidenceResults, ...synthResults].filter(Boolean)
 const cleanAxes = all.filter((r) => r.clean).map((r) => r.axis)
 const unverifiedAxes = all.filter((r) => r.verifyFailed).map((r) => r.axis)
+const slicedGroups = Object.entries(
+  allKeys.reduce((g, k) => (k.includes('--') ? { ...g, [keyOf(k)]: [...(g[keyOf(k)] || []), k] } : g), {}),
+).filter(([, instances]) => instances.length >= 1)
+if (slicedGroups.length) {
+  log(`Digests for sliced axes: ${slicedGroups.map(([k]) => k).join(', ')}`)
+  await parallel(
+    slicedGroups.map(([key, instances]) => () =>
+      agent(digestPrompt(key, instances), {
+        label: `digest:${key}`,
+        phase: 'Consolidate',
+        model: models.digest || models.default || 'sonnet',
+        schema: NOTE_SCHEMA,
+      }),
+    ),
+  )
+}
 // Sequential, not parallel: the critic inspects what the consolidator produced. Run concurrently, it
 // reads findings.jsonl before that file exists and reports it as empty — which is how a measured run
 // ended up with a critic claiming the consolidator wrote nothing while the consolidator wrote 70 lines.
@@ -774,7 +978,7 @@ const critique = wantCritic
     })
   : null
 
-const ranThisTime = [...scoutAxes, ...evidenceAxes, ...synthAxes].map((a) => a.key)
+const ranThisTime = [...scoutAxes, ...evidenceAxes, ...synthAxes].map(inst)
 const failed = ranThisTime.filter((k) => !all.some((r) => r.axis === k))
 
 return {
@@ -796,5 +1000,5 @@ return {
   })),
   consolidate: consolidated && consolidated.summary,
   completeness: critique && critique.summary,
-  read: [`${dossier}/synthesis.md`, `${dossier}/findings.jsonl`, `${dossier}/work/completeness.md`],
+  read: [`${dossier}/README.md`, `${dossier}/audit/synthesis.md`, `${dossier}/findings.jsonl`, `${dossier}/work/completeness.md`],
 }

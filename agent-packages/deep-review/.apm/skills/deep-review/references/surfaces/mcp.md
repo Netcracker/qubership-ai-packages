@@ -28,7 +28,8 @@ costs you.
 | Renaming or removing a tool, argument, or output field; tightening a schema; changing a default, a unit, or the meaning of an argument; changing which conditions produce an error; dropping a protocol revision; changing the shape of `structuredContent`; deprecation windows and how a client learns | `api-compatibility` |
 | Drift between the declared schema and the code that reads the arguments; arguments accepted but undeclared, or declared but ignored; `outputSchema` that the results violate; validation that the handler skips because the transport already "validated"; idempotency of mutating tools; whether `annotations` match what the tool actually does | `correctness` |
 | Tool descriptions and results as an injection surface; secrets in arguments, in results, or in logs; token audience validation and passthrough; SSRF in anything that takes a URL; authorization on state handles; consent gates and what bypasses them; what a compromised or malicious caller reaches through the tools | `security` |
-| Where the server logs and whether that channel is safe on this transport; progress on long calls; timeouts and cancellation actually stopping work; per-call latency and cost; trace context propagation; what an operator sees when a tool fails in production | `observability-operability` |
+| Progress on long calls; timeouts and cancellation actually stopping work; per-call latency and cost; what an operator sees when a tool fails in production | `observability-operability` |
+| Where the server logs and whether that channel is safe on this transport; trace context propagation; each log, metric, and span call site | `telemetry` |
 | Agreement between the README, the install snippet, the registry entry, and what the server actually registers; the configuration a user must supply before the first call succeeds; whether a tool that needs setup says so in its description rather than only in the README | `docs-onboarding` |
 | A test that asserts the tool list (names, schemas) so a rename shows up in review; a test per documented error condition; schema-validity tests; tests that call the server over its real transport rather than the handler function | `tests` |
 | Which protocol revision the server targets, how far behind the current one it sits, what that costs its callers today, and whether the SDK it depends on can reach a newer one at all | `dependencies` |
@@ -281,14 +282,18 @@ previous call, on a protocol that guarantees none.
   repeated calls once. Assume every tool will eventually be invoked without a human reading the arguments, and judge
   the blast radius on that assumption.
 
+## `telemetry`
+
+Logging goes where the transport allows: `stderr` on stdio, and never `stdout`. Trace context arrives in `_meta`
+(`traceparent`, `tracestate`, `baggage`) under the OpenTelemetry conventions; a server that drops it breaks the
+operator's ability to connect a slow agent turn to the query behind it.
+
 ## `observability-operability`
 
-Logging goes where the transport allows: `stderr` on stdio, and never `stdout`. Long calls report progress or the host
-shows nothing for ninety seconds. Timeouts are the server's job as much as the client's — an upstream that hangs holds
-the caller's turn open. Trace context arrives in `_meta` (`traceparent`, `tracestate`, `baggage`) under the
-OpenTelemetry conventions; a server that drops it breaks the operator's ability to connect a slow agent turn to the
-query behind it. And the operational question specific to stdio: one process per client, started and killed by the
-host, with no place to expose metrics — say how the project expects to be observed at all.
+Long calls report progress or the host shows nothing for ninety seconds. Timeouts are the server's job as much as the
+client's — an upstream that hangs holds the caller's turn open. And the operational question specific to stdio: one
+process per client, started and killed by the host, with no place to expose metrics — say how the project expects to
+be observed at all.
 
 ## `docs-onboarding`
 

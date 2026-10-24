@@ -23,7 +23,8 @@ configuration being loaded.
 - **Injection.** SQL, command, LDAP, template, header, and log injection. Follow untrusted data to every sink; note
   where parameterization or escaping is missing rather than where it is present.
 - **Secrets.** Credentials, tokens, and keys in source, tests, defaults, sample configuration, and error messages.
-  Whether secrets reach logs, exception messages, stack traces, or crash dumps. How they are held in memory and
+  Whether secrets or personal data reach logs, span attributes, metric labels, exception messages, stack traces, or
+  crash dumps; this axis owns that exposure even when `telemetry` points at it. How they are held in memory and
   whether they are cleared.
 - **Cryptography and transport.** TLS verification that can be disabled and whether anything disables it by default;
   certificate and hostname validation; protocol and cipher selection; random number sources for anything security-
@@ -48,3 +49,5 @@ configuration being loaded.
 - Where the ecosystem has a scanner (CodeQL, Semgrep, `gosec`, Bandit, SpotBugs with FindSecBugs), run it and triage
   its output rather than pasting it. An unreviewed scanner dump is not a report.
 - Do not restate `dependencies` findings. Reference them and add the exploitability judgment they lack.
+- In a browser application, `frontend-web` inventories the production bundle and records where it saw a credential or
+  an internal endpoint; the finding about it is yours, as are XSS, CSP, and token storage.
