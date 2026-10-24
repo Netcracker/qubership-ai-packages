@@ -98,6 +98,15 @@ both charts define or a variable both programs read, and for each say what a val
 the new one. A value that means something else there, or makes it ask for something nothing builds or provides, is a
 finding. The request is a setting of the new consumer's own, or a run with that value.
 
+Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), say from the old code and
+the new how long each takes to fail and what each prints, on two faults: the one the old mechanism met most often (a
+missing image, a peer that does not answer, a wrong credential), which its error handling or the CI history shows, and,
+where the new mechanism waits in a loop, the fault on which one attempt waits longest. A loop takes its number of
+attempts times the sum of the longest attempt and the sleep after it, and an attempt can wait as long as its command's
+own timeout, the default where no flag sets one. A replacement that fails later or prints less, with no sentence in the
+change that accepts it, is a finding. The request is a run of that fault on the new mechanism, with its duration and its
+output, or a bound on the wait.
+
 Where the change sets, exposes, or moves a limit, list the other limits on the same work: in whatever starts or wraps
 this code, in what this code starts, and in the environment, each with the place that sets it (a documented setting, a
 value fixed in a script or a wrapper, a default, another program's code). A limit counts where the work it bounds
@@ -194,7 +203,8 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   that version left on the target is one more partition. For a configuration or a script, the paragraph on limits in
   item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
   file or in the program it starts. For a setting that now reaches another consumer, the values users already pass are
-  one more partition.
+  one more partition. For a script or a configuration that replaces another, the faults that item names are partitions
+  too, each with how long the old and the new take to fail on it and what each prints.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline.
