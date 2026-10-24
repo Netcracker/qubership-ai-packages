@@ -73,11 +73,20 @@ or refactoring mixed with separable feature work? Use change and file size only 
 changed lines is usually easy to review, 300 can remain coherent, and 1,000 deserves a split unless it is mostly
 deletion or mechanical output. Size alone is not a finding.
 
+Map every hunk to a sentence of the description or a commit message. A hunk no sentence claims is a `blocking` finding
+however small, such as a version bump carried over from another branch or a dependency moved in a file the change
+otherwise leaves alone. Ask for a sentence that claims it, with the run that checks it, or for the hunk to move to its
+own change.
+
 ### Correctness and data integrity
 
 Trace normal, boundary, invalid, retry, concurrency, and partial-failure paths. Check null and empty inputs, limit
 values, off-by-one behavior, races, state transitions, cleanup, idempotency, and data loss. Confirm that the
 implementation matches both the stated contract and what the tests actually assert.
+
+Where the change fixes a symptom, list the other paths that show the same symptom, which a search for the changed
+helper does not find: a twin build target, the other major version of a tool, the other operating system. A path the fix
+leaves out is a finding.
 
 ### Compatibility and evolution
 
@@ -93,6 +102,12 @@ Check backward and forward compatibility across old and new callers, stored data
   persisted data or schemas, caches, lock files, and objects an earlier chart or `kubectl apply` created. Check that a
   test or a run starts from that state, not only from a fresh install, or that the change documents the remedy and
   shows it run on that state.
+- **Passed values:** Where an existing setting (a pass-through variable, a flag, an environment variable) now reaches a
+  consumer it did not reach before, list the names the new consumer reads that the old consumers also read, such as a
+  values key both charts define. For each, say what a value meant for the old consumers does to the new one; the
+  documented example does not settle it. A value that means something else there, or makes the new consumer ask for
+  something nothing builds or provides, is a `blocking` finding; ask for a setting of the new consumer's own or a run
+  with that value.
 - **Exceptions and evidence:** Evaluate technology replacements case by case. When exact compatibility is impractical,
   require an explicit migration path. Anchor findings in repository evidence; missing history is a context gap, not a
   defect.
@@ -153,6 +168,16 @@ target, or CI job that runs that exact form, flags included; a form that differs
 not count. Where none does, compare what the tool's help text, reference, or source says the command acts on with the
 configuration the change creates, in each version the change supports. Where that does not settle it, the missing run is
 itself the observed fact: report it and ask for a run of that form or for the form a job runs.
+
+A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
+build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
+matrix, a schema. Search for two existing members by name, or for the one where the set had one, and read every file
+that names both: a list there without the new member is a finding. Then search the prose for the set's old size, in
+digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a finding.
+
+For every remedy, troubleshooting row, or step the change writes, list the paths its symptom or cause names, such as two
+build targets, and check that its action names a step for each. A fix that answers a review comment is where this is
+missed: the comment names one path, and the fix covers that one.
 
 ### Structural defects
 
