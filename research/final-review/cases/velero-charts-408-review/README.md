@@ -76,3 +76,19 @@ at `1b34f27` (before this rule), `coupled-<n>` at the working copy of the branch
 and `trimmed-4` (the committed text) pass check 1 by naming velero's own SIGTERM handling as a limit outside the
 repository, and none pairs `resticTimeout`; two say it ends one operation and does not count. Costs 0.03, 0.02, 0.04,
 0.05 USD.
+
+## Results of the `series` arm, 2026-10-23
+
+`series-<n>` ran every rule in the series that adds the questions of `research/final-review/change-reach.md` and the
+question on a replaced mechanism, in the wording of 2026-10-23: before two sentences were cut from the paragraphs on
+values users already pass and on parallel paths, and before the question on a replaced mechanism was shortened. Opus,
+two runs, as a no-regression check against the arm named below.
+
+| Check | `series-1` | `series-2` | `final` |
+| --- | --- | --- | --- |
+| 1 | strong | strong | strong, strong |
+| 2 | none | none | none, none |
+
+Unchanged. The new questions find that `helm upgrade --reuse-values`, which the README documents, never gets the new
+default, and that `restic.*` has no counterpart of the new key. `series-2` also lists the restic DaemonSet hunk as
+unclaimed, which commit `98041d0` does claim. Cost 0.45 and 0.55 USD against 0.58 and 0.50.

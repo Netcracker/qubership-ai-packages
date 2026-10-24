@@ -74,3 +74,18 @@ most say they ran `date -d` on the macOS host and saw `illegal option -- d`. A d
 exposes is found without a rule that asks for the run. The rule matters where the outcome depends on what a tool does
 with the configuration and the reviewer cannot run it, as in `authz-agent-122-review`. This case stays as the check that
 the rule costs nothing where the reviewer finds the defect anyway.
+
+## Results of the `series` arm, 2026-10-23
+
+`series-<n>` ran every rule in the series that adds the questions of `research/final-review/change-reach.md` and the
+question on a replaced mechanism, in the wording of 2026-10-23: before two sentences were cut from the paragraphs on
+values users already pass and on parallel paths, and before the question on a replaced mechanism was shortened. Opus,
+two runs, as a no-regression check against the arm named below.
+
+| Check | `series-1` | `series-2` | `doccmd` |
+| --- | --- | --- | --- |
+| 1 | pass | pass | pass, pass |
+
+Unchanged. The new questions add real findings (the `ask` list misses forms the skills use, a root-file list misses
+`secure-agent-setup.md`, "Three-layer defence" now describes four layers) and leave check 1 where it was. The reports
+grow to 24 and 25 findings, in 19 and 17 turns against 13; cost 1.87 and 1.26 USD against 1.33 and 1.34.

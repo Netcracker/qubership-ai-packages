@@ -48,3 +48,17 @@ the rule, a different one in each: `final-1` the replaced limit, `final-2` the e
 [pr]: https://github.com/pgjdbc/pgjdbc/pull/1557
 [fix1]: https://github.com/pgjdbc/pgjdbc/pull/2022
 [fix2]: https://github.com/pgjdbc/pgjdbc/pull/1943
+
+## Results of the `series` arm, 2026-10-23
+
+`series-<n>` ran every rule in the series that adds the questions of `research/final-review/change-reach.md` and the
+question on a replaced mechanism, in the wording of 2026-10-23: before two sentences were cut from the paragraphs on
+values users already pass and on parallel paths, and before the question on a replaced mechanism was shortened. Opus,
+two runs, as a no-regression check against the arm named below.
+
+| Check | `series-1` | `series-2` | `final` |
+| --- | --- | --- | --- |
+| 1 | pass | pass | pass, pass |
+| 2 | pass | pass | fail, pass |
+
+No regression; both runs file the equal pair of check 2. Cost 0.42 and 0.36 USD against 0.48 and 0.45.

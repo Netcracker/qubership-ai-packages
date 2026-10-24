@@ -45,3 +45,19 @@ which the diff states in a comment, and `loginTimeout` capping it, which the doc
 [pr]: https://github.com/pgjdbc/pgjdbc/pull/2572
 [issue]: https://github.com/pgjdbc/pgjdbc/issues/2683
 [fix]: https://github.com/pgjdbc/pgjdbc/pull/2687
+
+## Results of the `series` arm, 2026-10-23
+
+`series-<n>` ran every rule in the series that adds the questions of `research/final-review/change-reach.md` and the
+question on a replaced mechanism, in the wording of 2026-10-23: before two sentences were cut from the paragraphs on
+values users already pass and on parallel paths, and before the question on a replaced mechanism was shortened. Opus,
+two runs, as a no-regression check against the arm named below.
+
+| Check | `series-1` | `series-2` | `final` |
+| --- | --- | --- | --- |
+| 1 | pass | fail | pass, fail |
+
+The same split as `final`. `series-2` files the bypass of `PGStream.setNetworkTimeout` as taste, and the question on a
+replaced mechanism leads it to a false failure time: it says a silent peer now fails after 5 s, where at the default
+`socketTimeout=0` `VisibleBufferedInputStream.readMore` swallows the timeout. Cost 0.61 and 0.77 USD against 0.83 and
+0.50.

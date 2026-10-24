@@ -62,9 +62,15 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 6. **A count that the change made stale.** Pass: a substantive finding on `README.md` "CI builds both" or
    `.github/docs-for-publication-task.md` "the two-entry array", now that `.github/docker-dev-config.json` lists five
    components. `grep -niE 'builds both|two-entry' result.md`
+7. **The failure of the replaced suite target.** Pass: a substantive finding that with the suite image missing
+   (`ErrImageNeverPull`) the old target failed after 3 minutes and the new one waits out the 15-minute `helm test`
+   timeout, with a request to bound the wait, run the fault, or accept the trade in writing. Partial: the report says
+   the new target can wait 15 minutes for a Pod that never starts, with no comparison to the old one.
+   `grep -niE 'ErrImageNeverPull|3 m|three minutes|condition=Ready' result.md`
 
-Checks 4 to 6 come from the reviewer's general comment on the same commit, which reported six more defects; they are
-the defects the questions of `research/final-review/change-reach.md` were written from.
+Checks 4 to 7 come from the reviewer's general comment on the same commit, which reported six more defects. Checks 4 to
+6 are the defects the questions of `research/final-review/change-reach.md` were written from, and check 7 the defect the
+question on a replaced mechanism was written from.
 
 ## Skill parts
 
@@ -79,7 +85,7 @@ the defects the questions of `research/final-review/change-reach.md` were writte
 | --- | --- |
 | `repo`, `base`, `head` | The repository, `58316ca6ca5d0d91932873de01fb40397d5dd4df` (the parent of the pull request's first commit), and `17b17fcf373d8d3716aa45bd7a66b5fa2d4aba9c` (the commit the human reviewed). |
 | `prompt.md` | The task, with `<skills>` and `<base>` replaced by `run-review-case.sh`. |
-| `<model>/<label>/…` | The outputs of one run; `run-review-case.sh` lists them. `main-<n>` ran the skills at `0706dc5` (before the rule on inherited state), `pr180-<n>` at `1f1f5ec` (with it), `doccmd-<n>` and `trim-<n>` with the rule on documented commands as well, and `draft1-<n>` and `draft2-<n>` (Haiku) with two earlier wordings of it. `reach-<n>` ran with the rules on documented commands and coupled limits and the questions of `change-reach.md`: `reach-1` and `reach-2` with the first wording of the question on values users already pass, `reach-3` and `reach-4` with the committed one, and `reach-5` and `reach-6` with it after two sentences were cut. `reach-1` to `reach-4` had an earlier wording of the paragraph on parallel paths, which no check of this case grades. |
+| `<model>/<label>/…` | The outputs of one run; `run-review-case.sh` lists them. `main-<n>` ran the skills at `0706dc5` (before the rule on inherited state), `pr180-<n>` at `1f1f5ec` (with it), `doccmd-<n>` and `trim-<n>` with the rule on documented commands as well, and `draft1-<n>` and `draft2-<n>` (Haiku) with two earlier wordings of it. `reach-<n>` ran with the rules on documented commands and coupled limits and the questions of `change-reach.md`: `reach-1` and `reach-2` with the first wording of the question on values users already pass, `reach-3` and `reach-4` with the committed one, and `reach-5` and `reach-6` with it after two sentences were cut. `reach-1` to `reach-4` had an earlier wording of the paragraph on parallel paths, which no check of this case grades. `failure-<n>` ran with the first wording of the question on a replaced mechanism as well, and with the matching rule of `test-authoring` §3 from the branch `feat/test-authoring-replaced-mechanism-failure`, so their pass cannot be split between the two; their paragraphs on values users pass and on parallel paths are the first wordings. `series-<n>` ran the text of every rule in the series as it stood before the two sentences were cut. `cut-<n>` ran the committed text: the questions of `change-reach.md` after the cut, and the question on a replaced mechanism without its sentence of rationale and with its two sentences on what to say merged into one; `test-authoring` came from `ebe8841` on `feat/test-authoring-replaced-mechanism-failure-pr`. |
 
 ## How to run
 
@@ -234,3 +240,57 @@ Checks 4 to 6, Opus. The control is every earlier Opus run in this directory (`m
   run reports the coupled limits of check 3.
 - **Cost.** The `reach` runs cost 2.07 to 3.77; `reach-1` (3.77, 58 turns) is the dearest run in this directory, and the
   other five are within the control's range or just above it.
+
+## Results of the `failure` arm, 2026-10-23
+
+Check 7, Opus. `failure-2` and `failure-3` are the two valid runs: the session of a third, `failure-1` (2.62 USD), ended
+on a note about a background search after the report, so its `result.md` held only that note, and it was dropped.
+
+| Arm | Check 1 | Check 7 | Cost, USD |
+| --- | --- | --- | --- |
+| Every earlier Opus run, 22 runs | 20 pass | 0 | 1.88 to 3.77 |
+| `failure-2`, `failure-3` | pass, pass | pass, pass | 3.41, 2.42 |
+
+- **Check 7.** Both runs quote the old target's `kubectl wait --for=condition=Ready pod … --timeout=3m` and say that the
+  new one waits out the 15-minute `helm test` timeout on a missing image, and the harness its 10-minute `--wait`. Both
+  ask to bound the wait or to state the trade with a run of the fault. `failure-2` also counts the polling loop as
+  90 × (one `kubectl logs` call + 2 s), with no bound on the call, and files it as taste.
+- **Cost.** `failure-2` is the dearest run in this directory after `reach-1` (3.41, 53 turns); `failure-3` is within
+  the control's range.
+
+## Results of the `series` arm, 2026-10-23
+
+The text of every rule in the series before the cuts: documented commands, coupled limits, the questions of
+`change-reach.md`, and the question on a replaced mechanism with its two faults, with `test-authoring` §3 as committed on
+its branch. Opus, two runs.
+
+| Check | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `series-1`, `series-2` | pass, pass | pass, fail | pass, pass | pass, pass | pass, pass | pass, pass | pass, pass | 2.50, 2.56 |
+
+Both runs carry every finding of the earlier arms at once, in 38 turns each, against 32 to 58 in the arms that had
+fewer rules. `series-2` lists the chart README's `helm test … --logs` with the transfer-image steps as depending on the
+published images and does not reach the Job hook, the miss the `doccmd` arm recorded for one run in four. For check 7
+both runs build the old-and-new table on the missing image, and `series-1` adds the stub image (2 minutes under
+`rollout status`, 10 under `helm --wait`).
+
+## Results of the `cut` arm, 2026-10-24
+
+The committed text, after the question on a replaced mechanism lost a sentence of rationale ("its failures are
+partitions that every green run misses") and its two sentences on what to say about each fault became one. Opus, two
+runs.
+
+| Check | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `cut-1`, `cut-2` | pass, pass | fail, partial | pass, pass | fail, pass | pass, pass | pass, pass | pass, pass | 2.63, 2.36 |
+
+- **Check 7.** Both runs compare the old `kubectl wait --for=condition=Ready pod … --timeout=3m` with the new target on
+  the missing image, 3 minutes against about 15, and file it as substantive with a request to bound the wait or run the
+  fault. `cut-1` adds the Job with no Pod, about 33 minutes through the polling loop, and `cut-2` the stub image, 2
+  minutes against 10 under `helm --wait`.
+- **Check 4.** `cut-1` names `TAG` and `IMAGE_PULL_POLICY` as the keys the stand shares with the product charts and
+  settles that they mean the same there, which the check fails. The paragraph this arm changed does not address check 4,
+  and the `reach-5` and `reach-6` runs on the same text of that paragraph passed it.
+- **Check 2.** `cut-1` lists the README's `helm test … --logs` as run by nothing and files no finding; `cut-2` files it
+  with two other unrun recipes and asks to run them, with no reason tied to the Job, the check's partial. The `series`
+  and `doccmd` arms missed it in one run each as well.
