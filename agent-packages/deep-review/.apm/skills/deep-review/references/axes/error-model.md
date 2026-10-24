@@ -21,8 +21,8 @@ it may have happened. If the answer requires parsing a message, that is a findin
 (the offending value, the peer, the status code, the attempt count)? Are there types nobody can catch usefully because
 everything throws the same one? Are there types so specific that a caller must enumerate twenty to be safe?
 
-**Causes.** Is the original failure preserved and reachable, or swallowed and replaced? Look for: caught and logged
-then rethrown as something new without a cause; caught and returned as a boolean or a null; caught and ignored;
+**Causes.** Is the original failure preserved and reachable, or swallowed and replaced? Look for: rethrown as
+something new without a cause; caught and returned as a boolean or a null; caught and ignored;
 `catch (Exception)` / bare `except` / `_ = err` at a boundary that hides real defects.
 
 **Partial failure.** An operation that half-succeeded: is that a distinct outcome, or does it look like total failure?
@@ -36,7 +36,9 @@ retries internally, is the total time bounded, is there jitter, and can the call
 
 **Messages.** Reason, action, consequence, in that order. The offending value or identifier must appear so it can be
 grepped. Check for: the message that only restates the type; the message that dumps a raw upstream body or a stack
-trace; the message that changes on every call (a timestamp, a UUID) so identical failures never look identical.
+trace; the message that changes on every call (a timestamp, a UUID) so identical failures never look identical. The
+wording of an error returned to a caller is yours; the wording of a log record, and whether a failure is logged as well
+as returned, belongs to `telemetry`.
 
 **Consistency.** Two functions in the same package that fail differently for the same reason is a finding, even if
 each is defensible on its own. The caller has to learn one model, not five.

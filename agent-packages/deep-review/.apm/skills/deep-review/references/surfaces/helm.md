@@ -22,9 +22,11 @@ than it costs you.
 
 | Concern | Owner axis |
 | --- | --- |
-| Value naming and casing; flat versus nested; what belongs under `global`; defaults that install unattended; documentation of each value; `values.schema.json` coverage; `NOTES.txt`; `--set` ergonomics | `api-ux` |
+| Value naming and casing; flat versus nested; what belongs under `global`; defaults that install unattended; documentation of each value in `values.yaml` comments and the schema `description`; `values.schema.json` coverage; `NOTES.txt`; `--set` ergonomics | `api-ux` |
 | Renaming, removing, or moving a value; changing a default; tightening the schema; subchart `alias` and `condition` keys; chart `version` / `appVersion` discipline; rendered object names and immutable fields; a CRD schema change against objects already stored | `api-compatibility` |
 | Rendering the matrix of profiles and toggles; probes, resources, RBAC, scheduling; hooks; the install / upgrade / rollback / uninstall drill; CRD install-and-upgrade ownership (`crds/` versus `templates/`, `--skip-crds`, what an uninstall deletes) | `deployment-config` |
+| A docs page that states a value or its default (a configuration reference, an administration guide) | `docs-pages` |
+| A value rendered into an environment variable, a flag, or a config key the binary does not read; a port, path, or service name the chart and the binary declare differently | `contracts` |
 | Template logic: falsy defaults, type coercion, indentation shape, non-determinism, `lookup`, checksum annotations, subchart value plumbing that silently does nothing | `correctness` |
 | What a user sees when a value is wrong, and where they see it: `required` and `fail` messages, schema violation text, render error versus apply error versus a pod that crash-loops an hour later | `error-model` |
 | Secrets in values and in rendered output; image pinning; pod security context; RBAC breadth; supply chain of the dependencies | `security` |

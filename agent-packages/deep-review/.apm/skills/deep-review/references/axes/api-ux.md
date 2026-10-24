@@ -38,8 +38,9 @@ and CRD versioning to `api-compatibility`, however much they feel like API usabi
   plausible ones?
 - Do doc comments state the contract — units, nullability, thread-safety, ownership, what is retained, what throws —
   or do they restate the signature? This axis owns the doc comment on the declaration; the pages a reader reaches
-  without opening the source are `docs-onboarding`'s.
-- Are examples present, current, and compilable? A README example that no longer compiles is a finding.
+  without opening the source are `docs-onboarding`'s and `docs-pages`'s.
+- Are examples in doc comments present, current, and compilable? Examples on documentation pages belong to
+  `docs-onboarding` (README and getting started) and `docs-pages` (every other page).
 
 ## CLI surface (when there is one)
 
@@ -64,7 +65,9 @@ effects stated explicitly; output small enough to be usable and truncation that 
   directory, environment variables, static mutable state — is a finding.
 - Are failures uniform in shape across the surface, so a caller can handle them in one place? (Depth belongs to
   `error-model`; here, judge only the consistency a caller sees.)
-- Is there any operation that succeeds partially and reports success?
+- Is there any operation that succeeds partially and reports success to a program (a return value, a status code)? On
+  HTTP, a failure reported with a `2xx` is `error-model`'s, per `surfaces/rest-http.md`. A success shown to a person in
+  a UI, a toast, or CLI prose belongs to `least-surprise`.
 
 ## Method
 

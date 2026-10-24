@@ -8,7 +8,9 @@ normative parts, and compare. Findings on this axis must cite the specification 
 ## Before anything else
 
 Identify the exact normative source: the RFC and its errata, the standard's version, the vendor document, or — for a
-client of someone else's service — that service's source code if it is reachable. Record it in the report. A review
+client of someone else's service — that service's source code if it is reachable. A server of an HTTP API conforms
+to HTTP itself as well as to its own spec: `references/surfaces/rest-http.md` lists the RFC sections and routes which
+of them this axis owns. Record the source in the report. A review
 of a protocol implementation against the reviewer's memory of the protocol is worthless; if the source cannot be
 found, say so in the report, give every finding `method: inferred` with the missing source as the unchecked
 assumption, and make the source the one question for the user.

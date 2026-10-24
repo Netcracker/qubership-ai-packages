@@ -17,7 +17,8 @@ database, a file, a cache that is trusted, a queue, an external system the code 
 ## Schema and migration
 
 - How does a schema change reach existing data? Forward migration, backward compatibility of the reader, and what
-  happens to a rolling deployment where both versions run.
+  happens to a rolling deployment where both versions run. Two different components that read or write one table
+  with different meanings belong to `contracts`.
 - Are migrations idempotent, and what does a migration killed halfway leave behind?
 - Is there a down path, and if not, is that stated? An irreversible migration shipped without a note is a finding.
 - Does anything validate that the code's model and the stored schema still agree, or is drift discovered by a
@@ -29,7 +30,8 @@ database, a file, a cache that is trusted, a queue, an external system the code 
   transaction. Enumerate what a crash between them leaves, and what fixes it.
 - Fsync and acknowledgement semantics: when the code reports success, what has actually been made durable?
 - Deletion: is it a tombstone, a cascade, or a hard delete? What else does the cascade reach — this is where
-  accidental data loss lives. Trace every ownership reference that can cascade.
+  accidental data loss lives. Trace every ownership reference that can cascade. Whether the user was told the
+  deletion would happen, by the label, dialog, or help of the action, belongs to `least-surprise`.
 - Retention and cleanup: what grows forever, what deletes on a schedule, and can a cleanup job delete live data
   because of a clock skew, an empty query result, or a filter that matched nothing?
 

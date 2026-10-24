@@ -19,54 +19,84 @@ profile.
 - **protocol library** — a library whose product is conformance to an external specification (a wire protocol, a file
   format, a standard). Interop with other implementations is the acceptance criterion.
 - **service** — a long-running process with its own deployment, configuration, and on-call. A microservice is a
-  service; the interactions with its neighbors are reviewed as surfaces without a pack (`rest-http`,
-  `events-messaging`) unless the neighbors are in the review too, which makes it a system.
+  service; the interactions with its neighbors are reviewed as its surfaces (`rest-http`, or `events-messaging`, which
+  has no pack yet) unless the neighbors are in the review too, which makes it a system.
 - **operator / controller** — a service whose API is Kubernetes resources and whose job is convergence.
 - **cli** — invoked by humans and scripts; the argument surface and exit codes are the product.
 - **mcp-server / agent-tool** — invoked by models; tool names, schemas, and error text are the product.
 - **sdk / client** — a library whose product is fidelity to a remote API it does not own.
+- **web-app** — a browser application (SPA or server-rendered) used by people; the journeys through its screens are
+  the product. A UI component library published for reuse is a `library` that also runs `frontend-web`.
 - **system** — several components reviewed together: several repositories, or several deployables of one monorepo.
   The product is the interactions: contracts between components, shared schemas and topics, failure propagation,
   deployment as a whole (an umbrella chart, an Argo CD application set). Each component gets a row in the profile with
   its own archetype; the axis list is one for the whole system, and the focus file says which components each axis
   reads closely.
-- **monorepo** — one repository holding several components. Profile it as a `system` when the components interact and
-  the interactions are the question; otherwise pick the one component the review is about, say so in the focus file,
-  and profile it under its own archetype.
+- **monorepo** — one repository holding several components. Profile each component, and in the questions file propose
+  the slices and an axis-by-slice matrix (`slice`, `paths`, `focus`, and `seams` in step 3 of `SKILL.md`). Run
+  `contracts` on every monorepo, and on any repository that ships two components talking to each other, with the
+  profile's seam list as its `seams`. When the interactions between the components are the question, profile it as a
+  `system` as well; when the review is about one component, say so in the focus file and profile it under that
+  component's archetype.
 
 ## Axis matrix
 
 `y` = in the default set, `?` = applicable, run when the focus file says so, blank = does not apply. A review of that
-archetype runs the default set when the questions file gives no reason to change it; the set is sized so that the run
-stays under the limit in *Sizing* below. Every `?` is a legitimate axis for the archetype, and a directed question
-in the focus file is the usual reason to turn one on.
+archetype runs the default set when the questions file gives no reason to change it. On a service or an operator the
+default set is larger than the limit in *Sizing* below, so the questions file proposes which of those axes to cut.
+Every `?` is a legitimate axis for the archetype, and a directed question in the focus file is the usual reason to turn
+one on.
 
-| Axis | library | protocol lib | service | operator | cli | mcp | sdk | system |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `tests` (scout) | y | y | y | y | y | y | y | ? |
-| `dependencies` (scout) | y | y | y | y | y | y | y | ? |
-| `correctness` | y | y | y | y | y | y | y | ? |
-| `error-model` | y | y | y | y | y | y | y | y |
-| `concurrency-lifecycle` | y | y | y | y | ? | ? | y | ? |
-| `api-compatibility` | y | y | ? | y | y | y | y | y |
-| `api-ux` | y | y | ? | ? | y | y | y | ? |
-| `protocol-conformance` | | y | ? | ? | | y | y | ? |
-| `performance` | ? | y | ? | ? | | | ? | ? |
-| `security` | ? | y | y | y | y | y | y | y |
-| `docs-onboarding` | y | ? | ? | ? | y | y | y | ? |
-| `build-release` | y | ? | ? | ? | y | y | ? | ? |
-| `observability-operability` | ? | ? | y | y | ? | ? | ? | y |
-| `deployment-config` | | | y | y | | | | y |
-| `data-lifecycle` | ? | | y | ? | | | ? | y |
-| `upgrade-migration` | ? | ? | y | y | ? | ? | ? | y |
-| `runtime-verification` | | ? | ? | ? | ? | ? | ? | ? |
-| `architecture` | y | y | y | y | y | y | y | y |
+| Axis | library | protocol lib | service | operator | cli | mcp | sdk | web-app | system |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `tests` (scout) | y | y | y | y | y | y | y | y | ? |
+| `dependencies` (scout) | y | y | y | y | y | y | y | y | ? |
+| `test-strategy` | ? | ? | y | y | ? | ? | ? | ? | ? |
+| `correctness` | y | y | y | y | y | y | y | y | ? |
+| `error-model` | y | y | y | y | y | y | y | ? | y |
+| `concurrency-lifecycle` | y | y | y | y | ? | ? | y | | ? |
+| `api-compatibility` | y | y | ? | y | y | y | y | | y |
+| `contracts` | | | ? | ? | | ? | ? | ? | y |
+| `api-ux` | y | y | ? | ? | y | y | y | | ? |
+| `protocol-conformance` | | y | ? | ? | | y | y | | ? |
+| `performance` | ? | y | ? | ? | | | ? | ? | ? |
+| `security` | ? | y | y | y | y | y | y | y | y |
+| `docs-onboarding` | y | ? | ? | ? | y | y | y | ? | ? |
+| `docs-pages` | ? | ? | y | y | ? | ? | ? | ? | ? |
+| `build-release` | y | ? | ? | ? | y | y | ? | y | ? |
+| `observability-operability` | ? | ? | y | y | ? | ? | ? | | y |
+| `telemetry` | ? | ? | y | y | ? | ? | ? | ? | ? |
+| `deployment-config` | | | y | y | | | | ? | y |
+| `data-lifecycle` | ? | | y | ? | | | ? | | y |
+| `upgrade-migration` | ? | ? | y | y | ? | ? | ? | ? | y |
+| `frontend-web` | ? | | | | | | | y | ? |
+| `least-surprise` | | | y | ? | y | ? | | y | ? |
+| `runtime-verification` | | ? | ? | ? | ? | ? | ? | ? | ? |
+| `architecture` | y | y | y | y | y | y | y | y | y |
 
 `architecture` is always a **synthesis** axis: it runs last, on a prompt distilled from the evidence axes. `api-ux` is
 a synthesis axis when the repository already has review history to distill from (earlier dossiers, a usability study,
 a migration post-mortem), and an evidence axis otherwise. `runtime-verification` is a synthesis axis too: it runs
 after the evidence axes have been verified and settles their findings against a running system, so it needs a runtime
 the focus file allows and pays off most on an operator or a service.
+
+The new axes run under these conditions:
+
+- `test-strategy` runs by default for a service, an operator, and a monorepo of any archetype; elsewhere, run it when
+  the repository has a medium or large test level, or a real peer (database, queue, another service) behind a double.
+  It is an evidence axis that reads the `tests` scout report.
+- `contracts` runs where two components of one repository meet (see the monorepo bullet above).
+- `docs-pages` runs only where the repository ships user documentation beyond the README and a getting-started page:
+  a `docs/` tree, a docs site, administration or configuration guides, a troubleshooting page. Without them,
+  `docs-onboarding` covers the README alone.
+- `telemetry` and `observability-operability` divide one subject: the first judges each call site, the second the
+  outcome for the operator. Run `telemetry` for a library only when the focus file asks what the library emits into
+  its host. When both run, `observability-operability` moves to the synthesis phase and reads the telemetry inventory.
+- `frontend-web` needs a running application; the `library` cell means a UI component library. The profiler records
+  the start commands and how the backend is provided in `00-commands.md`.
+- `least-surprise` needs a surface a person operates: run it for a service only when it has a UI, a CLI, or chart
+  values a person edits; for an operator when its CRD or chart is edited by hand; for an MCP server when a tool is
+  destructive. Without a runtime it falls back to tracing and says so in its coverage.
 
 ## Sizing
 
@@ -91,7 +121,7 @@ library mode (does it let the host observe it) is a directed question for `api-u
 surface anyway. Skip `deployment-config` and `data-lifecycle`.
 
 **A Kubernetes operator.** Archetype: operator. Surfaces: `kubernetes`, plus `helm` when it ships an install chart;
-`rest-http` goes into `surfacesWithoutPack` when it also serves one. `kubernetes` covers the CRD it serves and `helm`
+add `rest-http` when it also serves one. `kubernetes` covers the CRD it serves and `helm`
 the values contract of the chart that installs it; they are two APIs with two audiences, and one pack will not do for
 both. Default: `tests`, `dependencies`, `correctness`, `error-model`, `concurrency-lifecycle`, `api-compatibility`,
 `security`, `observability-operability`, `deployment-config`, `upgrade-migration`, then `architecture`. Turned on:
@@ -107,19 +137,29 @@ drift between them is a finding neither pack produces alone. Default: `tests`, `
 then `architecture`. Pin the protocol revision in the profile before any axis starts; `surfaces/mcp.md` says why.
 
 **Three microservices and the umbrella chart that deploys them.** Archetype: system, with three `service` rows and
-one chart row in the components table. Surfaces: `helm`, `gitops-argocd`; `rest-http` and `events-messaging` in
-`surfacesWithoutPack`. Default: `error-model`, `api-compatibility`, `security`, `observability-operability`,
+one chart row in the components table. Surfaces: `helm`, `gitops-argocd`, `rest-http`; `events-messaging` in
+`surfacesWithoutPack`. Default: `error-model`, `api-compatibility`, `contracts`, `security`, `observability-operability`,
 `deployment-config`, `data-lifecycle`, `upgrade-migration`, then `architecture`. Turned on: `runtime-verification`,
 because the focus file granted a disposable cluster and the question is whether a rolling upgrade of one service
 breaks the other two. The focus file names the interactions each axis reads closely: `api-compatibility` reads the
 two REST contracts and the topic schema, `data-lifecycle` the two services that share a database.
 
+**An HTTP service with a published OpenAPI spec.** Archetype: service. Surfaces: `rest-http`, plus `helm` when it
+ships a chart. Pin the contract artifact in the profile first: which spec file is published, whether it is
+hand-written or generated from code, the previous release tag, and the gateway in front of the server
+(`surfaces/rest-http.md`, "The contract artifact, first"). Axes: `tests`, `test-strategy`, `correctness`, `error-model`,
+`security`, `contracts`, `api-compatibility`, `api-ux`, `protocol-conformance`, `telemetry`, and
+`observability-operability` in the synthesis phase, then `architecture`.
+Once the spec has consumers outside the repository, `api-compatibility`, `api-ux`, and `protocol-conformance` are
+default rather than optional; with only the repository's own frontend as a caller, `contracts` covers most of what
+`api-compatibility` would find.
+
 ## Surfaces available
 
-`kubernetes`, `cli`, `mcp`, `helm`, `helm-qubership`, and `gitops-argocd` — `helm-qubership` is an organization overlay
-on `helm`, opt-in and only for charts that participate in the Qubership platform parameter contract. Everything else —
-`rest-http`, `grpc`, `graphql`, `events-messaging`, `code-library`, outgoing webhooks, a database schema shared between
-services, a Terraform provider, emitted telemetry under OpenTelemetry semantic conventions — has no pack yet. Name the
-surface in the profile anyway and pass it in `surfacesWithoutPack`: the axes fall back to their form-independent
-rules, which is weaker but honest, and the gap shows up in coverage. Write the pack from what that review turns out to
-need, not from a guess.
+`kubernetes`, `cli`, `mcp`, `rest-http`, `helm`, `helm-qubership`, and `gitops-argocd` — `helm-qubership` is an
+organization overlay on `helm`, opt-in and only for charts that participate in the Qubership platform parameter
+contract. Everything else — `grpc`, `graphql`, `events-messaging`, `code-library`, outgoing webhooks, a database schema
+shared between services, a Terraform provider, emitted telemetry under OpenTelemetry semantic conventions — has no pack
+yet. Name the surface in the profile anyway and pass it in `surfacesWithoutPack`: the axes fall back to their
+form-independent rules, which is weaker but honest, and the gap shows up in coverage. Write the pack from what that
+review turns out to need, not from a guess.

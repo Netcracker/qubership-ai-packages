@@ -39,5 +39,8 @@ axis: state machines, boundary conditions, data mapping, algorithmic logic, and 
 ## Out of scope for this axis
 
 Thread-safety and lifecycle (`concurrency-lifecycle`), exception hierarchy and retry signaling (`error-model`),
-wire-format conformance (`protocol-conformance`), anything that is a design decision rather than a defect
-(`architecture`). Note them in *Cross-axis notes* and move on.
+wire-format conformance (`protocol-conformance`), disagreement between two components of the repository or between
+two implementations of one rule (`contracts`), behavior that does what its author intended while contradicting what
+the product told the user (`least-surprise`), UI state, caching, routing, and framework usage in a browser
+application (`frontend-web`; plain logic defects in frontend code stay here), anything that is a design decision
+rather than a defect (`architecture`). Note them in *Cross-axis notes* and move on.

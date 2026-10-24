@@ -20,6 +20,8 @@ Compatibility is not only the source API. Inventory every surface a consumer can
 - serialized forms: wire messages, persisted files, database schemas, cache entries, `Serializable` classes;
 - configuration: property names, environment variables, defaults, and the meaning of a default;
 - observable behavior consumers rely on: ordering, timing, thread of callback invocation, error types;
+- emitted telemetry consumers rely on: metric names, label keys, span names, and structured log field names that
+  alerts and dashboards query;
 - extension points: interfaces a consumer implements — adding a method to one is a breaking change;
 - transitive dependency versions a consumer shares with you (see `dependencies`).
 
@@ -34,8 +36,9 @@ Compatibility is not only the source API. Inventory every surface a consumer can
   `pub(crate)`) against the actual one.
 - Is there a deprecation policy, and is it followed? A deprecation with no replacement named, no removal version, and
   no migration note is decoration.
-- Skew: which combinations of this component and its peers are supported simultaneously, and does anything test them?
-  Rolling upgrades and mixed-version clusters live here.
+- Skew: which combinations of this component and its external consumers are supported simultaneously, and does
+  anything test them? Skew between two components of this repository, where both producer and consumer ship from it,
+  belongs to `contracts`.
 - Forward compatibility of data: does the reader tolerate fields it does not know? Does the writer emit anything an
   older reader will reject?
 

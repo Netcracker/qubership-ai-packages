@@ -12,6 +12,10 @@ How this thing is installed, configured, upgraded, and rolled back. Services and
   hour later? Fail-fast on invalid configuration is the single highest-value fix on this axis.
 - Are there two sources for one setting (a flag and an environment variable, a chart value and a config map) and is
   the precedence documented and tested?
+- A key the packaging sets and the binary never reads, or the reverse, and a port or service name the two sides
+  declare differently, belong to `contracts`. Note them under *Cross-axis notes*.
+- A sensible value accepted and read with a meaning other than its name or comment states (a unit, a case fold, a
+  clamp) belongs to `least-surprise`. This axis keeps nonsense values and when they are rejected.
 - Defaults: is the default configuration safe and useful, or does it require a profile nobody mentions? Render the
   packaging with defaults and see whether it works at all.
 - Secrets: how are they delivered, are they ever logged, and what happens when one rotates while the process runs?
@@ -47,3 +51,8 @@ How this thing is installed, configured, upgraded, and rolled back. Services and
 Render and run what you can. A finding from reading a template carries `method: inferred`; only a render or a run is
 `executed`. Deployment findings are cheap to claim and expensive to be wrong about, and the verifier stamps the
 confidence.
+
+Whether a knob is documented, and whether the documented default matches the code, belongs to `docs-pages`; this axis
+owns the knob's behavior, and running the documented install command stays here. For a static server that serves a
+browser application, the history fallback and the cache headers on `index.html` and hashed assets belong to
+`frontend-web`; the rest of the server and chart configuration stays here.

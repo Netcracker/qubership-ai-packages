@@ -22,7 +22,7 @@ if [ -e "$dossier" ]; then
   dossier="$dossier-$n"
 fi
 
-mkdir -p "$dossier/prompts" "$dossier/reports" "$dossier/work/history"
+mkdir -p "$dossier/prompts" "$dossier/reports" "$dossier/work/history" "$dossier/issues" "$dossier/audit"
 : >"$dossier/findings.jsonl"
 
 # Keep dossiers out of the reviewed repository's history without touching its .gitignore.
@@ -30,7 +30,8 @@ if [ ! -e "$repo/.review/.gitignore" ]; then
   printf '*\n' >"$repo/.review/.gitignore"
 fi
 
-cat >"$dossier/README.md" <<EOF
+# README.md is left for the consolidator: it becomes the team's report, and a folder view renders it first.
+cat >"$dossier/audit/dossier.md" <<EOF
 # Review dossier — $name
 
 | File | Written by | Contents |
@@ -45,7 +46,12 @@ cat >"$dossier/README.md" <<EOF
 | \`prompts/<axis>.md\` | workflow | distilled prompts for synthesis axes |
 | \`reports/<axis>.md\` | workflow | one report per axis |
 | \`findings.jsonl\` | workflow, then triage | normalized findings; triage adds \`verdict\` and \`rejection_reason\` |
-| \`synthesis.md\` | workflow | deduplicated, ranked, cross-axis view |
+| \`README.md\` | workflow | the team's report: what to fix, in which order; the entry point |
+| \`issues/<NN>-<slug>.md\` | workflow | one card per problem, ready to copy into a tracker |
+| \`findings.csv\` | \`scripts/findings-csv.py\` | every finding, for triage in a spreadsheet; \`--import-csv\` copies decisions back |
+| \`audit/synthesis.md\` | workflow | how the run went: disagreements between axes, coverage, refutations |
+| \`audit/dossier.md\` | \`new-dossier.sh\` | this map |
+| \`work/completeness.md\` | workflow | what the review missed, and the first-reader check of \`README.md\` |
 | \`work/\` | agents | scratch space: reproductions, scanner output, benchmarks |
 
 Rejection reasons used during triage: \`convention\`, \`guard-missed\`, \`out-of-scope\`, \`model-error\`,

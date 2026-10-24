@@ -395,7 +395,7 @@
     },
     {
       "name": "deep-review",
-      "description": "Review a repository, a microservice, or a system of services along independent axes, refute every finding, and consolidate the survivors into one ranked report.",
+      "description": "Review a repository, a microservice, or a system of services along independent axes, refute every finding, and consolidate the survivors into a prioritized report with one tracker-ready card per root-cause problem.",
       "version": "1.0.0",
       "tags": [
         "topic:code-review",

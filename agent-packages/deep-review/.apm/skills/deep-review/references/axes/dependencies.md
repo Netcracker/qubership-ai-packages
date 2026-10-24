@@ -12,9 +12,9 @@ early.
   every consumer, and a version conflict in someone else's build is your defect.
 - **Compile versus runtime versus test scope.** A test-only library leaking into the compile scope, or an optional
   feature's dependency being mandatory, is a finding.
-- **Framework lock-in.** A library that forces a logging implementation, a DI container, a JSON library, or a
-  concurrency framework onto its consumers. Facades are the exception: an SLF4J-style API is fine, a bound
-  implementation is not.
+- **Framework lock-in.** A library that forces a DI container, a JSON library, or a concurrency framework onto its
+  consumers. A logging provider, telemetry SDK, exporter, or metrics registry in the published scope is `telemetry`'s
+  finding; report here only its version, advisories, and license.
 - **Version pinning and floating.** Ranges that resolve differently over time, `latest` tags, snapshot dependencies,
   and unpinned CI actions and container base images. A build that is not reproducible today will fail on a day nobody
   chose.
@@ -37,6 +37,8 @@ early.
 ## Rules
 
 - Depth of exploitation belongs to `security`. Here, report exposure and hygiene.
+- For a published UI library, whether its peer dependency range admits a framework version it does not work with, and
+  whether it bundles a second copy of the framework, belong to `frontend-web`. Staleness and advisories stay here.
 - Every finding needs the version numbers. "Outdated dependency" without the current and target version is not a
   finding.
 - A claim that a dependency is unused, or belongs in a narrower scope, is proven by a build, not by grepping the
