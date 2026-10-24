@@ -1,0 +1,68 @@
+test(k8s): run the kind harnesses on a test-stand chart with stock Keycloak
+
+The kind harnesses brought up Keycloak, the stubs, the tenant-manager
+emulator, and the suite Jobs from loose manifests under test/k8s/ applied
+with kubectl, and a realm ConfigMap built from a list of files in the
+Makefile. A stand outside kind had no way to install the same parts, and
+no other feature could reuse them.
+
+The parts are now the chart helm-templates/authz-test-stand, each off by
+default: Keycloak in dev mode on the public image, importing the realm
+files of files/realms/<realms>/ at every start and restarting when one
+changes; pip-stub instances keyed by Service name; the tenant-manager
+emulator with a tenant map; the M2M client-credentials Secret; and the
+suite Job as a helm test hook. test/k8s/test-stand-values.yaml and
+test/k8s/parity/test-stand-values.yaml turn on what each harness needs,
+`make e2e-harness` and `make parity-harness` install the chart, and
+`make e2e-suite` and `make parity-suite` run `helm test` and stream the
+Job log. The resource profiles of the agent and authz-policy-admin
+installs stay as they were.
+
+The chart's realm and rule files are generated rather than kept twice:
+`make test-stand-files` runs the chart-files stage of
+build/authz-agent-transfer/Dockerfile. It merges the user files under
+test/parity/suite/testdata/realm/, none so far, into the parity realm and
+fills in the profile fields Keycloak 26 requires for a password grant.
+The same Dockerfile builds the transfer image with the three charts. The
+parity realm gains a second tenant realm, parity-mt-b.
+
+The release now also publishes qubership-authz-pip-stub,
+qubership-authz-parity-suite, and qubership-authz-agent-transfer from
+.qubership/docker.cfg. The tenant-manager emulator and the runtime suite
+stay unpublished, so the e2e stand runs on kind only.
+
+test(pipstub): answer unrouted paths from a default route
+
+The parity cases need a stub for the User Management API that
+access-control calls for a request with userId, and the path it calls is
+not known in advance. pip-stub answered every path without a route of
+its own with 404, and a route configured with no responses indexed its
+sequence at -1.
+
+/pip-stub/configure now takes the path * as a default route that answers
+every request whose path has no route of its own. A stub that nobody
+configures with * answers an unrouted path 404 as before, so pip-mock and
+entitlements-mock behave as they did. A call record also keeps the
+request target as it arrived, in requestUri, so that a value encoded in
+the path shows how it was encoded. A route with no responses falls through
+to the default route, or to 404. The stub instance itself comes with the
+cases that use it.
+
+test(k8s): run the test stand under the restricted Pod Security Standard
+
+The test-stand chart set no security context on any Pod or container, so
+the stand could not start in a namespace that enforces the restricted Pod
+Security Standard, and its objects carried only the label app: <name>.
+
+Every Pod now runs as the non-root user its image names, with the
+RuntimeDefault seccomp profile; every container drops all capabilities
+and cannot escalate privileges. Every container but Keycloak has a
+read-only root filesystem: Keycloak writes its dev-mode database and its
+Quarkus build under /opt/keycloak at start. The suite Job gets an
+emptyDir at /tmp for tests that ask for a temporary directory. No
+runAsUser is pinned, as in the authz-agent chart, so OpenShift's
+restricted SCC can assign a uid from the namespace range.
+
+Every object also carries the app.kubernetes.io labels and
+helm.sh/chart. The selectors keep app: <name>.
+
