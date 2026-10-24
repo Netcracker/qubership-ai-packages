@@ -133,15 +133,16 @@ its budget. Raise each documented setting just past each other limit, not only a
 fixed elsewhere caps, and an inner limit that does not fire first at the defaults. For a limit in a program outside the
 repository, ask for the line that sets it or a run that reaches it.
 
-Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), ask how the old one failed
-and how the new one does. Take the fault the old one met most often (a missing image, a peer that does not answer),
-which its error handling or the CI history shows, and, where the new one waits in a loop, the fault on which one attempt
-waits longest. For each, say from both versions of the code how long each takes to fail and what each prints. A loop
-takes its number of attempts times the sum of the longest attempt and the sleep after it, and an attempt can wait as
-long as its command's own timeout, the default its help text or source states where no flag sets one. A replacement that
-fails later or prints less is a finding unless the change accepts the slower or quieter failure in writing, and is
-`blocking` where the new time to fail reaches a limit that encloses it, such as the CI job's timeout, or nothing bounds
-the wait. Ask for a run of that fault on the new mechanism, with its duration and output, or a bound on the wait.
+Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), take the fault the old one
+met most often, which its error handling or the CI history shows, and, where the new one waits in a loop, the fault on
+which one attempt waits longest. For each, say from both versions of the code how long each takes to fail and what each
+prints. On the second fault, count each attempt at its call's own timeout, the default its help text or source states
+where nothing sets one, and a call with no timeout as never returning. Count a deadline checked before each attempt as
+overrun by up to one attempt and one sleep. A replacement that fails later or prints less is a finding unless the change
+accepts the slower or quieter failure in writing, and is `blocking` where the new time to fail reaches a limit that
+encloses it, such as the CI job's timeout, or nothing bounds the wait. Ask for a run of that fault on the new mechanism,
+with its duration and output. For a later failure, also ask for a deadline that bounds the whole wait, last attempt
+included, at the old mechanism's time to fail; for a quieter one, the old output.
 
 ### Performance, capacity, and cost
 
