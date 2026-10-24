@@ -18,8 +18,9 @@ rule can be satisfied by a test worth nothing.
   observable through the unit's interface, when a second level is owed, what a change made for speed owes, which
   existing tests a deliberate behavior change updates, the test or run that starts from the state an earlier version
   left behind where the change reads or replaces it, the runs of a replaced mechanism's failures on the mechanism that
-  replaces it, with how long each takes to fail and what each prints, and the three questions that tell a chosen level
-  from a defaulted one.
+  replaces it, with how long each takes to fail and what each prints, the test or run of a consumer an existing setting
+  now reaches, with the values users already pass for the old consumers, and the three questions that tell a chosen
+  level from a defaulted one.
 - Which inputs the test set uses: one case per equivalence partition, each invalid partition alone, the boundaries and
   their neighbors, the value just past another limit set at another layer on the same work, and the order those limits
   fire in at the defaults, a decision table for combinations, a state-transition test for history, a property-based test
