@@ -1,43 +1,27 @@
-I added four regression tests to `FrameworkTests.java` for the SpEL `null`-comparison fix. Production code is unchanged and nothing is committed. `FrameworkTests` passes (74 tests) and so does `:nullaway:buildWithNullAway`. I ran the new tests against the pre-fix `SpringHandler` and they failed, then restored the file.
+I added four regression tests to `nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java`. All four fail on the commit before the fix and pass on it. I didn't touch production code and didn't commit. `./gradlew :nullaway:test --tests "com.uber.nullaway.FrameworkTests"` and `./gradlew :nullaway:buildWithNullAway` both pass.
 
-Here is the message I'd leave for the author of #1750:
+**Message for the author of #1750**
 
----
+The fix shipped with no test, so I added four small tests through the NullAway checker, next to `springValueFieldTest`. Each test compiles one class with two `@Value` fields:
+- **The case:** a SpEL expression where `null` is only compared against, which must not be reported.
+- **Its control:** the same expression except that one branch returns `null`, which must still be reported.
 
-**Tests added (in `FrameworkTests`, beside `springValueFieldTest`)**
+The two expressions differ in one place only, so a test can't pass just because the setup is wrong.
 
-The fix changed behavior and came with no test, so I added one test for each comparison form named in the Javadoc of `NULL_COMPARISON_PATTERN`:
+| Test | Case (not reported) | Control (still reported) |
+| --- | --- | --- |
+| `springValueNullAfterNotEqualsIsNotAPossibleValue` | `#{bean != null ? bean.name : 'default'}` | `#{bean != null ? null : 'default'}` |
+| `springValueNullAfterEqualsIsNotAPossibleValue` | `#{bean == null ? 'default' : bean.name}` | `#{bean == null ? null : bean.name}` |
+| `springValueNullBeforeComparisonOperatorIsNotAPossibleValue` | `#{null != bean ? bean.name : 'default'}` | `#{null != bean ? null : 'default'}` |
+| `springValueNullComparisonWithoutWhitespaceIsNotAPossibleValue` | `#{bean!=null?bean.name:'default'}` | `#{bean!=null?null:'default'}` |
 
-- `springValueNullAfterNotEqualsIsNotAPossibleValue`: `settings != null`
-- `springValueNullAfterEqualsIsNotAPossibleValue`: `settings == null`
-- `springValueNullBeforeNotEqualsIsNotAPossibleValue`: `null != settings`
-- `springValueNullBeforeEqualsIsNotAPossibleValue`: `null == settings`
+The cases cover the forms your new pattern handles: `null` after `!=` and after `==`, `null` before the operator, and no spaces around the operator.
 
-Each test compiles one class with two `@Value` fields:
-- **The case:** the ternary yields a non-null value, e.g. `#{settings != null ? settings.name : 'default'}`. It must not be reported.
-- **A control:** the same expression with that branch replaced by `null`. It must still be reported as not initialized.
+- **Evidence the tests catch the bug:** I ran them against the code from before the fix, in a temporary worktree. All four failed with `Saw unexpected error on line 5 … @NonNull field 'checked' not initialized`, which is the false positive this PR fixes. The controls report on both versions.
+- **Why four tests and not one:** I checked the test harness by breaking two expectations on purpose. `CompilationTestHelper.doTest()` stops at the first mismatch and points to it by line number, so if all cases shared one class, a failure in one would hide the others. One case per test means each failure shows up under its own name.
+- **Shared setup:** I moved the `@Value` annotation stub into a helper, `addSpringValueAnnotationStub`. `springValueFieldTest` now uses it too, with its expectations unchanged.
+- **Only small tests:** the behavior can be seen through one compilation, and nothing here crosses a process boundary, so a larger test would add nothing.
 
-The control shows that the case goes silent because of the comparison rule, not because of the setup. Fields are checked one at a time, so the two can share one compilation.
-
-These are ordinary `CompilationTestHelper` tests that compile in-process, the smallest level where the handler can be seen through the NullAway check. `containsNullSpELExpression` is private, so it is tested only through that check.
-
-**Evidence**
-- **Red on the base commit:** with `SpringHandler` from `HEAD~1`, all four fail with `Saw unexpected error on line 5 … @NonNull field 'nameOrDefault' not initialized`. That is the false positive from the bug report. All four controls report on both the old and the new code.
-- **They tell the forms apart:** I narrowed the pattern to `!=\s*\bnull\b|\bnull\b\s*==` and exactly `…AfterEquals…` and `…BeforeNotEquals…` failed. With only two cases, that change would have gone unnoticed.
-
-**Why four separate tests instead of one class with all of them**
-
-I checked how `CompilationTestHelper` reports failures by breaking two cases on purpose:
-- It stops at the first mismatch.
-- It identifies that mismatch by line number. A missing diagnostic also shows the marker's text; an unexpected one also lists every diagnostic.
-
-Putting four cases in one compilation would mean a failure in one hides the others. Each `// BUG: Diagnostic contains:` marker names its field, so a missing diagnostic still says which case it was.
-
-**Refactoring of an existing test**
-
-I moved the `@Value` annotation stub into a helper, `addSpringValueAnnotationStub`, written like the existing `addSpringMockAnnotationStubs`. `springValueFieldTest` now calls it, and its expectations are unchanged.
-
-**Proposed, not done**
-- **A stack line for `CLAUDE.md`/`AGENTS.md`**, for example: `Tests: JUnit 4 engine, JUnit 4 assertions; Error Prone CompilationTestHelper, which stops at the first mismatch and names it by line number (missing diagnostics also show the marker text).` I didn't edit either file.
-- **No-space operators are untested.** Forms like `settings!=null` rely on `\s*` and could get one more case if you want it.
-- **Other comparisons still count as a possible value.** `null` used as a method argument (`#{T(java.util.Objects).equals(a, null)}`) or with `<`, `>`, `<=`, `>=` is still flagged. This is likely a remaining false positive, outside this fix and with no test.
+**Suggested, not done:**
+- **The fix misses SpEL's word operators.** SpEL also writes the comparisons as `eq` and `ne`, and the new pattern only removes `==` and `!=`. So `@Value("#{bean ne null ? bean.name : 'default'}")` is still a false positive. I didn't add a test for it because it would fail. If you extend the pattern, add a test like the ones above.
+- **A line for the repo's instructions.** `AGENTS.md`/`CLAUDE.md` don't say which test libraries the repo uses. I suggest adding: `Tests: JUnit 4 engine, JUnit 4 assertions; checker tests use Error Prone's CompilationTestHelper, whose doTest() stops at the first mismatch and names it by line number.` I didn't edit the file; that's for a maintainer to agree to.

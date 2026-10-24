@@ -1,0 +1,37 @@
+test(k8s): run the test stand on year-old tools, and stop a suite that never starts
+
+run-suite waited for the Job with `kubectl wait --for=create`, which
+kubectl accepts only from 1.31. An older kubectl rejected it, the polling
+loop was skipped, and the suite log was not streamed. The loop on
+`kubectl logs job/<name>` now waits for the Job on any kubectl.
+
+A suite container that never starts, for example on ErrImageNeverPull,
+held `make e2e-suite` until helm test's 15-minute timeout. When the log
+cannot be read after three minutes, the target prints the Pod and stops
+helm test.
+
+E2E_HELM_ARGS also reached the test-stand install, which reads TAG and
+IMAGE_PULL_POLICY for its own images, so `--set TAG=x` meant for the
+product charts sent the stand after local/pip-stub:x, which e2e-images
+does not build. The stand takes TEST_STAND_HELM_ARGS instead.
+
+The chart-files stage merged the user files in the order find printed
+them, which depends on the filesystem, so checksum/realms, and with it a
+Keycloak restart, could change between builds; an unquoted substitution
+also split a file name with a space. The files are now sorted and passed
+NUL-separated.
+
+The SVT Compose stack is back on Keycloak 26.0: the move to 26.3.5 came
+in with the chart and had no SVT run behind it.
+
+docs/local-integration-tests.md names the versions the targets need,
+Docker 23.0 and Helm 3.14 or later, and the suite timeout variables; the
+chart README names the Helm releases where `helm test --logs` prints
+nothing.
+
+User-visible:
+make e2e-harness and make parity-harness pass TEST_STAND_HELM_ARGS, not E2E_HELM_ARGS, to the test-stand install.
+make e2e-suite and make parity-suite fail after about three minutes with "The <job> container did not start within 3 minutes:" and the Pod listing when the suite container does not start.
+
+Assisted-by: Claude Code (claude-opus-5-5)
+

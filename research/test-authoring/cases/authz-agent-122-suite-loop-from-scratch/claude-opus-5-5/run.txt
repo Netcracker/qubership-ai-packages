@@ -1,0 +1,3 @@
+cost_usd: 1.58
+turns: 20
+duration_s: 470

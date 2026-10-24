@@ -1,0 +1,22 @@
+on the fix (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-k8s-make-targets.sh (exit 1)
+      ok: e2e-suite fails with helm test's timeout when E2E_SUITE_TIMEOUT is shorter than the start wait
+      FAIL: e2e-suite with no Pod for the Job gave up after 1980s, 90 kubectl logs calls, expected at most 202s; exit 2
+      ok: e2e-harness installs the test stand with TEST_STAND_HELM_ARGS and without E2E_HELM_ARGS
+      ok: parity-harness installs the test stand with TEST_STAND_HELM_ARGS and without E2E_HELM_ARGS
+      ok: e2e-install installs the agent with E2E_HELM_ARGS and without TEST_STAND_HELM_ARGS
+      ok: parity-install installs the agent with E2E_HELM_ARGS and without TEST_STAND_HELM_ARGS
+      
+      kind target checks: 1 failure(s)
+on the base (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-k8s-make-targets.sh (exit 1)
+      ok: e2e-suite fails with helm test's timeout when E2E_SUITE_TIMEOUT is shorter than the start wait
+      FAIL: e2e-suite with no Pod for the Job gave up after 2000s, 91 kubectl logs calls, expected at most 202s; exit 2
+      FAIL: e2e-harness exited 0 and installed the test stand as: helm --kube-context kind-authz-e2e -n authz-e2e upgrade --install authz-test-stand /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.fFAvmVS7cc/chart --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=product; output: 
+      FAIL: parity-harness exited 0 and installed the test stand as: helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.fFAvmVS7cc/chart --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=product; output: 
+      ok: e2e-install installs the agent with E2E_HELM_ARGS and without TEST_STAND_HELM_ARGS
+      ok: parity-install installs the agent with E2E_HELM_ARGS and without TEST_STAND_HELM_ARGS
+      
+      kind target checks: 6 failure(s)

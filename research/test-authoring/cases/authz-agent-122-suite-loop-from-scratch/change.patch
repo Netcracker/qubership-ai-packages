@@ -1,0 +1,180 @@
+diff --git a/.github/docs-for-publication-task.md b/.github/docs-for-publication-task.md
+index 36b00783..410c2a76 100644
+--- a/.github/docs-for-publication-task.md
++++ b/.github/docs-for-publication-task.md
+@@ -74,7 +74,7 @@ No additional secrets are needed.
+ ## docker-dev-config.json discovery
+ 
+ The shared `docker-build.yaml` reads `.github/docker-dev-config.json` and runs
+-one Docker build per component entry using a matrix strategy.  The two-entry
++one Docker build per component entry using a matrix strategy.  The component
+ array in this repository's `docker-dev-config.json` is handled in a single
+ workflow run; no per-component config files are needed.  This was confirmed by
+ reading `Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml`
+diff --git a/Makefile b/Makefile
+index 44a248f8..0cd700d8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,9 +43,12 @@ E2E_NAMESPACE ?= authz-e2e
+ E2E_ARTIFACTS ?= test/artifacts/kind
+ E2E_KUBECTL := kubectl --context kind-$(KIND_CLUSTER) -n $(E2E_NAMESPACE)
+ E2E_HELM := helm --kube-context kind-$(KIND_CLUSTER) -n $(E2E_NAMESPACE)
+-# Extra arguments for every chart install, the test stand's included, for
+-# example E2E_HELM_ARGS='--set IMAGE_PULL_POLICY=Never'.
++# Extra arguments for the installs of the agent and authz-policy-admin charts,
++# for example E2E_HELM_ARGS='--set IMAGE_PULL_POLICY=Never'. The test stand
++# reads TAG and IMAGE_PULL_POLICY too, for images of its own, so it takes
++# TEST_STAND_HELM_ARGS instead.
+ E2E_HELM_ARGS ?=
++TEST_STAND_HELM_ARGS ?=
+ # How long `helm test` waits for each suite Job. A suite that runs longer
+ # raises this together with suite.activeDeadlineSeconds in its values.
+ E2E_SUITE_TIMEOUT ?= 15m
+@@ -87,7 +90,7 @@ test-stand-files:
+ # client-credentials Secret the chart expects the platform to provision, and
+ # the runtime suite Job, which e2e-suite runs.
+ e2e-harness: test-stand-files
+-	$(E2E_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=$(E2E_BASE_URL) --wait --timeout 10m $(E2E_HELM_ARGS)
++	$(E2E_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=$(E2E_BASE_URL) --wait --timeout 10m $(TEST_STAND_HELM_ARGS)
+ 
+ # The stub first: the agent reports Ready only once it has pulled its policies,
+ # so its --wait would run out with no policy source to pull from. Each chart
+@@ -98,15 +101,21 @@ e2e-install:
+ 
+ # `helm test` runs the suite Job of the test stand and exits with its outcome.
+ # It prints the log only at the end, so the log is streamed while it runs.
+-# `kubectl logs -f` fails at once while the container is still being created,
+-# so the loop polls for up to three minutes until the log can be read.
++# `kubectl logs` fails until the Job exists and its container has started, so
++# the loop polls for up to three minutes. A container that has not started by
++# then, for example on ErrImageNeverPull, will not: the target prints the Pod
++# and stops helm test rather than wait out its timeout.
+ # $(1) is kubectl, $(2) is helm, $(3) is the Job name, $(4) is how long helm
+ # waits for the Job, no shorter than its suite.activeDeadlineSeconds.
+ define run-suite
+ $(1) delete job $(3) --ignore-not-found --wait
+ $(2) test authz-test-stand --timeout $(4) & helm_pid=$$!; \
+-	$(1) wait --for=create job/$(3) --timeout=2m \
+-	&& for i in $$(seq 90); do $(1) logs job/$(3) >/dev/null 2>&1 && break; sleep 2; done; \
++	started=; for i in $$(seq 90); do $(1) logs job/$(3) >/dev/null 2>&1 && { started=1; break; }; sleep 2; done; \
++	if [ -z "$$started" ]; then \
++		echo "The $(3) container did not start within 3 minutes:"; \
++		$(1) get pods -l job-name=$(3) -o wide; \
++		kill $$helm_pid; wait $$helm_pid; exit 1; \
++	fi; \
+ 	$(1) logs -f job/$(3); \
+ 	wait $$helm_pid
+ endef
+@@ -152,7 +161,7 @@ parity: e2e-cluster e2e-images parity-harness parity-install parity-suite
+ # client of the cloud-common realm, and the parity suite Job, which
+ # parity-suite runs.
+ parity-harness: test-stand-files
+-	$(PARITY_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=$(PARITY_AC_BASE_URL) --wait --timeout 10m $(E2E_HELM_ARGS)
++	$(PARITY_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=$(PARITY_AC_BASE_URL) --wait --timeout 10m $(TEST_STAND_HELM_ARGS)
+ 
+ # The stub first, as in e2e-install.
+ parity-install:
+diff --git a/README.md b/README.md
+index 33ca896a..1cd1e1d0 100644
+--- a/README.md
++++ b/README.md
+@@ -56,7 +56,8 @@ docker build -t authz-agent:local        -f build/authz-agent/Dockerfile .
+ docker build -t authz-policy-admin:local -f build/authz-policy-admin/Dockerfile .
+ ```
+ 
+-CI builds both via `.github/docker-dev-config.json` and publishes them as
++CI builds them, with the test images and the transfer image, from the component
++list in `.github/docker-dev-config.json`, and publishes the two services as
+ `ghcr.io/netcracker/qubership-authz-agent` and
+ `ghcr.io/netcracker/qubership-authz-policy-admin`, named as the platform names
+ its images: `qubership-` plus the service. A release is cut by hand with the
+diff --git a/build/authz-agent-transfer/Dockerfile b/build/authz-agent-transfer/Dockerfile
+index 7f848029..536aa719 100644
+--- a/build/authz-agent-transfer/Dockerfile
++++ b/build/authz-agent-transfer/Dockerfile
+@@ -40,8 +40,9 @@ COPY build/authz-agent-transfer/profile.jq /root/.jq
+ RUN mkdir -p /out/realms/e2e /out/realms/parity /out/pip-stub \
+  && cp e2e/*.json /out/realms/e2e/ \
+  && cp parity/cloud-common-realm.json parity/parity-mt-b-realm.json /out/realms/parity/ \
+- && jq --slurp '.[0].users += ([.[1:][][]] | map(profile)) | .[0]' \
+-      parity/parity-realm.json $(find users -name '*.json') > /out/realms/parity/parity-realm.json \
++ && find users -name '*.json' -print0 | sort -z | xargs -0 -r cat \
++  | jq --slurpfile users /dev/stdin '.users += ([$users[][]] | map(profile))' \
++      parity/parity-realm.json > /out/realms/parity/parity-realm.json \
+  && jq -e '[.users[].username] | length == (unique | length)' /out/realms/parity/parity-realm.json \
+  && jq -e '[.users[].id | select(.)] | length == (unique | length)' /out/realms/parity/parity-realm.json \
+  && cp pip-stub/* /out/pip-stub/
+diff --git a/docs/local-integration-tests.md b/docs/local-integration-tests.md
+index 20965123..aba5f8a2 100644
+--- a/docs/local-integration-tests.md
++++ b/docs/local-integration-tests.md
+@@ -32,12 +32,15 @@ executed as a Job inside that cluster. CI runs the same Makefile targets
+ 
+ | Tool | Why | Check |
+ | --- | --- | --- |
+-| **Docker** | builds the images and runs the kind node | `docker info` |
++| **Docker** 23.0 or later, where BuildKit is the default builder | builds the images, writes the test-stand files with `docker build --output`, and runs the kind node | `docker info` |
+ | **kind** | the cluster | `kind version` |
+ | **kubectl** | streams the Job log, restarts Deployments | `kubectl version --client` |
+-| **helm** | installs the charts, runs the suite Job | `helm version` |
++| **helm** 3.14 or later; Helm 4 works too | installs the charts, runs the suite Job | `helm version` |
+ | **Go 1.24+** (the version `test/integration/testify/go.mod` declares) | the structural tests and `go vet`; the suite itself is compiled inside its image | `go version` |
+ 
++The targets use no tool feature newer than these versions; `kubectl` and `kind` may be any version that supports the
++cluster.
++
+ You do **not** need a local OPA binary for the runtime tests (the agent carries the engine). It is only needed for the
+ Rego contract tests (section 7).
+ 
+@@ -187,8 +190,9 @@ The minimum CI gate for compatibility-sensitive changes is listed in [test/readm
+ | `go test` → `[build failed]` | `GOROOT` points at a different toolchain than `go` on `PATH`. Unset it or fix your profile (section 2). |
+ | `make e2e-cluster` fails | Docker is not running, or your user cannot reach `docker.sock` (section 2). |
+ | The Job Pod stays `Pending` or reports `ErrImageNeverPull` | The images are not in the cluster; run `make e2e-images`. |
+-| `make e2e-harness` or `make parity-harness` fails with `exists and cannot be imported into the current release: invalid ownership metadata` | The cluster still holds the harness objects an older `make e2e` created with `kubectl apply`. Run `make e2e-down` once, then `make e2e`. |
++| `make e2e-harness` or `make parity-harness` fails with `exists and cannot be imported into the current release: invalid ownership metadata` | The cluster still holds the harness objects an older `make e2e` or `make parity` created with `kubectl apply`. Run `make e2e-down` once, then rerun `make e2e` or `make parity`. |
+ | `make e2e-harness` runs out of its 10-minute wait on the first run | The node is still pulling Keycloak. Check `kubectl -n authz-e2e get pods`, then rerun `make e2e-harness`. |
+ | `setup.wait_for_agent` fails after a harness rerun | Keycloak has new realm keys; restart the agent (section 6). |
++| `make e2e-suite` or `make parity-suite` fails after 15 minutes while the Job still runs | `helm test` waits `E2E_SUITE_TIMEOUT` or `PARITY_SUITE_TIMEOUT`, 15m by default. Raise it together with `suite.activeDeadlineSeconds` in the values, for example `make parity-suite PARITY_SUITE_TIMEOUT=5h30m`. |
+ | Need logs after a run | `make e2e-logs`, then look under `test/artifacts/kind/`. |
+ | Cluster left behind | `make e2e-down`. |
+diff --git a/helm-templates/authz-test-stand/README.md b/helm-templates/authz-test-stand/README.md
+index 2a15b5a0..60bf33ec 100644
+--- a/helm-templates/authz-test-stand/README.md
++++ b/helm-templates/authz-test-stand/README.md
+@@ -59,7 +59,7 @@ emulator is not published.
+    ```
+ 
+ 3. Run the suite, then print its log. `helm test --logs` prints the logs of test Pods only, and the suite is a Job:
+-   Helm 4 prints nothing for it, and Helm 3 fails with `unable to get pod logs`. The Job is named by `suite.name`.
++   Helm 4.3 and later print nothing for it, and earlier releases, Helm 3 included, fail with `unable to get pod logs`. The Job is named by `suite.name`.
+ 
+    ```bash
+    helm test authz-test-stand --timeout 15m
+diff --git a/test/k8s/README.md b/test/k8s/README.md
+index 2b37e61c..9502312c 100644
+--- a/test/k8s/README.md
++++ b/test/k8s/README.md
+@@ -64,7 +64,10 @@ The parity targets mirror these: `parity-harness`, `parity-install`,
+ cluster and image targets first, then the three.
+ 
+ `KIND_CLUSTER`, `E2E_NAMESPACE`, `PARITY_NAMESPACE`, and `E2E_ARTIFACTS`
+-override the defaults. `E2E_HELM_ARGS` adds arguments to every chart install, the test stand's included;
++override the defaults. `E2E_HELM_ARGS` adds arguments to the installs of the agent and authz-policy-admin charts, and
++`TEST_STAND_HELM_ARGS` to the install of the test stand, which reads `TAG` and `IMAGE_PULL_POLICY` for images of its
++own. `E2E_SUITE_TIMEOUT` and `PARITY_SUITE_TIMEOUT`, 15m by default, set how long `e2e-suite` and `parity-suite` wait
++for the suite Job; a values file that raises `suite.activeDeadlineSeconds` needs the matching variable raised too.
+ `E2E_BASE_URL` and `PARITY_AC_BASE_URL` set where the suites send their
+ requests, the chart's Service by default. They go into the suite Job's values,
+ so they take effect at `e2e-harness` or `parity-harness`, not at `e2e-suite` or
+diff --git a/test/svt/common/compose/docker-compose.yml b/test/svt/common/compose/docker-compose.yml
+index 814e7117..448a3856 100644
+--- a/test/svt/common/compose/docker-compose.yml
++++ b/test/svt/common/compose/docker-compose.yml
+@@ -1,6 +1,6 @@
+ services:
+   keycloak:
+-    image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
++    image: quay.io/keycloak/keycloak:26.0
+     command: ["start-dev", "--import-realm", "--health-enabled=true"]
+     ports:
+       - "${SVT_KC_PORT:-25556}:8080"

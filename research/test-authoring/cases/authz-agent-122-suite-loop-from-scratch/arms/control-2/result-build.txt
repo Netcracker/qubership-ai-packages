@@ -1,0 +1,13 @@
+on the fix (build.sh exited with 0):
+  1 test files ran, 0 failed
+on the base (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-k8s-make-targets.sh (exit 1)
+      FAIL: e2e-harness installed the test stand with: helm --kube-context kind-authz-e2e -n authz-e2e upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=product; expected --set TAG=stand and no TAG=product
+      ok: e2e-install passes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS, to the authz-policy-admin install
+      ok: e2e-install passes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS, to the authz-agent install
+      FAIL: parity-harness installed the test stand with: helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=product; expected --set TAG=stand and no TAG=product
+      ok: parity-install passes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS, to the authz-policy-admin install
+      ok: parity-install passes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS, to the authz-agent install
+      
+      Makefile target checks: 10 failure(s)
