@@ -50,3 +50,18 @@ at `1b34f27` (before this rule), `coupled-<n>` at the working copy of the branch
 
 Every run in every arm finds it, through the comment `# Wait up to 40 min` that the job timeout contradicts. The case
 does not tell the arms apart; it shows that the rule did not cost the finding the form already made.
+
+## Results of the `series` arm, 2026-10-23
+
+`series-<n>` ran every rule in the series that adds the questions of `research/final-review/change-reach.md` and the
+question on a replaced mechanism, in the wording of 2026-10-23: before two sentences were cut from the paragraphs on
+values users already pass and on parallel paths, and before the question on a replaced mechanism was shortened. Opus,
+two runs, as a no-regression check against the arm named below.
+
+| Check | `series-1` | `series-2` | `final` |
+| --- | --- | --- | --- |
+| 1 | pass | pass | pass, pass |
+
+Unchanged; the check-1 finding stays first. The question on unclaimed hunks finds the `slolatte` actor added in no
+commit message, and in `series-1` also two small hunks the commit subject covers loosely. Cost 0.68 and 0.82 USD against
+0.66 and 0.65.
