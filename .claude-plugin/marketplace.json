@@ -311,6 +311,18 @@
       "source": "./agent-packages/docs-page-authoring"
     },
     {
+      "name": "doc-updater",
+      "description": "Analyze code changes and update project documentation. Run this skill only when the user explicitly asks to update or sync documentation, mentions that docs are outdated, or uses a command like /doc-updater. Do NOT run automatically before commits.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "activity:maintenance",
+        "audience:public"
+      ],
+      "source": "./agent-packages/doc-updater"
+    },
+    {
       "name": "test-authoring",
       "description": "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report.",
       "version": "1.1.1",
@@ -403,6 +415,19 @@
         "audience:public"
       ],
       "source": "./agent-packages/townhall-brief"
+    },
+    {
+      "name": "values-schema-generator",
+      "description": "Generate a strict values.schema.json for a Helm chart. Triggers when the user says \"generate schema\", \"create schema.json\", \"values schema\", \"schema for my chart\", \"validate helm values\", or points at a chart directory and asks for schema generation. Always use this skill for schema generation tasks — do not write ad-hoc schema logic inline.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "stack:helm",
+        "stack:kubernetes",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/values-schema-generator"
     },
     {
       "name": "adapt-nifi-flows-to-2-x",
