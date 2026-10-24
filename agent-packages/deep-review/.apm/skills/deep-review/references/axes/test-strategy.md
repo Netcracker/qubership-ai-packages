@@ -8,14 +8,14 @@ would turn something red. This axis asks which level turns red, how long it take
 failure at all: a rule checked only through a browser, a query checked only against a mock of the database, a
 contract between two components checked by neither side.
 
-The rules of level come from test-authoring (`<deep-review>/../test-authoring/SKILL.md`). Apply §1 (a test exists to
-fail, so a level that cannot observe the risk pins nothing), §3 (the smallest level at which a behavior is observable,
-and a second, larger test where a real dependency, wiring, persistence, or a process boundary adds a failure mode the
-small one cannot see), §4 (partitions and boundaries belong where enumerating them is cheap), §8 (which causes of
-flakiness come with a level), and §10 (which bucket a claim sits in). The small, medium, and large definitions of §3
-classify a test by what it touches, not by the directory it lives in. Sections §5, §6, §7, §9, and §11 judge single
-tests and their assertions, and are out of scope here: a weak assertion, a poor name or failure message, a mystery
-guest, DAMP against DRY, or a mock asserted on is `tests`' finding or nobody's.
+The rules of level come from the `test-authoring` skill, at the path your prompt gives. Apply §1 (a test exists to fail,
+so a level that cannot observe the risk pins nothing), §3 (the smallest level at which a behavior is observable, and a
+second, larger test where a real dependency, wiring, persistence, or a process boundary adds a failure mode the small
+one cannot see), §4 (partitions and boundaries belong where enumerating them is cheap), §8 (which causes of flakiness
+come with a level), and §10 (which bucket a claim sits in). The small, medium, and large definitions of §3 classify a
+test by what it touches, not by the directory it lives in. Sections §5, §6, §7, §9, and §11 judge single tests and their
+assertions, and are out of scope here: a weak assertion, a poor name or failure message, a mystery guest, DAMP against
+DRY, or a mock asserted on is `tests`' finding or nobody's.
 
 You may be given `paths` for one component. Tests outside them still count where they pin behavior inside them, such as
 a repository-wide end-to-end suite: find those, and say in your coverage which levels and components you measured and

@@ -69,13 +69,27 @@ The profiler only records; `contracts` checks the seams, and a sliced run passes
 Create the dossier:
 
 ```bash
-${CLAUDE_SKILL_DIR}/scripts/new-dossier.sh <repo-path>
+${CLAUDE_SKILL_DIR}/scripts/new-dossier.sh <repo-path> [label]
 ```
 
-It prints the dossier path — use it everywhere below. For a system, pass the checkout that hosts the dossier (the
+It prints the dossier path — use it everywhere below. The script refuses a `.review` that is a symbolic link and a
+label that is not letters, digits, `.`, `_`, and `-`: the reviewed repository decides what `.review` is, and a dossier
+written through a link it planted lands outside the repository. For a system, pass the checkout that hosts the dossier (the
 primary component, or a directory you created for the review); the other components stay where they are. Write
 `00-profile.md` into it: archetype, languages, public surface, consumers, stability commitments, notable prior art in
 the repo (existing review reports, ADRs), and anything that looks load-bearing.
+
+**Check which rubric skills are installed.** Three axes apply rules from another skill: `test-strategy` from
+`test-authoring`, `docs-pages` from `docs-page-authoring`, and `telemetry` from `telemetry-authoring` and
+`english-developer-style`. Each is looked up beside this skill:
+
+```bash
+ls -d ${CLAUDE_SKILL_DIR}/../{test-authoring,docs-page-authoring,telemetry-authoring,english-developer-style}/SKILL.md
+```
+
+Pass the directory names of the skills found, such as `test-authoring`, as `args.rubrics` in step 3. The workflow
+refuses to start an axis whose rubric is missing, so the questions file in step 2 proposes such an axis as off and names
+the package that would turn it on.
 
 **The profile carries a technology inventory.** One row per language, runtime, library, framework, storage, or
 external component the system cannot run without. It is a fact table, written before any opinion is formed, and every
@@ -199,6 +213,7 @@ whole file by saying so and only edit what they disagree with. Structure:
 | --- | --- | --- |
 | protocol-conformance | yes | the point of the library |
 | deployment-config | no | nothing is deployed |
+| telemetry | no | the rubric `telemetry-authoring` is not installed |
 **Answer:** as above
 
 ## 3. Where does it hurt today?
@@ -282,7 +297,7 @@ records, and what force in the domain justifies it if not.
 Workflow({
   scriptPath: "${CLAUDE_SKILL_DIR}/workflow/deep-review.js",
   args: { dossier, repo, skill: "${CLAUDE_SKILL_DIR}", depth: "coarse", surfaces: [...], surfacesWithoutPack: [...],
-          components: [...], axes: [...], models: {...}, completenessCritic: true }
+          rubrics: [...], components: [...], axes: [...], models: {...}, completenessCritic: true }
 })
 ```
 
@@ -361,8 +376,9 @@ render or run an existing artifact (a coverage plugin for `tests`, a build again
 Harness worktree isolation copies the *session's* repository, so on a cross-repository review it drops the agent into an
 unrelated checkout. With the flag absent, the workflow skips harness isolation and instructs each write-access axis to
 create its own worktree of the target repository under `work/<axis>-wt` (`work/<key>--<slice>-wt` for a slice) instead.
-Getting this wrong is not a cosmetic problem: an agent either reviews the wrong codebase or silently writes into the
-user's real working tree.
+On a system review the harness copy covers `repo` only, so with the flag set every other component still gets a
+worktree the agent makes itself. Getting this wrong is not a cosmetic problem: an agent either reviews the wrong
+codebase or silently writes into the user's real working tree.
 
 `phase` is one of three:
 
@@ -377,11 +393,15 @@ user's real working tree.
   `telemetry` and `observability-operability` both run, put `observability-operability` here: it reads the signal
   inventory of the `telemetry` report, and its distilled prompt carries that inventory.
 
-Order inside a phase does not matter. Every axis that reports at least one finding is followed by an adversarial
-verifier that writes `work/findings-<axis>.jsonl` (moving an earlier version into `work/history/`) and moves refuted
-findings into a closing section of the report rather than deleting them. An axis that reports nothing gets no verifier;
-the workflow tells the consolidator which axes were clean and which lost their verifier, so neither reads as a failed
-run and a failed run never reads as clean.
+Order inside a phase does not matter. Every axis moves the `raw-` and `findings-` files of an earlier run into
+`work/history/`, then writes its report and `work/raw-<axis>.jsonl`. Every axis that reports at least one finding is
+followed by an adversarial verifier that writes `work/findings-<axis>.jsonl` and moves refuted findings into a closing
+section of the report rather than deleting them. An axis that reports nothing gets no verifier. The consolidator
+classifies each axis from those files: no report is failed, an empty raw file and no findings file is clean, a raw file
+with findings and no findings file is unverified, and an id in the raw file that the findings file lacks got no
+verdict and stays unverified. The workflow also counts a finding without a verdict as unverified, never as upheld. A
+refuted or unverified finding stays in `findings.jsonl` and changes no other finding: it does not settle one, explain
+one, or set a problem's priority.
 
 **Leave `agentType` unset.** The specialized reviewers (`security-reviewer`, `protocol-compatibility-reviewer`,
 `backward-compatibility-reviewer` and the rest) are built for reviewing a diff and their system prompts fight the
@@ -436,7 +456,9 @@ Read `audit/synthesis.md` and the "Первое прочтение" section of `
 wrong, then read the reports behind anything that matters. For each finding, set `verdict` (`fix`, `backlog`, or
 `reject`) and, when rejecting, a typed `rejection_reason` in `findings.jsonl`. When the team triages instead, they fill
 the same two columns in `findings.csv`; `scripts/findings-csv.py <dossier> --import-csv` copies them back into
-`findings.jsonl`.
+`findings.jsonl`. Both files may be edited between two runs of the script: it records what it wrote into
+`findings.csv` in `work/findings-csv.base.json`, imports only what changed in the CSV, keeps what changed in the JSONL,
+and stops on a finding changed differently in both. A re-run of the consolidator carries both columns over by `id`.
 
 | `rejection_reason` | Meaning | Where the fix goes |
 | --- | --- | --- |
@@ -477,7 +499,8 @@ therefore costs most of the run; a re-run of a synthesis axis costs little.
 
 To re-run one axis in a fresh run instead, pass only that axis in `axes` and the report names (`<key>`, or
 `<key>--<slice>` for a sliced axis) of every other axis whose report is already in the dossier in `priorAxes`; the
-consolidator then covers all of them. Without `priorAxes`, a fresh run consolidates the one axis it ran and writes a
+consolidator then covers all of them, and classifies each from its files as above, so an axis that was clean in the
+earlier run is clean in this one too. Without `priorAxes`, a fresh run consolidates the one axis it ran and writes a
 README and an `audit/synthesis.md` that cover nothing else.
 
 ### 6. Post-mortem

@@ -11,23 +11,56 @@ set -euo pipefail
 repo=${1:?usage: new-dossier.sh <repo-path> [label]}
 label=${2:-}
 
-repo=$(cd "$repo" && pwd)
+# The label becomes a path segment, so it may not climb out of .review or hide the dossier.
+case $label in
+  '' | [A-Za-z0-9]*) ;;
+  *) echo "new-dossier.sh: the label must start with a letter or a digit; got '$label'" >&2; exit 1 ;;
+esac
+case $label in
+  *[!A-Za-z0-9._-]*) echo "new-dossier.sh: the label may hold letters, digits, '.', '_', and '-' only; got '$label'" >&2; exit 1 ;;
+esac
+
+repo=$(cd "$repo" && pwd -P)
 date=$(date +%Y-%m-%d)
 name=$date${label:+-$label}
-dossier="$repo/.review/$name"
+root="$repo/.review"
 
-if [ -e "$dossier" ]; then
-  n=2
-  while [ -e "$dossier-$n" ]; do n=$((n + 1)); done
-  dossier="$dossier-$n"
+# Everything under .review comes from the reviewed repository, which may point any of it somewhere else. Write only
+# into directories this script creates itself, and refuse a symbolic link anywhere on the way.
+if [ -L "$root" ]; then
+  echo "new-dossier.sh: $root is a symbolic link; refusing to write the dossier through it" >&2
+  exit 1
 fi
+if [ -e "$root" ] && [ ! -d "$root" ]; then
+  echo "new-dossier.sh: $root exists and is not a directory" >&2
+  exit 1
+fi
+mkdir -p "$root"
 
-mkdir -p "$dossier/prompts" "$dossier/reports" "$dossier/work/history" "$dossier/issues" "$dossier/audit"
+dossier="$root/$name"
+n=1
+# mkdir without -p fails on anything already there, a dangling symbolic link included, so a name is used only when
+# this script created the directory.
+until mkdir "$dossier" 2>/dev/null; do
+  n=$((n + 1))
+  dossier="$root/$name-$n"
+  if [ "$n" -gt 99 ]; then
+    echo "new-dossier.sh: no free dossier name under $root for $name" >&2
+    exit 1
+  fi
+done
+case $(cd "$dossier" && pwd -P) in
+  "$repo"/.review/*) ;;
+  *) echo "new-dossier.sh: $dossier resolves outside $repo" >&2; exit 1 ;;
+esac
+
+mkdir "$dossier/prompts" "$dossier/reports" "$dossier/work" "$dossier/work/history" "$dossier/issues" "$dossier/audit"
 : >"$dossier/findings.jsonl"
 
-# Keep dossiers out of the reviewed repository's history without touching its .gitignore.
-if [ ! -e "$repo/.review/.gitignore" ]; then
-  printf '*\n' >"$repo/.review/.gitignore"
+# Keep dossiers out of the reviewed repository's history without touching its .gitignore. A .gitignore that is already
+# there, or a symbolic link in its place, is left alone.
+if [ ! -e "$root/.gitignore" ] && [ ! -L "$root/.gitignore" ]; then
+  printf '*\n' >"$root/.gitignore"
 fi
 
 # README.md is left for the consolidator: it becomes the team's report, and a folder view renders it first.

@@ -72,6 +72,10 @@ one on.
 | `frontend-web` | ? | | | | | | | y | ? |
 | `least-surprise` | | | y | ? | y | ? | | y | ? |
 | `runtime-verification` | | ? | ? | ? | ? | ? | ? | ? | ? |
+
+`test-strategy`, `docs-pages`, and `telemetry` apply rules from another skill, and run only where that skill is
+installed beside this one (step 1 of `SKILL.md` lists them). `telemetry-authoring` is not published with this package,
+so on a service or an operator without it the default set loses `telemetry` and the questions file says why.
 | `architecture` | y | y | y | y | y | y | y | y | y |
 
 `architecture` is always a **synthesis** axis: it runs last, on a prompt distilled from the evidence axes. `api-ux` is
