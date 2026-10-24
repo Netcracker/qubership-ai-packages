@@ -1,0 +1,272 @@
+diff --git a/.github/workflows/integration-tests.yaml b/.github/workflows/integration-tests.yaml
+index 47a6a70..3cd014d 100644
+--- a/.github/workflows/integration-tests.yaml
++++ b/.github/workflows/integration-tests.yaml
+@@ -3,7 +3,8 @@
+ #
+ # Everything the Build workflow (go-build.yaml) does not cover:
+ #   rego                 Rego policy tests with the OPA CLI
+-#   chart                helm lint plus the chart-render assertions
++#   chart                helm lint, the chart-render assertions, and the
++#                        Makefile target assertions
+ #   integration-compile  go vet with -tags integration, so a broken integration
+ #                        test file fails here instead of after a cluster boot
+ #   kind-e2e             the Helm chart installed on a kind cluster and the
+@@ -86,6 +87,9 @@ jobs:
+       - name: Render assertions
+         run: bash test/scripts/test-chart-render.sh
+ 
++      - name: Makefile target assertions
++        run: bash test/scripts/test-k8s-make-targets.sh
++
+   integration-compile:
+     name: Vet tagged suites
+     runs-on: ubuntu-latest
+diff --git a/test/scripts/test-k8s-make-targets.sh b/test/scripts/test-k8s-make-targets.sh
+new file mode 100755
+index 0000000..cba03f3
+--- /dev/null
++++ b/test/scripts/test-k8s-make-targets.sh
+@@ -0,0 +1,242 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Assertions for the kind targets of the Makefile that need no cluster.
++#
++# The targets run against fakes of kubectl, helm, and sleep put first on PATH.
++# The fake kubectl answers as a kubectl older than 1.31 does: it rejects
++# `wait --for=create`. The fake sleep returns at once and adds its argument to
++# a simulated clock, which the other fakes read: the suite container's log can
++# be read from FAKE_SUITE_STARTS_AT seconds on, never where it is unset, and
++# `helm test` gives up when the clock reaches its --timeout. So a three-minute
++# wait takes well under a second, and helm's timeout and the target's own limit
++# can be set against each other.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++REAL_SLEEP="$(command -v sleep)"
++FAKE_BIN="$(mktemp -d)"
++FAKE_STATE="$(mktemp -d)"
++trap 'rm -rf "${FAKE_BIN}" "${FAKE_STATE}"' EXIT
++
++require_cmd() {
++  if ! command -v "$1" >/dev/null 2>&1; then
++    echo "error: required command not found: $1" >&2
++    exit 1
++  fi
++}
++
++require_cmd make
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++cat >"${FAKE_BIN}/sleep" <<'EOF'
++#!/usr/bin/env bash
++echo "$1" >>"${FAKE_STATE}/clock"
++EOF
++
++cat >"${FAKE_BIN}/kubectl" <<'EOF'
++#!/usr/bin/env bash
++echo "kubectl $*" >>"${FAKE_STATE}/calls"
++now() { awk '{ s += $1 } END { print s + 0 }' "${FAKE_STATE}/clock"; }
++ns=
++while [[ "$1" == --context || "$1" == -n ]]; do
++  [[ "$1" == -n ]] && ns="$2"
++  shift 2
++done
++case "$1" in
++  delete) ;;
++  logs)
++    if [[ -z "${FAKE_SUITE_STARTS_AT:-}" ]] || (( $(now) < FAKE_SUITE_STARTS_AT )); then
++      echo 'Error from server (BadRequest): container "suite" in pod "suite" is waiting to start: ContainerCreating' >&2
++      exit 1
++    fi
++    if [[ "$2" == -f ]]; then
++      echo "suite: the suite log"
++      touch "${FAKE_STATE}/suite-finished"
++    fi
++    ;;
++  get)
++    job="$(sed -n 's/.*-l job-name=\([^ ]*\).*/\1/p' <<<"$*")"
++    echo "NAME READY STATUS"
++    echo "${ns}/${job}-abcde 0/1 ErrImageNeverPull"
++    ;;
++  wait)
++    echo "error: unrecognized condition: \"create\"" >&2
++    exit 1
++    ;;
++  *)
++    echo "fake kubectl: unexpected command: $*" >&2
++    exit 1
++    ;;
++esac
++EOF
++
++cat >"${FAKE_BIN}/helm" <<EOF
++#!/usr/bin/env bash
++REAL_SLEEP='${REAL_SLEEP}'
++EOF
++cat >>"${FAKE_BIN}/helm" <<'EOF'
++echo "helm $*" >>"${FAKE_STATE}/calls"
++now() { awk '{ s += $1 } END { print s + 0 }' "${FAKE_STATE}/clock"; }
++while [[ "$1" == --kube-context || "$1" == -n ]]; do shift 2; done
++[[ "$1" == test ]] || exit 0
++timeout="$(sed -n 's/.*--timeout \([0-9]*\)m.*/\1/p' <<<"$*")"
++trap 'echo "helm test stopped" >>"${FAKE_STATE}/calls"; exit 143' TERM
++# The real-time bound only ends a run that nothing else ends, such as the code
++# before the fix, so that the script reports it instead of hanging.
++for _ in $(seq 200); do
++  [[ -e "${FAKE_STATE}/suite-finished" ]] && exit "${FAKE_HELM_STATUS:-0}"
++  if (( $(now) >= timeout * 60 )); then
++    echo "Error: timed out waiting for the condition" >&2
++    exit 1
++  fi
++  "${REAL_SLEEP}" 0.05 &
++  wait $!
++done
++echo "fake helm: nothing ended helm test within 10 s of real time" >&2
++exit 99
++EOF
++
++chmod +x "${FAKE_BIN}"/*
++
++# Runs make with the fakes from a clean state and keeps its output in
++# make_output, its exit status in make_status, every fake command in calls,
++# and the simulated seconds the target slept in slept.
++run_make() {
++  rm -rf "${FAKE_STATE:?}"/*
++  touch "${FAKE_STATE}/clock" "${FAKE_STATE}/calls"
++  make_status=0
++  make_output="$(env PATH="${FAKE_BIN}:${PATH}" FAKE_STATE="${FAKE_STATE}" \
++    make --no-print-directory -C "${ROOT_DIR}" "$@" 2>&1)" || make_status=$?
++  calls="$(cat "${FAKE_STATE}/calls")"
++  slept="$(awk '{ s += $1 } END { print s + 0 }' "${FAKE_STATE}/clock")"
++}
++
++# The line of calls that installs the named release.
++install_of() {
++  grep -E "upgrade --install $1 " <<<"${calls}" || true
++}
++
++# ── Waiting for the suite Job ────────────────────────────────────────────
++#
++# kubectl before 1.31 rejects `wait --for=create`, and the log was then not
++# streamed at all. The Job's container starts 10 s after helm test does.
++FAKE_SUITE_STARTS_AT=10 run_make e2e-suite
++if [[ "${make_status}" == 0 && "${make_output}" == *"suite: the suite log"* ]]; then
++  pass "e2e-suite streams the log of a container that starts after the Job is created, on a kubectl without wait --for=create"
++else
++  fail "e2e-suite with the container started at 10 s: exit ${make_status}, expected 0 and the suite log in: ${make_output}"
++fi
++
++FAKE_SUITE_STARTS_AT=0 FAKE_HELM_STATUS=1 run_make e2e-suite
++if [[ "${make_status}" != 0 && "${make_output}" == *"suite: the suite log"* ]]; then
++  pass "e2e-suite fails with helm test and streams the log of the failed suite"
++else
++  fail "e2e-suite with helm test failing: exit ${make_status}, expected a failure and the suite log in: ${make_output}"
++fi
++
++# The last attempt to read the log is at 178 s, after 89 waits of 2 s.
++FAKE_SUITE_STARTS_AT=178 run_make e2e-suite
++if [[ "${make_status}" == 0 && "${make_output}" == *"suite: the suite log"* ]]; then
++  pass "e2e-suite streams the log of a container that starts at the last attempt, 178 s in"
++else
++  fail "e2e-suite with the container started at 178 s: exit ${make_status}, expected 0 and the suite log in: ${make_output}"
++fi
++
++FAKE_SUITE_STARTS_AT=180 run_make e2e-suite
++if [[ "${make_status}" != 0 && "${make_output}" == *"The runtime-suite container did not start within 3 minutes:"* ]]; then
++  pass "e2e-suite gives up on a container that starts 180 s in, after the last attempt"
++else
++  fail "e2e-suite with the container started at 180 s: exit ${make_status}, expected a failure and the did-not-start message in: ${make_output}"
++fi
++
++# A container that never starts, as on ErrImageNeverPull, at the default
++# E2E_SUITE_TIMEOUT of 15m: the target's three minutes run out first, and helm
++# test is stopped rather than waited out.
++run_make e2e-suite
++if [[ "${make_status}" != 0 && "${make_output}" == *"The runtime-suite container did not start within 3 minutes:"* ]]; then
++  pass "e2e-suite fails, naming the Job, when the container never starts"
++else
++  fail "e2e-suite with a container that never starts: exit ${make_status}, expected a failure and the did-not-start message in: ${make_output}"
++fi
++if [[ "${make_output}" == *"authz-e2e/runtime-suite-abcde 0/1 ErrImageNeverPull"* ]]; then
++  pass "e2e-suite lists the Pod of the Job when the container never starts"
++else
++  fail "e2e-suite with a container that never starts printed no listing of the runtime-suite Pod in authz-e2e: ${make_output}"
++fi
++if [[ "${slept}" == 180 && "${calls}" == *"helm test stopped"* ]]; then
++  pass "e2e-suite stops helm test after 180 s of waiting when the container never starts"
++else
++  fail "e2e-suite with a container that never starts waited ${slept} s, expected 180, and left helm test $([[ "${calls}" == *"helm test stopped"* ]] && echo stopped || echo running)"
++fi
++
++# helm test's own timeout set below the target's three minutes: helm gives up
++# first, and its error reaches the user.
++run_make e2e-suite E2E_SUITE_TIMEOUT=2m
++if [[ "${make_status}" != 0 && "${make_output}" == *"Error: timed out waiting for the condition"* ]]; then
++  pass "e2e-suite fails with helm's timeout error when E2E_SUITE_TIMEOUT runs out before the container starts"
++else
++  fail "e2e-suite with E2E_SUITE_TIMEOUT=2m and a container that never starts: exit ${make_status}, expected a failure and helm's timeout error in: ${make_output}"
++fi
++
++run_make parity-suite
++if [[ "${make_status}" != 0 && "${make_output}" == *"The parity-suite container did not start within 3 minutes:"* && "${make_output}" == *"authz-parity/parity-suite-abcde 0/1 ErrImageNeverPull"* ]]; then
++  pass "parity-suite fails, naming its Job and listing its Pod, when the container never starts"
++else
++  fail "parity-suite with a container that never starts: exit ${make_status}, expected a failure, the did-not-start message for parity-suite, and its Pod in authz-parity, in: ${make_output}"
++fi
++
++# ── Extra install arguments ──────────────────────────────────────────────
++#
++# The test stand reads TAG and IMAGE_PULL_POLICY for images of its own, so a
++# TAG meant for the product charts must not reach it. test-stand-files is
++# taken as made, since it runs docker.
++for prefix in e2e parity; do
++  run_make -o test-stand-files "${prefix}-harness" "${prefix}-install" \
++    E2E_HELM_ARGS='--set TAG=product' TEST_STAND_HELM_ARGS='--set TAG=stand'
++  stand="$(install_of authz-test-stand)"
++  if [[ "${stand}" == *" --set TAG=stand" && "${stand}" != *"TAG=product"* ]]; then
++    pass "${prefix}-harness passes TEST_STAND_HELM_ARGS, not E2E_HELM_ARGS, to the test-stand install"
++  else
++    fail "${prefix}-harness installed the test stand with: ${stand:-no such install}; expected --set TAG=stand and no TAG=product"
++  fi
++  for release in authz-policy-admin authz-agent; do
++    product="$(install_of "${release}")"
++    if [[ "${product}" == *" --set TAG=product" && "${product}" != *"TAG=stand"* ]]; then
++      pass "${prefix}-install passes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS, to the ${release} install"
++    else
++      fail "${prefix}-install installed ${release} with: ${product:-no such install}; expected --set TAG=product and no TAG=stand"
++    fi
++  done
++done
++
++echo
++if (( failures > 0 )); then
++  echo "Makefile target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "Makefile target checks: all passed"

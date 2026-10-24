@@ -1,0 +1,8 @@
+.github/docs-for-publication-task.md
+Makefile
+README.md
+build/authz-agent-transfer/Dockerfile
+docs/local-integration-tests.md
+helm-templates/authz-test-stand/README.md
+test/k8s/README.md
+test/svt/common/compose/docker-compose.yml

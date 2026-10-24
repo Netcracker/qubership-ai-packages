@@ -1,0 +1,268 @@
+diff --git a/.github/workflows/integration-tests.yaml b/.github/workflows/integration-tests.yaml
+index 47a6a70..ab0ae44 100644
+--- a/.github/workflows/integration-tests.yaml
++++ b/.github/workflows/integration-tests.yaml
+@@ -3,7 +3,8 @@
+ #
+ # Everything the Build workflow (go-build.yaml) does not cover:
+ #   rego                 Rego policy tests with the OPA CLI
+-#   chart                helm lint plus the chart-render assertions
++#   chart                helm lint, the chart-render assertions, and the kind
++#                        targets of the Makefile run against kubectl and helm stubs
+ #   integration-compile  go vet with -tags integration, so a broken integration
+ #                        test file fails here instead of after a cluster boot
+ #   kind-e2e             the Helm chart installed on a kind cluster and the
+@@ -86,6 +87,11 @@ jobs:
+       - name: Render assertions
+         run: bash test/scripts/test-chart-render.sh
+ 
++      # The suite and harness targets of the Makefile, run against stubs of
++      # kubectl and helm; the kind jobs below run them against a cluster.
++      - name: Kind target checks
++        run: bash test/scripts/test-k8s-targets.sh
++
+   integration-compile:
+     name: Vet tagged suites
+     runs-on: ubuntu-latest
+diff --git a/test/scripts/test-k8s-targets.sh b/test/scripts/test-k8s-targets.sh
+new file mode 100755
+index 0000000..26c2cb8
+--- /dev/null
++++ b/test/scripts/test-k8s-targets.sh
+@@ -0,0 +1,236 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Checks of the kind targets of the Makefile that need no cluster: how
++# e2e-suite and parity-suite wait for the suite Job, and which install takes
++# which extra Helm arguments.
++#
++# The recipes run as written, with kubectl, helm, and sleep replaced on PATH by
++# the stubs below. The kubectl stub answers as kubectl 1.30 does, which has no
++# `wait --for=create`; the sleep stub returns at once and records how long it
++# was asked to sleep, so a 3-minute wait takes no time and is still measured.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++STUBS="$(mktemp -d)"
++trap 'rm -rf "${STUBS}"' EXIT
++STATE="${STUBS}/state"
++mkdir -p "${STUBS}/bin"
++
++# STUB_LOG_READABLE_FROM is the attempt of `kubectl logs` that first finds the
++# suite container started, counting from 1, or `never`.
++cat >"${STUBS}/bin/kubectl" <<'EOF'
++#!/usr/bin/env bash
++set -u
++args=()
++while (($#)); do
++  case "$1" in
++    --context | -n) shift 2 ;;
++    *) args+=("$1"); shift ;;
++  esac
++done
++case "${args[0]}" in
++  delete) ;;
++  wait)
++    echo 'error: unrecognized condition: "create"' >&2
++    exit 1
++    ;;
++  get)
++    selector="${args[*]}"
++    job="${selector##*job-name=}"
++    job="${job%% *}"
++    echo "NAME              READY   STATUS              RESTARTS   AGE"
++    echo "${job}-x7k2p   0/1     ErrImageNeverPull   0          3m"
++    ;;
++  logs)
++    attempt=$(($(cat "${STUB_STATE}/log-attempts" 2>/dev/null || echo 0) + 1))
++    echo "${attempt}" >"${STUB_STATE}/log-attempts"
++    if [[ "${STUB_LOG_READABLE_FROM}" == never ]] || ((attempt < STUB_LOG_READABLE_FROM)); then
++      echo 'Error from server (BadRequest): container "suite" is waiting to start: ErrImageNeverPull' >&2
++      exit 1
++    fi
++    if [[ "${args[1]}" == -f ]]; then
++      echo "suite: every step passed"
++    fi
++    ;;
++  *) echo "kubectl stub: unexpected call: ${args[*]}" >&2; exit 2 ;;
++esac
++EOF
++
++# STUB_HELM_TEST is what `helm test` does: `passes`, `fails` as a failed suite
++# does, `times-out` at once, or `runs` for 20 seconds and then times out. Each
++# chart install is recorded, one line each, in helm-installs.
++cat >"${STUBS}/bin/helm" <<'EOF'
++#!/usr/bin/env bash
++set -u
++args=()
++while (($#)); do
++  case "$1" in
++    --kube-context | -n) shift 2 ;;
++    *) args+=("$1"); shift ;;
++  esac
++done
++case "${args[0]}" in
++  upgrade) echo "${args[*]}" >>"${STUB_STATE}/helm-installs" ;;
++  test)
++    case "${STUB_HELM_TEST}" in
++      passes) ;;
++      fails) echo "Error: 1 error occurred: job failed: BackoffLimitExceeded" >&2; exit 1 ;;
++      times-out) echo "Error: timed out waiting for the condition" >&2; exit 1 ;;
++      runs)
++        # Without its descriptors, the sleep a kill orphans does not hold the
++        # output of make open.
++        /bin/sleep 20 </dev/null >/dev/null 2>&1 &
++        wait $!
++        echo "Error: timed out waiting for the condition" >&2
++        exit 1
++        ;;
++    esac
++    ;;
++  *) echo "helm stub: unexpected call: ${args[*]}" >&2; exit 2 ;;
++esac
++EOF
++
++cat >"${STUBS}/bin/sleep" <<'EOF'
++#!/usr/bin/env bash
++echo "$1" >>"${STUB_STATE}/sleeps"
++EOF
++chmod +x "${STUBS}/bin/"*
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++# Runs make with the given arguments against the stubs, with STUB_LOG_READABLE_FROM
++# and STUB_HELM_TEST taken from the caller, and leaves its combined output in
++# ${output} and its exit status in ${status}.
++run_make() {
++  rm -rf "${STATE}"
++  mkdir -p "${STATE}"
++  status=0
++  output="$(PATH="${STUBS}/bin:${PATH}" STUB_STATE="${STATE}" \
++    STUB_LOG_READABLE_FROM="${STUB_LOG_READABLE_FROM:-1}" STUB_HELM_TEST="${STUB_HELM_TEST:-passes}" \
++    make --no-print-directory -C "${ROOT_DIR}" "$@" 2>&1)" || status=$?
++}
++
++# How long the recipe asked to sleep, in seconds.
++slept() {
++  awk '{s += $1} END {print s + 0}' "${STATE}/sleeps" 2>/dev/null || echo 0
++}
++
++# The install of one release, as the helm stub recorded it.
++install_of() {
++  grep -E "^upgrade --install $1 " "${STATE}/helm-installs" || true
++}
++
++# kubectl before 1.31 rejects `wait --for=create`, and the Job is not there
++# yet for the first attempts to read its log.
++STUB_LOG_READABLE_FROM=4 STUB_HELM_TEST=passes run_make e2e-suite
++if [[ "${status}" == 0 && "${output}" == *"suite: every step passed"* ]]; then
++  pass "e2e-suite streams the log of a Job that appears after the first attempts, on kubectl 1.30"
++else
++  fail "e2e-suite on kubectl 1.30, Job readable from the 4th attempt: exit ${status}, expected 0 with the streamed log; output:
++${output}"
++fi
++
++STUB_LOG_READABLE_FROM=1 STUB_HELM_TEST=fails run_make e2e-suite
++if [[ "${status}" != 0 && "${output}" == *"suite: every step passed"* && "${output}" == *"BackoffLimitExceeded"* ]]; then
++  pass "e2e-suite fails with helm test's error after streaming the log of a failed suite"
++else
++  fail "e2e-suite with a failed suite: exit ${status}, expected non-zero with the log and helm test's error; output:
++${output}"
++fi
++
++# A container that never starts: the target gives up after about 3 minutes,
++# names the Job, lists its Pod, and stops helm test, which would otherwise run
++# out its own timeout and print it.
++for row in "e2e-suite:runtime-suite" "parity-suite:parity-suite"; do
++  IFS=: read -r target job <<<"${row}"
++  STUB_LOG_READABLE_FROM=never STUB_HELM_TEST=runs run_make "${target}"
++  if [[ "${status}" != 0 ]]; then
++    pass "${target} fails when the ${job} container never starts"
++  else
++    fail "${target} with a container that never starts exited 0; output:
++${output}"
++  fi
++  if [[ "${output}" == *"The ${job} container did not start within 3 minutes:"*"${job}-x7k2p   0/1     ErrImageNeverPull"* ]]; then
++    pass "${target} names the ${job} container that did not start and lists its Pod"
++  else
++    fail "${target} with a container that never starts did not name ${job} and list its Pod; output:
++${output}"
++  fi
++  if [[ "${output}" != *"timed out waiting for the condition"* ]]; then
++    pass "${target} stops helm test instead of waiting out its timeout"
++  else
++    fail "${target} waited for helm test to time out; output:
++${output}"
++  fi
++  if (($(slept) >= 170 && $(slept) <= 190)); then
++    pass "${target} waits about 3 minutes for the container ($(slept) s)"
++  else
++    fail "${target} waited $(slept) s for the container, expected about 180 s"
++  fi
++done
++
++# helm test's own limit, set below the 3-minute wait, fires first, and its
++# error reaches the user.
++STUB_LOG_READABLE_FROM=never STUB_HELM_TEST=times-out run_make e2e-suite E2E_SUITE_TIMEOUT=1m
++if [[ "${status}" != 0 && "${output}" == *"Error: timed out waiting for the condition"* ]]; then
++  pass "e2e-suite fails with helm test's timeout when E2E_SUITE_TIMEOUT is shorter than the 3-minute wait"
++else
++  fail "e2e-suite with E2E_SUITE_TIMEOUT=1m and a container that never starts: exit ${status}, expected non-zero with helm test's timeout; output:
++${output}"
++fi
++
++# The test stand reads TAG for images of its own, so a TAG meant for the
++# product charts must not reach it. test-stand-files needs Docker and is
++# skipped.
++for target in e2e-harness parity-harness; do
++  run_make -o test-stand-files "${target}" E2E_HELM_ARGS="--set TAG=product" TEST_STAND_HELM_ARGS="--set TAG=stand"
++  stand="$(install_of authz-test-stand)"
++  if [[ "${status}" == 0 && "${stand}" == *" --set TAG=stand"* && "${stand}" != *"TAG=product"* ]]; then
++    pass "${target} installs the test stand with TEST_STAND_HELM_ARGS and without E2E_HELM_ARGS"
++  else
++    fail "${target} with E2E_HELM_ARGS='--set TAG=product' TEST_STAND_HELM_ARGS='--set TAG=stand': exit ${status}, test-stand install: '${stand}'; output:
++${output}"
++  fi
++done
++
++for target in e2e-install parity-install; do
++  run_make "${target}" E2E_HELM_ARGS="--set TAG=product" TEST_STAND_HELM_ARGS="--set TAG=stand"
++  agent="$(install_of authz-agent)"
++  admin="$(install_of authz-policy-admin)"
++  if [[ "${status}" == 0 && "${agent}" == *" --set TAG=product" && "${admin}" == *" --set TAG=product" ]]; then
++    pass "${target} installs the agent and authz-policy-admin with E2E_HELM_ARGS"
++  else
++    fail "${target} with E2E_HELM_ARGS='--set TAG=product': exit ${status}, agent install: '${agent}', authz-policy-admin install: '${admin}'"
++  fi
++done
++
++echo
++if ((failures > 0)); then
++  echo "k8s target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "k8s target checks: all passed"
