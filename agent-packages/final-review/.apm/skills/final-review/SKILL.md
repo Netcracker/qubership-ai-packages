@@ -99,13 +99,14 @@ the new one. A value that means something else there, or makes it ask for someth
 finding. The request is a setting of the new consumer's own, or a run with that value.
 
 Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), say from the old code and
-the new how long each takes to fail and what each prints, on two faults: the one the old mechanism met most often (a
-missing image, a peer that does not answer, a wrong credential), which its error handling or the CI history shows, and,
-where the new mechanism waits in a loop, the fault on which one attempt waits longest. A loop takes its number of
-attempts times the sum of the longest attempt and the sleep after it, and an attempt can wait as long as its command's
-own timeout, the default where no flag sets one. A replacement that fails later or prints less, with no sentence in the
-change that accepts it, is a finding. The request is a run of that fault on the new mechanism, with its duration and its
-output, or a bound on the wait.
+the new how long each takes to fail and what each prints, on two faults: the one the old mechanism met most often, which
+its error handling or the CI history shows, and, where the new mechanism waits in a loop, the fault on which one attempt
+waits longest. On that fault, count each attempt at its call's own timeout, the default where nothing sets one, and a
+call with no timeout as never returning. Count a deadline checked before each attempt as overrun by up to one attempt
+and one sleep. A replacement that fails later or prints less, with no sentence in the change that accepts it, is a
+finding. The request is a run of that fault on the new mechanism, with its duration and its output. For a later failure,
+the request adds a deadline that bounds the whole wait, last attempt included, at the old mechanism's time to fail; for
+a quieter one, the old output.
 
 Where the change sets, exposes, or moves a limit, list the other limits on the same work: in whatever starts or wraps
 this code, in what this code starts, and in the environment, each with the place that sets it (a documented setting, a
