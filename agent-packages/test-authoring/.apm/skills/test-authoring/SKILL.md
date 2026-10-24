@@ -179,6 +179,21 @@ installed first and the change applied over it. A fixture that the new code writ
 because it tests the format the change agreed with itself. Where the project decides not to automate a one-time
 transition, the change owes the documented remedy, verified by running it on the inherited state.
 
+**A change that replaces a mechanism owes a run of its failures, not only of its success.** A mechanism here is what
+brings the system to a state and reports when it cannot: a build target, a wait loop, a client, a deployment step. Two
+faults are owed. The first is the one the old mechanism met most often (a missing image, a peer that does not answer, a
+wrong credential), which its error handling or the CI history shows. The second, where the new one waits in a loop, is
+the fault on which one attempt waits longest. A loop bounded by a count of attempts takes up to that count times the sum
+of the longest attempt and the longest sleep; a loop bounded by a deadline takes up to the deadline plus the longest
+attempt. An attempt can wait as long as its call's own timeout, the default where nothing sets one, and a call with no
+timeout leaves the loop unbounded. For each fault, name how long the old mechanism took to fail and what it printed, run
+the new one on the same fault, and state both durations and the new output in the pull request. A test that injects the
+fault controls the clock or the attempt counter (§8) and asserts that the mechanism gives up after its configured
+attempts or deadline, and what it reports; it does not assert the measured duration. Where the new one fails later than
+the old on the same fault, it gets a deadline over the whole wait no longer than the old one's, or the pull request says
+why the longer wait is worth it. Where it prints less, it prints what the old one printed, such as the reason a Pod is
+waiting, or the pull request says why the loss is acceptable.
+
 The rows below are examples, not a list to match a change against. Write the row a change needs from the rule: name
 what the changed behavior is observable through, then ask what a larger test would establish that the small one
 cannot.
@@ -527,7 +542,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the runs of a replaced mechanism's failures on its replacement, with both durations and outputs (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -547,6 +562,11 @@ Run this over a test you wrote or one you are reviewing.
 - Where the change reads or replaces state an earlier version left behind, does a test or a run start from a copy
   taken from that version, with the outcome named: keeps working, migrates, or fails naming the remedy? Where the
   project does not automate the transition, is the documented remedy shown run on that state (§3, §4)?
+- Where the change replaces a mechanism, are the fault the old one met most often and, for a loop, the fault on which
+  one attempt waits longest run on the old and the new one, the loop counted with each call's own timeout (§3)?
+- Does the pull request state both durations and what each prints, does a later failure get a deadline no longer than
+  the old one's and a quieter one the old output back, or a reason, and does no test assert the measured duration
+  (§3)?
 - Is there one case per partition, as a test of its own or in a form §7 allows, each invalid partition alone, and a
   case at each boundary and its neighbors (§4)?
 - Where the change sets or moves a limit, is there a case just past each other limit on the same work, and one showing
