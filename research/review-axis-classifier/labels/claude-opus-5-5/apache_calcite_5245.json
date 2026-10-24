@@ -1,0 +1,113 @@
+{
+ "key": "apache_calcite_5245",
+ "summary": "Fixes the validator's rollup check so that an unqualified USING/NATURAL join column in the SELECT list validates when identifier expansion is disabled, by expanding common columns before checkRollUp.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix owes a regression test; SqlValidatorTest adds USING and NATURAL cases with expansion on and off, but only for the SELECT list and only .ok(), with no check of the resulting type or of other clauses (GROUP BY, ORDER BY); a quidem test added earlier was removed after mihaibudiu asked how it disabled expansion."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The new AS-stripping step has no comment explaining why expandCommonColumn can return an AS call."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "mihaibudiu: the issue/commit title was missing 'fails'; the author renamed the Jira and PR titles. The PR body is only a Jira link."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Queries that used to fail now validate; no existing passing behavior changes."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The fix removes a spurious validation error; no new error path."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial validator change: checkRollUpInSelectList now calls Expander.expandCommonColumn and strips an AS wrapper; a reviewer should check aliased items (deptno AS x), measures, and whether other clauses have the same failure."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "USING/NATURAL common-column semantics come from the SQL standard; the author validated against PostgreSQL."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness",
+    "change_description"
+   ]
+  ],
+  "why": "Small, cohesive validator fix; one reviewer covers logic, tests, and title."
+ }
+}

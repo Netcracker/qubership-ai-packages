@@ -1,0 +1,112 @@
+{
+ "key": "apache_calcite_5180",
+ "summary": "Adds a Collect.isValid override that checks the Collect row type against the type derived from its input, with a unit test.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New invariant check needs positive and negative cases; CollectTest covers ARRAY, MAP valid/invalid, but no multi-column ARRAY/MULTISET query-constructor case, which is exactly the case the reviewer found mishandled."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Override of isValid; inline comment explains the single-column case, later rewritten to reference #create."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "PR body is only the Jira link; commit title matches Jira, which is the Calcite convention."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "isValid is invoked by the planner, so a stricter check could reject Collect nodes built by existing code with a hand-derived row type; only a glance needed since the check accepts both derivations."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New litmus.fail messages include the offending row types; adequate."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Reviewer (zzwqqq) asked to compare against SqlTypeUtil.deriveCollectionQueryComponentType as Collect.create(..., SqlKind, ...) does; the initial single-column special case was replaced by that derivation in the final diff."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Planner may now fail assertions on previously accepted plans; low risk."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Validation must agree with Collect.create/deriveRowType; initial version disagreed for multi-column query constructors (counted under correctness)."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness"
+   ]
+  ],
+  "why": "Small cohesive change in one class plus its test."
+ }
+}

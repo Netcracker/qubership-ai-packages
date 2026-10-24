@@ -1,0 +1,21 @@
+{"key": "uber_NullAway_1634",
+ "summary": "Bumps the Gradle wrapper from 9.5.0 to 9.6.1 and the Android Gradle Plugin from 8.13.0 to 9.3.0, regenerating the wrapper scripts.",
+ "axes": {
+  "tests": {"label": 0, "mandated": false, "finding": false, "evidence": "No behavior of NullAway changes; build tooling only, CI is the test."},
+  "user_docs": {"label": 0, "mandated": false, "finding": false, "evidence": "No doc lists the Gradle or AGP version (git grep at base finds only CHANGELOG history entries); NullAway users are unaffected."},
+  "doc_comments": {"label": 0, "mandated": false, "finding": false, "evidence": "Only generated wrapper-script header comments changed (Gradle -> gradlew), produced by the wrapper task."},
+  "change_description": {"label": 1, "mandated": false, "finding": false, "evidence": "Title states both bumps; 'To stay up to date' is enough for a routine tooling bump; the CHANGELOG is written at release time in this repo."},
+  "performance": {"label": 0, "mandated": false, "finding": false, "evidence": "No runtime code touched."},
+  "security": {"label": 1, "mandated": false, "finding": false, "evidence": "distributionSha256Sum changes with the URL; a glance that the checksum matches the official 9.6.1 bin distribution is enough."},
+  "backward_compat": {"label": 1, "mandated": false, "finding": false, "evidence": "AGP is a major bump (8 -> 9) but only builds sample-app; published artifacts and their supported JDKs are unaffected; contributors need Gradle 9.6.1 via the wrapper automatically."},
+  "concurrency": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "error_model": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "correctness": {"label": 0, "mandated": false, "finding": false, "evidence": "No logic changed."},
+  "user_value": {"label": 0, "mandated": false, "finding": false, "evidence": "Maintenance bump, no user-facing feature."},
+  "surprising_behavior": {"label": 0, "mandated": false, "finding": false, "evidence": "No user-observable behavior."},
+  "contradictions": {"label": 0, "mandated": false, "finding": false, "evidence": "No docs or comments describing versions to disagree with; sample-app/build.gradle:55 comment says 'AGP 8+ compatible', which still holds for 9."},
+  "build_ci": {"label": 2, "mandated": true, "finding": false, "evidence": "Build tooling versions change, including a major AGP bump (8.13.0 -> 9.3.0) whose DSL and defaults changed; mandated check that sample-app still builds under AGP 9. CI passed and no reviewer asked for changes."},
+  "observability": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "spec_conformance": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."}
+ },
+ "plan": {"mode": "single", "groups": [["build_ci"]], "why": "A four-file tooling bump needs one build-focused look."}}

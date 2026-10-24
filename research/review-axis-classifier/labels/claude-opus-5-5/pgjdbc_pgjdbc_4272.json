@@ -1,0 +1,116 @@
+{
+ "key": "pgjdbc_pgjdbc_4272",
+ "summary": "Under channelBinding=require, fail the SCRAM handshake when no tls-server-end-point hash can be derived from the server certificate or the negotiated mechanism is not -PLUS, instead of silently downgrading (GHSA-j92g-9f8w-j867).",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Security fix; the new mockito test covers the Ed25519 empty-hash path, but the authoritative post-negotiation isPlus() check has no test (codecov: 18% patch coverage, 9 lines missed) and the second test covers pre-existing no-SSL behavior."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "use.md/README already define require as 'must employ channel binding'; the fix makes code match docs, though the Ed25519 limitation could be noted."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Inline comments explain the RFC 5929 gap and the fail-closed intent accurately."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Security fix with a user-visible effect ships with no CHANGELOG.md entry (added later in #4270); the PR body explains why and how well."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Auth handshake only, one extra check."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Changes the channel-binding enforcement in SCRAM authentication (downgrade prevention); a focused security review is mandated. The isPlus() check also closes the remaining empty-array fall-throughs (null or non-X509 peer certificate)."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Connections with channelBinding=require against Ed25519-signed server certificates now fail; intended, since they were silently unprotected."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Two new CONNECTION_REJECTED PSQLExceptions with messages naming the signature algorithm or mechanism and the remediation; mandated check, messages look right."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial control flow in getChannelBindingData and initializeScramClient where a missed branch reopens the downgrade; the belt-and-braces isPlus() check covers the paths that still return an empty array."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Security fix, no new feature or option."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "require now fails for certificates it previously accepted; the message says why, so not astonishing."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Code, comments, and description agree."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Deliberately keeps scram-client 3.2; no dependency change."
+  },
+  "observability": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Failure surfaces as an exception with the algorithm name; the FINEST mechanism log stays; nothing swallowed."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Interprets RFC 5929 tls-server-end-point (no hash for Ed25519) and SCRAM -PLUS channel-binding semantics; the interpretation is correct."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "change_description",
+    "security",
+    "error_model",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "Small two-file security fix; one security-focused reviewer can cover the auth path, its spec basis, error messages, and test gaps together."
+ }
+}

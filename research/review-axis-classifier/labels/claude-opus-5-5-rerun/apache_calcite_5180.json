@@ -1,0 +1,21 @@
+{"key": "apache_calcite_5180",
+ "summary": "Adds Collect.isValid to check that a Collect's row type matches the type derived from its input, with a unit test.",
+ "axes": {
+  "tests": {"label": 2, "mandated": true, "finding": true, "evidence": "CollectTest covers only one- and two-column inputs; no case for a multi-column ARRAY/MULTISET query constructor whose row type comes from SqlTypeUtil.deriveCollectionQueryComponentType (uniquify), the path the reviewer showed was missed."},
+  "user_docs": {"label": 0, "mandated": false, "finding": false, "evidence": "Internal invariant check; no user-facing option or syntax."},
+  "doc_comments": {"label": 1, "mandated": false, "finding": false, "evidence": "Override of an existing method; inline comment explains the single-column case."},
+  "change_description": {"label": 1, "mandated": false, "finding": false, "evidence": "PR body is only the Jira link; the title states the change and the change is internal."},
+  "performance": {"label": 0, "mandated": false, "finding": false, "evidence": "isValid runs under planner assertions only."},
+  "security": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "backward_compat": {"label": 1, "mandated": false, "finding": false, "evidence": "A new invariant checked by the planner with assertions enabled could reject plans with hand-built Collect row types that were accepted before."},
+  "concurrency": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "error_model": {"label": 1, "mandated": false, "finding": false, "evidence": "New litmus failure messages; they include the offending types."},
+  "correctness": {"label": 2, "mandated": true, "finding": true, "evidence": "Reviewer zzwqqq: the check does not compare against SqlTypeUtil.deriveCollectionQueryComponentType as Collect.create(..., SqlKind, ...) does, so a query-constructor Collect over a multi-column input with duplicate names (uniquify) is rejected; fixed in the second commit."},
+  "user_value": {"label": 0, "mandated": false, "finding": false, "evidence": "Internal validation, no user-facing API."},
+  "surprising_behavior": {"label": 0, "mandated": false, "finding": false, "evidence": "No user-visible behavior beyond assertions."},
+  "contradictions": {"label": 1, "mandated": false, "finding": false, "evidence": "The check duplicates derivation logic in Collect.create; the initial version disagreed with it, which is covered under correctness."},
+  "build_ci": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "observability": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "spec_conformance": {"label": 0, "mandated": false, "finding": false, "evidence": "No external spec involved."}
+ },
+ "plan": {"mode": "single", "groups": [["tests", "correctness"]], "why": "Small cohesive change: one method and its test."}}

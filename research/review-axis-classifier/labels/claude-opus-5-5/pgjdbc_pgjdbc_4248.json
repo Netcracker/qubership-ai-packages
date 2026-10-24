@@ -1,0 +1,114 @@
+{
+ "key": "pgjdbc_pgjdbc_4248",
+ "summary": "Moves `closed = true` in LargeObject.close() after the output-stream flush so the flush's write() no longer fails checkClosed().",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Initial version had no test; the final adds BlobTest.closeFlushesBufferedOutputStream reproducing the buffered-write path of #4247."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix restoring documented behavior; no docs affected."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Inline comment updated to 'before marking closed'; final expands it to explain the write() callback."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Commit and description state cause and fix with Fixes #4247."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not a hot path."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "close() behavior on flush failure changes (object no longer marked closed); covered under correctness."
+  },
+  "concurrency": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Resource lifecycle: in the initial version a flush IOException throws before closed=true and before lo_close, leaking the server descriptor (sehrope's try/finally comment); vlsi also notes the widened double-close window."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "After the try/finally rework, lo_close/commit exceptions masked the flush error; final captures the flush error, addSuppressed for lo_close, and uses GT.tr for the message (vlsi review)."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Early-return path on flush failure leaves closed=false and skips lo_close; commitOnClose could commit a half-written object (reviews by sehrope and vlsi, commits e48ff3c4 and 2b4c0f50)."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Plain bug fix."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "commitOnClose committing after a failed flush would surprise users; addressed in the final version."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No docs or description disagree with the code."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "concurrency",
+    "error_model",
+    "correctness"
+   ]
+  ],
+  "why": "Small, cohesive change in one method; one reviewer covers cleanup, error path and the missing test."
+ }
+}

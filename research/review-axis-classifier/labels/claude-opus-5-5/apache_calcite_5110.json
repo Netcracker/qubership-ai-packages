@@ -1,0 +1,113 @@
+{
+ "key": "apache_calcite_5110",
+ "summary": "Adds absorption-law rewrites (a AND (a OR b) => a, a OR (a AND b) => a) to RexSimplify for AND, AND-unknown-as-false, and OR, guarded by a 20-term cap and a determinism check, and updates plans in existing tests.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New simplification behavior; RexProgramTest.testAbsorptionLaw and testAbsorptionLawWithNonDeterministic cover both directions, nullable and filter mode, and a non-deterministic negative case; many expected plans in sub-query.iq and JdbcAdapterTest change and needed explaining (author annotated them inline)."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal simplifier rule; no option or documented behavior changes."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New private absorb() has an accurate Javadoc including the determinism requirement; nothing contradicts."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "PR body is only the Jira link plus a note that other tests were simplified; plan changes were explained in review comments rather than the description."
+  },
+  "performance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "RexSimplify is on the planning hot path; mihaibudiu flagged the disjunctions/conjunctions calls as not cheap (O(n^2*m)), answered by the MAX_TERMS_FOR_ABSORPTION = 20 guard; asolimando stressed machine-generated large predicates."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No untrusted input, auth, or resource handling."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Simplified output and plans change for existing queries (sub-query.iq, JdbcAdapterTest, MaterializedViewSubstitutionVisitorTest), which users with plan-based tests may notice; semantics are preserved."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state or resources."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error paths added."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial rewrite in three-valued logic, applied in both UNKNOWN and FALSE modes, with in-place list mutation (terms.remove(i); i--) inside nested iteration; needs a careful check of null semantics and identity-vs-equals term matching."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Optimization with visible benefit (smaller plans, dropped helper columns); no API surface."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Equivalence-preserving rewrite; nothing a user would find unexpected."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comments, Javadoc and tests agree with the code."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build changes."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No failure or fallback paths."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Absorption holds under SQL three-valued (Kleene) logic, so NULL semantics conform; a quick check suffices."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "performance",
+    "correctness"
+   ]
+  ],
+  "why": "Small cohesive change to one simplifier method; one reviewer can cover logic, cost, and tests together."
+ }
+}

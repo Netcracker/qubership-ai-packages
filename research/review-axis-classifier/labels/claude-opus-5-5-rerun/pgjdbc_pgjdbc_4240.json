@@ -1,0 +1,113 @@
+{
+ "key": "pgjdbc_pgjdbc_4240",
+ "summary": "Restores the JaCoCo XML report on the aggregate jacocoReport task and adds per-job Codecov upload plus a manual-trigger finalization job to the PR workflow, committing the public Codecov upload token as a fork fallback.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No product code changes; the build/CI change is verified by the CI run itself (Codecov comment shows coverage arriving)."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "TESTING.md gains a Code coverage section; its claims (jacocoReport task name enables instrumentation, -Pcoverage) match build-logic.java.gradle.kts:50 and build-parameters."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Workflow and matrix.mjs comments are accurate; the new build.gradle.kts comment still points only to omni.yml as the XML consumer although main.yml now uploads it too (minor)."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Build/CI-only change with no user-visible behaviour, so no changelog entry owed; description explains why, what, and the token trade-off."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Coverage instrumentation slows CI jobs and crashed Windows workers; addressed in-PR by limiting collectCoverage to ubuntu rows."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Commits the Codecov upload token in main.yml and exposes secrets.CODECOV_TOKEN as a job env var for if-gating; credential handling mandates a focused check even though the description argues the token is low-sensitivity."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No public API, default, or runtime behaviour changes."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state or resource lifecycle in product code."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error paths or messages changed."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The step if-conditions (!cancelled(), steps.test.outcome, repository/token gate) are small but easy to get wrong; one was already fixed in-PR (commit 3ed0b449cf)."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal CI/coverage plumbing, no user-facing feature."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No driver behaviour change."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "codecov.yml switches to manual_trigger: true, but omni.yml (base :374) still uploads coverage and never calls send-notifications, so its scheduled/dispatch uploads will never be notified; the new build.gradle.kts comment also names only omni.yml as the consumer."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Changes main.yml, matrix.mjs, codecov.yml, and Gradle report config; omni.yml is left inconsistent with the new manual_trigger (and still uses the deprecated `file:` input with a mislabeled '# v6' pin)."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging or metrics in product code."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No external spec involved."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "security",
+    "contradictions",
+    "build_ci"
+   ]
+  ],
+  "why": "A cohesive CI/build change; one reviewer can cover the token handling and workflow consistency together."
+ }
+}

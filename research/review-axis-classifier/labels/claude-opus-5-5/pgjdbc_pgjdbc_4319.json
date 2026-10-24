@@ -1,0 +1,111 @@
+{
+ "key": "pgjdbc_pgjdbc_4319",
+ "summary": "Renovate bump of the pinned actions/checkout from v6.0.3 to v6.1.0 across all GitHub workflows and a composite action.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No behavior change in the driver."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "CI-only change."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Only version comments beside the pinned SHA, updated consistently."
+  },
+  "change_description": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Renovate-generated description is adequate for a CI dependency bump; no changelog owed."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "security": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Supply-chain: a new pinned SHA for an action that runs with a token in release.yml and update_version; a glance that the SHA matches the v6.1.0 tag suffices."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No public API or user-visible behavior."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "correctness": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Mechanical SHA replacement."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not user-facing."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not user-facing."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Every occurrence updated to the same SHA and comment."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "CI dependency version changes in 14 workflow files, including release and snapshot publishing; mandated check that the minor release does not change checkout behavior (fetch-depth, persist-credentials, token handling)."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "build_ci"
+   ]
+  ],
+  "why": "Mechanical CI dependency bump with a single required axis."
+ }
+}
