@@ -5,6 +5,11 @@ Usage:
     findings-csv.py <dossier>               write findings.csv and fill the generated blocks
     findings-csv.py <dossier> --import-csv  copy verdict and rejection_reason from findings.csv back into findings.jsonl
 
+Decisions may be entered in either file. work/findings-csv.base.json records the decisions as the last build wrote
+them into findings.csv, so a later run can tell which side changed: a change made only in findings.csv is imported
+with --import-csv, a change made only in findings.jsonl is written into the next findings.csv, and a finding changed
+differently in both is reported and left for a person to settle.
+
 The consolidator writes the prose (README.md, issues/*.md); this script writes everything that is a lookup:
 the CSV for the team's triage, and the blocks between `<!-- BEGIN generated:<name> -->` and
 `<!-- END generated:<name> -->` markers:
@@ -29,6 +34,8 @@ CONFIDENCE_LABEL = {"CONFIRMED": "воспроизведено", "PLAUSIBLE": "�
 ID_RE = re.compile(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b")
 VERDICTS = {"fix", "backlog", "reject"}
 REJECTION_REASONS = {"convention", "guard-missed", "out-of-scope", "model-error", "accepted-debt"}
+DECISION_KEYS = ("verdict", "rejection_reason")
+BASE = Path("work") / "findings-csv.base.json"
 CSV_COLUMNS = [
     "id", "issue", "priority", "severity", "confidence", "component", "effort", "title", "file",
     "axes", "details", "mentioned_in", "verify_verdict", "verdict", "rejection_reason",
@@ -73,17 +80,95 @@ def read_csv(path):
     return rows
 
 
-def unimported_decisions(dossier, findings):
-    """Ids whose verdict or rejection_reason in findings.csv differs from findings.jsonl."""
+def output_path(dossier, relative):
+    """The path of a file this script writes, refused when it would land outside the dossier.
+
+    The dossier lives inside the reviewed repository and agents write into it, so any file in it may be a symbolic
+    link by the time this script runs.
+    """
+    path = dossier / relative
+    if path.is_symlink() or not path.resolve().is_relative_to(dossier):
+        raise SystemExit(f"{path}: is a symbolic link or resolves outside {dossier}; refusing to write it")
+    return path
+
+
+def decision(record):
+    return tuple((record.get(k) or "").strip() for k in DECISION_KEYS)
+
+
+def load_base(dossier):
+    path = dossier / BASE
+    if not path.exists():
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return {fid: tuple(value) for fid, value in json.load(fh).items()}
+
+
+def write_base(dossier, findings):
+    path = output_path(dossier, BASE)
+    path.parent.mkdir(exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({f["id"]: decision(f) for f in findings}, fh, ensure_ascii=False, indent=0)
+        fh.write("\n")
+
+
+def compare_decisions(dossier, findings):
+    """Split the findings whose decision differs between findings.csv and findings.jsonl by the side that changed.
+
+    Returns (from_csv, conflicts): `from_csv` maps an id to the CSV row whose decision changed only in the CSV;
+    `conflicts` lists (id, csv decision, jsonl decision) where both changed, where no base records what the CSV was
+    written with, or where the id is on no line of findings.jsonl any more. A decision changed only in findings.jsonl
+    is in neither: the next build writes it into the CSV.
+
+    A row whose id a re-run of the consolidator merged into another line is compared with that line, found through
+    its `sources`.
+    """
     path = dossier / "findings.csv"
     if not path.exists():
-        return []
-    current = {f["id"]: f for f in findings}
-    return [
-        row["id"] for row in read_csv(path)
-        if row["id"] in current
-        and any((row.get(k) or "") != (current[row["id"]].get(k) or "") for k in ("verdict", "rejection_reason"))
-    ]
+        return {}, []
+    current = lines_by_id(findings)
+    base = load_base(dossier)
+    from_csv, conflicts = {}, []
+    for row in read_csv(path):
+        fid = row["id"]
+        if fid not in current:
+            if any(decision(row)):
+                conflicts.append((fid, decision(row), None))
+            continue
+        in_csv, in_jsonl = decision(row), decision(current[fid])
+        if in_csv == in_jsonl:
+            continue
+        written = base.get(fid) if base is not None else None
+        if written is not None and in_csv == written:
+            continue
+        if written is not None and in_jsonl == written:
+            from_csv[fid] = row
+        else:
+            conflicts.append((fid, in_csv, in_jsonl))
+    return from_csv, conflicts
+
+
+def lines_by_id(findings):
+    """Map every id to the line of findings.jsonl that carries it, as its own id or as one of its sources."""
+    lines = {}
+    for f in findings:
+        for _, source_id in sources(f):
+            lines.setdefault(source_id, f)
+    lines.update({f["id"]: f for f in findings})
+    return lines
+
+
+def report_conflicts(conflicts, base_missing):
+    reason = (
+        "work/findings-csv.base.json is missing, so it is unknown which file is newer"
+        if base_missing
+        else "both files changed since findings.csv was written"
+    )
+    print(f"findings.csv and findings.jsonl disagree, and {reason}:", file=sys.stderr)
+    for fid, in_csv, in_jsonl in conflicts:
+        jsonl = "has no line with this id" if in_jsonl is None else repr(in_jsonl)
+        print(f"  {fid}: findings.csv {in_csv!r}, findings.jsonl {jsonl}", file=sys.stderr)
+    print("Set the decision you want in both files, then run the script again.", file=sys.stderr)
 
 
 def anchors(dossier):
@@ -131,7 +216,7 @@ def cell(text):
 
 
 def write_csv(dossier, findings, mention_map):
-    with open(dossier / "findings.csv", "w", encoding="utf-8", newline="") as fh:
+    with open(output_path(dossier, "findings.csv"), "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(CSV_COLUMNS)
         for f in sorted(findings, key=sort_key):
@@ -143,9 +228,11 @@ def write_csv(dossier, findings, mention_map):
                 " ".join(mentioned_in(f, mention_map)), f.get("verify_verdict") or "",
                 f.get("verdict") or "", f.get("rejection_reason") or "",
             ])
+    write_base(dossier, findings)
 
 
-def replace_block(path, name, body, problems):
+def replace_block(dossier, relative, name, body, problems):
+    path = output_path(dossier, relative)
     text = path.read_text(encoding="utf-8")
     pattern = re.compile(
         rf"(<!-- BEGIN generated:{name} -->\n).*?(<!-- END generated:{name} -->)", re.DOTALL
@@ -224,11 +311,15 @@ def issue_title(path):
 
 def build(dossier):
     findings = load_findings(dossier)
-    pending = unimported_decisions(dossier, findings)
-    if pending:
+    from_csv, conflicts = compare_decisions(dossier, findings)
+    if conflicts:
+        report_conflicts(conflicts, load_base(dossier) is None)
+        return 1
+    if from_csv:
+        ids = sorted(from_csv)
         print(
-            f"findings.csv holds decisions findings.jsonl lacks ({', '.join(pending[:5])}"
-            f"{', …' if len(pending) > 5 else ''}); run with --import-csv first, or delete findings.csv to discard them",
+            f"findings.csv holds decisions findings.jsonl lacks ({', '.join(ids[:5])}{', …' if len(ids) > 5 else ''});"
+            " run with --import-csv first",
             file=sys.stderr,
         )
         return 1
@@ -250,14 +341,14 @@ def build(dossier):
         if not members:
             problems.append(f"issues/{slug}.md: no finding has issue={slug!r}")
             continue
-        replace_block(path, "evidence", evidence_block(members, mention_map), problems)
+        replace_block(dossier, path.relative_to(dossier), "evidence", evidence_block(members, mention_map), problems)
 
     readme = dossier / "README.md"
     if readme.exists():
         titles = {slug: issue_title(p) for slug, p in issue_files.items()}
-        replace_block(readme, "standalone", standalone_block(findings, mention_map), problems)
+        replace_block(dossier, "README.md", "standalone", standalone_block(findings, mention_map), problems)
         components = {slug: issue_component(p) for slug, p in issue_files.items()}
-        replace_block(readme, "components", components_block(findings, titles, components), problems)
+        replace_block(dossier, "README.md", "components", components_block(findings, titles, components), problems)
     else:
         problems.append("README.md does not exist")
 
@@ -271,7 +362,12 @@ def build(dossier):
 
 
 def import_csv(dossier):
-    decisions = {row["id"]: row for row in read_csv(dossier / "findings.csv")}
+    findings = load_findings(dossier)
+    decisions, conflicts = compare_decisions(dossier, findings)
+    if conflicts:
+        report_conflicts(conflicts, load_base(dossier) is None)
+        print("findings.jsonl left unchanged.", file=sys.stderr)
+        return 1
     errors = []
     for fid, row in decisions.items():
         verdict, reason = (row.get("verdict") or "").strip(), (row.get("rejection_reason") or "").strip()
@@ -285,17 +381,24 @@ def import_csv(dossier):
     if errors:
         print("findings.jsonl left unchanged:\n" + "\n".join(errors), file=sys.stderr)
         return 1
-    findings = load_findings(dossier)
+    lines = lines_by_id(findings)
+    targets = {}
+    for fid, row in decisions.items():
+        targets.setdefault(id(lines[fid]), []).append((fid, decision(row)))
+    split = [ids for ids in targets.values() if len({d for _, d in ids}) > 1]
+    if split:
+        print("findings.jsonl left unchanged: rows merged into one finding carry different decisions:", file=sys.stderr)
+        for ids in split:
+            print("  " + ", ".join(f"{fid} {d!r}" for fid, d in ids), file=sys.stderr)
+        return 1
     changed = 0
-    for f in findings:
-        row = decisions.get(f["id"])
-        if not row:
-            continue
-        for key in ("verdict", "rejection_reason"):
+    for fid, row in decisions.items():
+        f = lines[fid]
+        for key in DECISION_KEYS:
             if (row.get(key) or "") != (f.get(key) or ""):
                 f[key] = row.get(key) or ""
                 changed += 1
-    with open(dossier / "findings.jsonl", "w", encoding="utf-8") as fh:
+    with open(output_path(dossier, "findings.jsonl"), "w", encoding="utf-8") as fh:
         for f in findings:
             fh.write(json.dumps(f, ensure_ascii=False) + "\n")
     print(f"findings.jsonl: {changed} fields updated from findings.csv")

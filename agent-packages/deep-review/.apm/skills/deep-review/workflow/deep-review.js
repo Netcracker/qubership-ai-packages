@@ -36,6 +36,14 @@ const components = A.components || []
 // an unknown name is refused here rather than sending every axis to a missing file.
 const KNOWN_PACKS = ['cli', 'gitops-argocd', 'helm', 'helm-qubership', 'kubernetes', 'mcp', 'rest-http']
 const PHASES = ['scout', 'evidence', 'synthesis']
+// Axes whose rules live in another skill. The skill is installed beside this one (apm deploys a dependency into the
+// same skills directory), and the session lists the ones it found in `args.rubrics`. An axis whose rubric is missing
+// would review from memory and not say so, so the run refuses to start instead.
+const AXIS_RUBRICS = {
+  'test-strategy': ['test-authoring'],
+  'docs-pages': ['docs-page-authoring'],
+  telemetry: ['telemetry-authoring', 'english-developer-style'],
+}
 const DEPTHS = ['coarse', 'deep']
 
 if (!dossier || !repo) throw new Error('args.dossier and args.repo are required')
@@ -55,9 +63,50 @@ for (const axis of allAxes) {
     throw new Error(`axis "${axis.key}": phase must be one of ${PHASES.join(', ')}; got "${axis.phase}"`)
   }
 }
+// An axis key and a slice name become file names in the dossier (reports/<key>--<slice>.md), so each is held to a
+// shape that cannot leave the dossier, and two entries may not share one, or the second would overwrite the first.
+const NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/
+const seen = new Set()
+for (const axis of allAxes) {
+  if (!NAME.test(axis.key)) throw new Error(`axis key "${axis.key}" must be lowercase letters and digits joined by single hyphens`)
+  if (axis.slice !== undefined && !NAME.test(axis.slice)) {
+    throw new Error(`axis "${axis.key}": slice "${axis.slice}" must be lowercase letters and digits joined by single hyphens`)
+  }
+  const name = axis.slice ? `${axis.key}--${axis.slice}` : axis.key
+  if (seen.has(name)) throw new Error(`two entries of args.axes run as "${name}"; give each slice its own name`)
+  seen.add(name)
+}
+// `priorAxes` names reports an earlier run left in the dossier; each becomes a path just as an axis does.
+const priorAxes = (A.priorAxes || []).map((k) => {
+  const [key, slice, rest] = String(k).split('--')
+  if (!NAME.test(key) || (slice !== undefined && !NAME.test(slice)) || rest !== undefined) {
+    throw new Error(`args.priorAxes entry "${k}" must be an axis key or <key>--<slice>`)
+  }
+  if (seen.has(k)) throw new Error(`"${k}" is in args.priorAxes and runs in this invocation as well`)
+  seen.add(k)
+  return k
+})
 for (const c of components) {
   if (!c.name || !c.repo) throw new Error(`every entry of args.components needs name and repo; got ${JSON.stringify(c)}`)
 }
+
+const rubrics = A.rubrics || []
+for (const axis of allAxes) {
+  const missing = (AXIS_RUBRICS[axis.key] || []).filter((r) => !rubrics.includes(r))
+  if (missing.length) {
+    throw new Error(
+      `axis "${axis.key}" needs the ${missing.join(' and ')} skill beside deep-review, and args.rubrics does not list it; ` +
+        'install it, or leave the axis out of this run',
+    )
+  }
+}
+const rubricPath = (name) => `${skill.replace(/\/+$/, '').replace(/\/[^/]+$/, '')}/${name}/SKILL.md`
+const rubricNote = (axis) =>
+  (AXIS_RUBRICS[axis.key] || []).length
+    ? `\n\nYour axis file applies rules from other skills. Read them at these paths:\n${AXIS_RUBRICS[axis.key]
+        .map((r) => `- \`${r}\`: ${rubricPath(r)}`)
+        .join('\n')}`
+    : ''
 
 const surfaces = A.surfaces || []
 // Forms the profile named that have no pack in references/surfaces/. They are kept apart from `surfaces` because
@@ -110,14 +159,16 @@ const optsFor = (axis, phase) => {
   const o = { label: `${phase}:${inst(axis)}`, phase, model: modelForStage(axis, phase) }
   if (axis.agentType) o.agentType = axis.agentType
   if (axis.effort) o.effort = axis.effort
-  // Harness-level worktree isolation copies the SESSION's repository, which is only the right
-  // thing when the session is running inside the repository under review. Otherwise the agent
-  // lands in an unrelated checkout — see makeOwnWorktree below.
-  if (axis.needsWriteAccess && A.sessionRepoIsTarget === true) o.isolation = 'worktree'
+  if (harnessIsolates(axis)) o.isolation = 'worktree'
   return o
 }
 
-const makeOwnWorktree = A.sessionRepoIsTarget !== true
+// Harness-level worktree isolation copies the SESSION's repository and nothing else. It is the right copy of `repo`
+// only when the session runs inside the repository under review, and it never copies another component's checkout,
+// so every checkout it does not cover gets a worktree the agent makes itself.
+function harnessIsolates(axis) {
+  return axis.needsWriteAccess === true && A.sessionRepoIsTarget === true
+}
 
 // Resume returns the longest unchanged prefix of agent calls from cache. The attempt number is part of the prompt, so
 // bumping it on one axis re-runs that axis and every call sequenced after it, while the calls before it come back
@@ -133,13 +184,15 @@ const slug = (s) => String(s).replace(/[^A-Za-z0-9.-]+/g, '-')
 const worktreePath = (axis, prefix, c) =>
   `${dossier}/work/${prefix}${inst(axis)}-wt${components.length ? `-${slug(c.name)}` : ''}`
 
-const worktreeCommands = (axis, prefix) =>
-  checkouts.map((c) => `git -C ${q(c.repo)} worktree add ${q(worktreePath(axis, prefix, c))} HEAD`).join('\n')
+const worktreeCommands = (axis, prefix, list = checkouts) =>
+  list.map((c) => `git -C ${q(c.repo)} worktree add ${q(worktreePath(axis, prefix, c))} HEAD`).join('\n')
 
-const cleanupCommands = (axis, prefix) =>
-  checkouts.map((c) => `git -C ${q(c.repo)} worktree remove --force ${q(worktreePath(axis, prefix, c))}`).join('\n')
+const cleanupCommands = (axis, prefix, list = checkouts) =>
+  list.map((c) => `git -C ${q(c.repo)} worktree remove --force ${q(worktreePath(axis, prefix, c))}`).join('\n')
 
-const statusCommands = () => checkouts.map((c) => `git -C ${q(c.repo)} status --porcelain`).join('\n')
+const statusCommands = (list = checkouts) => list.map((c) => `git -C ${q(c.repo)} status --porcelain`).join('\n')
+
+const ownCopies = (axis) => (harnessIsolates(axis) ? checkouts.filter((c) => c.repo !== repo) : checkouts)
 
 const isolationNote = (axis) => {
   if (!axis.needsWriteAccess) {
@@ -152,40 +205,47 @@ throwaway copy first and remove it when you are done:
 ${worktreeCommands(axis, '')}
 \`\`\``
   }
-  if (makeOwnWorktree) {
-    return `
+  const own = ownCopies(axis)
+  const harnessCopy = harnessIsolates(axis)
+    ? `
 
-**Your axis needs to modify the project, and you must not modify ${checkouts.map((c) => c.repo).join(' or ')}.**
-Before you change anything, make your own copy and work inside it:
+You are running in a private git worktree — a throwaway copy of ${repo}. Modify it freely: add a coverage plugin,
+write a probe test, break a condition to see whether the suite notices. The copy is discarded afterwards and the
+user's working tree is never touched. The dossier path is absolute and outside the copy, so your report lands in the
+right place.`
+    : ''
+  const ownCopy = own.length
+    ? `
+
+**Your axis needs to modify the project, and you must not modify ${own.map((c) => c.repo).join(' or ')}.**
+Before you change anything there, make your own copy and work inside it:
 
 \`\`\`bash
-${worktreeCommands(axis, '')}
+${worktreeCommands(axis, '', own)}
 \`\`\`
 
 Remove the copies when you are done:
 
 \`\`\`bash
-${cleanupCommands(axis, '')}
+${cleanupCommands(axis, '', own)}
 \`\`\`
 
-Verify that every checkout is clean before you finish, and clean up any build output you created there:
+Verify that every one of those checkouts is clean before you finish, and clean up any build output you created there:
 
 \`\`\`bash
-${statusCommands()}
-\`\`\`
-
-Report the commands and edits you used to obtain a measurement so a maintainer can repeat them.
+${statusCommands(own)}
+\`\`\``
+    : ''
+  const cwdNote = harnessIsolates(axis)
+    ? ''
+    : `
 
 Ignore any pre-existing working directory the harness may have placed you in: the repository under review is
 ${repo} and nothing else. If your environment shows a different repository, that is expected — use the absolute
 paths in this prompt.`
-  }
-  return `
+  return `${harnessCopy}${ownCopy}
 
-You are running in a private git worktree — a throwaway copy of ${repo}. Modify it freely: add a coverage plugin,
-write a probe test, break a condition to see whether the suite notices. The copy is discarded afterwards and the
-user's working tree is never touched. The dossier path is absolute and outside the copy, so your report lands in the
-right place. Report the commands and edits you used to obtain any measurement, so a maintainer can repeat it.`
+Report the commands and edits you used to obtain a measurement so a maintainer can repeat them.${cwdNote}`
 }
 
 // ---------------------------------------------------------------- schemas
@@ -419,6 +479,11 @@ that work is invisible: the verifier only ever sees what survived your own filte
 rates look suspiciously clean. List the defects you suspected and dropped, each with the mechanism that made it a
 non-issue. A short report with ten rejected candidates says something very different from a short report with none.
 
+Before you write anything, move ${dossier}/reports/${inst(axis)}.md, ${dossier}/work/raw-${inst(axis)}.jsonl, and
+${dossier}/work/findings-${inst(axis)}.jsonl, where they exist, to ${dossier}/work/history/ under the same name with
+the next free \`.<n>\` before the extension. A file an earlier run left there would otherwise be read as this run's
+result.
+
 Write the full report to ${dossier}/reports/${inst(axis)}.md in Russian, with identifiers and paths in English. Give
 each finding a "Проверка:" line carrying your \`method\` and \`evidence\`; leave the confidence line out — the verifier
 stamps it in afterwards.
@@ -454,7 +519,7 @@ Read these, in order, and follow them:
    ${dossier}/work/commands-${inst(axis)}.md — one file per axis, so parallel axes cannot overwrite each other. Create it
    only if you have something to say. State what you ran, what happened, and the fix.
 6. ${dossier}/00-focus.md — the agreed focus and what is explicitly out of scope
-${extraInputs}${surfaceNote}${sliceNote(axis)}
+${extraInputs}${surfaceNote}${rubricNote(axis)}${sliceNote(axis)}
 
 Then do the work. Prefer executing things over reasoning about them: run the build, run the tests, run the
 ecosystem's analyzer.${axisTail(axis)}`
@@ -546,7 +611,8 @@ Read:
 1. ${skill}/references/axes/${axis.key}.md — the invariant part of this axis, including its filter and report shape
 2. ${skill}/references/common-rules.md and ${skill}/references/report-format.md
 3. ${dossier}/00-profile.md and ${dossier}/00-focus.md
-4. Every evidence report that exists: ${evidenceKeys.map((k) => `${dossier}/reports/${k}.md`).join(', ')}
+4. Every evidence report that exists: ${evidenceKeys.map((k) => `${dossier}/reports/${k}.md`).join(', ')}. Skip each
+   report's "Отклонено при проверке" section: a refuted finding is not a lead
 
 Write a single self-contained prompt to ${dossier}/prompts/${inst(axis)}.md. It must:
 
@@ -582,7 +648,7 @@ You own the "${axis.key}" axis. Your instructions are in ${dossier}/prompts/${in
 it exactly. It supersedes the generic axis file where the two differ; where it is silent, fall back to
 ${skill}/references/axes/${axis.key}.md, ${skill}/references/common-rules.md, and
 ${skill}/references/report-format.md. Read ${dossier}/00-commands.md and any ${dossier}/work/commands-*.md before you
-run anything.${surfaceNote}${sliceNote(axis)}${axisTail(axis)}`
+run anything.${surfaceNote}${rubricNote(axis)}${sliceNote(axis)}${axisTail(axis)}`
 
 // Before consolidation, each sliced axis gets one digest across its slices. Without it the consolidator reads every
 // slice report in full, and on a monorepo that is more text than one agent can hold.
@@ -591,20 +657,23 @@ const digestPrompt = (key, instances) => `${preamble}
 You are writing the digest of the "${key}" axis, which ran as ${instances.length} slices: ${instances.join(', ')}. You do
 not review code and you do not change any finding.
 
-Read, for each slice, ${dossier}/reports/<slice>.md and ${dossier}/work/findings-<slice>.jsonl. Write
+Read, for each slice, ${dossier}/reports/<slice>.md, ${dossier}/work/raw-<slice>.jsonl, and
+${dossier}/work/findings-<slice>.jsonl. An id in the raw file that the findings file lacks, or every id of a slice
+with no findings file, got no verdict: list it with the verify verdict \`unverified\`. Write
 ${dossier}/work/digest-${key}.md with:
 
-- one line per slice: what it covered and what it says it could not reach;
+- one line per slice: what it covered, what it says it could not reach, and whether its verifier ran;
 - a table of every finding: id, slice, severity, confidence, verify verdict, title, file;
 - defects reported by two slices that are one defect, typically in code the slices share, with both ids;
-- one defect shape found in several slices, with the ids: a candidate for a single problem card across components;
+- one defect shape found in several slices, with the ids: a candidate for a single problem card across components,
+  built only from findings the verifier upheld or downgraded;
 - cross-axis notes from the slices, merged and deduplicated;
 - the answers to directed questions from the slices' "Направленные вопросы" sections, merged into one answer per
   question, with what each slice settled and what none of them did.
 
 Return a two-sentence summary.`
 
-const consolidatePrompt = (keys, cleanAxes, unverifiedAxes) => `${preamble}
+const consolidatePrompt = (keys, cleanAxes, unverifiedAxes, partialAxes, failedAxes) => `${preamble}
 
 You are consolidating the whole review. Read ${dossier}/00-focus.md, every report in ${dossier}/reports/, and every
 per-axis findings file in ${dossier}/work/findings-*.jsonl.${componentNote}
@@ -617,12 +686,24 @@ slices is usually one problem card, with the slices' components listed in "Гд�
 
 Do these things, in order.
 
-0. **Audit the run before you summarize it.** For every axis in the covered list, check that
-   ${dossier}/reports/<axis>.md exists and holds a real report. An axis with no report file, or with a stub, did NOT
-   run — whatever its findings file says. Report it as **failed**, never as "found nothing": the two look identical
-   downstream and only one of them is good news. An axis with a report and no findings file is one of two things:
-   ${cleanAxes.length ? `these axes completed with zero findings, so no verifier ran and the report's "Checked and sound" section is their evidence: ${cleanAxes.join(', ')}. ` : ''}${unverifiedAxes.length ? `for these axes the verifier failed, so their findings are unverified — carry them at PLAUSIBLE, say so on every one, and list the axis under verification failures: ${unverifiedAxes.join(', ')}. ` : ''}Any other axis with a report and no findings file failed
-   between report and verification; report it as failed. List every such axis at the top of the Покрытие section of the audit file, and name it in the
+0. **Audit the run before you summarize it.** Classify every axis in the covered list from the files in the dossier,
+   not from memory of the run: an axis passed in from an earlier run has only its files. For each report name
+   \`<axis>\`:
+   - no ${dossier}/reports/<axis>.md, or a stub there: **failed**. It did not run, whatever any other file says;
+   - a report, ${dossier}/work/raw-<axis>.jsonl with no lines, and no findings file: **clean**. The axis found
+     nothing, no verifier ran, and the report's "Checked and sound" section is its evidence;
+   - a report, a raw file with lines, and no findings file: **unverified**. The verifier failed; carry every finding
+     at PLAUSIBLE with \`verify_verdict: unverified\`, and say so on each;
+   - a findings file: **verified**, for every id it holds. An id that is in the raw file and not in the findings file
+     got no verdict: take it from the raw file with \`verify_verdict: unverified\`, at PLAUSIBLE;
+   - a report and no raw file: **failed** between report and verification.
+   A failed axis is never reported as "found nothing": the two look identical downstream and only one of them is good
+   news.${failedAxes.length ? ` **These axes ran in this run and returned nothing, so they failed whatever their files
+   say:** ${failedAxes.join(', ')}. Files under their names are an earlier run's, left behind when the agent died before
+   moving them.` : ''}${cleanAxes.length || unverifiedAxes.length || partialAxes.length ? ` This run observed, as a cross-check of your
+   classification:${cleanAxes.length ? ` clean — ${cleanAxes.join(', ')};` : ''}${unverifiedAxes.length ? ` verifier failed — ${unverifiedAxes.join(', ')};` : ''}${partialAxes.length ? ` no verdict for some findings — ${partialAxes.map(([k, ids]) => `${k} (${ids.join(', ')})`).join('; ')};` : ''} where the files disagree, the files win and the
+   disagreement goes in the audit file.` : ''} List every failed and unverified axis, and every unverified finding of a
+   verified one, at the top of the Покрытие section of the audit file, and name the failed and unverified axes in the
    Итог of README.md as well: the team has to know which areas the review did not cover.
 
    **Then audit the directed questions the same way.** Read the \`## Directed questions\` section of
@@ -633,7 +714,20 @@ Do these things, in order.
    explicit "не отвечено", not merely in Покрытие. This is the one gap a reader cannot detect from the findings, because an
    unanswered question produces no output at all.
 
-1. Write ${dossier}/findings.jsonl: one JSON object per line, merged from the per-axis files. Deduplicate — the same
+**A refuted or unverified finding changes nothing else.** It stays in findings.jsonl as the record of what was raised,
+but it does not settle another finding, it is not the root cause a problem card is built on, it does not set a card's
+priority, and its description is not the one a merged line keeps. Only a finding whose \`verify_verdict\` is
+\`upheld\` or \`downgraded\` acts on others. The evidence axes read the scout reports before the scout verifier
+finished, so check every finding that cites a scout finding as its premise: where that scout finding was refuted, say
+so on the citing line's \`verify_reason\` and in the Противоречия section, and judge whether the finding stands without
+it.
+
+1. Write ${dossier}/findings.jsonl: one JSON object per line, merged from the per-axis files. If the file already holds
+   findings from an earlier consolidation, move it first to ${dossier}/work/history/findings.<n>.jsonl with the next
+   free <n>, and carry each finding's \`verdict\` and \`rejection_reason\` over to the line that now carries its
+   \`id\`, as its own \`id\` or as one of its \`sources\`: a person entered those, and a re-run must not erase
+   them. Where two old decisions land on one line and disagree, keep both in \`verify_reason\` and leave the
+   decision empty for the person to settle. Deduplicate — the same
    defect found by several axes becomes ONE line whose \`axes\` field lists all of them; keep the clearest
    description. Drop nothing: refuted findings stay, with their verdict. Keep \`tool_limit\` and \`component\` on the
    merged line. Add empty \`verdict\` and \`rejection_reason\` fields for the human triage that follows. A \`FIT\`
@@ -641,7 +735,8 @@ Do these things, in order.
    \`ACCEPTED-DEBT\`.
 
    **Apply the runtime verdicts.** A finding of the runtime-verification axis with a \`settles\` field is a verdict on
-   another finding, not a defect of its own: \`demonstrated\` sets that finding's \`confidence\` to CONFIRMED with the
+   another finding, not a defect of its own, and it applies only once its own verifier upheld or downgraded it; a
+   refuted or unverified one is recorded on the settled line as an attempt and changes nothing there. \`demonstrated\` sets that finding's \`confidence\` to CONFIRMED with the
    runtime evidence as \`verify_reason\`; \`refuted\` sets \`verify_verdict\` to refuted with the runtime's reason;
    \`narrowed\` and \`widened\` set \`severity\` to the runtime's proposal and record the old one in
    \`proposed_severity\`; \`not-reproducible\` leaves the finding as it was and adds the runtime's doubt to
@@ -853,12 +948,14 @@ const scoutInputs = scoutKeys.length
 const verifiedInputs = (keys) => `7. The verified findings of the axes that ran before you, one file per axis:
    ${keys.map((k) => `${dossier}/work/findings-${k}.jsonl`).join(', ')} (an axis with no such file found nothing or
    failed; its report says which), the reports behind them in ${dossier}/reports/, and the findings exactly as raised
-   in ${dossier}/work/raw-*.jsonl.`
+   in ${dossier}/work/raw-*.jsonl. Settle only findings whose \`verify_verdict\` is \`upheld\` or \`downgraded\`, or
+   that are in a raw file and got no verdict; a refuted finding is not a target.`
 
 const runAxis = (axis, extra) => agent(axisPrompt(axis, extra), { ...optsFor(axis, axis.phase === 'scout' ? 'Scout' : 'Evidence'), schema: FINDINGS_SCHEMA })
 
-// Three outcomes, kept apart because the consolidator treats them differently: the axis found nothing (clean, no
-// verifier ran), the axis found something and the verifier returned verdicts, or the verifier died (unverified).
+// Four outcomes, kept apart because the consolidator treats them differently: the axis found nothing (clean, no
+// verifier ran), the verifier returned a verdict for every finding (verified), it returned verdicts for some of them
+// (the rest are unverified), or it returned nothing (every finding is unverified).
 const refuteStage = (result, axis) => {
   if (!result) return null
   if (!result.findings || result.findings.length === 0) {
@@ -866,20 +963,30 @@ const refuteStage = (result, axis) => {
     return { axis: inst(axis), findings: [], verdicts: [], clean: true, coverage: result.coverage }
   }
   return agent(refutePrompt(axis, result), { ...optsFor(axis, 'Refute'), schema: VERDICTS_SCHEMA }).then((v) => {
-    if (!v || !v.verdicts) log(`${inst(axis)}: verifier returned nothing; findings are unverified`)
+    const verdicts = latestVerdicts((v && v.verdicts) || [])
+    const answered = new Set(verdicts.map((x) => x.id))
+    const unverifiedIds = result.findings.map((f) => f.id).filter((id) => !answered.has(id))
+    if (unverifiedIds.length) {
+      log(`${inst(axis)}: no verdict for ${unverifiedIds.length} of ${result.findings.length} findings (${unverifiedIds.join(', ')}); they stay unverified`)
+    }
     return {
       axis: inst(axis),
       coverage: result.coverage,
       findings: result.findings,
-      verdicts: (v && v.verdicts) || [],
-      verifyFailed: !v || !v.verdicts,
+      verdicts,
+      unverifiedIds,
+      verifyFailed: unverifiedIds.length === result.findings.length,
     }
   })
 }
 
+// One verdict per id: a verifier that answers an id twice is taken at its last answer.
+const latestVerdicts = (verdicts) => [...new Map(verdicts.map((x) => [x.id, x])).values()]
+
+// A finding the verifier did not answer survives unverified: it is neither upheld nor refuted.
 const survivors = (r) => {
-  if (!r || r.verifyFailed) return 0
-  return r.verdicts.filter((v) => v.verdict !== 'refuted').length
+  if (!r) return 0
+  return r.verdicts.filter((v) => v.verdict !== 'refuted').length + (r.unverifiedIds || []).length
 }
 
 const raisedByVerifier = (r) => {
@@ -939,11 +1046,15 @@ if (synthAxes.length) {
 phase('Consolidate')
 // `priorAxes` lets a targeted re-run of one axis consolidate over reports an earlier run left in
 // the dossier, instead of producing a synthesis that silently covers only the axis just executed.
-const priorAxes = A.priorAxes || []
 const allKeys = [...priorAxes, ...doneKeys, ...synthAxes.map(inst)]
 const all = [...scoutResults, ...evidenceResults, ...synthResults].filter(Boolean)
 const cleanAxes = all.filter((r) => r.clean).map((r) => r.axis)
 const unverifiedAxes = all.filter((r) => r.verifyFailed).map((r) => r.axis)
+const ranThisTime = [...scoutAxes, ...evidenceAxes, ...synthAxes].map(inst)
+const failed = ranThisTime.filter((k) => !all.some((r) => r.axis === k))
+const partialAxes = all
+  .filter((r) => !r.verifyFailed && (r.unverifiedIds || []).length)
+  .map((r) => [r.axis, r.unverifiedIds])
 const slicedGroups = Object.entries(
   allKeys.reduce((g, k) => (k.includes('--') ? { ...g, [keyOf(k)]: [...(g[keyOf(k)] || []), k] } : g), {}),
 ).filter(([, instances]) => instances.length >= 1)
@@ -963,7 +1074,7 @@ if (slicedGroups.length) {
 // Sequential, not parallel: the critic inspects what the consolidator produced. Run concurrently, it
 // reads findings.jsonl before that file exists and reports it as empty — which is how a measured run
 // ended up with a critic claiming the consolidator wrote nothing while the consolidator wrote 70 lines.
-const consolidated = await agent(consolidatePrompt(allKeys, cleanAxes, unverifiedAxes), {
+const consolidated = await agent(consolidatePrompt(allKeys, cleanAxes, unverifiedAxes, partialAxes, failed), {
   label: 'consolidate',
   phase: 'Consolidate',
   model: models.consolidate || models.default || 'sonnet',
@@ -978,8 +1089,6 @@ const critique = wantCritic
     })
   : null
 
-const ranThisTime = [...scoutAxes, ...evidenceAxes, ...synthAxes].map(inst)
-const failed = ranThisTime.filter((k) => !all.some((r) => r.axis === k))
 
 return {
   dossier,
@@ -988,6 +1097,7 @@ return {
   axesFailed: failed,
   axesClean: cleanAxes,
   axesUnverified: unverifiedAxes,
+  findingsUnverified: Object.fromEntries(partialAxes),
   raised: all.reduce((n, r) => n + r.findings.length + raisedByVerifier(r), 0),
   survived: all.reduce((n, r) => n + survivors(r), 0),
   perAxis: all.map((r) => ({
@@ -997,6 +1107,7 @@ return {
     survived: survivors(r),
     clean: r.clean === true,
     verifyFailed: r.verifyFailed === true,
+    unverified: (r.unverifiedIds || []).length,
   })),
   consolidate: consolidated && consolidated.summary,
   completeness: critique && critique.summary,

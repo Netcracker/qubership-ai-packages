@@ -8,9 +8,9 @@ installation guides, the configuration reference, hand-written API reference pro
 docs site that serves them. Their reader holds one question and arrives mid-page from a search, a link, or an error.
 If the only user documentation is the README and a getting-started page, say so and stop: `docs-onboarding` owns them.
 
-The rubric is `docs-page-authoring` (`<deep-review>/../docs-page-authoring/SKILL.md`). Read §1–§7 before starting
-and cite findings by section number. Do not apply §7a, §7b, or §8: they review an edit, and this axis reviews the
-pages as they stand.
+The rubric is the `docs-page-authoring` skill, at the path your prompt gives. Read §1–§7 before starting and cite
+findings by section number. Do not apply §7a, §7b, or §8: they review an edit, and this axis reviews the pages as they
+stand.
 
 **Do not review style.** Wording, tone, sentence length, dialect, heading case, and anything markdownlint enforces are
 not findings, however much better a rewrite would read. A wording problem is a finding only when it misleads or blocks
