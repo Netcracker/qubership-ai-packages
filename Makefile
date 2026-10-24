@@ -54,6 +54,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests/troubleshooting-skill-creator -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
+	node --test tests/workflow-scripts/syntax.test.mjs
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/test-authoring
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/final-review
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/blackbox-test-design
