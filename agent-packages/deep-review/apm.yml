@@ -1,0 +1,14 @@
+name: deep-review
+version: 1.0.0
+description: Review a repository, a microservice, or a system of services along independent axes, refute every finding, and consolidate the survivors into a prioritized report with one tracker-ready card per root-cause problem.
+# The pipeline runs through Claude Code's Workflow tool, which no other target has.
+targets:
+  - claude
+# Rubrics three axes apply: test-strategy, docs-pages, and the wording part of telemetry. apm deploys each beside this
+# skill, where the workflow looks for it. telemetry-authoring is not published here; without it the telemetry axis
+# stays off.
+dependencies:
+  apm:
+    - ../test-authoring
+    - ../docs-page-authoring
+    - ../english-us-developer-style
