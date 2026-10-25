@@ -44,6 +44,11 @@ Pick the scope from what the user asked for. If it is not clear, ask with AskUse
 python3 $S init --scope base:main --max-rounds 6
 ```
 
+The scope names the change's **left edge**, once: the commit's parent, the merge base with the
+branch, or HEAD as it stands. The right edge is whatever the current round snapshots, so the fixes
+you make during the run stay inside the scope and get reviewed. `init` resolves that left edge
+immediately, which is also where an unknown base branch is rejected.
+
 This creates the run directory under `$TMPDIR`, records it in the checkout's git dir, and prints the
 directory, the run id, and the reviewer name. Every later command finds the run through that pointer,
 so you never need to remember the path — and neither does a future you whose context was compacted.
@@ -87,6 +92,14 @@ alternative ways to say what to review, and rejects any two of them together. Ro
 flag. Later rounds need the ledger in the prompt, so they drop the flag and state the scope in the
 prompt text instead.
 
+What that prompt states is a **range**, never the scope argument again: from the commit `init`
+pinned as the left edge to this round's snapshot commit. Your fixes are inside it. Restating the
+argument is a mistake the loop hides well. Under `commit:<sha>` it makes Codex re-review that one
+commit every round, so it confirms round-1 findings independently and never sees the fix, and every
+later "Codex clean" means clean on the code the round started from. Under `uncommitted` it is worse:
+commit the fixes and the scope goes empty. If you rewrite a Codex prompt by hand, name the range;
+`review_run.py` writes it into `rounds/<N>/codex-prompt.txt` for you.
+
 **The Claude reviewer**, as a subagent. Round 1 spawns it with the Agent tool, `subagent_type:
 general-purpose`. Load the role by prompt; do not pass it as `agentType`, which would leave the
 subagent with no tools:
@@ -125,6 +138,13 @@ Wait for both. Then:
 python3 $S codex-extract        # codex stream  -> codex.findings.json
 python3 $S merge-prep           # validate, fence, pair by anchor -> merge-input.json
 ```
+
+A Codex round leaves two artifacts, and either one alone is a whole review: the structured event in
+`codex.jsonl` and the prose report in `codex.last.md`. When `codex-extract` finds only the second it
+says so in its `note` and returns the path. That is a review that ran, not a round that failed:
+read the file, and if it holds real findings, hand-write `codex.findings.json` against
+`schema/finding.schema.json` rather than recording a degraded round. Check both artifacts before you
+report a failure.
 
 `merge-prep` reports `degraded` for any reviewer that failed, returned invalid JSON, or answered for
 the wrong round. **A degraded round can never be called clean**, however few findings the other

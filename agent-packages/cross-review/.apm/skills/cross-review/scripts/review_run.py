@@ -29,6 +29,10 @@ LINE_SLACK = 5
 # Codex reports P0-P3; the ledger and the blocking rule work in three levels.
 CODEX_PRIORITY_TO_SEVERITY = {0: "blocker", 1: "blocker", 2: "major", 3: "minor"}
 
+# git's own hash for the empty tree, and the left edge of a change whose first commit is a root
+# commit.
+EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
 SANDBOX_SIGNATURES = (
     "Operation not permitted",
     "failed to initialize in-process app-server client",
@@ -203,6 +207,10 @@ def dirty_digest(repo: Path) -> str:
     return "sha256:" + hashlib.sha256(out.encode("utf-8")).hexdigest()[:32]
 
 
+def snapshot_ref(run_id: str, n: int) -> str:
+    return "refs/cross-review/%s/r%d" % (run_id, n)
+
+
 def make_snapshot(repo: Path, run_id: str, n: int, review_dir: Path) -> Tuple[str, str]:
     """Commit the current tree without touching the real index or working tree."""
     head = run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
@@ -218,7 +226,7 @@ def make_snapshot(repo: Path, run_id: str, n: int, review_dir: Path) -> Tuple[st
         cwd=repo,
     ).strip()
     # Without a ref the snapshot is unreachable and gc may drop it mid-run.
-    run(["git", "update-ref", "refs/cross-review/%s/r%d" % (run_id, n), snap], cwd=repo)
+    run(["git", "update-ref", snapshot_ref(run_id, n), snap], cwd=repo)
     return head, snap
 
 
@@ -266,6 +274,8 @@ def guess_symbol(repo: Path, rel_path: str, line: Optional[int]) -> Optional[str
 def cmd_init(args: argparse.Namespace) -> None:
     repo = repo_root(Path(args.repo).resolve() if args.repo else Path.cwd())
     kind, base, commit = parse_scope(args.scope)
+    # Before the run directory exists: a scope git cannot resolve should leave nothing behind.
+    base_oid = scope_base_oid(repo, kind, base, commit)
     run_id = hashlib.sha1(("%s|%f" % (repo, time.time())).encode()).hexdigest()[:6]
     tmp = Path(os.environ.get("TMPDIR", "/tmp"))
     d = (tmp / "claude-review" / ("%s-%s" % (repo.name, run_id))).resolve()
@@ -276,7 +286,7 @@ def cmd_init(args: argparse.Namespace) -> None:
         "run_id": run_id,
         "repo_root": str(repo),
         "review_dir": str(d),
-        "scope": {"kind": kind, "base": base, "commit": commit},
+        "scope": {"kind": kind, "base": base, "commit": commit, "base_oid": base_oid},
         "legs": [leg.strip() for leg in args.legs.split(",") if leg.strip()],
         "round": 0,
         "max_rounds": args.max_rounds,
@@ -293,6 +303,30 @@ def cmd_init(args: argparse.Namespace) -> None:
     emit({"review_dir": str(d), "run_id": run_id, "pointer": str(ptr),
           "reviewer_name": "rvw-%s-claude" % run_id,
           "next": "review_run.py snapshot"})
+
+
+def scope_base_oid(repo: Path, kind: str, base: Optional[str], commit: Optional[str]) -> str:
+    """Pin the left edge of the change, once, at init.
+
+    Every later round reviews the range from this commit to that round's snapshot, so the range
+    grows as fixes land. Without it each round restates the original argument: a `commit:` run
+    re-reviews that one commit forever and never sees a fix, and an `uncommitted` run goes empty
+    the moment the fixes are committed.
+    """
+    if kind == "commit":
+        sha = run(["git", "rev-parse", "--verify", "--quiet", "%s^{commit}" % commit],
+                  cwd=repo, check=False).strip()
+        if not sha:
+            die("no such commit: %s" % commit)
+        parent = run(["git", "rev-parse", "--verify", "--quiet", "%s^" % sha],
+                     cwd=repo, check=False).strip()
+        return parent or EMPTY_TREE
+    if kind == "base":
+        merge_base = run(["git", "merge-base", base, "HEAD"], cwd=repo, check=False).strip()
+        if not merge_base:
+            die("no merge base between %s and HEAD; is %s a branch in this checkout?" % (base, base))
+        return merge_base
+    return run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
 
 
 def parse_scope(spec: str) -> Tuple[str, Optional[str], Optional[str]]:
@@ -316,17 +350,20 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
     rd = round_dir(d, n)
     rd.mkdir(parents=True, exist_ok=True)
     head, snap = make_snapshot(repo, state["run_id"], n, d)
-    target = {"head_oid": head, "snapshot_oid": snap, "dirty_digest": dirty_digest(repo),
+    target = {"head_oid": head, "snapshot_oid": snap, "snapshot_ref": snapshot_ref(state["run_id"], n),
+              "dirty_digest": dirty_digest(repo),
               "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     (rd / "target.json").write_text(json.dumps(target, indent=2) + "\n", "utf-8")
     (rd / "scope.txt").write_text(scope_flags(state) + "\n", "utf-8")
 
+    prev_snap = None
     if n > 1:
         prev = json.loads((round_dir(d, n - 1) / "target.json").read_text("utf-8"))
-        patch = run(["git", "diff", "%s..%s" % (prev["snapshot_oid"], snap)], cwd=repo)
+        prev_snap = prev["snapshot_oid"]
+        patch = run(["git", "diff", "%s..%s" % (prev_snap, snap)], cwd=repo)
         (rd / "fixes.patch").write_text(patch, "utf-8")
 
-    (rd / "codex-prompt.txt").write_text(codex_prompt(state, n), "utf-8")
+    (rd / "codex-prompt.txt").write_text(codex_prompt(state, n, snap, prev_snap), "utf-8")
 
     state["round"] = n
     state["status"] = "reviewing"
@@ -348,19 +385,54 @@ def scope_flags(state: Dict[str, Any]) -> str:
     return "--commit %s" % s["commit"]
 
 
-def scope_sentence(state: Dict[str, Any]) -> str:
-    """Describe the scope in prose, for the rounds that cannot pass a scope flag."""
+def scope_sentence(state: Dict[str, Any], n: int, snap: Optional[str] = None,
+                   prev_snap: Optional[str] = None) -> List[str]:
+    """Describe the scope in prose, for the rounds that cannot pass a scope flag.
+
+    What a later round states is a *range*, not the argument `init` was given. Its right edge is
+    this round's snapshot commit, which puts the fixes made since the last round inside the scope
+    rather than beyond it. Restating the argument instead is what made a `commit:` run re-review
+    the same commit every round and never look at a single fix.
+    """
     s = state["scope"]
-    if s["kind"] == "uncommitted":
-        return "Review the staged, unstaged, and untracked changes in the working tree."
-    if s["kind"] == "base":
-        return ("Review the changes this branch introduces relative to `%s` "
-                "(`git diff %s...HEAD`), together with any uncommitted changes in the working tree."
-                % (s["base"], s["base"]))
-    return "Review the changes introduced by commit `%s` (`git show %s`)." % (s["commit"], s["commit"])
+    base_oid = s.get("base_oid")
+    if not base_oid or not snap:
+        # A run started before the range was pinned. Say what the argument said.
+        if s["kind"] == "uncommitted":
+            return ["Review the staged, unstaged, and untracked changes in the working tree."]
+        if s["kind"] == "base":
+            return ["Review the changes this branch introduces relative to `%s` (`git diff %s...HEAD`), "
+                    "together with any uncommitted changes in the working tree." % (s["base"], s["base"])]
+        return ["Review the changes introduced by commit `%s` (`git show %s`)."
+                % (s["commit"], s["commit"])]
+
+    origin = {
+        "uncommitted": "the working-tree changes this run started from",
+        "base": "the changes this branch introduces relative to `%s`" % s["base"],
+        "commit": "commit `%s`" % s["commit"],
+    }[s["kind"]]
+    out = [
+        "Review the change as it stands now: `git diff %s %s`. The right-hand side is a commit "
+        "holding the current working tree, uncommitted and untracked files included."
+        % (base_oid, snap),
+        "",
+        "That range is %s **plus every fix applied since**. Review the code inside the range as it "
+        "reads now — not the commit or the diff this run started from, which no longer describes "
+        "the code." % origin,
+    ]
+    if prev_snap:
+        out += [
+            "",
+            "The fixes made since round %d are `git diff %s %s`. Check those first: a fix that "
+            "introduces a defect, or that does not do what its rationale claims, is what this "
+            "round exists to catch. Then re-check the rest of the range."
+            % (n - 1, prev_snap, snap),
+        ]
+    return out
 
 
-def codex_prompt(state: Dict[str, Any], n: int) -> str:
+def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
+                 prev_snap: Optional[str] = None) -> str:
     """Rebuild the reviewer's memory from the ledger.
 
     Round 1 carries nothing, so it runs under a scope flag and Codex's own review prompt. Later
@@ -368,6 +440,9 @@ def codex_prompt(state: Dict[str, Any], n: int) -> str:
     `--commit` alongside a custom prompt — they are alternative ways to say what to review. So the
     scope moves into the prompt text from round 2 on, and so does everything else this prompt says,
     including the adversarial instruction round 1 has no way to carry.
+
+    What the prompt names is the range ending at this round's snapshot, never the original scope
+    argument: see scope_sentence().
     """
     if n == 1:
         return ""
@@ -375,8 +450,9 @@ def codex_prompt(state: Dict[str, Any], n: int) -> str:
     rejected = [e for e in state["ledger"] if e["status"] == "rejected"]
     deferred = [e for e in state["ledger"] if e["status"] == "deferred"]
 
-    out = ["Re-review round %d of this change. Report prioritized, actionable findings." % n,
-           "", scope_sentence(state), ""]
+    out = ["Re-review round %d of this change. Report prioritized, actionable findings." % n, ""]
+    out += scope_sentence(state, n, snap, prev_snap)
+    out.append("")
     if fixed:
         out.append("Addressed since your last pass. These are claims, not verified facts: check each "
                    "against the code, and watch for defects the fix itself introduced.")
@@ -468,11 +544,22 @@ def cmd_codex_extract(args: argparse.Namespace) -> None:
 
     status = "ok"
     note = ""
+    prose = rd / "codex.last.md"
+    prose_text = prose.read_text("utf-8", "replace") if prose.exists() else ""
     if review_output is None:
         status = "failed"
         hit = next((s for s in SANDBOX_SIGNATURES if s in stderr_text), None)
-        note = ("codex reported a sandbox problem (%s)" % hit) if hit else \
-               "no exited_review_mode event in stdout or the rollout file"
+        if hit:
+            note = "codex reported a sandbox problem (%s)" % hit
+        elif prose_text.strip():
+            # The structured event and the -o file are two artifacts, and only one is missing here:
+            # codex finished the review and wrote it as prose. Calling that a failed round throws
+            # away a review that ran.
+            note = ("no structured review event, but codex wrote a finished review to %s "
+                    "(%d bytes). Read it before you call this round degraded."
+                    % (prose, len(prose_text)))
+        else:
+            note = "no exited_review_mode event in stdout or the rollout file"
 
     report = build_codex_report(review_output, repo, n, target, dirty_digest(repo), status)
     out = rd / "codex.findings.json"
@@ -486,7 +573,8 @@ def cmd_codex_extract(args: argparse.Namespace) -> None:
     }
     write_state(d, state)
     emit({"status": status, "note": note, "session_id": session_id, "source": source,
-          "findings": len(report["findings"]), "file": str(out)})
+          "findings": len(report["findings"]), "file": str(out),
+          "report_md": str(prose) if prose_text.strip() else None})
 
 
 def scan_codex_stream(path: Path) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
@@ -1115,7 +1203,13 @@ def cmd_report(args: argparse.Namespace) -> None:
     lines = ["# Cross-review report", "",
              "Repository: `%s`" % state["repo_root"],
              "Scope: `%s`" % scope_flags(state),
-             "Rounds: %d of %d" % (state["round"], state["max_rounds"]), ""]
+             "Rounds: %d of %d" % (state["round"], state["max_rounds"])]
+
+    base_oid = state["scope"].get("base_oid")
+    if base_oid and state.get("target"):
+        lines.append("Range reviewed in the last round: `git diff %s %s` - the scope plus every fix "
+                     "applied during the run." % (base_oid, state["target"]["snapshot_oid"]))
+    lines.append("")
 
     degraded = sorted({leg for r in state["rounds"] for leg in r["degraded"]})
     if degraded:
