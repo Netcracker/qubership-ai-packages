@@ -80,16 +80,19 @@ primary component, or a directory you created for the review); the other compone
 the repo (existing review reports, ADRs), and anything that looks load-bearing.
 
 **Check which rubric skills are installed.** Three axes apply rules from another skill: `test-strategy` from
-`test-authoring`, `docs-pages` from `docs-page-authoring`, and `telemetry` from `telemetry-authoring` and
-`english-developer-style`. Each is looked up beside this skill:
+`test-authoring`, `docs-pages` from `docs-page-authoring`, and `telemetry` from `telemetry-authoring`. `telemetry`
+also judges the wording of the messages it reads by the developer-style skill of their language
+(`english-developer-style` for English), and takes whichever ones are installed. Each is looked up beside this skill:
 
 ```bash
-ls -d ${CLAUDE_SKILL_DIR}/../{test-authoring,docs-page-authoring,telemetry-authoring,english-developer-style}/SKILL.md
+for d in "${CLAUDE_SKILL_DIR}"/../*/; do [ -f "$d/SKILL.md" ] && basename "$d"; done
 ```
 
-Pass the directory names of the skills found, such as `test-authoring`, as `args.rubrics` in step 3. The workflow
-refuses to start an axis whose rubric is missing, so the questions file in step 2 proposes such an axis as off and names
-the package that would turn it on.
+It prints every skill installed beside this one. Pass the rubric and developer-style skills among them, such as
+`test-authoring` or `russian-developer-style`, as `args.rubrics` in step 3. The workflow refuses to start an axis whose
+rubric is missing, so the questions file in step 2 proposes such an axis as off and names the package that would turn it
+on. A missing developer-style skill does not stop `telemetry`; the axis says in its coverage which languages it judged
+without one.
 
 **The profile carries a technology inventory.** One row per language, runtime, library, framework, storage, or
 external component the system cannot run without. It is a fact table, written before any opinion is formed, and every
@@ -213,7 +216,7 @@ whole file by saying so and only edit what they disagree with. Structure:
 | --- | --- | --- |
 | protocol-conformance | yes | the point of the library |
 | deployment-config | no | nothing is deployed |
-| telemetry | no | the rubric `telemetry-authoring` is not installed |
+| telemetry | no | its rubric is missing; the `telemetry-authoring` package installs it |
 **Answer:** as above
 
 ## 3. Where does it hurt today?

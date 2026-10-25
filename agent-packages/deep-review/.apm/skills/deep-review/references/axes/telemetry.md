@@ -12,9 +12,9 @@ The rules come from the `telemetry-authoring` skill, at the path your prompt giv
 then the one file under its `references/` that its §0 selects for each component's ecosystem (`go.md`, `jvm.md`,
 `python.md`). Apply §1–§8 and use §10 as the per-call-site checklist. Do not report §9's question (holding only the
 text, would an engineer wait or intervene?) as a finding: name it under *Open questions* and leave the drill to
-`observability-operability`. Judge the wording of log messages and span or event text by the `english-developer-style`
-skill, section "Error and log messages", plus its §5 rules on digits a reader greps and on the `MessageFormat`
-apostrophe.
+`observability-operability`. Judge the wording of log messages and span or event text by the developer-style skill of
+the language the text is written in, from the ones your prompt lists (`english-developer-style` for English: its section
+"Error and log messages", and its §5 rules on digits a reader greps and on the `MessageFormat` apostrophe).
 
 **JavaScript and TypeScript have no reference file.** Judge them by the skill's language-independent rules and the
 platform's own conventions, and say so in coverage. In Node, `console.*` in library code is the ambient acquisition

@@ -72,11 +72,11 @@ one on.
 | `frontend-web` | ? | | | | | | | y | ? |
 | `least-surprise` | | | y | ? | y | ? | | y | ? |
 | `runtime-verification` | | ? | ? | ? | ? | ? | ? | ? | ? |
+| `architecture` | y | y | y | y | y | y | y | y | y |
 
 `test-strategy`, `docs-pages`, and `telemetry` apply rules from another skill, and run only where that skill is
-installed beside this one (step 1 of `SKILL.md` lists them). `telemetry-authoring` is not published with this package,
-so on a service or an operator without it the default set loses `telemetry` and the questions file says why.
-| `architecture` | y | y | y | y | y | y | y | y | y |
+installed beside this one (step 1 of `SKILL.md` lists them). `apm install` brings all three; a copy of this skill made
+by hand may lack one, and then the default set loses that axis and the questions file says why.
 
 `architecture` is always a **synthesis** axis: it runs last, on a prompt distilled from the evidence axes. `api-ux` is
 a synthesis axis when the repository already has review history to distill from (earlier dossiers, a usability study,

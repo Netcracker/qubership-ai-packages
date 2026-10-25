@@ -43,8 +43,11 @@ const PHASES = ['scout', 'evidence', 'synthesis']
 const AXIS_RUBRICS = {
   'test-strategy': ['test-authoring'],
   'docs-pages': ['docs-page-authoring'],
-  telemetry: ['telemetry-authoring', 'english-developer-style'],
+  telemetry: ['telemetry-authoring'],
 }
+// Axes that judge the wording of text the code emits. Its language decides which developer-style skill applies, so
+// the axis gets every one the session found, and none of them is required.
+const AXIS_STYLE = ['telemetry']
 const DEPTHS = ['coarse', 'deep']
 
 if (!dossier || !repo) throw new Error('args.dossier and args.repo are required')
@@ -102,12 +105,22 @@ for (const axis of allAxes) {
   }
 }
 const rubricPath = (name) => `${skill.replace(/\/+$/, '').replace(/\/[^/]+$/, '')}/${name}/SKILL.md`
-const rubricNote = (axis) =>
-  (AXIS_RUBRICS[axis.key] || []).length
-    ? `\n\nYour axis file applies rules from other skills. Read them at these paths:\n${AXIS_RUBRICS[axis.key]
-        .map((r) => `- \`${r}\`: ${rubricPath(r)}`)
-        .join('\n')}`
+const styleSkills = rubrics.filter((r) => r.endsWith('-developer-style'))
+const rubricNote = (axis) => {
+  const required = AXIS_RUBRICS[axis.key] || []
+  const style = AXIS_STYLE.includes(axis.key)
+    ? styleSkills.length
+      ? `\n\nJudge the wording of a message by the developer-style skill of the language it is written in. Installed:\n${styleSkills
+          .map((r) => `- \`${r}\`: ${rubricPath(r)}`)
+          .join('\n')}\nFor a language with none of these, judge the wording by the rubric alone and say so in coverage.`
+      : '\n\nNo developer-style skill is installed: judge the wording of messages by the rubric alone, and say so in coverage.'
     : ''
+  return required.length
+    ? `\n\nYour axis file applies rules from other skills. Read them at these paths:\n${required
+        .map((r) => `- \`${r}\`: ${rubricPath(r)}`)
+        .join('\n')}${style}`
+    : style
+}
 
 const surfaces = A.surfaces || []
 // Forms the profile named that have no pack in references/surfaces/. They are kept apart from `surfaces` because

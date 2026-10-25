@@ -61,10 +61,10 @@ stops before creating a dossier instead of calling a tool it does not have.
 - A shell, `git`, and whatever the repository under review needs to build and test. The profile step runs those
   commands and records the ones that work, so the axes do not each rediscover them.
 - The rubric skills three axes apply, installed beside this one: `test-authoring` for `test-strategy`,
-  `docs-page-authoring` for `docs-pages`, and `telemetry-authoring` with `english-developer-style` for `telemetry`.
-  `apm install` brings the first two and `english-us-developer-style` as dependencies. `telemetry-authoring` is not
-  published in this repository, so without a copy of it the `telemetry` axis stays off: the profile step lists the
-  rubrics it finds, and the workflow refuses to start an axis whose rubric is missing.
+  `docs-page-authoring` for `docs-pages`, and `telemetry-authoring` for `telemetry`. `apm install` brings all three as
+  dependencies. The profile step lists the rubrics it finds, and the workflow refuses to start an axis whose rubric is
+  missing. `telemetry` also judges the wording of messages by the developer-style skill of their language
+  (`english-developer-style` for English) where one is installed, and says in its coverage where none was.
 - Optional: a structural-search CLI such as `sb` for the surface and cycle summaries in the profile step. Without it,
   read the source roots directly.
 

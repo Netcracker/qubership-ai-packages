@@ -143,7 +143,7 @@ describe('the digest of a sliced axis', () => {
       baseArgs({
         axes: [{ key: 'telemetry', phase: 'evidence', slice: 'ui' }],
         priorAxes: ['telemetry--api'],
-        rubrics: ['telemetry-authoring', 'english-developer-style'],
+        rubrics: ['telemetry-authoring'],
       }),
       axisAnswering(['TEL-UI-01'], [{ id: 'TEL-UI-01', verdict: 'upheld' }]),
     )
@@ -202,6 +202,28 @@ describe('arguments the workflow refuses', () => {
       await assert.rejects(run(baseArgs(overrides), () => ({ summary: 'done' })), message)
     })
   }
+
+  it('starts the telemetry axis with no developer-style skill, and says to report the gap', async () => {
+    const { calls } = await run(
+      baseArgs({ axes: [{ key: 'telemetry', phase: 'evidence' }], rubrics: ['telemetry-authoring'] }),
+      axisAnswering([], []),
+    )
+    const axis = calls.find((c) => c.opts.label === 'Evidence:telemetry')
+    assert.match(axis.prompt, /No developer-style skill is installed/)
+  })
+
+  it('gives the telemetry axis every installed developer-style skill', async () => {
+    const { calls } = await run(
+      baseArgs({
+        axes: [{ key: 'telemetry', phase: 'evidence' }],
+        rubrics: ['telemetry-authoring', 'english-developer-style', 'russian-developer-style'],
+      }),
+      axisAnswering([], []),
+    )
+    const axis = calls.find((c) => c.opts.label === 'Evidence:telemetry')
+    assert.match(axis.prompt, /`english-developer-style`: \/s\/english-developer-style\/SKILL\.md/)
+    assert.match(axis.prompt, /`russian-developer-style`: \/s\/russian-developer-style\/SKILL\.md/)
+  })
 
   it('gives an axis the path of its installed rubric', async () => {
     const { calls } = await run(
