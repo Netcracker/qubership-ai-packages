@@ -48,6 +48,8 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 - [`pythondoc-authoring`](../pythondoc-authoring/) — the same for Python docstrings and inline comments.
 - [`problem-report-authoring`](../problem-report-authoring/) — what a bug report, a feature request, or a problem
   message to a colleague establishes and says, before anyone else has to act on it.
+- [`telemetry-authoring`](../telemetry-authoring/) — which signal an event owes (a log record, a metric, a span, or
+  nothing), what it carries, and what a library may not decide for its host.
 
 ## Adding a package to the bundle
 
