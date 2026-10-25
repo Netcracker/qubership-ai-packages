@@ -45,7 +45,9 @@ upstream convention — cite the local rule and note the divergence rather than 
   `spec` and will fight the controller.
 - **Optionality and defaults.** Every optional field has a documented default and behaves sanely when absent. A field
   marked required that the controller tolerates as empty, or optional that it rejects, is a contract mismatch.
-  Booleans that default to `true` cannot be turned off through a merge patch that omits them — flag those.
+  A boolean that defaults to `true` has to keep an explicit `false`: a Go `bool` with `omitempty` drops `false` when
+  the object is serialized, and defaulting then sets it back to `true`, so the user cannot turn it off. Flag those; a
+  `*bool` keeps the difference between unset and `false`.
 - **Validation placement.** What is enforced by OpenAPI schema or CEL (`x-kubernetes-validations`), and what is only
   checked by the controller after the object is accepted? The second kind surfaces as a confusing status minutes
   later instead of a rejected `kubectl apply`. List the gaps, and note where CEL genuinely cannot express the rule

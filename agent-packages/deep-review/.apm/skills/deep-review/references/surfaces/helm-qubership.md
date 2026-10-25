@@ -148,9 +148,12 @@ Checks:
 
 - All three parameters are declared in `values.schema.json`, `DEPLOYMENT_STRATEGY_TYPE` as a string with the four-value
   `enum`, both others as **strings** — they accept `50%` as readily as `2`, so a schema that types them as integers is
-  a defect, and so is a template that renders them unquoted into an `IntOrString` field. The deployment tooling has a
-  known type-cast weakness here; a value that survives `helm template` can still arrive wrong through the pipeline.
-  Treat a numeric spelling as a finding even when the local render looks fine, and say which of the two you tested.
+  a defect. Leaving them unquoted in the template is not: an unquoted `25%` parses as a string and an unquoted `2` as
+  an integer, and an `IntOrString` field accepts both, as the default branch of the block above shows. Rendering them
+  through `quote` is a defect, because it turns `2` into the string `"2"`, and an `IntOrString` field accepts a string
+  only as a percentage. The deployment tooling has a known type-cast weakness here; a value
+  that survives `helm template` can still arrive wrong through the pipeline. Treat a numeric spelling in the values as
+  a finding even when the local render looks fine, and say which of the two you tested.
 - The strategy is a **solution-wide** setting: every microservice in the application carries the same block. A chart
   that implements it for one workload and not another is the defect the contract's "all microservices" clause names.
 - Per-service strategy overrides are explicitly out of contract. Do not propose one.

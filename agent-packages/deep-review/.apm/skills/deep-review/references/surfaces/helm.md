@@ -191,10 +191,13 @@ The axis file has the general questions. On this surface, add:
   be set to `0`, and `| default "info"` cannot be set to `""`. `coalesce` and `empty` share the flaw. The correct test
   for "the user did not set it" is `hasKey` or `kindIs "invalid"`. This is the single most common real defect in Helm
   templates and it is trivially demonstrable: render with the value set to `false` and show that it did not take.
-- **Types and quoting.** YAML will read `on`, `yes`, `01`, and `1.0` as something other than the string the user
-  typed, and a percentage such as `25%` must stay quoted or it is not valid where an `IntOrString` is expected.
-  Conversely a numeric knob rendered through `quote` arrives as a string and is rejected by the API server. Render and
-  inspect the type, do not reason about it.
+- **Types and quoting.** Helm and the API server parse YAML 1.1, which reads an unquoted `on` or `yes` as a boolean,
+  `01` as an octal integer, and `1.10` as the float `1.1`, not as the string the user typed. A plain `25%` stays a
+  string, which an `IntOrString` field such as `maxSurge` accepts, so whether a value is quoted is not the defect. The
+  defect is a parsed value the destination field does not accept: a numeric knob rendered through `quote` arrives as a
+  string, which an integer field rejects, and an `IntOrString` field accepts a string only as a percentage, so a
+  quoted `"2"` fails there too. Render, parse the output, and check each value against the field's schema
+  (`kubectl explain`, the CRD's OpenAPI schema); do not reason about it.
 - **Indentation is structure.** `indent` where `nindent` was meant, or a chomped `{{-`, produces YAML that parses
   cleanly into the wrong shape — a block becomes a sibling of the key it belonged under, and nothing complains. Diff
   the rendered output; reading templates does not catch this class at all.
