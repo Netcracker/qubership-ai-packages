@@ -105,10 +105,14 @@ def load_base(dossier):
 
 
 def write_base(dossier, findings):
+    save_base(dossier, {f["id"]: decision(f) for f in findings})
+
+
+def save_base(dossier, base):
     path = output_path(dossier, BASE)
     path.parent.mkdir(exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump({f["id"]: decision(f) for f in findings}, fh, ensure_ascii=False, indent=0)
+        json.dump(base, fh, ensure_ascii=False, indent=0)
         fh.write("\n")
 
 
@@ -401,6 +405,13 @@ def import_csv(dossier):
     with open(output_path(dossier, "findings.jsonl"), "w", encoding="utf-8") as fh:
         for f in findings:
             fh.write(json.dumps(f, ensure_ascii=False) + "\n")
+    # The two files now agree on every imported row, so that is what a later edit of either file is compared with.
+    # Left as it was, the base would read a decision cleared in the CSV as unchanged, and a second change as a
+    # conflict.
+    base = load_base(dossier) or {}
+    for fid, row in decisions.items():
+        base[fid] = decision(row)
+    save_base(dossier, base)
     print(f"findings.jsonl: {changed} fields updated from findings.csv")
     return 0
 

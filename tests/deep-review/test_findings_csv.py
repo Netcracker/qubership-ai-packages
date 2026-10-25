@@ -83,6 +83,22 @@ class FindingsCsvTest(unittest.TestCase):
         self.assertEqual(0, done.returncode, done.stderr)
         self.assertEqual("backlog", self.jsonl_verdict())
 
+    def test_a_decision_cleared_in_the_csv_after_an_import_is_imported_too(self):
+        self.set_csv_verdict("fix")
+        self.assertEqual(0, self.script("--import-csv").returncode)
+        self.set_csv_verdict("")
+        done = self.script("--import-csv")
+        self.assertEqual(0, done.returncode, done.stderr)
+        self.assertEqual("", self.jsonl_verdict())
+
+    def test_a_decision_changed_twice_in_the_csv_is_not_a_conflict(self):
+        self.set_csv_verdict("fix")
+        self.assertEqual(0, self.script("--import-csv").returncode)
+        self.set_csv_verdict("backlog")
+        done = self.script("--import-csv")
+        self.assertEqual(0, done.returncode, done.stderr)
+        self.assertEqual("backlog", self.jsonl_verdict())
+
     def test_a_finding_decided_differently_in_both_files_is_left_for_a_person(self):
         self.write_finding(verdict="reject")
         self.set_csv_verdict("fix")
@@ -112,6 +128,12 @@ class FindingsCsvTest(unittest.TestCase):
         done = self.script("--import-csv")
         self.assertEqual(1, done.returncode)
         self.assertIn("SEC-01: findings.csv ('fix', ''), findings.jsonl has no line with this id", done.stderr)
+
+    def test_two_imports_without_the_base_file_record_a_base(self):
+        os.remove(os.path.join(self.dossier, "work", "findings-csv.base.json"))
+        self.assertEqual(0, self.script("--import-csv").returncode)
+        done = self.script("--import-csv")
+        self.assertEqual(0, done.returncode, done.stderr)
 
     def test_refuses_to_write_the_csv_through_a_symbolic_link(self):
         outside = os.path.realpath(tempfile.mkdtemp())
