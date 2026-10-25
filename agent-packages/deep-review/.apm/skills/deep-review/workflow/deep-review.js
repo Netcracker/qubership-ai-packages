@@ -7,6 +7,7 @@ export const meta = {
     { title: 'Refute', detail: 'adversarial verification of each axis findings' },
     { title: 'Distill', detail: 'generate synthesis-axis prompts from the evidence' },
     { title: 'Synthesis', detail: 'architecture and other axes that need the evidence' },
+    { title: 'Digest', detail: 'one digest per sliced axis, as soon as its last slice is verified' },
     { title: 'Consolidate', detail: 'dedup, rank, completeness critic' },
   ],
 }
@@ -673,7 +674,7 @@ ${dossier}/work/digest-${key}.md with:
 
 Return a two-sentence summary.`
 
-const consolidatePrompt = (keys, cleanAxes, unverifiedAxes, partialAxes, failedAxes) => `${preamble}
+const consolidatePrompt = (keys, cleanAxes, unverifiedAxes, partialAxes, failedAxes, failedDigests) => `${preamble}
 
 You are consolidating the whole review. Read ${dossier}/00-focus.md, every report in ${dossier}/reports/, and every
 per-axis findings file in ${dossier}/work/findings-*.jsonl.${componentNote}
@@ -682,7 +683,9 @@ Some axes may have run as slices, one agent per part of the repository: their re
 \`<axis>--<slice>.md\`. For each such axis read ${dossier}/work/digest-<axis>.md instead of every slice report in full,
 and open a slice report only for the findings you put on a problem card. In \`sources\`, \`axis\` is the report name
 without \`.md\`, slice included, because that is where the finding's anchor lives. A defect shape found in several
-slices is usually one problem card, with the slices' components listed in "Где".
+slices is usually one problem card, with the slices' components listed in "Где".${failedDigests.length ? ` The digest
+of ${failedDigests.join(', ')} failed in this run: for ${failedDigests.length > 1 ? 'those axes' : 'that axis'}, read every slice report
+in full and ignore any ${dossier}/work/digest-<axis>.md, which an earlier run left.` : ''}
 
 Do these things, in order.
 
@@ -995,6 +998,48 @@ const raisedByVerifier = (r) => {
   return r.verdicts.filter((v) => !ids.has(v.id)).length
 }
 
+// A sliced axis gets one digest across its slices, and the consolidator reads the digest instead of every slice report.
+// The digest needs only that axis's slices, so it starts the moment the last of them is verified, and runs alongside
+// the other axes and the synthesis rather than ahead of the consolidator. Slices an earlier run left in the dossier
+// (`priorAxes`) are complete already, so an axis that has no slice in this run gets its digest at once.
+const sliceGroups = new Map()
+for (const name of [...priorAxes, ...allAxes.map(inst)]) {
+  if (name.includes('--')) sliceGroups.set(keyOf(name), [...(sliceGroups.get(keyOf(name)) || []), name])
+}
+const slicesRunning = new Map()
+for (const a of allAxes) if (a.slice) slicesRunning.set(a.key, (slicesRunning.get(a.key) || 0) + 1)
+const digests = new Map()
+const startDigest = (key) => {
+  if (!digests.has(key)) {
+    log(`Digest of ${key}: ${sliceGroups.get(key).join(', ')}`)
+    digests.set(
+      key,
+      agent(digestPrompt(key, sliceGroups.get(key)), {
+        label: `digest:${key}`,
+        phase: 'Digest',
+        model: models.digest || models.default || 'sonnet',
+        schema: NOTE_SCHEMA,
+      }).then(
+        (note) => note,
+        () => null,
+      ),
+    )
+  }
+  return digests.get(key)
+}
+const sliceVerified = (axis) => {
+  if (!axis.slice) return
+  slicesRunning.set(axis.key, slicesRunning.get(axis.key) - 1)
+  if (slicesRunning.get(axis.key) === 0) startDigest(axis.key)
+}
+// The last stage of every axis: refutation, then the digest of its axis once no slice of it is still running. It
+// counts a slice whose refutation failed as finished too, so the digest still starts and reports the gap.
+const refuteThenDigest = (result, axis) =>
+  Promise.resolve()
+    .then(() => refuteStage(result, axis))
+    .finally(() => sliceVerified(axis))
+for (const key of sliceGroups.keys()) if (!slicesRunning.has(key)) startDigest(key)
+
 // The barrier belongs after the scout REPORTS, not after their refutation. Evidence axes read the
 // reports; nothing downstream reads a scout verdict before consolidation. Blocking the whole
 // evidence phase on the scout verifier is dead time — on a real run, ten idle agents for as long
@@ -1005,14 +1050,14 @@ if (scoutAxes.length) {
   log(`Scout: ${scoutKeys.join(', ')}`)
   const scoutFindings = await parallel(scoutAxes.map((a) => () => runAxis(a, '')))
   log('Scout reports written; refutation continues in the background')
-  scoutRefutation = parallel(scoutAxes.map((a, i) => () => refuteStage(scoutFindings[i], a)))
+  scoutRefutation = parallel(scoutAxes.map((a, i) => () => refuteThenDigest(scoutFindings[i], a)))
 }
 
 let evidenceResults = []
 if (evidenceAxes.length) {
   phase('Evidence')
   log(`Evidence axes: ${evidenceAxes.map(inst).join(', ')}`)
-  evidenceResults = await pipeline(evidenceAxes, (a) => runAxis(a, scoutInputs), refuteStage)
+  evidenceResults = await pipeline(evidenceAxes, (a) => runAxis(a, scoutInputs), refuteThenDigest)
 }
 
 const scoutResults = scoutRefutation ? (await scoutRefutation).filter(Boolean) : []
@@ -1039,7 +1084,7 @@ if (synthAxes.length) {
       }
       return agent(runDistilledPrompt(a), { ...optsFor(a, 'Synthesis'), schema: FINDINGS_SCHEMA })
     },
-    refuteStage,
+    refuteThenDigest,
   )
 }
 
@@ -1055,26 +1100,15 @@ const failed = ranThisTime.filter((k) => !all.some((r) => r.axis === k))
 const partialAxes = all
   .filter((r) => !r.verifyFailed && (r.unverifiedIds || []).length)
   .map((r) => [r.axis, r.unverifiedIds])
-const slicedGroups = Object.entries(
-  allKeys.reduce((g, k) => (k.includes('--') ? { ...g, [keyOf(k)]: [...(g[keyOf(k)] || []), k] } : g), {}),
-).filter(([, instances]) => instances.length >= 1)
-if (slicedGroups.length) {
-  log(`Digests for sliced axes: ${slicedGroups.map(([k]) => k).join(', ')}`)
-  await parallel(
-    slicedGroups.map(([key, instances]) => () =>
-      agent(digestPrompt(key, instances), {
-        label: `digest:${key}`,
-        phase: 'Consolidate',
-        model: models.digest || models.default || 'sonnet',
-        schema: NOTE_SCHEMA,
-      }),
-    ),
-  )
-}
+// A slice whose axis agent threw never reached its last stage, so its axis may still be waiting for a digest.
+for (const key of sliceGroups.keys()) startDigest(key)
+const digestNotes = await Promise.all([...digests].map(([key, note]) => note.then((n) => [key, n])))
+const failedDigests = digestNotes.filter(([, n]) => !n).map(([key]) => key)
+if (failedDigests.length) log(`Digest failed for ${failedDigests.join(', ')}; the consolidator reads their slice reports`)
 // Sequential, not parallel: the critic inspects what the consolidator produced. Run concurrently, it
 // reads findings.jsonl before that file exists and reports it as empty — which is how a measured run
 // ended up with a critic claiming the consolidator wrote nothing while the consolidator wrote 70 lines.
-const consolidated = await agent(consolidatePrompt(allKeys, cleanAxes, unverifiedAxes, partialAxes, failed), {
+const consolidated = await agent(consolidatePrompt(allKeys, cleanAxes, unverifiedAxes, partialAxes, failed, failedDigests), {
   label: 'consolidate',
   phase: 'Consolidate',
   model: models.consolidate || models.default || 'sonnet',

@@ -358,8 +358,9 @@ entries, one per part:
 Each entry is its own agent with its own report (`reports/<key>--<slice>.md`), findings file, worktree, and verifier;
 finding ids carry the slice (`TEL-PB-01`, or `idTag` when the slice name is long). `focus` narrows one agent within
 the same axis file, which is how one axis can still be split by concern. `seams` replaces `paths` for an axis that
-attacks the joins between parts. Before consolidation, every axis with more than one slice gets a digest
-(`work/digest-<key>.md`, model `models.digest`), and the consolidator reads digests instead of every slice report.
+attacks the joins between parts. Every sliced axis gets a digest (`work/digest-<key>.md`, model `models.digest`),
+which starts as soon as the last slice of that axis is verified and runs alongside the other axes and the synthesis;
+the consolidator waits for every digest and reads them instead of every slice report.
 The slices and the axis-by-slice matrix are proposed in the questions file and agreed with the user like everything
 else there: the partition is the most expensive decision of a monorepo run.
 
