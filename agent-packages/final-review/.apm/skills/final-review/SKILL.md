@@ -2,16 +2,16 @@
 name: final-review
 description: >-
   Use at the end of a coding task, in a fresh subagent, when the code, tests, and comments are
-  written and before the commit is final: "run the final review", "final-review this change",
-  "check the change before I commit". Reviews one change against a fixed form: every doc comment
-  added or changed, and every comment left above changed code, consistent with the code and with
-  the other comments in the file; every case the task statement, the commit message, and the class
-  comments claim, covered by a named test; boundaries, invalid partitions, and the negative control
-  present; names and comments that refer by content rather than by position or ordinal; assertions
-  that print the operands. Every item gets an answer, "none" included, with evidence. Findings are
-  sorted substantive, taste, or churn, and only the first kind is a request. A change with no code,
-  such as a skill or a docs page, fills the same form through the analogues the skill names. Not a
-  general code review; for that use the code-review skills.
+  written and before the commit is final: "run the final review" or "check the change before I
+  commit". Reviews one change against a fixed form: every doc comment added or changed, and every
+  comment left above changed code, consistent with the code and with the other comments in the
+  file; every case the task statement, the commit message, and the class comments claim, covered
+  by a named test; boundaries, invalid partitions, and the negative control present; names and
+  comments that refer by content rather than by position or ordinal; assertions that print the
+  operands. Every item gets an answer, "none" included, with evidence. Findings are sorted
+  substantive, taste, or churn, and only the first kind is a request. A change with no code, such
+  as a skill, a docs page, or a configuration, fills the same form through the analogues the skill
+  names. Not a general code review; for that use the code-review skills.
 ---
 
 # Final review of a change
