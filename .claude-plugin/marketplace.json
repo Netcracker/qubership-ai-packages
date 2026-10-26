@@ -64,8 +64,8 @@
     },
     {
       "name": "qubership-essentials",
-      "description": "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged.",
-      "version": "1.1.0",
+      "description": "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials.",
+      "version": "2.0.0",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -75,8 +75,8 @@
     },
     {
       "name": "qubership-global-essentials",
-      "description": "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged.",
-      "version": "1.1.0",
+      "description": "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials.",
+      "version": "2.0.0",
       "tags": [
         "topic:meta",
         "activity:setup",

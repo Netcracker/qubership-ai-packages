@@ -81,9 +81,9 @@ if [ -n "$mutable_refs" ]; then
 fi
 ok "published package dependencies pin immutable commit SHAs"
 
-# Deprecated umbrella packages keep their original dependency graphs. New
-# package adoption is explicit; only the new user package nests the new repo
-# package.
+# Deprecated umbrella packages keep their original dependency graphs, minus
+# codex-review, which needs a Codex account. New package adoption is explicit;
+# only the new user package nests the new repo package.
 dependency_block() { sed -n '/^dependencies:/,$p' "$1"; }
 
 # Matches a sibling as ../<name> and a package in another repository as
@@ -115,22 +115,23 @@ legacy_global="$repo_root/agent-packages/qubership-global-essentials/apm.yml"
 new_user="$repo_root/agent-packages/qubership-user-essentials/apm.yml"
 
 grep -qE '^description: .*Deprecated' "$legacy_repo" || fail "qubership-essentials must be marked deprecated"
-for dep in apm-authoring codex-review english-us-developer-style markdown-line-length-120 \
+for dep in apm-authoring english-us-developer-style markdown-line-length-120 \
   qubership-workflow-hub-usage; do
   require_dep "$legacy_repo" "$dep"
 done
-require_dep_count "$legacy_repo" 5
+require_dep_count "$legacy_repo" 4
 
 grep -qE '^description: .*Deprecated' "$legacy_global" || fail "qubership-global-essentials must be marked deprecated"
-for dep in apm-authoring codex-review english-us-developer-style markdown-line-length-120 \
+for dep in apm-authoring english-us-developer-style markdown-line-length-120 \
   qubership-agent-support-pr triage-dependency-prs enable-renovate-automerge adr-authoring; do
   require_dep "$legacy_global" "$dep"
 done
-require_dep_count "$legacy_global" 8
+require_dep_count "$legacy_global" 7
 
 for manifest in "$legacy_repo" "$legacy_global"; do
   reject_dep "$manifest" qubership-repo-essentials
   reject_dep "$manifest" qubership-user-essentials
+  reject_dep "$manifest" codex-review
 done
 require_dep "$new_user" qubership-repo-essentials
 
