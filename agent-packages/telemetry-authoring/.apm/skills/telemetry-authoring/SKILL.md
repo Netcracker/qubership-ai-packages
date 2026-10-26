@@ -3,15 +3,15 @@ name: telemetry-authoring
 description: >-
   Load when a diff adds, removes, or changes a call to a logger, a metric, or a span, and when a
   change adds a branch that ends in a failure, a retry, a fallback, a clamped value, or a state a
-  reader may wait on: load it before the first logger call is written, not when the pull request is
-  due. Also load to decide whether an event deserves a signal at all, which signal it owes, what the
-  record must carry, what a library may emit into a host it will never see, whether a new instrument
-  is worth its cardinality, and how to review instrumentation somebody else wrote. Governs the choice
-  between a record, an instrument, a span, the caller's channel, and nothing; what each carries; the
-  rate at which it may be emitted; and which decisions belong to the host rather than to the code
-  emitting. The wording of the message is the developer-style skill's, for the language the
-  message is written in, and the documentation a user-visible message owes is
-  docs-page-authoring's; load those too.
+  reader may wait on, including the text of an exception or error that a person or an agent reads,
+  such as a failed build, CLI command, or CI check: load it before the first such line is written.
+  Also load to decide whether an event deserves a signal at all, which signal it owes, what a record
+  or an error message must carry, what a library may emit into a host it will never see, whether a new
+  instrument is worth its cardinality, and how to review another author's instrumentation. Governs the
+  choice between a record, an instrument, a span, the caller's channel, and nothing; what each
+  carries; the rate at which it may be emitted; and which decisions belong to the host rather than to
+  the code emitting. Wording is the developer-style skill's, and the docs a user-visible message owes
+  are docs-page-authoring's; load both.
 ---
 
 # Authoring telemetry
@@ -86,6 +86,47 @@ same error on one path; the JVM file names a linter rule for it, and in Go and P
 Two exceptions, and only these: at the frame that handles the error, and nowhere above it, the error is recorded once
 under the rules of §5 where a span is active, or as an informational record at debug verbosity carrying the error as
 a field where none is.
+
+### What a message on the caller's channel carries
+
+An agent offered only a way to accept the result takes it, so the message also says when accepting is wrong. Beyond what
+failed and the values involved, the message carries:
+
+| Carries | Detection |
+| --- | --- |
+| **Why the check exists**, in one clause the reader can relay | The message says what failed but not what the check protects, so "why did it fail" needs the source |
+| **Where to change it**: the setting, the parameter, or the file and the key, spelled the way the reader sets or greps it | A limit or an expected value printed with no name the reader can set; a key named without its file, or a file without its key |
+| **How to find the cause**, where the code knows more than the reader: a command ready to run, or the fact itself, with every value the code holds filled in | A placeholder such as `<module>` or `<id>` where the code holds the value; "check your configuration" with no command or value |
+| **Each way out, runnable as printed and working as the code stands**: what to change when the condition is not intended; where a limit refused the operation, the change to the request that brings it under the limit, named for this operation, beside raising the limit with a value it accepts; and, where the check can be overridden, the command or setting that accepts the result | Where an override exists, only it is offered; a limit whose only way out is raising or disabling it, where the request could change instead; a remedy the code does not show to work, such as a setting the failing path never reads, or an example value that would fail the same check, such as a raised limit no larger than the one exceeded; a command that does not run as printed, such as one that names a module or a directory where the tool expects a task or a subcommand; one remedy after a list whose cases need different ones |
+| **What to report**, where the check exists so that a reviewer sees the change: what goes into the change description or to the user, with the names and numbers to quote | The message gives the accept path and does not say to tell the reviewer |
+
+A service refusing a request over a size limit:
+
+```text
+Request body of 12582912 bytes exceeds max-request-size=10485760 (10 MiB) in config/application.yaml. The limit keeps
+one request from holding more than that much server memory. Upload the file in parts of at most 10 MiB with the
+multipart endpoint, or raise max-request-size, for example to 20MB, if requests this large are expected.
+```
+
+A build check that compares the release jars with a committed list, with one module added and the size over its limit:
+
+```text
+The jars of the binary release do not match src/dist/src/dist/expected_release_artifacts.txt. The check catches
+dependencies that enter the release unnoticed, often transitively, and unexpected growth of the release.
+  + org.example:foo (foo-1.2.jar, 1048576 bytes)
+To see which dependency brings it in, run ./gradlew :src:dist:dependencyInsight --configuration runtimeClasspath --dependency org.example:foo
+The total size of the jars is 88080384 bytes (84 MiB), which exceeds total-size-limit=87031808 (83 MiB) in
+src/dist/src/dist/expected_release_artifacts.txt. The largest jars now:
+  12582912 bcprov-jdk18on-1.78.jar
+  ...
+If the module is not intended, exclude it or revert the dependency update that brought it in. If the growth is not
+intended, revert the update that grew the jars. If both are intended, run ./gradlew :src:dist:verifyReleaseDependencies
+-PupdateExpectedJars, which also raises total-size-limit, commit the file, and name the module, the size growth, and the
+dependency update in the pull request description.
+```
+
+The examples show what each row looks like, not text to reuse. Every fact in them is true of that check only; check
+each phrase taken from them against the code the new message reports on.
 
 ## 3. The record
 
@@ -267,9 +308,9 @@ from a package variable.
 
 ## 9. Review checklist
 
-Run this over a diff that touches instrumentation. Every item gets an answer; an item with nothing to report says
-`none` and one line on what was checked. Where an item turns on whether an engineer holding only the emitted text
-would wait or intervene, raise it for a person and say so.
+Run this over a diff that touches instrumentation or the text of an error. Every item gets an answer; an item with
+nothing to report says `none` and one line on what was checked. Where an item turns on whether an engineer holding only
+the emitted text would wait or intervene, raise it for a person and say so.
 
 - **Mode** (§1, §6): does the change contain a configuration call in a library or off a service's startup path, or
   an acquisition call; is the artifact in library mode, and does it then carry a provider, an SDK, an exporter, or a
@@ -295,3 +336,7 @@ would wait or intervene, raise it for a person and say so.
 - **Level** (§7): does it agree with the neighboring calls, and did the code continue normally afterwards?
 - **Context** (§8): does every concurrent call the change starts carry the caller's context; does every scope
   restore what it set, on every path?
+- **Caller's message** (§2): can a person or an agent holding only the text of the exception, the error response, or the
+  failed build, without the source, fix the cause or explain it to someone else? Does it say why the check exists, where
+  to change it, how to find the cause with every value the code holds filled in, each way out runnable as printed, and
+  what to report where a reviewer has to see the change?

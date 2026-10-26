@@ -1,9 +1,11 @@
 # telemetry-authoring
 
 An APM package that decides **which signal an event owes, what that signal carries, and who decides where it goes**, for
-libraries and services. The JVM, Go, and Python each have a reference file for their mechanics; any other ecosystem gets
-the rules without one. It loads when a diff adds, removes, or changes a logger call, a metric, or a span, and when a
-change adds a branch that fails, retries, falls back, or clamps a value.
+libraries and services, and what the text of an error tells the person or agent who reads it. The JVM, Go, and Python
+each have a reference file for their mechanics; any other ecosystem gets the rules without one. It loads when a diff
+adds, removes, or changes a logger call, a metric, or a span, and when a change adds a branch that fails, retries, falls
+back, or clamps a value, including the text of an exception or an error that a person or an agent reads, such as a
+failed build or CI check.
 
 ## What it governs
 
@@ -21,6 +23,9 @@ change adds a branch that fails, retries, falls back, or clamps a value.
   log records where the instrumentation can migrate from span events.
 - What a library may emit: it does not decide where its output goes, it returns an error instead of also logging
   it, and it carries the host's context across the concurrency it creates.
+- The caller's channel: an error that leaves the function goes to the caller rather than also to the log, and its text
+  says why the check exists, where to change it, how to find the cause, each way out runnable as printed, and what to
+  report, so a person or an agent holding only that text can fix the failure or explain it.
 - Severity: the axis is who must act; the repository's convention owns the ladder, checked against the neighboring
   calls.
 

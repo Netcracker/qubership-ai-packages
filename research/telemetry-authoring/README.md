@@ -29,10 +29,12 @@ documentation a user-visible message owes belongs to `docs-page-authoring`.
 | Phase 2: rules | `phase2_prompt.md`, `phase2_result.md` | Forty rules with detection and repair, six conflicts decided, the signal-choice rule built and tested on six named cases, the audit of the seed, and verification of every figure inside the pass |
 | Synthesis | the skill itself | Written by the orchestrating agent from the results; no separate synthesis document |
 | Trial | `ab-pr2837.md` | The skill tried on the review that seeded the research, with and without the skill |
+| Trial: error text | `ab-verify-release-deps.md` | The skill before and after the error-text rules, on the failure message of a Gradle verification task, three runs per arm on Haiku and Sonnet, judged blind and read by a fresh agent |
+| Trial: library exception | `ab-max-result-buffer.md` | The skill before the change, its build-tool first version, and the shipped version, on the `maxResultBuffer` exception of pgjdbc, three runs per arm on Haiku and Sonnet, judged blind |
 
-All passes ran on Opus on 2026-09-12. The prompts are what the subagents were given, and the result files are what
-came back, unedited, with one correction: `phase2_result.md` claimed that Ruff TRY400/TRY401 report log-and-raise,
-which they do not, and the four occurrences now say so.
+All passes ran on Opus on 2026-09-12; the error-text trial ran on 2026-10-26. The prompts are what the subagents were
+given, and the result files are what came back, unedited, with one correction: `phase2_result.md` claimed that Ruff
+TRY400/TRY401 report log-and-raise, which they do not, and the four occurrences now say so.
 
 ## Findings
 
@@ -50,6 +52,16 @@ which they do not, and the four occurrences now say so.
 - **The ecosystems differ in kind on three points**: what a host sees when it configures nothing, Python's warnings
   channel for a condition the caller can fix, and the shape of a lost or stale context. A fourth difference,
   configuring against acquiring a logger, turned out to be one rule with two detections.
+- **An error's text is the caller's channel, and the skill says what it carries.** The skill as first written spoke only
+  of hosts, operators, and alerts, and a writer that loaded it for a Gradle failure message judged it irrelevant. In
+  `ab-verify-release-deps.md` no writer loaded it from the old trigger and every writer loaded the revised one. Every
+  writer that loaded the shipped version said why the check exists, gave a diagnose command with the module filled in,
+  and said what to do either way; no writer without the skill did any of these. The rows a writer meets without the
+  skill were dropped. On the `maxResultBuffer` exception of pgjdbc, in `ab-max-result-buffer.md`, the build-tool first
+  version did not help and the general one did: it added why the limit exists, the property to set, and its accepted
+  values. Asking for the change to the request beside raising a limit, for remedies that work as the code stands, and
+  against example values that fail the same check brought an alternative to raising the limit into every message, with
+  no wrong advice.
 - **Corrections to phase 1** are named in `phase2_result.md` §11; sources that stayed unreachable had their claims
   dropped.
 
@@ -62,13 +74,22 @@ phase1b_prompt.md, phase1b_result.md     per-ecosystem discovery
 phase2_prompt.md, phase2_result.md       rules, conflicts, the signal-choice rule and its six cases, seed audit, verification
 ab-pr2837.md                             the skill tried on pgjdbc/pgjdbc#2837, with and without the skill
 prompt_ab-pr2837.md, results_ab-pr2837-*.md   the trial's prompt and the two reviews, unedited
+ab-verify-release-deps.md                the error-text rules tried on apache/jmeter#6846, before and after
+prompt_ab-verify-release-deps.md, results_ab-verify-release-deps-*.md   that trial's prompts, messages, verdicts, and interrogation
+ab-max-result-buffer.md                  the shipped rules tried on a pgjdbc exception, against the earlier versions
+prompt_ab-max-result-buffer.md, results_ab-max-result-buffer.md   that trial's prompts, verdicts, and messages
 ```
 
-The phase prompts and results, the seed, and the trial's prompt and reviews are excluded from markdownlint by
+The phase prompts and results, the seed, and each trial's prompt and results are excluded from markdownlint by
 `FILTER_REGEX_EXCLUDE` in `.github/super-linter.env`, as the other research directories are.
 
 ## Status
 
-The skill is in `agent-packages/telemetry-authoring`. The only trial covers a JVM library; Go, Python, and service
-mode are exercised by the six worked cases in `phase2_result.md` §5 and by no agent run. The trial's prompt gave both
-runs part of the answer and needs rebuilding before any count of findings from it is quoted.
+The skill is in `agent-packages/telemetry-authoring`. The trials cover a JVM library's log line, a Gradle build check,
+and a JVM library's exception; Go, Python, and service mode are exercised by the six worked cases in `phase2_result.md`
+§5 and by no agent run. The pgjdbc trial's prompt gave both runs part of the answer and needs rebuilding before any
+count of findings from it is quoted. That trial ran under `--setting-sources project`, which does not stop user-level
+`CLAUDE.md` files, so its runs may also have seen the machine's own rules; `ab-verify-release-deps.md` describes the
+isolation that works. The error-text trials exercised one Gradle check and one pgjdbc exception; an error response, a
+CLI command that rejects its input, a lint, a pre-commit hook, a CI step outside the build tool, and a tool outside the
+JVM have no run.
