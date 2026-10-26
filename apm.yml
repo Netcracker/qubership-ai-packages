@@ -55,15 +55,15 @@ marketplace:
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
-      description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
+      description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials."
       source: ./agent-packages/qubership-essentials
-      version: 1.1.0
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
-      description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
+      description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.1.0
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
