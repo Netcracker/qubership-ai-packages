@@ -124,6 +124,12 @@ auto-merge wait for the required checks:
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/*", "github/*"],
+      "matchUpdateTypes": ["major"],
+      "automerge": true
     }
   ],
   "platformAutomerge": true
@@ -137,6 +143,16 @@ the repository setting it depends on:
 ```sh
 gh api -X PATCH repos/<owner>/<repo> -f allow_auto_merge=true
 ```
+
+The `github-actions` rule lets majors of the actions published under
+`actions/*` and `github/*` merge on their own. A PR-triggered workflow
+runs every action it uses, so a green gate has exercised the new major
+there, and GitHub's own action majors are mostly runtime moves such as a
+Node.js bump. The gate does not run a release, scheduled, or push-only
+workflow, so an action used only there merges unexercised; where such a
+workflow would be costly to break, add `matchFileNames` with the workflow
+files the gate runs. Majors of every other dependency, including
+language-ecosystem ones such as Go modules, still wait for review.
 
 Open the renovate.json change as a PR; don't widen the update types
 beyond what the gate can vouch for.
