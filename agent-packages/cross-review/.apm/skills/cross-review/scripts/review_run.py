@@ -203,8 +203,28 @@ def round_dir(d: Path, n: int) -> Path:
 
 
 def dirty_digest(repo: Path) -> str:
-    out = run(["git", "status", "--porcelain=v2", "-z", "-uall"], cwd=repo)
-    return "sha256:" + hashlib.sha256(out.encode("utf-8")).hexdigest()[:32]
+    """Return a digest that changes whenever HEAD, the index, or a non-ignored file changes.
+
+    The status record of a file names its HEAD and index blobs but not its working-tree content,
+    so a second edit to a file that is already modified leaves the record unchanged. The content
+    of every file that differs from the index, and of every untracked file, is therefore hashed
+    too. Every other file matches HEAD and the index, which the HEAD oid and the status record
+    cover. A file marked assume-unchanged or skip-worktree is invisible to git, and to this digest.
+    """
+    h = hashlib.sha256()
+    h.update(run(["git", "rev-parse", "HEAD"], cwd=repo).encode("utf-8"))
+    h.update(run(["git", "status", "--porcelain=v2", "-z", "-uall"], cwd=repo).encode("utf-8"))
+    changed = run(["git", "ls-files", "-z", "--modified", "--others", "--exclude-standard"], cwd=repo)
+    for rel in sorted(set(filter(None, changed.split("\0")))):
+        path = repo / rel
+        h.update(b"\0" + rel.encode("utf-8") + b"\0")
+        if path.is_symlink():
+            h.update(b"link:" + os.readlink(path).encode("utf-8"))
+        elif path.is_file():
+            h.update(b"file:" + hashlib.sha256(path.read_bytes()).digest())
+        else:
+            h.update(b"absent")
+    return "sha256:" + h.hexdigest()[:32]
 
 
 def snapshot_ref(run_id: str, n: int) -> str:
@@ -679,6 +699,11 @@ def relativize(abs_path: str, repo: Path) -> str:
         return abs_path
 
 
+def cmd_digest(args: argparse.Namespace) -> None:
+    repo = repo_root(Path(args.repo).resolve() if args.repo else Path.cwd())
+    sys.stdout.write(dirty_digest(repo) + "\n")
+
+
 def cmd_validate(args: argparse.Namespace) -> None:
     schema = load_schema(args.kind)
     try:
@@ -728,7 +753,8 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
             degraded.append(leg)
             continue
         t = report["target"]
-        if t["dirty_digest_start"] != t["dirty_digest_end"]:
+        # A start that differs from the snapshot means the tree moved before the reviewer began.
+        if t["dirty_digest_start"] != t["dirty_digest_end"] or t["dirty_digest_start"] != target["dirty_digest"]:
             stale = True
         if t["snapshot_oid"] != target["snapshot_oid"]:
             stale = True
@@ -740,7 +766,7 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
             raw.append({**f, "reviewer": leg})
 
     groups, dropped = pair_findings(raw)
-    ledger_hits = {g["key"]: match_ledger(g, state["ledger"]) for g in groups}
+    ledger_hits = assign_ledger_matches(groups, state["ledger"])
 
     payload = {
         "round": n,
@@ -828,16 +854,34 @@ def normalized(f: Dict[str, Any]) -> str:
 LEDGER_MATCH_THRESHOLD = 50
 
 
-def match_ledger(group: Dict[str, Any], ledger: List[Dict[str, Any]]) -> Optional[str]:
+def assign_ledger_matches(groups: List[Dict[str, Any]],
+                          ledger: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
+    """Propose at most one group per ledger entry, the one that matches it best.
+
+    Two groups proposed for one entry would reach the ledger as one item, and the decision on one
+    would close the other. The first group in report order wins a tie.
+    """
+    proposed = {g["key"]: match_ledger(g, ledger) for g in groups}
+    winner: Dict[str, Tuple[float, str]] = {}
+    for g in groups:
+        fid, score = proposed[g["key"]]
+        if fid and (fid not in winner or score > winner[fid][0]):
+            winner[fid] = (score, g["key"])
+    return {key: fid if fid and winner[fid][1] == key else None for key, (fid, _) in proposed.items()}
+
+
+def match_ledger(group: Dict[str, Any], ledger: List[Dict[str, Any]]) -> Tuple[Optional[str], float]:
     """Find the ledger entry a group restates, scoring every candidate and taking the best.
 
     A shared symbol alone cannot carry a match: two distinct defects in one long method share it,
     and mismatching them here would attach one finding's rejection evidence to a different
     finding. Wording is the durable signal, since line numbers shift with every round of fixes.
+    A reviewer's own prior_id wins over any score, unless the ledger has no such entry.
     """
+    ids = {e["id"] for e in ledger}
     for f in group["members"]:
-        if f.get("prior_id"):
-            return f["prior_id"]
+        if f.get("prior_id") in ids:
+            return f["prior_id"], float("inf")
 
     best_id, best_score = None, 0.0
     for e in ledger:
@@ -852,7 +896,7 @@ def match_ledger(group: Dict[str, Any], ledger: List[Dict[str, Any]]) -> Optiona
                 score += 20
             if score > best_score:
                 best_id, best_score = e["id"], score
-    return best_id if best_score >= LEDGER_MATCH_THRESHOLD else None
+    return (best_id, best_score) if best_score >= LEDGER_MATCH_THRESHOLD else (None, 0.0)
 
 
 def title_similarity(a: str, b: str) -> float:
@@ -873,7 +917,7 @@ def cmd_merge_apply(args: argparse.Namespace) -> None:
     state = read_state(d)
     n = args.round or state["round"]
     prep = json.loads((round_dir(d, n) / "merge-input.json").read_text("utf-8"))
-    merge_with(d, state, n, prep, json.loads(Path(args.decisions).read_text("utf-8")))
+    merge_with(d, state, n, prep, json.loads(Path(args.decisions).read_text("utf-8")), args.decisions)
 
 
 def cmd_merge_auto(args: argparse.Namespace) -> None:
@@ -897,11 +941,11 @@ def cmd_merge_auto(args: argparse.Namespace) -> None:
         ],
         "dropped": [],
     }
-    merge_with(d, state, n, prep, decisions)
+    merge_with(d, state, n, prep, decisions, "the decisions merge-auto built")
 
 
 def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
-               decisions: Dict[str, Any]) -> None:
+               decisions: Dict[str, Any], source: str) -> None:
     rd = round_dir(d, n)
 
     by_key = {}
@@ -916,6 +960,8 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
     group_ids: Dict[str, str] = {}
     contradicts: Dict[str, Optional[str]] = {}
     next_id = max([int(e["id"].split("-")[1]) for e in state["ledger"]] or [0])
+    ledger_ids = {e["id"] for e in state["ledger"]}
+    claimed: Dict[str, Any] = {}
 
     for g in decisions.get("groups", []):
         members = []
@@ -936,6 +982,19 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
 
         prior_id = g.get("prior_id")
         if prior_id:
+            # ledger-apply keys decisions by id, so two groups under one id would share one decision
+            # and one ledger entry, and the defect of the other group would disappear.
+            if prior_id not in ledger_ids:
+                die("group %r names prior_id %s, which is not in the ledger (%s). In %s, set "
+                    "prior_id to one of those ids, or to null for a finding the ledger has not seen."
+                    % (g.get("key"), prior_id, ", ".join(sorted(ledger_ids)) or "empty", source))
+            if prior_id in claimed:
+                die("groups %r and %r both name prior_id %s; one ledger entry can take one group, or "
+                    "the decision on one would close the other. In %s, keep %s on the group that "
+                    "restates it and set prior_id to null on the other, or put both members in one "
+                    "group if they are one defect."
+                    % (claimed[prior_id], g.get("key"), prior_id, source, prior_id))
+            claimed[prior_id] = g.get("key")
             fid = prior_id
         else:
             next_id += 1
@@ -983,6 +1042,7 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
 
     entry = next(r for r in state["rounds"] if r["n"] == n)
     entry["blocking_in"] = merged["stats"]["blocking"]
+    entry["stale"] = prep["target"]["stale"]
     state["status"] = "awaiting_fixes"
     write_state(d, state)
     emit({"file": str(out), "items": len(items), "blocking": merged["stats"]["blocking"],
@@ -1058,6 +1118,12 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
     report = json.loads(Path(args.fix_report).read_text("utf-8"))
 
     by_id = {i["id"]: i for i in merged["items"]}
+    if len(by_id) != len(merged["items"]):
+        dupes = sorted({i["id"] for i in merged["items"] if sum(j["id"] == i["id"] for j in merged["items"]) > 1})
+        die("%s gives more than one item the id %s, and one decision would close all of them. "
+            "Rebuild it: run merge-apply %d --decisions %s, or merge-auto %d for a single-reviewer "
+            "run, and give each prior_id to one group only."
+            % (rd / "merged.json", ", ".join(dupes), n, rd / "merger-output.json", n))
     decisions = {dec["id"]: dec for dec in report.get("decisions", [])}
 
     undecided = [i["id"] for i in merged["items"] if i["blocking"] and i["id"] not in decisions]
@@ -1237,7 +1303,16 @@ def cmd_report(args: argparse.Namespace) -> None:
             lines.append("")
 
     open_blocking = [e for e in state["ledger"] if e["status"] in ("open", "regressed")]
-    verdict = "items remaining" if (open_blocking or degraded) else "clean"
+    # With no open item, the run is clean only if its last round reviewed the code it ends on: that
+    # round was merged, its reviewers read a still tree, and nothing it raised was fixed afterwards.
+    unconfirmed = last_round_gap(d, state)
+    if open_blocking or degraded:
+        verdict = "items remaining"
+    elif unconfirmed:
+        verdict = "incomplete"
+        lines += ["> No round reviewed the final code: %s" % unconfirmed, ""]
+    else:
+        verdict = "clean"
     lines += ["## Verdict: %s" % verdict, ""]
     if state["stop_reason"]:
         lines += ["Stopped because %s." % state["stop_reason"], ""]
@@ -1245,6 +1320,32 @@ def cmd_report(args: argparse.Namespace) -> None:
     out = d / "report.md"
     out.write_text("\n".join(lines), "utf-8")
     emit({"file": str(out), "verdict": verdict, "degraded": degraded})
+
+
+def last_round_gap(d: Path, state: Dict[str, Any]) -> Optional[str]:
+    """Say why the last round does not cover the code the run ends on, or return None if it does."""
+    another = ("Run `snapshot` for another round; if the run has used all %d rounds, raise max_rounds "
+               "in %s first." % (state["max_rounds"], d / "state.json"))
+    if not state["rounds"]:
+        return "no round was run. Run `snapshot` to start round 1."
+    last = state["rounds"][-1]
+    n = last["n"]
+    merged_path = round_dir(d, n) / "merged.json"
+    if last.get("blocking_in") is None or not merged_path.exists():
+        return ("round %d was not merged. Finish it: run merge-prep %d, then merge-apply %d --decisions "
+                "<file> (or merge-auto %d for a single-reviewer run), then ledger-apply %d."
+                % (n, n, n, n, n))
+    # A round merged by an older version of this script has no stale key; merged.json has the flag.
+    stale = last.get("stale")
+    if stale is None:
+        stale = json.loads(merged_path.read_text("utf-8"))["target"]["stale"]
+    if stale:
+        return "the tree changed while round %d was being reviewed. %s" % (n, another)
+    fixed = sorted(e["id"] for e in state["ledger"]
+                   if e["decision"]["round"] == n and e["decision"]["kind"] == "fixed")
+    if fixed:
+        return "the fixes for %s came after round %d, and no round reviewed them. %s" % (", ".join(fixed), n, another)
+    return None
 
 
 def cmd_stop(args: argparse.Namespace) -> None:
@@ -1319,6 +1420,9 @@ def main() -> None:
     s.add_argument("--agent-id", required=True)
     s.add_argument("--persistent", action="store_true")
     s.set_defaults(func=cmd_register_agent)
+
+    s = sub.add_parser("digest", help="print the digest a reviewer records before and after reading")
+    s.set_defaults(func=cmd_digest)
 
     s = sub.add_parser("validate", help="check a file against a bundled schema")
     s.add_argument("file")

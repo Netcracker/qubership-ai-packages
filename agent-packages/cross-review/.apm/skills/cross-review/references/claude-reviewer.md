@@ -32,10 +32,11 @@ Record `dirty_digest_start` before you open the first file and `dirty_digest_end
 the last one:
 
 ```bash
-git -C <repo> status --porcelain=v2 -z -uall | shasum -a 256
+python3 <skill-dir>/scripts/review_run.py --repo <repo> digest
 ```
 
-Report the value as `sha256:` followed by the first 32 hex characters. If the two differ, the tree
+Report the line it prints as it is. The digest covers the content of every modified and untracked
+file, so a second edit to a file that is already modified changes it too. If the two differ, the tree
 moved while you were reading and your findings describe code that no longer exists. Report them
 anyway with both digests as measured — the orchestrator decides what to do with a stale round.
 

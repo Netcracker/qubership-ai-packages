@@ -39,9 +39,13 @@ Write a JSON file with exactly this shape:
 - `primary` must be one of the group's own members. Its title, reasoning, and suggestion become the
   merged item's text, so pick the member that states the defect most precisely — not the most
   severe one, and not the longest.
-- `prior_id` is the ledger id this group restates, or `null`. The script proposes one per group in
-  `ledger_match`; accept it when it is right and override it when it is not. A wrong `prior_id`
-  attaches one finding's rejection evidence to a different finding, which is worse than no match.
+- `prior_id` is the ledger id this group restates, or `null`. The script proposes a ledger id in
+  `ledger_match` to at most one group, the one that matches it best, so a `null` there may mean
+  that another group took the id: check the `ledger` list before giving a group a new id. Accept a
+  proposal when it is right and override it when it is not. A wrong `prior_id` attaches one
+  finding's rejection evidence to a different finding, which is worse than no match. A ledger id
+  goes on at most one group, since two groups under one id would share one decision, and
+  `merge-apply` refuses an id that is reused or that the ledger does not have.
 - `contradicts` names another group whose premise this group's premise denies, or `null`.
 - `key` may be reused from the input or invented, as long as it is unique within your output.
 
