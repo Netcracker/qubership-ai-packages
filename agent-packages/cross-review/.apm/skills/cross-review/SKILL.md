@@ -302,8 +302,9 @@ python3 $S report
 
 Read `report.md` and summarize it: rounds run, what was fixed, what was rejected and on what
 evidence, and anything still open. State the verdict — `clean`, `items remaining`, or
-`incomplete` when the last round did not review the final code (it was not merged, its tree moved,
-or its findings were fixed afterwards) — and say explicitly if any round was degraded.
+`incomplete` when the last round did not review the final code (it did not finish, its reviewers
+read a moving tree, or the code changed after its snapshot) — and say explicitly if any round was
+degraded.
 
 The run directory is kept, not deleted. The ledger is the only record of what was rejected and why,
 and it is what makes a later round cheap.

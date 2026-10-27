@@ -231,16 +231,20 @@ def snapshot_ref(run_id: str, n: int) -> str:
     return "refs/cross-review/%s/r%d" % (run_id, n)
 
 
-def make_snapshot(repo: Path, run_id: str, n: int, review_dir: Path) -> Tuple[str, str]:
-    """Commit the current tree without touching the real index or working tree."""
-    head = run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
-    index = review_dir / "snap.index"
+def worktree_tree(repo: Path, index: Path) -> str:
+    """Write the working tree, untracked files included, as a tree object, through a scratch index."""
     if index.exists():
         index.unlink()
     env = {"GIT_INDEX_FILE": str(index)}
     run(["git", "read-tree", "HEAD"], cwd=repo, env=env)
     run(["git", "add", "-A"], cwd=repo, env=env)
-    tree = run(["git", "write-tree"], cwd=repo, env=env).strip()
+    return run(["git", "write-tree"], cwd=repo, env=env).strip()
+
+
+def make_snapshot(repo: Path, run_id: str, n: int, review_dir: Path) -> Tuple[str, str]:
+    """Commit the current tree without touching the real index or working tree."""
+    head = run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
+    tree = worktree_tree(repo, review_dir / "snap.index")
     snap = run(
         ["git", "commit-tree", tree, "-p", head, "-m", "cross-review snapshot r%d" % n],
         cwd=repo,
@@ -941,84 +945,40 @@ def cmd_merge_auto(args: argparse.Namespace) -> None:
         ],
         "dropped": [],
     }
-    merge_with(d, state, n, prep, decisions, "the decisions merge-auto built")
+    merge_with(d, state, n, prep, decisions, None)
 
 
 def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
-               decisions: Dict[str, Any], source: str) -> None:
+               decisions: Dict[str, Any], source: Optional[str]) -> None:
     rd = round_dir(d, n)
 
     by_key = {}
     for g in prep["candidate_groups"]:
         for m in g["members"]:
             by_key[(m["reviewer"], m["local_id"])] = m
-    expected = set(by_key)
+    check_decisions(decisions, set(by_key), {e["id"] for e in state["ledger"]}, source)
 
-    seen = set()
     items: List[Dict[str, Any]] = []
     dropped = list(prep["dropped"])
     group_ids: Dict[str, str] = {}
     contradicts: Dict[str, Optional[str]] = {}
     next_id = max([int(e["id"].split("-")[1]) for e in state["ledger"]] or [0])
-    ledger_ids = {e["id"] for e in state["ledger"]}
-    claimed: Dict[str, Any] = {}
-
-    for g in decisions.get("groups", []):
-        members = []
-        for m in g.get("members", []):
-            key = (m["reviewer"], m["local_id"])
-            if key not in by_key:
-                die("merger names an unknown finding: %s/%s" % key)
-            if key in seen:
-                die("merger placed %s/%s in more than one group" % key)
-            seen.add(key)
-            members.append(by_key[key])
-        if not members:
-            continue
-        primary_key = (g["primary"]["reviewer"], g["primary"]["local_id"])
-        primary = by_key.get(primary_key)
-        if primary is None or primary_key not in seen:
-            die("group %r names a primary that is not one of its members" % g.get("key"))
-
-        prior_id = g.get("prior_id")
-        if prior_id:
-            # ledger-apply keys decisions by id, so two groups under one id would share one decision
-            # and one ledger entry, and the defect of the other group would disappear.
-            if prior_id not in ledger_ids:
-                die("group %r names prior_id %s, which is not in the ledger (%s). In %s, set "
-                    "prior_id to one of those ids, or to null for a finding the ledger has not seen."
-                    % (g.get("key"), prior_id, ", ".join(sorted(ledger_ids)) or "empty", source))
-            if prior_id in claimed:
-                die("groups %r and %r both name prior_id %s; one ledger entry can take one group, or "
-                    "the decision on one would close the other. In %s, keep %s on the group that "
-                    "restates it and set prior_id to null on the other, or put both members in one "
-                    "group if they are one defect."
-                    % (claimed[prior_id], g.get("key"), prior_id, source, prior_id))
-            claimed[prior_id] = g.get("key")
-            fid = prior_id
+    for g in decisions["groups"]:
+        members = [by_key[(m["reviewer"], m["local_id"])] for m in g["members"]]
+        primary = by_key[(g["primary"]["reviewer"], g["primary"]["local_id"])]
+        if g.get("prior_id"):
+            fid = g["prior_id"]
         else:
             next_id += 1
             fid = "F-%03d" % next_id
         item = assemble_item(fid, g, members, primary, state["ledger"])
         items.append(item)
-        if g.get("key"):
-            group_ids[g["key"]] = item["id"]
-            contradicts[item["id"]] = g.get("contradicts")
-
+        group_ids[g["key"]] = item["id"]
+        contradicts[item["id"]] = g.get("contradicts")
     for m in decisions.get("dropped", []):
-        key = (m["reviewer"], m["local_id"])
-        if key not in by_key:
-            die("merger drops an unknown finding: %s/%s" % key)
-        if key in seen:
-            die("merger both grouped and dropped %s/%s" % key)
-        seen.add(key)
         dropped.append({"reviewer": m["reviewer"], "local_id": m["local_id"],
                         "duplicate_of": m.get("duplicate_of", ""), "reason": m.get("reason", "")})
-
-    missing = expected - seen
-    if missing:
-        die("merger lost %d finding(s): %s"
-            % (len(missing), ", ".join("%s/%s" % k for k in sorted(missing))))
+    expected = set(by_key)
 
     resolve_contradictions(items, group_ids, contradicts)
 
@@ -1048,6 +1008,93 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
     emit({"file": str(out), "items": len(items), "blocking": merged["stats"]["blocking"],
           "degraded": prep["degraded"], "stale": prep["target"]["stale"],
           "next": "read %s, decide each item, then run ledger-apply" % out})
+
+
+def check_decisions(decisions: Any, findings: set, ledger_ids: set, source: Optional[str]) -> None:
+    """Refuse a grouping that merged.json cannot represent faithfully, listing every violation.
+
+    The merger is a model, and the orchestrator reads only merged.json, so a grouping that hides or
+    misattributes a finding has to fail here. A primary outside its group gives one defect
+    another's text; a reused prior_id makes one decision close two defects; a contradicts or a
+    duplicate_of that names no group points the reader at nothing. source is the decisions file,
+    or None when merge-auto built the decisions, and then a violation is a defect of this script.
+    """
+    errors: List[str] = []
+    placed: Dict[Tuple[str, str], str] = {}
+
+    def place(ref: Any, where: str) -> Optional[Tuple[str, str]]:
+        if not isinstance(ref, dict) or not ref.get("reviewer") or not ref.get("local_id"):
+            errors.append("%s holds %r, which is not a {reviewer, local_id} reference" % (where, ref))
+            return None
+        key = (ref["reviewer"], ref["local_id"])
+        if key not in findings:
+            errors.append("%s names %s/%s, which is not in merge-input.json" % ((where,) + key))
+        elif key in placed:
+            errors.append("%s places %s/%s, which %s already placed" % ((where,) + key + (placed[key],)))
+        else:
+            placed[key] = where
+        return key
+
+    groups = decisions.get("groups") if isinstance(decisions, dict) else None
+    dropped = decisions.get("dropped", []) if isinstance(decisions, dict) else None
+    if not isinstance(groups, list) or not isinstance(dropped, list) \
+            or not all(isinstance(x, dict) for x in groups + dropped):
+        errors.append("the decisions need a groups list of objects, and dropped, where present, a list "
+                      "of objects")
+        groups, dropped = [], []
+    keys = [g.get("key") for g in groups]
+    claimed: Dict[str, str] = {}
+    for i, g in enumerate(groups):
+        key = g.get("key")
+        members = g.get("members") or []
+        if isinstance(key, str) and key:
+            where = "group %r" % key
+            if keys.count(key) > 1:
+                errors.append("%s: the key is used by %d groups" % (where, keys.count(key)))
+        else:
+            where = "groups[%d]" % i
+            errors.append("%s has no key; every group needs a unique one" % where)
+        own = [place(m, where) for m in members]
+        primary = g.get("primary")
+        primary_key = (primary.get("reviewer"), primary.get("local_id")) if isinstance(primary, dict) else None
+        if not own:
+            errors.append("%s has no members" % where)
+        elif primary_key not in own:
+            errors.append("%s names primary %r, which is not one of its own members" % (where, primary))
+        prior_id = g.get("prior_id")
+        if prior_id is not None:
+            if prior_id not in ledger_ids:
+                errors.append("%s names prior_id %s, which is not in the ledger (%s); use null for a "
+                              "finding the ledger has not seen"
+                              % (where, prior_id, ", ".join(sorted(ledger_ids)) or "empty"))
+            elif prior_id in claimed:
+                errors.append("%s names prior_id %s, which %s already took; one ledger entry takes one "
+                              "group, so keep it on the group that restates it and use null on the "
+                              "other, or merge the two groups if they are one defect"
+                              % (where, prior_id, claimed[prior_id]))
+            else:
+                claimed[prior_id] = where
+        other = g.get("contradicts")
+        if other is not None and (other == key or other not in keys):
+            errors.append("%s contradicts %r, which is not another group's key" % (where, other))
+    for i, m in enumerate(dropped):
+        place(m, "dropped[%d]" % i)
+        dup = m.get("duplicate_of")
+        if dup and dup not in keys:
+            errors.append("dropped[%d] is a duplicate_of %r, which is not a group's key" % (i, dup))
+    missing = sorted(findings - set(placed))
+    if missing:
+        errors.append("%d finding(s) are in no group and not dropped: %s"
+                      % (len(missing), ", ".join("%s/%s" % k for k in missing)))
+    if not errors:
+        return
+    listing = "\n  - ".join(errors)
+    if source is None:
+        die("merge-auto built decisions that fail %d check(s), so merged.json was not written. This is "
+            "a defect in review_run.py; report it with the round's merge-input.json:\n  - %s"
+            % (len(errors), listing))
+    die("%s fails %d check(s), so merged.json was not written:\n  - %s\n"
+        "Fix them in that file and rerun merge-apply with it." % (source, len(errors), listing))
 
 
 def assemble_item(fid: str, group: Dict[str, Any], members: List[Dict[str, Any]],
@@ -1304,7 +1351,7 @@ def cmd_report(args: argparse.Namespace) -> None:
 
     open_blocking = [e for e in state["ledger"] if e["status"] in ("open", "regressed")]
     # With no open item, the run is clean only if its last round reviewed the code it ends on: that
-    # round was merged, its reviewers read a still tree, and nothing it raised was fixed afterwards.
+    # round finished, its reviewers read a still tree, and the tree has not changed since.
     unconfirmed = last_round_gap(d, state)
     if open_blocking or degraded:
         verdict = "items remaining"
@@ -1339,12 +1386,18 @@ def last_round_gap(d: Path, state: Dict[str, Any]) -> Optional[str]:
     stale = last.get("stale")
     if stale is None:
         stale = json.loads(merged_path.read_text("utf-8"))["target"]["stale"]
+    if last.get("blocking_out") is None:
+        return ("round %d was merged, but its decisions were not applied. Run ledger-apply %d "
+                "--fix-report <file>." % (n, n))
     if stale:
         return "the tree changed while round %d was being reviewed. %s" % (n, another)
-    fixed = sorted(e["id"] for e in state["ledger"]
-                   if e["decision"]["round"] == n and e["decision"]["kind"] == "fixed")
-    if fixed:
-        return "the fixes for %s came after round %d, and no round reviewed them. %s" % (", ".join(fixed), n, another)
+    # Compared by content, so committing the reviewed changes keeps the run clean, and any edit
+    # after the snapshot, a fix included, does not.
+    snap = last["target"]["snapshot_oid"]
+    reviewed = run(["git", "rev-parse", "%s^{tree}" % snap], cwd=Path(state["repo_root"])).strip()
+    if worktree_tree(Path(state["repo_root"]), d / "report.index") != reviewed:
+        return ("the code changed after round %d took its snapshot, and no round reviewed the change; "
+                "`git diff %s` shows the tracked part of it. %s" % (n, snap, another))
     return None
 
 
