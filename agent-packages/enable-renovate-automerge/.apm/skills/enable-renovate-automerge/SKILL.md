@@ -141,6 +141,18 @@ gh api -X PATCH repos/<owner>/<repo> -f allow_auto_merge=true
 Open the renovate.json change as a PR; don't widen the update types
 beyond what the gate can vouch for.
 
+In the same PR, delete `assignAutomerge: true` from the repository's
+renovate.json wherever it appears, top level or inside a `packageRules`
+entry. An automerged PR merges without a human, so it needs no assignees
+or reviewers. With `assignAutomerge` at its default `false`, Renovate
+adds none to a PR that will automerge, code owners included, as long as
+its checks are not red. It adds them only when the checks fail, which is
+when the PR stops merging on its own and needs a person.
+
+Leave `assigneesFromCodeOwners` and `reviewersFromCodeOwners` as they
+are. They still route updates outside the automerge rule, such as major
+updates, and automerged PRs whose checks fail.
+
 ## Step 5. Pilot and verify
 
 Test on one Renovate PR before trusting the repository to merge on its
