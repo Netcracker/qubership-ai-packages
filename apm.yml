@@ -123,7 +123,7 @@ marketplace:
     - name: enable-renovate-automerge
       description: Skill that enables Renovate automerge on a repository behind a real test/style required check.
       source: ./agent-packages/enable-renovate-automerge
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:devops", "topic:dependencies", "stack:github-actions", "activity:maintenance", "audience:public"]
 
     - name: adr-authoring

@@ -195,7 +195,7 @@
     {
       "name": "enable-renovate-automerge",
       "description": "Skill that enables Renovate automerge on a repository behind a real test/style required check.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:devops",
         "topic:dependencies",
