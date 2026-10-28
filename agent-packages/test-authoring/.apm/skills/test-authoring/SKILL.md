@@ -101,10 +101,11 @@ name would fail it, do not write it.
 
 Two oracles turn that judgment into evidence, and a reviewer may ask for either:
 
-- **Red on the base commit.** A regression test is observed failing on the code before the fix and passing after it,
-  and the pull request carries the evidence: the test in its own commit ahead of the fix, or the pasted failing output
-  with its file and line. A test the reviewer has only been told exercises the bug is a claim. Check that the failure
-  on the base commit names the bug's symptom, not a missing symbol.
+- **Red on the base commit.** A regression test is observed failing on the code before the fix and passing after it.
+  Check that the failure on the base commit names the bug's symptom, not a missing symbol. A test nobody has seen red
+  is a claim. Whether the pull request description mentions the red run, and how, is `change-description-authoring`'s
+  to decide; where a reviewer asks for the evidence, it is the test in its own commit ahead of the fix, or the failing
+  output with its file and line.
 - **A surviving mutant on a changed line.** Where the repository runs a mutation tool, read its verdict as the tool
   defines it: *no coverage* is a missing test; a mutant that does not compile is no information; *survived* on a line
   the change touched is a candidate gap, and the writer settles it. A survivor that changes behavior the
@@ -289,7 +290,7 @@ them first; a mutation run confirms most of them.
 | A change detector | An in-order verification chain that mirrors the method body; a constant compared with its own literal; a snapshot of private structure | Test the behavior that depends on the decision: `retried five times and made no sixth attempt`, not `MAX_RETRIES == 5` |
 | An assertion weakened until it passes | Equality replaced by not-null, a type check, `contains`, `length > 0`; a widened range or delta | Assert the value. An existence check where the behavior defines a value is a sanity check, not a test |
 | A snapshot accepted unread | The snapshot file updated in the same commit as the behavior, with no note on what changed | Read it, name what changed and why, and narrow it to the output the behavior defines |
-| A regression test never seen red | No failing run, no test-first commit, no pasted output in the pull request | The red run on the base commit (§1) |
+| A regression test never seen red | No failing run on the base commit, by the author or by a test-first commit | The red run on the base commit (§1) |
 | An assertion that is never executed | The assert is not on the test's straight-line path: behind a condition that is false, in a loop over an empty collection, after an early return, inside a callback nothing invokes, or after a line in the same `try` block that throws first, with a `catch` that swallows it | Move the assertion to the top level of the test, or assert the condition that was supposed to hold before it (the collection is not empty, the callback ran); delete the swallowing `catch`, or assert on the exception |
 
 Each repair can be gamed in turn, and the reviewer checks the second step too: an assertion added to satisfy the row
@@ -556,7 +557,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 Run this over a test you wrote or one you are reviewing.
 
 - Which production change would make this test fail, and is it a bug rather than a decision (§1)?
-- For a regression test: was it seen red on the base commit, and does the pull request show it (§1)?
+- For a regression test: was it seen red on the base commit (§1)?
 - Can the change alter behavior at all? If not, does the pull request say so; if it is a dependency bump, a
   regeneration, or a build change, does the pull request name the surface the green suite covers (§3)?
 - For a change made for speed or memory, is the behavior preserved asserted, is the improvement measured where the
