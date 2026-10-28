@@ -24,13 +24,17 @@ the question it answers.
   breaks unless the next release from the target branch is a major, read from the branch's version
   file, milestone, or name, and the commit body keeps them first in its outcome slot.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
-  without it, the shortest chain that justifies that decision, the level of detail each artifact
-  owns, and the verification section that names what the tests establish rather than transcribing
-  them. A sentence the reviewer recovers from one hunk is cut even when it carries a decision; its
-  reason stays.
-- A rejected alternative answered by a mechanism that still holds in the merged code. A defect that
-  an audit found is described by what found it, with neither a predicted failure nor a claim that
-  none was seen. A question left open in the discussion is answered where the code or other verified
+  without it, the result rather than the route that reached it, and a length that follows the size
+  of the change. Two to six lines of code, a command with its output, or an error text quoted whole
+  stand in place of prose that would retell them. A sentence the reviewer recovers from one hunk is
+  cut in every slot, even when it carries a decision; its reason stays.
+- A verification section that carries only what the diff and CI do not show: a test that passes
+  without the change, a precondition CI lacks, removed coverage, which test guards which site, and a
+  manual check with its literal output. No test list, no mark on new tests, no command for tests CI
+  runs, and no account of what fails when the fix is reverted.
+- A rejected alternative answered by a mechanism that still holds in the merged code. A defect nobody
+  has observed ends at the condition that reaches it, with no word on what found it, no predicted
+  failure, and no claim that none was seen. A question left open in the discussion is answered where the code or other verified
   evidence settles it, kept with the decision it needs and the evidence for it where only a
   maintainer can settle it, and dropped only when it does not bear on the change.
 - Why the commit subject is change-first while the body is problem-first, and why the two do not

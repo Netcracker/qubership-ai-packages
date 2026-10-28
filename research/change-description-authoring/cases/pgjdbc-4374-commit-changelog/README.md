@@ -24,20 +24,21 @@ entry and the outcome slot that #113 added, which carries the text and the code 
 
 ## Running it
 
-As in [the cases README](../README.md). `controls/invented-and-thin-entry.md` is `opus/result.md` with `Fixes #4375`
-added to the commit and the changelog entry cut to its first clause.
+As in [the cases README](../README.md). `controls/invented-and-thin-entry.md` is `opus/result.md` as committed before
+2026-10-28 (see the git history) with `Fixes #4375` added to the commit and the changelog entry cut to its first clause.
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Outcome lines (1) | Nothing invented (2) | Changelog entry (3) | Ran by accident now fails (3, read) |
 | --- | --- | --- | --- | --- |
 | Opus r1, r2 | passes | passes | passes | yes |
-| Haiku r1, r2 | passes | passes | passes | yes |
+| Haiku r1 | passes | passes | passes | yes |
+| Haiku r2 | passes | passes | passes | only by implication |
 | Opus baseline | fails: no `User-visible:` | passes | passes | only by implication |
 | Haiku baseline | fails: no `User-visible:` | passes | passes | no |
 | `controls/invented-and-thin-entry.md` | passes | fails: `#4375` | fails | no |
 
-Both Haiku runs drop the dependency on #4363 from the commit message.
+Both Opus runs state the dependency on #4363 in the commit message; neither Haiku run does.

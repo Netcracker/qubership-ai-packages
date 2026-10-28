@@ -37,18 +37,18 @@ As in [the cases README](../README.md). `controls/as-pushed.md` is the branch as
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Command (1) | Outcome (2) | Every commit (3) | Body shape (4) | Verification in one sentence (4, read) |
 | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes | fails: three sentences |
-| Opus r2 | passes | passes | passes | passes | fails: two sentences |
-| Haiku r1 | passes | passes | passes | fails: two headings | fails: three sentences |
-| Haiku r2 | passes | passes | passes | fails: the whole template, nine headings | fails: four sentences |
+| Opus r1 | passes | passes | passes | passes | fails: two sentences |
+| Opus r2 | passes | passes | passes | passes | passes |
+| Haiku r1 | passes | passes | passes | fails: the whole template, nine headings and checkboxes | fails: two sentences, the second a precondition |
+| Haiku r2 | passes | passes | passes | fails: six headings | fails: two sentences, the second a precondition |
 | Opus baseline | fails: types `upstream/master` | fails | passes | fails | fails |
 | Haiku baseline | fails: types `upstream/master` | fails | passes | fails | fails |
 | `controls/as-pushed.md` | fails: no command | fails | fails | passes | passes |
 
 Both Opus runs add `git fetch upstream` and `git remote set-head upstream --auto` above the block, which type the
-remote, not a branch.
+remote, not a branch. Haiku r1 and r2 keep a separate test commit; Haiku r1 gives it a body that references #2404.

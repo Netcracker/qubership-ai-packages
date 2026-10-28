@@ -31,12 +31,13 @@ lead of #169 in a repository other than pgjdbc: `main` ships 1.43.0, a minor rel
 
 ## Running it
 
-As in [the cases README](../README.md). `controls/settled-and-reopened.md` is `opus/result-2.md` with the Jira Link
-heading removed, "so this is not a breaking change for them" added, and the run-time question asked as open.
+As in [the cases README](../README.md). `controls/settled-and-reopened.md` is `opus/result-2.md` as committed before
+2026-10-28 (see the git history) with the Jira Link heading removed, "so this is not a breaking change for them" added,
+and the run-time question asked as open.
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Break leads (1) | Question kept (2) | Not settled (3) | Not reopened (4) | Template (5) |
@@ -47,5 +48,5 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 | Haiku baseline | fails | passes | passes | passes | passes |
 | `controls/settled-and-reopened.md` | passes | passes | fails | fails | fails |
 
-Opus r2 puts its "Breaking changes" section above the template's `## Jira Link`. The Haiku runs say the checker throws
-on an invalid operand count whatever `throwOnFailure` is, which the diff does not do.
+Both Opus runs put their "Breaking changes" section above the template's `## Jira Link`; both Haiku runs put it
+under `## Changes Proposed`.

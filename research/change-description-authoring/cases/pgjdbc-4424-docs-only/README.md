@@ -18,8 +18,8 @@ cited by its heading text, and links at the commit that has the content.
 1. **Verification names the checks** (`no_test_verification_named`). The description says how its two claims about
    the code were checked: the `git grep` that finds no JUnit 4 test under `pgjdbc/src/test`, and the
    `pgjdbc/build.gradle.kts` lines that reject `junit:junit`. "Documentation only" alone fails.
-2. **No headings** (`no_headings`). The description has no fenced command, names no several tests, and has no stacked
-   pull request, so it is prose.
+2. **No headings** (`no_headings`). The description has no break to lead with and no related or stacked pull
+   request, so it is prose.
 3. **A section cited by its heading text** (`section_heading_text`). `TESTING.md` section 5 appears as
    `Extending the test suite with new tests`, not as `§5` alone.
 4. **The edited sections link at the head** (`changed_files_link_at_head`). The description links the rendered
@@ -37,14 +37,13 @@ only; no code changes."
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Verification (1) | No headings (2) | Heading text (3) | Edited sections at head (4) | Unchanged code at merge base (5) |
 | --- | --- | --- | --- | --- | --- |
 | Opus r1, r2 | passes | passes | passes | passes | passes |
-| Haiku r1 | passes | passes | passes | fails: the edited section is not linked | passes |
-| Haiku r2 | passes | passes | passes | passes | passes |
+| Haiku r1, r2 | passes | passes | passes | passes | passes |
 | Opus baseline | passes | fails: three headings | fails | passes | passes |
 | Haiku baseline | passes | passes | fails | fails: no link | fails: no link |
 | `controls/posted.md` | passes | passes | passes | fails: four links at the merge base | passes |

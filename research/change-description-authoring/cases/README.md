@@ -53,7 +53,10 @@ case tests.
 | [`pgjdbc-4374-commit-changelog`](pgjdbc-4374-commit-changelog/README.md) | pgjdbc#4374 description | `User-visible:` lines with their SQLState, the changelog entry |
 | [`pgjdbc-4423-no-outcome`](pgjdbc-4423-no-outcome/README.md) | pgjdbc#4423 diff and notes | negative control: no outcome slot and no changelog entry |
 | [`calcite-5330-open-question`](calcite-5330-open-question/README.md) | apache/calcite#5330 discussion | a question only a maintainer can settle; a break in a minor release |
-| [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect an audit found, hunks not read aloud, an answered review question |
+| [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect nobody has observed, hunks not read aloud, an answered review question |
+| [`pgjdbc-4501-manual-check`](pgjdbc-4501-manual-check/README.md) | pgjdbc#4501 description and diff | a manual check kept literal; no search result, bookkeeping, or footer |
+| [`pgjdbc-4388-contract-fix`](pgjdbc-4388-contract-fix/README.md) | pgjdbc#4388 description and diff | the old lines shown; a contract fix is not a break; no test narration |
+| [`pgjdbc-4420-test-sites`](pgjdbc-4420-test-sites/README.md) | pgjdbc#4420 description and diff | negative control: the pairing of tests to sites stays in a test-only change |
 
 The five `pgjdbc-4466-*` cases share their input below "Repository facts" and differ in the merge model, so a check that
 passes in one and fails in another isolates the row of the model table. `pgjdbc-4466-detection-failed` also asks for
