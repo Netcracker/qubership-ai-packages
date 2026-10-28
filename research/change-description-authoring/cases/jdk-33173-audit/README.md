@@ -9,15 +9,16 @@ no code from the diff.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 2: a defect an audit found, a derived consequence; Pull request description: the
+- `SKILL.md`: §2 (Commit body, slot 2: a defect nobody has observed, a derived consequence; Pull request description: the
   What slot and translation, rejected alternatives, Scope and open questions), §7
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
 
-1. **The audit is named** (`audit_named`).
+1. **What found the defect is not named** (`finder_not_named`). The slot ends at the condition that reaches the
+   defect; the audit is the route, not the result.
 2. **No statement about failures seen or not seen** (`no_absence_claim`). "No failure has been reported", "has not
-   been observed", and the like fail: the sentence ends at what found the defect.
+   been observed", and the like fail: the sentence ends at the condition.
 3. **No predicted symptom** (`no_predicted_symptom`, read). No sentence says what a JNI caller would see, such as a
    `NullPointerException` or a null `UNSAFE`, unless it is traced to the caller and marked as derived; the notes carry
    no such trace.
@@ -35,21 +36,27 @@ no code from the diff.
 ## Running it
 
 As in [the cases README](../README.md). `controls/run-B.md` is a draft from the research behind #130, written under an
-earlier version of the skill. `controls/unnamed-and-reopened.md` is `opus/result.md` with the audit and the property taken
-out, and the answer to the review question replaced by the question, marked as left open.
+earlier version of the skill. `controls/unnamed-and-reopened.md` is `controls/main-opus.md` with the audit and the
+property taken out, and the answer to the review question replaced by the question, marked as left open.
+`controls/main-opus.md` is the Opus result of 2026-10-20, written when the skill still asked for the audit to be named.
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
-| Run | Audit (1) | No absence claim (2) | No prediction (3) | No hunk (4) | Alternative (5) | Not open (6) | Property (7) |
+| Run | Finder not named (1) | No absence claim (2) | No prediction (3) | No hunk (4) | Alternative (5) | Not open (6) | Property (7) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | fails: "The upcall sites drop their on-demand initializations" | passes | passes | passes |
-| Opus r2 | passes | passes | passes | fails: "the on-demand initializations … are removed" | passes | passes | passes |
-| Haiku r1 | passes | fails: "Nobody has reported `is_same_object` failing" | passes | fails: "are redundant and removed" | passes | passes | passes |
-| Haiku r2 | passes | fails: "No failure has been reported" | passes | fails | passes | passes | passes |
-| Opus baseline | passes | fails | passes | fails | passes | passes | passes |
-| Haiku baseline | passes | fails | passes | fails | passes | passes | passes |
-| `controls/run-B.md` | passes | passes | fails: a null `UNSAFE`, not traced | fails | fails: the `initPhase1` obstacle | passes | passes |
-| `controls/unnamed-and-reopened.md` | fails | passes | passes | fails | passes | fails | fails |
+| Opus r1 | passes | passes | passes | passes | passes | passes | passes |
+| Opus r2 | passes | passes | passes | passes | passes | passes | passes |
+| Haiku r1 | passes | passes | passes | fails: "the per-site initialize calls are removed" | passes | passes | passes |
+| Haiku r2 | passes | fails: "What a JNI caller observes … is not established here" | passes | fails: "The `initialize` calls in … are removed" | passes | passes | passes |
+| Opus baseline | fails: "found the missing call" | fails | passes | fails | passes | passes | passes |
+| Haiku baseline | fails: "A post-integration audit … confirmed that fix" | fails | passes | fails | passes | passes | passes |
+| `controls/run-B.md` | fails: "an audit of the VM upcalls … found one more" | passes | fails: a null `UNSAFE`, not traced | fails | fails: the `initPhase1` obstacle | passes | passes |
+| `controls/unnamed-and-reopened.md` | passes | passes | passes | fails | passes | fails | fails |
+| `controls/main-opus.md` | fails: "An automated post-integration audit … found another upcall" | passes | passes | fails: "The upcall sites drop their on-demand initializations" | passes | passes | passes |
+
+The new runs no longer name the audit. Opus r1 and r2 say the interpreter, `JVM_IHashCode`, and the C2 path "no longer
+initialize" the class themselves, which the script accepts as not reading the hunk aloud; both Haiku runs say the
+initializations are removed.

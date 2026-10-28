@@ -32,13 +32,14 @@ As in [the cases README](../README.md). `controls/as-pushed.md` is the branch as
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Outcome (1) | Every commit (2) | Fix-ups (3) | Title (4) | Template (5) |
 | --- | --- | --- | --- | --- | --- |
 | Opus r1, r2 | passes | passes | passes | passes | passes |
-| Haiku r1, r2 | passes | passes | passes | passes | passes |
+| Haiku r1 | passes | passes | passes | passes | passes |
+| Haiku r2 | passes | fails: a separate test commit with a short body and no `#2404` | passes | passes | passes |
 | Opus baseline | fails | passes | passes | passes | fails: dropped |
 | Haiku baseline | fails | passes | passes | passes | fails: dropped |
 | `controls/as-pushed.md` | fails | fails | fails | fails | fails |

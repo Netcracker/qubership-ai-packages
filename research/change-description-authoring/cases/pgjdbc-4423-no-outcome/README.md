@@ -21,22 +21,22 @@ changelog entry.
 
 ## Running it
 
-As in [the cases README](../README.md). `controls/entry-for-a-test-change.md` is `haiku/result.md` with a `Changed`
-entry for the test in place of "No entry".
+As in [the cases README](../README.md). `controls/entry-for-a-test-change.md` is `haiku/result.md` as committed before
+2026-10-28 (see the git history) with a `Changed` entry for the test in place of "No entry".
 
 ## Results
 
-Runs of 2026-10-20 on the skill whose tree id is in `<model>/skill-tree` (`e4c81d96`, `main` at 2cee8a6), graded
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | No outcome slot (1) | No changelog entry (2) |
 | --- | --- | --- |
-| Opus r1, r2 | fails: `Not changed:` says that nothing in the driver jar changes | passes |
+| Opus r1 | passes | passes |
+| Opus r2 | fails: "Not changed: The driver jar has the same contents." | passes |
 | Haiku r1, r2 | passes | passes |
 | Opus baseline | passes | passes |
 | Haiku baseline | passes | passes |
 | `controls/entry-for-a-test-change.md` | passes | fails |
 
 The baselines pass both checks: without the skill, neither model writes an outcome slot or an entry for this change.
-The checks fail on the skill's own output, so they guard against the slot spreading rather than against its
-absence.
+The failing run is the one that adds a `Not changed:` line to the commit body.

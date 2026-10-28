@@ -251,10 +251,12 @@ def facts_kept_4370(text):
     return result(not missing, f'missing: {missing}' if missing else 'all kept')
 
 
-def new_test_marked(text):
-    ok = re.search(r'VisibleBufferedInputStreamSkipTest`?\s*\(new\)|new[^.\n]{0,60}VisibleBufferedInputStreamSkipTest'
-                   r'|VisibleBufferedInputStreamSkipTest`?[^.\n]{0,40}\bis new\b', text, re.I)
-    return result(bool(ok), ok.group(0) if ok else 'the new test class is not marked new')
+def new_test_not_marked(text):
+    """The diff shows which test is new; the description does not say it."""
+    found = re.search(r'`?\w+Test`?\s*\(new\)|\bnew (test|test class)\b[^.\n]{0,60}\w+Test'
+                      r'|\w+Test`?[^.\n]{0,40}\bis new\b|\b(\d+|one|two|three|four|five) new tests?\b'
+                      r'|^\s*\**New tests?:', text, re.I | re.M)
+    return result(not found, f'marked new: {found.group(0)!r}' if found else 'no test is marked new')
 
 
 def coverage_lost_named(text):
@@ -271,22 +273,31 @@ def no_construction_in_verification(text):
     return result(not found, f'construction in the verification slot: {found}' if found else 'none found')
 
 
-def headings_present(text):
-    n = len(HEADING.findall(text))
-    return result(n >= 2, f'{n} heading(s)')
+def no_test_command(text):
+    """CI runs the tests; the description carries no command that runs them."""
+    found = re.search(r'gradlew[^\n]*(\btest\b|--tests)|\bmvn\b[^\n]*\btest\b', text)
+    return result(not found, f'test command: {found.group(0)[:100]!r}' if found else 'no test command')
+
+
+def no_test_narration(text):
+    """No sentence says a test fails without the change, counts passing tests, or narrates a revert."""
+    pat = (r'fails? (against|on) `?master|fails? on the base|fail(s|ed)? without (the|this) (change|fix)|'
+           r'\brevert(s|ing|ed)?\b[^.]{0,80}\bfail|with the production change reverted|before the fix[^.]{0,40}\bfail|'
+           r'\b\d+ tests\b(?![^.]*without)[^.]{0,80}\bpass|against (the old|master)\b[^.]{0,80}\bfail|'
+           r'\b\w+ of (the|its) \w+ cases\b[^.]{0,40}\bfail')
+    found = [x for x in sentences(text) if re.search(pat, x, re.I)]
+    return result(not found, f'narrated: {found[0][:160]!r}' if found else 'no test narration')
+
+
+def no_tool_footer(text):
+    found = re.search(r'Generated with', text)
+    return result(not found, 'tool footer present' if found else 'no tool footer')
 
 
 def links_at_merge_base(text):
     urls = re.findall(r'https://github\.com/pgjdbc/pgjdbc/blob/([^/\s)]+)/', text)
     wrong = [u[:12] for u in urls if u != MERGE_BASE]
     return result(not wrong, f'{len(urls)} link(s), not at the merge base: {wrong}')
-
-
-def no_narrated_command(text):
-    """No sentence beside the fenced command repeats what the command names."""
-    found = [x for x in sentences(text)
-             if re.search(r'\b(the|this) command (also )?(runs|executes|checks|covers)|\bruns? (both|the two) test classes', x, re.I)]
-    return result(not found, f'narrated: {found[0][:160]!r}' if found else 'no sentence narrates the command')
 
 
 # pgjdbc-4367-breaks and pgjdbc-4392-no-break
@@ -381,9 +392,12 @@ def sentences(text):
     return re.split(r'(?<=[.!?])\s+', re.sub(r'\s+', ' ', prose(text)))
 
 
-def audit_named(text):
-    found = [x for x in sentences(text) if re.search(r'\baudit', x, re.I)]
-    return result(bool(found), found[0][:120] if found else 'the audit that found the defect is not named')
+def finder_not_named(text):
+    """The slot ends at the condition; what found the defect is the route, not the result."""
+    found = [x for x in sentences(text)
+             if re.search(r'\baudit(?! log)|\bfound (it|this|the defect)|turned (it|this) up|\bspotted\b|\bCodex\b'
+                          r'|static analysis', x, re.I)]
+    return result(not found, f'finder named: {found[0][:120]!r}' if found else 'what found the defect is not named')
 
 
 def no_absence_claim(text):
@@ -470,6 +484,65 @@ def calcite_template_kept(text):
     return result(ok, 'both template headings' if ok else 'a template heading is missing')
 
 
+# pgjdbc-4501-manual-check
+
+def manual_check_literal_4501(text):
+    missing = [m for m in ['25433->5433', '25434->5434', 'PG_REPLICA_TWO_PUBLISH_PORT=25434'] if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'the command and its output kept as literals')
+
+
+def no_route_4501(text):
+    found = re.search(r'nothing else (in the repository )?uses|no longer carries', text, re.I)
+    return result(not found, f'route left: {found.group(0)!r}' if found else 'no search result or bookkeeping')
+
+
+# pgjdbc-4388-contract-fix
+
+def snippet_shown_4388(text):
+    ok = any('never reached' in b or '// throws' in b for _, b in fences(text))
+    return result(ok, 'the old lines are shown' if ok else 'no snippet of the old close()')
+
+
+def no_route_4388(text):
+    found = re.search(r'adversarial|Codex|found by|review(ed)? by|findings', text, re.I)
+    return result(not found, f'route left: {found.group(0)!r}' if found else 'what found the defect is not named')
+
+
+def no_break_lead_4388(text):
+    """A second close() that throws broke Closeable; fixing it is a fix, not a break that leads."""
+    first = [x for x in re.split(r'\n\s*\n', text.strip()) if x.strip()][:1]
+    found = re.search(r'\bBreaking\b|^#{1,6} .*\bbreak', first[0], re.I | re.M) if first else None
+    return result(not found, f'opens with {first[0][:80]!r}' if found else 'no break lead')
+
+
+def passes_without_named_4388(text):
+    ok = 'closeReportsAFailedRelease' in text
+    return ('READ', 'named: read that it is the test that passes without the change' if ok
+            else 'not named: read for a sentence on the test that passes without the change')
+
+
+# pgjdbc-4420-test-sites
+
+def site_mapping_kept_4420(text):
+    """The tests guard several sites, and the diff does not pair them; the pairing is the content."""
+    names = ['addBatch', 'QueryWithReturningColumnsKey', 'BaseQueryKey', 'executeCachedSql', 'CachedQueryCreateAction']
+    paired = sorted({m for line in re.split(r'\n|(?<=[.;])\s', prose(text)) for m in names
+                     if m in line and re.search(r'\btests?\b|\bcases?\b|"off"|"on"|default|(?-i:[a-z]\w*Test\b)|`\w+\(?\)?`\s*\|\s*$',
+                                               line.replace(m, ''), re.I)})
+    return result(len(paired) >= 3, f'sites paired with a test: {paired}')
+
+
+def removed_tests_named_4420(text):
+    missing = [m for m in ['testBatchEscapeProcessing', 'escapeProcessing'] if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'the removed tests are named')
+
+
+def no_route_4420(text):
+    found = re.search(r'\bmutants?\b|\bmutation\b|(?<![A-Za-z])I (checked|applied|broke)\b|\bbroke (one|each)\b', text,
+                      re.I)
+    return result(not found, f'route left: {found.group(0)!r}' if found else 'no mutation narration')
+
+
 CASES = {
     'pgjdbc-4367-breaks': [break_lines_lead_4367, stated_once_4367, literals_kept_4367],
     'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392],
@@ -486,15 +559,20 @@ CASES = {
                                      every_commit_full_with_issue, description_as_commit_body, verification_one_line],
     'pgjdbc-4424-docs-only': [no_test_verification_named, no_headings, section_heading_text,
                               changed_files_link_at_head, unchanged_code_link_at_merge_base],
-    'pgjdbc-4370-verbose': [prose_under(500), facts_kept_4370, new_test_marked, coverage_lost_named,
-                            no_construction_in_verification, headings_present, links_at_merge_base,
-                            no_narrated_command],
+    'pgjdbc-4370-verbose': [prose_under(500), facts_kept_4370, new_test_not_marked, coverage_lost_named,
+                            no_construction_in_verification, links_at_merge_base, no_test_command,
+                            no_test_narration],
     'pgjdbc-4374-commit-changelog': [outcome_lines_4374, nothing_invented_4374, changelog_entry_4374],
     'pgjdbc-4423-no-outcome': [no_outcome_slot, no_changelog_entry],
     'calcite-5330-open-question': [break_leads_5330, maintainer_question_kept, compatibility_not_settled,
                                    answered_question_not_reopened, calcite_template_kept],
-    'jdk-33173-audit': [audit_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
+    'jdk-33173-audit': [finder_not_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
                         alternative_by_mechanism, answered_question_not_open, property_named],
+    'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110)],
+    'pgjdbc-4388-contract-fix': [snippet_shown_4388, no_route_4388, no_break_lead_4388, no_test_command,
+                                 no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
+    'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
+                               prose_under(330), no_tool_footer],
 }
 
 

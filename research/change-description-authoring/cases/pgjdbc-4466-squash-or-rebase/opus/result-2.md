@@ -1,79 +1,70 @@
-## 1. Commits
+## Commits at merge
 
-Squash `add tests` and `Apply suggestion from @vlsi` into `feat: Include driver version in default application_name`. The branch then has one commit, with this message:
+Fold commits 2 (`add tests`) and 3 (`Apply suggestion from @vlsi`) into commit 1. Commit 2 adds the tests for commit 1's behavior. Commit 3 rewrites commit 1's changelog and documentation lines. The maintainers may rebase instead of squashing, and then each fix-up would land as a commit of its own. One commit remains:
 
 ```text
-feat: include the driver version in the default ApplicationName
+feat: include the driver version in the default application_name
 
-When ApplicationName was not set, the driver sent "PostgreSQL JDBC
-Driver" as application_name at startup. Every pgjdbc connection looked
-the same in pg_stat_activity, so a database administrator could not
-tell which driver version a client used. Users asked to see the driver
-version from a view in PostgreSQL (#2404).
+A database administrator who looks at pg_stat_activity cannot tell
+which pgjdbc version a client connection uses. A connection that does
+not set ApplicationName reports the fixed string
+"PostgreSQL JDBC Driver" as its application_name.
 
-The default is now DriverInfo.DRIVER_FULL_NAME: "PostgreSQL JDBC
-Driver" followed by a space and the version of the driver jar.
+The default ApplicationName is now DriverInfo.DRIVER_FULL_NAME: the
+driver name, a space, and the version of the driver jar.
 
 User-visible:
-Breaking: a connection that leaves ApplicationName unset reports application_name `PostgreSQL JDBC Driver 42.7.14` instead of `PostgreSQL JDBC Driver`, so a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds it; set ApplicationName explicitly to keep a fixed value.
-Any role that can connect to the database reads application_name of every session in pg_stat_activity, so it now sees the driver version of connections that use the default.
+A connection that leaves ApplicationName unset reports application_name `PostgreSQL JDBC Driver 42.7.14` with driver 42.7.14, instead of `PostgreSQL JDBC Driver`; a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
+Any role that can connect to the database reads the application_name of every session in pg_stat_activity, so the default shows the driver version to other database users.
+
 Not changed:
-An explicitly set ApplicationName is sent as given.
+A connection that sets ApplicationName reports that value as given.
 
 Fixes #2404
 ```
 
-## 2. Pull request title
+## Pull request title
 
 ```text
-feat: include the driver version in the default ApplicationName
+feat: include the driver version in the default ApplicationName (application_name)
 ```
 
-## 3. Pull request description
+## Pull request description
 
 ```markdown
 ### Breaking changes
 
-This changes the default of `ApplicationName`, and 42.7.14 is not a major release. Only connections that leave `ApplicationName` unset are affected.
+This changes a default in a patch release (`pgjdbc.version=42.7.14`). It affects code that identifies pgjdbc connections by their `application_name`.
 
-* A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver 42.7.14` rather than `PostgreSQL JDBC Driver`, as in 42.7.13 and earlier. A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` stops finding pgjdbc connections after the upgrade. To keep a fixed value, set `ApplicationName` explicitly.
+* A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver 42.7.14` instead of `PostgreSQL JDBC Driver`, the value through 42.7.13. A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds these connections. To keep the old value, set `ApplicationName=PostgreSQL JDBC Driver` explicitly.
 
 ### Why
 
-With `ApplicationName` unset, every pgjdbc connection showed the same `application_name` in `pg_stat_activity`, so nobody could tell from the database which driver version a client was running. #2404 asks for exactly that, and users I talked to asked for the same thing.
+Users want to know which driver version their applications use, and `pg_stat_activity` is where they look. Before this change it showed the same `PostgreSQL JDBC Driver` for every pgjdbc version. #2404 asks for exactly this: to see the JDBC driver version of a client in a PostgreSQL view.
 
 ### What
 
-The default is now `DriverInfo.DRIVER_FULL_NAME`: `PostgreSQL JDBC Driver`, then a space, then the version of the driver jar. `CHANGELOG.md` lists the entry first under Changed and links #2404 and #4466. The `ApplicationName` entry in `use.md` gives the new default.
+The default `ApplicationName` is now `DriverInfo.DRIVER_FULL_NAME`, which is `DRIVER_NAME + " " + DRIVER_VERSION`. The version is the version of the driver jar.
 
 ### User-visible changes
 
-* Any role that can connect to the database reads `application_name` of every session in `pg_stat_activity`, so other database users now see the driver version of connections that use the default.
-* Not changed: an explicitly set `ApplicationName` is sent as given.
+* Any role that can connect to the database reads the `application_name` of every session in `pg_stat_activity`, so the default shows the driver version to other database users. The `ApplicationName` entry in `use.md` says so.
+* Not changed: a connection that sets `ApplicationName` reports that value as given.
 
 ### Verification
 
-`ApplicationNameTest` is new, and both of its tests need a running server. `defaultApplicationNameCarriesTheDriverVersion` fails on `master`, where the value is `PostgreSQL JDBC Driver`. `explicitApplicationNameIsKept` passes on `master` too, and it checks that an explicit `ApplicationName` stays as set.
+`explicitApplicationNameIsKept` passes on `master` too. It covers the side that must not change: an explicit `ApplicationName=billing` still reads back as `billing`.
 
 ### Scope
 
-Fixes #2404. The git sha of the build and the JDK version are left out of the default; they can be discussed separately.
+The build's git SHA and the JDK version are not in the default. Adding either can be discussed separately.
 
-### All Submissions:
-
-* [ ] Have you followed the guidelines in our [Contributing](https://github.com/pgjdbc/pgjdbc/blob/master/CONTRIBUTING.md) document?
-* [ ] Have you checked to ensure there aren't other open [Pull Requests](../../pulls) for the same update/change?
-
-### New Feature Submissions:
-
-1. [ ] Does your submission pass tests?
-2. [ ] Does `./gradlew styleCheck` pass ?
-3. [ ] Have you added your new test classes to an existing test suite in alphabetical order?
+Fixes #2404
 
 ### Changes to Existing Features:
 
-* [x] Does this break existing behaviour? If so please explain. (See "Breaking changes" above.)
+* [x] Does this break existing behaviour? If so please explain.
 * [x] Have you added an explanation of what your changes do and why you'd like us to include them?
 * [x] Have you written new tests for your core changes, as applicable?
-* [ ] Have you successfully run tests with your changes locally?
+* [x] Have you successfully run tests with your changes locally?
 ```
