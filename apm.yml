@@ -235,7 +235,7 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: 8c2c44b419f1977d570cd4fdc7bc3db854d99555  # main
+      ref: fa3ff9793dd74a346190ea6d808f74ba39494ff3  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
@@ -271,7 +271,7 @@ marketplace:
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: 93a4ff0542012e0839b4261f109c38fdc2f275f0  # main
+      ref: b449d94bd1c7b5631a204df9628bc8138ebe5e01  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
