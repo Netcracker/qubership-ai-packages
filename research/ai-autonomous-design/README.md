@@ -28,46 +28,46 @@ It defines stop reason labels, recording rules, and measures for identifying and
 
 ## 2. Stop reason labels
 
-Use the `ai-stop:*` namespace.
+Use the `needs-human:*` namespace.
 
 Each label identifies why an agent cannot continue independently. It describes a current blocker; it does not assess
 result quality or automatically determine the autonomy of the whole task.
 
 | Label | When to apply | Example |
 | --- | --- | --- |
-| `ai-stop:approval-required` | The next action requires an explicitly defined approval. | Plan approval, deployment authorization, or mandatory review. |
-| `ai-stop:risk-found` | The agent identifies a significant risk, and existing rules do not establish whether it may proceed. | An irreversible data migration without a defined approval process. |
-| `ai-stop:decision-required` | A choice between alternatives or a resolution of conflicting requirements is needed. | Choosing between incompatible API behaviors. |
-| `ai-stop:context-missing` | Required facts, documentation, or system knowledge are missing. | The required namespace and the reason for using it are undocumented. |
-| `ai-stop:access-missing` | Required permissions, credentials, tools, or connections are unavailable. | The agent cannot read logs or run a command in staging. |
-| `ai-stop:verification-blocked` | The agent can prepare the result but cannot adequately verify its correctness. | No test environment, benchmark, or way to check the UI is available. |
-| `ai-stop:environment-blocked` | An environment failure unrelated to the current change blocks execution. | A service is unavailable, the default branch is broken, or CI capacity is exhausted. |
-| `ai-stop:external-dependency` | Progress depends on a result outside the current task and the agent's control. | Data from the bug reporter or an upstream fix is pending. |
-| `ai-stop:conflict-unresolved` | The work overlaps with another change, and the agent cannot resolve the overlap independently. | An unresolved merge conflict or competing pull requests. |
-| `ai-stop:scope-review-required` | Completing the task requires changing its boundaries or decomposition. | A change in another repository is required but was outside the task's scope. |
-| `ai-stop:invalid` | The agent finds grounds for not performing the original task and waits for confirmation. | The task is a duplicate, is already fixed, or describes intended behavior. |
-| `ai-stop:stuck` | The agent cannot find a workable next step after reasonable attempts. | Repeated fixes fail to resolve a test failure. |
-| `ai-stop:disagreement` | Participants in an automated process cannot resolve a substantive disagreement. | Implementation and review agents repeat their arguments without progress. |
-| `ai-stop:budget-exhausted` | A defined time, cost, token, or iteration limit has been reached. | The allowed number of fix and review cycles is exhausted. |
+| `needs-human:approval-required` | The next action requires an explicitly defined approval. | Plan approval, deployment authorization, or mandatory review. |
+| `needs-human:risk-found` | The agent identifies a significant risk, and existing rules do not establish whether it may proceed. | An irreversible data migration without a defined approval process. |
+| `needs-human:decision-required` | A choice between alternatives or a resolution of conflicting requirements is needed. | Choosing between incompatible API behaviors. |
+| `needs-human:context-missing` | Required facts, documentation, or system knowledge are missing. | The required namespace and the reason for using it are undocumented. |
+| `needs-human:access-missing` | Required permissions, credentials, tools, or connections are unavailable. | The agent cannot read logs or run a command in staging. |
+| `needs-human:verification-blocked` | The agent can prepare the result but cannot adequately verify its correctness. | No test environment, benchmark, or way to check the UI is available. |
+| `needs-human:environment-blocked` | An environment failure unrelated to the current change blocks execution. | A service is unavailable, the default branch is broken, or CI capacity is exhausted. |
+| `needs-human:external-dependency` | Progress depends on a result outside the current task and the agent's control. | Data from the bug reporter or an upstream fix is pending. |
+| `needs-human:conflict-unresolved` | The work overlaps with another change, and the agent cannot resolve the overlap independently. | An unresolved merge conflict or competing pull requests. |
+| `needs-human:scope-review-required` | Completing the task requires changing its boundaries or decomposition. | A change in another repository is required but was outside the task's scope. |
+| `needs-human:invalid` | The agent finds grounds for not performing the original task and waits for confirmation. | The task is a duplicate, is already fixed, or describes intended behavior. |
+| `needs-human:stuck` | The agent cannot find a workable next step after reasonable attempts. | Repeated fixes fail to resolve a test failure. |
+| `needs-human:disagreement` | Participants in an automated process cannot resolve a substantive disagreement. | Implementation and review agents repeat their arguments without progress. |
+| `needs-human:budget-exhausted` | A defined time, cost, token, or iteration limit has been reached. | The allowed number of fix and review cycles is exhausted. |
 
 ### Selection rules
 
 Apply these distinctions consistently:
 
-- Use `ai-stop:approval-required` when an approval rule exists. Use `ai-stop:risk-found` when the risk is identified
+- Use `needs-human:approval-required` when an approval rule exists. Use `needs-human:risk-found` when the risk is identified
   but the rule is missing or
   ambiguous.
-- Use `ai-stop:decision-required` when someone must choose. Use `ai-stop:context-missing` when a fact must be
+- Use `needs-human:decision-required` when someone must choose. Use `needs-human:context-missing` when a fact must be
   established.
-- Use `ai-stop:access-missing` when the agent cannot perform a required action. Use `ai-stop:verification-blocked` when
+- Use `needs-human:access-missing` when the agent cannot perform a required action. Use `needs-human:verification-blocked` when
   it cannot establish that
   the result is correct.
-- Use `ai-stop:environment-blocked` when an available environment fails. Use `ai-stop:external-dependency` when a
+- Use `needs-human:environment-blocked` when an available environment fails. Use `needs-human:external-dependency` when a
   result from an external participant
   or system is required.
-- Use `ai-stop:scope-review-required` when the task boundaries need revision. A large amount of work alone is not a
+- Use `needs-human:scope-review-required` when the task boundaries need revision. A large amount of work alone is not a
   stop reason.
-- Use `ai-stop:stuck` when there is no workable path forward. Use `ai-stop:budget-exhausted` when a configured limit
+- Use `needs-human:stuck` when there is no workable path forward. Use `needs-human:budget-exhausted` when a configured limit
   stops further work.
 
 Apply a label only when the agent actually stops. If it resolves a conflict, restores the environment, or finds the
@@ -84,7 +84,7 @@ When the agent stops, it:
 Example:
 
 ```text
-Reason: ai-stop:access-missing
+Reason: needs-human:access-missing
 
 Blocker:
 I cannot retrieve application logs from staging to test the hypothesis.
@@ -142,7 +142,7 @@ not a measure of autonomy.
 
 ## 5. Interpretation limits
 
-A stop reason alone does not determine the outcome. After `ai-stop:access-missing`, a human might grant access, perform
+A stop reason alone does not determine the outcome. After `needs-human:access-missing`, a human might grant access, perform
   the
 action, or take over the task entirely. These are three different outcomes.
 
@@ -151,7 +151,7 @@ stop reason to autonomy level.
 
 - An absence of recorded stops establishes autonomy only if event collection is complete.
 - Record approvals separately from assistance in solving the task.
-- `ai-stop:environment-blocked` and `ai-stop:external-dependency` can expose limitations of the autonomous process even
+- `needs-human:environment-blocked` and `needs-human:external-dependency` can expose limitations of the autonomous process even
   when the agent is not at fault.
 - Interpret fewer stops together with result quality and task complexity.
 
