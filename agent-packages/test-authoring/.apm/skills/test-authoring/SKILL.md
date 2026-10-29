@@ -101,10 +101,11 @@ name would fail it, do not write it.
 
 Two oracles turn that judgment into evidence, and a reviewer may ask for either:
 
-- **Red on the base commit.** A regression test is observed failing on the code before the fix and passing after it,
-  and the pull request carries the evidence: the test in its own commit ahead of the fix, or the pasted failing output
-  with its file and line. A test the reviewer has only been told exercises the bug is a claim. Check that the failure
-  on the base commit names the bug's symptom, not a missing symbol.
+- **Red on the base commit.** A regression test is observed failing on the code before the fix and passing after it.
+  Check that the failure on the base commit names the bug's symptom, not a missing symbol. A test nobody has seen red
+  is a claim. Whether the pull request description mentions the red run, and how, is `change-description-authoring`'s
+  to decide; where a reviewer asks for the evidence, it is the test in its own commit ahead of the fix, or the failing
+  output with its file and line.
 - **A surviving mutant on a changed line.** Where the repository runs a mutation tool, read its verdict as the tool
   defines it: *no coverage* is a missing test; a mutant that does not compile is no information; *survived* on a line
   the change touched is a candidate gap, and the writer settles it. A survivor that changes behavior the
@@ -169,6 +170,35 @@ asserted is the behavior that moved, or kept, because it caught a defect in the 
 test whose expectation moved and the behavior that moved with it. A test edited until the suite is green, with no such
 sentence, is §5 arriving through the diff of the tests.
 
+**A change to how the system reads or replaces what an earlier version left behind owes a test or a run that starts
+from that state, not only from a fresh install.** The state is whatever the earlier version created and the new one
+meets: a configuration file, keys or certificates, a persisted format or schema, a cache, a lock file, Kubernetes
+objects that an older chart or `kubectl apply` created. Name what the earlier version leaves behind, where the test
+gets a faithful copy of it, and the outcome the change promises: it keeps working, it migrates, or it fails with a
+message that names the remedy. A faithful copy is a fixture recorded from the earlier version, or the earlier version
+installed first and the change applied over it. A fixture that the new code writes and then reads back is not one,
+because it tests the format the change agreed with itself. Where the project decides not to automate a one-time
+transition, the change owes the documented remedy, verified by running it on the inherited state.
+
+**A change that lets an existing setting reach a consumer it did not reach before owes a test or a run with the values
+users already pass through it, not only with the documented example.** List the names the new consumer reads that the
+old consumers also read, such as a values key both charts define, and cite the line that reads each. For each name,
+give the new consumer a value meant for the old ones and assert what it does with it; the documented example settles
+nothing when it means the same to every consumer. Where the value means something else there, the defect is in the
+change, not in the test. A fix that keeps the value from the new consumer makes the test a silent case, and it owes the
+control of §7: a value of the new consumer's own setting, where it has one, still reaches it.
+
+**A change that replaces a mechanism owes a run of its failures, not only of its success.** A mechanism here is what
+brings the system to a state and reports when it cannot: a build target, a wait loop, a client, a deployment step. Two
+faults are owed: the one the old mechanism met most often, which its error handling or the CI history shows, and, where
+the new one waits in a loop, the fault on which one attempt waits longest. On the second fault, count each attempt at
+its call's own timeout, the default where nothing sets one, and a call with no timeout as never returning. Count a
+deadline checked before each attempt as overrun by up to one attempt and one sleep. For each fault, name from the old
+code how long the old mechanism took to fail and what it printed, run the new one on the same fault, and state both
+durations and both outputs in the pull request. Where the new one fails later than the old, it gets a deadline that
+bounds the whole wait, last attempt included, at the old one's time to fail; where it prints less, it prints what the
+old one printed; either may instead give its reason in the pull request.
+
 The rows below are examples, not a list to match a change against. Write the row a change needs from the rule: name
 what the changed behavior is observable through, then ask what a larger test would establish that the small one
 cannot.
@@ -180,6 +210,8 @@ cannot.
 | A change to an error or failure path | Small, on the input that triggers it, asserting the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
 | A change to what crosses a process boundary: bytes on a wire, a schema, a message format, a serialized value | Small, feeding recorded or hand-built bytes or records to the reader with no socket or file | Medium, against the real peer or its wire-level fake, because the contract crossed a process boundary | The expected bytes are literals or captures, not produced by the writer under test; the medium test exists or is named |
 | A change in a configuration default | Small, asserting the behavior the code shows when nothing is set, through the accessor the rest of the code reads | Medium or large, where the default is read at deployment and the change altered the deployment path | The test asserts the behavior that depends on the default, not that the constant equals itself |
+| A change to how state an earlier version created is read or replaced: a file, a key, a schema, a cache, deployed objects | Where code reads the state: small, feeding the reader a copy recorded from the earlier version | Medium or large, installing the earlier version first and the change over it, where the replacement happens at deployment | The copy comes from the earlier version, not from the code under test; the promised outcome is asserted: keeps working, migrates, or fails naming the remedy |
+| A change that lets an existing setting reach another consumer: a pass-through variable, a flag, an environment variable, a property, a values key | Small where the new consumer is code the test calls in one process, such as a parser or a client, with a value users pass for the old ones; medium where it is a tool that reads files, such as a chart under `helm template` with a key both charts read | Medium or large, running the new consumer with that value, where its effect shows only when it runs or is deployed | The names both consumers read are listed; the value comes from what the old consumers read, not only from the documented example; what it does to the new consumer is asserted |
 
 Three questions tell a chosen level from a defaulted one: does the pull request name the level; does the small test
 mock the very boundary the change altered, which establishes nothing about that boundary; does an existing larger
@@ -209,10 +241,20 @@ form.
 - **Each boundary and its neighbors.** For an ordered input, test the minimum, the maximum, and the value just outside
   each (two-value analysis); add the value just inside where a wrong operator is plausible, since `x <= 10` written as
   `x == 10` passes 10 and 11 and fails only on 9.
+- **A limit set elsewhere on the same work.** Where the change sets or moves a limit and another layer bounds the same
+  work (the caller or the wrapper, what the code starts, the environment), two cases are owed: the changed limit set
+  just past the other, asserting which one fires and what the user sees, and the defaults, asserting that the inner
+  limit fires first. A limit on one operation inside the work, or on work that only overlaps it, is not such a layer.
+  For a duration, control the clock (§8) or assert the relation between the configured values where the code reads them,
+  rather than waiting the duration out. Where the first case cannot pass because the other limit is fixed outside the
+  documented configuration, the defect is in the code, not in the test.
 - **A decision table when the outcome depends on a combination of conditions.** One case per feasible column, so the
   happy column is not the only one tested.
 - **A state-transition test when the behavior depends on history.** Every valid transition once; each invalid transition
   as a case of its own.
+- **The state the system starts from, where the change reads or replaces what an earlier version left behind.** A
+  fresh install and the inherited state are two partitions of that input, and a suite whose every run starts clean
+  tests one of them. §3 says what the inherited-state case carries.
 - **A property-based test for an invariant over a large domain**, where enumeration would list examples forever. It
   costs the T1 reader a reproducer. A failure carries what replays it: the seed or the reproduce blob the framework
   prints, or a seed the test pins where the framework prints none. Each shrunk counterexample the tool ever found
@@ -248,7 +290,7 @@ them first; a mutation run confirms most of them.
 | A change detector | An in-order verification chain that mirrors the method body; a constant compared with its own literal; a snapshot of private structure | Test the behavior that depends on the decision: `retried five times and made no sixth attempt`, not `MAX_RETRIES == 5` |
 | An assertion weakened until it passes | Equality replaced by not-null, a type check, `contains`, `length > 0`; a widened range or delta | Assert the value. An existence check where the behavior defines a value is a sanity check, not a test |
 | A snapshot accepted unread | The snapshot file updated in the same commit as the behavior, with no note on what changed | Read it, name what changed and why, and narrow it to the output the behavior defines |
-| A regression test never seen red | No failing run, no test-first commit, no pasted output in the pull request | The red run on the base commit (§1) |
+| A regression test never seen red | No failing run on the base commit, by the author or by a test-first commit | The red run on the base commit (§1) |
 | An assertion that is never executed | The assert is not on the test's straight-line path: behind a condition that is false, in a loop over an empty collection, after an early return, inside a callback nothing invokes, or after a line in the same `try` block that throws first, with a `catch` that swallows it | Move the assertion to the top level of the test, or assert the condition that was supposed to hold before it (the collection is not empty, the callback ran); delete the swallowing `catch`, or assert on the exception |
 
 Each repair can be gamed in turn, and the reviewer checks the second step too: an assertion added to satisfy the row
@@ -506,7 +548,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | Bucket | Rules | What it takes |
 | --- | --- | --- |
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
-| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
+| **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the runs of a replaced mechanism's failures on its replacement, with both durations and outputs (§3); for a setting that now reaches another consumer, the names that consumer shares with the old ones, each cited by the file and line that reads it, and its run with a value users pass for the old ones, where no test calls, renders, or parses it with that value (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
 | **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
@@ -515,7 +557,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 Run this over a test you wrote or one you are reviewing.
 
 - Which production change would make this test fail, and is it a bug rather than a decision (§1)?
-- For a regression test: was it seen red on the base commit, and does the pull request show it (§1)?
+- For a regression test: was it seen red on the base commit (§1)?
 - Can the change alter behavior at all? If not, does the pull request say so; if it is a dependency bump, a
   regeneration, or a build change, does the pull request name the surface the green suite covers (§3)?
 - For a change made for speed or memory, is the behavior preserved asserted, is the improvement measured where the
@@ -523,8 +565,21 @@ Run this over a test you wrote or one you are reviewing.
 - Is the level named, and is it the smallest at which the behavior is observable through the unit's interface (§3)?
 - Is every existing test whose expectation moved named, with the behavior that moved with it (§3)?
 - Does a small test mock the boundary the change altered (§3)?
+- Where the change reads or replaces state an earlier version left behind, does a test or a run start from a copy
+  taken from that version, with the outcome named: keeps working, migrates, or fails naming the remedy? Where the
+  project does not automate the transition, is the documented remedy shown run on that state (§3, §4)?
+- Where the change replaces a mechanism, are the fault the old one met most often and, for a loop, the fault on which
+  one attempt waits longest run on the new one, each attempt counted at its call's own timeout and a deadline with its
+  overrun (§3)?
+- Does the pull request state both durations and both outputs, and does a later failure get a deadline that holds at
+  the old time to fail, last attempt included, and a quieter one the old output back, or a reason (§3)?
+- Where an existing setting now reaches another consumer, are the names it shares with the old consumers listed, and
+  does a test or a run give it a value meant for the old ones, not only the documented example, with the effect
+  asserted and, where the fix keeps that value out, the §7 control (§3)?
 - Is there one case per partition, as a test of its own or in a form §7 allows, each invalid partition alone, and a
   case at each boundary and its neighbors (§4)?
+- Where the change sets or moves a limit, is there a case just past each other limit on the same work, and one showing
+  that the inner limit fires first at the defaults (§4)?
 - Where another argument can influence the changed behavior, is it varied, one case per partition the behavior
   distinguishes, and would each fail with the changed behavior wrong for that value alone (§4)?
 - Does the change add a member to an open set, and does a test enumerate the set from the code (§4)?

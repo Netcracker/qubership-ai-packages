@@ -2,16 +2,16 @@
 name: final-review
 description: >-
   Use at the end of a coding task, in a fresh subagent, when the code, tests, and comments are
-  written and before the commit is final: "run the final review", "final-review this change",
-  "check the change before I commit". Reviews one change against a fixed form: every doc comment
-  added or changed, and every comment left above changed code, consistent with the code and with
-  the other comments in the file; every case the task statement, the commit message, and the class
-  comments claim, covered by a named test; boundaries, invalid partitions, and the negative control
-  present; names and comments that refer by content rather than by position or ordinal; assertions
-  that print the operands. Every item gets an answer, "none" included, with evidence. Findings are
-  sorted substantive, taste, or churn, and only the first kind is a request. A change with no code,
-  such as a skill or a docs page, fills the same form through the analogues the skill names. Not a
-  general code review; for that use the code-review skills.
+  written and before the commit is final: "run the final review" or "check the change before I
+  commit". Reviews one change against a fixed form: every doc comment added or changed, and every
+  comment left above changed code, consistent with the code and with the other comments in the
+  file; every case the task statement, the commit message, and the class comments claim, covered
+  by a named test; boundaries, invalid partitions, and the negative control present; names and
+  comments that refer by content rather than by position or ordinal; assertions that print the
+  operands. Every item gets an answer, "none" included, with evidence. Findings are sorted
+  substantive, taste, or churn, and only the first kind is a request. A change with no code, such
+  as a skill, a docs page, or a configuration, fills the same form through the analogues the skill
+  names. Not a general code review; for that use the code-review skills.
 ---
 
 # Final review of a change
@@ -66,12 +66,58 @@ that exercises it, by name. A claimed case with no test, or a test whose name pr
 exercise, is a finding. Where the statement names a reason for the design (a warning avoided, a value preserved),
 the test that would fail if the design were replaced by the alternative is the one to name.
 
+A command the change tells someone to run is a claimed case too: a command line in a page, a comment, a help text, or a
+recipe, with the outcome it promises. List every such command line in the changed files with its outcome. Beside each,
+put the script, build target, or CI job that runs the same command with the same flags on the configuration the change
+creates, or `none`. A documented form that differs from every form that runs, by a flag, a tool, or a version, is
+`none`. For each `none`, name the property of this configuration the outcome depends on (the kind of object the command
+acts on, a flag combination, the platform) and say what the tool does with it in each version the change says it
+supports. That a flag exists does not settle its outcome: compare what its help text, reference, or source says it acts
+on with what this configuration has. The finding is substantive, and the request is a run of that form on that
+configuration and those versions, or the documented form replaced by the one that runs.
+
+Then read the claims the other way: every hunk of the diff belongs to a sentence of the commit message or the
+description. A hunk no sentence claims is a finding, however small: a version bump carried over from another branch, a
+dependency moved in a file the change otherwise does not touch. The request is a sentence that claims it, with the run
+that checks it, or the hunk moved to a change of its own.
+
 ### Item 3: boundaries, partitions, and the negative control
 
 For every input the test set varies: the boundary values and the value just outside them; each invalid partition
 tested alone; the empty value where the type admits one. For every setting or mode that triggers the defect: the
 other value of that setting, or the other mode, present as the control that stays green on the base commit. A
-suite that tests only the failing corner is a finding, named as such.
+suite that tests only the failing corner is a finding, named as such. Where the change reads or replaces something an
+earlier version left behind (a configuration file, keys, a persisted format, a cache, deployed objects), ask which
+pre-existing state the change will meet. A change whose every test and run starts from a fresh install is a finding;
+the request is a test or a run that starts from that state, or the documented remedy, run on that state.
+
+The values users already pass are such state too. Where an existing setting (a pass-through variable, a flag, an
+environment variable) now reaches a consumer it did not reach before, check the values users pass through it, not only
+the documented example: list the names the new consumer reads that the old consumers also read, such as a values key
+both charts define or a variable both programs read, and for each say what a value meant for the old consumers does to
+the new one. A value that means something else there, or makes it ask for something nothing builds or provides, is a
+finding. The request is a setting of the new consumer's own, or a run with that value.
+
+Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), say from the old code and
+the new how long each takes to fail and what each prints, on two faults: the one the old mechanism met most often, which
+its error handling or the CI history shows, and, where the new mechanism waits in a loop, the fault on which one attempt
+waits longest. On that fault, count each attempt at its call's own timeout, the default where nothing sets one, and a
+call with no timeout as never returning. Count a deadline checked before each attempt as overrun by up to one attempt
+and one sleep. A replacement that fails later or prints less, with no sentence in the change that accepts it, is a
+finding. The request is a run of that fault on the new mechanism, with its duration and its output. For a later failure,
+the request adds a deadline that bounds the whole wait, last attempt included, at the old mechanism's time to fail; for
+a quieter one, the old output.
+
+Where the change sets, exposes, or moves a limit, list the other limits on the same work: in whatever starts or wraps
+this code, in what this code starts, and in the environment, each with the place that sets it (a documented setting, a
+value fixed in a script or a wrapper, a default, another program's code). A limit counts where the work it bounds
+contains this work or lies inside it as a whole; one on a single operation inside the work, after which the work goes
+on, or on work that only overlaps it, does not. An enclosing limit that starts earlier still counts, with the time spent
+before this work starts taken from its budget. Then raise each documented setting just past each of the other limits,
+not only at its default: where a limit fixed elsewhere fires first, so that the raised value has no effect, that is a
+finding. So is an inner limit that does not fire first at the defaults. The request is to derive one limit from the
+other. Where the other limit is in a program the repository does not contain, the request is the line that sets it or a
+run that reaches it.
 
 ### Item 3a: level, placement, and the environment
 
@@ -119,6 +165,19 @@ description, never to leave it unsaid. Where a helper has more call sites than y
 and read the ones the change's own condition can reach: the callers that pass the value, the state, or the argument
 shape the defect needed. Report the count and the criterion, so that the reader knows what was not read.
 
+A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
+build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
+matrix, a schema. Search for two existing members by name (the one, where the set had one), and read every file that
+names both; a list that names the others and not the new member is a finding. Then search the prose for the set's old
+size, in digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a
+finding too.
+
+The sites of a fix include the other paths that show the same symptom, which `git grep` on a helper does not find: a
+twin target, the other major version of a tool, the other operating system. Then read every remedy, troubleshooting
+row, and step the change writes: list the paths its symptom or its cause names, and check that its action names a step
+for each. A row whose symptom names two targets and whose action names one is a finding. A fix made in answer to a
+review comment is where this is missed: the comment names one path, and the fix covers that one.
+
 ## 2a. A change with no code
 
 A skill, a documentation page, a configuration, or a research directory has no members, no tests, and nothing for
@@ -133,13 +192,20 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   or standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read,
   not remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow.
 - **Claimed cases covered.** The claimed cases are the cases the task statement names and the artifacts or situations
-  the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection:
-  a rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test.
-  A README's claim about the repository is covered by the file that makes it true.
-- **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the
-  change claims; the negative control is the statement of what does not apply, and the control arm of any trial the
-  change carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the
-  finding names them.
+  the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
+  rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
+  README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
+  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*. Every hunk belongs to a claim of
+  the description, as in the same item.
+- **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the change
+  claims; the negative control is the statement of what does not apply, and the control arm of any trial the change
+  carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the finding
+  names them. For a configuration, a deployment definition, or a package installed over an earlier version, the state
+  that version left on the target is one more partition. For a configuration or a script, the paragraph on limits in
+  item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
+  file or in the program it starts. For a setting that now reaches another consumer, the values users already pass are
+  one more partition. For a script or a configuration that replaces another, the faults that item names are partitions
+  too, each with how long the old and the new take to fail on it and what each prints.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline.
@@ -153,7 +219,9 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   the change's own worked example is a finding.
 - **Siblings of the change.** The siblings are the places that enumerate or route to the artifact: an index, a
   marketplace entry, a sibling package's cross-reference, an umbrella that pins it. A scope widened in the artifact's
-  body and not on the surface that decides whether it loads is the classic miss.
+  body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
+  the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
+  still counts the set as before.
 
 ## 3. Sorting the findings
 

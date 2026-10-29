@@ -1,0 +1,13 @@
+on the fix (build.sh exited with 0):
+  1 test files ran, 0 failed
+on the base (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-kind-targets.sh (exit 1)
+      ---
+      > authz-e2e authz-test-stand TAG=product
+      4c4
+      < authz-parity authz-test-stand TAG=stand
+      ---
+      > authz-parity authz-test-stand TAG=product
+      
+      kind target checks: 9 failure(s)

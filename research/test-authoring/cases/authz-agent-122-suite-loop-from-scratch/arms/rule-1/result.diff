@@ -1,0 +1,285 @@
+diff --git a/test/scripts/test-k8s-make-targets.sh b/test/scripts/test-k8s-make-targets.sh
+new file mode 100755
+index 0000000..cfa4cc9
+--- /dev/null
++++ b/test/scripts/test-k8s-make-targets.sh
+@@ -0,0 +1,279 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Checks of the Makefile's kind targets that need no cluster.
++#
++# The targets run against stand-ins for kubectl, helm, docker, and sleep put
++# first on PATH. The stand-ins answer as a cluster would in the scenario each
++# check sets up, and record what they were called with. sleep returns at once
++# and adds its argument to a clock file, replaced whole so that the stand-in
++# for helm, which reads it at the same time, never sees it empty; kubectl logs
++# adds the time one attempt would wait. A check thus reads how long a target
++# would have taken without waiting it out.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++
++require_cmd() {
++  if ! command -v "$1" >/dev/null 2>&1; then
++    echo "error: required command not found: $1" >&2
++    exit 1
++  fi
++}
++
++require_cmd make
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++WORK="$(mktemp -d)"
++trap 'rm -rf "${WORK}"' EXIT
++FAKE_BIN="${WORK}/bin"
++mkdir -p "${FAKE_BIN}"
++
++# kubectl. FAKE_KUBECTL_WAIT_FOR_CREATE=no answers `wait --for=create` as
++# kubectl before 1.31 does. FAKE_LOGS_READY_AFTER is the number of `kubectl
++# logs` calls that fail before the container has started, `never` for one that
++# does not start; each failed call reports FAKE_LOGS_ERROR and adds
++# FAKE_LOGS_ATTEMPT_SECONDS to the clock.
++cat >"${FAKE_BIN}/kubectl" <<'EOF'
++#!/usr/bin/env bash
++echo "kubectl $*" >>"${FAKE_STATE}/calls"
++args=" $* "
++case "${args}" in
++  *" delete job "*) exit 0 ;;
++  *" wait --for=create "*)
++    if [[ "${FAKE_KUBECTL_WAIT_FOR_CREATE}" == no ]]; then
++      echo 'error: unrecognized condition: "create"' >&2
++      exit 1
++    fi
++    exit 0 ;;
++  *" get pods -l job-name="*)
++    job="${args#* job-name=}"
++    job="${job%% *}"
++    echo "NAME                  READY   STATUS              RESTARTS   AGE"
++    echo "${job}-x7k2p   0/1     ErrImageNeverPull   0          3m"
++    exit 0 ;;
++  *" logs "*)
++    attempts=$(($(cat "${FAKE_STATE}/log-attempts") + 1))
++    echo "${attempts}" >"${FAKE_STATE}/log-attempts"
++    if [[ "${FAKE_LOGS_READY_AFTER}" == never ]] || ((attempts <= FAKE_LOGS_READY_AFTER)); then
++      echo $(($(cat "${FAKE_STATE}/clock") + FAKE_LOGS_ATTEMPT_SECONDS)) >"${FAKE_STATE}/clock.new"
++      mv "${FAKE_STATE}/clock.new" "${FAKE_STATE}/clock"
++      echo "${FAKE_LOGS_ERROR}" >&2
++      exit 1
++    fi
++    if [[ "${args}" == *" logs -f "* ]]; then
++      echo "=== RUN   TestRuntimeSuite"
++      echo "--- PASS: TestRuntimeSuite"
++      touch "${FAKE_STATE}/log-streamed"
++    fi
++    exit 0 ;;
++esac
++echo "fake kubectl: unexpected call: $*" >&2
++exit 2
++EOF
++
++# helm. `helm test` follows FAKE_HELM_TEST: `pass` and `fail` report the
++# suite's outcome once the log has been streamed or after two seconds, `abort`
++# fails at once as helm does when its own --timeout runs out first, and
++# `timeout` waits out its 15 minutes on the clock, or a minute of real time
++# where the clock stops, and fails unless it is stopped first. Every other
++# call succeeds.
++cat >"${FAKE_BIN}/helm" <<'EOF'
++#!/usr/bin/env bash
++echo "helm $*" >>"${FAKE_STATE}/calls"
++[[ " $* " == *" test "* ]] || exit 0
++case "${FAKE_HELM_TEST}" in
++  pass | fail)
++    for _ in $(seq 20); do
++      [[ -e "${FAKE_STATE}/log-streamed" ]] && break
++      /bin/sleep 0.1
++    done
++    if [[ "${FAKE_HELM_TEST}" == pass ]]; then
++      echo "Phase: Succeeded"
++      exit 0
++    fi
++    echo "Error: 1 error occurred: job runtime-suite failed: BackoffLimitExceeded" >&2
++    exit 1 ;;
++  abort)
++    echo "Error: timed out waiting for the condition" >&2
++    exit 1 ;;
++  timeout)
++    for _ in $(seq 600); do
++      (($(cat "${FAKE_STATE}/clock") >= 900)) && break
++      /bin/sleep 0.1
++    done
++    echo "Error: helm test ran out its timeout" >&2
++    exit 1 ;;
++esac
++EOF
++
++cat >"${FAKE_BIN}/sleep" <<'EOF'
++#!/usr/bin/env bash
++echo $(($(cat "${FAKE_STATE}/clock") + $1)) >"${FAKE_STATE}/clock.new"
++mv "${FAKE_STATE}/clock.new" "${FAKE_STATE}/clock"
++EOF
++
++cat >"${FAKE_BIN}/docker" <<'EOF'
++#!/usr/bin/env bash
++echo "docker $*" >>"${FAKE_STATE}/calls"
++EOF
++
++chmod +x "${FAKE_BIN}"/*
++
++# Runs a make target against the stand-ins, with the scenario's settings in
++# the environment, and leaves its combined output in ${output}, its exit
++# status in ${status}, and the seconds it would have taken in ${elapsed}.
++run_target() {
++  export FAKE_STATE="${WORK}/state"
++  rm -rf "${FAKE_STATE}"
++  mkdir -p "${FAKE_STATE}"
++  echo 0 >"${FAKE_STATE}/clock"
++  echo 0 >"${FAKE_STATE}/log-attempts"
++  : >"${FAKE_STATE}/calls"
++  status=0
++  output="$(env PATH="${FAKE_BIN}:${PATH}" \
++    FAKE_KUBECTL_WAIT_FOR_CREATE="${FAKE_KUBECTL_WAIT_FOR_CREATE:-yes}" \
++    FAKE_LOGS_READY_AFTER="${FAKE_LOGS_READY_AFTER:-0}" \
++    FAKE_LOGS_ATTEMPT_SECONDS="${FAKE_LOGS_ATTEMPT_SECONDS:-0}" \
++    FAKE_LOGS_ERROR="${FAKE_LOGS_ERROR:-}" \
++    FAKE_HELM_TEST="${FAKE_HELM_TEST:-pass}" \
++    make -s -C "${ROOT_DIR}" TEST_STAND_CHART="${WORK}/chart" "$@" 2>&1)" || status=$?
++  elapsed="$(cat "${FAKE_STATE}/clock")"
++}
++
++# The arguments of the one recorded call that contains the given text.
++call_with() {
++  grep -F -- "$1" "${FAKE_STATE}/calls" || true
++}
++
++# ── run-suite: waiting for the suite container ───────────────────────────
++#
++# `kubectl logs` fails while the container is being created, which the
++# stand-in reports for the first three calls.
++starting='Error from server (BadRequest): container "suite" in pod "runtime-suite-x7k2p" is waiting to start: ContainerCreating'
++never_pull='Error from server (BadRequest): container "suite" in pod "runtime-suite-x7k2p" is waiting to start: ErrImageNeverPull'
++
++FAKE_LOGS_READY_AFTER=3 FAKE_LOGS_ERROR="${starting}" run_target e2e-suite
++if [[ "${status}" == 0 && "${output}" == *"--- PASS: TestRuntimeSuite"* ]]; then
++  pass "e2e-suite streams the suite log once the container starts and passes with the suite"
++else
++  fail "e2e-suite exited ${status} with output: ${output}"
++fi
++
++# kubectl before 1.31 has no `wait --for=create`, and the wait must not depend
++# on it.
++FAKE_KUBECTL_WAIT_FOR_CREATE=no FAKE_LOGS_READY_AFTER=3 FAKE_LOGS_ERROR="${starting}" run_target e2e-suite
++if [[ "${status}" == 0 && "${output}" == *"--- PASS: TestRuntimeSuite"* ]]; then
++  pass "e2e-suite streams the suite log on a kubectl without wait --for=create"
++else
++  fail "e2e-suite on a kubectl without wait --for=create exited ${status} with output: ${output}"
++fi
++
++FAKE_HELM_TEST=fail FAKE_LOGS_READY_AFTER=3 FAKE_LOGS_ERROR="${starting}" run_target e2e-suite
++if [[ "${status}" != 0 && "${output}" == *"BackoffLimitExceeded"* ]]; then
++  pass "e2e-suite fails with helm test's error when the suite fails"
++else
++  fail "e2e-suite with a failing suite exited ${status} with output: ${output}"
++fi
++
++# A container that never starts stops the target after about three minutes,
++# with the Pod listed, rather than after helm test's 15.
++FAKE_HELM_TEST=timeout FAKE_LOGS_READY_AFTER=never FAKE_LOGS_ERROR="${never_pull}" run_target e2e-suite
++expected_listing="runtime-suite-x7k2p   0/1     ErrImageNeverPull   0          3m"
++if [[ "${status}" != 0 \
++  && $'\n'"${output}" == *$'\nThe runtime-suite container did not start within 3 minutes:\n'*"${expected_listing}"* \
++  && "${output}" != *"helm test ran out its timeout"* ]] \
++  && ((elapsed >= 150 && elapsed <= 210)); then
++  pass "e2e-suite stops helm test and lists the Pod when the container does not start within 3 minutes (${elapsed}s)"
++else
++  fail "e2e-suite with a container that never starts exited ${status} after ${elapsed}s with output: ${output}"
++fi
++
++FAKE_HELM_TEST=timeout FAKE_LOGS_READY_AFTER=never FAKE_LOGS_ERROR="${never_pull}" run_target parity-suite
++expected_listing="parity-suite-x7k2p   0/1     ErrImageNeverPull   0          3m"
++if [[ "${status}" != 0 \
++  && $'\n'"${output}" == *$'\nThe parity-suite container did not start within 3 minutes:\n'*"${expected_listing}"* \
++  && "$(call_with "get pods")" == *"-n authz-parity "* ]]; then
++  pass "parity-suite lists the parity suite's Pod when its container does not start"
++else
++  fail "parity-suite with a container that never starts exited ${status} with output: ${output}; kubectl get was called as: $(call_with "get pods")"
++fi
++
++# helm test's own timeout, E2E_SUITE_TIMEOUT, set shorter than the three
++# minutes of the start wait: helm test fires first, and its error reaches the
++# user.
++FAKE_HELM_TEST=abort FAKE_LOGS_READY_AFTER=never FAKE_LOGS_ERROR="${never_pull}" run_target e2e-suite E2E_SUITE_TIMEOUT=1m
++if [[ "${status}" != 0 && "${output}" == *"Error: timed out waiting for the condition"* ]]; then
++  pass "e2e-suite fails with helm test's timeout when E2E_SUITE_TIMEOUT is shorter than the start wait"
++else
++  fail "e2e-suite with E2E_SUITE_TIMEOUT=1m exited ${status} with output: ${output}"
++fi
++
++# A Job whose Pod is never created, for example one the namespace's Pod
++# Security admission rejects: each `kubectl logs job/...` waits its
++# --pod-running-timeout, 20s by default, for a Pod before it fails. The
++# three-minute bound holds with that wait counted, overrun by at most one
++# attempt and one sleep.
++FAKE_HELM_TEST=timeout FAKE_LOGS_READY_AFTER=never FAKE_LOGS_ATTEMPT_SECONDS=20 \
++  FAKE_LOGS_ERROR='error: timed out waiting for the condition' run_target e2e-suite
++if [[ "${status}" != 0 ]] && ((elapsed <= 180 + 20 + 2)); then
++  pass "e2e-suite gives up within 3 minutes when every kubectl logs waits 20s for a Pod (${elapsed}s)"
++else
++  fail "e2e-suite with no Pod for the Job gave up after ${elapsed}s, $(cat "${FAKE_STATE}/log-attempts") kubectl logs calls, expected at most 202s; exit ${status}"
++fi
++
++# ── The test stand's install arguments ───────────────────────────────────
++#
++# The test stand reads TAG for images of its own, so E2E_HELM_ARGS, meant for
++# the product charts, does not reach its install, and TEST_STAND_HELM_ARGS
++# does; the product charts keep E2E_HELM_ARGS.
++for target in e2e-harness parity-harness; do
++  run_target "${target}" E2E_HELM_ARGS='--set TAG=product' TEST_STAND_HELM_ARGS='--set TAG=stand'
++  stand_install="$(call_with "upgrade --install authz-test-stand")"
++  if [[ "${status}" == 0 && "${stand_install}" == *"--set TAG=stand"* && "${stand_install}" != *"TAG=product"* ]]; then
++    pass "${target} installs the test stand with TEST_STAND_HELM_ARGS and without E2E_HELM_ARGS"
++  else
++    fail "${target} exited ${status} and installed the test stand as: ${stand_install:-no install}; output: ${output}"
++  fi
++done
++
++for target in e2e-install parity-install; do
++  run_target "${target}" E2E_HELM_ARGS='--set TAG=product' TEST_STAND_HELM_ARGS='--set TAG=stand'
++  agent_install="$(call_with "upgrade --install authz-agent")"
++  if [[ "${status}" == 0 && "${agent_install}" == *"--set TAG=product"* && "${agent_install}" != *"TAG=stand"* ]]; then
++    pass "${target} installs the agent with E2E_HELM_ARGS and without TEST_STAND_HELM_ARGS"
++  else
++    fail "${target} exited ${status} and installed the agent as: ${agent_install:-no install}; output: ${output}"
++  fi
++done
++
++echo
++if ((failures > 0)); then
++  echo "kind target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "kind target checks: all passed"

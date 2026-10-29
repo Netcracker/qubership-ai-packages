@@ -29,8 +29,8 @@ cases that expect the same outcome.
   the rule's text still names the check a reviewer applies to any kind.
 - **A new case goes to a kind the cases do not cover yet**, where the edit rests on a kind they miss. The cases so far
   are `uber/NullAway#1834` and `#1750` and `apache/calcite#4410` (compiler-like harnesses),
-  `qubership-core-lib-go-paas-mediation-client#167` (a Go service client), and `frictionless-py#1799` (a batch
-  validator).
+  `qubership-core-lib-go-paas-mediation-client#167` (a Go service client), `frictionless-py#1799` (a batch validator),
+  and `qubership-authz-agent#122` (a Makefile recipe that waits for a Kubernetes Job).
 
 ## One rule, five places
 
@@ -71,8 +71,8 @@ others. The rules below exist so that the next edit does not repeat them.
 1. Run `scripts/check-skill.sh --index` before the edit: it prints, per section, every line in the package that
    cites it, which is the list of places the edit has to visit. Run it again after: it fails on an ordinal
    cross-reference, a retired term, a version number in a reference, or a short line followed by a continuation.
-   `make test` runs it over this package and over `final-review` and `blackbox-test-design`, which share the rules,
-   so a term retired here is retired there too.
+   `make test` runs it over this package and over `final-review`, `blackbox-test-design`, and `telemetry-authoring`,
+   which share the rules, so a term retired here is retired there too.
 2. Run `make check-descriptions` and the markdownlint configuration the repository's CI uses.
 3. For every rule the edit touched, answer in the pull request which of its five places moved, and why the others
    did not need to.

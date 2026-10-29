@@ -53,8 +53,8 @@
     },
     {
       "name": "qubership-user-essentials",
-      "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, problem-report authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python.",
-      "version": "1.3.0",
+      "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, a final pre-commit review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, test authoring, problem-report authoring, telemetry authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python.",
+      "version": "1.5.0",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -195,7 +195,7 @@
     {
       "name": "enable-renovate-automerge",
       "description": "Skill that enables Renovate automerge on a repository behind a real test/style required check.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:devops",
         "topic:dependencies",
@@ -288,7 +288,7 @@
     {
       "name": "change-description-authoring",
       "description": "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what the merge model does to it.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "tags": [
         "topic:documentation",
         "topic:code-review",
@@ -313,7 +313,7 @@
     {
       "name": "test-authoring",
       "description": "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "tags": [
         "topic:testing",
         "activity:authoring",
@@ -360,6 +360,18 @@
       "source": "./agent-packages/problem-report-authoring"
     },
     {
+      "name": "telemetry-authoring",
+      "description": "Rules for instrumentation in libraries and services, and for the error text a person or an agent reads: which signal an event owes (a record, an instrument, a span, the caller's channel, or nothing), what a record carries, the rate it may be emitted at, and what a library may not decide for its host.",
+      "version": "1.1.0",
+      "tags": [
+        "topic:observability",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/telemetry-authoring"
+    },
+    {
       "name": "codex-review",
       "description": "Skill that runs a Codex CLI code review and applies the fixes, iterating until the review is clean.",
       "version": "1.0.0",
@@ -373,7 +385,7 @@
     {
       "name": "adversarial-code-review",
       "description": "Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.",
-      "version": "1.0.2",
+      "version": "1.0.5",
       "tags": [
         "topic:code-review",
         "activity:code-review",
@@ -419,7 +431,8 @@
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
         "ref": "fa3ff9793dd74a346190ea6d808f74ba39494ff3",
-        "sha": "fa3ff9793dd74a346190ea6d808f74ba39494ff3"
+        "sha": "fa3ff9793dd74a346190ea6d808f74ba39494ff3",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -437,7 +450,8 @@
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
         "ref": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
-        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5"
+        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -455,7 +469,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -473,13 +488,14 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
       "name": "dbaas-mounted-secret-migration",
       "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
-      "version": "1.1.0",
+      "version": "3.2.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -490,14 +506,15 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
-        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
+        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "tag_pattern": "v{version}"
       }
     },
     {
       "name": "migrate-core-operator-dbaas-declarations",
       "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
-      "version": "1.1.1",
+      "version": "3.2.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -508,8 +525,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67",
-        "sha": "9ff5f2205efde2b78c7337e6c83b189f4cf74f67"
+        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -528,7 +546,8 @@
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
         "ref": "b449d94bd1c7b5631a204df9628bc8138ebe5e01",
-        "sha": "b449d94bd1c7b5631a204df9628bc8138ebe5e01"
+        "sha": "b449d94bd1c7b5631a204df9628bc8138ebe5e01",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -547,7 +566,8 @@
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
         "ref": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
-        "sha": "7cec756af409f1fc2c9f377f1b86c10a088cf817"
+        "sha": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -564,7 +584,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
         "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -581,7 +602,8 @@
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
         "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "tag_pattern": "v{version}"
       }
     }
   ]

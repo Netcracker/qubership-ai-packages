@@ -209,6 +209,11 @@ case you are in, and prefer moving an important example into a harness over poli
 snippet as part of a wording pass, and when a snippet contradicts the code, report it as a bug rather than rewording
 around it.
 
+**A command the page tells the reader to run is a claim about a tool.** Name the script, build target, or CI job that
+runs that exact form, flags included, on the configuration the page describes. Where none does, run it there, in each
+tool version the page says it supports, or replace it with the form a job runs. That a flag exists does not settle its
+outcome: compare what its help text, reference, or source says it acts on with what the page set up.
+
 **Every name the page states must exist**, spelled as the code spells it: an identifier, a configuration key, a flag,
 an environment variable. Grep each one. A name that resolves to a private symbol is a second finding: the page is
 describing the implementation (§1).
@@ -351,6 +356,8 @@ Run this over a section before you commit it.
 - Findability: does every option, error, and task the branch introduced have a heading or a row (§3)?
 - Table: any paragraph in which the same nouns recur with different values (§3)?
 - Names and numbers: does every identifier, value, unit, and quoted error match the code (§6)?
+- Commands: does a script or CI job run each command the page gives, in that exact form, and if none does, was it run
+  (§6)?
 - Copies: is the new item in every place a sibling occupies, in that place's shape, and in no new place (§4)?
 - Links: does the feature page link the options it depends on, and the entry the error it triggers (§4)?
 - Headings: did a shipped heading change, and if so is the redirect in the same change (§5)?

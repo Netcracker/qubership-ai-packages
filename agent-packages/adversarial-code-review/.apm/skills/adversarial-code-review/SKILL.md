@@ -73,11 +73,20 @@ or refactoring mixed with separable feature work? Use change and file size only 
 changed lines is usually easy to review, 300 can remain coherent, and 1,000 deserves a split unless it is mostly
 deletion or mechanical output. Size alone is not a finding.
 
+Map every hunk to a sentence of the description or a commit message. A hunk no sentence claims is a `blocking` finding
+however small, such as a version bump carried over from another branch or a dependency moved in a file the change
+otherwise leaves alone. Ask for a sentence that claims it, with the run that checks it, or for the hunk to move to its
+own change.
+
 ### Correctness and data integrity
 
 Trace normal, boundary, invalid, retry, concurrency, and partial-failure paths. Check null and empty inputs, limit
 values, off-by-one behavior, races, state transitions, cleanup, idempotency, and data loss. Confirm that the
 implementation matches both the stated contract and what the tests actually assert.
+
+Where the change fixes a symptom, list the other paths that show the same symptom, which a search for the changed
+helper does not find: a twin build target, the other major version of a tool, the other operating system. A path the fix
+leaves out is a finding.
 
 ### Compatibility and evolution
 
@@ -89,6 +98,16 @@ Check backward and forward compatibility across old and new callers, stored data
   valid. New fields and parameters must be optional or have compatibility-preserving defaults.
 - **Dependencies:** Do not make new external services or runtime integrations mandatory. Keep them disabled by default
   and require explicit opt-in.
+- **Inherited state:** Ask which pre-existing state the change will meet: configuration files, keys or certificates,
+  persisted data or schemas, caches, lock files, and objects an earlier chart or `kubectl apply` created. Check that a
+  test or a run starts from that state, not only from a fresh install, or that the change documents the remedy and
+  shows it run on that state.
+- **Passed values:** Where an existing setting (a pass-through variable, a flag, an environment variable) now reaches a
+  consumer it did not reach before, list the names the new consumer reads that the old consumers also read, such as a
+  values key both charts define. For each, say what a value meant for the old consumers does to the new one; the
+  documented example does not settle it. A value that means something else there, or makes the new consumer ask for
+  something nothing builds or provides, is a `blocking` finding; ask for a setting of the new consumer's own or a run
+  with that value.
 - **Exceptions and evidence:** Evaluate technology replacements case by case. When exact compatibility is impractical,
   require an explicit migration path. Anchor findings in repository evidence; missing history is a context gap, not a
   defect.
@@ -106,6 +125,24 @@ parameterization and context-appropriate output encoding where relevant.
 
 Check timeouts, retries, recovery, failure isolation, resource cleanup, actionable logs and metrics, and safe operator
 controls.
+
+For each limit the change sets or exposes, find the other limits on the same work in the caller or the wrapper, in what
+the code starts, and in the environment; a limit on one operation inside that work, or on work that only overlaps it,
+does not count, and an enclosing limit that starts earlier does, with the time spent before this work starts taken from
+its budget. Raise each documented setting just past each other limit, not only at its default, and flag one that a limit
+fixed elsewhere caps, and an inner limit that does not fire first at the defaults. For a limit in a program outside the
+repository, ask for the line that sets it or a run that reaches it.
+
+Where the change replaces a mechanism (a build target, a wait, a client, a deployment step), take the fault the old one
+met most often, which its error handling or the CI history shows, and, where the new one waits in a loop, the fault on
+which one attempt waits longest. For each, say from both versions of the code how long each takes to fail and what each
+prints. On the second fault, count each attempt at its call's own timeout, the default its help text or source states
+where nothing sets one, and a call with no timeout as never returning. Count a deadline checked before each attempt as
+overrun by up to one attempt and one sleep. A replacement that fails later or prints less is a finding unless the change
+accepts the slower or quieter failure in writing, and is `blocking` where the new time to fail reaches a limit that
+encloses it, such as the CI job's timeout, or nothing bounds the wait. Ask for a run of that fault on the new mechanism,
+with its duration and output. For a later failure, also ask for a deadline that bounds the whole wait, last attempt
+included, at the old mechanism's time to fail; for a quieter one, the old output.
 
 ### Performance, capacity, and cost
 
@@ -126,7 +163,22 @@ already-large file are inspection signals, not automatic findings.
 Check that tests have descriptive names, cover behavior and regression paths, and would catch an incorrect
 implementation. Check that documentation covers compatibility promises, operational steps, and user-visible effects.
 Distinguish evidence supplied by CI, builds, manual checks, screenshots, benchmarks, and before/after comparisons from
-verification actually performed during this review. Treat CI status as supporting evidence, not the review result.
+verification actually performed during this review. Treat CI status as supporting evidence, not the review result. For
+every command the change tells someone to run in a page, a comment, a help text, or a recipe, find the script, build
+target, or CI job that runs that exact form, flags included; a form that differs by a flag, a tool, or a version does
+not count. Where none does, compare what the tool's help text, reference, or source says the command acts on with the
+configuration the change creates, in each version the change supports. Where that does not settle it, the missing run is
+itself the observed fact: report it and ask for a run of that form or for the form a job runs.
+
+A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
+build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
+matrix, a schema. Search for two existing members by name, or for the one where the set had one, and read every file
+that names both: a list there without the new member is a finding. Then search the prose for the set's old size, in
+digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a finding.
+
+For every remedy, troubleshooting row, or step the change writes, list the paths its symptom or cause names, such as two
+build targets, and check that its action names a step for each. A fix that answers a review comment is where this is
+missed: the comment names one path, and the fix covers that one.
 
 ### Structural defects
 

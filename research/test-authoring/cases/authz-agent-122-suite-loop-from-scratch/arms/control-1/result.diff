@@ -1,0 +1,307 @@
+diff --git a/.github/workflows/integration-tests.yaml b/.github/workflows/integration-tests.yaml
+index 47a6a70..ba34dba 100644
+--- a/.github/workflows/integration-tests.yaml
++++ b/.github/workflows/integration-tests.yaml
+@@ -3,7 +3,8 @@
+ #
+ # Everything the Build workflow (go-build.yaml) does not cover:
+ #   rego                 Rego policy tests with the OPA CLI
+-#   chart                helm lint plus the chart-render assertions
++#   chart                helm lint plus the chart-render assertions, and the
++#                        checks of the kind targets that need no cluster
+ #   integration-compile  go vet with -tags integration, so a broken integration
+ #                        test file fails here instead of after a cluster boot
+ #   kind-e2e             the Helm chart installed on a kind cluster and the
+@@ -86,6 +87,9 @@ jobs:
+       - name: Render assertions
+         run: bash test/scripts/test-chart-render.sh
+ 
++      - name: Kind target checks
++        run: bash test/scripts/test-kind-targets.sh
++
+   integration-compile:
+     name: Vet tagged suites
+     runs-on: ubuntu-latest
+diff --git a/test/scripts/test-kind-targets.sh b/test/scripts/test-kind-targets.sh
+new file mode 100755
+index 0000000..995d43e
+--- /dev/null
++++ b/test/scripts/test-kind-targets.sh
+@@ -0,0 +1,277 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Checks of the Makefile's kind targets that need no cluster.
++#
++# Each check runs the real target with fakes of kubectl, helm, and sleep first
++# on PATH. The kubectl fake is a 1.30 client, which has no `wait --for=create`,
++# facing a suite Job whose container starts at a given read of its log. The
++# sleep fake returns at once and records how long it was asked to wait, so the
++# three minutes the suite targets poll for take no time.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++
++require_cmd() {
++  if ! command -v "$1" >/dev/null 2>&1; then
++    echo "error: required command not found: $1" >&2
++    exit 1
++  fi
++}
++
++require_cmd make
++require_cmd timeout
++
++WORK="$(mktemp -d)"
++# A helm test the target failed to stop is still running; end it with the run.
++cleanup() {
++  local pid_file
++  for pid_file in "${WORK}"/case.*/helm.pid; do
++    [[ -f "${pid_file}" ]] && kill "$(cat "${pid_file}")" 2>/dev/null || true
++  done
++  rm -rf "${WORK}"
++}
++trap cleanup EXIT
++
++mkdir "${WORK}/bin"
++
++# FAKE_LOGS_READABLE_FROM is the read of the suite log, counted from 1, at
++# which the container has started; unset, it never starts.
++cat >"${WORK}/bin/kubectl" <<'EOF'
++#!/usr/bin/env bash
++echo "$*" >>"${FAKE_RECORDS}/kubectl.calls"
++args=" $* "
++case "${args}" in
++  *" wait "*)
++    echo 'error: unrecognized condition: "create"' >&2
++    exit 1
++    ;;
++  *" delete job "*)
++    ;;
++  *" get pods "*)
++    job="${args##*job-name=}"
++    job="${job%% *}"
++    echo "NAME              READY   STATUS              RESTARTS   AGE"
++    echo "${job}-7x2kq   0/1     ErrImageNeverPull   0          3m"
++    ;;
++  *" logs "*)
++    reads=$(( $(cat "${FAKE_RECORDS}/log-reads" 2>/dev/null || echo 0) + 1 ))
++    echo "${reads}" >"${FAKE_RECORDS}/log-reads"
++    job="${args##*job/}"
++    job="${job%% *}"
++    if [[ -z "${FAKE_LOGS_READABLE_FROM:-}" ]] || (( reads < FAKE_LOGS_READABLE_FROM )); then
++      echo "Error from server (BadRequest): container \"${job}\" in pod \"${job}-7x2kq\" is waiting to start: ContainerCreating" >&2
++      exit 1
++    fi
++    echo "--- PASS: TestSuite (1.00s)"
++    ;;
++  *)
++    echo "fake kubectl: unexpected call: $*" >&2
++    exit 1
++    ;;
++esac
++EOF
++
++# FAKE_HELM_TEST is what `helm test` does: passes, times-out at once, or
++# runs-on until something stops it, as it does while its Job's container has
++# not started. Every other command succeeds.
++cat >"${WORK}/bin/helm" <<'EOF'
++#!/usr/bin/env bash
++echo "$*" >>"${FAKE_RECORDS}/helm.calls"
++case " $* " in
++  *" test "*)
++    case "${FAKE_HELM_TEST:-}" in
++      passes) ;;
++      times-out)
++        echo "Error: timed out waiting for the condition" >&2
++        exit 1
++        ;;
++      runs-on)
++        echo "$$" >"${FAKE_RECORDS}/helm.pid"
++        exec /bin/sleep 300
++        ;;
++      *)
++        echo "fake helm: FAKE_HELM_TEST is '${FAKE_HELM_TEST:-}'" >&2
++        exit 1
++        ;;
++    esac
++    ;;
++esac
++EOF
++
++cat >"${WORK}/bin/sleep" <<'EOF'
++#!/usr/bin/env bash
++echo "$1" >>"${FAKE_RECORDS}/sleeps"
++EOF
++
++chmod +x "${WORK}/bin/kubectl" "${WORK}/bin/helm" "${WORK}/bin/sleep"
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++# Runs make with the given arguments and the fakes first on PATH, and sets
++# records, the directory the fakes wrote to; output; and status. A target that
++# never returns is ended after a minute with status 124.
++run_make() {
++  records="$(mktemp -d "${WORK}/case.XXXXXX")"
++  status=0
++  FAKE_RECORDS="${records}" PATH="${WORK}/bin:${PATH}" MAKEFLAGS='' \
++    timeout 60 make -C "${ROOT_DIR}" --no-print-directory "$@" >"${records}/output" 2>&1 || status=$?
++  output="$(cat "${records}/output")"
++}
++
++# The last lines of the last run's output, for a failure message.
++output_tail() {
++  tail -5 <<<"${output}" | sed 's/^/    /'
++}
++
++# Checks that the last run printed the line, whole. A whole line, because make
++# echoes each recipe, and the recipe of a suite target holds its messages.
++expect_line() {
++  local label="$1"
++  local line="$2"
++  if grep -qxF -- "${line}" <<<"${output}"; then
++    pass "${label}"
++  else
++    fail "${label}: make printed no line '${line}', status ${status}; it ended with:"$'\n'"$(output_tail)"
++  fi
++}
++
++expect_no_line() {
++  local label="$1"
++  local line="$2"
++  if grep -qxF -- "${line}" <<<"${output}"; then
++    fail "${label}: make printed '${line}'"
++  else
++    pass "${label}"
++  fi
++}
++
++expect_status() {
++  local label="$1"
++  local expected="$2"
++  if [[ "${status}" == "${expected}" ]]; then
++    pass "${label}"
++  else
++    fail "${label}: make exited with ${status}, expected ${expected}; it ended with:"$'\n'"$(output_tail)"
++  fi
++}
++
++# ── The suite targets wait for the suite container ───────────────────────────
++
++# The container may start on the first read of the log, or on the last of the
++# 90 the targets make, three minutes apart from the first at two seconds a
++# read. kubectl 1.30 rejects `wait --for=create`, and the log is streamed
++# whichever read finds the container started.
++for first_readable in 1 90; do
++  FAKE_LOGS_READABLE_FROM="${first_readable}" FAKE_HELM_TEST=passes run_make e2e-suite
++  expect_status "e2e-suite passes when the container starts at read ${first_readable}" 0
++  expect_line "e2e-suite streams the suite log when the container starts at read ${first_readable}" \
++    "--- PASS: TestSuite (1.00s)"
++done
++
++# A container that starts at read 91 is one that has not started in three
++# minutes, as on ErrImageNeverPull. The target prints the Pod and stops helm
++# test, which would otherwise run out E2E_SUITE_TIMEOUT, 15m by default: a
++# target that left it running would be ended by run_make's minute, with status
++# 124. The three minutes the message names are the sleeps between the reads.
++FAKE_LOGS_READABLE_FROM=91 FAKE_HELM_TEST=runs-on run_make e2e-suite
++expect_status "e2e-suite fails, and does not wait for helm test, when the container has not started in 3 minutes" 2
++expect_line "e2e-suite names the Job whose container did not start" \
++  "The runtime-suite container did not start within 3 minutes:"
++expect_line "e2e-suite prints the Pod of a container that did not start" \
++  "runtime-suite-7x2kq   0/1     ErrImageNeverPull   0          3m"
++expect_no_line "e2e-suite streams no log from a container that did not start" \
++  "--- PASS: TestSuite (1.00s)"
++polled="$(awk '{s += $1} END {print s + 0}' "${records}/sleeps" 2>/dev/null || echo 0)"
++helm_test="$(grep -oE -- ' test authz-test-stand --timeout [^ ]+' "${records}/helm.calls" || true)"
++if [[ "${polled}" == 180 && "${helm_test}" == " test authz-test-stand --timeout 15m" ]]; then
++  pass "e2e-suite gives up after 180 s of polling, inside helm test's default 15m"
++else
++  fail "e2e-suite polled for ${polled} s against helm${helm_test:-' test with no --timeout'}, expected 180 s against --timeout 15m"
++fi
++helm_pid="$(cat "${records}/helm.pid" 2>/dev/null || true)"
++if [[ -n "${helm_pid}" ]] && ! kill -0 "${helm_pid}" 2>/dev/null; then
++  pass "e2e-suite leaves no helm test running after it gives up"
++else
++  fail "e2e-suite left helm test running as pid '${helm_pid}'"
++fi
++
++# A helm test timeout shorter than the three minutes runs out first. The
++# target fails with helm's own error, whatever it prints after.
++FAKE_HELM_TEST=times-out run_make e2e-suite E2E_SUITE_TIMEOUT=2m
++expect_status "e2e-suite fails when E2E_SUITE_TIMEOUT runs out before the container starts" 2
++expect_line "e2e-suite shows helm's error when E2E_SUITE_TIMEOUT runs out before the container starts" \
++  "Error: timed out waiting for the condition"
++
++# parity-suite runs the same wait on its own Job, in its own namespace.
++FAKE_LOGS_READABLE_FROM=91 FAKE_HELM_TEST=runs-on run_make parity-suite
++expect_status "parity-suite fails, and does not wait for helm test, when the container has not started in 3 minutes" 2
++expect_line "parity-suite names the Job whose container did not start" \
++  "The parity-suite container did not start within 3 minutes:"
++if grep -qxF -- "--context kind-authz-e2e -n authz-parity get pods -l job-name=parity-suite -o wide" "${records}/kubectl.calls"; then
++  pass "parity-suite lists the Pods of the parity Job in the parity namespace"
++else
++  fail "parity-suite listed Pods with: $(grep -F ' get pods ' "${records}/kubectl.calls" || echo 'no get pods call')"
++fi
++
++# ── Extra install arguments ──────────────────────────────────────────────────
++
++# TEST_STAND_HELM_ARGS goes to the test-stand install and nowhere else, and
++# E2E_HELM_ARGS to the installs of the agent and authz-policy-admin charts and
++# nowhere else: a TAG meant for the product images must not send the test
++# stand after images of that tag. test-stand-files builds with docker and is
++# taken as done.
++run_make -o test-stand-files e2e-harness e2e-install parity-harness parity-install \
++  E2E_HELM_ARGS='--set TAG=product' TEST_STAND_HELM_ARGS='--set TAG=stand'
++# One line per install: the namespace, the release, and each TAG it was given.
++installs="$(awk '
++  / upgrade --install / {
++    line = ""
++    for (i = 1; i <= NF; i++) {
++      if ($i == "-n") line = $(i + 1)
++      if ($i == "--install") line = line " " $(i + 1)
++      if ($i ~ /^TAG=/) line = line " " $i
++    }
++    print line
++  }' "${records}/helm.calls" 2>/dev/null || true)"
++expected_installs="authz-e2e authz-test-stand TAG=stand
++authz-e2e authz-policy-admin TAG=product
++authz-e2e authz-agent TAG=product
++authz-parity authz-test-stand TAG=stand
++authz-parity authz-policy-admin TAG=product
++authz-parity authz-agent TAG=product"
++if [[ "${status}" == 0 && "${installs}" == "${expected_installs}" ]]; then
++  pass "each install takes its own extra arguments: TEST_STAND_HELM_ARGS the test stand, E2E_HELM_ARGS the charts"
++else
++  fail "the installs took these TAGs, make status ${status}:"$'\n'"$(diff <(echo "${expected_installs}") <(echo "${installs}") || true)"
++fi
++
++echo
++if (( failures > 0 )); then
++  echo "kind target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "kind target checks: all passed"

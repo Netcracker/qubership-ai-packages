@@ -83,5 +83,7 @@ skill, which lives in the APM package
 duplicated here; `phase4_merge_model.md` extends section 4 of the synthesis and carries its own sources. The prose of
 the synthesis runs to about 4,700 words, plus tables.
 
-The regression cases under `cases/` were added on 2026-10-20 with the rule that a break leads the pull request
-description: `pgjdbc-4367-breaks` tests the rule, and `pgjdbc-4392-no-break` is its negative control.
+The regression cases under `cases/` started on 2026-10-20 with the rule that a break leads the pull request
+description (`pgjdbc-4367-breaks` and its negative control `pgjdbc-4392-no-break`), and grew the same day to cover the
+merge model, verification, headings, length, links, the outcome slot, audit findings, hunk translation, open questions,
+and the changelog entry. [`cases/README.md`](cases/README.md) lists them and says how to run and grade them.
