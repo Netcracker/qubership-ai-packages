@@ -506,8 +506,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "ref": "af4a16a1289417e8abecaab4169894ee8966ad2e",
+        "sha": "af4a16a1289417e8abecaab4169894ee8966ad2e",
         "tag_pattern": "v{version}"
       }
     },
@@ -525,8 +525,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "ref": "af4a16a1289417e8abecaab4169894ee8966ad2e",
+        "sha": "af4a16a1289417e8abecaab4169894ee8966ad2e",
         "tag_pattern": "v{version}"
       }
     },
