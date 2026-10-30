@@ -430,8 +430,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "fa3ff9793dd74a346190ea6d808f74ba39494ff3",
-        "sha": "fa3ff9793dd74a346190ea6d808f74ba39494ff3",
+        "ref": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
+        "sha": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
         "tag_pattern": "v{version}"
       }
     },
@@ -506,8 +506,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
         "tag_pattern": "v{version}"
       }
     },
@@ -525,8 +525,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568",
+        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
         "tag_pattern": "v{version}"
       }
     },
@@ -545,8 +545,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "b449d94bd1c7b5631a204df9628bc8138ebe5e01",
-        "sha": "b449d94bd1c7b5631a204df9628bc8138ebe5e01",
+        "ref": "665288138e45c18b5ae16af55605bfb0e70edd77",
+        "sha": "665288138e45c18b5ae16af55605bfb0e70edd77",
         "tag_pattern": "v{version}"
       }
     },
@@ -565,8 +565,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
-        "sha": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
+        "ref": "f0ffff457170a0a2342fa392a87e6a95f9c2e97e",
+        "sha": "f0ffff457170a0a2342fa392a87e6a95f9c2e97e",
         "tag_pattern": "v{version}"
       }
     },
@@ -583,15 +583,15 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
-        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "ref": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "sha": "466c5b9a1e0971161230fb52e73bb2460995c523",
         "tag_pattern": "v{version}"
       }
     },
     {
       "name": "ai-agent-telemetry-configure",
       "description": "Agent-guided setup, testing, repair, and delivery verification.",
-      "version": "3.4.0",
+      "version": "3.5.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -601,8 +601,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
-        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6",
+        "ref": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "sha": "466c5b9a1e0971161230fb52e73bb2460995c523",
         "tag_pattern": "v{version}"
       }
     }

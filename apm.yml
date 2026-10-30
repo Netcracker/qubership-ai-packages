@@ -235,7 +235,7 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: fa3ff9793dd74a346190ea6d808f74ba39494ff3  # main
+      ref: f74bea00b3ef950425d2f4a0e69d2f5209c05f9b  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
@@ -259,35 +259,35 @@ marketplace:
     - name: dbaas-mounted-secret-migration
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/dbaas-mounted-secret-migration
-      ref: 62569d71f9e8093b66002889e9aa2dc54aa14568  # main
+      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: migrate-core-operator-dbaas-declarations
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations
-      ref: 62569d71f9e8093b66002889e9aa2dc54aa14568  # main
+      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: b449d94bd1c7b5631a204df9628bc8138ebe5e01  # main
+      ref: 665288138e45c18b5ae16af55605bfb0e70edd77  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: 7cec756af409f1fc2c9f377f1b86c10a088cf817  # main
+      ref: f0ffff457170a0a2342fa392a87e6a95f9c2e97e  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry
-      ref: c7de411139332dab92b9d472e8f484aba92f57f6  # v1.3.1
+      ref: 466c5b9a1e0971161230fb52e73bb2460995c523  # v1.4.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
 
     - name: ai-agent-telemetry-configure
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry-configure
-      ref: c7de411139332dab92b9d472e8f484aba92f57f6  # v1.3.1
+      ref: 466c5b9a1e0971161230fb52e73bb2460995c523  # v1.4.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
