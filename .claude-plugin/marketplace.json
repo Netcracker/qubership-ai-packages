@@ -495,7 +495,7 @@
     {
       "name": "dbaas-mounted-secret-migration",
       "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -506,15 +506,15 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "af4a16a1289417e8abecaab4169894ee8966ad2e",
-        "sha": "af4a16a1289417e8abecaab4169894ee8966ad2e",
+        "ref": "2a26d8dfe9af873cc9ddb373d179a1aa761bf4d4",
+        "sha": "2a26d8dfe9af873cc9ddb373d179a1aa761bf4d4",
         "tag_pattern": "v{version}"
       }
     },
     {
       "name": "migrate-core-operator-dbaas-declarations",
       "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -525,8 +525,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "af4a16a1289417e8abecaab4169894ee8966ad2e",
-        "sha": "af4a16a1289417e8abecaab4169894ee8966ad2e",
+        "ref": "2a26d8dfe9af873cc9ddb373d179a1aa761bf4d4",
+        "sha": "2a26d8dfe9af873cc9ddb373d179a1aa761bf4d4",
         "tag_pattern": "v{version}"
       }
     },
