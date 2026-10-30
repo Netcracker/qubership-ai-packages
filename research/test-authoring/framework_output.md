@@ -390,3 +390,26 @@ java.lang.AssertionError: host
 Expected: "b"
      but: was "a"
 ```
+
+## `go test` on a package that does not build, Go 1.27.3 (measured 2026-10-27)
+
+`go test ./...` on a module whose source refers to an undefined name, then on one whose test file imports a package no
+module provides, each followed by `echo "exit=$?"`. Tabs are shown as spaces:
+
+```text
+# example.com/m [example.com/m.test]
+./m.go:3:23: undefined: x
+FAIL    example.com/m [build failed]
+FAIL
+exit=1
+
+# example.com/m
+m_test.go:5:2: no required module provides package example.com/m/missing; to add it:
+    go get example.com/m/missing
+FAIL    example.com/m [setup failed]
+FAIL
+exit=1
+```
+
+Both exit 1, the code a failing test gets, so a mutation tool that reads only the exit code counts a mutant that does
+not compile as killed.
