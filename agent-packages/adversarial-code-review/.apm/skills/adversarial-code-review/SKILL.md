@@ -150,6 +150,18 @@ Look for N+1 access, unbounded loops or fetches, missing pagination, synchronous
 hot-path I/O and allocation, UI rerenders, fan-out, amplification, retention growth, contention, and cost regressions at
 realistic scale.
 
+Check for quadratic or worse aggregate work across a batch or growing session, even when each handler has only one
+loop. Name the input sizes and count how often each growing collection is scanned, copied, decoded, or shifted:
+repeated history reads and `find`/`findIndex`/`includes` plus array removal can turn N events into O(N²) work. Follow
+helper and API calls that hide those costs. Test out-of-order completions and repeated keys as well as sequential
+calls; establish whether concurrent entries can accumulate under one key.
+
+For a suspected growth defect, derive the total operation count or compare deterministic counts at N and 2N;
+functional tests and correct output do not establish scaling. Tie the cost to a reachable workload and its effect on
+an awaited path or background backlog. Check existing limits and amortization before filing: nested loops alone are
+not a defect. Ask for the smallest change that removes repeated growing work while preserving ordering, duplicate-key
+handling, cleanup, and recovery behavior.
+
 ### Architecture and maintainability
 
 Check ownership, invariants, dependency direction, coupling, duplicated policy, extension points, explicit type
