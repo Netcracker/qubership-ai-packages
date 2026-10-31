@@ -1,0 +1,29 @@
+on the fix (build.sh exited with 0):
+  184 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  184 tests ran, 25 failed
+    test_resource.test_analyze_resource_detailed_skips_a_field_the_header_lacks[exact]
+    test_resource.test_analyze_resource_detailed_skips_a_field_the_header_lacks[partial]
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_headers_and_cells
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_exact_extra_label_still_reports_a_longer_row
+    test_validate_schema.test_resource_validate_fields_match_exact_extra_label_reports_its_missing_cell
+    test_validate_schema.test_resource_validate_fields_match_exact_missing_label_still_reports_a_shorter_row
+    test_validate_schema.test_resource_validate_fields_match_exact_missing_label_reports_its_cell_as_extra
+    test_validate_schema.test_resource_validate_fields_match_unique_skips_a_field_the_header_lacks[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_unique_skips_a_field_the_header_lacks[superset-expected1]
+    test_validate_schema.test_resource_validate_fields_match_exact_primary_key_needs_its_labels[on a field the header lacks]
+    test_validate_schema.test_resource_validate_fields_match_exact_primary_key_needs_its_labels[on a field the header carries]
+    test_validate_schema.test_resource_validate_fields_match_foreign_key_skips_a_field_the_header_lacks[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_foreign_key_skips_a_field_the_header_lacks[superset-expected1]
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
+    test_header.test_get_expected_fields[exact: extra labels repeating a field name get a field each]
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
+    test_header.test_get_expected_fields[equal: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[subset: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[superset: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields[partial: without a header, schema fields are returned as-is]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]

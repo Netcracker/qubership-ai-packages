@@ -1,0 +1,91 @@
+diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+index 958be01..604ad2c 100644
+--- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
++++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+@@ -5486,6 +5486,86 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+         .ok();
+   }
+ 
++  /** Returns a fixture that validates {@code sql} with identifier expansion,
++   * keeps every identifier in the case it is written, and matches names
++   * case-sensitively or case-insensitively. */
++  private SqlValidatorFixture sqlWithUnchangedCasing(String sql,
++      boolean caseSensitive) {
++    return sql(sql)
++        .withCaseSensitive(caseSensitive)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .withValidatorIdentifierExpansion(true);
++  }
++
++  @Test void testCaseInsensitiveJoinUsingResolvesCommonColumnWrittenAsInTable() {
++    sqlWithUnchangedCasing("select DEPTNO from EMP join DEPT using (DEPTNO)", false)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. The query used to fail with "Column 'deptno' is
++   * ambiguous". */
++  @Test void testCaseInsensitiveJoinUsingResolvesSelectItemInOtherCaseThanUsing() {
++    sqlWithUnchangedCasing("select deptno from EMP join DEPT using (DEPTNO)", false)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  @Test void testCaseSensitiveJoinUsingRejectsSelectItemInOtherCaseThanUsing() {
++    sqlWithUnchangedCasing("select ^deptno^ from EMP join DEPT using (DEPTNO)", true)
++        .fails("Column 'deptno' not found in any table; "
++            + "did you mean 'DEPTNO', 'DEPTNO'\\?");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. The query used to fail with "Column 'DEPTNO' is
++   * ambiguous". */
++  @Test void testCaseInsensitiveJoinUsingResolvesUsingColumnInOtherCaseThanTable() {
++    sqlWithUnchangedCasing("select DEPTNO from EMP join DEPT using (deptno)", false)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. The select item and the USING column match each other
++   * exactly but not the table's column, and validation used to fail with
++   * AssertionError. */
++  @Test void testCaseInsensitiveJoinUsingResolvesCommonColumnInOtherCaseThanTable() {
++    sqlWithUnchangedCasing("select deptno from EMP join DEPT using (deptno)", false)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. The common column of a NATURAL JOIN used to fail with
++   * "Column 'DEPTNO' is ambiguous" under identifier expansion, whatever the
++   * case sensitivity. */
++  @Test void testNaturalJoinResolvesCommonColumn() {
++    sqlWithUnchangedCasing("select DEPTNO from EMP natural join DEPT", true)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testCaseInsensitiveNaturalJoinResolvesCommonColumnInOtherCaseThanTable() {
++    sqlWithUnchangedCasing("select deptno from EMP natural join DEPT", false)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  @Test void testCaseSensitiveNaturalJoinRejectsCommonColumnInOtherCaseThanTable() {
++    sqlWithUnchangedCasing("select ^deptno^ from EMP natural join DEPT", true)
++        .fails("Column 'deptno' not found in any table; "
++            + "did you mean 'DEPTNO', 'DEPTNO'\\?");
++  }
++
+   @Test void testCrossJoinOnFails() {
+     sql("select * from emp cross join dept\n"
+         + " ^on^ emp.deptno = dept.deptno")

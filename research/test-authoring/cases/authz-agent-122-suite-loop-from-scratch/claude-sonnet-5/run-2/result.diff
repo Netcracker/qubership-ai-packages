@@ -1,0 +1,423 @@
+diff --git a/test/scripts/test-e2e-makefile.sh b/test/scripts/test-e2e-makefile.sh
+new file mode 100755
+index 0000000..8c82651
+--- /dev/null
++++ b/test/scripts/test-e2e-makefile.sh
+@@ -0,0 +1,248 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Assertions for the parts of the Makefile's e2e/parity targets that do not
++# need a real cluster: which variable reaches which `helm upgrade --install`,
++# and the run-suite shell macro that waits for the suite Job's log and now
++# gives up after three minutes instead of helm test's own timeout. kubectl and
++# helm are replaced with fakes on PATH, so this runs with no kind cluster, no
++# Docker, and no real kubectl or helm server-side calls.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++cd "${ROOT_DIR}"
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++WORKDIR="$(mktemp -d)"
++trap 'rm -rf "${WORKDIR}"' EXIT
++
++# ── Which variable reaches which install ─────────────────────────────────
++#
++# E2E_HELM_ARGS used to also reach the test-stand install, which reads TAG and
++# IMAGE_PULL_POLICY for its own images: an E2E_HELM_ARGS meant for the product
++# charts sent the stand after an image e2e-images does not build.
++# TEST_STAND_HELM_ARGS is the test stand's own variable, and E2E_HELM_ARGS now
++# reaches only the agent and authz-policy-admin installs. `make -n` prints the
++# recipe with every variable substituted and runs nothing, so this needs
++# neither a cluster nor Docker.
++check_routing() {
++  local target="$1" want_marker="$2" refuse_marker="$3"
++  local recipe
++  recipe="$(make -n "${target}" \
++    TEST_STAND_HELM_ARGS='--set FAKE_TEST_STAND_MARKER=1' \
++    E2E_HELM_ARGS='--set FAKE_PRODUCT_CHART_MARKER=1' 2>&1)"
++  if [[ "${recipe}" == *"${want_marker}"* && "${recipe}" != *"${refuse_marker}"* ]]; then
++    pass "${target} takes its helm args from ${want_marker%%=*}, not from the other variable"
++  else
++    fail "${target}: expected '${want_marker}' and not '${refuse_marker}' in: ${recipe}"
++  fi
++}
++
++check_routing e2e-harness "FAKE_TEST_STAND_MARKER=1" "FAKE_PRODUCT_CHART_MARKER=1"
++check_routing parity-harness "FAKE_TEST_STAND_MARKER=1" "FAKE_PRODUCT_CHART_MARKER=1"
++check_routing e2e-install "FAKE_PRODUCT_CHART_MARKER=1" "FAKE_TEST_STAND_MARKER=1"
++check_routing parity-install "FAKE_PRODUCT_CHART_MARKER=1" "FAKE_TEST_STAND_MARKER=1"
++
++# ── run-suite: waiting for the Job and giving up on one that never starts ─
++#
++# Fakes for kubectl and helm, put ahead of the real ones on PATH. kubectl
++# counts its `logs` polls in ATTEMPT_FILE and answers by FAKE_KUBECTL_MODE;
++# helm answers by FAKE_HELM_MODE and records how it ended in HELM_MARKER_FILE,
++# "killed" by the TERM trap or "ran-to-completion" if nothing stopped it.
++FAKE_BIN="${WORKDIR}/bin"
++mkdir -p "${FAKE_BIN}"
++
++cat >"${FAKE_BIN}/kubectl" <<'EOS'
++#!/usr/bin/env bash
++set -euo pipefail
++has() {
++  local needle="$1"
++  shift
++  for a in "$@"; do
++    [[ "${a}" == "${needle}" ]] && return 0
++  done
++  return 1
++}
++if has wait "$@"; then
++  # kubectl before 1.31 rejects `wait --for=create`; a run-suite that still
++  # depended on it would call this and the suite log would never stream.
++  echo "fake kubectl: refuses 'kubectl wait' (pre-1.31 kubectl has no --for=create)" >&2
++  exit 1
++fi
++if has delete "$@"; then
++  exit 0
++fi
++if has logs "$@"; then
++  if has -f "$@"; then
++    echo "FAKE-SUITE-LOG: decision tests passed"
++    exit 0
++  fi
++  attempt=0
++  [[ -f "${ATTEMPT_FILE}" ]] && attempt="$(cat "${ATTEMPT_FILE}")"
++  attempt=$((attempt + 1))
++  echo "${attempt}" >"${ATTEMPT_FILE}"
++  case "${FAKE_KUBECTL_MODE:-never-starts}" in
++    starts-on-third)
++      if [[ "${attempt}" -ge 3 ]]; then
++        exit 0
++      fi
++      exit 1
++      ;;
++    *)
++      exit 1
++      ;;
++  esac
++fi
++if has get "$@" && has pods "$@"; then
++  echo "NAME                   READY   STATUS              RESTARTS   AGE"
++  echo "runtime-suite-abc123   0/1     ErrImageNeverPull   0          3m"
++  exit 0
++fi
++echo "fake kubectl: unhandled invocation: $*" >&2
++exit 1
++EOS
++chmod +x "${FAKE_BIN}/kubectl"
++
++cat >"${FAKE_BIN}/helm" <<'EOS'
++#!/usr/bin/env bash
++set -euo pipefail
++marker="${HELM_MARKER_FILE}"
++trap 'echo killed >"${marker}"; exit 143' TERM
++case "${FAKE_HELM_MODE:-quick-success}" in
++  quick-success)
++    sleep 2
++    ;;
++  never-returns)
++    # One-second steps, not one long sleep: the TERM trap above should not
++    # need more than a second to take effect once run-suite gives up.
++    for _ in $(seq 1 "${FAKE_HELM_NEVER_RETURNS_SECONDS:-600}"); do
++      sleep 1
++    done
++    ;;
++esac
++echo ran-to-completion >"${marker}"
++EOS
++chmod +x "${FAKE_BIN}/helm"
++
++run_e2e_suite() {
++  PATH="${FAKE_BIN}:${PATH}" make e2e-suite "$@" 2>&1
++}
++
++# A container that starts on the third poll: the loop has to keep polling
++# `kubectl logs` itself, with no `kubectl wait --for=create` in between, and
++# then stream the log and exit 0.
++attempt_file_a="${WORKDIR}/attempts-a"
++helm_marker_a="${WORKDIR}/helm-marker-a"
++set +e
++output_a="$(ATTEMPT_FILE="${attempt_file_a}" FAKE_KUBECTL_MODE=starts-on-third \
++  HELM_MARKER_FILE="${helm_marker_a}" FAKE_HELM_MODE=quick-success \
++  run_e2e_suite E2E_SUITE_TIMEOUT=20m)"
++status_a=$?
++set -e
++
++if [[ "${status_a}" -eq 0 ]]; then
++  pass "e2e-suite exits 0 once the Job's container starts"
++else
++  fail "e2e-suite exited ${status_a} for a container that starts on the third poll: ${output_a}"
++fi
++if [[ "${output_a}" == *"FAKE-SUITE-LOG: decision tests passed"* ]]; then
++  pass "e2e-suite streams the suite log once the container has started"
++else
++  fail "e2e-suite did not stream the suite log: ${output_a}"
++fi
++if [[ "${output_a}" != *"fake kubectl: refuses 'kubectl wait'"* ]]; then
++  pass "e2e-suite waits for the Job without kubectl wait --for=create"
++else
++  fail "e2e-suite still calls kubectl wait --for=create, which pre-1.31 kubectl rejects"
++fi
++if [[ "$(cat "${attempt_file_a}" 2>/dev/null || echo 0)" == "3" ]]; then
++  pass "the poll loop stops at the attempt the container starts on, not before or after"
++else
++  fail "expected 3 logs polls, counted $(cat "${attempt_file_a}" 2>/dev/null || echo 0)"
++fi
++if [[ "$(cat "${helm_marker_a}" 2>/dev/null || echo '')" == "ran-to-completion" ]]; then
++  pass "helm test is left to finish on its own once the log has streamed"
++else
++  fail "helm test did not finish on its own: $(cat "${helm_marker_a}" 2>/dev/null || echo '<no marker>')"
++fi
++
++# A container that never starts, for example on ErrImageNeverPull: run-suite
++# has to give up by itself after about three minutes, print the Pod, and kill
++# the backgrounded helm test, rather than wait out helm's own --timeout
++# (set here to 20m, far longer than the 3-minute budget this proves).
++attempt_file_b="${WORKDIR}/attempts-b"
++helm_marker_b="${WORKDIR}/helm-marker-b"
++started_b="$(date +%s)"
++set +e
++output_b="$(ATTEMPT_FILE="${attempt_file_b}" FAKE_KUBECTL_MODE=never-starts \
++  HELM_MARKER_FILE="${helm_marker_b}" FAKE_HELM_MODE=never-returns \
++  run_e2e_suite E2E_SUITE_TIMEOUT=20m)"
++status_b=$?
++set -e
++elapsed_b=$(($(date +%s) - started_b))
++
++if [[ "${status_b}" -ne 0 ]]; then
++  pass "e2e-suite fails rather than reporting success for a container that never starts"
++else
++  fail "e2e-suite exited 0 for a container that never starts: ${output_b}"
++fi
++if [[ "${output_b}" == *"The runtime-suite container did not start within 3 minutes:"* ]]; then
++  pass "e2e-suite reports which Job's container did not start and how long it waited"
++else
++  fail "e2e-suite did not report the 3-minute give-up: ${output_b}"
++fi
++if [[ "${output_b}" == *"ErrImageNeverPull"* ]]; then
++  pass "e2e-suite prints the Pod it gave up on"
++else
++  fail "e2e-suite did not print the Pod listing: ${output_b}"
++fi
++if [[ "$(cat "${attempt_file_b}" 2>/dev/null || echo 0)" == "90" ]]; then
++  pass "the poll loop uses its full three-minute budget (90 polls) before giving up"
++else
++  fail "expected 90 logs polls before giving up, counted $(cat "${attempt_file_b}" 2>/dev/null || echo 0)"
++fi
++# 90 polls at 2s apart is 180s; CI and a loaded machine both earn some slack,
++# but this has to stay far short of the 20-minute helm --timeout above, which
++# is what the old mechanism (wait --for=create, then an unconditional
++# `logs -f` and `wait $helm_pid`) would have run into instead.
++if [[ "${elapsed_b}" -ge 170 && "${elapsed_b}" -le 420 ]]; then
++  pass "e2e-suite gives up in about 3 minutes (${elapsed_b}s), not helm's 20-minute --timeout"
++else
++  fail "e2e-suite took ${elapsed_b}s to give up, expected roughly 170-420s"
++fi
++if [[ "$(cat "${helm_marker_b}" 2>/dev/null || echo '')" == "killed" ]]; then
++  pass "the backgrounded helm test is killed once run-suite gives up"
++else
++  fail "helm test was not killed: $(cat "${helm_marker_b}" 2>/dev/null || echo '<no marker>')"
++fi
++
++echo
++if ((failures > 0)); then
++  echo "e2e Makefile checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "e2e Makefile checks: all passed"
+diff --git a/test/scripts/test-parity-users-merge.sh b/test/scripts/test-parity-users-merge.sh
+new file mode 100755
+index 0000000..f95f0cc
+--- /dev/null
++++ b/test/scripts/test-parity-users-merge.sh
+@@ -0,0 +1,163 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Assertions for the find|sort|xargs|jq pipeline of the chart-files stage in
++# build/authz-agent-transfer/Dockerfile, which merges the user files of
++# test/parity/suite/testdata/realm/ into the parity realm. The pipeline used
++# to pass $(find users -name '*.json') unquoted as jq's file arguments: find's
++# order is whatever the filesystem happens to return, so the merged users, and
++# the realm checksum a chart-files rebuild computed from them, could change
++# between builds with no change to any file, and a file name with a space
++# split into two bad arguments. It now pipes the files through
++# `sort -z | xargs -0`, NUL-separated, which this script holds fixed and
++# checks by running the exact pipeline text, read out of the Dockerfile so it
++# cannot drift from what the image actually runs.
++#
++# There is no Docker in this environment, so the pipeline runs directly under
++# a fake $HOME holding profile.jq as the ~/.jq jq loads on every invocation
++# the same way /root/.jq does in the image, against a users/ directory this
++# script controls.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++DOCKERFILE="${ROOT_DIR}/build/authz-agent-transfer/Dockerfile"
++PROFILE_JQ="${ROOT_DIR}/build/authz-agent-transfer/profile.jq"
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++merge_snippet="$(sed -n "/^ && find users -name '\\*\\.json' -print0/,/^      parity\\/parity-realm\\.json > /p" "${DOCKERFILE}")"
++if [[ -z "${merge_snippet}" ]]; then
++  fail "could not find the find|sort|xargs|jq merge pipeline in ${DOCKERFILE}; has it moved or been reworded?"
++  echo
++  echo "parity users merge checks: ${failures} failure(s)"
++  exit 1
++fi
++# Drop the leading "&&" continuation and the trailing line-continuation
++# backslash (command substitution already strips the newline that used to
++# follow it, so a bare "\" would otherwise reach jq as a stray file argument)
++# so the extracted text parses on its own.
++merge_snippet="$(sed -E '1s/^ *&& *//; $s/[[:space:]]*\\$//' <<<"${merge_snippet}")"
++
++WORKDIR="$(mktemp -d)"
++trap 'rm -rf "${WORKDIR}"' EXIT
++
++# Runs the extracted pipeline against a sandbox users/ directory and prints
++# the merged realm. $1 names the sandbox subdirectory (kept so each case's
++# files are inspectable on failure); the caller has already populated
++# "${WORKDIR}/$1/users/".
++run_merge() {
++  local case_dir="${WORKDIR}/$1"
++  local out_file="${case_dir}/parity-realm.json"
++  local snippet="${merge_snippet//\/out\/realms\/parity\/parity-realm.json/${out_file}}"
++  mkdir -p "${case_dir}/parity"
++  printf '{"users": []}\n' >"${case_dir}/parity/parity-realm.json"
++  cp "${PROFILE_JQ}" "${case_dir}/.jq"
++  if ! (cd "${case_dir}" && HOME="${case_dir}" bash -c "${snippet}") >/dev/null 2>"${case_dir}/stderr"; then
++    echo "pipeline failed for case $1: $(cat "${case_dir}/stderr")" >&2
++    echo '{}'
++    return
++  fi
++  cat "${out_file}"
++}
++
++# ── A file name with a space ─────────────────────────────────────────────
++#
++# The old `$(find ...)` word-split "a space.json" into "a" and "space.json",
++# which jq then refused to open; both users were still meant to be merged.
++space_case="space-in-name"
++mkdir -p "${WORKDIR}/${space_case}/users"
++printf '[{"username":"parity-zed-user"}]\n' >"${WORKDIR}/${space_case}/users/b.json"
++printf '[{"username":"parity-alpha-user","firstName":"Custom"}]\n' >"${WORKDIR}/${space_case}/users/a space.json"
++
++merged="$(run_merge "${space_case}")"
++got_order="$(jq -r '[.users[].username] | join(",")' <<<"${merged}")"
++if [[ "${got_order}" == "parity-alpha-user,parity-zed-user" ]]; then
++  pass "a user file whose name has a space is merged, in filename order"
++else
++  fail "expected users parity-alpha-user,parity-zed-user (in that order), got ${got_order}: ${merged}"
++fi
++if [[ "$(jq -r '.users[0].firstName' <<<"${merged}")" == "Custom" ]]; then
++  pass "a first name the file already sets survives the merge"
++else
++  fail "expected the fixture's firstName 'Custom' to survive, got: ${merged}"
++fi
++if [[ "$(jq -r '.users[1].lastName' <<<"${merged}")" == "ZedUser" ]]; then
++  pass "a first or last name the file omits is filled in from the username"
++else
++  fail "expected lastName 'ZedUser' derived from parity-zed-user, got: ${merged}"
++fi
++
++# ── Merge order does not depend on the order the files were created in ───
++#
++# find has no defined order of its own; only `sort -z` makes it filename
++# order. The files below are created out of alphabetical order, so a merge
++# that read find's raw order would be as likely to get this wrong as right.
++order_case="creation-order"
++mkdir -p "${WORKDIR}/${order_case}/users"
++for letter in d b e a c; do
++  printf '[{"username":"parity-%s-user"}]\n' "${letter}" >"${WORKDIR}/${order_case}/users/${letter}.json"
++done
++merged_order="$(jq -r '[.users[].username] | join(",")' <<<"$(run_merge "${order_case}")")"
++if [[ "${merged_order}" == "parity-a-user,parity-b-user,parity-c-user,parity-d-user,parity-e-user" ]]; then
++  pass "users merge in filename order regardless of the order the files were created in"
++else
++  fail "expected the merge in filename order a,b,c,d,e; got ${merged_order}"
++fi
++
++# ── An empty users directory merges no one, rather than failing ──────────
++#
++# test/parity/suite/testdata/realm/ currently holds no *.json file (only its
++# README), so `xargs -r` has to see this case: cat is not invoked with zero
++# files, and jq reads an empty $users list rather than erroring on malformed
++# input.
++empty_case="no-user-files"
++mkdir -p "${WORKDIR}/${empty_case}/users"
++merged_empty="$(run_merge "${empty_case}")"
++if [[ "$(jq -c '.users' <<<"${merged_empty}")" == "[]" ]]; then
++  pass "an empty users directory (the current state of testdata/realm/) merges in no users and does not fail"
++else
++  fail "expected no users merged from an empty directory, got: ${merged_empty}"
++fi
++
++# ── The merge is deterministic ────────────────────────────────────────────
++#
++# The same inputs, read twice, must give byte-identical output: this is what
++# keeps the Keycloak checksum, and the restart it triggers, from moving
++# between builds that changed nothing.
++first_run="$(run_merge "${order_case}")"
++second_run="$(run_merge "${order_case}")"
++if [[ "${first_run}" == "${second_run}" ]]; then
++  pass "merging the same users twice gives byte-identical output"
++else
++  fail "two merges of the same users differ: $(diff <(echo "${first_run}") <(echo "${second_run}") || true)"
++fi
++
++echo
++if ((failures > 0)); then
++  echo "parity users merge checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "parity users merge checks: all passed"

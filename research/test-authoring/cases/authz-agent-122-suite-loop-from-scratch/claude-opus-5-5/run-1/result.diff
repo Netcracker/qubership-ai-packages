@@ -1,0 +1,635 @@
+diff --git a/test/scripts/fake-cluster/helm b/test/scripts/fake-cluster/helm
+new file mode 100755
+index 0000000..661a1bb
+--- /dev/null
++++ b/test/scripts/fake-cluster/helm
+@@ -0,0 +1,78 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# The helm of test-suite-targets.sh. Each call is appended to
++# $FAKE_STATE/helm.calls, and every command but `test` succeeds at once.
++#
++# `helm test` waits for the suite Job as Helm does: it exits with
++# FAKE_SUITE_STATUS, 0 by default, once the fake kubectl has streamed the suite
++# log to its end, and fails once the fake clock reaches its --timeout, which it
++# writes to $FAKE_STATE/helm-test.timeout. When it is stopped, it writes
++# $FAKE_STATE/helm-test.killed, and when it exits, $FAKE_STATE/helm-test.exited.
++#
++# A clock that stands still for two real seconds means that nothing but helm
++# test is left running, as when the target waits for it, and the cluster's own
++# time passes: a container of FAKE_POD starts-on-poll starts and the suite
++# succeeds, any other runs helm test out of its timeout.
++set -euo pipefail
++
++state="${FAKE_STATE:?}"
++echo "$*" >>"${state}/helm.calls"
++
++[[ " $* " == *" test "* ]] || exit 0
++
++timeout=300
++while (($# > 0)); do
++  if [[ "$1" == --timeout ]]; then
++    case "$2" in
++      *m) timeout=$((${2%m} * 60)) ;;
++      *s) timeout="${2%s}" ;;
++    esac
++  fi
++  shift
++done
++
++echo "${timeout}" >"${state}/helm-test.timeout"
++trap 'touch "${state}/helm-test.exited"' EXIT
++trap 'touch "${state}/helm-test.killed"; exit 143' TERM
++
++succeed() {
++  echo 'Phase:          Succeeded'
++  exit "${FAKE_SUITE_STATUS:-0}"
++}
++
++time_out() {
++  echo 'Error: timed out waiting for the condition' >&2
++  exit 1
++}
++
++last_clock=-1
++SECONDS=0
++while :; do
++  [[ -e "${state}/suite-finished" ]] && succeed
++  clock="$(<"${state}/clock")"
++  ((clock >= timeout)) && time_out
++  if ((clock != last_clock)); then
++    last_clock="${clock}"
++    SECONDS=0
++  elif ((SECONDS >= 2)); then
++    [[ "${FAKE_POD}" == starts-on-poll:* ]] && succeed
++    echo "${timeout}" >"${state}/clock.new"
++    mv "${state}/clock.new" "${state}/clock"
++    time_out
++  fi
++  /bin/sleep 0.05
++done
+diff --git a/test/scripts/fake-cluster/kubectl b/test/scripts/fake-cluster/kubectl
+new file mode 100755
+index 0000000..e599524
+--- /dev/null
++++ b/test/scripts/fake-cluster/kubectl
+@@ -0,0 +1,126 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# The kubectl of test-suite-targets.sh: a namespace that holds one suite Job,
++# answering the calls of the suite targets the way kubectl 1.35 does. Each call
++# is appended to $FAKE_STATE/kubectl.calls.
++#
++#   FAKE_NAMESPACE, FAKE_JOB  the namespace and the name of the Job
++#   FAKE_POD                  starts-on-poll:N   the container has started by
++#                                                the Nth `kubectl logs`
++#                             ErrImageNeverPull  the container never starts
++#                             none               the Job has no Pod, as when
++#                                                admission refuses it
++#   FAKE_WAIT_FOR_CREATE      unsupported: `wait --for=create` is refused, as
++#                             kubectl before 1.31 refuses it
++set -euo pipefail
++
++state="${FAKE_STATE:?}"
++namespace=
++args=()
++while (($# > 0)); do
++  case "$1" in
++    --context) shift 2 ;;
++    -n) namespace="$2"; shift 2 ;;
++    *) args+=("$1"); shift ;;
++  esac
++done
++echo "${args[*]}" >>"${state}/kubectl.calls"
++
++pod="${FAKE_JOB}-7tq2m"
++
++advance_clock() {
++  echo $(($(<"${state}/clock") + $1)) >"${state}/clock.new"
++  mv "${state}/clock.new" "${state}/clock"
++}
++
++seconds_of() {
++  case "$1" in
++    *m) echo $((${1%m} * 60)) ;;
++    *s) echo "${1%s}" ;;
++  esac
++}
++
++# Counts this call of `kubectl logs` and tells whether the container has
++# started by it.
++container_started() {
++  local polls
++  polls=$(($(cat "${state}/polls" 2>/dev/null || echo 0) + 1))
++  echo "${polls}" >"${state}/polls"
++  [[ "${FAKE_POD}" == starts-on-poll:* ]] && ((polls >= ${FAKE_POD#starts-on-poll:}))
++}
++
++case "${args[0]}" in
++  delete) ;;
++  wait)
++    if [[ "${FAKE_WAIT_FOR_CREATE:-}" == unsupported ]]; then
++      echo 'error: unrecognized condition: "create"' >&2
++      exit 1
++    fi
++    ;;
++  logs)
++    follow=
++    job=
++    pod_running_timeout=20
++    for arg in "${args[@]:1}"; do
++      case "${arg}" in
++        -f) follow=1 ;;
++        job/*) job="${arg#job/}" ;;
++        --pod-running-timeout=*) pod_running_timeout="$(seconds_of "${arg#*=}")" ;;
++      esac
++    done
++    if [[ "${namespace}" != "${FAKE_NAMESPACE}" || "${job}" != "${FAKE_JOB}" ]]; then
++      echo "Error from server (NotFound): jobs.batch \"${job}\" not found" >&2
++      exit 1
++    fi
++    if [[ "${FAKE_POD}" == none ]]; then
++      # kubectl waits --pod-running-timeout for the Job's first Pod:
++      # k8s.io/kubectl/pkg/polymorphichelpers/helpers.go, GetPodList.
++      advance_clock "${pod_running_timeout}"
++      echo 'error: timed out waiting for the condition' >&2
++      exit 1
++    fi
++    if ! container_started; then
++      reason=ContainerCreating
++      [[ "${FAKE_POD}" == ErrImageNeverPull ]] && reason=ErrImageNeverPull
++      echo "Error from server (BadRequest): container \"suite\" in pod \"${pod}\" is waiting to start: ${reason}" >&2
++      exit 1
++    fi
++    echo '--- PASS: TestSuite (0.01s)'
++    if [[ -n "${follow}" ]]; then
++      touch "${state}/suite-finished"
++    fi
++    ;;
++  get)
++    selector=
++    for ((i = 1; i < ${#args[@]}; i++)); do
++      [[ "${args[i]}" == -l ]] && selector="${args[i + 1]}"
++    done
++    if [[ "${namespace}" == "${FAKE_NAMESPACE}" && "${selector}" == "job-name=${FAKE_JOB}" && "${FAKE_POD}" != none ]]; then
++      status=ContainerCreating
++      [[ "${FAKE_POD}" == ErrImageNeverPull ]] && status=ErrImageNeverPull
++      printf '%-20s %-6s %-18s %-9s %-4s %-12s %s\n' \
++        NAME READY STATUS RESTARTS AGE IP NODE \
++        "${pod}" 0/1 "${status}" 0 3m 10.244.0.12 authz-e2e-control-plane
++    else
++      echo "No resources found in ${namespace} namespace." >&2
++    fi
++    ;;
++  *)
++    echo "fake kubectl: unexpected call: ${args[*]}" >&2
++    exit 2
++    ;;
++esac
+diff --git a/test/scripts/fake-cluster/sleep b/test/scripts/fake-cluster/sleep
+new file mode 100755
+index 0000000..f9db3d5
+--- /dev/null
++++ b/test/scripts/fake-cluster/sleep
+@@ -0,0 +1,32 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# The sleep of test-suite-targets.sh: it moves the fake clock in
++# $FAKE_STATE/clock forward by whole seconds and returns at once. Once the clock
++# reaches the timeout of a running `helm test`, it returns only after that helm
++# has exited, so the caller's next step sees helm gone, as it would in real time.
++set -euo pipefail
++
++state="${FAKE_STATE:?}"
++echo $(($(<"${state}/clock") + ${1%%.*})) >"${state}/clock.new"
++mv "${state}/clock.new" "${state}/clock"
++
++if [[ -e "${state}/helm-test.timeout" ]] && (($(<"${state}/clock") >= $(<"${state}/helm-test.timeout"))); then
++  for _ in $(seq 100); do
++    [[ -e "${state}/helm-test.exited" ]] && break
++    /bin/sleep 0.05
++  done
++fi
+diff --git a/test/scripts/test-chart-files.sh b/test/scripts/test-chart-files.sh
+new file mode 100755
+index 0000000..e4c3779
+--- /dev/null
++++ b/test/scripts/test-chart-files.sh
+@@ -0,0 +1,136 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Checks of how the chart-files stage of build/authz-agent-transfer/Dockerfile
++# merges the user files of test/parity/suite/testdata/realm/ into the parity
++# realm.
++#
++# The checks need no docker: they run the RUN instruction of the stage, read
++# from the Dockerfile, in a directory laid out as the stage's WORKDIR, with
++# /out moved under it. A find that lists files in reverse stands for a file
++# system whose order is not the names'.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++DOCKERFILE="${ROOT_DIR}/build/authz-agent-transfer/Dockerfile"
++WORK="$(mktemp -d)"
++trap 'rm -rf "${WORK}"' EXIT
++
++require_cmd() {
++  if ! command -v "$1" >/dev/null 2>&1; then
++    echo "error: required command not found: $1" >&2
++    exit 1
++  fi
++}
++
++require_cmd jq
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++mkdir -p "${WORK}/bin" "${WORK}/home"
++cp "${ROOT_DIR}/build/authz-agent-transfer/profile.jq" "${WORK}/home/.jq"
++cat >"${WORK}/bin/find" <<EOF
++#!/usr/bin/env bash
++if [[ " \$* " == *" -print0 "* ]]; then
++  $(command -v find) "\$@" | tr '\\0' '\\n' | sort -r | tr '\\n' '\\0'
++else
++  $(command -v find) "\$@" | sort -r
++fi
++EOF
++chmod +x "${WORK}/bin/find"
++
++# The RUN instruction that writes /out, with its continuation lines.
++STAGE_RUN="$(awk '/^RUN mkdir -p \/out/ {run=1} run {print} run && !/\\$/ {exit}' "${DOCKERFILE}" \
++  | sed -e '1s/^RUN //' -e 's#/out/#out/#g')"
++
++# Lays out the stage's WORKDIR as its COPY instructions do, with users/ left
++# empty for the check to fill.
++new_context() {
++  rm -rf "${WORK}/src"
++  mkdir -p "${WORK}/src/e2e" "${WORK}/src/parity" "${WORK}/src/users" "${WORK}/src/pip-stub"
++  cp "${ROOT_DIR}"/test/k8s/authn/*-realm.json "${WORK}/src/e2e/"
++  cp "${ROOT_DIR}"/test/k8s/parity/idp-seed/{cloud-common,parity,parity-mt-b}-realm.json "${WORK}/src/parity/"
++  cp "${ROOT_DIR}"/test/integration/pipstub/config/* "${WORK}/src/pip-stub/"
++}
++
++# Runs the stage. Leaves its output and exit status in ${output} and ${status}.
++run_stage() {
++  status=0
++  output="$(cd "${WORK}/src" && env HOME="${WORK}/home" PATH="${WORK}/bin:${PATH}" sh -c "${STAGE_RUN}" 2>&1)" || status=$?
++}
++
++# The parity realm the stage wrote, reduced by a jq filter.
++realm() {
++  jq -c "$1" "${WORK}/src/out/realms/parity/parity-realm.json" 2>&1 || true
++}
++
++expect_realm() {
++  local label="$1"
++  local filter="$2"
++  local want="$3"
++  local got
++  if [[ "${status}" != 0 ]]; then
++    fail "${label}: the stage failed with status ${status}: ${output}"
++    return
++  fi
++  got="$(realm "${filter}")"
++  if [[ "${got}" == "${want}" ]]; then
++    pass "${label}"
++  else
++    fail "${label}: ${filter} is ${got}, expected ${want}"
++  fi
++}
++
++# With no user files, as the repository has today, the realm keeps its users.
++new_context
++run_stage
++expect_realm "with no user files, the parity realm keeps its own users" \
++  '.users | length' "$(jq -c '.users | length' "${WORK}/src/parity/parity-realm.json")"
++
++# The users follow the realm's own in the order of their file names, whatever
++# order find lists the files in, so that the realm file, and with it
++# checksum/realms, is the same on every build.
++new_context
++echo '[{"username": "parity-r1-alpha", "enabled": true}]' >"${WORK}/src/users/a-users.json"
++echo '[{"username": "parity-r2-beta", "enabled": true}]' >"${WORK}/src/users/b-users.json"
++run_stage
++expect_realm "user files are merged in the order of their names" \
++  '[.users[-2:][].username]' '["parity-r1-alpha","parity-r2-beta"]'
++
++# A file name with a space is one file, and its users get the profile fields.
++new_context
++echo '[{"username": "parity-r29-level-m2m", "enabled": true}]' >"${WORK}/src/users/r29 users.json"
++run_stage
++expect_realm "the users of a file whose name has a space are merged with their profile" \
++  '.users[-1] | {username, firstName, lastName, email}' \
++  '{"username":"parity-r29-level-m2m","firstName":"Parity","lastName":"R29LevelM2M","email":"parity-r29-level-m2m@example.test"}'
++
++echo
++if ((failures > 0)); then
++  echo "chart files checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "chart files checks: all passed"
+diff --git a/test/scripts/test-suite-targets.sh b/test/scripts/test-suite-targets.sh
+new file mode 100755
+index 0000000..7d6c87b
+--- /dev/null
++++ b/test/scripts/test-suite-targets.sh
+@@ -0,0 +1,233 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Checks of the Makefile's kind targets that need no cluster: how e2e-suite and
++# parity-suite wait for the suite Job and give up on it, and which extra helm
++# arguments reach which chart install.
++#
++# make runs the real recipes with the kubectl, helm, and sleep of
++# fake-cluster/ first on PATH. sleep moves a fake clock instead of waiting, and
++# `kubectl logs` moves it by the time a real kubectl would wait, so the checks
++# read how long a target would have taken from the clock.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++FAKES="${ROOT_DIR}/test/scripts/fake-cluster"
++STATE="$(mktemp -d)"
++trap 'rm -rf "${STATE}"' EXIT
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++# Runs make on the Makefile of this checkout. The arguments before -- set the
++# fake cluster's scenario, the ones after it go to make. Leaves the combined
++# output in ${output}, the exit status in ${status}, and the fake clock's
++# seconds in ${elapsed}.
++run_make() {
++  local scenario=()
++  while [[ "$1" != -- ]]; do
++    scenario+=("$1")
++    shift
++  done
++  shift
++  rm -rf "${STATE:?}"/*
++  echo 0 >"${STATE}/clock"
++  status=0
++  output="$(env PATH="${FAKES}:${PATH}" FAKE_STATE="${STATE}" "${scenario[@]}" \
++    make -s -C "${ROOT_DIR}" "$@" 2>&1)" || status=$?
++  elapsed="$(<"${STATE}/clock")"
++}
++
++expect_status() {
++  local label="$1"
++  local want="$2"
++  if [[ "${status}" == "${want}" ]]; then
++    pass "${label}"
++  else
++    fail "${label}: exit status ${status}, expected ${want}; output:"$'\n'"${output}"
++  fi
++}
++
++expect_failure() {
++  local label="$1"
++  if [[ "${status}" != 0 ]]; then
++    pass "${label}"
++  else
++    fail "${label}: exit status 0, expected a failure; output:"$'\n'"${output}"
++  fi
++}
++
++expect_line() {
++  local label="$1"
++  local line="$2"
++  if grep -qxF -- "${line}" <<<"${output}"; then
++    pass "${label}"
++  else
++    fail "${label}: no line '${line}' in the output:"$'\n'"${output}"
++  fi
++}
++
++expect_no_line() {
++  local label="$1"
++  local line="$2"
++  if grep -qxF -- "${line}" <<<"${output}"; then
++    fail "${label}: unexpected line '${line}' in the output:"$'\n'"${output}"
++  else
++    pass "${label}"
++  fi
++}
++
++# Checks that a line of the output starts with the given words.
++expect_line_starting() {
++  local label="$1"
++  local words="$2"
++  if awk -v w="${words}" '{$1=$1} index($0, w) == 1 {found=1} END {exit !found}' <<<"${output}"; then
++    pass "${label}"
++  else
++    fail "${label}: no line starting '${words}' in the output:"$'\n'"${output}"
++  fi
++}
++
++expect_elapsed() {
++  local label="$1"
++  local min="$2"
++  local max="$3"
++  if ((elapsed >= min && elapsed <= max)); then
++    pass "${label}"
++  else
++    fail "${label}: took ${elapsed} s, expected ${min} to ${max} s"
++  fi
++}
++
++expect_helm_test_killed() {
++  local label="$1"
++  if [[ -e "${STATE}/helm-test.killed" ]]; then
++    pass "${label}"
++  else
++    fail "${label}: helm test was not stopped; output:"$'\n'"${output}"
++  fi
++}
++
++# The arguments of the `helm upgrade --install` of one release, from the fake
++# helm's record of its calls.
++install_args_of() {
++  grep -- "upgrade --install $1 " "${STATE}/helm.calls" || echo "(no install of $1)"
++}
++
++expect_install_args() {
++  local label="$1"
++  local release="$2"
++  local present="$3"
++  local absent="$4"
++  local args
++  args="$(install_args_of "${release}")"
++  if [[ " ${args} " == *" ${present} "* && " ${args} " != *" ${absent} "* ]]; then
++    pass "${label}"
++  else
++    fail "${label}: helm ${args}; expected '${present}' and no '${absent}'"
++  fi
++}
++
++E2E_CLUSTER=(FAKE_NAMESPACE=authz-e2e FAKE_JOB=runtime-suite)
++PARITY_CLUSTER=(FAKE_NAMESPACE=authz-parity FAKE_JOB=parity-suite)
++
++# ── Waiting for the suite container ──────────────────────────────────────
++
++# kubectl before 1.31 refuses `kubectl wait --for=create`, and the suite log
++# has to be streamed on it all the same.
++run_make "${E2E_CLUSTER[@]}" FAKE_WAIT_FOR_CREATE=unsupported FAKE_POD=starts-on-poll:3 -- e2e-suite
++expect_line "e2e-suite streams the suite log on a kubectl without wait --for=create" '--- PASS: TestSuite (0.01s)'
++expect_status "e2e-suite exits with the suite's status on a kubectl without wait --for=create" 0
++
++# The last poll inside the three minutes still finds the container.
++run_make "${E2E_CLUSTER[@]}" FAKE_POD=starts-on-poll:90 -- e2e-suite
++expect_line "e2e-suite streams the log of a container that starts on the last poll" '--- PASS: TestSuite (0.01s)'
++expect_no_line "e2e-suite keeps helm test for a container that starts on the last poll" \
++  'The runtime-suite container did not start within 3 minutes:'
++
++# A container that never starts stops the target after three minutes, with the
++# Pod listed, instead of after helm test's 15.
++run_make "${E2E_CLUSTER[@]}" FAKE_POD=ErrImageNeverPull -- e2e-suite
++expect_failure "e2e-suite fails when the container never starts"
++expect_line "e2e-suite says that the container did not start" \
++  'The runtime-suite container did not start within 3 minutes:'
++expect_line_starting "e2e-suite lists the Pod whose container did not start" 'runtime-suite-7tq2m 0/1 ErrImageNeverPull'
++expect_helm_test_killed "e2e-suite stops helm test when the container never starts"
++expect_elapsed "e2e-suite gives up on a container that never starts after three minutes" 180 202
++
++run_make "${PARITY_CLUSTER[@]}" FAKE_POD=ErrImageNeverPull -- parity-suite
++expect_failure "parity-suite fails when the container never starts"
++expect_line "parity-suite says that the container did not start" \
++  'The parity-suite container did not start within 3 minutes:'
++expect_line_starting "parity-suite lists the Pod whose container did not start" 'parity-suite-7tq2m 0/1 ErrImageNeverPull'
++expect_helm_test_killed "parity-suite stops helm test when the container never starts"
++
++# A Job with no Pod, as when admission refuses the Pod, makes each
++# `kubectl logs job/...` wait 20 s for one. The three minutes hold all the same:
++# the target gives up no later than one poll and one sleep past them, and well
++# before helm test's 15 minutes.
++run_make "${E2E_CLUSTER[@]}" FAKE_POD=none -- e2e-suite
++expect_failure "e2e-suite fails when the Job has no Pod"
++expect_elapsed "e2e-suite gives up on a Job with no Pod after three minutes" 180 202
++expect_helm_test_killed "e2e-suite stops helm test when the Job has no Pod"
++
++# Where E2E_SUITE_TIMEOUT is below the three minutes, helm test runs out first,
++# and the target ends with it rather than polling on.
++run_make "${E2E_CLUSTER[@]}" FAKE_POD=ErrImageNeverPull -- e2e-suite E2E_SUITE_TIMEOUT=2m
++expect_failure "e2e-suite fails when helm test runs out before the container starts"
++expect_line "e2e-suite prints helm's timeout when helm test runs out first" \
++  'Error: timed out waiting for the condition'
++expect_elapsed "e2e-suite ends with helm test when E2E_SUITE_TIMEOUT is below three minutes" 120 122
++
++# ── Extra helm arguments ─────────────────────────────────────────────────
++
++# The test stand reads TAG for images of its own (templates/suite.yaml,
++# pip-stub.yaml, tenant-manager.yaml), so a TAG meant for the product charts
++# must not reach it. test-stand-files builds the chart files with docker and
++# is taken as done.
++run_make "${E2E_CLUSTER[@]}" FAKE_POD=none -- -o test-stand-files e2e-harness e2e-install \
++  "E2E_HELM_ARGS=--set TAG=pr-123" "TEST_STAND_HELM_ARGS=--set TAG=stand-7"
++expect_install_args "e2e-harness installs the test stand with TEST_STAND_HELM_ARGS only" \
++  authz-test-stand TAG=stand-7 TAG=pr-123
++expect_install_args "e2e-install installs authz-policy-admin with E2E_HELM_ARGS only" \
++  authz-policy-admin TAG=pr-123 TAG=stand-7
++expect_install_args "e2e-install installs authz-agent with E2E_HELM_ARGS only" \
++  authz-agent TAG=pr-123 TAG=stand-7
++
++run_make "${PARITY_CLUSTER[@]}" FAKE_POD=none -- -o test-stand-files parity-harness parity-install \
++  "E2E_HELM_ARGS=--set TAG=pr-123" "TEST_STAND_HELM_ARGS=--set TAG=stand-7"
++expect_install_args "parity-harness installs the test stand with TEST_STAND_HELM_ARGS only" \
++  authz-test-stand TAG=stand-7 TAG=pr-123
++expect_install_args "parity-install installs authz-policy-admin with E2E_HELM_ARGS only" \
++  authz-policy-admin TAG=pr-123 TAG=stand-7
++expect_install_args "parity-install installs authz-agent with E2E_HELM_ARGS only" \
++  authz-agent TAG=pr-123 TAG=stand-7
++
++echo
++if ((failures > 0)); then
++  echo "suite target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "suite target checks: all passed"

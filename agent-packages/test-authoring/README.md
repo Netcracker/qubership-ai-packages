@@ -101,21 +101,21 @@ Tests: Go testing with testify require; fake clients from k8s.io/client-go/kuber
 Tests: cargo test; rstest for parameterized cases; proptest for property-based tests.
 Tests: Vitest; expect.soft for several assertions on one result; msw for HTTP fakes.
 Tests: node:test with node:assert/strict; no test framework dependency.
-Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first marker without a finding, names each mismatch, missing or unexpected, by line, and offers no label (the issue asking for one: <link>).
+Tests: JUnit 5 engine, AssertJ assertions; the project's lint(...) harness stops at the first mismatch and quotes the source line of each, missing or unexpected.
 Tests: JUnit 4 engine; Error Prone's CompilationTestHelper stops at the first mismatch, names a missing marker by line, and offers no label; write its tests as if it reported every mismatch.
 ```
 
 The skill opens its reference files from that line. Without it the agent reads the build file and the nearest test to
 find the engine and the assertion library, on every task, and where the two disagree it guesses. Two more lines save the
-same search again: the command that runs one test, and where a new test goes. Where the line is missing, the skill
-proposes it in one sentence: to you in a session, or in the pull request description when it runs unattended. It edits
-an instructions file only after you agree, and then it edits the source where that file is generated. It creates no such
-file without being asked. Unattended, in a repository somebody else maintains, and in a review it only proposes the
-line. The `lint(...)` example carries one more fact, which the line owes for a harness that has no reference file in the
-skill. It says whether one call of the harness reports every mismatch and how it names each case. The Error Prone
-example also accepts a form ahead of the harness: its maintainers group the cases of one rule in one source for the
-reader, and accept a second run to see the next mismatch until the harness reports them all. The skill then writes the
-tests that way and proposes no change to the harness.
+same search again: the command that runs one test, and where a new test goes. The skill proposes the line, in one
+sentence and to you alone, only where it had to establish a fact about a harness that no reference file records: whether
+one call reports every mismatch and how it names each case. It puts the line in no pull request description and no
+review. It edits an instructions file only after you agree, and then it edits the source where that file is generated.
+It creates no such file without being asked. The `lint(...)` example carries one more fact, which the line owes for a
+harness that has no reference file in the skill. It says whether one call of the harness reports every mismatch and how
+it names each case. The Error Prone example also accepts a form ahead of the harness: its maintainers group the cases of
+one rule in one source for the reader, and accept a second run to see the next mismatch until the harness reports them
+all. The skill then writes the tests that way and proposes no change to the harness.
 
 ```text
 Run one test class with `./gradlew --quiet :postgresql:test --tests '<class>'`; a PostgreSQL 16 on localhost:5432 accepts user test, password test, database test.
@@ -130,7 +130,7 @@ Unit tests sit beside the code under test; tests that need the server live under
   style/) or [`french-developer-style`](../french-developer-style/). Install this package with one of them.
 - The five doc-comment packages above own the comment on a test.
 - [`change-description-authoring`](../change-description-authoring/) owns the commit message and the pull request
-  description, including the sentence that names the level a change was tested at.
+  description.
 - [`blackbox-test-design`](../blackbox-test-design/) decides which questions to send a system whose expected values
   are unknown and learned by querying it, such as a legacy service being ported. This package governs each test that
   carries one of those questions.

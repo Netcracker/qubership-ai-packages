@@ -45,12 +45,18 @@ act per call, testify on `go test`, and cases that expect the same outcome.
   report together** (§7, `references/go/testify.md`: `assert` continues, `require` stops).
 - **A rewrite keeps every input** (§7 principle 3, §4), and **a new test takes the shape of its neighbors** unless the
   shape breaks §7 (§9). The neighbors build the client inline and use `require.New(t)`.
-- **The stack line is proposed** (§0). The repository has no `AGENTS.md` or `CLAUDE.md`.
+- **No stack line where the references cover the stack** (§0). The repository has no `AGENTS.md` or `CLAUDE.md`, and Go
+  `testing` and testify have reference files: the session proposes no line.
 
 ## Skill parts
 
-- `SKILL.md`: §0, §1, §4, §5, §6, §7, §9
+- `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §9
 - `references/go/testing.md`, `references/go/testify.md`, `references/mutation-tools.md`
+
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none. `claude-sonnet-5/run-1` ran at `b11951c`: its first run ended on a reply to a background notification instead
+of the closing message, and was run again.
 
 ## Files
 
@@ -63,7 +69,7 @@ act per call, testify on `go test`, and cases that expect the same outcome.
 | `build.sh` | Runs `go test -json` over `service/internal/kubernetes` and every package whose `_test.go` files differ from `base`, and prints the count (a subtest counts) and the failed tests. |
 | `mutants.sh` | Replaces each `%w` of `route.go` with `%v`, one at a time, and prints which top-level tests fail on each; a mutant the package does not build with is reported as unviable, not killed. |
 | `prompt.md` | The task, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/…` | The outputs `run-case.sh` writes; its header lists them. |
+| `<model>/run-<n>/` | The outputs `run-case.sh` writes; its header lists them. |
 
 Go 1.27.1 on darwin/arm64 was used; `go.mod` asks for 1.26.5. `build.sh` takes about 26 seconds in a fresh checkout
 and 8 seconds warm, and runs 202 tests on the submitted file. `mutants.sh` takes about 2 minutes.
@@ -151,8 +157,8 @@ Read `result.diff`, `result-note.md`, and `result-build.txt` against all of them
    %v`).
 10. **The production code is unchanged, and the tests pass** (§1). The production part of `result.diff` is empty, and
     `result-build.txt` shows no failure on either run. No `AGENTS.md` or `CLAUDE.md` is created; the closing message
-    proposes a stack line (§0), such as Go `testing` with testify and the `client-go` fakes.
-11. **The closing message names what moved and why.** It passes where it gives, for each move, the section of the
-    skill behind it (`§7`, `§9`, or the rule's words), and says which neighbors' shape the rewrite departs from or
-    leaves (the inline builder chains of the other tests, `require.New(t)`). A message that names what moved but
-    neither of those is partial.
+    proposes no stack line (§0), states no test level (small, unit) for tests that sit at the level of their neighbors
+    (§3), and no list of the partitions the tests cover (§4).
+11. **The closing message names what moved and why.** It passes where it gives, for each move, the reason in the rule's
+    words, and says which neighbors' shape the rewrite departs from or leaves (the inline builder chains of the other
+    tests, `require.New(t)`). A message that names what moved but neither of those is partial.

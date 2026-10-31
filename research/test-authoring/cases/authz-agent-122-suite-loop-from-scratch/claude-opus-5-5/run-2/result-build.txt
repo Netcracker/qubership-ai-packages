@@ -1,0 +1,22 @@
+on the fix (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-kind-make-targets.sh (exit 1)
+      ok: e2e: the authz-test-stand install takes TEST_STAND_HELM_ARGS alone
+      ok: e2e: the authz-policy-admin install takes E2E_HELM_ARGS alone
+      ok: e2e: the authz-agent install takes E2E_HELM_ARGS alone
+      ok: parity: the authz-test-stand install takes TEST_STAND_HELM_ARGS alone
+      ok: parity: the authz-policy-admin install takes E2E_HELM_ARGS alone
+      ok: parity: the authz-agent install takes E2E_HELM_ARGS alone
+      
+      kind make target checks: 1 failure(s)
+on the base (build.sh exited with 1):
+  1 test files ran, 1 failed
+    test/scripts/test-kind-make-targets.sh (exit 1)
+      FAIL: e2e: the authz-test-stand install should carry '--set IMAGE_PULL_POLICY=Never' and not '--set TAG=pr-123', and ran: helm --kube-context kind-authz-e2e -n authz-e2e upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=pr-123
+      ok: e2e: the authz-policy-admin install takes E2E_HELM_ARGS alone
+      ok: e2e: the authz-agent install takes E2E_HELM_ARGS alone
+      FAIL: parity: the authz-test-stand install should carry '--set IMAGE_PULL_POLICY=Never' and not '--set TAG=pr-123', and ran: helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=pr-123
+      ok: parity: the authz-policy-admin install takes E2E_HELM_ARGS alone
+      ok: parity: the authz-agent install takes E2E_HELM_ARGS alone
+      
+      kind make target checks: 9 failure(s)
