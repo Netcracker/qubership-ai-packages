@@ -8,8 +8,8 @@ request, a question about whether a behavior is intended, a vendor support ticke
 issue in a team's own backlog, and a short message to a colleague. The first draft of version 1.1.0 was written from
 one hardening report, and a review found four of its rules broke other genres: a fix shape demanded of every expected
 block, a deletion test that served only the maintainer, a one-line limit on logs of runs that succeeded, and local
-consistency ranked with the project's own specification. Only three genres have a case so far (a bug report, a
-feature request, and a vendor ticket); check a rule against the other four by reading.
+consistency ranked with the project's own specification. Four genres have a case so far (a bug report, a feature
+request, a vendor ticket, and a colleague message); check a rule against the other three by reading.
 
 ## What an edit owes
 
@@ -20,5 +20,5 @@ feature request, and a vendor ticket); check a rule against the other four by re
   number across all of them before editing.
 
 The cases are under `research/problem-report-authoring/cases/`, and the procedure for running them is in
-`agent-packages/AGENTS.md`, under "Testing a skill against its cases". The prompt that runs a case is in
-`research/problem-report-authoring/cases/nested-workflow-tag/README.md`.
+`agent-packages/AGENTS.md`, under "Testing a skill against its cases". The script that runs a case is
+`research/problem-report-authoring/cases/run-case.sh`.

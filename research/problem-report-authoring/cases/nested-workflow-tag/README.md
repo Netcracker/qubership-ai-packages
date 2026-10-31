@@ -41,14 +41,15 @@ qubership-core-infra before filing. The problem it describes is real; the report
 | `<model>/result-note.md` | The hand-over note to the person filing, kept apart from the body. An output path the runner wrote into it is shortened to the path inside the case directory. |
 | `<model>/skill-tree` | The git tree id of the skill the result was generated from, as `scripts/skill-tree.sh` prints it. |
 
-One directory per model, named by its model ID, so results from different models sit side by side. Each directory
-holds one run; the case measures a direction, not a distribution, so compare a new result against the old one rather
-than against a threshold alone.
+One directory per model, named by its model ID, so results from different models sit side by side. `result-2.md` and
+on are further runs of the same cell, and `baseline/` holds runs of an earlier skill tree for comparison.
 
 ## How to run
 
-Give a fresh session the following, with the three paths filled in, and nothing else. It needs no network: the notes
-freeze the state of the repositories, so the case still runs after the tag moves or the run logs expire.
+From the repository root, `research/problem-report-authoring/cases/run-case.sh <case directory> <model ID> <out name>
+[<rev>]` does what this section describes. By hand: give a fresh session the following, with the three paths filled
+in, and nothing else. It needs no network: the notes freeze the state of the repositories, so the case still runs
+after the tag moves or the run logs expire.
 
 ```text
 You are drafting a GitHub issue. Read the skill at <skill>/SKILL.md in full, open its reference files under the
