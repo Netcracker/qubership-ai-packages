@@ -1,0 +1,5 @@
+cost_usd: 0.3983
+tokens: 52453
+turns: 3
+duration_s: 30
+effort: default

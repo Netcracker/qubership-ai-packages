@@ -93,16 +93,20 @@ done from retrying` describes a transition between two versions, and the reader 
 Rewrite it as the state that holds: what the delay cannot do, and why.
 
 One exception. **The comment on a regression test may tell history, and an equivalence is not
-history.** The test guards the defect, so the defect belongs in the comment: state the rule the
-test asserts first, then the defect in one past-tense sentence with the error or the panic: `A
-negative n used to be reported as available, and the caller then panicked with a slice bounds out
-of range.` A comment that opens with the defect makes the reader reconstruct the broken version to
-understand the fixed one (measured on one branch: a blind reader ranked the version that opened
-with `used to` fourth of five on that ground alone). Do not narrate the old mechanism in the present
-tense, and do not recast it as a chain of `would` clauses. History narration, which this section
-forbids, is a sentence whose only content is that the code changed. A sentence that argues the new
-behavior is safe **because it is identical to the old one** is rationale, and the old behavior is
-its comparison term. Keep the comparison; it is the whole argument.
+history.** A regression test owes no comment for being one. Where its name states the rule, the
+defect and the issue number belong in the commit that adds the test, and a comment, where the test
+has one, carries what §3 leaves it: the reason or the construction. Tell the defect in the comment
+only where the rule alone would look arbitrary to the next maintainer: state the rule the test
+asserts first, then the defect in one past-tense sentence, with the error or the panic where the old
+code produced one and the wrong result where it did not: `A negative n used to be reported as
+available, and the caller then panicked with a slice bounds out of range.` A comment that opens with
+the defect makes the reader reconstruct the broken version to understand the fixed one (measured on
+one branch: a blind reader ranked the version that opened with `used to` fourth of five on that
+ground alone). Do not narrate the old mechanism in the present tense, and do not recast it as a
+chain of `would` clauses. History narration, which this section forbids, is a sentence whose only
+content is that the code changed. A sentence that argues the new behavior is safe **because it is
+identical to the old one** is rationale, and the old behavior is its comparison term. Keep the
+comparison; it is the whole argument.
 
 - *Keep:* `a reader whose closed.Load() runs before Close stores true behaves exactly as every
   reader did before the atomic.Bool was added: it reads from the buffer and the wrapped reader as
@@ -209,16 +213,20 @@ and an inline comment whose next statement is the actor (`// The envelope must b
 above the `c.endMessage()` that consumes it), after checking that the next line really is the actor
 and not test setup standing between the comment and the call it constrains.
 
-Most declarations need slots 1 and 2 only. A getter needs slot 1. Do not manufacture the other slots
-to fill a template; an absent slot is not a gap.
+Most declarations need slots 1 and 2 only, and a getter whose name and type are its whole contract
+needs no comment (§7). Where the repository's linter demands a comment on every exported name
+(`revive`'s `exported` rule, `golint`), it gets the one line that rule asks for, `Name returns the
+cache's name.`, and nothing more. Do not manufacture the other slots to fill a template; an absent
+slot is not a gap.
 
 **Size the comment to the declaration.** A doc comment longer than the function it documents is not
 automatically wrong (an invariant can be worth ten lines over a three-line method), but it is a
 signal to re-read. When you check, the surplus is almost always rationale: keep at most two
 sentences of it, and only for the part a reader would otherwise get wrong. The rest belongs in the
-commit message. As a working size, a test function's comment is two to five sentences and a
+commit message. A test function's comment, where one is owed, runs to at most five sentences, and a
 function comment fits in one glance; past that you are describing the investigation, not the
-contract, so keep the rule and the exception and move the rest.
+contract, so keep the rule and the exception and move the rest. These are ceilings: a test whose
+name states what it establishes often needs no comment at all.
 
 ## 3. The first sentence names the thing it documents
 
@@ -385,10 +393,11 @@ write.
 
 Three cases, and the interface's contract decides which one you are in.
 
-1. **The method obeys the interface's contract.** Write a single line that names the contract, and
-   nothing else: `Close implements [io.Closer].` The line satisfies §3, and its doc link is the
-   only thing beside the method that gets the reader to the contract they rely on. A second
-   sentence that restates that contract is the duplicate §7a cuts.
+1. **The method obeys the interface's contract.** On a type §1's table counts as exported, write a
+   single line that names the contract, and nothing else: `Close implements [io.Closer].` The line
+   satisfies §3, and its doc link is the only thing beside the method that gets the reader to the
+   contract they rely on. A second sentence that restates that contract is the duplicate §7a cuts. A
+   method of any other unexported type is not rendered anywhere, and gets no comment.
 2. **The interface leaves the behavior open, and this type picks one.** State the resulting
    contract as a rule of this type, in one positive sentence: `Read returns the final bytes
    together with [io.EOF], not on the following call.` The freedom the interface granted is not
@@ -410,10 +419,12 @@ documentation prescribes looks arbitrary to nobody.
 
 ### Field, constant, and variable
 
-Document the unit, the range, the sentinel, and who may write it. An unexported package-level
-variable whose invariant is non-obvious needs that invariant spelled out; a reader adding a write
-has no other source of truth. When the type comment already states the rule, the field comment
-shrinks to one sentence plus a link.
+Document what the type and the name leave open: the unit, the range, a sentinel value, and who may
+write the field where more than the constructor does. An unexported `name string` field leaves
+nothing open and gets no comment (§7). An unexported package-level variable whose invariant is
+non-obvious needs that invariant spelled out; a reader adding a write has no other source of truth.
+When the type comment already states the rule, the field comment shrinks to one sentence plus a
+link.
 
 A `const` block with a shared rule takes one comment above the block and short ones inside it, not
 the same sentence eight times.
@@ -424,12 +435,13 @@ comment that leaves the scope to be inferred from a contrast (`…which governs 
 limit does not`) makes the reader subtract one limit from another and reconstruct the missing verb.
 Both halves are facts; state them separately, this one first.
 
-A constant whose value is a size or a duration states both forms: `1 MiB (1048576 bytes)`. Nothing
-in Go substitutes the value into the comment: `go doc` and pkg.go.dev print the declaration as
-written, so a reader of `MaxCStringLength = 1 << 20` sees the expression, not the digits. The
-digits in the comment are hand-written, so re-check them whenever the value changes, and keep the
-unit exact (`64000000` is `64 MB`, not `64 MiB`) or hedged in words: `about 1 GiB (1073741823
-bytes)`. The form is `english-developer-style` §5.
+A size or duration constant whose literal does not read as a quantity at a glance (`1 << 20`,
+`1048576`) states both forms: `1 MiB (1048576 bytes)`. `DefaultTimeoutSeconds = 30` shows its value
+and its unit already. Nothing in Go substitutes the value into the comment: `go doc` and pkg.go.dev
+print the declaration as written, so a reader of `MaxCStringLength = 1 << 20` sees the expression,
+not the digits. The digits in the comment are hand-written, so re-check them whenever the value
+changes, and keep the unit exact (`64000000` is `64 MB`, not `64 MiB`) or hedged in words: `about 1
+GiB (1073741823 bytes)`. The form is `english-developer-style` §5.
 
 ### Inline comment
 
@@ -479,7 +491,9 @@ The comment on a test is read by whoever opened the file. The reader of a red bu
 the test's name, its assertion, and its message in the report, and comes here for the rule behind
 them; the next author comes looking for what this test covers and where a case goes. Both want the
 rule, stated once, as a claim: a negation nested in a negation (`fails when … does not …`) is not
-that, and `english-developer-style` §3 asks for what happens, not what does not.
+that, and `english-developer-style` §3 asks for what happens, not what does not. A test whose name
+states the rule it checks, and whose failure is fixed in the code it exercises, needs no comment
+(§7); what follows is for a rule the name does not carry, and for a failure fixed somewhere else.
 
 Test functions are not rendered by `go doc` or pkg.go.dev, so the name-first rule of §3 has no
 tooling behind it here. `go test` prints the name, so the name states what the test establishes,
@@ -496,10 +510,12 @@ func TestClient_RetryPreservesCallerHeaders(t *testing.T) { … }
   did go away` leaves the reader guessing: not panic, not close twice, not log? Name the
   observable. If you cannot phrase the rule as an observation, the test probably cannot check it
   either.
-- **What to do about the red build** goes in the comment as well: which set to edit, which case to
-  add, where the failure message states the rest.
+- **What to do about the red build** goes in the comment where it is an edit somewhere other than
+  the code under test: which set to edit, which case to add, where the failure message states the
+  rest. Where the fix is the code the test exercises, the rule already implies it, and the comment
+  says nothing about it (§2).
 
-Deliberate duplication between the test's comment, a helper's comment, and the failure message is
+Where the test has a comment, repeating its rule in a helper's comment or the failure message is
 correct, because each reader meets exactly one of the three. It does not extend to production code,
 where the type comment and the method comment have the same reader.
 
@@ -573,12 +589,12 @@ in the code. Use that name, and cite the number once, where the history belongs.
 Go has no `@param`, `@return`, `@throws`, `@since`, or `@see`. §4 covers what replaces the first
 two. The rest:
 
-- **`Deprecated:`** starts its own paragraph, at the end of the comment, and must name the
-  replacement. Tooling reads it: `staticcheck` SA1019 and editors flag callers. Nothing else in a Go
-  doc comment is machine-interpreted this way, so do not invent siblings for it.
-- **Errors** go in prose, naming the sentinel or type a caller matches: `Do returns an
-  *AggregatorError for any non-2xx response.` A panic is worth a sentence when the caller can
-  prevent it.
+- **`Deprecated:`** starts its own paragraph, at the end of the comment, and names the replacement
+  where there is one. Tooling reads it: `staticcheck` SA1019 and editors flag callers. Nothing else
+  in a Go doc comment is machine-interpreted this way, so do not invent siblings for it.
+- **Errors a caller is expected to match** (§4's list) go in prose, naming the sentinel or the type:
+  `Do returns an *AggregatorError for any non-2xx response.` An error the caller can only pass up
+  gets no sentence. A panic is worth a sentence when the caller can prevent it.
 - **Nothing is inherited.** A method's comment is all that is displayed beside it: pkg.go.dev shows
   the interface's method comments on the interface's page, and an editor hover shows the method's
   own comment. A comment on an implementing method that states one special case and nothing else
@@ -653,7 +669,8 @@ by going stale. Skip it for:
 
 The corollary: an exported declaration with a non-obvious contract is not optional, however
 self-evident the name looks to the person who just wrote it. Go's convention is that every exported
-declaration has a doc comment; that convention buys nothing when the comment restates the name.
+declaration has a doc comment; that convention buys nothing when the comment restates the name, so
+write the restating line only where a linter in the repository fails the build without it (§2).
 
 ## 7a. Editing an existing comment
 
@@ -689,11 +706,12 @@ away.
   sentence that specializes the rule, plus the link. Two full statements of the same rule is the
   most common outcome of a good structural edit and the easiest to miss, because each of the two
   reads well on its own.
-- **Deleting is an edit, and every cut is reported.** A list of callers, a rejected alternative, a
-  cost estimate, a reference to the change that introduced the code: cutting these is usually the
-  highest-value change in the diff, even though the result looks like less work. Delete sentence by
-  sentence, and report each deleted sentence with the fact it carried and where that fact now
-  lives: another declaration, the type comment, the commit message, or nowhere, with the reason. A
+- **Deleting is an edit, and a cut that carried a fact is reported.** A list of callers, a rejected
+  alternative, a cost estimate, a reference to the change that introduced the code: cutting these is
+  usually the highest-value change in the diff, even though the result looks like less work. Delete
+  sentence by sentence, and report each deleted sentence that carried a fact (§7b step 1 says what
+  counts as one) with where that fact now lives: another declaration, the type comment, the commit
+  message, or nowhere, with the reason. Narration and a restated signature go without a report. A
   rationale sentence stays only where a maintainer reading the rule would ask why or would be
   tempted to relax it; the test is whether the sentence would come up as a question in code review.
   A rewrite that reads better and says less is the failure this rule exists to prevent.
@@ -830,18 +848,19 @@ the same answer.
 
 ## 8. Review checklist
 
-Run this over a comment you wrote or one you are reviewing.
+Run this over a comment you wrote or one you are reviewing. An item asks about a rule stated above,
+and where that rule has a condition, the item applies only under it.
 
 - Does the first sentence begin with the name of the declaration, or, for an API field, its JSON
   name?
 - Does the first sentence stand alone, with no term this comment introduces, and does it terminate
   where you think it does, or does an `e.g.` cut it short?
 - Could a reader reconstruct the first sentence from the declaration's name alone?
-- In a regression test's comment: the rule first, the old defect in one past-tense sentence, and any
-  equivalence with the old behavior kept (§1)?
+- In a regression test's comment that tells the defect: the rule first, the old defect in one
+  past-tense sentence, and any equivalence with the old behavior kept (§1)?
 - Is the contract stated positively and in one place, before any mechanism?
-- Could a caller satisfy the contract without opening the code, or a maintainer fix a failing test
-  from the comment alone?
+- On an exported declaration, could a caller satisfy the contract without opening the code (§1's
+  table)? On a test that has a comment, could a maintainer fix a failure from it alone?
 - Is any rationale here commit-message material?
 - Any sentence describing a previous version of the code: `now`, `no longer`, `used to`?
 - Any sentence describing a code path this code does not have: what would happen if the rule were
@@ -872,13 +891,30 @@ Run this over a comment you wrote or one you are reviewing.
 
 ## 9. Worked examples
 
-The two examples pull in opposite directions on purpose. The first shrinks, because the facts were
-already there. The second grows, because one was missing. Do not read either one as the target
-shape.
+The most common edit is the first one: a comment that goes. All three are constructed rather than
+lifted from a real codebase, and deliberately so: an example a sweeper can recognize in the wild is
+an example it will paste instead of derive, and a rewrite that matches this file word for word
+proves nothing about whether the rules were applied.
 
-Both are constructed rather than lifted from a real codebase, and deliberately so: an example a
-sweeper can recognize in the wild is an example it will paste instead of derive, and a rewrite that
-matches this file word for word proves nothing about whether the rules were applied.
+### A getter, where the comment goes
+
+**Before**: the comment restates the signature, and the field comment restates the field.
+
+```go
+type Cache struct {
+    // name is the name of the cache.
+    name string
+}
+
+// Name returns the name of the cache.
+func (c *Cache) Name() string { return c.name }
+```
+
+**After**: no comment on either. The name and the type are the whole contract (§7), and since the
+deleted lines carried no fact, the cut needs no report (§7a). Where the repository's linter demands
+a comment on every exported name, `Name` keeps its one line and nothing more (§2). Where the method
+does more than return the field, such as copy it or return `""` before something happens, that is
+the line it keeps.
 
 ### An inline comment that narrated the code's history
 
