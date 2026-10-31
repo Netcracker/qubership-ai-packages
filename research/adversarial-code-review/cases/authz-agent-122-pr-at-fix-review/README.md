@@ -51,7 +51,7 @@ limit; the report then has no trace of it, and the check fails.
 | --- | --- |
 | `repo`, `base`, `head` | The repository, `58316ca6ca5d0d91932873de01fb40397d5dd4df` (the parent of the pull request's first commit), and `5dcb6be836474aeecf2c90c9d50541ad6b1bd2f2` (the commit the second review round read). |
 | `prompt.md` | The task, with `<skills>`, `<base>`, and `<head>` replaced by `run-review-case.sh`. |
-| `<model>/<label>/…` | The outputs of one run. `base-<n>` ran with the skill before the questions of `change-reach.md`; `reach-1` and `reach-2` with a first wording that set no severity and left out the question on the fix's own parallel paths; `reach-3` and `reach-4` with a second wording that added both and listed no places a set's members appear; `reach-5` and `reach-6` with the committed wording, before pull request 185 added the question on a replaced mechanism; `reach-7` and `reach-8` with the committed text. `skill-tree` records the tree of the skill. |
+| `<model>/<label>/…` | The outputs of one run. `base-<n>` ran with the skill before the questions of `change-reach.md`; `reach-1` and `reach-2` with a first wording that set no severity and left out the question on the fix's own parallel paths; `reach-3` and `reach-4` with a second wording that added both and listed no places a set's members appear; `reach-5` and `reach-6` with the committed wording, before pull request 185 added the question on a replaced mechanism; `reach-7` and `reach-8` with the text before the conditions of tree `5a29ff5e`; `cond-<n>` with that tree, on Opus and Sonnet. `skill-tree` records the tree of the skill. |
 
 ## How to run
 
@@ -97,3 +97,30 @@ Opus, two runs per arm. `base` ran the skill at `906df48`.
   `.github/docker-dev-config.json`, and none of the other six runs treats that file's list of components as a set.
 - **Cost.** The `reach` runs cost 1.57 to 2.09 against 1.43 and 1.64 for `base`. `base` ran before pull request 185
   and was not re-run after it.
+
+## Results of the `cond` arm, 2026-10-31
+
+Skill tree `5a29ff5e`: an unclaimed hunk is a finding only where it changes behavior, a version, or a dependency, and
+`blocking` only where it changes runtime behavior or a dependency version; the question on inherited state asks only
+where the change reads or replaces earlier state; a command with no run is a finding only where the docs or the source
+leave a property of the configuration in doubt. Opus and Sonnet, two runs each.
+
+| Model | Run | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Result | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | fail | fail | pass | fail | 1 blocking, 3 non-blocking | 1.22 |
+| Opus | `cond-2` | pass | fail | fail | pass | fail | 1 blocking, 2 non-blocking | 1.27 |
+| Sonnet | `cond-1` | fail | fail | fail | pass | fail | 1 blocking, 2 non-blocking | 0.49 |
+| Sonnet | `cond-2` | fail | fail | fail | pass | fail | 1 blocking, 2 non-blocking | 0.33 |
+
+- **Check 4 stays `blocking`.** Every run files the SVT Keycloak bump as `blocking` and gives the new condition as the
+  reason (Opus `cond-1`, `result.md:14`: "This is a runtime dependency version ch[ange]"). No run reports a hunk that
+  changes only wording.
+- **Against `reach-7` and `reach-8`.** Opus passes 4 of 10 against 5 of 10: check 1 passes in both runs, and the passes
+  of `reach-8` on checks 3 and 5 are gone. Two runs per arm cannot tell this from noise, and the paragraphs those checks
+  test did not change. Opus `cond-2` and both Sonnet runs leave a `non-blocking` slot free and still miss checks 2, 3,
+  and 5, so the limit does not explain the misses.
+- **Sonnet** finds the unclaimed bump and none of the four defects of sets, counts, and remedies.
+- **No finding rests on a missing run alone.** Each run still asks for a run of the SVT stack inside the unclaimed-hunk
+  finding. Opus cost fell from 1.78 and 1.62 to 1.22 and 1.27 USD.
+
+The committed tree `13ff7802` differs from `5a29ff5e` only by line wrapping.

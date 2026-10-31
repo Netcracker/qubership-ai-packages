@@ -73,10 +73,12 @@ or refactoring mixed with separable feature work? Use change and file size only 
 changed lines is usually easy to review, 300 can remain coherent, and 1,000 deserves a split unless it is mostly
 deletion or mechanical output. Size alone is not a finding.
 
-Map every hunk to a sentence of the description or a commit message. A hunk no sentence claims is a `blocking` finding
-however small, such as a version bump carried over from another branch or a dependency moved in a file the change
-otherwise leaves alone. Ask for a sentence that claims it, with the run that checks it, or for the hunk to move to its
-own change.
+A hunk that changes behavior, a version, or a dependency beyond what the claimed change needs is a finding however
+small, where no sentence of the description or a commit message claims it: a version bump carried over from another
+branch, a dependency moved in a file the change otherwise leaves alone. The tests of a claimed change, and the generated
+or lock output it produces, are claimed with it. The finding is `blocking` where the hunk changes runtime behavior or a
+dependency version. Ask for a sentence that claims it, with the run that checks it, or for the hunk to move to its own
+change. A hunk outside that scope, such as a fixed typo, needs no claim, and the report does not mention it.
 
 ### Correctness and data integrity
 
@@ -84,7 +86,7 @@ Trace normal, boundary, invalid, retry, concurrency, and partial-failure paths. 
 values, off-by-one behavior, races, state transitions, cleanup, idempotency, and data loss. Confirm that the
 implementation matches both the stated contract and what the tests actually assert.
 
-Where the change fixes a symptom, list the other paths that show the same symptom, which a search for the changed
+Where the change fixes a symptom, check the other paths that show the same symptom, which a search for the changed
 helper does not find: a twin build target, the other major version of a tool, the other operating system. A path the fix
 leaves out is a finding.
 
@@ -98,10 +100,10 @@ Check backward and forward compatibility across old and new callers, stored data
   valid. New fields and parameters must be optional or have compatibility-preserving defaults.
 - **Dependencies:** Do not make new external services or runtime integrations mandatory. Keep them disabled by default
   and require explicit opt-in.
-- **Inherited state:** Ask which pre-existing state the change will meet: configuration files, keys or certificates,
-  persisted data or schemas, caches, lock files, and objects an earlier chart or `kubectl apply` created. Check that a
-  test or a run starts from that state, not only from a fresh install, or that the change documents the remedy and
-  shows it run on that state.
+- **Inherited state:** Where the change reads or replaces something an earlier version left behind, ask which
+  pre-existing state it will meet: configuration files, keys or certificates, persisted data or schemas, caches, lock
+  files, and objects an earlier chart or `kubectl apply` created. Check that a test or a run starts from that state, not
+  only from a fresh install, or that the change documents the remedy and shows it run on that state.
 - **Passed values:** Where an existing setting (a pass-through variable, a flag, an environment variable) now reaches a
   consumer it did not reach before, list the names the new consumer reads that the old consumers also read, such as a
   values key both charts define. For each, say what a value meant for the old consumers does to the new one; the
@@ -112,8 +114,9 @@ Check backward and forward compatibility across old and new callers, stored data
   require an explicit migration path. Anchor findings in repository evidence; missing history is a context gap, not a
   defect.
 
-Also cover mixed-version operation, rolling upgrade, downgrade, rollback, migration ordering, deprecation, and fresh
-install paths.
+Where the change touches stored data, configuration, an interface between components, or a deployment, also cover
+mixed-version operation, rolling upgrade, downgrade, rollback, migration ordering, deprecation, and fresh install
+paths.
 
 ### Security, privacy, and supply chain
 
@@ -164,11 +167,13 @@ Check that tests have descriptive names, cover behavior and regression paths, an
 implementation. Check that documentation covers compatibility promises, operational steps, and user-visible effects.
 Distinguish evidence supplied by CI, builds, manual checks, screenshots, benchmarks, and before/after comparisons from
 verification actually performed during this review. Treat CI status as supporting evidence, not the review result. For
-every command the change tells someone to run in a page, a comment, a help text, or a recipe, find the script, build
-target, or CI job that runs that exact form, flags included; a form that differs by a flag, a tool, or a version does
-not count. Where none does, compare what the tool's help text, reference, or source says the command acts on with the
-configuration the change creates, in each version the change supports. Where that does not settle it, the missing run is
-itself the observed fact: report it and ask for a run of that form or for the form a job runs.
+every command the change adds or edits in a page, a comment, a help text, or a recipe, and every command whose outcome
+depends on a configuration the change creates, find the script, build target, or CI job that runs that exact form, flags
+included; a form that differs by a flag, a tool, or a version does not count. Where none does, compare what the tool's
+help text, reference, or source says the command acts on with the configuration the change creates, in each version the
+change supports. Only where that leaves in doubt a concrete property of this configuration that decides the outcome,
+such as whether a flag acts on the kind of object the change creates, report the doubt and ask for a run of that form or
+for the form a job runs.
 
 A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
 build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
@@ -345,9 +350,9 @@ put the complete finding in the general comment with its exact location and posi
 confidence and severity.
 
 Start the general comment with `Result:`, followed only by the revision tuple, optional `Assessed by`, conditional
-`Previous findings`, findings that cannot be placed inline, and the request below. Include `Coverage` only for
-`REVIEW_INCOMPLETE`. Omit empty sections and other metadata. Do not copy inline findings, their titles, summaries,
-ordinals, or pointers such as "See inline comment".
+`Previous findings`, findings that cannot be placed inline, and, where at least one finding comment was published, the
+request below. Include `Coverage` only for `REVIEW_INCOMPLETE`. Omit empty sections and other metadata. Do not copy
+inline findings, their titles, summaries, ordinals, or pointers such as "See inline comment".
 
 > Please react with 👍 or 👎 to the finding comments. Your feedback will help us assess review quality and improve
 > future reviews.
