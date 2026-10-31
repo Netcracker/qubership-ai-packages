@@ -1,0 +1,1 @@
+pgsync: --jobs must be at least 1, got %d. --jobs sets how many tables pgsync copies in parallel, so a value below 1 would copy none. Omit --jobs to use the default of 4, or pass a positive integer such as --jobs=8.
