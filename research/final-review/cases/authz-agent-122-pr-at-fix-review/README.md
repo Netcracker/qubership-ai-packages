@@ -78,3 +78,44 @@ Opus, two runs per arm.
 
 `authz-agent-122-fix-review` reviews the fix commit alone, with the comments it answered as the task statement. There
 the control already finds checks 1 and 2 on Opus.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; the change has no skill or instruction file, so no report used it. Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | pass, pass | pass, pass | fail, pass | 3102, 2457 | 2.06, 1.91 |
+| Haiku | fail, pass | fail, fail | fail, pass | pass, pass | pass, fail | 1612, 1687 | 0.98, 0.70 |
+
+- Opus checks 1 to 4 pass in both runs. Check 1: "The new suite-timeout variables are missing from the overrides list"
+  (`instr-1`), "missing from the README list of overrides" (`instr-2`). Check 2: "The troubleshooting action names only
+  `make e2e` for a symptom that includes `parity-harness`" (`instr-1`), "Remedy row names `make e2e` only, though its
+  symptom names `parity-harness` too" (`instr-2`). Check 3: "`TAG` and `IMAGE_PULL_POLICY` ask for images nothing
+  builds" (`instr-1`), "`--set TAG=…` or `IMAGE_PULL_POLICY=Always` aimed at the agent breaks the stand's `local/*`
+  images" (`instr-2`), each substantive. Check 4: the SVT Keycloak bump is in a substantive row of both tables.
+- Opus check 5: `instr-2` passes ("'CI builds both' is stale; the dev config builds five images"). `instr-1` has no
+  finding on `README.md` "CI builds both" or on "two-entry"; its Item 7 covers the troubleshooting row, the override
+  list, `kubectl wait --for=create`, and pip-stub's other users.
+- Haiku check 1: `instr-2` F22 passes ("`E2E_SUITE_TIMEOUT` and `PARITY_SUITE_TIMEOUT` are missing from the override
+  list"). `instr-1` has no finding on the override list; its Item 7 reads "The Makefile twins (`e2e-*`/`parity-*`) are
+  symmetric."
+- Haiku check 2: `instr-1` row 4 asks for a run of the `make e2e-down` remedy and does not mention the second path.
+  `instr-2` settles it in Item 7: "the ownership troubleshooting row names both targets and one action that covers both
+  namespaces."
+- Haiku check 3: `instr-2` F21 passes ("`--set TAG=x`, meant for the agent, makes the stand ask for
+  `local/pip-stub:x` and others, none built"). `instr-1` names neither `E2E_HELM_ARGS` nor `TAG`.
+- Haiku check 4: both runs file the Keycloak bump as substantive, `instr-1` row 7 ("changes 26.0 to 26.3.5@digest") and
+  `instr-2` F11.
+- Haiku check 5: `instr-1` row 9 passes ("the README says CI "builds both" images from the dev config, which now lists
+  five. The publication doc says "The two-entry array""). `instr-2` files the dev config only as an unclaimed hunk
+  (F13, "Adds three components to the dev build config. Not claimed.").
+
+Against the `1b1ebc3e` runs. Opus went from ten passes in ten to nine: check 5 of `instr-1` went from pass to fail. It
+writes 3102 and 2457 words against 2735 and 2729 and costs 2.06 and 1.91 against 2.20 and 1.77. Haiku stays at five
+passes in ten, on different cells: check 1 `instr-2` fail to pass, check 3 `instr-1` pass to fail, check 5 `instr-1`
+fail to pass and `instr-2` pass to fail; check 2 is fail, fail on both trees and check 4 pass, pass. Haiku writes 1612
+and 1687 words against 1721 and 1812 and costs 0.98 and 0.70 against 0.61 and 0.54; `instr-1` took 58 turns against
+37.

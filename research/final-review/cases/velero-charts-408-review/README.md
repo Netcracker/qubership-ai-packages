@@ -92,3 +92,42 @@ two runs, as a no-regression check against the arm named below.
 Unchanged. The new questions find that `helm upgrade --reuse-values`, which the README documents, never gets the new
 default, and that `restic.*` has no counterpart of the new key. `series-2` also lists the restic DaemonSet hunk as
 unclaimed, which commit `98041d0` does claim. Cost 0.45 and 0.55 USD against 0.58 and 0.50.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
+`apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
+before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Check 1 | Check 2 (false pair) | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | strong, strong | filed, none | 0.49, 1.10 | 1459, 1775 |
+| Haiku | partial, fail | filed, filed | 0.06, 0.03 | 1179, 1207 |
+
+- **Opus `instr-1`.** Check 1 is a strong pass in the sense of the 2026-10-23 grades: under "Other limits on the same
+  work" it lists "(a) Velero's SIGTERM handling" as the limit that decides whether the value does anything, and the
+  finding (`result.md:76`) asks to "Cite the Velero v1.9.2 shutdown line, or run a backup, delete the pod, and show the
+  backup completes". It names no controller-runtime timeout. It also files the pair of check 2 as substantive
+  (`result.md:77`): "`--restic-timeout` (Velero default 240m) exceeds the 3600 s default grace period on the same
+  backup", with "Derive one from the other".
+- **Opus `instr-2`.** Strong pass: its table of limits (`result.md:62`) names "a controller-runtime graceful-shutdown
+  timeout, 30 s by default", and the finding (`result.md:95`) asks for "the line in Velero v1.9 that waits for the
+  in-flight backup, or run SIGTERM during a backup". It says `resticTimeout` "bounds one pod-volume backup, after which
+  the backup carries on, so the skill doesn't count it" (`result.md:64`): no pair.
+- **Haiku `instr-1`.** Check 1 is partial, as on `1b1ebc3e`: velero's shutdown appears only inside the `resticTimeout`
+  pair, F3 (`result.md:52`), which says "the PR's use case needs the grace period to outlast the work it waits for" and
+  asks to "Check the Velero shutdown path in the binary". Check 2 is filed by the same F3, substantive.
+- **Haiku `instr-2`.** Check 1 fails: the report never mentions SIGTERM or velero's shutdown, and the evidence finding
+  (`result.md:58`) asks only for "the `helm template` output for the default and for an override". Check 2 is filed:
+  finding 2 (`result.md:53`) says of the grace period and `resticTimeout` "At defaults both are 3600 s, so neither fires
+  first", as substantive.
+
+Against tree `1b1ebc3e` four grades changed, one of them for the better. Opus `instr-1` rose on check 1 from pass to
+strong but now files the `resticTimeout` pair as substantive, where before it listed `resticTimeout` as taste with no
+claim that one limit caps the other; Opus `instr-2` is unchanged, strong with no pair. Opus cost 0.49, 1.10 against
+0.57, 0.50, at 1459, 1775 words against 1709, 1703. Haiku `instr-1` is unchanged, partial with the pair filed; Haiku
+`instr-2` fell from pass to fail on check 1 and now files the `resticTimeout` pair, where before it paired the grace
+period only with Helm's `--timeout` and said that bounds the rollout. Haiku cost 0.06, 0.03 against 0.06, 0.09, at 1179,
+1207 words against 1261, 1159. The case adds no skill or instruction file, and no run writes a table of added
+instructions or the `Added instructions:` line.

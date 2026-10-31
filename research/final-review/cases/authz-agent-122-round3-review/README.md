@@ -77,3 +77,33 @@ Both `cut` runs reach the 33 minutes under the fault the question names. `cut-2`
 kubectl's `cmd/logs/logs.go` and names the restricted Pod Security Standard the previous commit turned on as the way
 admission refuses the Pod; `cut-1` takes the 20 seconds from `kubectl logs --help`. Both ask for
 `--pod-running-timeout=2s` or a deadline, and both file the false "up to three minutes" in the Makefile comment.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; the reviewed commit has no skill or instruction file, so no report used it. Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Check 1 | Words | Cost, USD |
+| --- | --- | --- | --- |
+| Opus | pass, partial | 1919, 1935 | 1.22, 1.82 |
+| Haiku | partial, fail | 1711, 1177 | 0.34, 0.34 |
+
+Opus `instr-1` reaches the 33 minutes from the 20-second wait per attempt: its fault table has a row for a Job whose
+Pod is never created, "Each `kubectl logs job/X` waits out the default `--pod-running-timeout=20s` looking for a Pod,
+so 90 × 22 s", and the finding asks to "Limit the whole loop to 3 min: a deadline it checks, or
+`--pod-running-timeout=2s`", naming the restricted Pod Security Standard or a quota as the cause. Opus `instr-2`
+counts the call time without the per-attempt timeout and files it as taste: "The 3-minute bound is 90 × (2 s + an
+unbounded `kubectl` call), so a slow API server stretches it with no limit", the check's partial. Its substantive
+finding on the loop is the other fault, a `helm test` that exits at once, which it ran with stub `kubectl` and `helm`
+("measured 185 s").
+
+Haiku `instr-1` files F2 as substantive: "The loop bounds attempts, not time. It runs 90 times, and each `kubectl logs`
+has no request timeout by default", and asks for an elapsed-time bound and `--request-timeout`. It does not name
+`--pod-running-timeout` or the 33 minutes: partial. Haiku `instr-2` counts the new loop as "about 3 minutes" and
+settles the longest attempt: "`logs -f` in the old code had no timeout either, so the new code is no worse. `none`."
+
+Against the `1b1ebc3e` runs (Opus pass, pass; Haiku fail, partial), Opus `instr-2` moved from pass to partial, and
+Haiku `instr-1` from fail to partial and `instr-2` from partial to fail; Opus `instr-1` kept its pass. Opus writes 1919
+and 1935 words against 2095 and 2097 and costs 1.22 and 1.82 against 1.66 and 1.53. Haiku writes 1711 and 1177 words
+against 1179 and 1357 and costs 0.34 and 0.34 against 0.31 and 0.20.

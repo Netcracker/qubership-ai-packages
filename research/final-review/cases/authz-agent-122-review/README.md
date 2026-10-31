@@ -294,3 +294,50 @@ runs.
 - **Check 2.** `cut-1` lists the README's `helm test … --logs` as run by nothing and files no finding; `cut-2` files it
   with two other unrun recipes and asks to run them, with no reason tied to the Job, the check's partial. The `series`
   and `doccmd` arms missed it in one run each as well.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; this change has no skill or instruction file, so no report used it. Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Check 6 | Check 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, partial | pass, pass | pass, pass | pass, pass | pass, fail | pass, pass | 2023, 2459 | 2.43, 2.16 |
+| Haiku | pass, pass | partial, partial | pass, pass | fail, partial | pass, pass | pass, pass | pass, pass | 1750, 1653 | 0.60, 0.73 |
+
+- **Check 2.** Opus `instr-1` puts it first among its three worst problems: "`--logs` reads the log of a Pod named after
+  the test hook (`pkg/action/release_testing.go:127`). Here the hook is a Job", read in Helm 3.15.2, and asks to run
+  it or replace it with `kubectl logs job/<name>`. Opus `instr-2` lists the README's `helm test … --timeout 15m --logs`
+  as run by "none" and asks for one run, with reasons that are the tag form and the 15-minute limit, not the Job: the
+  check's partial. Haiku `instr-1` files it as F8 and asks for a run; it names the Job only as an open question
+  ("Whether `--logs` prints the log of a Job-created pod is unverified"), so it does not find that the form prints no
+  log: partial. Haiku `instr-2` files the README's install path with `helm test … --logs` as having no run (F12), with
+  no reason tied to the Job: partial.
+- **Check 6.** Opus `instr-2` checks the image set in Item 7 and settles it: "`git grep 'qubership-authz-policy-admin'`
+  finds no other list of the images. None." It files neither "CI builds both" nor "two-entry". The other three file
+  "CI builds both"; Opus `instr-1` files "two-entry" with it.
+- **Check 4.** Both Opus runs file it and show the failure with `TAG` (`instr-1`: "With `--set TAG=1.2.3`, I got
+  `local/pip-stub:1.2.3`"). Haiku `instr-1` settles it on the documented example: "The example
+  `IMAGE_PULL_POLICY=Never` means the same to both. I found no case where a value means something different, so no
+  finding." Haiku `instr-2` names the shared keys and files nothing ("both mean the same thing to every consumer.
+  None.").
+- **Check 3.** All four file the pair of the Job's deadline and the fixed `helm test --timeout 15m`. Opus `instr-1`:
+  "Raising `activeDeadlineSeconds` past 900 has no effect"; Haiku `instr-1` (F9): "Limits not derived. The Job deadline
+  `activeDeadlineSeconds: 900` equals `helm test --timeout 15m`", and Haiku `instr-2` (F8) asks to raise the `helm
+  test` timeout past 900 s or derive one from the other. Neither Haiku run says that raising the deadline has no effect.
+- **Check 1.** All four name the objects and Helm's refusal and ask for a run from the old state or the remedy; Opus
+  `instr-2` quotes "invalid ownership metadata".
+- **Check 7.** All four compare the old 3-minute `wait … Ready` with about 15 minutes on a missing image and ask to run
+  the fault or bound the wait; both Opus runs add the harness, 2 minutes against 10.
+- **Cost.** Opus costs 2.43 and 2.16, Haiku 0.60 and 0.73, under a third of Opus.
+
+Against the `1b1ebc3e` runs. Opus: check 2 went from fail, fail to pass, partial and check 6 from pass, pass to pass,
+fail; the other checks are unchanged. Opus `instr-1` is 3158 words before and 2023 now at the same cost, and Opus
+`instr-2` costs 2.16 against 3.25 (24 turns against 53). Haiku: check 2 went from partial, fail to partial, partial,
+check 3 from fail, fail to pass, pass, check 4 from partial, fail to fail, partial, and check 6 from fail, pass to
+pass, pass; checks 1, 5, and 7 are unchanged. No report of either tree carries a table of added instructions, since the
+change adds no skill or instruction file; Haiku `instr-2` says so ("the §2a instruction table does not apply"). The
+check 2 failures of the `1b1ebc3e` runs therefore came from how the reviewer reads Helm, not from the §2a wording, and
+Opus failed check 2 in both runs of the `main` and `pr180` arms too. Of the new runs, only Opus `instr-1` read Helm's
+source and found the Job; the other three list the `--logs` form as unrun.

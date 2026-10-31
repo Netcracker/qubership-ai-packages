@@ -35,7 +35,8 @@ head=$(cat "$case_dir/head")
 work=$(mktemp -d)
 mkdir "$work/skills" "$work/out"
 # Each line: the package directory, then the skill directory inside it.
-for entry in final-review:final-review test-authoring:test-authoring english-us-developer-style:english-developer-style; do
+for entry in final-review:final-review test-authoring:test-authoring english-us-developer-style:english-developer-style \
+  apm-authoring:apm-authoring; do
   name=${entry#*:}
   skill=agent-packages/${entry%%:*}/.apm/skills/$name
   if [ $# -ge 4 ]; then

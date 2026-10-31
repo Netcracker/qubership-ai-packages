@@ -62,3 +62,38 @@ two runs, as a no-regression check against the arm named below.
 | 2 | pass | pass | fail, pass |
 
 No regression; both runs file the equal pair of check 2. Cost 0.42 and 0.36 USD against 0.48 and 0.45.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
+`apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
+before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Check 1 | Check 2 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | 0.52, 0.49 | 1600, 1537 |
+| Haiku | fail, partial | fail, fail | 0.10, 0.10 | 1108, 1073 |
+
+- **Opus.** Both runs file the replaced `socketTimeout` and ask to keep the smaller value (`instr-1`, `result.md:85`:
+  "`isValid(0)` and large timeouts replace the user's `socketTimeout` with a longer one", with "Only lower the timeout";
+  `instr-2`, `result.md:67-68`: "Use the smaller of the two non-zero limits" and "A `timeout` larger than the configured
+  `socketTimeout` raises the limit for the call"). Both file the equal pair (`instr-1`, `result.md:86`: "Socket timeout
+  equal to query timeout races the cancel; on a slow but healthy server the connection is aborted instead of cancelled";
+  `instr-2`, `result.md:72`: "The read timeout equals the query timeout and races the cancel timer").
+- **Haiku `instr-1`.** Both checks fail. No finding says the caller's `socketTimeout` is raised or removed; `isValid(0)`
+  appears only as an untested claim, "`isValid(0)` leaves the network timeout unchanged. **No test.**" (`result.md:15`).
+  The equal pair is noted under item 3 and left open: "The statement's query timeout is set to the same `timeout` in
+  seconds" and "I did not verify whether that cancel runs off the calling thread" (`result.md:25`); no row files it.
+- **Haiku `instr-2`.** Check 1 is partial. F3 (`result.md:52`) states both cases, "For `isValid(0)` SO_TIMEOUT becomes 0
+  (infinite)" and "For `isValid(n)` with a longer `n` it lengthens the bound", but asks to keep the configured value
+  only for `timeout == 0` and to "State the precedence" otherwise. Check 2 fails: item 3 says the query timeout "is set
+  to the same value and does not unblock the caller's blocked read, so it does not bound the call" (`result.md:28`),
+  which drops the race instead of filing it.
+
+Against tree `1b1ebc3e` Opus is unchanged, 4 of 4 passes, at a cost of 0.52, 0.49 against 0.67, 0.51 and 1600, 1537
+words against 1538, 1597. Haiku loses three of its passes: `instr-1` falls from pass, pass to fail, fail, and `instr-2`
+from fail, pass to partial, fail, so the one gain is check 1 of `instr-2`, from fail to partial. Haiku cost 0.10, 0.10
+against 0.12, 0.06, and its reports shrank from 1258, 1436 to 1108, 1073 words. The change is a Java diff, and no run
+writes a table of added instructions or the `Added instructions:` line. Haiku `instr-2` has a `### Not findings` list
+(`result.md:56`), but it names items 1, 4 and 5 that had nothing to review, not instructions.

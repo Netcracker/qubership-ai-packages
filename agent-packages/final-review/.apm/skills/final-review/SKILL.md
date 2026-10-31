@@ -10,8 +10,8 @@ description: >-
   comments that refer by content rather than by position or ordinal; assertions that print the
   operands. Every item gets an answer, "none" included, with evidence. Findings are sorted
   substantive, taste, or churn, and only the first kind is a request. A change with no code, such
-  as a skill, a docs page, or a configuration, fills the same form through the analogues the skill
-  names. Not a general code review; for that use the code-review skills.
+  as a skill, AGENTS.md, a docs page, or a configuration, fills the same form through the
+  analogues the skill names. Not a general code review; for that use the code-review skills.
 ---
 
 # Final review of a change
@@ -180,17 +180,22 @@ review comment is where this is missed: the comment names one path, and the fix 
 
 ## 2a. A change with no code
 
-A skill, a documentation page, a configuration, or a research directory has no members, no tests, and nothing for
-the drift script to parse. The form still applies; each item reads the analogue below, and the report says under
-every item which analogue was used. Say that the drift script was not run and why, and do not skip an item because
-its literal wording does not fit. The skills to load are the developer-style skill and the authoring skill of the
-artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package) in place of the doc-comment skill.
+A skill, an instruction file an agent reads (`AGENTS.md`, `CLAUDE.md`, a rule file), a documentation page, a
+configuration, or a research directory has no members, no tests, and nothing for the drift script to parse. The form
+still applies; each item reads the analogue below, and the report says under every item which analogue was used. Say
+that the drift script was not run and why, and do not skip an item because its literal wording does not fit. An analogue
+that names a skill or an instruction file applies to those files only; a docs page or a configuration in the same change
+gets the others. The skills to load are the developer-style skill and the authoring skill of the artifact
+(`docs-page-authoring` for a page, `apm-authoring` for a skill package or an instruction file) in place of the
+doc-comment skill.
 
 - **Comments consistent with the code and with each other.** The comments are every statement one changed file makes
   about another, about the repository, or about a document it cites: a section reference, a count ("six questions",
-  "five slots"), a file list, a description repeated across an index and a manifest, a claim about what a named issue
-  or standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read,
-  not remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow.
+  "five slots"), a file list, a description repeated across an index and a manifest, a claim about what a named issue or
+  standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read, not
+  remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow. In a skill
+  or an instruction file, a worked example is a statement too: an example followed by a sentence on what not to copy
+  from it contradicts its rule (`apm-authoring` rule *One canonical example per concern*).
 - **Claimed cases covered.** The claimed cases are the cases the task statement names and the artifacts or situations
   the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
@@ -205,23 +210,65 @@ artifact (`docs-page-authoring` for a page, `apm-authoring` for a skill package)
   item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
   file or in the program it starts. For a setting that now reaches another consumer, the values users already pass are
   one more partition. For a script or a configuration that replaces another, the faults that item names are partitions
-  too, each with how long the old and the new take to fail on it and what each prints.
+  too, each with how long the old and the new take to fail on it and what each prints. For a skill or an instruction
+  file, the negative control is the table of added instructions below.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
-  where it runs offline.
+  where it runs offline. A sentence in a skill or an instruction file that could appear unchanged in any tutorial on the
+  topic has no level, and the finding asks for its removal (`apm-authoring` rule *Encode platform-specific knowledge,
+  nothing else*).
 - **Names by content, not by position.** Unchanged, and applied to the change's own headings, cross-references, and
   case names.
 - **The failure report.** A rule's failure report is what it tells the reader to look at and what a failure looks
   like. Two checks: every rule with a detection is reached by the artifact's own checklist, where it has one, and
   every detection detects the rule it is attached to rather than a weaker property.
-- **What the writer says it verified.** The evidence that the rules can fail: an exemplar they pass and a bad case
-  they fail, both named in the change. Where a rule was rewritten, apply it again to both; a rewrite that now fails
-  the change's own worked example is a finding.
+- **What the writer says it verified.** The evidence that the rules can fail: an exemplar they pass and a bad case they
+  fail, both named in the change. Where a rule was rewritten, apply it again to both; a rewrite that now fails the
+  change's own worked example is a finding. For an instruction added after a bad output, the bad case includes an input
+  where the added item is noise, and a check that the output there did not grow, beside the check that the item now
+  appears.
 - **Siblings of the change.** The siblings are the places that enumerate or route to the artifact: an index, a
   marketplace entry, a sibling package's cross-reference, an umbrella that pins it. A scope widened in the artifact's
   body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
   the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
   still counts the set as before.
+
+For a skill or an instruction file, the report carries one more table, of the instructions the change adds or widens.
+Count them before filling a row: an instruction is one thing the change tells the agent to do. A rule that takes several
+sentences is one row, because the sentences that define its terms, state its exceptions, or say where it stops are its
+condition, and a checklist line that restates it is the same instruction. Take each instruction through three steps:
+
+1. **Choose the input.** Take an input that meets every condition the instruction states, so that it fires, and where
+   its item helps no reader or drops something a reader needs. Take it from what the artifact names: its own text, its
+   examples, its cases. An input brought from outside them, such as a versioning scheme, a template, or a deployment
+   model the artifact never mentions, is taste whatever it costs, and goes to the findings table alone, with no row. An
+   input that fails one of those conditions tests nothing.
+2. **Label it before writing a row.** The input gets no row in three cases. Where the artifact already ends the
+   instruction for that input, by its own condition or by a definition it relies on, it is not a finding: add the line
+   number that ends it to the `Not findings:` line. Only a condition ends it: a clause on where the output stops, such
+   as `end the sentence there`, says what the agent writes once the instruction fires, and does not keep it from firing.
+   Where another rule asks for the opposite on the same input, or the instruction's text reads two ways and one of the
+   readings serves the input, the conflict or the ambiguity is the finding, and it goes under item 1, not into the
+   table. Where another item already files that input, that finding carries the clause. Any other input is substantive
+   and gets a row, including one that every reading of the text fails.
+3. **Fill the row from the text.** Write what an agent that follows the instruction produces for that input, and the
+   clause that would end the instruction there (`…, and stop`, `only where …`, `absent when …`). A run on the input is
+   evidence for the row, not a substitute for it. Name the instruction by its line and a few of its words, and keep
+   every other cell to a phrase of at most about fifteen words, as in the example row. The request is the clause, not a
+   further instruction or a further run (`apm-authoring` rule *Fix a bad output where the rule stops*), and the
+   findings table points to the row rather than restating it.
+
+Where no instruction gets a row, write no table: write `Added instructions: <n>, no rows.` and the `Not findings:` line.
+Both lines carry numbers alone, as in the example below: no list of the instructions, and no word on why each one ends.
+
+One such input per instruction is the negative control the item asks for. The other branches of the instruction's
+condition are partitions, owed evidence only where the change claims them.
+
+| Instruction | Input it does not serve | What the agent writes there | Clause that ends it |
+| --- | --- | --- | --- |
+| `:42` "List every file the change touches" | a one-line fix | a list of one file the diff already shows | "only where the change spans more than one package" |
+
+Not findings: `:57`, `:63`.
 
 ## 3. Sorting the findings
 
@@ -244,7 +291,8 @@ sentence, or replaces one contradiction with another, is reshaped, not resolved,
 finding of this round; one loop refiled the same rule three times before it was stated from the exemplar rather
 than from the previous fix.
 
-One section per item, in the order above, each headed by the item's name and answered even when the answer is
-`none`. Then a table: finding, label, file and line, the change requested. Then one sentence on what the review did
-not check (the suite was not run, a language the drift script does not parse), so that the reader does not assume
-it.
+One section per item, in the order above, each headed by the item's name and answered even when the answer is `none`.
+For a skill or an instruction file, the section of *Boundaries, partitions, and the negative control* carries the table
+of added instructions from §2a, or the line that replaces it, and its `Not findings:` line. Then a table: finding,
+label, file and line, the change requested. Then one sentence on what the review did not check (the suite was not run, a
+language the drift script does not parse), so that the reader does not assume it.
