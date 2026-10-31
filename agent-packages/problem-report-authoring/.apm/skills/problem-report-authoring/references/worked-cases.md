@@ -2,9 +2,11 @@
 
 Open this when an expected block failed the test in the skill and you need the repair, or when you
 want to see the rules applied end to end. Each case pairs a draft that failed a rule with the report
-that was accepted. All six cases come from one investigation into test reporting in a build tool and
+that serves. Cases 1 to 6 come from one investigation into test reporting in a build tool and
 a test framework, so they show the rules on a library defect with a reproducer; the rules they
-illustrate are the skill's, not the ecosystem's. Both accepted reports are public and worth opening:
+illustrate are the skill's, not the ecosystem's. Case 7 is constructed rather than taken from a
+project, and shows the short end: a report that is only its core. Both accepted reports of cases 1
+to 6 are public and worth opening:
 [gradle/gradle#39079](https://github.com/gradle/gradle/issues/39079) and
 [junit-team/junit-framework#6041](https://github.com/junit-team/junit-framework/issues/6041).
 
@@ -88,6 +90,25 @@ states the problem, which is the first question of the analysis deletion test in
 The draft that failed the same test traced the defect into a Gradle class inside the field that
 states the current behavior. Deleting its marked reasoning left the report standing, so it passed the
 first question; the trace inside the symptom failed the second.
+
+## Case 7: a misspelled name with nothing past the core
+
+The draft for a misspelled environment variable on a configuration page carried five headings: the
+observation, the expected name, the operating system and the version of the service it was run
+against, the commit that introduced the misspelling, and the search that found nothing. Every part
+was true, and every part past the core failed its condition in §8 of the skill: the name the code reads is the
+expectation and its grounding, the service ignores the misspelled name on every version, and nobody
+needs the history to fix one word. The report that serves is the core and a title:
+
+```markdown
+Configuration page names `LOG_LEVL`; the service reads `LOG_LEVEL`
+
+The "Logging" section of `docs/configuration.md` (at `9c41e07`) tells you to set `LOG_LEVL=debug`.
+The service ignores that variable and keeps logging at `info`; `LOG_LEVEL=debug` switches it to
+`debug`, and `LOG_LEVEL` is the name `config/env.go` reads.
+```
+
+The search queries, the history, and the offer of a pull request go in the hand-over note.
 
 ## Published before-and-after pairs worth copying
 

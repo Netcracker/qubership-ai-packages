@@ -48,8 +48,8 @@ EOF2
 
 ## Results
 
-Runs of 2026-10-31 on the tree of 1.1.0, `1daec6f3`, graded by reading, as for
-[`readme-typo`](../readme-typo/README.md#results). The runs used this prompt as it stands; a first version piped the
+Runs of 2026-10-31, graded by reading, as for [`readme-typo`](../readme-typo/README.md#results): the new arm on skill
+tree `6ff543e9`, the baseline on `1daec6f3`. The baseline ran on this prompt as it stands; a first version piped the
 output through `cat -v`, which made `auto` color into a pipe, and Opus spent a paragraph on the contradiction.
 
 The word limit was 150 before the first run. A report with only the parts the checks ask for counts about 235 words,
@@ -57,5 +57,16 @@ because the quote from no-color.org alone is 40, so the limit is 250.
 
 | Run | Opening, criterion, observation (1–3) | The flag, once (4) | Short (5) | No slots that answer nobody (6) |
 | --- | --- | --- | --- | --- |
+| Opus r1 | pass | fail: in the first paragraph and again after the docs | fail (307) | fail: "We know of no affected users outside our own CI" |
+| Opus r2 | pass | pass | fail (286) | fail: "We are the only affected user we know of" |
+| Sonnet r1 | pass | fail: again under "What we tried" | fail (349) | fail: three headings and the only-case sentence |
+| Sonnet r2 | pass | fail | fail (346) | fail: a "Scope" paragraph of non-goals, and the only-case sentence |
 | Opus baseline r1, r2 | pass | pass | fail (426, 447) | fail: Out of scope, Alternatives, the search queries |
 | Sonnet baseline r1, r2 | pass | fail | fail (442, 392) | fail: Out of scope, Alternatives, the queries in r1 |
+
+The new arm drops the search queries from every run, the alternatives section from every run, and the non-goals from
+three of four, and cuts the prose by about a quarter. The case still fails on both models. The "only known case"
+sentence is in every new run, though the slot now asks for it only where the change is costly; it comes back from the
+reader table of §1, whose R2 asks who is blocked, and nothing in this change moved it. Two earlier trees of 1.2.0,
+`a93b8e29` and `09cd6130`, wrote 261 to 351 words by a count that included an unlabeled title, and the sentence in two
+and three runs of four.

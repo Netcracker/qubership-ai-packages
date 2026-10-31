@@ -154,6 +154,44 @@ The synthetic cases letter the rules of that draft they test:
 The last three were added for version 1.2.0. Each is a negative control, with a word limit and checks that an item is
 absent, for a rule that 1.1.0 stated without the condition that ends it.
 
+### Runs for 1.2.0
+
+Every case ran twice per model on Opus 5.5 and Sonnet 5.5 on 2026-10-31, on skill tree `6ff543e9` and on the tree of
+1.1.0, `1daec6f3` (`<model>/baseline/`), with `cases/run-case.sh`. Cells whose result moved between trees ran four
+times. The tree of 1.2.0 differs from `6ff543e9` only in the misspelled name in worked case 7, now `LOG_LEVL`,
+because misspell flagged the earlier one; no rule moved, so no case ran again. Prose words outside code blocks, Opus
+r1, r2 then Sonnet r1, r2:
+
+| Case | 1.1.0 | 1.2.0 |
+| --- | --- | --- |
+| `readme-typo` | 138, 144, 179, 166 | 53, 31, 48, 64 |
+| `ci-red-colleague` | 109, 122, 115, 106 | 94, 94, 125, 100 |
+| `no-color-request` | 426, 447, 442, 392 | 307, 286, 349, 346 |
+| `crash-no-known-fix` | 484, 436, 600, 546 | 415, 442, 599, 535 |
+| `intentional-exception-request` | 737, 655, 779, 741 | 577, 557, 673, 692 |
+| `nested-workflow-tag` | 624, 470, 667, 599 | 453, 427, 491, 487 |
+| `perf-regression` | 665, 714, 703, 737 | 628, 600, 722, 729 |
+| `vendor-ticket-mitigation` | 65, 41, 1045, 1091 | 63, 73, 813, 796 |
+
+Opus writes the vendor ticket's description as a plain-text code block, because the portal renders no Markdown, so its
+count is near zero on both trees.
+
+`no-color-request` fails on both trees: on 1.2.0 every run is over its 250-word limit and says it is the only known
+case, though the search, the alternatives section, and most non-goals are gone. In the older cases, a failing check
+compares with 1.1.0 as follows:
+
+- `crash-no-known-fix`: the supplier's Q1 2027 schedule in four of four runs, against two of four on 1.1.0, and in
+  three of four on each earlier tree of 1.2.0 (`a93b8e29`, `09cd6130`). This one is likely a regression, and no rule
+  this change touched names it.
+- `intentional-exception-request`: the 23-path listing in three of six runs (four of eight on 1.1.0); the sketch not
+  marked as untested in Opus r2, as in Opus r2 on 1.1.0. Who is blocked is stated in six of six.
+- `nested-workflow-tag`: "I have not checked how they pin it" in one of four runs (two of four on 1.1.0).
+- `perf-regression`: #2291 missing in two of eight runs (four of eight on 1.1.0, and four of four on tree `09cd6130`,
+  before §4 said that the nearest hit can have another symptom).
+- `vendor-ticket-mitigation`: the 0.32% upload failure rate after the backoff missing in one of four Opus runs (none of
+  two on 1.1.0); the DNS cache and the memory limit in Opus r2, which no Opus run on 1.1.0 carries, and in both Sonnet
+  runs on either tree.
+
 ## Files
 
 | File | What it is |

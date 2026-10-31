@@ -40,10 +40,17 @@ EOF2
 
 ## Results
 
-Runs of 2026-10-31 on the tree of 1.1.0, `1daec6f3`, graded by reading, as for
-[`readme-typo`](../readme-typo/README.md#results).
+Runs of 2026-10-31, graded by reading, as for [`readme-typo`](../readme-typo/README.md#results): the new arm on skill
+tree `6ff543e9`, the baseline on `1daec6f3`.
 
 | Run | Ask, identifiers, ruled out, assertion (1–4) | Short (5) | No environment (6) | No goal, no template (7) |
 | --- | --- | --- | --- | --- |
+| Opus r1, r2 | pass | pass (94, 94) | pass | pass |
+| Sonnet r1 | pass | fail (125): the checks as a bulleted list | fail: the versions beside the local run | pass |
+| Sonnet r2 | pass | pass (100) | pass | pass |
 | Opus baseline r1, r2 | pass | fail (109, 122) | fail | pass; both say the trace was trimmed |
 | Sonnet baseline r1, r2 | pass | fail (115, 106) | fail | pass |
+
+No run on either tree wrote a goal sentence, so this case does not tell the narrowed goal rule from the old one. What
+moved is the environment: four of four baseline runs gave the JDK, Gradle, and macOS versions of a failure CI shows too,
+and one of four new runs does.
