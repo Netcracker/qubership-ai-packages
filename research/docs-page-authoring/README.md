@@ -83,3 +83,5 @@ corrections carried into the synthesis and listed in its section 13 (the reports
 The synthesis runs to about 6,600 words including its tables. It was the input for the skill,
 which lives in the APM package [`docs-page-authoring`](../../agent-packages/docs-page-authoring/) and is kept
 canonical there, not duplicated here.
+
+Regression cases for the skill, with the runs on Opus and Sonnet, are in [`cases/`](cases/README.md).
