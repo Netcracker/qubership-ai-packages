@@ -49,10 +49,20 @@ only a `Title` label, the line after it is the title.
 
 ## Results
 
-Runs of 2026-10-31 on the tree of 1.1.0, `1daec6f3` (`<model>/baseline/`), graded by reading, both models at the
-default effort, each with `english-developer-style` from the working copy.
+Runs of 2026-10-31, graded by reading, both models at the default effort, each with `english-developer-style` from the
+working copy. The new arm ran on skill tree `6ff543e9` (`<model>/skill-tree`), the baseline on `1daec6f3`, the tree of
+1.1.0 (`<model>/baseline/`).
 
 | Run | Core (1) | Short (2) | No sections (3) | No environment (4) | No search, no analysis (5, 6) | Hand-over (7) |
 | --- | --- | --- | --- | --- | --- | --- |
+| Opus r1 | pass | pass (53), with a sentence that #212 leaves the line alone | pass | pass | pass | pass |
+| Opus r2 | pass | pass (31) | pass | pass | pass | pass |
+| Sonnet r1 | pass | pass (48) | pass | pass | pass | pass |
+| Sonnet r2 | pass | fail (64) | pass | fail: one closing line with the versions | pass | pass |
 | Opus baseline r1, r2 | pass | fail (138, 144) | fail: Expected, Environment, Workaround, Duplicates | fail | fail: the search and `81ac2f7` | pass |
 | Sonnet baseline r1, r2 | pass | fail (179, 166) | fail | fail | fail: `81ac2f7` in both, the search in r2 | pass |
+
+The #212 sentence in Opus r1 follows the last edit of this change, which tells §4 that the nearest hit is the closest
+item the search returned even with another symptom, for the `perf-regression` case. It answers no question this
+report raises, and no check catches it while the report stays under the limit. Sonnet r2 is over the limit by its
+versions line.

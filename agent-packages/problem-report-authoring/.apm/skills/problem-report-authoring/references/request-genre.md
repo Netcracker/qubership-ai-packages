@@ -7,8 +7,8 @@ for, because it does not exist; every claim about today's behavior still carries
 the document it rests on (question 5 of the skill's expected-behavior test), and a demonstration of
 what the current release does is usually the strongest section of a request. The reproduction on a
 supported version is replaced by confirming that the current release does not already do this, and
-the duplicate search by finding whether someone asked before, which the prior-proposals slot below
-carries. Ownership does not lapse: where the behavior sits between two projects, say which one owns
+the duplicate search by finding whether someone asked before; what it found goes in the
+prior-proposals slot below. Ownership does not lapse: where the behavior sits between two projects, say which one owns
 the contract and why it is the right addressee. Only the method changes, because there is no failing
 run to bisect, so the argument comes from the contract rather than from a command sequence.
 
@@ -34,24 +34,33 @@ the end; a maintainer decides whether to ask for it, and the request has to stan
 
 ## The slots
 
+Every request carries the first two. Each other slot appears only where its condition holds, and a
+two-paragraph request often needs none of them. A slot is what the request says, not a heading: a
+request that fits in a few paragraphs carries no headings, and each fact appears once, so a setting
+that does not serve you is stated beside the problem and not again under alternatives.
+
 - **The problem.** A task you could not complete, in your own vocabulary. Not "the API lacks X".
-- **Who else is blocked, and what it costs.** Both directions: the cost of doing it and the cost of
-  leaving it undone. Name a party other than yourself, or say explicitly that you are the only known
-  case. A maintainer's first question is how far the problem extends.
 - **The acceptance criterion: how anyone will know it worked.** One sentence that could become a
   test or a measurement. Phrasing it as a question the project can answer later beats any ritual
   template.
-- **What is out of scope.** A non-goals sentence keeps the discussion from expanding into the change
-  you did not ask for. Maintainers use it to bound the review.
-- **Whether it has been proposed before, and how yours differs.** A link to the prior discussion, or an
-  explicit statement of what you searched. This is the slot §4 of the skill sends the query to; some
-  processes make it a required field.
-- **Alternatives, including your workaround.** In a slot of their own below the problem statement,
-  subordinate, and stated with why each was ruled out. Ruling something out is information about your
-  requirements; leading with it is a frame that undercuts the request. One kind moves: a setting you
-  tried that does **not** solve the problem is a negative result rather than an alternative, and it
-  belongs with the problem statement, under a heading or in a sentence that says it does not fix it,
-  as §3 of the skill says.
+- **Who else is blocked, and what it costs, where you know or the change is costly.** Where you know
+  of a party other than yourself, or of what leaving it undone costs, name them. Where the change
+  costs the project something a maintainer will weigh, such as a new dependency, a changed default,
+  or an API to support, a maintainer first asks how far the problem extends: name the party, or say
+  that you are the only known case.
+- **What is out of scope, where the request could be read as asking for more.** Where a maintainer
+  could assume a related change comes with yours, one non-goals sentence names it and keeps the
+  review bounded.
+- **Whether it has been proposed before, and how yours differs, where the search found something or
+  the process asks.** A link to the prior discussion and the difference in one sentence. Where the
+  process makes what you searched a required field, the query goes there; otherwise a search that
+  found nothing goes to the hand-over note, as §4 of the skill says.
+- **Alternatives, where you considered one a maintainer would suggest.** In a slot of its own below
+  the problem statement, subordinate, and stated with why it was ruled out. Ruling something out is
+  information about your requirements; leading with it is a frame that undercuts the request. One
+  kind moves: a setting you tried that does **not** solve the problem is a negative result rather
+  than an alternative, and it belongs with the problem statement, in a sentence that says it does
+  not fix it, as §3 of the skill says.
 - **A sketch, optional and labeled.** A mock-up, a snippet, or before-and-after code helps a
   maintainer see the shape you mean. It sits below the problem statement and is marked as one possible
   shape, not as the requirement. Separate the requirement from the rendering explicitly: say which
@@ -63,15 +72,15 @@ The grounding order in the skill applies here too, and it costs more here. A req
 in "another product does it this way" or in personal preference is the shape maintainers close.
 Ground it in a task the project's own documentation says it supports, in an error the project itself
 raises, or in users who hit the same wall. A genuinely new need has no documented promise behind it,
-and that does not disqualify it: the grounding is then the task, who has it, and what it costs them
-today, stated as such. Evidence of a defect and justification for an improvement are different
+and that does not disqualify it: the grounding is then the task and what it costs today, stated as
+such, with who else has it where you know. Evidence of a defect and justification for an improvement are different
 things; a request does not borrow the language of a defect report to look stronger.
 
 ## A request in a team's own backlog
 
 The forms and guides the skill reads in step 2 rarely exist there; what stands in for them is in
-`project-conventions.md`. The slots above still apply, and the acceptance criterion and the
-non-goals are the two a backlog item most often lacks.
+`project-conventions.md`. The slots above still apply, and the acceptance criterion is the one a
+backlog item most often lacks.
 
 ## What the request does not owe, and the backport ask
 

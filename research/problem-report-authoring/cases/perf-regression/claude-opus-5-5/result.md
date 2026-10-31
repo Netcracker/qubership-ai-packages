@@ -1,19 +1,21 @@
 ## Summary
 
-After upgrading from 4.6.2 to 4.7.0 with an unchanged config, I measured p99 latency for proxying a 1 KiB response rise from 2.115 ms to 6.885 ms (median of ten runs each, 3.3 times higher). p50 rose from 610.5 us to 945.5 us, and throughput fell 8.5%, from 198114 to 181192 req/s. No run had errors. Bisecting between v4.6.2 and v4.7.0 points at 3f9c2e71 (!1482, "io: coalesce small writes per event-loop tick").
+I proxied a 1 KiB response through Ferrygate 4.6.2 and 4.7.0 with the same config. On 4.7.0 the p99 latency is 6.89 ms, against 2.12 ms on 4.6.2, which is 3.3 times higher. Throughput drops 8.5%, from 198114 to 181192 requests per second. Both figures are medians of ten `wrk` runs per version on the same machine. The ranges do not overlap: p99 was 2.06–2.23 ms on 4.6.2 and 6.51–7.40 ms on 4.7.0. No request failed.
 
-Our edge team saw the same in production: the week after the upgrade on 2026-09-15, their dashboard showed p99 at about 7 ms at unchanged traffic, which is over the 5 ms p99 target they have to meet.
+I expected 4.7.0 with its default configuration to stay within the 4.6.2 ranges for p99 and requests per second on this benchmark. The documentation promises no latency figure. The expectation rests on 4.6.2, a supported release, and on the 4.7.0 release notes, which describe the new write coalescing (`worker.io_batch`, default `auto`) as a syscall reduction and mention no latency cost. Whether the fix is in the coalescing or in its default is up to you.
+
+In production, our edge dashboard showed a p99 of about 7 ms in the week after we upgraded on September 15, 2026, at the same traffic. We need to stay under 5 ms.
 
 ## Environment
 
-- AMD EPYC 7443P (24 cores, SMT on), 128 GiB RAM, Ubuntu 24.04.1, kernel `6.8.0-45-generic`, CPU governor `performance`. Nothing else ran on the machine during the measurements.
-- Ferrygate 4.6.2 and 4.7.0 from the release tarballs `ferrygate-4.6.2-x86_64-linux-gnu.tar.gz` and `ferrygate-4.7.0-x86_64-linux-gnu.tar.gz`.
-- Upstream: `tools/bench-upstream` from the v4.7.0 tag, serving a 1 KiB body at `/1k` on `127.0.0.1:9000`.
+- Ferrygate 4.6.2 and 4.7.0 from the release tarballs `ferrygate-4.6.2-x86_64-linux-gnu.tar.gz` and `ferrygate-4.7.0-x86_64-linux-gnu.tar.gz`. I have not tested any build newer than 4.7.0.
+- AMD EPYC 7443P (24 cores, SMT on), 128 GiB RAM, CPU governor `performance`. Nothing else ran on the machine during the measurements.
+- Ubuntu 24.04.1, kernel `6.8.0-45-generic`.
 - Load generator: `wrk` 4.2.0.
-- Everything over loopback, pinned with `taskset`: Ferrygate to cores 0-7, the upstream to cores 12-15, `wrk` to cores 16-23.
-- Not established: I have not measured any 4.7.x release after 4.7.0 or the default branch.
+- Upstream: `tools/bench-upstream` from the `v4.7.0` tag, serving a 1 KiB body at `/1k` on `127.0.0.1:9000`.
+- All traffic over loopback. Each process pinned with `taskset`: Ferrygate to cores 0-7, the upstream to cores 12-15, and `wrk` to cores 16-23.
 
-Config, identical for both versions:
+Config, the same for both versions:
 
 ```toml
 [listen]
@@ -29,13 +31,13 @@ upstream = "http://127.0.0.1:9000"
 
 ## How to measure
 
-For each version: one 30-second warm-up run, discarded, then ten runs of
+For each version: one 30-second warm-up run, discarded, then ten runs of:
 
 ```bash
 wrk -t4 -c128 -d60s --latency http://127.0.0.1:8080/1k
 ```
 
-Every run exited 0 and printed no `Non-2xx or 3xx responses` or socket error line. Measurements taken 2026-09-22 and 2026-09-23.
+Every run exited 0 and printed no `Non-2xx or 3xx responses` line and no socket error line.
 
 ## Results
 
@@ -53,9 +55,7 @@ Every run exited 0 and printed no `Non-2xx or 3xx responses` or socket error lin
 | 10 | 610us | 2.13ms | 198041.58 | 955us | 7.05ms | 180255.36 |
 | **Median** | 610.5us | 2.115ms | 198114 | 945.5us | 6.885ms | 181192 |
 
-The p99 ranges do not overlap: 2.06–2.23 ms on 4.6.2, 6.51–7.40 ms on 4.7.0.
-
-4.6.2, run 2, as printed:
+Run 2 on 4.6.2, as printed:
 
 ```text
 Running 1m test @ http://127.0.0.1:8080/1k
@@ -73,7 +73,7 @@ Requests/sec: 198186.73
 Transfer/sec:    225.41MB
 ```
 
-4.7.0, run 1, as printed:
+Run 1 on 4.7.0, as printed:
 
 ```text
 Running 1m test @ http://127.0.0.1:8080/1k
@@ -93,7 +93,7 @@ Transfer/sec:    206.47MB
 
 ## Bisect
 
-Built from source with Rust 1.81.0 and `cargo build --release` on the same machine. The bisect script runs the warm-up and three of the `wrk` runs above, and exits 1 when the median p99 exceeds 4 ms.
+I built each step from source with Rust 1.81.0 (`cargo build --release`) on the same machine. `bench/bisect-p99.sh` runs the warm-up and three of the `wrk` runs above, and exits 1 when the median p99 exceeds 4 ms.
 
 ```bash
 git bisect start v4.7.0 v4.6.2
@@ -114,13 +114,20 @@ Date:   Tue Jul 14 10:22:31 2026 +0200
  3 files changed, 102 insertions(+), 20 deletions(-)
 ```
 
-The bisect took seven steps. The parent commit `a51d07c` measured a median p99 of 2.12 ms, and 3f9c2e71 measured 6.91 ms.
+The bisect took seven steps. The parent commit `a51d07c` measured a median p99 of 2.12 ms, and `3f9c2e7` measured 6.91 ms.
 
-The description of !1482 reports the syscall reduction on a 64 KiB-body benchmark and gives no latency numbers; this report is about latency with a 1 KiB body. The nearest open issue, #2291, reports memory growth with HTTP/2 upstreams on 4.7.0, a different symptom.
+The description of !1482 reports the syscall reduction on a benchmark with a 64 KiB body and gives no latency numbers. This report covers a 1 KiB body.
 
 ## Profiling data
 
-`perf record -F 999 -g -p $(pidof ferrygate) -- sleep 30` during run 4 on 4.7.0, then `perf report --no-children --percent-limit 3`. The first five lines of the report:
+Captured during run 4 on 4.7.0:
+
+```bash
+perf record -F 999 -g -p $(pidof ferrygate) -- sleep 30
+perf report --no-children --percent-limit 3
+```
+
+First lines of the report, trimmed:
 
 ```text
     18.42%  ferrygate  [kernel.kallsyms]  [k] do_epoll_wait
@@ -130,11 +137,11 @@ The description of !1482 reports the syscall reduction on a 64 KiB-body benchmar
      3.12%  ferrygate  libc.so.6          [.] __memmove_avx_unaligned_erms
 ```
 
-The same capture on 4.6.2 has no `Coalescer` frame. The flame graph from the 4.7.0 capture (40.2 MB SVG) and `perf.data` (1.3 GB) are over the attachment limit here; I can share either on request.
+The same capture on 4.6.2 has no `Coalescer` frame. The flame graph of the 4.7.0 capture (40.2 MB SVG) and the `perf.data` file (1.3 GB) are over the attachment limit; I can share either on request.
 
 ## Workaround
 
-Adding `io_batch = "off"` under `[worker]` in the config above, on 4.7.0, five runs of the same command:
+Adding `io_batch = "off"` under `[worker]` in the config above recovers most of the 4.6.2 numbers on 4.7.0, but not all of them. Five runs of the same command:
 
 | Run | p50 | p99 | req/s |
 | --- | --- | --- | --- |
@@ -144,16 +151,12 @@ Adding `io_batch = "off"` under `[worker]` in the config above, on 4.7.0, five r
 | 4 | 626us | 2.27ms | 196011.43 |
 | 5 | 630us | 2.31ms | 195655.09 |
 
-Median p99 is 2.29 ms and throughput 195816 req/s. That recovers most of the 4.6.2 numbers, not all: both are still outside the 4.6.2 ranges. The edge team rolled `io_batch = "off"` out on 2026-09-22, and their dashboard p99 went back to about 2.4 ms.
+The median p99 is 2.29 ms, about 8% above the 4.6.2 median, and the range of 2.25–2.33 ms still does not overlap with the 4.6.2 range. The median throughput is 195816 requests per second, 1.2% below 4.6.2.
 
-## Expected behavior
+Our edge team rolled `io_batch = "off"` out to production on September 22, 2026, and the dashboard p99 went back to about 2.4 ms.
 
-With the default `worker.io_batch` (`auto`) and the config above, the median p99 of this measurement stays within the 4.6.2 range, 2.06–2.23 ms. This rests on 4.6.2, which the Supported versions page still lists, and on the 4.7.0 release notes, which introduce `auto` as a reduction in syscalls per request and mention no latency cost.
+## Possible cause (untested)
 
-If a latency cost for small responses is the intended trade-off of `auto`, what I need is for the release notes and the `worker.io_batch` reference page to state it and the workload it applies to. Whether to change the default, the heuristic behind `auto`, or the documentation is yours to choose.
-
-## Possible cause (unverified)
-
-This is a guess from the commit title and the profile above. I have not read `src/io/writer.rs` closely or tested the idea, and the sections above stand without it. The coalescer seems to hold a small response until the end of the event-loop tick, so under load a response waits for the next `epoll_wait` round.
+This section is a guess from the commit title and the profile, and the sections above stand without it. I have not read `src/io/writer.rs` closely or tested the idea. The coalescer may hold a small response until the end of the event-loop tick, so under load a response waits for the next `epoll_wait` round.
 
 /label ~performance ~"needs triage"
