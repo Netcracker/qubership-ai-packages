@@ -87,7 +87,7 @@ whose name starts with `test` with `bash`, and a Go test file with `go test`, te
 
 Opus, two runs per arm, graded against every check by reading. `rule` ran test-authoring at skill tree `2c84a74`, with
 the paragraph on a replaced mechanism as committed; `control` ran it at `e7a22de`, from `main` before that paragraph.
-`claude-opus-5-5/` holds `rule-2`, and `arms/` the other three runs.
+`arms/` holds the four runs.
 
 | Arm | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Cost, USD |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -108,3 +108,27 @@ the paragraph on a replaced mechanism as committed; `control` ran it at `e7a22de
   exited, with no deadline over the loop (check 4), and adds a CI step.
 - Two earlier `rule` runs, on a wording that still stated the loop arithmetic and a sentence on the test of the fault,
   graded the same on checks 1, 2, and 4.
+
+## Results, 2026-10-31
+
+Test-authoring 1.2.0, two runs per model, graded against every check by reading. The runs used skill tree `00b85c9`;
+the results also stand for `b11951c`, which changed only when §0 proposes a stack line where the repository already has
+one, and this repository has none. `claude-opus-5-5/` and `claude-sonnet-5/` hold `run-1` and `run-2`.
+
+| Model | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | 1 | pass | pass | pass | pass | pass | pass | partial | 2.43 |
+| Opus | 2 | pass | pass | pass | pass | pass | pass | pass | 1.95 |
+| Sonnet | 1 | partial | fail | partial | fail | pass | pass | pass | 2.70 |
+| Sonnet | 2 | partial | fail | partial | fail | fail | pass | pass | 3.56 |
+
+- **Opus.** Both runs name the Job with no Pod, take the 20 seconds from `GetPodList`, count 1980 s against "about
+  three minutes", and test the give-up path on a fake clock. Both propose a deadline over the loop. `run-2` offers it
+  as one of two options and claims that a short `--pod-running-timeout` alone would pass its 202 s bound, which 90
+  polls of 4 s do not. `run-1` also asserts that the target ends with helm when `E2E_SUITE_TIMEOUT=2m`, a bound the
+  commit never promised, and that test fails on the fix (check 7). Both propose an `AGENTS.md` line about the
+  plain-bash test scripts to the user, outside the message for the author.
+- **Sonnet**, with no earlier runs to compare. Both runs test only the container that does not start, say nothing of
+  the loop's duration on a Job with no Pod, and propose no remedy, as the `control` arm did. `run-1` fakes `sleep`, but
+  its check that `helm test` was stopped also passes on the base. `run-2` sleeps for real and asserts a wall-clock window
+  of 170 to 420 seconds (check 5).

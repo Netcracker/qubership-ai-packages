@@ -1,0 +1,15 @@
+on the fix (build.sh exited with 0):
+  187 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  187 tests ran, 11 failed
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_headers_and_cells
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_schema.test_resource_schema_unique_with_a_field_dropped_by_a_header_mismatch_issue_1791
+    test_schema.test_resource_schema_foreign_keys_with_a_field_dropped_by_a_header_mismatch_issue_1791
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
+    test_header.test_get_expected_fields_exact_default_field_is_any_typed
+    test_header.test_get_expected_fields_exact_extra_label_colliding_with_a_field_name_is_renamed

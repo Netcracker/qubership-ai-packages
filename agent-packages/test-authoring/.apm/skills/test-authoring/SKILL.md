@@ -49,21 +49,20 @@ Which files, in this order:
 
 1. **The repository's instructions name the stack.** A line such as `Tests: JUnit 5 engine, JUnit 5 assertions; Mockito
    for doubles; jetCheck for property-based tests; ArchUnit for structural tests` selects the files, and nothing else is
-   opened. Where the line is missing, propose it in one sentence: to the user where the session has one, in the review
-   where the task is a review, and in the pull request description otherwise. The proposal edits no file. Write the line
-   into the repository's instructions file (`AGENTS.md`, `CLAUDE.md`) only after the user agrees. A change made with no
-   user to ask, a change to a repository that somebody else maintains, and a review all stop at the proposal. Where the
-   instructions file is generated, as its header or the repository's build shows, the agreed line goes into the source
-   the file is generated from. An edit to the output is lost at the next generation. Where the repository has no
-   instructions file, ask the user whether to add the line in a new `AGENTS.md`, and create no instructions file
-   unasked. A change that finds the line present adds to it only a fact about the harness that the change had to
-   establish (§7), under the same condition. The line names the major version where the reference files split by it
-   (`junit4.md`, `junit5.md`). Besides the libraries, it may carry a rule that decides how a new test is written, such
-   as a library new tests do not use. For a harness that has no reference file here, the project's own or a library's,
-   it also says whether one call of the harness reports every mismatch and how it names each case (§7). Maintainers may
-   write their tests as if a harness reported every mismatch, or named each case by content, before it does, and accept
-   a harder diagnosis until the harness does; the line then says so (§7). It may name the follow-up that asks a harness
-   for what it lacks, such as a label (§7). It carries no more: no rationale, and nothing about one test.
+   opened. Where the line is missing, step 2 finds the stack. A line, or a fact added to an existing one, is proposed
+   only where the session had to establish a fact about a harness that neither a reference file here nor the existing
+   line records, by a run or by reading its source: whether one call reports every mismatch and how it names each case
+   (§7). Propose it in one sentence to the user of the session, apart from any text written for others: a pull request
+   description, a review, and a message to another author carry no stack line, and a session with no user to ask
+   proposes nothing. Write the line into the repository's instructions file (`AGENTS.md`, `CLAUDE.md`) only after the
+   user agrees, and where the file is generated, as its header or the repository's build shows, into the source it is
+   generated from; an edit to the output is lost at the next generation. Create no instructions file unasked. The line
+   names the major version where the reference files split by it (`junit4.md`, `junit5.md`). Besides the libraries, it
+   may carry a rule that decides how a new test is written, such as a library new tests do not use. For a harness that
+   has no reference file here, the project's own or a library's, it also says whether one call of the harness reports
+   every mismatch and how it names each case (§7). Maintainers may write their tests as if a harness reported every
+   mismatch, or named each case by content, before it does, and accept a harder diagnosis until the harness does; the
+   line then says so (§7). It carries no more: no rationale, and nothing about one test.
 2. **Otherwise the imports of the nearest existing test of the same unit decide** (`org.junit.jupiter` against
    `org.junit.Test`, `org.assertj` against `org.junit.jupiter.api.Assertions`), then the build file. §9 already
    requires reading that test. In a repository with more than one test stack, the stack is the module's, not the
@@ -137,24 +136,24 @@ not mention them; T4 learns where the next case goes.
 ## 3. What a change owes in tests
 
 **A change owes no test when it cannot change behavior.** A rename, a move, a formatting pass, a comment, and a
-regenerated file whose output is unchanged owe nothing; the pull request says so in one line. A dependency bump, a
-regeneration whose output moved, and a build or configuration change are the other case: they can change behavior,
-and an unchanged green suite is evidence only over the surface that suite already covers. Name that surface, or test
-the behavior the bump was made for. A test written for a change that cannot alter behavior asserts the decision
-rather than the behavior, which is §5's change detector.
+regenerated file whose output is unchanged owe nothing. A dependency bump, a regeneration whose output moved, and a
+build or configuration change are the other case: they can change behavior, and an unchanged green suite is evidence
+only over the surface that suite already covers. Name that surface, or test the behavior the bump was made for. A test
+written for a change that cannot alter behavior asserts the decision rather than the behavior, which is §5's change
+detector.
 
-**Otherwise, choose the smallest level at which the changed behavior is observable through the unit's interface, and
-state the choice.** Levels are defined by what a test may touch, not by how much code it covers: a small test runs in
-one process with no network, database, file system, sleep, or system property; a medium test may use the local
-machine; a large test spans machines. These three names are this skill's. Where the repository says unit,
-integration, and end to end, unit maps to small, integration to medium or to a small test with a real in-process
-dependency, and end to end to large; choose by the definitions above, and write the repository's own name in the pull
-request and in the directory the test lands in. A change owes its first test at the smallest level that can observe
-it. It owes a second, larger test where that test establishes a failure mode the smaller one cannot: the wiring
-between components, the behavior of a real dependency a fake cannot reproduce, persistence, or a contract that
-crosses a process boundary (bytes on a socket, a schema, a message format, a value read from the deployment
-environment). The process boundary is the usual case, not the definition. Where a larger test that exercises the
-path already exists, name it in the pull request instead of adding one.
+**Otherwise, choose the smallest level at which the changed behavior is observable through the unit's interface.**
+Levels are defined by what a test may touch, not by how much code it covers: a small test runs in one process with no
+network, database, file system, sleep, or system property; a medium test may use the local machine; a large test spans
+machines. These three names are this skill's. Where the repository says unit, integration, and end to end, unit maps to
+small, integration to medium or to a small test with a real in-process dependency, and end to end to large; choose by
+the definitions above, and put the test where the repository puts tests of that level. A change owes its first test at
+the smallest level that can observe it. It owes a second, larger test where that test establishes a failure mode the
+smaller one cannot: the wiring between components, the behavior of a real dependency a fake cannot reproduce,
+persistence, or a contract that crosses a process boundary (bytes on a socket, a schema, a message format, a value read
+from the deployment environment). The process boundary is the usual case, not the definition. Where a larger test is
+owed and the change adds none, the pull request names the existing test that exercises the path, or the reason there is
+none. Elsewhere, it names the level only where the level differs from that of the unit's neighboring tests.
 
 **A change made for speed or memory owes a test of the behavior it preserves and a measurement of the improvement.**
 Assert that the result and the observable state are what they were, on the inputs the optimization special-cases and
@@ -164,11 +163,12 @@ under a tracking allocator). Where none exists, the measurement is a before-and-
 the conditions it was taken under. A wall-clock bound in an ordinary functional test is §8's assertion range that
 excludes valid outputs, and it fails on a loaded CI runner rather than on a regression.
 
-**A deliberate behavior change updates the tests that encode the old behavior, and names them.** Find them before
-writing the new test: they are the ones that fail on the change. Each is either updated, because the behavior it
-asserted is the behavior that moved, or kept, because it caught a defect in the change. The pull request names every
-test whose expectation moved and the behavior that moved with it. A test edited until the suite is green, with no such
-sentence, is §5 arriving through the diff of the tests.
+**A deliberate behavior change updates the tests that encode the old behavior.** Find them before writing the new test:
+they are the ones that fail on the change. Each is either updated, because the behavior it asserted is the behavior that
+moved, or kept, because it caught a defect in the change. Every edited expectation is the behavior that moved, and the
+reviewer checks each hunk of the tests against the change. The pull request names a test only where its hunk does not
+show which behavior moved with it. A test edited until the suite is green, its new expectation matching no behavior the
+change set out to move, is §5 arriving through the diff of the tests.
 
 **A change to how the system reads or replaces what an earlier version left behind owes a test or a run that starts
 from that state, not only from a fresh install.** The state is whatever the earlier version created and the new one
@@ -189,15 +189,15 @@ change, not in the test. A fix that keeps the value from the new consumer makes 
 control of §7: a value of the new consumer's own setting, where it has one, still reaches it.
 
 **A change that replaces a mechanism owes a run of its failures, not only of its success.** A mechanism here is what
-brings the system to a state and reports when it cannot: a build target, a wait loop, a client, a deployment step. Two
-faults are owed: the one the old mechanism met most often, which its error handling or the CI history shows, and, where
-the new one waits in a loop, the fault on which one attempt waits longest. On the second fault, count each attempt at
-its call's own timeout, the default where nothing sets one, and a call with no timeout as never returning. Count a
-deadline checked before each attempt as overrun by up to one attempt and one sleep. For each fault, name from the old
-code how long the old mechanism took to fail and what it printed, run the new one on the same fault, and state both
-durations and both outputs in the pull request. Where the new one fails later than the old, it gets a deadline that
-bounds the whole wait, last attempt included, at the old one's time to fail; where it prints less, it prints what the
-old one printed; either may instead give its reason in the pull request.
+waits for a state or retries until it holds, and reports when it cannot reach it: a wait loop, a build target or a
+deployment step that polls, a client that retries. Two faults are owed: the one the old mechanism met most often, which
+its error handling or the CI history shows, and, where the new one waits in a loop, the fault on which one attempt waits
+longest. On the second fault, count each attempt at its call's own timeout, the default where nothing sets one, and a
+call with no timeout as never returning. Count a deadline checked before each attempt as overrun by up to one attempt
+and one sleep. For each fault, name from the old code how long the old mechanism took to fail and what it printed, run
+the new one on the same fault, and state both durations and both outputs in the pull request. Where the new one fails
+later than the old, it gets a deadline that bounds the whole wait, last attempt included, at the old one's time to fail;
+where it prints less, it prints what the old one printed; either may instead give its reason in the pull request.
 
 The rows below are examples, not a list to match a change against. Write the row a change needs from the rule: name
 what the changed behavior is observable through, then ask what a larger test would establish that the small one
@@ -205,7 +205,7 @@ cannot.
 
 | Change | First test | Second test | What the reviewer checks |
 | --- | --- | --- | --- |
-| A bug fix in a private helper | Small, through the caller that reaches the helper, on the input that triggered the bug | None, unless a larger test would establish wiring, a real dependency, or persistence the small test cannot | The test reaches the helper through its caller, not by reflection or widened visibility; the red run on the base commit is in the pull request |
+| A bug fix in a private helper | Small, through the caller that reaches the helper, on the input that triggered the bug | None, unless a larger test would establish wiring, a real dependency, or persistence the small test cannot | The test reaches the helper through its caller, not by reflection or widened visibility; the test was seen red on the base commit (§1) |
 | A new method on a unit's interface | Small, one case per partition and boundary of its inputs (§4), through the method itself | Medium only where the outcome depends on a real dependency a fake cannot reproduce | The partition list against the specification; no mock of a collaborator where a fake exists |
 | A change to an error or failure path | Small, on the input that triggers it, asserting the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
 | A change to what crosses a process boundary: bytes on a wire, a schema, a message format, a serialized value | Small, feeding recorded or hand-built bytes or records to the reader with no socket or file | Medium, against the real peer or its wire-level fake, because the contract crossed a process boundary | The expected bytes are literals or captures, not produced by the writer under test; the medium test exists or is named |
@@ -213,9 +213,10 @@ cannot.
 | A change to how state an earlier version created is read or replaced: a file, a key, a schema, a cache, deployed objects | Where code reads the state: small, feeding the reader a copy recorded from the earlier version | Medium or large, installing the earlier version first and the change over it, where the replacement happens at deployment | The copy comes from the earlier version, not from the code under test; the promised outcome is asserted: keeps working, migrates, or fails naming the remedy |
 | A change that lets an existing setting reach another consumer: a pass-through variable, a flag, an environment variable, a property, a values key | Small where the new consumer is code the test calls in one process, such as a parser or a client, with a value users pass for the old ones; medium where it is a tool that reads files, such as a chart under `helm template` with a key both charts read | Medium or large, running the new consumer with that value, where its effect shows only when it runs or is deployed | The names both consumers read are listed; the value comes from what the old consumers read, not only from the documented example; what it does to the new consumer is asserted |
 
-Three questions tell a chosen level from a defaulted one: does the pull request name the level; does the small test
-mock the very boundary the change altered, which establishes nothing about that boundary; does an existing larger
-test already cover the path. `Covered by the integration tests` with no test name is a claim, not an answer.
+Three questions tell a chosen level from a defaulted one: where the level differs from the neighboring tests', or a
+larger test is owed and not added, does the pull request say why; does the small test mock the very boundary the change
+altered, which establishes nothing about that boundary; does an existing larger test already cover the path. `Covered by
+the integration tests` with no test name is a claim, not an answer.
 
 ## 4. Which inputs
 
@@ -269,10 +270,11 @@ form.
   Rust enum, `switch` on a sealed type, a `never` check in TypeScript), rely on it and write no test.
 
 The partition set against the specification is a judgment no tool checks. Make it from the specification and the
-existing tests, state it in the pull request, and stop when every partition of the changed input has one case, every
-boundary of it has a case, every partition of a varied argument that the changed behavior distinguishes has one, and
-every feasible column and transition the change reached has one, counting the tests that already exist. Ask about a
-partition only where the specification leaves the expected behavior open.
+existing tests, and stop when every partition of the changed input has one case, every boundary of it has a case, every
+partition of a varied argument that the changed behavior distinguishes has one, and every feasible column and transition
+the change reached has one, counting the tests that already exist. Name a partition in the pull request only where the
+change leaves it untested, with the reason, or where the specification leaves its expected behavior open; ask about the
+second where the session has a user to ask.
 
 ## 5. A test that cannot fail
 
@@ -404,8 +406,7 @@ them for a library this skill covers; the stack line of the repository's instruc
 documentation says them for any other. Where none says, break two cases on purpose and read what the report names, or
 cite the harness's source by file and line, and propose the answer for the stack line under §0's condition. The
 instructions may accept a form ahead of the harness, tests written as if it reported every mismatch or named each case,
-and every principle below then takes the line's answer. The change then proposes nothing about the harness for what the
-line accepts: no issue, no change, and no new stack line. A writer's preference for fewer tests is not such a line, and
+and every principle below then takes the line's answer. A writer's preference for fewer tests is not such a line, and
 neither is the shape of the neighboring tests. A test that asserts on the result of one act itself has no such fact to
 learn: it uses the grouped form that reports every failure (*Several assertions on one behavior report together*), each
 with a message that names its case where the assertion cannot, or, where the library has none, one comparison of the
@@ -424,14 +425,12 @@ of each entry open (§8). The reference file names the runner option that prints
      a second test whose name adds the case's partition. A case and its controls count as one case: a control that fails
      shows the case's setup wrong, so one hiding the other loses nothing. Where the act names a case only by position
      for some kind of mismatch, give each case a label where the harness offers one. Where it offers none, the test's
-     name is the only label, and the pull request names the label as a follow-up: a change to the harness where its
-     source is in the repository, an issue against the library otherwise, checked against its tracker. Recording that
-     the harness offers no label is not that proposal. Where the stack line already names the follow-up, or accepts the
-     tests as if the harness named each case, the pull request proposes nothing. A name that joins the outcomes of two
-     inputs with `and` or `but` names two tests. The reviewer checks: with two cases of the test broken, the report
-     names both, or the test holds one case; the two facts of the harness are cited from the reference, the stack line,
-     a run, or the harness's source; a form ahead of the harness is backed by the instructions and not by the writer or
-     the neighbors; every case a report names only by position carries a label or is proposed one.
+     name is the only label; where the harness's source is in the repository being changed, propose the label to the
+     user as a change to the harness, unless the stack line records that it offers none. A name that joins the outcomes
+     of two inputs with `and` or `but` names two tests. The reviewer checks: with two cases of the test broken, the
+     report names both, or the test holds one case; the two facts of the harness are cited from the reference, the stack
+     line, a run, or the harness's source; a form ahead of the harness is backed by the instructions and not by the
+     writer or the neighbors; every case a report names only by position carries a label where the harness offers one.
   2. **The reader sees each input whole, and the difference between two cases on one line.** Write what related cases
      share once: in one act's input where principle 3 puts the cases there; in a helper beside the tests that takes the
      varying value; as the rows of one table; or in the engine's per-test fixture, for the part no expectation depends
@@ -479,10 +478,6 @@ of each entry open (§8). The reference file names the runner option that prints
      table, and the table keeps its rows and its assertions (§9). The reviewer checks: no row field or flag selects
      which assertion a case runs; no case joined a table that asserts less than the case needs.
 
-  Where a form the harness already offers reports cases apart (a subtest or a parameterized case for separate acts, a
-  grouped assertion over the result of one act), use it and propose nothing; only a limitation no offered form removes
-  earns the follow-up of principle 1. The task files nothing.
-
 ## 8. Determinism
 
 A flaky test is neither retried until green nor deleted; it is diagnosed, and the code under test is inspected
@@ -516,16 +511,15 @@ before the test is. Each cause below has one fix, and every cause but the last i
   name, `accountWithBalance(5)`. A validation helper asserts one conceptual fact.
 - **A new test takes the shape of its neighbors.** Where the file writes one case per method, several cases in one
   source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the
-  neighbors' shape breaks §7, the skill wins: the new test takes the form §7 asks for, and the pull request names the
-  principle. The usual such shapes are several cases in one act that stops at the first mismatch, a loop whose
-  assertion stops at the first failing row or whose report does not name the row, a long setup copied into every test,
-  and a silent case kept apart from its control. The neighbors' shape is not a stack line that accepts a form ahead of
-  the harness (§7). The neighbors stay as they are unless the task is to rewrite them, with one exception: the existing
-  test of the same rule. The new case joins it where §7's principle 3 lets the two share an act, or through a helper
-  both now call, with the existing expectations unchanged and the name restated for the rule; otherwise the new test
-  stands beside it and shares its setup through that helper. A reference file may name the ecosystem's idiom for a
-  table and say which new cases join it; any other case goes beside the table in the smallest form that asserts what
-  §5 to §7 ask, and the table keeps its rows.
+  neighbors' shape breaks §7, the skill wins: the new test takes the form §7 asks for. The usual such shapes are several
+  cases in one act that stops at the first mismatch, a loop whose assertion stops at the first failing row or whose
+  report does not name the row, a long setup copied into every test, and a silent case kept apart from its control. The
+  neighbors' shape is not a stack line that accepts a form ahead of the harness (§7). The neighbors stay as they are
+  unless the task is to rewrite them, with one exception: the existing test of the same rule. The new case joins it
+  where §7's principle 3 lets the two share an act, or through a helper both now call, with the existing expectations
+  unchanged and the name restated for the rule; otherwise the new test stands beside it and shares its setup through
+  that helper. A reference file may name the ecosystem's idiom for a table and say which new cases join it; any other
+  case goes beside the table in the smallest form that asserts what §5 to §7 ask, and the table keeps its rows.
 - **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
   utilities, before writing one. Where an existing helper builds the same setup except for some values, settings, or
   return values, give it those as arguments or options and have the old callers keep calling it, so that the existing
@@ -533,8 +527,8 @@ before the test is. Each cause below has one fix, and every cause but the last i
   depends on (§7). Two helpers that build the same thing with a few lines different are the copied setup of §7 one level
   up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds for a helper
   the change itself added beside an existing one. A helper that assembles an input from pieces of syntax (§7) is neither
-  called by the new test nor copied: the new test writes its input out whole, leaves that helper and its callers as they
-  are, and the pull request says so.
+  called by the new test nor copied: the new test writes its input out whole, and leaves that helper and its callers as
+  they are.
 - **A new test goes beside the nearest existing test of the unit it exercises**, in the file or directory named for
   the code under test, not in a file named for the ticket or the author. A test class splits when its fixture no
   longer serves every test in it; a fixture with fields only some tests use is the signal.
@@ -550,7 +544,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
 | **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the runs of a replaced mechanism's failures on its replacement, with both durations and outputs (§3); for a setting that now reaches another consumer, the names that consumer shares with the old ones, each cited by the file and line that reads it, and its run with a value users pass for the old ones, where no test calls, renders, or parses it with that value (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
-| **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
+| **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each only where a reviewer reading the diff would decide otherwise. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
 ## 11. Review checklist
 
@@ -558,19 +552,21 @@ Run this over a test you wrote or one you are reviewing.
 
 - Which production change would make this test fail, and is it a bug rather than a decision (§1)?
 - For a regression test: was it seen red on the base commit (§1)?
-- Can the change alter behavior at all? If not, does the pull request say so; if it is a dependency bump, a
+- Can the change alter behavior at all? If not, is no test written for it; if it is a dependency bump, a
   regeneration, or a build change, does the pull request name the surface the green suite covers (§3)?
 - For a change made for speed or memory, is the behavior preserved asserted, is the improvement measured where the
   repository measures or reported with its conditions, and is no wall-clock bound in a functional test (§3)?
-- Is the level named, and is it the smallest at which the behavior is observable through the unit's interface (§3)?
-- Is every existing test whose expectation moved named, with the behavior that moved with it (§3)?
+- Is the level the smallest at which the behavior is observable through the unit's interface, and where it differs
+  from the neighboring tests' or a larger owed test is not added, does the pull request say why (§3)?
+- Does every existing test whose expectation moved assert the behavior that moved, and where its hunk does not show
+  which, does the pull request name it (§3)?
 - Does a small test mock the boundary the change altered (§3)?
 - Where the change reads or replaces state an earlier version left behind, does a test or a run start from a copy
   taken from that version, with the outcome named: keeps working, migrates, or fails naming the remedy? Where the
   project does not automate the transition, is the documented remedy shown run on that state (§3, §4)?
-- Where the change replaces a mechanism, are the fault the old one met most often and, for a loop, the fault on which
-  one attempt waits longest run on the new one, each attempt counted at its call's own timeout and a deadline with its
-  overrun (§3)?
+- Where the change replaces a mechanism that waits or retries, are the fault the old one met most often and, for a loop,
+  the fault on which one attempt waits longest run on the new one, each attempt counted at its call's own timeout and a
+  deadline with its overrun (§3)?
 - Does the pull request state both durations and both outputs, and does a later failure get a deadline that holds at
   the old time to fail, last attempt included, and a quieter one the old output back, or a reason (§3)?
 - Where an existing setting now reaches another consumer, are the names it shares with the old consumers listed, and
@@ -583,7 +579,8 @@ Run this over a test you wrote or one you are reviewing.
 - Where another argument can influence the changed behavior, is it varied, one case per partition the behavior
   distinguishes, and would each fail with the changed behavior wrong for that value alone (§4)?
 - Does the change add a member to an open set, and does a test enumerate the set from the code (§4)?
-- Do the partitions come from the specification, or from the branches of the code (§4)?
+- Do the partitions come from the specification, or from the branches of the code, and does the pull request name only
+  a partition left untested or one the specification leaves open (§4)?
 - Any expected value computed by the code under test, or pasted from its output (§5)?
 - Any assertion on a value the test supplied, or on the mock where the call is not the behavior (§5)?
 - Is the unit under test, or the collaborator the test names, replaced by a double (§5)?
@@ -597,9 +594,9 @@ Run this over a test you wrote or one you are reviewing.
   joined by `and` or `but` (§7)?
 - Does the assertion print the operands, in the framework's order (§7)?
 - Do the grouping, error, and message forms come from the assertion library's reference, not the engine's (§0)?
-- Where the repository's instructions carry no stack line, was the line proposed in one sentence, to the user, in the
-  review, or in the pull request (§0)? Was an instructions file edited only after the user agreed, in its source where
-  the file is generated, and was none created unasked (§0)?
+- Was a stack line proposed only where the session established a fact about a harness that neither a reference nor the
+  existing line records, and then to the user alone, never in a pull request or a review (§0)? Was an instructions file
+  edited only after the user agreed, in its source where the file is generated, and was none created unasked (§0)?
 - Does the message repeat the name or the values, or say only `failed` (§7)?
 - Is there an act after an assert that starts an unrelated scenario (§7)?
 - Does each case fail on its own, under its own name: is every case that is a separate act a test, a row, or a subtest,
@@ -616,8 +613,7 @@ Run this over a test you wrote or one you are reviewing.
   generator and the property in a property-based one (§7)?
 - Does a row field or a flag select which assertion runs, or did a case join a table that asserts less than it needs
   (§7)?
-- Where the act names a case only by position, does each case carry a label the harness prints, or does the pull
-  request propose the label as the follow-up, unless the stack line already names it (§7)?
+- Where the act names a case only by position, does each case carry a label where the harness offers one (§7)?
 - Did a rewrite drop an input whose expectation held on the base commit (§7)?
 - Any sleep, wall-clock read, unseeded random, real host, or unordered collection compared as a sequence (§8)?
 - Any expected value hidden in a fixture, a helper, or a file (§9)?
@@ -625,7 +621,7 @@ Run this over a test you wrote or one you are reviewing.
   §7, joined to the existing test of the same rule where §7 lets them share an act or a helper, and on the file's
   helpers rather than on a new one that builds what an existing one builds with a few lines different (§9)?
 - For each finding: which of the four buckets, and what settles it there: the diff, a run or a citation of the
-  harness, the tool's report, or a judgment stated in a sentence (§10)?
+  harness, the tool's report, or a judgment, stated where a reviewer would decide otherwise (§10)?
 
 ## 12. Worked examples
 
@@ -761,9 +757,8 @@ report still names each case.
 
 The harness lints one source and matches each `// expect:` marker against a finding on the next line. A finding on a
 line with no marker fails the test too, so a line without a marker expects no finding. The harness stops at the first
-marker without a finding and names it by line number, and it names an unexpected finding by line number too. It offers
-no label for a marker, so the report carries the test's name and a line. The repository's stack line records these facts
-and names the issue that asks the harness for a label, so the pull request does not propose the label again (§7).
+mismatch, and its report quotes the source line of that mismatch: the line under a marker that got no finding, or a
+line with a finding no marker expects.
 
 **Before**: the case and its control are two tests, and each carries its own copy of the class. The silent test
 establishes the rule only while the reporting one fires on the same source, and nothing keeps the two sources the same.
@@ -816,9 +811,6 @@ void aLocalIsReportedOnlyWhenNothingReadsIt() {
         """);
 }
 ```
-
-A helper `lintLocal(declaration, marker)` would also remove the copy, and it would hide the program behind a template:
-it assembles the source from two pieces of syntax, and the reader never sees the program whole.
 
 ### A report that says nothing
 

@@ -34,12 +34,18 @@ Before the fix, `SpringHandler` treated a Spring `@Value` field as possibly unin
   name and its expectations.
 - **A helper that takes a value, not pieces of syntax** (§7). A helper that splices a SpEL expression and a marker into
   a class fails.
-- **The stack line** (§0). NullAway's `AGENTS.md` has none, so the session proposes one and edits no instructions file.
+- **The stack line** (§0). NullAway's `AGENTS.md` has none. The session edits no instructions file, and a line it
+  proposes carries the harness facts it had to establish.
 
 ## Skill parts
 
 - `SKILL.md`: §0, §1, §3, §4, §7, §9
 - `references/java/junit4.md`
+
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none. `claude-sonnet-5/run-2` ran at `b11951c`: its first run ended on a reply to a background notification instead
+of the closing message, and was run again.
 
 ## Files
 
@@ -51,7 +57,7 @@ Before the fix, `SpringHandler` treated a Spring `@Value` field as possibly unin
 | `production-paths` | `nullaway/src/main`. The pull request does not touch `CHANGELOG.md`. |
 | `build.sh` | Runs every test class under `nullaway/src/test/java` that differs from `base`, with `./gradlew :nullaway:test --rerun --quiet`, and prints how many tests ran and which failed. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy; the same text as `nullaway-1834-from-scratch`. |
-| `<model>/` | The output of `run-case.sh`: `result.diff`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
+| `<model>/run-<n>/` | The output of `run-case.sh`: `result.diff`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
 
 The infrastructure was checked without a model on 2026-09-25: the pull request's own tests applied on top of the case
 commit give `73 tests ran, 0 failed` on the fix (59 s with a warm Gradle cache), and on the base
@@ -96,8 +102,13 @@ Read `result.diff` and `result-note.md` against all of them.
    inputs; `Unless` or `OnlyWhen` stating the condition of one rule passes. A test that now holds the new case keeps no
    name that states only an older rule, such as `springValueFieldTest`; where the rule has a test per partition, the
    name also states the partition, such as the side of the operator `null` is on.
-8. **The production code is unchanged.** The first part of `result.diff` is empty. The session proposes the stack
-   line (§0) in its closing message, with the text of the line, for `AGENTS.md` or `CLAUDE.md`, and edits neither.
+8. **The production code is unchanged.** The first part of `result.diff` is empty. Neither `AGENTS.md` nor `CLAUDE.md`
+   is edited. A stack line in the closing message is optional (§0): the session had to establish facts about
+   `CompilationTestHelper`, which no reference file records, but §0 keeps the line out of text written for another
+   author, and the message here is written for the author of the pull request. Where it proposes one, the line carries
+   those facts (it stops at the first mismatch and names a missing marker by line) and nothing about one test. The
+   closing message states no test level (small, unit) for tests that sit at the level of their neighbors (§3), and no
+   list of the partitions the tests cover (§4).
 9. **Green on the fix, red on the base for each moved case** (§1). Read `result-build.txt`: no failure on the fix, and
    on the base a failure for every test that holds a silent field with `null` in a comparison and for no other test: at
    least two, one with `null` on the right and one with `null` on the left. `springValueFieldTest` passes on both.

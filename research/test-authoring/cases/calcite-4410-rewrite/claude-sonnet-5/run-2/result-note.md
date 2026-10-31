@@ -1,0 +1,15 @@
+I rewrote `testSelectJoinUsingCommonColumnCaseSensitive` and `testNaturalJoinCommonColumn` into seven separate `@Test` methods. Here's the message for the PR author:
+
+---
+
+**What I changed and why**
+
+The original two tests only called `.ok()` on each query, which just asserts that validation doesn't throw. That's a weak oracle here: it would stay green even if the fix picked the wrong table for the common column, or produced the wrong output alias — which is exactly the kind of regression this JIRA is about (the fix changes not only *whether* the column is matched case-insensitively, but also *which* text becomes the output alias: `identifier.getSimple()` instead of `name`). I switched every case to `.rewritesTo(...)`, which asserts the actual expanded SQL — the `COALESCE(...)` call, which two tables it qualifies against, and the output alias — so a future change that picks the wrong side or the wrong alias case will fail the test.
+
+I also split each bundled test into one `@Test` per scenario. The original two methods packed 4 unrelated `sql(...).ok()` calls into one method each; since the assertion stops at the first mismatch, a regression in the first query would silently hide a regression in the second, third, or fourth. Each new test now fails and is named on its own.
+
+I verified the oracle by hand: I temporarily reverted just `SqlValidatorImpl.java` to its pre-fix version (keeping the new tests) and reran. 6 of the 7 new tests go red on the base commit — one with the ambiguous-column error the JIRA describes, and, for the all-lowercase USING case, with an uncaught `AssertionError` crash inside `expandExprFromJoin` (a case the JIRA title doesn't literally mention, but the same code path). All 7 pass against the fix, and the full `SqlValidatorTest` class (552 tests) and checkstyle still pass. I did not touch production code and did not commit.
+
+Rather than keep the original 4+4 arbitrary-looking combinations, I used them to build a real 2×2 decision table for the USING case (does the USING-clause spelling match the catalog's case; does the select item's spelling match the USING clause's), since each of the 4 cells exercises a genuinely different path in the fix (catalog lookup case-insensitivity, select-vs-USING case-insensitivity, both, or neither as a baseline/control). For NATURAL JOIN I dropped one redundant case: the original had both `DEPTNO` and `deptno` under `caseSensitive(true)`, but with default casing both get upper-cased to `DEPTNO` during parsing, so they are literally the same test twice; I kept one as the baseline and kept the two `caseSensitive(false)` cases (matching and mismatched schema case) as a case/control pair.
+
+**What I propose but didn't do:** nothing outstanding — I think the 4+3 split fully covers the partitions the fix touches. If you'd rather keep fewer, longer-named tests to match a different house style for this file, that's a judgment call I'd leave to you; I followed the file's existing per-scenario-`@Test` convention.

@@ -1,0 +1,34 @@
+on the fix (build.sh exited with 0):
+  
+on the base (build.sh exited with 0):
+  M  .github/docker-dev-config.json
+  M  .github/workflows/docker-release.yaml
+  M  .github/workflows/integration-tests.yaml
+  M  .gitignore
+  M  .qubership/docker.cfg
+  M  Makefile
+  M  README.md
+  M  docs/local-integration-tests.md
+  M  test/integration/pipstub/main.go
+  M  test/integration/pipstub/main_test.go
+  M  test/integration/testify/Dockerfile
+  M  test/integration/testify/helpers.go
+  M  test/k8s/README.md
+  M  test/k8s/authn/REALM-DESCRIPTION.md
+  A  test/k8s/authn/m2m-credentials/password
+  A  test/k8s/authn/m2m-credentials/username
+  A  test/k8s/entitlements-mock.yaml
+  A  test/k8s/keycloak.yaml
+  A  test/k8s/parity/entitlements-mock.yaml
+  M  test/k8s/parity/idp-seed/README.md
+  M  test/k8s/parity/idp-seed/parity-realm.json
+  A  test/k8s/parity/keycloak.yaml
+  A  test/k8s/parity/parity-suite-job.yaml
+  A  test/k8s/parity/pip-mock.yaml
+  A  test/k8s/pip-stub.yaml
+  A  test/k8s/runtime-suite-job.yaml
+  A  test/k8s/runtime-suite-rbac.yaml
+  A  test/k8s/tenant-manager.yaml
+  M  test/k8s/values.yaml
+  M  test/parity/README.md
+  M  test/svt/common/compose/docker-compose.yml

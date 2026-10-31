@@ -66,7 +66,7 @@ diagnostic:
 
 ```bash
 python3 research/test-authoring/cases/check-nullaway-case.py \
-  research/test-authoring/cases/nullaway-1834-rewrite-harness-ahead/claude-opus-5-5 \
+  research/test-authoring/cases/nullaway-1834-rewrite-harness-ahead/claude-opus-5-5/run-1 \
   'incompatible types: Box<T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<@Nullable T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<S> cannot be converted to Box<? extends Object>' \

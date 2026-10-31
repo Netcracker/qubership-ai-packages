@@ -1,0 +1,117 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d3188..9152720 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -1442,6 +1442,112 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Foo<T extends @Nullable Object> {}
++              static class NullableBound<T extends @Nullable Object> {
++                void testPositive(Foo<T> f) {
++                  // BUG: Diagnostic contains: incompatible types
++                  Foo<? extends Object> nonnull = f;
++                }
++              }
++              static class NonNullBound<T> {
++                void testNegative(Foo<T> f) {
++                  Foo<? extends Object> nonnull = f;
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void wildcardActualWithNullableTypeVariableBoundRejectedByNonNullExtendsWildcard() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Foo<T extends @Nullable Object> {}
++              static class NullableBound<T extends @Nullable Object> {
++                void testPositive(Foo<? extends T> f) {
++                  // BUG: Diagnostic contains: incompatible types
++                  Foo<? extends Object> nonnull = f;
++                }
++              }
++              static class NonNullBound<T> {
++                void testNegative(Foo<? extends T> f) {
++                  Foo<? extends Object> nonnull = f;
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void parametricExtendsWildcardRejectsNullableActualBoundOnlyWhenTargetCannotBeNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              interface Box<T extends @Nullable Object> {}
++              static class NonNullTarget<T> {
++                void consume(Box<? extends T> box) {}
++                <S extends T> void testNegative(Box<S> box) {
++                  consume(box);
++                }
++                <S extends @Nullable T> void testPositive(Box<S> box) {
++                  // BUG: Diagnostic contains: incompatible types
++                  consume(box);
++                }
++              }
++              static class NullableTarget<T extends @Nullable Object> {
++                void consume(Box<? extends T> box) {}
++                <S extends @Nullable T> void testNegative(Box<S> box) {
++                  consume(box);
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void overriddenMethodNonNullExtendsWildcardBoundRejectsNullableTypeVariableReturn() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            import java.util.List;
++            @NullMarked
++            class Test {
++              interface Box<V extends @Nullable Object> {
++                List<? extends @NonNull V> get();
++              }
++              static class Impl<V extends @Nullable Object> implements Box<V> {
++                @Override
++                // BUG: Diagnostic contains: mismatched type parameter nullability
++                public List<V> get() { throw new RuntimeException(); }
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(

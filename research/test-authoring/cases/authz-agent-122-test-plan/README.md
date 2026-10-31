@@ -44,6 +44,10 @@ Grade each by reading `result-note.md`; the grep only finds the candidates. `res
 
 - `SKILL.md`: §3, §10, §11
 
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none.
+
 ## Files
 
 | File | What it is |
@@ -53,7 +57,7 @@ Grade each by reading `result-note.md`; the grep only finds the candidates. `res
 | `production-paths` | `.`: the session changes no file. |
 | `build.sh` | Prints `git status --short`, since there is nothing to build. |
 | `prompt.md` | The task, with `<skill>` replaced by `run-case.sh`. |
-| `<model>/<arm>-<n>/` | The outputs of one run. `base-<n>` ran the skill at `387297b`, before the rule on values users already pass; `draft-<n>` with a first wording of the rule, which named one fix and no control, on an earlier base; `reach-<n>` with a twelve-sentence wording that named three fixes, the control, and what a test after a translation asserts; `trim-<n>` with the committed five-sentence wording. |
+| `<model>/<arm>-<n>/` | The outputs of one run. `base-<n>` ran the skill at `387297b`, before the rule on values users already pass; `draft-<n>` with a first wording of the rule, which named one fix and no control, on an earlier base; `reach-<n>` with a twelve-sentence wording that named three fixes, the control, and what a test after a translation asserts; `trim-<n>` with the committed five-sentence wording; `run-<n>` with test-authoring 1.2.0. |
 
 ## How to run
 
@@ -93,3 +97,19 @@ block when the runner commits the change; the variable skips that scanner.
   saying that nothing builds them. `trim-3` lists the shared names with their lines and sets only `TAG=ci`, the tag
   `make e2e-images` builds. The other three runs set a `TAG` meant for the product charts and say the stand then
   pulls images nothing builds. No Haiku run plans the control that a value of the stand's own setting still reaches it.
+
+## Results, 2026-10-31
+
+Test-authoring 1.2.0 at skill tree `00b85c9`, two runs per model, in `<model>/run-1` and `run-2`.
+
+| Model | Check 1 | Check 2 | Cost, USD | Turns | Minutes |
+| --- | --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | 1.74, 1.61 | 17, 20 | 13.6, 11.1 |
+| Sonnet | partial, fail | fail, fail | 1.30, 1.33 | 34, 25 | 12.1, 7.2 |
+
+- **Opus.** Both runs keep what `reach` found: the keys the stand shares with the product charts, a `TAG` meant for
+  those charts, and the control for a fix that keeps `E2E_HELM_ARGS` away from the stand. Both plan the run from a
+  cluster the old harness set up. `run-1` proposes a stack line to the user only, for the chart-render script.
+- **Sonnet**, with no earlier runs to compare. `run-1` names the reach and the shared keys, then sets `TAG=smoke` and
+  expects the stand's images to carry it, without saying that nothing builds them. `run-2` mentions neither
+  `E2E_HELM_ARGS` nor `TAG`. Neither run plans a start from the old harness's state.
