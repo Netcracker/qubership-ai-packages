@@ -99,3 +99,10 @@ from fail, pass to partial, fail, so the one gain is check 1 of `instr-2`, from 
 against 0.12, 0.06, and its reports shrank from 1258, 1436 to 1108, 1073 words. The change is a Java diff, and no run
 writes a table of added instructions or the `Added instructions:` line. Haiku `instr-2` has a `### Not findings` list
 (`result.md:56`), but it names items 1, 4 and 5 that had nothing to review, not instructions.
+
+## The `cond` arm, 2026-10-31: not run
+
+Final-review tree `3d6a0954` conditions the hunk and command rules of item *Claimed cases covered*, the twin-path
+paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
+case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
+tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.

@@ -10,9 +10,10 @@ demands an answer to every item can, and the form is short enough that the items
    the first sentence of an added or changed comment, the list a comment carries, the sibling that delegates with a
    fixed argument, history narration.
 2. Every case the task statement, the commit message, and the test class comments claim, covered by a named test,
-   including the test that separates the chosen design from its alternative, and every command the change tells
-   someone to run, matched to a script or CI job that runs that exact form. In the other direction, every hunk of the
-   diff belongs to a sentence of the commit message or the description.
+   including the test that separates the chosen design from its alternative, and every command the change adds or edits,
+   or whose outcome depends on a configuration it creates, matched to a script or CI job that runs that exact form. In
+   the other direction, every hunk that changes behavior, a version, or a dependency belongs to a sentence of the commit
+   message or the description.
 3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and, where
    the change reads or replaces state an earlier version left behind, a test or run that starts from it. Where the
    change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one
@@ -31,7 +32,7 @@ demands an answer to every item can, and the form is short enough that the items
 A change with no code (a skill, an `AGENTS.md` or `CLAUDE.md`, a docs page, a configuration) is checked through the same
 items read as analogues. For a skill or an instruction file the report adds a table of the instructions the change adds
 or widens, one row per rule however many sentences it takes: an input inside the instruction's own condition where its
-item is noise or drops something, what an agent writes there, and the clause that would end the instruction. An
+item is noise or drops something, what an agent writes there, and the condition that would end the instruction. An
 instruction the artifact already ends for that input gets no row, only its line number below the table, and an ambiguity
 or a conflict with another rule goes to the comments item instead; with no row left, one line replaces the table. The
 analogues also ask whether a worked example teaches what the sentence after it forbids, whether a sentence could appear

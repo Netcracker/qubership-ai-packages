@@ -243,3 +243,26 @@ fixed headings and findings row 4 repeats its clause, "Add 'only where the templ
 table)"; v3n-2 writes one row on a changed error code for an input that already failed, and findings row 7 restates it
 with the clause. Sonnet `instr-2` on `796a9b8d` failed 4a the same way, and `instr-1` passed it. Both Haiku runs write
 no row, and keep both lines to about ten words.
+
+## Results of the `cond` arm, 2026-10-31
+
+`draft-<n>` ran final-review tree `3d6a0954` and `cond-<n>` tree `385ba703`; they differ in one sentence, described in
+[`cda-4f69810-review`](../cda-4f69810-review/README.md), as is the committed tree `a24f8021`, for which the `cond`
+results stand. Graded by reading `result.md`.
+
+| Model | Run | Check 1 | Check 2 | Check 3 | Check 4a | Check 4b | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `draft-1` | pass | pass | pass | pass | n/a | 1855 | 1.19 |
+| Opus | `draft-2` | pass | pass | pass | pass | pass | 1906 | 1.42 |
+| Opus | `cond-1` | pass | pass | pass | pass | pass | 1767 | 1.31 |
+| Opus | `cond-2` | pass | pass | pass | pass | pass | 1776 | 1.10 |
+| Sonnet | `draft-1` | pass | pass | n/a | pass | pass | 1688 | 0.33 |
+| Sonnet | `draft-2` | pass | pass | n/a | pass | n/a | 2058 | 0.32 |
+| Sonnet | `cond-1` | pass | pass | n/a | pass | n/a | 2220 | 0.47 |
+| Sonnet | `cond-2` | pass | pass | n/a | pass | n/a | 1956 | 0.29 |
+
+No check regresses on this control. Both Opus `cond` runs write `Added instructions: <n>, no rows.` and a `Not
+findings:` line of about ten words, and stay under the 2313-word limit of check 3. Sonnet `cond-1` files that the
+control `pgjdbc-4392-no-break` has no baseline arm, so it cannot show that the output did not grow (`result.md:74`): a
+new substantive request, which the restored sentence invites, in the longest report of the four. Sonnet index rows
+restate the input of their table row without its clause.

@@ -109,3 +109,10 @@ Against the `1b1ebc3e` runs (Opus pass, pass; Haiku fail, partial), Opus `instr-
 Haiku `instr-1` from fail to partial and `instr-2` from partial to fail; Opus `instr-1` kept its pass. Opus writes 1919
 and 1935 words against 2095 and 2097 and costs 1.22 and 1.82 against 1.66 and 1.53. Haiku writes 1711 and 1177 words
 against 1179 and 1357 and costs 0.34 and 0.34 against 0.31 and 0.20.
+
+## The `cond` arm, 2026-10-31: not run
+
+Final-review tree `3d6a0954` conditions the hunk and command rules of item *Claimed cases covered*, the twin-path
+paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
+case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
+tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.

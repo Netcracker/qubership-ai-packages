@@ -223,3 +223,33 @@ framework repository and reads no tracker content, with the clause "when the ses
 docs-only typo edit, with the same kind of clause. Sonnet `v3n-1` writes its row as a bullet, on a host without
 bubblewrap or socat, which the paragraph does not address. Neither Haiku run writes the table, although the change
 edits `AGENTS.md`.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, graded by reading `result.md`. Final-review tree `1b139bb8` is the committed one.
+`3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which `3d6a0954` had
+shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where `3d6a0954` made a
+command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8` makes it one
+unless the reading shows the promised outcome. Check 1 reads the command rule, so `draft-<n>` holds the runs on
+`3d6a0954` and `cond-<n>` those on `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line
+wrapping and by the word restored in "an item with a finding gives the file and line" in §2, which every run since
+`3d6a0954` read without "finding".
+
+| Model | Run | Check 1 | Table of added instructions | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `draft-1` | pass | one row | 2851 | 1.71 |
+| Opus | `draft-2` | pass | one row | 2530 | 1.75 |
+| Opus | `cond-1` | pass | one row | 2709 | 1.19 |
+| Opus | `cond-2` | pass | one row | 2736 | 1.44 |
+| Sonnet | `draft-1` | partial | `2, no rows` | 1874 | 0.56 |
+| Sonnet | `draft-2` | pass | one row | 2594 | 0.68 |
+| Sonnet | `cond-1` | pass | one row | 2376 | 0.33 |
+| Sonnet | `cond-2` | pass | one row | 2127 | 0.49 |
+
+- **Opus** holds check 1 in all four runs, as in `instr` (2646 and 2457 words). `cond-2` files the BSD `date -d`
+  under item 2: "On macOS, BSD `date -d` fails ("illegal option -- d")" (`result.md:73`).
+- **Sonnet** passes in three runs of four, against pass, partial in `instr`. `draft-1` named the GNU-only call and asked
+  for no portable form and no macOS run, as `instr-2` did; both `cond` runs ask for one (`cond-1`, `result.md:73`: "say
+  "Linux/GNU only", or use Python for the dates").
+- **The report.** No index carries a request, and every report ends on a check it could not run (`prek`, network
+  lookups). Every run writes one row of the table of added instructions.
