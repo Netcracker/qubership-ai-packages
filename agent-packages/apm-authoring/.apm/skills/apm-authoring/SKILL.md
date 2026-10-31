@@ -284,14 +284,16 @@ once, in active voice, and let them apply to both directions.
 
 This applies to a skill and to any instruction file an agent reads
 (`*.instructions.md`, `AGENTS.md`, `CLAUDE.md`, a rule file). When an
-agent leaves a part of its output empty or fills it with something
-wrong (a commit body that guesses at a cause, a review that pads a
-section with "none found because…"), first give that part a condition
-that ends it: what to state and where to stop, or when the part is
-absent. A rule that says "write X" fires on every input, including
-those where X is noise, and such rules pile up one per bad output until
-every output carries all of them. Add one only where the reader needs
-X on every input.
+agent leaves a part of its output empty or fills it with something wrong
+(a commit body that guesses at a cause, a review that pads a section
+with "none found because…"), first give that part a condition that ends
+it: when the part is absent, and, where it is owed, what to state and
+where to stop. A clause on where to stop bounds the part on the inputs
+that need it; only the condition on when it is absent keeps it off the
+inputs where it is noise. A rule that says "write X" fires on every
+input, including those where X is noise, and such rules pile up one per
+bad output until every output carries all of them. Add one only where
+the reader needs X on every input.
 
 Before adding a rule to a section, read the rules that earlier failures
 added there (`git log -S '<phrase>'` finds each one's commit and
