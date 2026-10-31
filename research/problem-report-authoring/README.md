@@ -147,6 +147,12 @@ The synthetic cases letter the rules of that draft they test:
 | [`cases/perf-regression/`](cases/perf-regression/README.md) | A synthetic latency regression where every run succeeded: measurements cut to one log line, a verified workaround deleted, and a cause stated as fact |
 | [`cases/vendor-ticket-mitigation/`](cases/vendor-ticket-mitigation/README.md) | A synthetic vendor support ticket after a mitigated incident: the ask for a timeline and a credit deleted, isolation evidence moved to the note, and identifiers the vendor needs redacted with the internal ones |
 | [`cases/intentional-exception-request/`](cases/intentional-exception-request/README.md) | A synthetic feature request against a documented exception: local consistency argued as the project's contract, the operator's standard dropped as a second grounding, and an untested design sketch banned or passed off as verified |
+| [`cases/readme-typo/`](cases/readme-typo/README.md) | A one-word typo in a README filed with `gh issue create` to a repository with no template: the default sections of §8 and the environment of §6 written into a report that needs two sentences |
+| [`cases/ci-red-colleague/`](cases/ci-red-colleague/README.md) | A red `main` reported to the author of the commit in a direct message: the environment of a failure CI shows too, and the length of the short form |
+| [`cases/no-color-request/`](cases/no-color-request/README.md) | A two-paragraph feature request: every slot of the request genre (who else is blocked, non-goals, the search, alternatives) written whether or not it applies |
+
+The last three were added for version 1.2.0. Each is a negative control, with a word limit and checks that an item is
+absent, for a rule that 1.1.0 stated without the condition that ends it.
 
 ## Files
 
@@ -162,7 +168,8 @@ The synthetic cases letter the rules of that draft they test:
 | `trial/control.md` | The draft written without the skill |
 | `trial/treatment.md` | The draft written with the skill |
 | `cases/<case>/prompt.md` | The frozen investigation notes a case gives the model |
-| `cases/<case>/<model>/result.md` | The issue body that model drafted with the skill, and `result-note.md` beside it for the hand-over note |
+| `cases/<case>/<model>/result.md` | The issue body that model drafted with the skill, and `result-note.md` beside it for the hand-over note; `result-2.md` and on are further runs, and `baseline/` holds runs of an earlier tree |
+| `cases/run-case.sh` | Runs one case as a consumer of the skill gets it, and writes the result, the note, the cost, and the skill tree |
 | `review-history.md` | What changed in the skill across four review rounds, rule by rule, and what the merge took from each |
 
 ## Status
@@ -170,8 +177,8 @@ The synthetic cases letter the rules of that draft they test:
 Complete. The skill ships at `agent-packages/problem-report-authoring`. Three follow-ups remain.
 
 - Pin the package in the umbrella packages once it is on `main` and has a commit SHA.
-- **Four genres have no case.** The trial and the cases cover the bug report, the feature request,
-  and the vendor support ticket. The question, the comment on an existing report, the issue filed in
-  your own repository, and the colleague message have no evidence behind them, and their rules rest
-  on the sources alone.
+- **Three genres have no case.** The trial and the cases cover the bug report, the feature request,
+  the vendor support ticket, and the colleague message. The question, the comment on an existing
+  report, and the issue filed in your own repository have no evidence behind them, and their rules
+  rest on the sources alone.
 - Repeat the trial on a second real report in another ecosystem.
