@@ -61,3 +61,36 @@ The same split as `final`. `series-2` files the bypass of `PGStream.setNetworkTi
 replaced mechanism leads it to a false failure time: it says a silent peer now fails after 5 s, where at the default
 `socketTimeout=0` `VisibleBufferedInputStream.readMore` swallows the timeout. Cost 0.61 and 0.77 USD against 0.83 and
 0.50.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
+`apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
+before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
+`result.md`. Opus and Haiku, two runs each.
+
+| Model | Run | Check 1 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | `instr-1` | fail | 0.84 | 1518 |
+| Opus | `instr-2` | fail | 0.59 | 1811 |
+| Haiku | `instr-1` | pass | 0.25 | 1339 |
+| Haiku | `instr-2` | pass | 0.23 | 1606 |
+
+Both Haiku runs find the bypass and file it as substantive. `instr-1` finding 1 (`result.md:67`): "The raw
+`setSoTimeout` bypasses the `timeoutRequested` flag, so `readMore` swallows the `SocketTimeoutException` and
+`ensureBytes` loops", with the request to use `pgStream.setNetworkTimeout(...)`. `instr-2` traces the same path in four
+steps under item 3 and files it as S1, "Substantive (blocker)" (`result.md:96`): "The timeout is set on the raw socket,
+so `timeoutRequested` stays false and `readMore` swallows the timeout, looping forever".
+
+Opus `instr-1` never mentions `setNetworkTimeout` or the wrapper. It reports missing tests, `sslResponseTimeout=0`, a
+negative value, the unstated default, GSS and the TLS handshake, and states "Users on `socketTimeout=0` (the default)
+move from "wait forever" to 5 s" (`result.md:43`), which is false. Opus `instr-2` names the pattern but files it as
+taste: "Bypasses `PGStream.get/setNetworkTimeout`" (`result.md:118`), with no word on the swallowed timeout, and it
+states "**New:** about 5 s" for a silent server (`result.md:61`), which is false at the default `socketTimeout`.
+
+Against tree `1b1ebc3e` one grade changed: Haiku `instr-2` rose from fail to pass, so Haiku now passes in both runs.
+Opus is fail, fail in both trees, with the same pair of misses: `instr-1` silent on the wrapper, `instr-2` filing it as
+taste. Opus cost 0.84, 0.59 against 0.73, 0.54, at 1518, 1811 words against 1765, 1867. Haiku cost 0.25, 0.23 against
+0.28, 0.19, at 1339, 1606 words against 1562, 1171; the longer `instr-2` carries the four-step trace of the bypass and a
+table of how the old and new code fail on each fault. The change is a Java diff, and no run writes a table of added
+instructions or the `Added instructions:` line.
