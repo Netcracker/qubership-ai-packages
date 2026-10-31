@@ -62,6 +62,12 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   sections, or finds a check testing a part the list omits.
 - **Write `scripts/skill-tree.sh <skill directory> [<rev>]` to `<model>/skill-tree` beside each result.** A result whose
   file matches `git rev-parse HEAD:<skill directory>` is current and needs no new run.
+- **A case for a rule added after a bad output also checks an input where the rule's item is noise:** a word limit, or a
+  check that the item is absent there, beside the check that it now appears. A case that checks presence alone passes a
+  skill that writes the item into every output (the change-description-authoring cases checked that the audit was named
+  and the new test marked, and the one word limit, in `pgjdbc-4370-verbose`, was left failing; the descriptions grew
+  until maintainers called them too long). How to fix the rule: `apm-authoring` rule *Fix a bad output where the rule
+  stops*.
 - **Grade every check by reading the result, not by the snippet's count,** and say in the commit message which checks
   each result fails, which cases improved or got worse, and what you ran.
 - **Commit results and draw conclusions from the target models (Opus, Sonnet), at least two runs per cell.** Haiku is

@@ -34,7 +34,8 @@ local `AGENTS.md` / `CLAUDE.md`.
   the agent to load the `apm-authoring` skill instead of guessing.
 - The skill itself
   ([`SKILL.md`](.apm/skills/apm-authoring/SKILL.md)) — package layout,
-  the instruction-vs-skill decision, frontmatter rules, version
+  the instruction-vs-skill decision, how to fix a bad output by where
+  a rule stops rather than by one more rule, frontmatter rules, version
   policy, common authoring pitfalls.
 
 ## Typical use
