@@ -24,5 +24,16 @@ example, and the case checks that the rows still reach the message without it.
 
 ## Results
 
-Runs of 2026-10-31 on the skill at `9d2eab7` are under `<model>/baseline/`; the results of the skill these checks
-test come with it.
+Runs of 2026-10-31, graded by reading; both models at the default effort. The new arm ran on skill tree `f3764558`
+(`<model>/skill-tree`), the baseline on `9d2eab7`.
+
+Every run passes checks 1 to 7. Check 8 fails in one: Sonnet r2 says the accept command `sets
+total-size-limit=88080384`, a value the notes do not establish, and offers a third way out, `Make room instead`, that
+names no change the reader could make.
+
+The baseline runs copy the removed example's sentences (Sonnet r1 almost word for word: `The check catches dependencies
+that enter the release unnoticed, often transitively`); the new runs write their own. Three of the four new runs say
+when accepting the change is wrong (`Do not run -PupdateExpectedJars only to make the build pass`), which no baseline
+run did; Sonnet r2 says when to choose the other way out instead. Both new Sonnet runs list the largest jars, as every
+baseline run did; both Opus runs give instead the overage, which equals the size of `foo-1.2.jar`. Length: new 199 to
+234 words, baseline 140 to 213.

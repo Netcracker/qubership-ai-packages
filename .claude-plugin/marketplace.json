@@ -362,7 +362,7 @@
     {
       "name": "telemetry-authoring",
       "description": "Rules for instrumentation in libraries and services, and for the error text a person or an agent reads: which signal an event owes (a record, an instrument, a span, the caller's channel, or nothing), what a record carries, the rate it may be emitted at, and what a library may not decide for its host.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "topic:observability",
         "activity:authoring",

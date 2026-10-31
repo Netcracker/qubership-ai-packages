@@ -27,5 +27,20 @@ the subsection on the caller's channel applies except what to report. The case c
 
 ## Results
 
-Runs of 2026-10-31 on the skill at `9d2eab7` are under `<model>/baseline/`; the results of the skill these checks
-test come with it.
+Runs of 2026-10-31, graded by reading; both models at the default effort. The new arm ran on skill tree `f3764558`
+(`<model>/skill-tree`), the baseline on `9d2eab7`.
+
+Every run passes checks 1, 2, 3, 5, 6, and 7: why the limit exists, `maxResultBuffer` by name, a fetch size with
+autocommit off as the alternative to raising it, the closed connection, and no wrong advice.
+
+| Run | Value form (4) | Alternative (5) | Length (8) |
+| --- | --- | --- | --- |
+| Opus r1 | the unit (`at least {0,number,#} bytes`) | fetch size with autocommit off, fewer rows or columns | 113 words |
+| Opus r2 | byte count, `500M`, and `20p` | fetch size with autocommit off, fewer rows or columns | 133 words |
+| Sonnet r1 | byte count, `100M`, and `10p` | fetch size with autocommit off, fewer rows or columns | 143 words |
+| Sonnet r2 | fails: `raise the maxResultBuffer connection property`, with no value or unit | fetch size with autocommit off | 85 words |
+| Opus baseline r1, r2 | byte count, suffixed size, percent of the heap | fetch size with autocommit off, fewer rows or columns | 137, 147 words |
+| Sonnet baseline r1, r2 | the unit | fetch size with autocommit off, fewer rows or columns | 105, 100 words |
+
+A draft of 1.2.0 that dropped "with a value it accepts" from the way-out row also left one Sonnet run with no value or
+unit; the clause was put back, and one Sonnet run of four still gives none.

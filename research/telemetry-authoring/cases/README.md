@@ -39,3 +39,11 @@ check passed: read the result against the check's question in the case README be
 | [`build-check-release-jars`](build-check-release-jars/README.md) | a build check against a committed list | why, the diagnose command, each way out, what to report |
 | [`review-retry-loop`](review-retry-loop/README.md) | a review of a retry loop | the findings, without a padded checklist, a stack line, or an instrument for a covered fact |
 
+## Not covered
+
+The conditions 1.2.0 added are exercised on the side where they keep an item out. The side where each lets the item
+back in has no case yet: a stack line proposed where the imports and the build leave the logging API ambiguous; a review
+note where a reviewer would expect a branch to emit; a limit on a request whose size the caller does not choose, where
+the change to the request stays out of the message; an instrument a semantic convention defines; and a state whose
+counterpart is the error returned to the caller. No case reaches the deleted rule that counted every recurring logged
+condition (see `review-retry-loop`).
