@@ -8,7 +8,8 @@
 # its AGENTS.md where it has no CLAUDE.md, to the system prompt.
 #
 # A case directory holds:
-#   repo        the URL to fetch from
+#   repo        the URL to fetch from, or the path of a git bundle relative to
+#               the case directory
 #   base        the full sha of the commit the change starts from
 #   head        the full sha of the last commit of the change
 #   prompt.md   the task; <skills> is replaced by the directory of the skill
@@ -54,7 +55,9 @@ done
 
 repo=$work/repo
 git init -q "$repo"
-git -C "$repo" fetch -q --depth 10 "$(cat "$case_dir/repo")" "$head"
+src=$(cat "$case_dir/repo")
+[ -f "$case_dir/$src" ] && src=$case_dir/$src
+git -C "$repo" fetch -q --depth 10 "$src" "$head"
 git -C "$repo" checkout -q FETCH_HEAD
 git -C "$repo" cat-file -e "$base^{commit}"
 
