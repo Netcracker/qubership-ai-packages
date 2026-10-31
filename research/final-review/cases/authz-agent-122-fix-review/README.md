@@ -86,3 +86,26 @@ words against 1920 and 1930 and costs 1.02 and 0.67 against 0.96 and 0.76; Haiku
 in `suite.args` ends the suite at 10 minutes, so raising the two limits the comments name does not let a suite run
 longer; of the `1b1ebc3e` runs, Opus `instr-2` did not. The reviewed commit adds no instruction for an agent, so there
 is no table of added instructions to classify.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, at tree `3d6a0954`, graded by reading `result.md`. Final-review tree `1b139bb8` is the
+committed one. `3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which
+`3d6a0954` had shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where
+`3d6a0954` made a command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8`
+makes it one unless the reading shows the promised outcome. No check of this case reads either sentence, so its `cond`
+results stand for `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by
+the word restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read
+without "finding".
+
+| Model | Run | Check 1 | Check 2 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | 1547 | 0.82 |
+| Opus | `cond-2` | pass | pass | 1520 | 0.82 |
+| Sonnet | `cond-1` | fail | pass | 1705 | 0.32 |
+| Sonnet | `cond-2` | pass | partial | 1769 | 0.27 |
+
+- **Opus** passes both checks in both runs, as in `instr`, in shorter reports (1718 and 1684 words before).
+- **Sonnet.** `cond-1` writes "No page has a table of overrides, so none is owed" (`result.md:102`). `cond-2` files the
+  remedy row as taste, and asks for a sentence in the commit message for a reworded docs row (`result.md:29`), the one
+  run of this arm that asks to claim a hunk of wording. Opus `cond-1` says the same row "needs no claim".

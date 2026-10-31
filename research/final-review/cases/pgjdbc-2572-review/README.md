@@ -96,3 +96,10 @@ taste. Opus cost 0.84, 0.59 against 0.73, 0.54, at 1518, 1811 words against 1765
 0.28, 0.19, at 1339, 1606 words against 1562, 1171; the longer `instr-2` carries the four-step trace of the bypass and a
 table of how the old and new code fail on each fault. The change is a Java diff, and no run writes a table of added
 instructions or the `Added instructions:` line.
+
+## The `cond` arm, 2026-10-31: not run
+
+Final-review tree `3d6a0954` conditions the hunk and command rules of item *Claimed cases covered*, the twin-path
+paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
+case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
+tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.

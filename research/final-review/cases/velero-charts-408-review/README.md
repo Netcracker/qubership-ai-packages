@@ -133,3 +133,34 @@ claim that one limit caps the other; Opus `instr-2` is unchanged, strong with no
 period only with Helm's `--timeout` and said that bounds the rollout. Haiku cost 0.06, 0.03 against 0.06, 0.09, at 1179,
 1207 words against 1261, 1159. The case adds no skill or instruction file, and no run writes a table of added
 instructions or the `Added instructions:` line.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, graded by reading `result.md`. Final-review tree `1b139bb8` is the committed one.
+`3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which `3d6a0954` had
+shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where `3d6a0954` made a
+command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8` makes it one
+unless the reading shows the promised outcome. Opus ran `3d6a0954`; its check reads neither sentence, so its results
+stand. Sonnet ran `3d6a0954` as `draft-<n>` and `1b139bb8` as `cond-<n>`, since item *Claimed cases covered* also
+reaches check 1. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by the word
+restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read without
+"finding".
+
+| Model | Run | Check 1 | Check 2 (false pair) | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | strong | filed | 1817 | 0.48 |
+| Opus | `cond-2` | strong | filed | 1492 | 0.56 |
+| Sonnet | `draft-1` | fail | none | 1160 | 0.14 |
+| Sonnet | `draft-2` | fail | none | 1541 | 0.22 |
+| Sonnet | `cond-1` | fail | none | 1673 | 0.35 |
+| Sonnet | `cond-2` | fail | none | 1308 | 0.24 |
+
+- **Opus** keeps check 1 strong in both runs (`cond-1`, `result.md:62`: the velero server's SIGTERM handling as the
+  inner limit). Both runs file the `resticTimeout` pair as substantive, against one of two in `instr`; the earlier
+  `final` arm filed it in all four runs, so two runs cannot tell this from noise. The §2a analogue now says that each
+  question of item 3 applies as written instead of naming the paragraph on limits; the paragraph's rule on which limits
+  count did not change.
+- **Sonnet** fails check 1 in all four runs. `draft-1` labels the server's shutdown taste with no request for evidence,
+  and `cond-1` says the shutdown behavior "is in a program the repository does not contain; no line here sets it, and
+  I did not check it" (`result.md:59`), then asks only where the 3600 comes from.
+- **The report.** No index carries a request; every run takes the `Chart.yaml` version bump as claimed.

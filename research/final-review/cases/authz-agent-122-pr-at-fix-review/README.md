@@ -121,3 +121,35 @@ passes in ten, on different cells: check 1 `instr-2` fail to pass, check 3 `inst
 fail to pass and `instr-2` pass to fail; check 2 is fail, fail on both trees and check 4 pass, pass. Haiku writes 1612
 and 1687 words against 1721 and 1812 and costs 0.98 and 0.70 against 0.61 and 0.54; `instr-1` took 58 turns against
 37.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, at tree `3d6a0954`, graded by reading `result.md`. Final-review tree `1b139bb8` is the
+committed one. `3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which
+`3d6a0954` had shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where
+`3d6a0954` made a command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8`
+makes it one unless the reading shows the promised outcome. No check of this case reads either sentence, so its `cond`
+results stand for `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by
+the word restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read
+without "finding".
+
+| Model | Run | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | pass | pass | pass | 2706 | 2.25 |
+| Opus | `cond-2` | pass | pass | pass | pass | pass | 2563 | 2.99 |
+| Sonnet | `cond-1` | fail | fail | pass | fail | fail | 2264 | 0.86 |
+| Sonnet | `cond-2` | pass | fail | pass | pass | fail | 1864 | 0.60 |
+
+- **Opus** passes all ten, against nine in `instr` (3102 and 2457 words): `cond-1` now files "CI builds both"
+  (`result.md:113`), and `cond-2` also the two-entry array. Check 4, the SVT Keycloak bump, stays substantive in both
+  runs under the narrowed hunk rule, which still covers a version.
+- **Sonnet.** `cond-1` writes "Hunks beyond the claims: none" and says it did not read the `docker-compose.yml` hunk
+  (`result.md:63`); it files "CI builds both" as taste with no request. `cond-2` passes checks 1, 3, and 4, and is the
+  one run of the arm whose index carries the request, in the finding cell ("Request: claim it in a message…",
+  `result.md:106`).
+- **Sonnet at the base tree.** `base-1` and `base-2` ran final-review at `925b910`, before this change, to tell a
+  regression on check 4 from noise; only check 4 was graded. Both file the SVT bump as substantive (`base-1`,
+  `result.md:65`; `base-2`, `result.md:54`), against one of two `cond` runs. The narrowed rule still covers a version,
+  and `cond-1` says it did not read that hunk, so two runs cannot tell whether the old wording, "every hunk of the diff
+  belongs to a sentence", made Sonnet read every hunk. The base runs wrote 3537 and 2479 words and cost 0.64 and 0.54
+  USD.

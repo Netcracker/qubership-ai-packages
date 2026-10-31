@@ -144,3 +144,36 @@ ambiguity in item 1 ("restrict to 'where no one observed it'"). v3n-1 still writ
 observed symptom (the rule's condition ends it)" under `Not findings:`. Both Opus runs pass all three checks, v3n-1 with
 the input filed under item 1 as an ambiguity and "Added instructions: 8, no rows", v3n-2 with a row on `:475`. Both
 Haiku runs pass checks 1 and 2, v3n-1 in a row on `:91` and v3n-2 in item 1.
+
+## Results of the `cond` arm, 2026-10-31
+
+`draft-<n>` ran final-review tree `3d6a0954`, which had shortened the analogue of *What the writer says it verified* to
+"the exemplars include an input like the one its row in the table below takes"; `cond-<n>` ran tree `385ba703`, which
+keeps that sentence as before. Both trees also condition the hunk and command rules, shorten the §2a analogue of
+*Boundaries, partitions, and the negative control* to one sentence, and change the report of §4 to an index. Graded by
+reading `result.md`. The committed tree `a24f8021` differs from `385ba703` in the outcome sentence of the command rule,
+which this case's change, adding no command, does not reach; by line wrapping; and by the word restored in "an item with
+a finding gives the file and line" in §2, which every run since `3d6a0954` read without "finding". The `cond` results
+stand for it.
+
+| Model | Run | Check 1 | Check 2 | Check 3 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus | `draft-1` | pass | pass | fail | 1951 | 0.94 |
+| Opus | `draft-2` | pass | pass | fail | 1543 | 1.19 |
+| Opus | `cond-1` | pass | pass | pass | 1840 | 1.18 |
+| Opus | `cond-2` | pass | pass | pass | 1845 | 1.12 |
+| Sonnet | `draft-1` | pass | pass | fail | 1553 | 0.45 |
+| Sonnet | `draft-2` | pass | pass | fail | 1696 | 0.40 |
+| Sonnet | `cond-1` | fail | fail | fail | 1451 | 0.43 |
+| Sonnet | `cond-2` | pass | pass | fail | 1747 | 0.29 |
+
+- **Check 3 needs the sentence.** Both Opus `draft` runs lose it: their evidence finding is about untested genres. With
+  the sentence back, both Opus runs file it again (`cond-1`, `result.md:76`: "§2a asks for a bad case where each added
+  item is noise … with a check that the output did not grow there. The commit states none."). The sentence asks
+  whether the writer showed the noise input; the table asks the reviewer to construct one, and the shortening had read
+  the two as the same.
+- **Sonnet** fails check 3 in every run of both arms, as in `instr` (fail, partial). `cond-1` closes the audit rule
+  under `Not findings:` as ended by its own condition (`result.md:67`), the failure of `instr-1`; `cond-2` writes the
+  row. `cond-2` ends on "and the `english-developer-style` pass", a check the form does not ask for.
+- **The report.** No index carries a request. Opus `cond-1` points to the row ("Table row in Item 3"); Sonnet `cond-2`
+  restates it in the index without a pointer.

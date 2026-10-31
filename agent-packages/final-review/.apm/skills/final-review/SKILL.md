@@ -26,7 +26,7 @@ reads, the doc-comment skill of the language (`javadoc-authoring` and its siblin
 developer-style skill for wording. Load the two that apply to the change's language before filling the form, and
 cite their sections in the findings; do not restate them here. Wording enters this form only where it makes a
 sentence read wrongly, which is a finding under the first item; a pass over the prose for style alone is not this
-review, and the closing sentence of the report says it was not done.
+review.
 
 ## 1. Inputs
 
@@ -45,8 +45,9 @@ review, and the closing sentence of the report says it was not done.
 
 ## 2. The form
 
-Answer every item. An item with nothing to report says `none` and one line on what was checked; an item with a
-finding gives the file and line, the sentence or the test it concerns, and what the reader would get wrong.
+Answer every item. An item with nothing to report says `none` and one sentence on what was checked, not an answer to
+each of its questions; an item with a finding gives the file and line, the sentence or the test it concerns, what the
+reader would get wrong, and the change requested. The finding is stated there once; the index of §4 points to it.
 
 ### Item 1: comments consistent with the code and with each other
 
@@ -67,19 +68,22 @@ exercise, is a finding. Where the statement names a reason for the design (a war
 the test that would fail if the design were replaced by the alternative is the one to name.
 
 A command the change tells someone to run is a claimed case too: a command line in a page, a comment, a help text, or a
-recipe, with the outcome it promises. List every such command line in the changed files with its outcome. Beside each,
-put the script, build target, or CI job that runs the same command with the same flags on the configuration the change
-creates, or `none`. A documented form that differs from every form that runs, by a flag, a tool, or a version, is
-`none`. For each `none`, name the property of this configuration the outcome depends on (the kind of object the command
-acts on, a flag combination, the platform) and say what the tool does with it in each version the change says it
-supports. That a flag exists does not settle its outcome: compare what its help text, reference, or source says it acts
-on with what this configuration has. The finding is substantive, and the request is a run of that form on that
-configuration and those versions, or the documented form replaced by the one that runs.
+recipe that the change adds or edits, or whose outcome depends on a configuration the change creates, with the outcome
+it promises. List each such command line with its outcome. Beside each, put the script, build target, or CI job that
+runs the same command with the same flags on that configuration, or `none`. A documented form that differs from every
+form that runs, by a flag, a tool, or a version, is `none`. For each `none`, name the property of this configuration the
+outcome depends on (the kind of object the command acts on, a flag combination, the platform) and say what the tool does
+with it in each version the change says it supports. That a flag exists does not settle its outcome: compare what its
+help text, reference, or source says it acts on with what this configuration has. Unless that shows this configuration
+getting the promised outcome in every version the change supports, the finding is substantive, and the request is a run
+of that form on that configuration and those versions, or the documented form replaced by the one that runs.
 
-Then read the claims the other way: every hunk of the diff belongs to a sentence of the commit message or the
-description. A hunk no sentence claims is a finding, however small: a version bump carried over from another branch, a
-dependency moved in a file the change otherwise does not touch. The request is a sentence that claims it, with the run
-that checks it, or the hunk moved to a change of its own.
+Then read the claims the other way. A hunk that changes behavior, a version, or a dependency beyond what the claimed
+change needs is a finding, however small, where no sentence of the commit message or the description claims it: a
+version bump carried over from another branch, a dependency moved in a file the change otherwise does not touch. The
+tests of a claimed change, and the generated or lock output it produces, are claimed with it. The request is a sentence
+that claims the hunk, with the run that checks it, or the hunk moved to a change of its own. A hunk outside that scope,
+such as a typo fixed in a comment or a page, needs no claim, and the report does not mention it.
 
 ### Item 3: boundaries, partitions, and the negative control
 
@@ -172,11 +176,11 @@ names both; a list that names the others and not the new member is a finding. Th
 size, in digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a
 finding too.
 
-The sites of a fix include the other paths that show the same symptom, which `git grep` on a helper does not find: a
-twin target, the other major version of a tool, the other operating system. Then read every remedy, troubleshooting
-row, and step the change writes: list the paths its symptom or its cause names, and check that its action names a step
-for each. A row whose symptom names two targets and whose action names one is a finding. A fix made in answer to a
-review comment is where this is missed: the comment names one path, and the fix covers that one.
+Where the change fixes a symptom, its sites include the other paths that show the same symptom, which `git grep` on a
+helper does not find: a twin target, the other major version of a tool, the other operating system. Then read every
+remedy, troubleshooting row, and step the change writes: list the paths its symptom or its cause names, and check that
+its action names a step for each. A row whose symptom names two targets and whose action names one is a finding. A fix
+made in answer to a review comment is where this is missed: the comment names one path, and the fix covers that one.
 
 ## 2a. A change with no code
 
@@ -200,18 +204,14 @@ doc-comment skill.
   the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
   README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
-  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*. Every hunk belongs to a claim of
-  the description, as in the same item.
+  to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*. A hunk that changes a rule, a
+  version, or a dependency is claimed as in the same item.
 - **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the change
   claims; the negative control is the statement of what does not apply, and the control arm of any trial the change
   carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the finding
-  names them. For a configuration, a deployment definition, or a package installed over an earlier version, the state
-  that version left on the target is one more partition. For a configuration or a script, the paragraph on limits in
-  item *Boundaries, partitions, and the negative control* applies across files: the other limit is often set in another
-  file or in the program it starts. For a setting that now reaches another consumer, the values users already pass are
-  one more partition. For a script or a configuration that replaces another, the faults that item names are partitions
-  too, each with how long the old and the new take to fail on it and what each prints. For a skill or an instruction
-  file, the negative control is the table of added instructions below.
+  names them. For a configuration, a script, a deployment definition, or a package installed over an earlier version,
+  each question of item 3 applies as written, and its answer often lies in another file or in the program the change
+  starts. For a skill or an instruction file, the negative control is the table of added instructions below.
 - **Level, placement, and the environment.** Which file each rule lives in, whether the layout matches the siblings in
   the repository, and whether the registration entries are the ones the repository's own gate checks. Run that gate
   where it runs offline. A sentence in a skill or an instruction file that could appear unchanged in any tutorial on the
@@ -235,14 +235,14 @@ doc-comment skill.
 
 For a skill or an instruction file, the report carries one more table, of the instructions the change adds or widens.
 Count them before filling a row: an instruction is one thing the change tells the agent to do. A rule that takes several
-sentences is one row, because the sentences that define its terms, state its exceptions, or say where it stops are its
-condition, and a checklist line that restates it is the same instruction. Take each instruction through three steps:
+sentences is one row, because the sentences that define its terms, state its exceptions, or say where it stops belong
+to it, and a checklist line that restates it is the same instruction. Take each instruction through three steps:
 
 1. **Choose the input.** Take an input that meets every condition the instruction states, so that it fires, and where
    its item helps no reader or drops something a reader needs. Take it from what the artifact names: its own text, its
    examples, its cases. An input brought from outside them, such as a versioning scheme, a template, or a deployment
-   model the artifact never mentions, is taste whatever it costs, and goes to the findings table alone, with no row. An
-   input that fails one of those conditions tests nothing.
+   model the artifact never mentions, is taste whatever it costs: a taste finding of this item, with no row. An input
+   that fails one of those conditions tests nothing.
 2. **Label it before writing a row.** The input gets no row in three cases. Where the artifact already ends the
    instruction for that input, by its own condition or by a definition it relies on, it is not a finding: add the line
    number that ends it to the `Not findings:` line. Only a condition ends it: a clause on where the output stops, such
@@ -252,11 +252,11 @@ condition, and a checklist line that restates it is the same instruction. Take e
    table. Where another item already files that input, that finding carries the clause. Any other input is substantive
    and gets a row, including one that every reading of the text fails.
 3. **Fill the row from the text.** Write what an agent that follows the instruction produces for that input, and the
-   clause that would end the instruction there (`…, and stop`, `only where …`, `absent when …`). A run on the input is
+   condition that would end the instruction there (`only where …`, `absent when …`). A run on the input is
    evidence for the row, not a substitute for it. Name the instruction by its line and a few of its words, and keep
    every other cell to a phrase of at most about fifteen words, as in the example row. The request is the clause, not a
    further instruction or a further run (`apm-authoring` rule *Fix a bad output where the rule stops*), and the
-   findings table points to the row rather than restating it.
+   index of §4 points to the row rather than restating it.
 
 Where no instruction gets a row, write no table: write `Added instructions: <n>, no rows.` and the `Not findings:` line.
 Both lines carry numbers alone, as in the example below: no list of the instructions, and no word on why each one ends.
@@ -264,7 +264,7 @@ Both lines carry numbers alone, as in the example below: no list of the instruct
 One such input per instruction is the negative control the item asks for. The other branches of the instruction's
 condition are partitions, owed evidence only where the change claims them.
 
-| Instruction | Input it does not serve | What the agent writes there | Clause that ends it |
+| Instruction | Input it does not serve | What the agent writes there | Condition that ends it |
 | --- | --- | --- | --- |
 | `:42` "List every file the change touches" | a one-line fix | a list of one file the diff already shows | "only where the change spans more than one package" |
 
@@ -293,6 +293,12 @@ than from the previous fix.
 
 One section per item, in the order above, each headed by the item's name and answered even when the answer is `none`.
 For a skill or an instruction file, the section of *Boundaries, partitions, and the negative control* carries the table
-of added instructions from §2a, or the line that replaces it, and its `Not findings:` line. Then a table: finding,
-label, file and line, the change requested. Then one sentence on what the review did not check (the suite was not run, a
-language the drift script does not parse), so that the reader does not assume it.
+of added instructions from §2a, or the line that replaces it, and its `Not findings:` line. Then an index of the
+findings, one row each, in these four columns; the request stays in the item's section:
+
+| Finding | Label | File and line | Item |
+| --- | --- | --- | --- |
+| The `@throws` sentence names the exception the change removed | Substantive | `Parser.java:88` | 1 |
+
+Where no item has a finding, the index is the line `Findings: none.` Where a check the form asks for could not be done
+(the drift script does not parse the language, a file could not be read), end with one sentence that names it.

@@ -343,3 +343,35 @@ change adds no skill or instruction file; Haiku `instr-2` says so ("the §2a ins
 check 2 failures of the `1b1ebc3e` runs therefore came from how the reviewer reads Helm, not from the §2a wording, and
 Opus failed check 2 in both runs of the `main` and `pr180` arms too. Of the new runs, only Opus `instr-1` read Helm's
 source and found the Job; the other three list the `--logs` form as unrun.
+
+## Results of the `cond` arm, 2026-10-31
+
+Graded by reading `result.md`. Final-review tree `1b139bb8` is the committed one. `3d6a0954` differs from it in two
+sentences: the analogue of *What the writer says it verified*, which `3d6a0954` had shortened and `1b139bb8` keeps as
+before, and the command rule of item *Claimed cases covered*, where `3d6a0954` made a command with no run a finding only
+where reading the tool "leaves the outcome in doubt" and `1b139bb8` makes it one unless the reading shows the promised
+outcome. Check 2 reads the command rule. Opus ran `3d6a0954` and passes check 2 in both runs, which `1b139bb8` only
+makes easier to file, so its results stand. Sonnet ran `3d6a0954` as `draft-<n>` and `1b139bb8` as `cond-<n>`. Opus
+`cond-1` was run twice: the first session ended on a reply to a late background-task notification (4 turns, 21 s) and
+was replaced. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by the word
+restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read without
+"finding".
+
+| Model | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | pass | pass | pass | pass | pass | 2420 | 2.39 |
+| Opus | `cond-2` | pass | pass | pass | pass | pass | fail | pass | 1965 | 1.89 |
+| Sonnet | `draft-1` | pass | fail | pass | pass | pass | pass | pass | 2099 | 0.80 |
+| Sonnet | `draft-2` | pass | fail | fail | pass | pass | fail | pass | 2826 | 1.05 |
+| Sonnet | `cond-1` | pass | fail | pass | pass | pass | pass | pass | 1880 | 0.55 |
+| Sonnet | `cond-2` | pass | partial | pass | pass | pass | pass | pass | 1932 | 0.78 |
+
+- **Opus** gains check 2 against `instr` (pass, partial): both runs read Helm 3's `GetPodLogs` and file that the
+  README's `helm test … --logs` fails for a Job hook (`cond-1`, `result.md:50`). `cond-2` misses "CI builds both", as
+  `instr-2` did.
+- **Sonnet, check 2.** On `3d6a0954` neither run read the tool: `draft-1` filed the form as taste, "both are documented
+  paths that I expect to work", and `draft-2` settled it because the flag exists. On `1b139bb8`, `cond-2` files the
+  unrun form as substantive and asks to run it or use the Makefile's (`result.md:54`), which is the partial; `cond-1`
+  lists the form as `none` and files only the other unrun recipe.
+- **The report.** No index carries a request; every report ends on checks it could not run (no cluster, the drift script
+  on Go). The SVT Keycloak bump is filed as substantive in every run.

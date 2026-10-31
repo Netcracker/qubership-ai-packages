@@ -99,3 +99,24 @@ cost 0.03, 0.12 against 0.11, 0.12, and its reports shrank from 1522, 1631 to 12
 second to first in `haiku-1`. The change adds no skill or instruction file, and no run writes a table of added
 instructions or the `Added instructions:` line; `haiku-1` says the table "is for skills and instruction files, so it
 does not apply here".
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, at tree `3d6a0954`, graded by reading `result.md`. Final-review tree `1b139bb8` is the
+committed one. `3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which
+`3d6a0954` had shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where
+`3d6a0954` made a command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8`
+makes it one unless the reading shows the promised outcome. No check of this case reads either sentence, so its `cond`
+results stand for `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by
+the word restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read
+without "finding".
+
+| Model | Run | Check 1 | Words | Cost, USD |
+| --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | 2009 | 1.31 |
+| Opus | `cond-2` | pass | 2076 | 0.72 |
+| Sonnet | `cond-1` | pass | 1860 | 0.28 |
+| Sonnet | `cond-2` | pass | 1986 | 0.20 |
+
+Every run files the 20-minute job timeout that ends the 40-minute loop, and both Opus runs put it first in the index,
+where `instr` had it third and fourth. Opus reports grew from 1692 and 1745 words. No index carries a request.
