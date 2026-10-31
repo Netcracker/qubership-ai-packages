@@ -98,7 +98,9 @@ unclaimed, which commit `98041d0` does claim. Cost 0.45 and 0.55 USD against 0.5
 `instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
 `apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
 before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
-`result.md`. Opus and Haiku, two runs each.
+`result.md`. Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs
+from `796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that
+table, because the change adds no instruction.
 
 | Model | Check 1 | Check 2 (false pair) | Cost, USD | Words |
 | --- | --- | --- | --- | --- |

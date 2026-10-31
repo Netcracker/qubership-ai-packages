@@ -51,11 +51,14 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   `AGENTS.md` files on the way, and a drafting agent should not see instructions for editing the skill.
 - **A change to a skill re-runs the cases whose `## Skill parts` it touches.** A change to a skill is a change under
   `agent-packages/<package>/.apm/skills/<skill>/`. The frontmatter and the text above the first numbered section count
-  for every case; a checklist item, a table row, or a worked example counts as the section whose rule it restates.
-  Commit the results with the change, and say in the pull request which cases ran and why the others did not. A change
-  to a case's checks re-runs its snippet over the committed results; a change to its `prompt.md` re-runs the case.
-- **Before a version bump, run every case** on every model it has results for, and commit the results. A model with no
-  results yet runs every case.
+  for every case; a checklist item, a table row, or a worked example counts as the section whose rule it restates. A
+  case whose input never reaches the changed rule needs no run either, such as a case whose change adds no instruction
+  when the rule governs the table of added instructions: write in its `README.md` the tree its results now stand for and
+  why the change does not reach it. Commit the results with the change, and say in the pull request which cases ran and
+  why the others did not. A change to a case's checks re-runs its snippet over the committed results; a change to its
+  `prompt.md` re-runs the case.
+- **A version bump alone re-runs nothing.** The cases are there to catch regressions, and the rule above already re-runs
+  every case a change can reach. A model with no results yet runs every case.
 - **Every case declares its `## Skill parts`:** the `SKILL.md` sections and reference files whose rules its checks
   test, with a line of its own for each other skill the case runs with. Find each rule in the skill text, not from the
   section number the check cites. Update the declarations in the same commit that adds a check, renumbers the

@@ -82,7 +82,9 @@ admission refuses the Pod; `cut-1` takes the 20 seconds from `kubectl logs --hel
 
 `instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
 the reviewer as well; the reviewed commit has no skill or instruction file, so no report used it. Graded by reading
-`result.md`. Opus and Haiku, two runs each.
+`result.md`. Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs
+from `796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that
+table, because the change adds no instruction.
 
 | Model | Check 1 | Words | Cost, USD |
 | --- | --- | --- | --- |
