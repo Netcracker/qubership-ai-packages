@@ -1,0 +1,1 @@
+--jobs=%d is invalid: --jobs sets how many tables pgsync copies in parallel, so it must be at least 1. Pass --jobs=1 to copy one table at a time, or omit --jobs to use the default of 4.

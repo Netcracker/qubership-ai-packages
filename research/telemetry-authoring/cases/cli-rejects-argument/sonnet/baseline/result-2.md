@@ -1,0 +1,1 @@
+pgsync: invalid --jobs value %d. --jobs sets how many tables are copied in parallel, so it must be at least 1 or no table is copied. Pass --jobs 1 to copy one table at a time, a larger value such as --jobs 8 to copy more at once, or omit the flag to use the default of 4.
