@@ -30,8 +30,9 @@
 # Run from the repository root:
 #   research/test-authoring/cases/run-case.sh <case directory> <model> [<rev>]
 # With <rev>, the skill is taken from that commit; without it, from the working
-# copy. The output goes to <case directory>/<model>/, and only after the
-# session succeeds:
+# copy. The output goes to <case directory>/<model>/, or to
+# <case directory>/<model>/$RUN_NAME/ where RUN_NAME is set, so that two runs of
+# one model can run at once; it is written only after the session succeeds:
 #   result.diff       what the session changed in production code (expected
 #                     empty), then every other file relative to base
 #   result-note.md    the session's final message
@@ -116,7 +117,8 @@ build base
 # shellcheck disable=SC2086
 git -C "$repo" checkout -q HEAD -- $production
 
-rm -rf "${case_dir:?}/$model"
-mkdir -p "$case_dir/$model"
-cp "$work/out/"* "$case_dir/$model/"
+out_dir=$case_dir/$model${RUN_NAME:+/$RUN_NAME}
+rm -rf "${out_dir:?}"
+mkdir -p "$out_dir"
+cp "$work/out/"* "$out_dir/"
 echo "$work"
