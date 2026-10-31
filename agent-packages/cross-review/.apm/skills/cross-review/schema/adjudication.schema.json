@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision", "reasoning", "revised_finding"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["withdrawn", "upheld", "modified"],
+      "description": "withdrawn when the rebuttal defeats the premise the finding rested on, upheld when it does not, modified when the defect is real but differs from the original description."
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "What in the code decides it. Name the file, the declaration, and the mechanism, so the conclusion can be checked without rerunning the review."
+    },
+    "revised_finding": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["title", "why", "evidence", "suggestion", "path", "symbol"],
+      "description": "Present only when decision is modified. Null otherwise.",
+      "properties": {
+        "title": { "type": "string" },
+        "why": { "type": "string" },
+        "evidence": { "type": "string" },
+        "suggestion": { "type": "string" },
+        "path": { "type": "string", "description": "Path relative to the repository root." },
+        "symbol": { "type": ["string", "null"], "description": "Enclosing declaration as Class#method." }
+      }
+    }
+  }
+}

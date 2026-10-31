@@ -55,15 +55,15 @@ marketplace:
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-essentials
-      description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
+      description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials."
       source: ./agent-packages/qubership-essentials
-      version: 1.1.0
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-global-essentials
-      description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
+      description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials."
       source: ./agent-packages/qubership-global-essentials
-      version: 1.1.0
+      version: 2.0.0
       tags: ["topic:meta", "activity:setup", "audience:public"]
 
     - name: qubership-agent-support-pr
@@ -214,6 +214,12 @@ marketplace:
       description: Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.
       source: ./agent-packages/adversarial-code-review
       version: 1.0.5
+      tags: ["topic:code-review", "activity:code-review", "audience:public"]
+
+    - name: cross-review
+      description: Skill that reviews a change with two independent reviewers — the Codex CLI and a Claude subagent — merges their findings, and repeats rounds until the review converges.
+      source: ./agent-packages/cross-review
+      version: 1.0.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
     - name: meeting-analysis

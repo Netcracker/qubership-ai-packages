@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reviewer report",
+  "description": "One reviewer's output for one round. Both the Codex leg and the Claude leg produce this shape, so the merger reads a single format.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "reviewer",
+    "round",
+    "target",
+    "verdict",
+    "findings",
+    "preexisting",
+    "checked_without_findings"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "failed", "no_input"],
+      "description": "Whether the review ran. An empty findings list means the diff is clean only under 'ok'; under 'failed' or 'no_input' it means the reviewer never looked."
+    },
+    "reviewer": {
+      "type": "string",
+      "description": "Which leg produced this report: codex, claude, or a fan-out dimension name."
+    },
+    "round": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Review round this report belongs to. The orchestrator rejects a report whose round does not match the round it asked for."
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head_oid", "snapshot_oid", "dirty_digest_start", "dirty_digest_end"],
+      "description": "What the reviewer actually looked at. The orchestrator compares these against the round's recorded target to detect a working tree that moved mid-review.",
+      "properties": {
+        "head_oid": {
+          "type": "string",
+          "description": "git rev-parse HEAD, read at the start of the review."
+        },
+        "snapshot_oid": {
+          "type": "string",
+          "description": "The round's snapshot commit, copied from target.json."
+        },
+        "dirty_digest_start": {
+          "type": "string",
+          "description": "Digest of the working tree state read before the first file is opened."
+        },
+        "dirty_digest_end": {
+          "type": "string",
+          "description": "The same digest re-read after the last file. A value differing from dirty_digest_start means the tree moved and the findings are stale."
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "revise", "inconclusive"],
+      "description": "approve when nothing blocks, revise when something does, inconclusive when the reviewer could not reach a position."
+    },
+    "findings": {
+      "type": "array",
+      "description": "Defects the diff introduces. Problems the diff did not cause belong in preexisting.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "local_id",
+          "prior_id",
+          "severity",
+          "confidence",
+          "category",
+          "title",
+          "why",
+          "evidence",
+          "depends_on_premise",
+          "suggestion",
+          "anchor",
+          "introduced_by_diff"
+        ],
+        "properties": {
+          "local_id": {
+            "type": "string",
+            "description": "Identifier unique within this file, such as claude-r2-3. The merger assigns the run-stable id."
+          },
+          "prior_id": {
+            "type": ["string", "null"],
+            "description": "Ledger id this finding restates, when the reviewer recognizes it as one it already filed."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["blocker", "major", "minor"],
+            "description": "blocker breaks correctness or safety, major is a defect worth fixing before merge, minor is a preference."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "How sure the reviewer is that the defect is real, not how bad it would be."
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "correctness",
+              "concurrency",
+              "api-compat",
+              "security",
+              "performance",
+              "resource-leak",
+              "error-handling",
+              "tests",
+              "docs",
+              "style"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "One line naming the defect, with no severity prefix."
+          },
+          "why": {
+            "type": "string",
+            "description": "The concrete failure: the input, state, or sequence that produces it."
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Paths, line numbers, and quoted code that let someone else re-derive the finding without trusting the reviewer."
+          },
+          "depends_on_premise": {
+            "type": ["string", "null"],
+            "description": "The assumption the finding rests on. Refute the premise and the finding is gone. The merger compares these across legs to spot contradictions."
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "What to change. Name the mechanism, not just the goal."
+          },
+          "anchor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "symbol", "start_line", "end_line"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Path relative to the repository root. An absolute path is a bug in the adapter that produced this file."
+              },
+              "symbol": {
+                "type": ["string", "null"],
+                "description": "Enclosing declaration as Class#method or a bare function name. It survives the line shifts that later rounds introduce, which is why the ledger matches on it."
+              },
+              "start_line": { "type": ["integer", "null"] },
+              "end_line": { "type": ["integer", "null"] }
+            }
+          },
+          "introduced_by_diff": {
+            "type": "boolean",
+            "description": "True when the reviewed diff causes the defect. False when the diff only exposes it."
+          }
+        }
+      }
+    },
+    "preexisting": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Problems outside the change. They are reported once and never block convergence."
+    },
+    "checked_without_findings": {
+      "type": "string",
+      "maxLength": 600,
+      "description": "What the reviewer examined and found sound. This is what distinguishes a thorough clean review from a shallow one."
+    }
+  }
+}
