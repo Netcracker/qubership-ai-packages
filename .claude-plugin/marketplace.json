@@ -159,7 +159,7 @@
     {
       "name": "russian-developer-style",
       "description": "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "lang:ru",
