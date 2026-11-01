@@ -32,10 +32,9 @@ case tests the rule in `SKILL.md` §2,
 
 Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
 marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
-with the lead-in labels, after the results below. The four results and the control pass it with a `## Break…`
-heading, which the skill no longer writes without a template, and both baselines fail it; the results stand for the
-tree they ran on, not for the current one. `controls/breaking-lead-in.md` is `opus/result.md` with its first heading
-replaced by the lead-in, so that check 7 is seen passing on the form the skill now asks for.
+with the lead-in labels. The Haiku results and `controls/retyped-and-repeated.md` pass it with a `## Break…` heading,
+which the skill no longer writes without a template, and both baselines fail it. `controls/breaking-lead-in.md` is
+`opus/result.md` as committed before 2026-11-01 with its first heading replaced by the lead-in.
 
 ## Running it
 
@@ -51,6 +50,12 @@ message retyped, and the `getMoreResults()` break line repeated under "User-visi
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
+left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
+from one sentence; both open with `**Breaking changes.**` and pass check 7, and both keep `grant insert` among the break
+lines. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. The baseline
 rows and the control are of 2026-10-20 and were not re-run.
@@ -58,15 +63,15 @@ rows and the control are of 2026-10-20 and were not re-run.
 | Run | Lead (1) | Result shape (2) | `grant insert` (3) | Fix out (4) | Once (5) | Literals (6) | Words |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `opus/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 756 |
-| `opus/result.md` | passes | passes | fails: in Scope | passes | passes | passes | 795 |
-| `opus/result-2.md` | passes | passes | passes | passes | passes | passes | 847 |
+| `opus/result.md` | passes | passes | passes | passes | passes | passes | 763 |
+| `opus/result-2.md` | passes | passes | passes | passes | passes | passes | 781 |
 | `haiku/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 758 |
 | `haiku/result.md` | passes | passes | passes | passes | passes | passes | 799 |
 | `haiku/result-2.md` | passes | passes | passes | passes | passes | passes | 785 |
 | `controls/retyped-and-repeated.md` | passes | passes | passes | passes | fails: repeated | fails: retyped | 864 |
 
-`opus/result.md` again keeps `grant insert` in Scope as a consequence of the rule the change extends, the miss that the
-second version of the rule was written for.
+The Opus r1 of 2026-10-28 kept `grant insert` in Scope as a consequence of the rule the change extends, the miss that
+the second version of the rule was written for; both re-runs keep it among the break lines.
 
 Cost, from `<model>/result*.run.txt`: an Opus run costs about $0.50 and a Haiku run about $0.02, nearly all of it the
 two skill files read as input.

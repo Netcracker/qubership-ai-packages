@@ -1,10 +1,12 @@
-A JDBC escape whose keyword is separated from its value by a tab or a newline was not recognized. The driver sent it to the server verbatim, and the server rejected it with `syntax error at or near "{"`:
+A JDBC escape was not recognized when its keyword was followed by a tab or a newline. It reached the server verbatim:
 
 ```java
 Parser.replaceProcessing("{d\t'1999-01-09'}", true, false)
-// returns {d\t'1999-01-09'} unchanged
+// returns {d\t'1999-01-09'}, and the server rejects it with: syntax error at or near "{"
 ```
 
-`SqlParseState.getMatchedPosition` skipped only the space character, so the same escape written with a space worked. A newline is easy to hit when the SQL is formatted across several lines.
+`SqlParseState.getMatchedPosition` skipped only the space character after the keyword. The same escape written with a space worked. So whether the escape was recognized depended on which whitespace the caller wrote. A newline is easy to hit when the SQL is formatted across lines.
 
-The separator can now be any character that `Parser.isSpace` accepts: space, tab, newline, carriage return, and form feed. The backend scanner treats the same set as whitespace. `{d}`, `{ts}`, `{escape}`, and `{fn}` are now recognized with any of these characters, or a mix of them, after the keyword. A brace that does not start an escape, such as `{obj\t: 1}` or a truncated `{d\t`, still passes through unchanged. `nonEscapeBraceIsUntouchedWhateverTheWhitespace` covers these cases, and it passes without the change as well.
+The separator can now be any character that `Parser.isSpace` accepts: space, tab, newline, carriage return, or form feed. That is the set the backend scanner treats as whitespace, and the class already defines the predicate for this purpose.
+
+A brace that does not start an escape still passes through unchanged, whatever whitespace follows it. `nonEscapeBraceIsUntouchedWhateverTheWhitespace` covers this case and also passes without the change. It checks that `{obj\t: 1}` and a truncated `{d\t` come back as they went in.

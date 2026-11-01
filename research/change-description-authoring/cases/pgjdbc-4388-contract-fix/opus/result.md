@@ -1,4 +1,4 @@
-`BlobInputStream.close()` cleared `this.lo` only after the descriptor was released. When `LargeObject.close()` threw, the stream kept the large object:
+`BlobInputStream.close()` cleared `this.lo` only after it released the descriptor, so when `LargeObject.close()` threw, the stream kept the large object:
 
 ```java
 if (lo != null) {
@@ -8,8 +8,10 @@ if (lo != null) {
 this.lo = null;        // never reached
 ```
 
-As a result, `read()` after a failed `close()` still returned bytes from a descriptor the caller had been told to consider gone. A second `close()` tried the release again and threw again, although `Closeable` requires it to be a no-op. A try-with-resources block that closes the stream after its own failure got that second exception on the way out.
+After a failed `close()`, `read()` still returned bytes from the descriptor. A second `close()` retried the release and threw again, though `Closeable` requires it to do nothing. So when code closed the stream explicitly inside a try-with-resources block and that close failed, the block's own close threw the second exception on the way out.
 
-The stream is now marked closed, and its buffer released, before the descriptor is released. The first `close()` still throws `IOException` (`Can not close large object {0}`) with the `SQLException` as its cause. After that, `read()` throws an `IOException` for a closed stream, and another `close()` returns without trying the release again. Releasing the buffer here also frees up to 512 KiB that a closed stream used to hold until the stream itself was garbage collected.
+The stream is now marked closed, and its buffer released, before the descriptor is released. A closed stream used to hold that buffer, up to 512 KiB, until the stream itself was collected. A failed release still reaches the caller as an `IOException` wrapping the `SQLException`. After that failure, `read()` throws an `IOException` for a closed stream, and a second `close()` returns without trying the release again.
 
-`closeReportsAFailedRelease` passes without the fix. It pins the wrapping, which was already right. [PR #4364](https://github.com/pgjdbc/pgjdbc/pull/4364), still open, fixes the same defect in `BlobOutputStream`.
+`closeReportsAFailedRelease` passes without the fix, by design: it pins the wrapping, which was already correct.
+
+**Scope.** #4364, which is still open, fixes the same ordering in `BlobOutputStream.close()`.

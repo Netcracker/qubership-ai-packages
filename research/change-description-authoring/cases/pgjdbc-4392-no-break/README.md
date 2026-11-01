@@ -23,8 +23,16 @@ the negative control for the rule in `SKILL.md` §2,
 As in [`pgjdbc-4367-breaks`](../pgjdbc-4367-breaks/README.md). `check.py` marks all three checks.
 `controls/empty-break-section.md` is `opus/result.md` as committed before 2026-10-28 (see the git history) with a
 `Breaking changes` heading that says nothing breaks, and the server's message retyped.
+`controls/empty-break-lead-in.md` is `opus/result.md` opened with `**Breaking changes.** None.`, and fails checks 1 and
+2 through the lead-in alone.
 
 ## Results
+
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
+left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
+from one sentence; both pass all three checks, with no `**Breaking changes.**` label, at 144 and 124 words. The other
+rows stand for the trees they ran on.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. All four

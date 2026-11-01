@@ -31,13 +31,14 @@ while the coverage a narrowed test loses stays.
 8. **No test narration** (`no_test_narration`). No sentence counts the cases that fail against the old code or the
    tests that pass.
 9. **Scope by lead-in** (`scope_lead_in_4370`). The overlap with #4359 is in a paragraph that opens with
-   `**Scope.**`, and the description has no headings. The case has no template, and the two open pull requests
-   share `VisibleBufferedInputStreamSkipTest.java`, so the Scope slot carries a related pull request.
+   `**Scope.**`, or in the list that directly follows that paragraph, and the description has no headings. The case
+   has no template, and the two open pull requests share `VisibleBufferedInputStreamSkipTest.java`, so the Scope slot
+   carries a related pull request.
 
-Check 9 was added with the lead-in labels, after the results below: every result and control committed before it
-fails it, six of the eight with four or five headings, because the skill they ran on asked for headings where a
-description named a related pull request. `controls/scope-lead-in.md` is `haiku/result.md`, which has no headings, with `**Scope.**` put before its
-paragraph on #4359 and #4360; it is the one file that passes check 9.
+Check 9 was added with the lead-in labels. The Haiku results, the baselines, and the older controls fail it, four of
+the six with four or five headings, because the skill they ran on asked for headings where a description named a
+related pull request. `controls/scope-lead-in.md` is `haiku/result.md`, which has no headings, with `**Scope.**` put
+before its paragraph on #4359 and #4360.
 
 ## Running it
 
@@ -49,13 +50,19 @@ for the command.
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
+left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
+from one sentence; both runs pass check 9, each opening its paragraph on #4359 and #4360 with `**Scope.**` and carrying
+no heading. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Prose words (1) | Facts (2) | New not marked (3) | Coverage lost (4) | No construction (5) | Links (6) | No command (7) | No narration (8) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | fails: 541 | passes | passes | passes | passes | passes | passes | passes |
-| Opus r2 | fails: 658 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes | passes | fails: "5 of the 15 cases fail" |
+| Opus r1 | fails: 600 | passes | passes | passes | fails: "`Long.MIN_VALUE`", "-1, -2" | passes | passes | passes |
+| Opus r2 | fails: 541 | passes | passes | passes | passes | passes | passes | passes |
 | Haiku r1 | fails: 585 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes (no links) | passes | fails: "fails five of its 15 cases" |
 | Haiku r2 | fails: 641 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes | passes | fails: "Five of the fifteen cases … fail" |
 | Opus baseline | fails: 721 | passes | fails: "is new" | passes | fails | passes | fails | fails: "5 of its 15 cases fail" |
@@ -65,4 +72,5 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 The script passes the Haiku narration check by its regular expression; the spelled-out "five of its 15 cases" is the
 same sentence the check rules out. The new runs no longer mark the test new or give the command, but all four stay
-above 500 words (Opus r1 comes closest, at 541) and three of four still list the counts and the failing cases.
+above 500 words (Opus r2 comes closest, at 541), three of four still list the counts, and both Haiku runs count the
+failing cases.
