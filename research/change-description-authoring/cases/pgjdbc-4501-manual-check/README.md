@@ -10,8 +10,8 @@ the evidence.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Pull request description: Verification, a manual check and its literal output; What each paragraph
-  must earn: show it, the result not the route, length), §7
+- `SKILL.md`: §2 (Pull request description: the What slot; Verification, a manual check and its literal output; What
+  each paragraph must earn: show it, the result not the route, length), §7
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -21,6 +21,9 @@ the evidence.
 2. **No route** (`no_route_4501`). Neither "nothing else in the repository uses" nor "no longer carries".
 3. **No tool footer** (`no_tool_footer`). No "Generated with" line.
 4. **Short** (`prose_at_most_110_words`). At most 110 words outside fenced blocks; the posted text is 80.
+5. **The change is named** (`change_named_4501`). Outside the "Checked by" paragraph, the description names
+   the variable the script reads after the change, `PG_REPLICA_TWO_PUBLISH_PORT`. A description made of that
+   paragraph alone passes checks 1 to 4 and fails this one.
 
 ## Running it
 
@@ -31,18 +34,27 @@ effort medium, written from the same description and diff under the skill at `ma
 `SKILL.md` quotes this case's `25433->5433` output and both phrases `no_route_4501` bans, so the runs are open-book:
 they show the skill's examples are followed, not that the rule carries to a pull request it does not quote.
 
+`controls/checked-by-only.md` is the "Checked by" paragraph alone.
+
+`controls/opus-one-paragraph.md` is `opus/result.md` with its two paragraphs joined into one. 
+
+`controls/tested-by-two-paragraphs.md` is the verification as two paragraphs. They keep the layout fix from regressing.
+
 ## Results
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. There are no
 baselines for this case.
 
-| Run | Manual check literal (1) | No route (2) | No footer (3) | Words (4) |
-| --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes: 54 |
-| Opus r2 | passes | passes | passes | passes: 54 |
-| Haiku r1 | passes | passes | passes | passes: 62 |
-| Haiku r2 | passes | passes | passes | passes: 90 |
-| `controls/as-posted.md` | passes | fails: "nothing else in the repository uses" | fails | passes: 80 |
-| `controls/short-draft.md` | fails: no command, no output | passes | passes | passes: 62 |
-| `controls/main-haiku.md` | passes | fails: "Nothing else in the repository uses" | fails | fails: 136 |
+| Run | Manual check literal (1) | No route (2) | No footer (3) | Words (4) | Change named (5) |
+| --- | --- | --- | --- | --- | --- |
+| Opus r1 | passes | passes | passes | passes: 54 | passes |
+| Opus r2 | passes | passes | passes | passes: 54 | passes |
+| Haiku r1 | passes | passes | passes | passes: 62 | passes |
+| Haiku r2 | passes | passes | passes | passes: 90 | passes |
+| `controls/as-posted.md` | passes | fails: "nothing else in the repository uses" | fails | passes: 80 | passes |
+| `controls/short-draft.md` | fails: no command, no output | passes | passes | passes: 62 | passes |
+| `controls/main-haiku.md` | passes | fails: "Nothing else in the repository uses" | fails | fails: 136 | passes |
+| `controls/checked-by-only.md` | passes | passes | passes | passes: 15 | fails: name only in the command |
+| `controls/opus-one-paragraph.md` | passes | passes | passes | passes: 54 | passes |
+| `controls/tested-by-two-paragraphs.md` | passes | passes | passes | passes: 17 | fails: name only in the command |
