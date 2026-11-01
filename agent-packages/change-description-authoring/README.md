@@ -21,8 +21,7 @@ the question it answers.
   list each outcome on its own line, with the exact text and its error code or exception class where
   the outcome emits them.
 - Where a change breaks code that works on the released version: the description opens with the
-  breaks unless the next release from the target branch is a major, read from the branch's version
-  file, milestone, or name, and the commit body keeps them first in its outcome slot.
+  breaks, whatever release it targets, and the commit body keeps them first in its outcome slot.
 - Headings only where the repository's template supplies them. Without a template, the break block
   opens with `**Breaking changes.**` and a Scope slot that carries a gap, a related or stacked pull
   request, or a maintainer's question opens with `**Scope.**`; no other slot is labelled.

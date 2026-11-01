@@ -197,7 +197,7 @@ Six slots, in order; the last four are conditional.
 | --- | --- | --- | --- | --- |
 | 1 | **Why** | R1; R2 and R3 where the description becomes the commit body | The problem, the symptom, the condition that reaches it | *R1 asks: is there a problem worth fixing?* |
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
-| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it; ahead of slot 1 unless the next release is a major (below) | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
+| 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it; ahead of slot 1 (below) | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
 | 4 | **Verification** | R1 only | Only what the diff and the CI result do not show: a manual check and its literal output; a test that passes without the change, or needs what CI lacks; a test removed or narrowed; which test guards which site, where the change has several; for a claim about the code that no test establishes, the command or file that checks it | *R1, holding the diff and green checks, asks: what am I still taking on trust?* |
 | 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
 | 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
@@ -233,7 +233,7 @@ lines. A line is carried over as written, not summarized; a commit whose outcome
 is the place to fix, not the description. A change that alters nothing a caller observes has no
 slot 3 and does not write an empty one. A fact stated in slot 3 is not restated in slot 2.
 
-**A break leads the description unless the next release from the target branch is a major.** A
+**A break leads the description.** A
 break changes what code that works on the released version gets: a call that succeeded and now
 fails, a different return value or result shape (`getUpdateCount()` returning `-1` where it returned
 a count), a removed or renamed option, a changed default, a changed error code for a failure a
@@ -244,20 +244,17 @@ old behavior broke a contract the API documents (a second `Closeable.close()` th
 from a closed stream that returns data), the change is a fix, and its outcome is a line in slot 3,
 not a lead. A failure that now succeeds is a fix, not a break.
 
-In a release that is not a major, the reviewer's first decision is whether the change may ship in it
-at all. A Why and a What read before that decision are wasted on a reviewer who decides no. Read the
-next release from the target branch: its version file (`gradle.properties`, `pom.xml`,
-`package.json`, `Cargo.toml`), its milestone, or the name of a maintenance branch (`release/1.4`,
-`REL_17_STABLE`). Where a release tool bumps the major on a `BREAKING CHANGE:` trailer or a `!` (§5),
-the trailer decides, and it is written whatever the description does. Where nothing says which
-release it is, the breaks lead: a break read first in a major release costs a paragraph, and a break
-missed in a patch release ships.
+The reviewer's first decision is whether the change may ship, and in which release. A Why and a
+What read before that decision are wasted on a reviewer who decides no; a break read first costs a
+paragraph, and a break missed in a patch release ships. Where a release tool bumps the major on a
+`BREAKING CHANGE:` trailer or a `!` (§5), the trailer is written as well, whatever the description
+does.
 
 The description then opens with slot 3's break lines, after at most a short paragraph that says
 which code breaks. The block starts with the lead-in `**Breaking changes.**`, or sits under a
 `Breaking changes` heading where a template gives the description headings. Slot 3 keeps the other
-outcomes, and the Why slot follows the breaks. Where the next release is a major, the breaks stay
-first in slot 3 and keep the lead-in. A change with no break has neither the lead nor its label (§7).
+outcomes, and the Why slot follows the breaks. A change with no break has neither the lead nor its
+label (§7).
 
 The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
 slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
@@ -860,9 +857,8 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   commit that adds one carry it under `User-visible:` (§2)? Does a line carry the exact text and its
   error code or exception class only where the outcome emits them? Is a deliberate non-change a
   reader would expect stated under `Not changed:`?
-- Breaks: where the change breaks code that works on the released version and the next release
-  from the target branch is not a major, or is unknown, does the description open with the break
-  lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3 keep only the
+- Breaks: where the change breaks code that works on the released version, does the description
+  open with the break lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3 keep only the
   other outcomes (§2)? Where nothing breaks, is there no lead and no label?
 - Headings: absent unless the repository's template supplies them, and absent from a description
   that §4 rule 5 makes a commit body? Without them, does a Scope slot that carries a gap, a related or
