@@ -37,6 +37,14 @@ and the run-time question asked as open.
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
+left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
+from one sentence; both pass all five checks. Both keep the template's headings and put a `Breaking changes` heading
+beside them; both also open the maintainer's question with `**Scope.**` inside the template, which the skill asks for
+only without headings and which costs nothing here. They wrote 447 and 456 words, down from 535 and 486. The other rows
+stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 

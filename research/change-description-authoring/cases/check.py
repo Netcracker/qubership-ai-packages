@@ -259,7 +259,14 @@ def facts_kept_4370(text):
 def scope_lead_in_4370(text):
     """The overlap with #4359 sits in a Scope slot that opens with the lead-in, not under a heading."""
     paras = [x.strip() for x in re.split(r'\n\s*\n', prose(description(text))) if x.strip()]
-    ok = [x for x in paras if x.startswith('**Scope.**') and '#4359' in x]
+    # The Scope paragraph and the list that follows it, up to the next paragraph of prose.
+    blocks = []
+    for x in paras:
+        if x.startswith('**Scope.**'):
+            blocks.append(x)
+        elif blocks and re.match(r'[*-] |\d+\. ', x):
+            blocks[-1] += '\n\n' + x
+    ok = [x for x in blocks if '#4359' in x]
     heads = HEADING.findall(description(text))
     return result(bool(ok) and not heads, f'{len(ok)} Scope paragraph(s) naming #4359, {len(heads)} heading(s)')
 

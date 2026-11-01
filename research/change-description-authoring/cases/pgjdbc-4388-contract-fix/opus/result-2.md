@@ -1,4 +1,4 @@
-`BlobInputStream.close()` released the descriptor first and cleared `this.lo` afterwards. When `LargeObject.close()` threw, the stream kept the object:
+`BlobInputStream.close()` cleared `this.lo` only after the descriptor was released. When `LargeObject.close()` threw, the stream kept the object:
 
 ```java
 if (lo != null) {
@@ -8,8 +8,10 @@ if (lo != null) {
 this.lo = null;        // never reached
 ```
 
-After a failed `close()`, `read()` went on returning bytes from a descriptor the caller had been told to consider gone. A second `close()` should be a no-op under `Closeable`. Instead it tried the failed release again and threw again. So a `try`-with-resources that closes the stream after its own failure got that second exception on the way out.
+After that failed `close()`, `read()` still returned bytes from a descriptor the caller had been told to consider gone. A second `close()` tried the release again and threw again, but `Closeable` requires a second `close()` to have no effect. A `try`-with-resources that closes the stream after its own failure got that second exception on the way out.
 
-The stream is now marked closed before the descriptor is released, and its buffer of up to 512 KiB is released at the same point. After a failed `close()`, `read()` throws an `IOException` for a closed stream. A second `close()` returns without trying the release again. The failed release still reaches the caller as an `IOException` (`Can not close large object <oid>`) with the `SQLException` as its cause. `closeReportsAFailedRelease` pins that wrapping, and it passes without the fix.
+`close()` now marks the stream closed and releases its buffer before it releases the descriptor. The failure still reaches the caller wrapped in an `IOException`. After it, `read()` throws an `IOException` reporting a closed stream, and a second `close()` returns without trying the release again. Releasing the buffer also frees up to 512 KiB that a closed stream used to hold until the stream itself was garbage-collected.
 
-This is the read-side counterpart of [PR #4364](https://github.com/pgjdbc/pgjdbc/pull/4364), still open, which fixes the same defect in `BlobOutputStream`.
+`closeReportsAFailedRelease` passes without the fix because it pins the `IOException` wrapping, which was already correct.
+
+**Scope.** [PR #4364](https://github.com/pgjdbc/pgjdbc/pull/4364) is still open and fixes the same defect in `BlobOutputStream`.

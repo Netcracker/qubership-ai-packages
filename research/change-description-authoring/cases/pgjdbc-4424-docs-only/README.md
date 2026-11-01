@@ -35,10 +35,16 @@ cited by its heading text, and links at the commit that has the content.
 
 As in [the cases README](../README.md). `controls/posted.md` is the description as posted on GitHub;
 `controls/documentation-only.md` is `haiku/result-2.md` with its verification paragraph replaced by "Documentation
-only; no code changes." `controls/empty-scope-label.md` is `opus/result.md` with a `**Scope.**` paragraph added that
-names no gap; it fails check 6, which no result fails.
+only; no code changes." `controls/empty-scope-label.md` is `opus/result.md` as committed before 2026-11-01 with a
+`**Scope.**` paragraph added that names no gap; it fails check 6, which no result fails.
 
 ## Results
+
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
+left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
+from one sentence; both pass every check, check 6 included, at 255 and 242 words. The other rows stand for the trees
+they ran on.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
