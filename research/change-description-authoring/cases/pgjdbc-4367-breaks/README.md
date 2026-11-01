@@ -5,7 +5,7 @@ The input is the author's description of [pgjdbc/pgjdbc#4367](https://github.com
 breaking changes first, because `master` ships 42.7.x patch releases. The draft lists two `**Breaks:**` lines and one
 result-shape change under "What the caller sees", after Why and What, and keeps the `grant insert` case in Scope. The
 case tests the rule in `SKILL.md` §2,
-"A break leads the description unless the next release from the target branch is a major".
+"A break leads the description" (until 1.7.0, only where the next release was not a major).
 
 ## Skill parts
 

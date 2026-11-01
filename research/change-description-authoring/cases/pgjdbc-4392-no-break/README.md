@@ -4,7 +4,7 @@ The input is the author's description of [pgjdbc/pgjdbc#4392](https://github.com
 escape followed by a tab or a newline used to reach the server verbatim and fail, and now works. Nothing that worked
 before fails or returns a different result. The target is the same `master` as in `pgjdbc-4367-breaks`, so the case is
 the negative control for the rule in `SKILL.md` §2,
-"A break leads the description unless the next release from the target branch is a major".
+"A break leads the description" (until 1.7.0, only where the next release was not a major).
 
 ## Skill parts
 
