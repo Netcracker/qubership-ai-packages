@@ -10,8 +10,8 @@ while the coverage a narrowed test loses stays.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Pull request description: headings; What each paragraph must earn, length, the result not the
-  route; Verification), §5 (links), §7a
+- `SKILL.md`: §2 (Pull request description: headings and lead-in labels; What each paragraph must earn, length, the
+  result not the route; Verification), §5 (links), §7a
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -30,9 +30,14 @@ while the coverage a narrowed test loses stays.
 7. **No test command** (`no_test_command`). No `./gradlew … test` block: CI runs the tests.
 8. **No test narration** (`no_test_narration`). No sentence counts the cases that fail against the old code or the
    tests that pass.
+9. **Scope by lead-in** (`scope_lead_in_4370`). The overlap with #4359 is in a paragraph that opens with
+   `**Scope.**`, and the description has no headings. The case has no template, and the two open pull requests
+   share `VisibleBufferedInputStreamSkipTest.java`, so the Scope slot carries a related pull request.
 
-Headings are no longer checked: the skill allows them for the two overlapping pull requests and no longer requires
-them for a fenced command.
+Check 9 was added with the lead-in labels, after the results below: every result and control committed before it
+fails it, six of the eight with four or five headings, because the skill they ran on asked for headings where a
+description named a related pull request. `controls/scope-lead-in.md` is `haiku/result.md`, which has no headings, with `**Scope.**` put before its
+paragraph on #4359 and #4360; it is the one file that passes check 9.
 
 ## Running it
 

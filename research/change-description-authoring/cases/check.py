@@ -210,6 +210,11 @@ def no_headings(text):
     return result(not heads, f'{len(heads)} heading(s)')
 
 
+def no_lead_in_labels(text):
+    found = re.findall(r'\*\*(?:Scope|Breaking changes)[.:]?\*\*', description(text))
+    return result(not found, f'labels: {found}' if found else 'no lead-in labels')
+
+
 def section_heading_text(text):
     ok = 'Extending the test suite with new tests' in text
     return result(ok, 'heading text cited' if ok else 'section cited without its heading text')
@@ -249,6 +254,15 @@ def facts_kept_4370(text):
     markers = ['SocketTimeoutException', '#4358', '#4359', '75 ms', '149 ms', 'EOFException']
     missing = [m for m in markers if m not in text]
     return result(not missing, f'missing: {missing}' if missing else 'all kept')
+
+
+def scope_lead_in_4370(text):
+    """The overlap with #4359 sits in a Scope slot that opens with the lead-in, not under a heading."""
+    paras = [x.strip() for x in re.split(r'\n\s*\n', prose(description(text))) if x.strip()]
+    ok = [x for x in paras if x.startswith('**Scope.**') and '#4359' in x]
+    heads = HEADING.findall(description(text))
+    return result(bool(ok) and not heads, f'{len(ok)} Scope paragraph(s) naming #4359, {len(heads)} heading(s)')
+
 
 
 def new_test_not_marked(text):
@@ -336,6 +350,12 @@ def break_lines_lead_4367(text):
     return result(ok, 'break lines among the first three blocks' if ok else f'opens with {first[0][:100]!r}')
 
 
+def break_label_4367(text):
+    """The break block carries a label: the lead-in, or a heading where the description has headings."""
+    ok = re.search(r'^\*\*Breaking changes\.\*\*|^#{1,6} .*[Bb]reak', prose(text), re.M)
+    return result(bool(ok), f'label: {ok.group(0)!r}' if ok else 'break block unlabelled')
+
+
 def literals_kept_4367(text):
     markers = ['42703', '0100E', 'A result was returned when none was expected.', '42601',
                'cannot insert multiple commands into a prepared statement']
@@ -354,7 +374,7 @@ def no_lead_4392(text):
 
 
 def no_empty_section_4392(text):
-    found = re.findall(r'^#{1,6} .*[Bb]reak.*$|nothing breaks|no breaking|backward[s-]? compatible|fully compatible|is compatible',
+    found = re.findall(r'^#{1,6} .*[Bb]reak.*$|\*\*Breaking changes[.:]?\*\*|nothing breaks|no breaking|backward[s-]? compatible|fully compatible|is compatible',
                        text, re.M | re.I)
     return result(not found, f'found: {found}' if found else 'no empty section')
 
@@ -571,7 +591,7 @@ def no_route_4420(text):
 
 
 CASES = {
-    'pgjdbc-4367-breaks': [break_lines_lead_4367, stated_once_4367, literals_kept_4367],
+    'pgjdbc-4367-breaks': [break_lines_lead_4367, break_label_4367, stated_once_4367, literals_kept_4367],
     'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392],
     'pgjdbc-4466-squash-default': [user_visible_without_invented_code, first_commit_full_with_issue,
                                    title_is_subject, template_headings_kept],
@@ -584,11 +604,11 @@ CASES = {
                                                    verification_one_line],
     'pgjdbc-4466-detection-failed': [detection_commands, user_visible_without_invented_code,
                                      every_commit_full_with_issue, description_as_commit_body, verification_one_line],
-    'pgjdbc-4424-docs-only': [no_test_verification_named, no_headings, section_heading_text,
+    'pgjdbc-4424-docs-only': [no_test_verification_named, no_headings, no_lead_in_labels, section_heading_text,
                               changed_files_link_at_head, unchanged_code_link_at_merge_base],
     'pgjdbc-4370-verbose': [prose_under(500), facts_kept_4370, new_test_not_marked, coverage_lost_named,
                             no_construction_in_verification, links_at_merge_base, no_test_command,
-                            no_test_narration],
+                            no_test_narration, scope_lead_in_4370],
     'pgjdbc-4374-commit-changelog': [outcome_lines_4374, nothing_invented_4374, changelog_entry_4374],
     'pgjdbc-4423-no-outcome': [no_outcome_slot, no_changelog_entry],
     'calcite-5330-open-question': [break_leads_5330, maintainer_question_kept, compatibility_not_settled,

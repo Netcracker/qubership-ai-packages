@@ -253,15 +253,17 @@ the trailer decides, and it is written whatever the description does. Where noth
 release it is, the breaks lead: a break read first in a major release costs a paragraph, and a break
 missed in a patch release ships.
 
-The description then opens with slot 3's break lines, under a `Breaking changes` heading where the
-description has headings, after at most a short paragraph that says which code breaks. Slot 3 keeps
-the other outcomes, and the Why slot follows the breaks. Where the next release is a major, the
-breaks stay first in slot 3. A change with no break has neither the lead nor an empty heading (§7).
+The description then opens with slot 3's break lines, after at most a short paragraph that says
+which code breaks. The block starts with the lead-in `**Breaking changes.**`, or sits under a
+`Breaking changes` heading where a template gives the description headings. Slot 3 keeps the other
+outcomes, and the Why slot follows the breaks. Where the next release is a major, the breaks stay
+first in slot 3 and keep the lead-in. A change with no break has neither the lead nor its label (§7).
 
 The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
 slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
 rule 5 makes the description the commit body, the lead stays, because the reviewer reads the
-description before it becomes a body; that body opens with its breaks and then its problem.
+description before it becomes a body; that body opens with its breaks, as `User-visible:` lines
+without the lead-in, and then its problem.
 
 *Before:*
 
@@ -286,8 +288,10 @@ The orphan sync is requeued with backoff on failure instead of being
 dropped. Removing the finalizer synchronously in the GC path was rejected:
 the GC has no client for the job namespace.
 
-Fixes #141346. The stale-finalizer metric proposed in #140900 is not part
-of this change.
+Fixes #141346.
+
+**Scope.** The stale-finalizer metric proposed in #140900 is not part of
+this change.
 ```
 
 The *After* has no Verification paragraph: its new test is in the diff, and CI shows that it passes.
@@ -315,19 +319,19 @@ Reviewer-only content is not a slot. Checklists, screenshots, the template's own
 round-by-round history live in comments or in a collapsed block, and never in a description that a
 squash or merge-commit setting will copy into the commit body (§4).
 
-The heading names are house style. `Why`, `What`, `User-visible changes`, `How to verify`, and
-`Scope` is one set that matches the slots; a template's `Summary` and `Testing` are another. Where the repository has a
-template, use its headings and fill them with the slots' content.
+Where the repository has a template, use its headings and fill them with the slots' content.
 
-Where the repository has no template, headings are the exception, not the default. A description of
-up to four paragraphs, each plainly answering one slot's question, is prose without headings, and
-that is the shape most changes take. A code snippet or a fenced command does not call for a
-heading. Use headings where the description leads with breaks, or describes a related or stacked
-pull request. Under §4 rule 5 the description is the commit body and takes the body's shape instead.
+Where the repository has no template, the description has no headings. Up to four paragraphs, each
+plainly answering one slot's question, is the shape most changes take, and a code snippet or a
+fenced command does not call for a heading. Two slots carry a bold lead-in instead, because a
+reviewer and a backporter look for them: the break block (above), and the Scope slot, which opens
+with `**Scope.**` wherever it carries a deliberate gap, a related or stacked pull request, or a
+question only a maintainer can settle. The other slots carry no label. Under §4 rule 5 the
+description is the commit body and takes the body's shape instead.
 
 Without headings, slot 3 is not a section of its own: the What paragraph states each outcome once,
 with its literal text, code, and condition, and no line repeats it under a label. A separate
-`User-visible changes` list belongs to a description long enough to carry headings.
+`User-visible changes` list belongs under a template's heading.
 
 #### What each paragraph must earn
 
@@ -788,8 +792,8 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 - No changelog entry for maintenance noise: dotfiles, development-only dependencies, formatting,
   CI. Where the tooling demands a line, `NONE` is the line.
 - No section for an absent concern. A description with no breaking change, no follow-up, and no
-  rejected alternative has no such sections; an empty heading is not a gap to fill. A claim about
-  the code that the diff does not show still names its check (§2).
+  rejected alternative has no such sections and no such labels; an empty heading is not a gap to
+  fill. A claim about the code that the diff does not show still names its check (§2).
 - No tool-attribution line (`Generated with …`): it answers none of the five readers.
 - No verification narrative in the commit body (§4).
 - No paraphrase of the diff. A body whose sentences map one to one onto hunks adds no rationale;
@@ -858,10 +862,12 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   reader would expect stated under `Not changed:`?
 - Breaks: where the change breaks code that works on the released version and the next release
   from the target branch is not a major, or is unknown, does the description open with the break
-  lines, and does slot 3 keep only the other outcomes (§2)? Where nothing breaks, is there no lead
-  and no empty heading?
-- Headings: absent unless the description leads with breaks or describes a related or stacked
-  change, and absent from a description that §4 rule 5 makes a commit body (§2)?
+  lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3 keep only the
+  other outcomes (§2)? Where nothing breaks, is there no lead and no label?
+- Headings: absent unless the repository's template supplies them, and absent from a description
+  that §4 rule 5 makes a commit body? Without them, does a Scope slot that carries a gap, a related or
+  stacked change, or a maintainer's question open with `**Scope.**`, and does no other slot carry a
+  label (§2)?
 - Shown: where a few lines of code, a command and its output, or an error text show the problem, are
   they there in place of prose that retells them, and is no literal traded for a description (§2)?
 - Route: is no finder, reviewer, tool, empty search, or aside left, and does every claim about code

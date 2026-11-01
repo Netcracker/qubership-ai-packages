@@ -14,8 +14,8 @@ the negative control for the rule in `SKILL.md` §2,
 ## Checks
 
 1. **No lead.** The description opens with the problem, not with a compatibility statement.
-2. **No empty section.** No `Breaking changes` heading, and no sentence saying that nothing breaks or that the change is
-   compatible.
+2. **No empty section.** No `Breaking changes` heading or `**Breaking changes.**` lead-in, and no sentence saying that
+   nothing breaks or that the change is compatible.
 3. **Literals kept.** `{d\t'1999-01-09'}` and the server's `syntax error at or near "{"` appear as in the draft.
 
 ## Running it
