@@ -9,8 +9,8 @@ cited by its heading text, and links at the commit that has the content.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Pull request description: headings; Verification, "A change with no tests still fills the slot"),
-  §5 (Identifiers: a section of a document, links), §7
+- `SKILL.md`: §2 (Pull request description: headings and lead-in labels; Verification, "A change with no tests still
+  fills the slot"), §5 (Identifiers: a section of a document, links), §7
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -18,8 +18,7 @@ cited by its heading text, and links at the commit that has the content.
 1. **Verification names the checks** (`no_test_verification_named`). The description says how its two claims about
    the code were checked: the `git grep` that finds no JUnit 4 test under `pgjdbc/src/test`, and the
    `pgjdbc/build.gradle.kts` lines that reject `junit:junit`. "Documentation only" alone fails.
-2. **No headings** (`no_headings`). The description has no break to lead with and no related or stacked pull
-   request, so it is prose.
+2. **No headings** (`no_headings`). The repository's template is not used for this description, so it is prose.
 3. **A section cited by its heading text** (`section_heading_text`). `TESTING.md` section 5 appears as
    `Extending the test suite with new tests`, not as `§5` alone.
 4. **The edited sections link at the head** (`changed_files_link_at_head`). The description links the rendered
@@ -28,12 +27,16 @@ cited by its heading text, and links at the commit that has the content.
    base has, which is at the merge base.
 5. **Unchanged code links at the merge base** (`unchanged_code_link_at_merge_base`). The `build.gradle.kts` lines are
    linked at `f171cd8af6fc5f341c765309af0c1ab0db6fbfb7` with a line range.
+6. **No lead-in labels** (`no_lead_in_labels`). The change has no break, no deliberate gap, no related pull request,
+   and no question for a maintainer, so neither `**Breaking changes.**` nor `**Scope.**` appears. This is the noise
+   input for the lead-in rule that `pgjdbc-4370-verbose` check 9 tests where the label is owed.
 
 ## Running it
 
 As in [the cases README](../README.md). `controls/posted.md` is the description as posted on GitHub;
 `controls/documentation-only.md` is `haiku/result-2.md` with its verification paragraph replaced by "Documentation
-only; no code changes."
+only; no code changes." `controls/empty-scope-label.md` is `opus/result.md` with a `**Scope.**` paragraph added that
+names no gap; it fails check 6, which no result fails.
 
 ## Results
 

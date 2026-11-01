@@ -23,6 +23,9 @@ the question it answers.
 - Where a change breaks code that works on the released version: the description opens with the
   breaks unless the next release from the target branch is a major, read from the branch's version
   file, milestone, or name, and the commit body keeps them first in its outcome slot.
+- Headings only where the repository's template supplies them. Without a template, the break block
+  opens with `**Breaking changes.**` and a Scope slot that carries a gap, a related or stacked pull
+  request, or a maintainer's question opens with `**Scope.**`; no other slot is labelled.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the result rather than the route that reached it, and a length that follows the size
   of the change. Two to six lines of code, a command with its output, or an error text quoted whole

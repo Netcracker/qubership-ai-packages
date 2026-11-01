@@ -27,8 +27,15 @@ case tests the rule in `SKILL.md` §2,
 6. **Literals kept.** `42703`, `0100E`, `A result was returned when none was expected.`, and `42601` with `cannot insert
    multiple commands into a prepared statement` appear as in the draft.
 
-Checks 1 to 3 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py` marks
-checks 1 and 6 and prints the question for check 5; checks 2 to 4 are graded by reading.
+7. **The break block is labelled** (`break_label_4367`). It opens with `**Breaking changes.**`, or sits under a
+   heading that names the breaks where the description has headings.
+
+Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
+marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
+with the lead-in labels, after the results below. The four results and the control pass it with a `## Break…`
+heading, which the skill no longer writes without a template, and both baselines fail it; the results stand for the
+tree they ran on, not for the current one. `controls/breaking-lead-in.md` is `opus/result.md` with its first heading
+replaced by the lead-in, so that check 7 is seen passing on the form the skill now asks for.
 
 ## Running it
 
