@@ -13,7 +13,8 @@ description as a commit body drops the pull request template here, where it belo
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, template headings), §4
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, template headings and the Scope
+  lead-in under them), §4
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -32,6 +33,9 @@ description as a commit body drops the pull request template here, where it belo
 4. **The template stays** (`template_headings_kept`). The description uses at least one of the template's headings.
    The description is not copied under this setting, so nothing argues for stripping the template, and §2 says a
    repository's template supplies the headings.
+5. **Scope by lead-in under the template** (`scope_lead_in_under_template`). The template has no Scope heading, so
+   the deliberate gap (the git sha and the JDK version left out of the default) sits in a paragraph that opens with
+   `**Scope.**`, and the description adds no heading that names Scope.
 
 ## Running it
 
@@ -40,13 +44,19 @@ pull request title and description.
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading; both pass every check. Each puts the gap
+in a `**Scope.**` paragraph under a heading it already has. The earlier Opus runs (the Opus row below) added a `Scope`
+heading of their own and fail check 5, as do the Haiku results, the baselines, and the control: no lead-in, or a heading
+that names Scope. Both new runs, like the earlier ones, add a `Breaking changes` heading the template lacks, as §2 asks
+for a break under a template. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
-| Run | Outcome (1) | First commit (2) | Title (3) | Template (4) |
-| --- | --- | --- | --- | --- |
-| Opus r1, r2 | passes | passes | passes | passes |
-| Haiku r1, r2 | passes | passes | passes | passes |
-| Opus baseline | fails: outcomes under "Behavior change", no label | passes | passes | passes |
-| Haiku baseline | fails: no label | passes | passes | passes |
-| `controls/as-pushed.md` | fails | fails: no `#2404`, no reason | fails: `Include` | fails |
+| Run | Outcome (1) | First commit (2) | Title (3) | Template (4) | Scope (5) |
+| --- | --- | --- | --- | --- | --- |
+| Opus r1, r2 | passes | passes | passes | passes | fails: a `Scope` heading |
+| Haiku r1, r2 | passes | passes | passes | passes | fails: r1 a `### Scope` heading, r2 no lead-in |
+| Opus baseline | fails: outcomes under "Behavior change", no label | passes | passes | passes | fails |
+| Haiku baseline | fails: no label | passes | passes | passes | fails |
+| `controls/as-pushed.md` | fails | fails: no `#2404`, no reason | fails: `Include` | fails | fails |

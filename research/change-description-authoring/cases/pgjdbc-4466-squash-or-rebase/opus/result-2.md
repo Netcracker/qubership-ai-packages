@@ -1,70 +1,65 @@
-## Commits at merge
+## 1. Commits
 
-Fold commits 2 (`add tests`) and 3 (`Apply suggestion from @vlsi`) into commit 1. Commit 2 adds the tests for commit 1's behavior. Commit 3 rewrites commit 1's changelog and documentation lines. The maintainers may rebase instead of squashing, and then each fix-up would land as a commit of its own. One commit remains:
+Fold `add tests` and `Apply suggestion from @vlsi` into the first commit. The branch then merges as one commit, with this message:
 
 ```text
-feat: include the driver version in the default application_name
+feat: include the driver version in the default ApplicationName
 
-A database administrator who looks at pg_stat_activity cannot tell
-which pgjdbc version a client connection uses. A connection that does
-not set ApplicationName reports the fixed string
-"PostgreSQL JDBC Driver" as its application_name.
+A database administrator who looks at pg_stat_activity cannot tell which
+pgjdbc version a client runs. A connection that leaves ApplicationName
+unset reports the fixed string "PostgreSQL JDBC Driver" in
+application_name, whatever the version of the driver.
 
-The default ApplicationName is now DriverInfo.DRIVER_FULL_NAME: the
-driver name, a space, and the version of the driver jar.
+The default now carries the driver version and nothing else: the git sha
+of the build and the JDK version are left out.
 
 User-visible:
-A connection that leaves ApplicationName unset reports application_name `PostgreSQL JDBC Driver 42.7.14` with driver 42.7.14, instead of `PostgreSQL JDBC Driver`; a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
-Any role that can connect to the database reads the application_name of every session in pg_stat_activity, so the default shows the driver version to other database users.
-
+A connection that leaves ApplicationName unset reports application_name "PostgreSQL JDBC Driver <version>", such as "PostgreSQL JDBC Driver 42.7.14", where it reported "PostgreSQL JDBC Driver"; a query that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
+Any role that can connect reads the application_name of every session in pg_stat_activity, so the default shows the driver version to other database users.
 Not changed:
-A connection that sets ApplicationName reports that value as given.
+An explicitly set ApplicationName is sent as given.
 
 Fixes #2404
 ```
 
-## Pull request title
+## 2. Title
 
 ```text
-feat: include the driver version in the default ApplicationName (application_name)
+feat: include the driver version in the default ApplicationName
 ```
 
-## Pull request description
+## 3. Description
 
 ```markdown
 ### Breaking changes
 
-This changes a default in a patch release (`pgjdbc.version=42.7.14`). It affects code that identifies pgjdbc connections by their `application_name`.
+A connection that leaves `ApplicationName` unset now reports `PostgreSQL JDBC Driver` followed by a space and the driver version in `application_name`, such as `PostgreSQL JDBC Driver 42.7.14`. In 42.7.13 it reports `PostgreSQL JDBC Driver`. After the upgrade, a query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds pgjdbc connections. Update the query, or set `ApplicationName` explicitly: an explicit value is sent as given.
 
-* A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver 42.7.14` instead of `PostgreSQL JDBC Driver`, the value through 42.7.13. A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds these connections. To keep the old value, set `ApplicationName=PostgreSQL JDBC Driver` explicitly.
+### Changes to Existing Features
 
-### Why
+Users want to know which driver version each of their applications runs, and #2404 asks to read it from a view in PostgreSQL. `pg_stat_activity` shows `application_name`, but the default value names only the driver, not its version.
 
-Users want to know which driver version their applications use, and `pg_stat_activity` is where they look. Before this change it showed the same `PostgreSQL JDBC Driver` for every pgjdbc version. #2404 asks for exactly this: to see the JDBC driver version of a client in a PostgreSQL view.
+Any role that can connect reads the `application_name` of every session in `pg_stat_activity`. The default therefore shows the driver version to other database users, and the `ApplicationName` entry in the documentation now says so.
 
-### What
+`explicitApplicationNameIsKept` passes on `master` as well. It pins the explicit value, which this change must leave alone.
 
-The default `ApplicationName` is now `DriverInfo.DRIVER_FULL_NAME`, which is `DRIVER_NAME + " " + DRIVER_VERSION`. The version is the version of the driver jar.
+**Scope.** The git sha of the build and the JDK version are left out of the default. Adding them can be discussed separately.
 
-### User-visible changes
-
-* Any role that can connect to the database reads the `application_name` of every session in `pg_stat_activity`, so the default shows the driver version to other database users. The `ApplicationName` entry in `use.md` says so.
-* Not changed: a connection that sets `ApplicationName` reports that value as given.
-
-### Verification
-
-`explicitApplicationNameIsKept` passes on `master` too. It covers the side that must not change: an explicit `ApplicationName=billing` still reads back as `billing`.
-
-### Scope
-
-The build's git SHA and the JDK version are not in the default. Adding either can be discussed separately.
-
-Fixes #2404
-
-### Changes to Existing Features:
+Fixes #2404.
 
 * [x] Does this break existing behaviour? If so please explain.
 * [x] Have you added an explanation of what your changes do and why you'd like us to include them?
 * [x] Have you written new tests for your core changes, as applicable?
 * [x] Have you successfully run tests with your changes locally?
+
+### New Feature Submissions:
+
+1. [ ] Does your submission pass tests?
+2. [ ] Does `./gradlew styleCheck` pass ?
+3. [ ] Have you added your new test classes to an existing test suite in alphabetical order?
+
+### All Submissions:
+
+* [ ] Have you followed the guidelines in our [Contributing](https://github.com/pgjdbc/pgjdbc/blob/master/CONTRIBUTING.md) document?
+* [ ] Have you checked to ensure there aren't other open [Pull Requests](../../pulls) for the same update/change?
 ```

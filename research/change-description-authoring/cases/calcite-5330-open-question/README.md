@@ -28,6 +28,9 @@ lead of #169 in a repository other than pgjdbc: `main` ships 1.43.0, a minor rel
 4. **The answered question is not asked again** (`answered_question_not_reopened`). Whether all types are comparable
    at run time was answered with the `ARRAY` case; no sentence asks it.
 5. **The template stays** (`calcite_template_kept`). `## Jira Link` and `## Changes Proposed`.
+6. **Scope by lead-in under the template** (`scope_lead_in_under_template`). The template has no Scope heading, so the
+   maintainer's question sits in a paragraph that opens with `**Scope.**`, and the description adds no heading that
+   names Scope. The Haiku results, both baselines, and the control fail it; the Opus results pass it.
 
 ## Running it
 
@@ -37,13 +40,11 @@ and the run-time question asked as open.
 
 ## Results
 
-Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
-two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
-left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
-from one sentence; both pass all five checks. Both keep the template's headings and put a `Breaking changes` heading
-beside them; both also open the maintainer's question with `**Scope.**` inside the template, which the skill asks for
-only without headings and which costs nothing here. They wrote 447 and 456 words, down from 535 and 486. The other rows
-stand for the trees they ran on.
+Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading; both pass all six checks. Both keep the
+template's headings and put a `Breaking changes` heading above them, and both open the maintainer's question with
+`**Scope.**` in a paragraph under `## Changes Proposed`, as the skill now asks where a template has no Scope heading.
+They wrote 500 and 475 words, up from 447 and 456 on `c99e1c77`, where both runs already put the lead-in there unasked;
+the case has no word limit. The other rows stand for the trees they ran on.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.

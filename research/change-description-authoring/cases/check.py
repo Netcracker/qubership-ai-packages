@@ -277,6 +277,15 @@ def scope_lead_in_4370(text):
     return result(bool(ok) and not heads, f'{len(ok)} Scope paragraph(s) naming #4359, {len(heads)} heading(s)')
 
 
+def scope_lead_in_under_template(text):
+    """The template has no Scope heading, so the Scope slot opens with the lead-in under one of its headings."""
+    d = description(text)
+    paras = [x.strip() for x in re.split(r'\n\s*\n', prose(d)) if x.strip()]
+    ok = [x for x in paras if (m := LEAD_IN.match(x)) and m.group(1) == 'Scope']
+    added = re.findall(r'^#{1,6} .*\bScope\b.*$', d, re.M | re.I)
+    return result(bool(ok) and not added, f'{len(ok)} Scope lead-in(s), Scope heading(s): {added}')
+
+
 def new_test_not_marked(text):
     """The diff shows which test is new; the description does not say it."""
     found = re.search(r'`?\w+Test`?\s*\(new\)|\bnew (test|test class)\b[^.\n]{0,60}\w+Test'
@@ -363,12 +372,12 @@ def break_lines_lead_4367(text):
 
 
 def break_label_4367(text):
-    """The case has no template, so the break block opens with the lead-in, among the first blocks, under no heading."""
+    """The case has no template, so the description opens with the break lead-in, under no heading."""
     d = description(text)
-    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:3]
-    ok = [x for x in first if (m := LEAD_IN.match(x)) and m.group(1) == 'Breaking changes']
+    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:1]
+    ok = bool(first) and (m := LEAD_IN.match(first[0])) is not None and m.group(1) == 'Breaking changes'
     heads = HEADING.findall(d)
-    return result(bool(ok) and not heads, f'lead-in among the first three blocks: {bool(ok)}, {len(heads)} heading(s)')
+    return result(ok and not heads, f'opens with the lead-in: {ok}, {len(heads)} heading(s)')
 
 
 def literals_kept_4367(text):
@@ -609,11 +618,12 @@ CASES = {
     'pgjdbc-4367-breaks': [break_lines_lead_4367, break_label_4367, stated_once_4367, literals_kept_4367],
     'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392],
     'pgjdbc-4466-squash-default': [user_visible_without_invented_code, first_commit_full_with_issue,
-                                   title_is_subject, template_headings_kept],
+                                   title_is_subject, template_headings_kept, scope_lead_in_under_template],
     'pgjdbc-4466-squash-title-description': [user_visible_without_invented_code, title_is_subject,
                                              description_as_commit_body, verification_one_line],
     'pgjdbc-4466-squash-or-rebase': [user_visible_without_invented_code, every_commit_full_with_issue,
-                                     fixups_folded, title_is_subject, template_headings_kept],
+                                     fixups_folded, title_is_subject, template_headings_kept,
+                                     scope_lead_in_under_template],
     'pgjdbc-4466-merge-commit-title-description': [user_visible_without_invented_code, every_commit_full_with_issue,
                                                    fixups_folded, title_is_subject, description_as_commit_body,
                                                    verification_one_line],
@@ -627,7 +637,8 @@ CASES = {
     'pgjdbc-4374-commit-changelog': [outcome_lines_4374, nothing_invented_4374, changelog_entry_4374],
     'pgjdbc-4423-no-outcome': [no_outcome_slot, no_changelog_entry],
     'calcite-5330-open-question': [break_leads_5330, maintainer_question_kept, compatibility_not_settled,
-                                   answered_question_not_reopened, calcite_template_kept],
+                                   answered_question_not_reopened, calcite_template_kept,
+                                   scope_lead_in_under_template],
     'jdk-33173-audit': [finder_not_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
                         alternative_by_mechanism, answered_question_not_open, property_named],
     'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110)],
