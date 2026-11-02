@@ -233,16 +233,16 @@ lines. A line is carried over as written, not summarized; a commit whose outcome
 is the place to fix, not the description. A change that alters nothing a caller observes has no
 slot 3 and does not write an empty one. A fact stated in slot 3 is not restated in slot 2.
 
-**A break leads the description.** A
-break changes what code that works on the released version gets: a call that succeeded and now
-fails, a different return value or result shape (`getUpdateCount()` returning `-1` where it returned
-a count), a removed or renamed option, a changed default, a changed error code for a failure a
-caller may catch. A failure the change extends to inputs that worked before is a break for those
-inputs, even though other inputs failed the same way already; it goes with the breaks, not in the
-Scope slot. Whether the old behavior was right does not decide it, with one exception: where the
-old behavior broke a contract the API documents (a second `Closeable.close()` that throws, a read
-from a closed stream that returns data), the change is a fix, and its outcome is a line in slot 3,
-not a lead. A failure that now succeeds is a fix, not a break.
+**A break leads the description.** A break changes what code that works on the released version
+gets: a call that succeeded and now fails, a different return value or result shape
+(`getUpdateCount()` returning `-1` where it returned a count), a removed or renamed option, a
+changed default, a changed error code for a failure a caller may catch. A failure the change extends
+to inputs that worked before is a break for those inputs, even though other inputs failed the same
+way already; it goes with the breaks, not in the Scope slot. Whether the old behavior was right does
+not decide it, with one exception: where the old behavior broke a contract the API documents (a
+second `Closeable.close()` that throws, a read from a closed stream that returns data), the change
+is a fix, and its outcome is a line in slot 3, not a lead. A failure that now succeeds is a fix, not
+a break.
 
 The reviewer's first decision is whether the change may ship, and in which release. A Why and a
 What read before that decision are wasted on a reviewer who decides no; a break read first costs a
@@ -254,7 +254,7 @@ The description then opens with slot 3's break lines, after at most a short para
 which code breaks. The block starts with the lead-in `**Breaking changes.**`, or sits under a
 `Breaking changes` heading where a template gives the description headings. Slot 3 keeps the other
 outcomes, and the Why slot follows the breaks. A change with no break has neither the lead nor its
-label (§7).
+lead-in (§7).
 
 The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
 slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
@@ -323,7 +323,7 @@ plainly answering one slot's question, is the shape most changes take, and a cod
 fenced command does not call for a heading. Two slots carry a bold lead-in instead, because a
 reviewer and a backporter look for them: the break block (above), and the Scope slot, which opens
 with `**Scope.**` wherever it carries a deliberate gap, a related or stacked pull request, or a
-question only a maintainer can settle. The other slots carry no label. Under §4 rule 5 the
+question only a maintainer can settle. The other slots carry no lead-in. Under §4 rule 5 the
 description is the commit body and takes the body's shape instead.
 
 Without headings, slot 3 is not a section of its own: the What paragraph states each outcome once,
@@ -789,7 +789,7 @@ slot, a label); keep the user-facing sentence separate from the reviewer-facing 
 - No changelog entry for maintenance noise: dotfiles, development-only dependencies, formatting,
   CI. Where the tooling demands a line, `NONE` is the line.
 - No section for an absent concern. A description with no breaking change, no follow-up, and no
-  rejected alternative has no such sections and no such labels; an empty heading is not a gap to
+  rejected alternative has no such sections and no such lead-ins; an empty heading is not a gap to
   fill. A claim about the code that the diff does not show still names its check (§2).
 - No tool-attribution line (`Generated with …`): it answers none of the five readers.
 - No verification narrative in the commit body (§4).
@@ -852,18 +852,18 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   marked new, said to fail without the change, counted, or given a command CI already runs? Does each
   claim about the code outside the diff name its check?
 - Caller: where the change adds or alters an outcome a caller can observe, does the description
-  state each distinct outcome once, as a line under "User-visible changes" where it has headings or
-  in the What paragraph where it has none, breaks first, and does each
-  commit that adds one carry it under `User-visible:` (§2)? Does a line carry the exact text and its
-  error code or exception class only where the outcome emits them? Is a deliberate non-change a
-  reader would expect stated under `Not changed:`?
-- Breaks: where the change breaks code that works on the released version, does the description
-  open with the break lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3 keep only the
-  other outcomes (§2)? Where nothing breaks, is there no lead and no label?
+  state each distinct outcome once, as a line under a template's heading where the template has one
+  for outcomes, or in the What paragraph otherwise, breaks first, and does each commit that adds one
+  carry it under `User-visible:` (§2)? Does a line carry the exact text and its error code or
+  exception class only where the outcome emits them? Is a deliberate non-change a reader would
+  expect stated under `Not changed:`?
+- Breaks: where the change breaks code that works on the released version, does the description open
+  with the break lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3
+  keep only the other outcomes (§2)? Where nothing breaks, is there no lead and no lead-in?
 - Headings: absent unless the repository's template supplies them, and absent from a description
-  that §4 rule 5 makes a commit body? Without them, does a Scope slot that carries a gap, a related or
-  stacked change, or a maintainer's question open with `**Scope.**`, and does no other slot carry a
-  label (§2)?
+  that §4 rule 5 makes a commit body? Without them, does a Scope slot that carries a gap, a related
+  or stacked change, or a maintainer's question open with `**Scope.**`, and does no other slot carry
+  a lead-in (§2)?
 - Shown: where a few lines of code, a command and its output, or an error text show the problem, are
   they there in place of prose that retells them, and is no literal traded for a description (§2)?
 - Route: is no finder, reviewer, tool, empty search, or aside left, and does every claim about code
