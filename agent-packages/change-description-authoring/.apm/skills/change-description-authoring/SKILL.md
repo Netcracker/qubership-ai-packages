@@ -250,11 +250,10 @@ paragraph, and a break missed in a patch release ships. Where a release tool bum
 `BREAKING CHANGE:` trailer or a `!` (§5), the trailer is written as well, whatever the description
 does.
 
-The description then opens with the lead-in `**Breaking changes.**`: nothing comes before it. The
-lead-in starts at most a short paragraph that says which code breaks, and slot 3's break lines
-follow. Where a template gives the description headings, the block sits under a
-`Breaking changes` heading instead. Slot 3 keeps the other outcomes, and the Why slot follows the breaks. A
-change with no break has neither the lead nor its lead-in (§7).
+The description then opens with the lead-in `**Breaking changes.**`: nothing comes before it, not
+even a template's first heading. The lead-in starts at most a short paragraph that says which code
+breaks, and slot 3's break lines follow. Slot 3 keeps the other outcomes, and the Why slot follows
+the breaks. A change with no break has neither the lead nor its lead-in (§7).
 
 The commit body keeps its order, problem first, with the breaks as the first `User-visible:` lines of
 slot 4: R2 opens the commit for the reason, and the label is what R4 and R5 search for. Where §4
@@ -316,10 +315,11 @@ Reviewer-only content is not a slot. Checklists, screenshots, the template's own
 round-by-round history live in comments or in a collapsed block, and never in a description that a
 squash or merge-commit setting will copy into the commit body (§4).
 
-Where the repository has a template, use its headings and fill them with the slots' content. A Scope
+Where the repository has a template, use its headings and fill them with the slots' content; the
+break block (above) still opens the description, ahead of the template's first heading. A Scope
 slot that carries a deliberate gap, a related or stacked pull request, or a question only a
-maintainer can settle, and that the template gives no heading of its own, opens with `**Scope.**` in
-a paragraph under the closest heading.
+maintainer can settle, and for which the template has no heading, opens with `**Scope.**` in a
+paragraph of its own.
 
 Where the repository has no template, the description has no headings. Up to four paragraphs, each
 plainly answering one slot's question, is the shape most changes take, and a code snippet or a
@@ -856,17 +856,17 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   claim about the code outside the diff name its check?
 - Caller: where the change adds or alters an outcome a caller can observe, does the description
   state each distinct outcome once, as a line under a template's heading where the template has one
-  for outcomes, or in the What paragraph otherwise, breaks first, and does each commit that adds one
-  carry it under `User-visible:` (§2)? Does a line carry the exact text and its error code or
-  exception class only where the outcome emits them? Is a deliberate non-change a reader would
-  expect stated under `Not changed:`?
+  for outcomes, or in the What paragraph otherwise, with the breaks leading the description (Breaks
+  item), and does each commit that adds one carry it under `User-visible:` (§2)? Does a line carry
+  the exact text and its error code or exception class only where the outcome emits them? Is a
+  deliberate non-change a reader would expect stated under `Not changed:`?
 - Breaks: where the change breaks code that works on the released version, does the description open
-  with the break lines, opened by `**Breaking changes.**` or the template's heading, and does slot 3
+  with the break lines, opened by `**Breaking changes.**` ahead of any heading, and does slot 3
   keep only the other outcomes (§2)? Where nothing breaks, is there no lead and no lead-in?
 - Headings: absent unless the repository's template supplies them, and absent from a description
   that §4 rule 5 makes a commit body? Does a Scope slot that carries a gap, a related or stacked
   change, or a maintainer's question, and has no template heading of its own, open with
-  `**Scope.**`, and does no other slot carry a lead-in (§2)?
+  `**Scope.**`, and does no slot but that one and the break block carry a lead-in (§2)?
 - Shown: where a few lines of code, a command and its output, or an error text show the problem, are
   they there in place of prose that retells them, and is no literal traded for a description (§2)?
 - Route: is no finder, reviewer, tool, empty search, or aside left, and does every claim about code

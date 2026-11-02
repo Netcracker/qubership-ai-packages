@@ -286,6 +286,15 @@ def scope_lead_in_under_template(text):
     return result(bool(ok) and not added, f'{len(ok)} Scope lead-in(s), Scope heading(s): {added}')
 
 
+def break_lead_in_before_headings(text):
+    """The break opens the description with its lead-in, ahead of the template's first heading, under no heading."""
+    d = description(text)
+    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:1]
+    ok = bool(first) and (m := LEAD_IN.match(first[0])) is not None and m.group(1) == 'Breaking changes'
+    added = re.findall(r'^#{1,6} .*\bbreak.*$', d, re.M | re.I)
+    return result(ok and not added, f'opens with the lead-in: {ok}, break heading(s): {added}')
+
+
 def new_test_not_marked(text):
     """The diff shows which test is new; the description does not say it."""
     found = re.search(r'`?\w+Test`?\s*\(new\)|\bnew (test|test class)\b[^.\n]{0,60}\w+Test'
@@ -515,9 +524,14 @@ def property_named(text):
 def break_leads_5330(text):
     """The break (a key reporting NONE validated before and now fails) opens the description, ahead of the problem.
 
-    The template's Jira Link section may come first. The break lines may follow one short paragraph that says which
-    code breaks, under a heading of their own."""
+    The break may open with its lead-in ahead of every template heading. A run of an earlier skill put the template's
+    Jira Link section first, and the break lines after one short paragraph that says which code breaks, or under a
+    heading of their own."""
     t = prose(text)
+    opening = [x for x in re.split(r'\n\s*\n', t.strip()) if x.strip()][:1]
+    if (opening and (m := LEAD_IN.match(opening[0])) and m.group(1) == 'Breaking changes'
+            and re.search(r'NONE|reject|fail', opening[0])):
+        return result(True, f'opens with the lead-in: {opening[0][:120]!r}')
     heads = [h for h in re.findall(r'^#{1,6} (.*)$', t, re.M) if h.strip() != 'Jira Link']
     if heads and re.search(r'break', heads[0], re.I):
         return result(True, f'first heading after the Jira link: {heads[0]!r}')
@@ -536,7 +550,7 @@ def break_leads_5330(text):
 def maintainer_question_kept(text):
     found = [x for x in sentences(text)
              if ('?' in x and re.search(r'NONE|permissive|#5331|VECTOR|reject|close', x))
-             or re.search(r'\b(decide|decision)\b', x, re.I)]
+             or re.search(r'\b(decide|decision|choose)\b', x, re.I)]
     return result(bool(found), f'question: {found[0][:200]!r}' if found else 'no question or decision asked of the maintainer')
 
 
@@ -618,12 +632,13 @@ CASES = {
     'pgjdbc-4367-breaks': [break_lines_lead_4367, break_label_4367, stated_once_4367, literals_kept_4367],
     'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392],
     'pgjdbc-4466-squash-default': [user_visible_without_invented_code, first_commit_full_with_issue,
-                                   title_is_subject, template_headings_kept, scope_lead_in_under_template],
+                                   title_is_subject, template_headings_kept, scope_lead_in_under_template,
+                                   break_lead_in_before_headings],
     'pgjdbc-4466-squash-title-description': [user_visible_without_invented_code, title_is_subject,
                                              description_as_commit_body, verification_one_line],
     'pgjdbc-4466-squash-or-rebase': [user_visible_without_invented_code, every_commit_full_with_issue,
                                      fixups_folded, title_is_subject, template_headings_kept,
-                                     scope_lead_in_under_template],
+                                     scope_lead_in_under_template, break_lead_in_before_headings],
     'pgjdbc-4466-merge-commit-title-description': [user_visible_without_invented_code, every_commit_full_with_issue,
                                                    fixups_folded, title_is_subject, description_as_commit_body,
                                                    verification_one_line],
@@ -638,7 +653,7 @@ CASES = {
     'pgjdbc-4423-no-outcome': [no_outcome_slot, no_changelog_entry],
     'calcite-5330-open-question': [break_leads_5330, maintainer_question_kept, compatibility_not_settled,
                                    answered_question_not_reopened, calcite_template_kept,
-                                   scope_lead_in_under_template],
+                                   scope_lead_in_under_template, break_lead_in_before_headings],
     'jdk-33173-audit': [finder_not_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
                         alternative_by_mechanism, answered_question_not_open, property_named],
     'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110)],
