@@ -1,8 +1,6 @@
-## Breaking changes
+**Breaking changes.** Before this change, `ARG_MIN`, `ARG_MAX`, `MIN_BY` and `MAX_BY` (Spark library) passed validation with a key (the second argument) whose type has comparability `NONE`. They now fail validation, as `MIN` and `MAX` already do for such a key. Only types that declare `NONE` are affected. `RelDataTypeImpl.getComparability()` returns `ALL`, and the only override in core is `ObjectSqlType`, which returns the comparability it was constructed with. In this repository, only the testkit's `ADDRESS` fixture is constructed with `NONE`. `ARRAY`, `MAP`, `MULTISET`, `ROW` and the types created by `CREATE TYPE` report `ALL` and validate as before. If a project's type reports `NONE` but can be compared at run time, the project has to make the type report `ALL`.
 
-`ARG_MIN`, `ARG_MAX`, `MIN_BY`, and `MAX_BY` now reject a key whose type reports comparability `NONE`. In 1.42.0 such a query passes validation. No built-in type in core reports `NONE`, so this affects only types that an application constructs with it, such as an `ObjectSqlType`. `MIN` and `MAX` already reject these types.
-
-- `ARG_MIN(value, key)`, `ARG_MAX(value, key)`, `MIN_BY(value, key)`, and `MAX_BY(value, key)` with a key of comparability `NONE` passed validation in 1.42.0. They now fail validation with `Cannot apply 'ARG_MIN' to arguments of type 'ARG_MIN(<INTEGER>, <>)'. Supported form(s): ARG_MIN(<ANY>, <COMPARABLE_TYPE>)`, where the arguments are an `INTEGER` value and an `ADDRESS` key. If the key type is comparable at run time, make it report comparability `ALL`. `MIN` and `MAX` already need that.
+- With a key whose comparability is `NONE`, each of the four functions fails validation, for example: `Cannot apply 'ARG_MIN' to arguments of type 'ARG_MIN(<INTEGER>, <>)'. Supported form(s): ARG_MIN(<ANY>, <COMPARABLE_TYPE>)`
 
 ## Jira Link
 
@@ -10,32 +8,25 @@
 
 ## Changes Proposed
 
-`ARG_MIN(value, key)`, `ARG_MAX(value, key)`, and their aliases `MIN_BY` and `MAX_BY` require a comparable key. However, the validator accepts a key whose type has comparability `NONE`, and `MIN` and `MAX` reject that same type. In the test catalog, `EMP_ADDRESS.HOME_ADDRESS` has the structured type `ADDRESS`, whose comparability is `NONE`:
+These four functions require a comparable key, but the validator accepts a key whose comparability is `NONE`. In the test catalog, `EMP_ADDRESS.HOME_ADDRESS` has the structured type `ADDRESS`, whose comparability is `NONE`, and this query validates:
 
 ```sql
-select min(home_address) from emp_address;            -- fails validation
-select arg_min(empno, home_address) from emp_address; -- passes validation on main
+select arg_min(empno, home_address) from emp_address
 ```
 
-Because validation accepts the key, the first check comes during execution. #5331 adds a `VECTOR` type whose comparability is `NONE`. On that branch, `MIN(v)` and `ORDER BY v` fail validation. `ARG_MIN(x, v)` passes validation and then fails with an `IllegalStateException`:
+#5331 adds a `VECTOR` type whose comparability is `NONE`. On that branch, without this change, `ARG_MIN` is the only one of these queries that is not rejected at validation. It fails later with an internal error:
 
-```text
-Unable to implement EnumerableAggregate(group=[{}], A=[ARG_MIN($0, $1)])
+```sql
+SELECT MIN(v) FROM t;          -- validation error: Cannot apply 'MIN' to arguments of type 'MIN(<VECTOR(2, REAL)>)'
+SELECT x FROM t ORDER BY v;    -- validation error: Values of type 'VECTOR(2, REAL)' are not comparable
+SELECT ARG_MIN(x, v) FROM t;   -- validates, then fails with IllegalStateException:
+                               --   Unable to implement EnumerableAggregate(group=[{}], A=[ARG_MIN($0, $1)])
 ```
 
-The four functions use the operand type checker `OperandTypes.ANY_COMPARABLE`, added in [CALCITE-5283](https://issues.apache.org/jira/browse/CALCITE-5283). It returns `false` for a non-comparable key but never throws, and `SqlOperator.validateOperands` ignores the returned value. The checker also discarded the result of the operand-count check. With this change, `ANY_COMPARABLE` honors `throwOnFailure` like the other operand type checkers. `SqlOperator.validateOperands` is unchanged.
+`OperandTypes.ANY_COMPARABLE`, the operand type checker of these functions (added in CALCITE-5283), returned `false` for a non-comparable key but never threw, and `SqlOperator.validateOperands` ignores the returned value. The checker also discarded the result of the operand-count check. When `throwOnFailure` is true, the checker now throws `callBinding.newValidationSignatureError()` for an invalid operand count or a non-comparable key, like the other checkers. `SqlOperator.validateOperands` is unchanged. The value (the first argument) still doesn't need to be comparable.
 
-Not changed: the value (the first argument) still doesn't need to be comparable.
-Not changed: keys of types that report `ALL` pass validation as before. That includes `ARRAY`, `MAP`, `MULTISET`, `ROW`, and types created by `CREATE TYPE`.
+The test cases with a non-comparable value, `arg_min(home_address, empno)` and `max_by(home_address, empno)`, pass without the change. They make sure that only the key is checked.
 
-The cases in `testArgMinMaxNonComparableKey` that use a non-comparable value also pass on `main`. They check that the value is still accepted.
+**Scope.** The maintainer said that in their implementation and in the Calcite runtime all types are comparable, so this change would break them. This needs a maintainer's decision. One option is to reject a `NONE` key in all four functions, as this PR does, which makes them consistent with `MIN` and `MAX`. The other is to keep the functions permissive, reject only `VECTOR` keys inside #5331 as that PR already does for `ORDER BY`, `GROUP BY` and the other clauses, and close this PR.
 
-**Scope.** This needs a maintainer's decision. The review comment says that Calcite's runtime, and the reviewer's own implementation, treat all types as comparable, and that this change would break them. The choice is between two options:
-
-- Reject non-comparable keys in these four functions, which is this pull request.
-- Keep the functions permissive and close this pull request. #5331 would then reject `VECTOR` keys itself, as it already does for `ORDER BY`, `GROUP BY`, and the other clauses.
-
-The evidence:
-
-- `RelDataTypeImpl.getComparability()` returns `ALL`. The only override in core is `ObjectSqlType`, which returns the comparability it was constructed with, and `SingleColumnAliasRelDataType` delegates. In this repository, the only type constructed with `NONE` is the testkit's `ADDRESS` fixture.
-- Comparable keys don't always run either. On `main`, `ARG_MIN(x, v)` with an `ARRAY` key passes validation and then fails with the same "Unable to implement EnumerableAggregate" error, while `MIN(v)` and `ORDER BY v` work on the same data. `ArgMinMaxImplementor` compares non-primitive keys with `SqlFunctions.ltNullable(Comparable, Comparable)`, and an array is a `java.util.List`. That failure is outside this change and has no Jira issue yet.
+A separate problem on `main` is not fixed here. `ARG_MIN(x, v)` with an `ARRAY` key, whose comparability is `ALL`, passes validation and then fails with the same `Unable to implement EnumerableAggregate`, even though `MIN(v)` and `ORDER BY v` work on the same data. `ArgMinMaxImplementor` compares non-primitive keys with `SqlFunctions.ltNullable(Comparable, Comparable)`, and an array is a `java.util.List`. No issue has been filed for it yet.

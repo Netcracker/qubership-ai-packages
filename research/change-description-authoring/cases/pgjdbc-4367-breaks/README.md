@@ -55,7 +55,9 @@ message retyped, and the `getMoreResults()` break line repeated under "User-visi
 Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading. Both open the description with
 `**Breaking changes.**`, which starts a short paragraph on which code breaks, and both pass check 7; both keep `grant
 insert` among the break lines and repeat no break line. They wrote 764 and 769 words of prose, against 763 and 781 on
-`c99e1c77`, where the skill did not yet say where the lead-in goes. The other rows stand for the trees they ran on.
+`c99e1c77`, where the skill did not yet say where the lead-in goes. Tree `6efc3a3a` differs from `044c6057` only in
+where the break lead-in and the Scope paragraph go under a template, and this case has no template, so the runs were
+not repeated. The other rows stand for the trees they ran on.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. The baseline
