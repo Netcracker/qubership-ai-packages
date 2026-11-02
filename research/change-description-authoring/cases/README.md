@@ -56,6 +56,7 @@ case tests.
 | [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect nobody has observed, hunks not read aloud, an answered review question |
 | [`pgjdbc-4501-manual-check`](pgjdbc-4501-manual-check/README.md) | pgjdbc#4501 description and diff | a manual check kept literal; no search result, bookkeeping, or footer |
 | [`pgjdbc-4388-contract-fix`](pgjdbc-4388-contract-fix/README.md) | pgjdbc#4388 description and diff | the old lines shown; a contract fix is not a break; no test narration |
+| [`pgjdbc-4412-comment-only`](pgjdbc-4412-comment-only/README.md) | pgjdbc#4412 description, commits, and diff | open, failing: a comment the diff rewrites is not quoted; the code it contradicted is kept |
 | [`pgjdbc-4420-test-sites`](pgjdbc-4420-test-sites/README.md) | pgjdbc#4420 description and diff | negative control: the pairing of tests to sites stays in a test-only change |
 
 The five `pgjdbc-4466-*` cases share their input below "Repository facts" and differ in the merge model, so a check that

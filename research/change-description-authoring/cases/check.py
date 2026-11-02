@@ -300,6 +300,33 @@ def links_at_merge_base(text):
     return result(not wrong, f'{len(urls)} link(s), not at the merge base: {wrong}')
 
 
+# pgjdbc-4412-comment-only
+
+def no_old_comment_quoted_4412(text):
+    """The comments and messages the diff removes are shown by the diff and are not quoted again."""
+    old = ['autoCommit is false on a connection returned by getConnection',
+           '2nd phase commit must be issued using an idle connection',
+           'should have restored connection autocommit mode']
+    found = [m for m in old if m.lower() in text.lower()]
+    return result(not found, f'quoted: {found}' if found else 'no removed wording quoted')
+
+
+def contradictions_kept_4412(text):
+    """The two comments that contradicted the code keep the code side, which the comment hunk does not show."""
+    missing = [m for m in ['pg_has_role', '64000'] if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'both kept')
+
+
+def renames_named_4412(text):
+    missing = [m for m in ['onePhaseBranch_leavesAutoCommitUnchanged', 'endThenJoinBranch_leavesAutoCommitUnchanged']
+               if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'both new names')
+
+
+def runtime_noop_checked_4412(text):
+    return ('READ', 'read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?')
+
+
 # pgjdbc-4367-breaks and pgjdbc-4392-no-break
 
 def break_lines_lead_4367(text):
@@ -573,6 +600,8 @@ CASES = {
                                  no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
     'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
                                prose_under(330), no_tool_footer],
+    'pgjdbc-4412-comment-only': [no_old_comment_quoted_4412, contradictions_kept_4412, renames_named_4412,
+                                 runtime_noop_checked_4412, prose_under(150)],
 }
 
 
