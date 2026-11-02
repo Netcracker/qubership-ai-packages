@@ -20,6 +20,7 @@ import sys
 FENCE = re.compile(r'^(`{3,}|~{3,})([^\n`]*)\n(.*?)^\1[ \t]*$', re.S | re.M)
 SUBJECT = re.compile(r'^[a-z]+(\([^)]*\))?!?: \S')
 HEADING = re.compile(r'^#{1,6} ', re.M)
+LEAD_IN = re.compile(r'\*\*(Scope|Breaking changes)[.:]?\*\*')
 CHECKBOX = re.compile(r'^\s*(?:[*-]|\d+\.)\s*\[[ xX]\]', re.M)
 MERGE_BASE = 'f171cd8af6fc5f341c765309af0c1ab0db6fbfb7'
 HEAD_4424 = 'e6bf0181251063d4cb2fc8324e28fc4f6cde1313'
@@ -211,8 +212,8 @@ def no_headings(text):
 
 
 def no_lead_in_labels(text):
-    found = re.findall(r'\*\*(?:Scope|Breaking changes)[.:]?\*\*', description(text))
-    return result(not found, f'labels: {found}' if found else 'no lead-in labels')
+    found = [m.group(0) for m in LEAD_IN.finditer(description(text))]
+    return result(not found, f'lead-ins: {found}' if found else 'no lead-ins')
 
 
 def section_heading_text(text):
@@ -261,15 +262,19 @@ def scope_lead_in_4370(text):
     paras = [x.strip() for x in re.split(r'\n\s*\n', prose(description(text))) if x.strip()]
     # The Scope paragraph and the list that follows it, up to the next paragraph of prose.
     blocks = []
+    extending = False
     for x in paras:
-        if x.startswith('**Scope.**'):
+        m = LEAD_IN.match(x)
+        if m and m.group(1) == 'Scope':
             blocks.append(x)
-        elif blocks and re.match(r'[*-] |\d+\. ', x):
+            extending = True
+        elif extending and re.match(r'[*-] |\d+\. ', x):
             blocks[-1] += '\n\n' + x
+        else:
+            extending = False
     ok = [x for x in blocks if '#4359' in x]
     heads = HEADING.findall(description(text))
     return result(bool(ok) and not heads, f'{len(ok)} Scope paragraph(s) naming #4359, {len(heads)} heading(s)')
-
 
 
 def new_test_not_marked(text):
@@ -358,9 +363,12 @@ def break_lines_lead_4367(text):
 
 
 def break_label_4367(text):
-    """The break block carries a label: the lead-in, or a heading where the description has headings."""
-    ok = re.search(r'^\*\*Breaking changes\.\*\*|^#{1,6} .*[Bb]reak', prose(text), re.M)
-    return result(bool(ok), f'label: {ok.group(0)!r}' if ok else 'break block unlabelled')
+    """The case has no template, so the break block opens with the lead-in, among the first blocks, under no heading."""
+    d = description(text)
+    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:3]
+    ok = [x for x in first if (m := LEAD_IN.match(x)) and m.group(1) == 'Breaking changes']
+    heads = HEADING.findall(d)
+    return result(bool(ok) and not heads, f'lead-in among the first three blocks: {bool(ok)}, {len(heads)} heading(s)')
 
 
 def literals_kept_4367(text):
