@@ -13,7 +13,8 @@ copies it.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, template headings), §4
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, template headings and the Scope
+  lead-in under them), §4
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -25,6 +26,7 @@ copies it.
 3. **Fix-ups folded** (`fixups_folded`). No commit with the subject `add tests` or `Apply suggestion …` remains.
 4. **The title is a subject** (`title_is_subject`).
 5. **The template stays** (`template_headings_kept`), as in the squash-default case.
+6. **Scope by lead-in under the template** (`scope_lead_in_under_template`), as in the squash-default case.
 
 ## Running it
 
@@ -32,17 +34,24 @@ As in [the cases README](../README.md). `controls/as-pushed.md` is the branch as
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading; both pass every check. Each puts the gap
+in a `**Scope.**` paragraph under a heading it already has. The earlier Opus runs (the Opus row below) added a `Scope`
+heading of their own and fail check 6, as do the Haiku results, the baselines, and the control: no lead-in, or a heading
+that names Scope. Both new runs, like the earlier ones, add a `Breaking changes` heading the template lacks, as §2 asks
+for a break under a template. Opus r1 also adds a `### What and why` heading the template lacks, which no check covers.
+The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
-| Run | Outcome (1) | Every commit (2) | Fix-ups (3) | Title (4) | Template (5) |
-| --- | --- | --- | --- | --- | --- |
-| Opus r1, r2 | passes | passes | passes | passes | passes |
-| Haiku r1 | passes | passes | passes | passes | passes |
-| Haiku r2 | passes | fails: a separate test commit with a short body and no `#2404` | passes | passes | passes |
-| Opus baseline | fails | passes | passes | passes | fails: dropped |
-| Haiku baseline | fails | passes | passes | passes | fails: dropped |
-| `controls/as-pushed.md` | fails | fails | fails | fails | fails |
+| Run | Outcome (1) | Every commit (2) | Fix-ups (3) | Title (4) | Template (5) | Scope (6) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus r1, r2 | passes | passes | passes | passes | passes | fails: a `Scope` heading |
+| Haiku r1 | passes | passes | passes | passes | passes | fails: `### Scope` |
+| Haiku r2 | passes | fails: a separate test commit with a short body and no `#2404` | passes | passes | passes | fails: `### Scope` |
+| Opus baseline | fails | passes | passes | passes | fails: dropped | fails |
+| Haiku baseline | fails | passes | passes | passes | fails: dropped | fails |
+| `controls/as-pushed.md` | fails | fails | fails | fails | fails | fails |
 
 The Haiku baseline's commit body ends with a paragraph on the tests after the `Closes #2404` trailer, which lands in
 `git log` under rebase.

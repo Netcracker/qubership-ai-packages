@@ -27,15 +27,16 @@ case tests the rule in `SKILL.md` §2,
 6. **Literals kept.** `42703`, `0100E`, `A result was returned when none was expected.`, and `42601` with `cannot insert
    multiple commands into a prepared statement` appear as in the draft.
 
-7. **The break block is labelled** (`break_label_4367`). One of the first three blocks opens with
-   `**Breaking changes.**` (or `**Breaking changes:**`), and the description has no headings: the case has no template.
+7. **The break lead-in comes first** (`break_label_4367`). The description opens with `**Breaking changes.**` (or
+   `**Breaking changes:**`), with nothing before it, and has no headings: the case has no template.
 
 Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
 marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
-with the lead-in labels. The Haiku results, both baselines, and `controls/retyped-and-repeated.md` fail it: they carry
+with the lead-ins. The Haiku results, both baselines, and `controls/retyped-and-repeated.md` fail it: they carry
 a `## Break…` heading or none, under the headings the skill they ran on wrote. `controls/breaking-lead-in.md` is
 `opus/result.md` as committed before 2026-11-01 with its first heading replaced by the lead-in; it fails check 7 on the
-five headings it keeps, and the two Opus results pass it.
+five headings it keeps. `controls/paragraph-before-lead-in.md` is `opus/result.md` with one sentence of prose put
+above the lead-in, and fails check 7 on that alone. The two Opus results pass it.
 
 ## Running it
 
@@ -51,11 +52,10 @@ message retyped, and the `getMoreResults()` break line repeated under "User-visi
 
 ## Results
 
-Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
-two places the checks do not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites,
-left out because it changed no output on `pgjdbc-4412-comment-only`, and two example template headings since dropped
-from one sentence; both open with `**Breaking changes.**` and pass check 7, and both keep `grant insert` among the break
-lines. The other rows stand for the trees they ran on.
+Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading. Both open the description with
+`**Breaking changes.**`, which starts a short paragraph on which code breaks, and both pass check 7; both keep `grant
+insert` among the break lines and repeat no break line. They wrote 764 and 769 words of prose, against 763 and 781 on
+`c99e1c77`, where the skill did not yet say where the lead-in goes. The other rows stand for the trees they ran on.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. The baseline
