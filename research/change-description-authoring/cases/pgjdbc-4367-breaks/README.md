@@ -27,14 +27,15 @@ case tests the rule in `SKILL.md` §2,
 6. **Literals kept.** `42703`, `0100E`, `A result was returned when none was expected.`, and `42601` with `cannot insert
    multiple commands into a prepared statement` appear as in the draft.
 
-7. **The break block is labelled** (`break_label_4367`). It opens with `**Breaking changes.**`, or sits under a
-   heading that names the breaks where the description has headings.
+7. **The break block is labelled** (`break_label_4367`). One of the first three blocks opens with
+   `**Breaking changes.**` (or `**Breaking changes:**`), and the description has no headings: the case has no template.
 
 Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
 marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
-with the lead-in labels. The Haiku results and `controls/retyped-and-repeated.md` pass it with a `## Break…` heading,
-which the skill no longer writes without a template, and both baselines fail it. `controls/breaking-lead-in.md` is
-`opus/result.md` as committed before 2026-11-01 with its first heading replaced by the lead-in.
+with the lead-in labels. The Haiku results, both baselines, and `controls/retyped-and-repeated.md` fail it: they carry
+a `## Break…` heading or none, under the headings the skill they ran on wrote. `controls/breaking-lead-in.md` is
+`opus/result.md` as committed before 2026-11-01 with its first heading replaced by the lead-in; it fails check 7 on the
+five headings it keeps, and the two Opus results pass it.
 
 ## Running it
 
