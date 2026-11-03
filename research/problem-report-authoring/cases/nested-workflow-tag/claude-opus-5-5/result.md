@@ -1,26 +1,36 @@
 ## Goal
 
-qubership-ratelimit pins `generic-go-build.yaml` by commit SHA, and its images are still built and pushed by a `docker-build.yaml` that GitHub resolves through the tag `v2.5.2` at run time. I want a caller's SHA pin to fix every workflow in the chain, so that the job that pushes images with `packages: write` changes only when the caller changes its pin.
+qubership-ratelimit pins `generic-go-build.yaml` by commit SHA, so that its CI cannot change without a commit in qubership-ratelimit. The `docker-build` job of that workflow still calls `docker-build.yaml` by the tag `v2.5.2`, and that job builds the service images and pushes them to GHCR with `packages: write`. We need a release of `generic-go-build.yaml` whose call to `docker-build.yaml` resolves to a fixed commit, so that a SHA pin on the outer workflow fixes everything it runs.
 
 ## Context
 
-The caller, `.github/workflows/go-build.yml` on `feat/ratelimit-operator` at `7701fd5`, pins the reusable workflow by SHA and grants it `packages: write` (lines 39-43):
+The caller is `.github/workflows/go-build.yml` in Netcracker/qubership-ratelimit (branch `feat/ratelimit-operator` at `7701fd5`), line 43:
 
 ```yaml
-    permissions:
-      contents: read
-      pull-requests: write
-      packages: write
     uses: Netcracker/qubership-core-infra/.github/workflows/generic-go-build.yaml@71206242f5967ac6691337913593f8623863f711 # v2.5.2
 ```
 
-Inside that commit, the `docker-build` job calls the next workflow by tag (`generic-go-build.yaml` line 392 at `71206242`):
+In `generic-go-build.yaml` at that commit, every action reference is a full SHA, and line 392 calls `docker-build.yaml` by tag:
 
-```yaml
-    uses: Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml@v2.5.2
+```bash
+curl -s https://raw.githubusercontent.com/Netcracker/qubership-core-infra/71206242f5967ac6691337913593f8623863f711/.github/workflows/generic-go-build.yaml | grep -n 'uses:'
 ```
 
-GitHub resolved the two calls this way in a qubership-ratelimit run on 2026-09-23 ([run 35839496302](https://github.com/Netcracker/qubership-ratelimit/actions/runs/35839496302), event `pull_request`, head `ae667a4`):
+```text
+8:#       uses: Netcracker/qubership-core-infra/.github/workflows/generic-go-build.yaml@v2.x.x
+118:        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+227:        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+233:        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+300:        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+313:        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+353:        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+376:        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+392:    uses: Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml@v2.5.2
+```
+
+`docker-build.yaml` at the same commit pins every `uses:` by full SHA as well.
+
+GitHub resolved the nested call through the tag in qubership-ratelimit run 35839496302 (event `pull_request`, head `ae667a4`, 2026-09-23T08:51:16Z):
 
 ```bash
 curl -s https://api.github.com/repos/Netcracker/qubership-ratelimit/actions/runs/35839496302 | jq -r '.referenced_workflows[] | "\(.path) ref=\(.ref // "-")"'
@@ -31,15 +41,15 @@ Netcracker/qubership-core-infra/.github/workflows/generic-go-build.yaml@71206242
 Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml@v2.5.2 ref=refs/tags/v2.5.2
 ```
 
-The tag-resolved `docker-build.yaml` pushed the operator image in that run ([job 107112852067](https://github.com/Netcracker/qubership-ratelimit/actions/runs/35839496302/job/107112852067), first of three manifest lines):
+[Job 107112852067](https://github.com/Netcracker/qubership-ratelimit/actions/runs/35839496302/job/107112852067) of that run pushed the operator image through this call (first of three push lines):
 
 ```text
 2026-09-23T08:59:28.8293149Z #20 pushing manifest for ghcr.io/netcracker/qubership-ratelimit-operator:feat-migrate-to-v1-20260923085731-193@sha256:635897f02cb0667c1da85c712e85cc30843eaabb3fca8cdc2688d8756e17251b
 ```
 
-Today `v2.5.2` peels to `71206242`, the pinned commit, so that run executed the code a SHA pin would have given it. The tag is a plain tag: the repository's rulesets API returned `[]` and it has no releases. GitHub's [reusable workflow docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows) say "Using the commit SHA is the safest option for stability and security", and [secure use](https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions) says a tag can be moved or deleted.
+On 2026-09-23, `v2.5.2` peeled to `71206242f5967ac6691337913593f8623863f711`, the commit the caller pins, so both calls ran the same code that day. The rulesets and releases endpoints of this repository returned `[]`, and `releases/tags/v2.5.2` returned 404, so `v2.5.2` is a plain tag and not an immutable release. GitHub's [Reuse workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows) page says: "Using the commit SHA is the safest option for stability and security."
 
-The call to `docker-build.yaml` is the only `uses:` in `generic-go-build.yaml` at `71206242` that is not a full SHA; its seven action references are, and so is every `uses:` in `docker-build.yaml`. The tag reference is still there in later versions, read on 2026-09-23 (`main` at `f7fba11`):
+The latest tag and `main` (`f7fba11`, read 2026-09-23 10:00 UTC) have the same pattern:
 
 ```bash
 for ref in v2.6.1 main; do printf '%s: ' "$ref"; curl -s "https://raw.githubusercontent.com/Netcracker/qubership-core-infra/$ref/.github/workflows/generic-go-build.yaml" | grep -n 'docker-build.yaml@'; done
@@ -50,23 +60,19 @@ v2.6.1: 394:    uses: Netcracker/qubership-core-infra/.github/workflows/docker-b
 main: 394:    uses: Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml@v2.6.1
 ```
 
-`generic-maven-build.yaml` on `main` has the same call at line 222. #367 says `generic-go-build.yaml` is used by 16 observability repositories; for every caller of v2.5.2, v2.6.1, or `main`, the nested call resolves through a tag whatever the caller pins.
+`generic-maven-build.yaml` on `main` calls `docker-build.yaml@v2.6.1` at line 222. #367 states that `generic-go-build.yaml` is used by 16 observability repositories.
 
-The nearest existing item is Renovate's #321, open since 2026-07-27 with no review, which pins these two lines to `8a233b03c5b5355d59c1585ffdaa1f45ea816405 # v2.6.1`. This issue asks for that outcome in a release, since callers pin released versions, and states why it matters.
+Renovate's #321, open since 2026-07-27 with no reviews, pins both lines on `main` to `8a233b03c5b5355d59c1585ffdaa1f45ea816405 # v2.6.1`. This issue asks for that change and for a release that carries it, because a caller pinned to a release commit keeps running the tag until it moves to a commit that contains the pin.
 
 ## Scope
 
-- The `docker-build.yaml` call in `generic-go-build.yaml`.
-- The same call in `generic-maven-build.yaml`.
+- Pin the `docker-build.yaml` call in `generic-go-build.yaml` and `generic-maven-build.yaml`. #321 makes this change on `main`.
+- Tag a release that contains it, so that callers can pin its commit.
+- Out of scope: changing the existing tags `v2.5.2`, `v2.6.0`, and `v2.6.1`. Callers move to the new release.
 
-Out of scope: what `docker-build.yaml` does, and the action pins inside qubership-workflow-hub. Existing tags such as `v2.5.2` keep their tag reference whatever `main` does; whether to protect `v*` tags with a ruleset is a separate decision.
+A SHA pin is one possible shape. A file cannot name the commit it is in, so a pinned call reaches `docker-build.yaml` from an earlier commit, as #321 pins the `v2.6.1` one. How to keep the two files in step is the project's choice; what we need is that the call resolves to a fixed commit.
 
 ## Definition of done
 
-- In a released version of core-infra, `grep -n 'docker-build.yaml@'` over `generic-go-build.yaml` and `generic-maven-build.yaml` shows a 40-character commit SHA, or the call uses another form that GitHub resolves to a fixed commit.
-- For a caller pinned by SHA to that release, the run's `referenced_workflows` lists `docker-build.yaml` with no `refs/tags/` ref.
-
-The mechanism is yours to choose. Two possible shapes, neither tried:
-
-- A SHA pin, as in #321. A commit cannot contain its own SHA, so the pin names an earlier commit: #321 pins the `docker-build.yaml` of v2.6.1 into the file that ships in the next release. A change to `docker-build.yaml` would then reach `generic-go-build.yaml` callers one release later.
-- A same-repository reference, `./.github/workflows/docker-build.yaml`. The reusable workflow docs say such a reference resolves to the caller's own commit, but they do not say how it resolves inside a workflow that another repository calls.
+- A tag exists on this repository whose `generic-go-build.yaml` and `generic-maven-build.yaml` contain the change.
+- In a caller run that pins `generic-go-build.yaml` to that tag's commit, the `jq` command above prints the `docker-build.yaml` entry with a commit SHA in its path and `ref=-`.

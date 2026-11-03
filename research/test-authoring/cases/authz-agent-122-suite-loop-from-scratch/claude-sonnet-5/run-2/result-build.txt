@@ -1,0 +1,17 @@
+on the fix (build.sh exited with 0):
+  2 test files ran, 0 failed
+on the base (build.sh exited with 1):
+  2 test files ran, 2 failed
+    test/scripts/test-e2e-makefile.sh (exit 124)
+      helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set FAKE_PRODUCT_CHART_MARKER=1
+      ok: e2e-install takes its helm args from FAKE_PRODUCT_CHART_MARKER, not from the other variable
+      ok: parity-install takes its helm args from FAKE_PRODUCT_CHART_MARKER, not from the other variable
+      ok: e2e-suite exits 0 once the Job's container starts
+      ok: e2e-suite streams the suite log once the container has started
+      FAIL: e2e-suite still calls kubectl wait --for=create, which pre-1.31 kubectl rejects
+      FAIL: expected 3 logs polls, counted 0
+      ok: helm test is left to finish on its own once the log has streamed
+    test/scripts/test-parity-users-merge.sh (exit 1)
+      FAIL: could not find the find|sort|xargs|jq merge pipeline in /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.zkE0c6X7yX/repo/build/authz-agent-transfer/Dockerfile; has it moved or been reworded?
+      
+      parity users merge checks: 1 failure(s)

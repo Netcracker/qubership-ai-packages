@@ -1,0 +1,30 @@
+on the fix (build.sh exited with 0):
+  186 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  186 tests ran, 26 failed
+    test_resource.test_analyze_resource_detailed_leaves_out_fields_missing_from_header[exact]
+    test_resource.test_analyze_resource_detailed_leaves_out_fields_missing_from_header[equal]
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_header_without_cell_errors
+    test_validate_schema.test_resource_validate_schema_primary_key_missing_from_header_is_not_checked[exact]
+    test_validate_schema.test_resource_validate_schema_primary_key_missing_from_header_is_not_checked[equal]
+    test_validate_schema.test_resource_validate_schema_unique_field_missing_from_header_is_not_checked[exact]
+    test_validate_schema.test_resource_validate_schema_unique_field_missing_from_header_is_not_checked[equal]
+    test_validate_schema.test_resource_validate_schema_foreign_key_missing_from_header_is_not_checked[exact]
+    test_validate_schema.test_resource_validate_schema_foreign_key_missing_from_header_is_not_checked[equal]
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[extra label: only a row longer than the header has an extra cell]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[extra label: a row shorter than the header misses the label's cell]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[missing label: only a row shorter than the header misses a cell]
+    test_validate_schema.test_resource_validate_fields_match_exact_checks_row_length_against_the_header[missing label: a row longer than the header has an extra cell]
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
+    test_header.test_get_expected_fields[exact: an extra label repeating a field name gets a numbered name]
+    test_header.test_get_expected_fields[exact: a numbered name skips the names already taken]
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
+    test_header.test_get_expected_fields[equal: without a header the schema fields are returned]
+    test_header.test_get_expected_fields[subset: without a header the schema fields are returned]
+    test_header.test_get_expected_fields[superset: without a header the schema fields are returned]
+    test_header.test_get_expected_fields[partial: without a header the schema fields are returned]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]

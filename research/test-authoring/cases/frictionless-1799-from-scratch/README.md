@@ -28,7 +28,7 @@ longer counts the missing column in its field statistics. Six existing tests enc
   one key, and uniqueness is checked across rows, so the key's control is a separate act.
 - **Which inputs** (§4). Four moved partitions: a missing label, an extra label, an integrity check on a missing column,
   and the analyzer. The pull request tests the first three and not the analyzer, although its message names it.
-- **A deliberate behavior change updates the tests that encode the old behavior, and names them** (§3). On the fix,
+- **A deliberate behavior change updates the tests that encode the old behavior** (§3). On the fix,
   `test_resource_validate_schema_extra_headers_and_cells`,
   `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`,
   `test_resource_validate_fields_match_extra_label[exact-…]`,
@@ -38,8 +38,8 @@ longer counts the missing column in its field statistics. Six existing tests enc
   `test_resource_with_missing_required_header_with_schema_sync_is_true_issue_1611` loops over a list of cases with a
   stopping `assert`; the neighbors' parametrized tests carry no ids, so pytest names the rows `exact-expected0`; and
   several names end in an issue number.
-- **The stack line** (§0). frictionless-py has no `AGENTS.md` or `CLAUDE.md`; the session proposes the line and creates
-  no file.
+- **No stack line where the references cover the stack** (§0). frictionless-py has no `AGENTS.md` or `CLAUDE.md`, and
+  pytest has a reference file: the session proposes no line and creates no file.
 
 ## Behaviors on the base
 
@@ -66,6 +66,10 @@ Measured with `TableResource(data=…, schema=…).validate()` and `report.flatt
 - `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §8, §9
 - `references/python/pytest.md`
 
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none.
+
 ## Files
 
 | File | What it is |
@@ -76,7 +80,7 @@ Measured with `TableResource(data=…, schema=…).validate()` and `report.flatt
 | `production-paths` | The three files of `change.patch`. The tests live beside the code, under `frictionless/**/__spec__/`, so a directory would take them in too. |
 | `build.sh` | Makes a Python 3.11 environment with `uv` under `.python/case`, which the repository ignores, then runs the four spec modules whose expectations the change moves, and every spec module that differs from `base`, and prints how many tests ran and which failed. |
 | `prompt.md` | The task, with `<skill>` replaced by the path of the skill copy. It tells the session that `uv` is there, since the machine's default Python is older than the project needs. |
-| `<model>/` | The output of `run-case.sh`: `result.diff`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
+| `<model>/run-<n>/` | The output of `run-case.sh`: `result.diff`, `result-note.md`, `result-build.txt`, `run.txt`, `skill-tree`. |
 
 The infrastructure was checked without a model on 2026-10-01 with uv 0.12 and CPython 3.11: the pull request's own tests
 on the case commit give `174 tests ran, 0 failed` on the fix, and `174 tests ran, 13 failed` on the base: the six
@@ -104,10 +108,11 @@ Read `result.diff` and `result-note.md` against all of them.
    foreign key under another `fieldsMatch` mode that raised `KeyError` on the base. Through `analyze()`: a missing
    column absent from `fieldStats` or from `rowsWithNullValues`. A missing one of the first three fails; a missing
    analyzer case is partial. Tests of `Header.get_expected_fields` alone do not count for the report.
-2. **The tests that encoded the old reports are updated and named** (§3). Each of the six tests listed under *What it
-   exercises* keeps its input and its whole-report assertion with the cell errors removed; none is deleted, skipped, or
-   loosened to a count or a membership check. The parametrize id `exact: extra labels get no field` states the old rule
-   and is renamed. The closing message names each updated test and the behavior that moved.
+2. **The tests that encoded the old reports are updated** (§3). Each of the six tests listed under *What it exercises*
+   keeps its input and its whole-report assertion with the cell errors removed; none is deleted, skipped, or loosened to
+   a count or a membership check. The parametrize id `exact: extra labels get no field` states the old rule and is
+   renamed. The closing message names an updated test only where its hunk does not show which behavior moved; a list of
+   all six with the behavior each one moved is partial.
 3. **The silent part of the case stands with a reporting control in one table** (§7 principle 3). The missing-label case
    shares one validated table with a row shorter or longer than its header that still reports its cell (`missing-cell`
    for a present column, or `extra-cell` past the header), or with a cell error in a present column. The extra-label
@@ -135,7 +140,8 @@ Read `result.diff` and `result-note.md` against all of them.
    to a name that already states the rule is partial (the neighbors' convention, which §9 does not let override §7); a
    name that is only an issue number fails.
 8. **The production code is unchanged.** The first part of `result.diff` is empty, no `AGENTS.md` or `CLAUDE.md` is
-   created, and the closing message proposes a stack line (§0), such as `Tests: pytest`.
+   created, and the closing message proposes no stack line (§0), states no test level (small, unit) for tests that sit
+   at the level of their neighbors (§3), and no list of the partitions the tests cover (§4).
 9. **Green on the fix, red on the base for each moved case** (§1). Read `result-build.txt`: no failure on the fix, and
    on the base a failure for every test that holds a moved case of check 1 and for the updated tests of check 2. A test
    that holds only controls passes on the base.

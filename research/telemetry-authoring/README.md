@@ -78,6 +78,7 @@ ab-verify-release-deps.md                the error-text rules tried on apache/jm
 prompt_ab-verify-release-deps.md, results_ab-verify-release-deps-*.md   that trial's prompts, messages, verdicts, and interrogation
 ab-max-result-buffer.md                  the shipped rules tried on a pgjdbc exception, against the earlier versions
 prompt_ab-max-result-buffer.md, results_ab-max-result-buffer.md   that trial's prompts, verdicts, and messages
+cases/                                   regression cases with run-case.sh and check.py
 ```
 
 The phase prompts and results, the seed, and each trial's prompt and results are excluded from markdownlint by
@@ -92,4 +93,5 @@ count of findings from it is quoted. That trial ran under `--setting-sources pro
 `CLAUDE.md` files, so its runs may also have seen the machine's own rules; `ab-verify-release-deps.md` describes the
 isolation that works. The error-text trials exercised one Gradle check and one pgjdbc exception; an error response, a
 CLI command that rejects its input, a lint, a pre-commit hook, a CI step outside the build tool, and a tool outside the
-JVM have no run.
+JVM have no run in the trials. Since 1.2.0, [`cases/`](cases/README.md) holds regression cases, including a library and
+a Go CLI rejecting a trivial argument, where the subsection on the caller's channel has to add nothing.

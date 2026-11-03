@@ -8,7 +8,7 @@
     {
       "name": "apm-authoring",
       "description": "Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "tags": [
         "topic:documentation",
         "activity:authoring",
@@ -111,7 +111,7 @@
     {
       "name": "english-developer-style",
       "description": "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -123,7 +123,7 @@
     {
       "name": "english-uk-developer-style",
       "description": "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -135,7 +135,7 @@
     {
       "name": "english-us-developer-style",
       "description": "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "topic:documentation",
         "lang:en",
@@ -159,7 +159,7 @@
     {
       "name": "russian-developer-style",
       "description": "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "lang:ru",
@@ -219,7 +219,7 @@
     {
       "name": "javadoc-authoring",
       "description": "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "stack:java",
@@ -235,7 +235,7 @@
     {
       "name": "godoc-authoring",
       "description": "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "stack:go",
@@ -248,7 +248,7 @@
     {
       "name": "rustdoc-authoring",
       "description": "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "stack:rust",
@@ -261,7 +261,7 @@
     {
       "name": "jsdoc-authoring",
       "description": "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "stack:javascript",
@@ -275,7 +275,7 @@
     {
       "name": "pythondoc-authoring",
       "description": "Structure and content rules for Python docstrings and inline comments: what a comment says, in what order, and how far a rewrite may grow.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "stack:python",
@@ -288,7 +288,7 @@
     {
       "name": "change-description-authoring",
       "description": "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what the merge model does to it.",
-      "version": "1.5.0",
+      "version": "1.7.0",
       "tags": [
         "topic:documentation",
         "topic:code-review",
@@ -301,7 +301,7 @@
     {
       "name": "docs-page-authoring",
       "description": "Structure and content rules for documentation pages: which reader a section serves, what an option entry carries, what a change owes the documentation, and what a page may not claim.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "topic:documentation",
         "activity:authoring",
@@ -313,7 +313,7 @@
     {
       "name": "test-authoring",
       "description": "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "topic:testing",
         "activity:authoring",
@@ -337,7 +337,7 @@
     {
       "name": "final-review",
       "description": "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands.",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "tags": [
         "topic:testing",
         "topic:code-review",
@@ -349,7 +349,7 @@
     {
       "name": "problem-report-authoring",
       "description": "Structure and content rules for problem reports: bug reports in any tracker or on a mailing list, in someone else's project or your own, feature and change requests, questions and vendor support tickets, comments on existing reports, and short problem messages to a colleague.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "topic:documentation",
         "topic:code-review",
@@ -362,7 +362,7 @@
     {
       "name": "telemetry-authoring",
       "description": "Rules for instrumentation in libraries and services, and for the error text a person or an agent reads: which signal an event owes (a record, an instrument, a span, the caller's channel, or nothing), what a record carries, the rate it may be emitted at, and what a library may not decide for its host.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "topic:observability",
         "activity:authoring",
@@ -385,7 +385,7 @@
     {
       "name": "adversarial-code-review",
       "description": "Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.",
-      "version": "1.0.5",
+      "version": "1.1.0",
       "tags": [
         "topic:code-review",
         "activity:code-review",
@@ -430,8 +430,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "8c2c44b419f1977d570cd4fdc7bc3db854d99555",
-        "sha": "8c2c44b419f1977d570cd4fdc7bc3db854d99555"
+        "ref": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
+        "sha": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -449,7 +450,8 @@
         "url": "Netcracker/qubership-apihub-api-diff",
         "path": "agent-packages/api-diff-authoring",
         "ref": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
-        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5"
+        "sha": "ce76b66795f88a32dfb688bb222dbc2ddabe1fa5",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -467,7 +469,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-authoring",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -485,7 +488,8 @@
         "url": "Netcracker/qubership-apihub-api-unifier",
         "path": "agent-packages/api-unifier-testing",
         "ref": "7d587699bc382bdaf3fd3283357c23c59f026977",
-        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977"
+        "sha": "7d587699bc382bdaf3fd3283357c23c59f026977",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -502,8 +506,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568"
+        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -520,8 +525,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "62569d71f9e8093b66002889e9aa2dc54aa14568",
-        "sha": "62569d71f9e8093b66002889e9aa2dc54aa14568"
+        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -539,8 +545,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-workflow-hub",
         "path": "agent-packages/qubership-workflow-hub-usage",
-        "ref": "93a4ff0542012e0839b4261f109c38fdc2f275f0",
-        "sha": "93a4ff0542012e0839b4261f109c38fdc2f275f0"
+        "ref": "665288138e45c18b5ae16af55605bfb0e70edd77",
+        "sha": "665288138e45c18b5ae16af55605bfb0e70edd77",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -558,8 +565,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-core-control-plane",
         "path": "agent-packages/core-mesh-to-istio-migration",
-        "ref": "7cec756af409f1fc2c9f377f1b86c10a088cf817",
-        "sha": "7cec756af409f1fc2c9f377f1b86c10a088cf817"
+        "ref": "f0ffff457170a0a2342fa392a87e6a95f9c2e97e",
+        "sha": "f0ffff457170a0a2342fa392a87e6a95f9c2e97e",
+        "tag_pattern": "v{version}"
       }
     },
     {
@@ -575,14 +583,15 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry",
-        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "ref": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "sha": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "tag_pattern": "v{version}"
       }
     },
     {
       "name": "ai-agent-telemetry-configure",
       "description": "Agent-guided setup, testing, repair, and delivery verification.",
-      "version": "3.4.0",
+      "version": "3.5.0",
       "tags": [
         "topic:observability",
         "activity:telemetry",
@@ -592,8 +601,9 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-ai-agent-telemetry",
         "path": "agent-packages/ai-agent-telemetry-configure",
-        "ref": "c7de411139332dab92b9d472e8f484aba92f57f6",
-        "sha": "c7de411139332dab92b9d472e8f484aba92f57f6"
+        "ref": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "sha": "466c5b9a1e0971161230fb52e73bb2460995c523",
+        "tag_pattern": "v{version}"
       }
     }
   ]

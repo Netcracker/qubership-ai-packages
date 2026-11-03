@@ -28,6 +28,10 @@ its own, and whether it finds the cases the change owes.
 - `SKILL.md`: §0, §1, §3, §4, §5, §7, §9
 - `references/java/junit4.md`
 
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none.
+
 ## Files
 
 | File | What it is |
@@ -35,11 +39,11 @@ its own, and whether it finds the cases the change owes.
 | `base` | The commit the tests are compared with, the base of the pull request. |
 | `tag` | The tag in `vlsi/NullAway` the session starts from. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/result.diff` | What the session changed in the production code (expected empty), then every other file relative to `base`. |
-| `<model>/result-note.md` | The session's closing message to the author of the pull request. |
-| `<model>/skill-tree` | The tree id of the skill that produced the result. |
-| `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
-| `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
+| `<model>/run-<n>/result.diff` | What the session changed in the production code (expected empty), then every other file relative to `base`. |
+| `<model>/run-<n>/result-note.md` | The session's closing message to the author of the pull request. |
+| `<model>/run-<n>/skill-tree` | The tree id of the skill that produced the result. |
+| `<model>/run-<n>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
+| `<model>/run-<n>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
 
@@ -69,8 +73,12 @@ Read `result.diff` and `result-note.md` against all of them.
    (§9).
 6. **The name states the rule** (§7). No ordinal, no line number, and no `And` or `But` joining the outcomes of two
    inputs. An `And` inside the condition of one rule passes.
-7. **The production code is unchanged.** The session proposes the stack line (§0) in its closing message and does not
-   edit `AGENTS.md`.
+7. **The production code is unchanged**, and `AGENTS.md` is not edited. A stack line in the closing message is optional
+   (§0): the session had to establish facts about `CompilationTestHelper`, which no reference file records, but §0 keeps
+   the line out of text written for another author, and the message here is written for the author of the pull request.
+   Where it proposes one, the line carries those facts (it stops at the first mismatch and names a missing marker by
+   line) and nothing about one test. The closing message states no test level (small, unit) for tests that sit at the
+   level of their neighbors (§3), and no list of the partitions the tests cover (§4).
 8. **The tests pass on the fix, and the defect's test fails on the base** (§5). Read `result-build.txt`: no failure on
    the fix, and on the base a failure for the test of check 1.
 
@@ -79,5 +87,5 @@ Checks 4 to 7 are partly countable. A result that passes has one marker at most 
 
 ```bash
 python3 research/test-authoring/cases/check-nullaway-case.py \
-  research/test-authoring/cases/nullaway-1834-from-scratch/claude-opus-5-5
+  research/test-authoring/cases/nullaway-1834-from-scratch/claude-opus-5-5/run-1
 ```

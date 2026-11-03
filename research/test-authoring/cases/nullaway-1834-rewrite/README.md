@@ -20,13 +20,17 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
   statement, and a marker with `String.formatted`.
 - **No case is lost when the tests collapse** (§4). The rewrite changes the form; each of the 20 inputs keeps its
   expectation.
-- **The stack line is proposed, not written** (§0). NullAway has an `AGENTS.md`; the skill proposes the line that
-  records the harness's stop-at-first behavior, and the session does not add it.
+- **The stack line is not written** (§0). NullAway has an `AGENTS.md`; the session does not add the line, and a line it
+  proposes records the harness's stop-at-first behavior.
 
 ## Skill parts
 
-- `SKILL.md`: §0, §1, §4, §5, §7, §9
+- `SKILL.md`: §0, §1, §3, §4, §5, §7, §9
 - `references/java/junit4.md`
+
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none.
 
 ## Files
 
@@ -35,11 +39,11 @@ the same setup twice ([the comment][review]), and the rules of version 1.1.0 on 
 | `base` | The commit the tests are compared with, the base of the pull request. |
 | `tag` | The tag in `vlsi/NullAway` the session starts from. |
 | `prompt.md` | The task given to the session, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/result.diff` | What the session changed in the production code (expected empty), then every other file relative to `base`. |
-| `<model>/result-note.md` | The session's closing message to the author of the pull request. |
-| `<model>/skill-tree` | The tree id of the skill that produced the result. |
-| `<model>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
-| `<model>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
+| `<model>/run-<n>/result.diff` | What the session changed in the production code (expected empty), then every other file relative to `base`. |
+| `<model>/run-<n>/result-note.md` | The session's closing message to the author of the pull request. |
+| `<model>/run-<n>/skill-tree` | The tree id of the skill that produced the result. |
+| `<model>/run-<n>/result-build.txt` | For the fix and for the base: the tests that ran and the ones that failed, or the build's exit status where it failed before any test ran. |
+| `<model>/run-<n>/run.txt` | The session's cost in dollars, its turns and duration, and whether it ran the tests itself. |
 
 ## How to run
 
@@ -81,9 +85,13 @@ Read `result.diff` and `result-note.md` against all of them.
    block the reader sees whole.
 5. **The name states the rule** (§7). No ordinal, no line number, and no `And` or `But` joining the outcomes of two
    inputs. An `And` inside the condition of one rule passes.
-6. **The production code is unchanged, and so are the other tests.** The session proposes the stack line (§0) in its
-   closing message and does not edit `AGENTS.md`.
-7. **The closing message names what moved and why**, and the rule of the skill behind each move.
+6. **The production code is unchanged, and so are the other tests**, and `AGENTS.md` is not edited. A stack line in the
+   closing message is optional (§0): the session had to establish facts about `CompilationTestHelper`, which no
+   reference file records, but §0 keeps the line out of text written for another author, and the message here is written
+   for the author of the pull request. Where it proposes one, the line carries those facts (it stops at the first
+   mismatch and names a missing marker by line) and nothing about one test. It states no test level (small, unit) for
+   tests that sit at the level of their neighbors (§3), and no list of the partitions the tests cover (§4).
+7. **The closing message names what moved and why**, giving the reason for each move in the rule's words.
 8. **The rewritten tests pass on the fix, and each test with a marker fails on the base** (§5). Read
    `result-build.txt`: no failure on the fix, and on the base a failure for every test that expects a diagnostic the
    fix added.
@@ -95,7 +103,7 @@ at most 3 of them with no marker, one marker at most per test, and prints `True`
 
 ```bash
 python3 research/test-authoring/cases/check-nullaway-case.py \
-  research/test-authoring/cases/nullaway-1834-rewrite/claude-opus-5-5 \
+  research/test-authoring/cases/nullaway-1834-rewrite/claude-opus-5-5/run-1 \
   'incompatible types: Box<T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<@Nullable T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<S> cannot be converted to Box<? extends Object>' \

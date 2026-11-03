@@ -1,0 +1,324 @@
+diff --git a/test/scripts/test-kind-make-targets.sh b/test/scripts/test-kind-make-targets.sh
+new file mode 100755
+index 0000000..df503e2
+--- /dev/null
++++ b/test/scripts/test-kind-make-targets.sh
+@@ -0,0 +1,318 @@
++#!/usr/bin/env bash
++
++# Copyright 2024-2026 Netcracker Technology Corporation
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Assertions for the kind targets of the Makefile, run with no cluster.
++#
++# Each check runs the real `make` target with fake kubectl, helm, sleep, and
++# date first on PATH. The fakes play a cluster in which the suite container
++# starts late, never starts, or never gets a Pod, and they share a fake clock:
++# `sleep` and a kubectl call that would block move it forward, and the fake
++# `helm test` reads it to decide when its --timeout runs out. A three-minute
++# wait therefore costs a few seconds of real time, and every run sees the same
++# times.
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++
++require_cmd() {
++  if ! command -v "$1" >/dev/null 2>&1; then
++    echo "error: required command not found: $1" >&2
++    exit 1
++  fi
++}
++
++require_cmd make
++require_cmd timeout
++
++WORK="$(mktemp -d)"
++trap 'rm -rf "${WORK}"' EXIT
++FAKES="${WORK}/bin"
++mkdir -p "${FAKES}"
++
++failures=0
++
++fail() {
++  echo "FAIL: $*" >&2
++  failures=$((failures + 1))
++}
++
++pass() {
++  echo "ok: $*"
++}
++
++# The fake clock, in whole seconds since make started. Whoever moves it waits
++# until a running `helm test` has seen the new time, so that helm's timeout
++# fires at the same point of the loop on every run.
++cat >"${WORK}/fake-clock.sh" <<'EOF'
++clock() { cat "${FAKE_STATE}/clock"; }
++advance_clock() {
++  local now=$(( $(clock) + $1 )) i
++  echo "${now}" >"${FAKE_STATE}/clock.new"
++  mv "${FAKE_STATE}/clock.new" "${FAKE_STATE}/clock"
++  for i in $(seq 3000); do
++    [[ -f "${FAKE_STATE}/helm.running" && "$(cat "${FAKE_STATE}/helm.seen" 2>/dev/null)" != "${now}" ]] || return 0
++    /bin/sleep 0.01
++  done
++}
++EOF
++
++cat >"${FAKES}/sleep" <<'EOF'
++#!/usr/bin/env bash
++. "$(dirname "$0")/../fake-clock.sh"
++advance_clock "${1%s}"
++EOF
++
++# `date +%s` reads the fake clock, so that a deadline the targets compute from
++# it is measured in the same time as everything else.
++cat >"${FAKES}/date" <<'EOF'
++#!/usr/bin/env bash
++. "$(dirname "$0")/../fake-clock.sh"
++if [[ "$*" == "+%s" ]]; then echo $(( 1700000000 + $(clock) )); else exec /bin/date "$@"; fi
++EOF
++
++# helm records every call. `helm test` stands for the suite Job: it succeeds
++# once the suite log has been streamed to its end, fails when the fake clock
++# reaches its --timeout, and records a SIGTERM.
++cat >"${FAKES}/helm" <<'EOF'
++#!/usr/bin/env bash
++. "$(dirname "$0")/../fake-clock.sh"
++echo "helm $*" >>"${FAKE_STATE}/calls"
++[[ " $* " == *" test "* ]] || exit 0
++timeout=5m prev=
++for arg; do [[ "${prev}" == --timeout ]] && timeout="${arg}"; prev="${arg}"; done
++deadline=0 rest="${timeout}"
++while [[ "${rest}" =~ ^([0-9]+)([hms])(.*)$ ]]; do
++  case "${BASH_REMATCH[2]}" in
++    h) deadline=$(( deadline + BASH_REMATCH[1] * 3600 )) ;;
++    m) deadline=$(( deadline + BASH_REMATCH[1] * 60 )) ;;
++    s) deadline=$(( deadline + BASH_REMATCH[1] )) ;;
++  esac
++  rest="${BASH_REMATCH[3]}"
++done
++now=0
++touch "${FAKE_STATE}/helm.running"
++trap 'rm -f "${FAKE_STATE}/helm.running"' EXIT
++trap 'echo "helm test stopped by SIGTERM at ${now} s" >>"${FAKE_STATE}/calls"; exit 143' TERM
++for i in $(seq 3000); do
++  now="$(clock)"
++  if [[ -f "${FAKE_STATE}/suite.finished" ]]; then
++    echo "Phase: Succeeded"
++    exit 0
++  fi
++  if (( now >= deadline )); then
++    echo "helm test timed out at ${now} s" >>"${FAKE_STATE}/calls"
++    printf 'Error: 1 error occurred:\n\t* timed out waiting for the condition\n' >&2
++    exit 1
++  fi
++  echo "${now}" >"${FAKE_STATE}/helm.seen.new"
++  mv "${FAKE_STATE}/helm.seen.new" "${FAKE_STATE}/helm.seen"
++  /bin/sleep 0.01
++done
++echo "fake helm: the suite did not finish and the fake clock stopped at ${now} s" >&2
++exit 1
++EOF
++
++# kubectl as the cluster of ${FAKE_SCENARIO} shows it, at the version before
++# 1.31, which rejects `kubectl wait --for=create`:
++#   container-starts-at-150  the suite container starts 150 s after make does;
++#   image-never-pull         the Pod exists and its container waits on
++#                            ErrImageNeverPull for good;
++#   no-pod                   the Job exists and has no Pod, as when admission
++#                            refuses the Pod, so `kubectl logs job/...` waits
++#                            its --pod-running-timeout, 20 s by default, for
++#                            one (kubectl pkg/polymorphichelpers/helpers.go,
++#                            GetPodList).
++cat >"${FAKES}/kubectl" <<'EOF'
++#!/usr/bin/env bash
++. "$(dirname "$0")/../fake-clock.sh"
++args=() namespace=default
++while (( $# )); do
++  case "$1" in
++    --context) shift 2 ;;
++    -n | --namespace) namespace="$2"; shift 2 ;;
++    *) args+=("$1"); shift ;;
++  esac
++done
++set -- "${args[@]}"
++echo "kubectl $* (at $(clock) s)" >>"${FAKE_STATE}/calls"
++case "$1" in
++  delete) exit 0 ;;
++  wait)
++    echo 'error: unrecognized condition: "create"' >&2
++    exit 1
++    ;;
++  get)
++    selector="$*" job="${selector##*job-name=}" job="${job%% *}"
++    if [[ "${FAKE_SCENARIO}" == no-pod ]]; then
++      echo "No resources found in ${namespace} namespace." >&2
++      exit 0
++    fi
++    echo "NAME                  READY   STATUS              RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES"
++    echo "${job}-x7k2p   0/1     ErrImageNeverPull   0          3m    10.244.0.17   authz-e2e-control-plane   <none>           <none>"
++    ;;
++  logs)
++    follow= job= pod_timeout=20
++    for arg; do
++      case "${arg}" in
++        -f) follow=1 ;;
++        job/*) job="${arg#job/}" ;;
++        --pod-running-timeout=*) pod_timeout="${arg#*=}" pod_timeout="${pod_timeout%s}" ;;
++      esac
++    done
++    case "${FAKE_SCENARIO}" in
++      no-pod)
++        advance_clock "${pod_timeout}"
++        echo "error: timed out waiting for the condition" >&2
++        exit 1
++        ;;
++      image-never-pull)
++        echo "Error from server (BadRequest): container \"suite\" in pod \"${job}-x7k2p\" is waiting to start: ErrImageNeverPull" >&2
++        exit 1
++        ;;
++      container-starts-at-150)
++        if (( $(clock) < 150 )); then
++          echo "Error from server (BadRequest): container \"suite\" in pod \"${job}-x7k2p\" is waiting to start: ContainerCreating" >&2
++          exit 1
++        fi
++        echo "=== RUN   TestRuntimeSuite"
++        if [[ -n "${follow}" ]]; then
++          echo "--- PASS: TestRuntimeSuite (41.20s)"
++          touch "${FAKE_STATE}/suite.finished"
++        fi
++        ;;
++    esac
++    ;;
++esac
++EOF
++chmod +x "${FAKES}"/*
++
++# Runs make with the arguments given, in the cluster of the scenario given,
++# and leaves its combined output in ${output}, its exit status in ${status},
++# the fakes' call record in ${calls}, and the fake time make took, in seconds,
++# in ${took}. -s keeps make from echoing the recipe, whose text holds the very
++# messages the checks look for.
++runs=0
++run_make() {
++  local scenario="$1"
++  shift
++  runs=$((runs + 1))
++  local state="${WORK}/state-${runs}"
++  mkdir -p "${state}"
++  echo 0 >"${state}/clock"
++  touch "${state}/calls"
++  status=0
++  output="$(FAKE_STATE="${state}" FAKE_SCENARIO="${scenario}" PATH="${FAKES}:${PATH}" \
++    timeout 120 make -s --no-print-directory -C "${ROOT_DIR}" "$@" 2>&1)" || status=$?
++  calls="$(cat "${state}/calls")"
++  took="$(cat "${state}/clock")"
++}
++
++excerpt() {
++  tail -n 8 <<<"$1" | sed 's/^/    /'
++}
++
++# The start wait polls for three minutes, and a deadline checked before each
++# attempt may overrun by one attempt and one sleep: kubectl's 20 s
++# --pod-running-timeout and the loop's 2 s.
++START_WAIT_LIMIT=202
++
++# kubectl before 1.31 rejected `kubectl wait --for=create`, which skipped the
++# start wait and left the log unstreamed. The container starts 150 s in, inside
++# the three minutes, so a shorter wait misses it too.
++run_make container-starts-at-150 e2e-suite
++if [[ "${status}" == 0 && "${output}" == *"--- PASS: TestRuntimeSuite"* ]]; then
++  pass "e2e-suite streams the log of a container that starts 150 s in, on a kubectl older than 1.31"
++else
++  fail "e2e-suite on a container that starts 150 s in exited ${status}, expected 0 with the suite log; output:
++$(excerpt "${output}")
++  calls:
++$(excerpt "${calls}")"
++fi
++
++# A container that never starts held the target until helm test's 15-minute
++# timeout. The target now gives up on it, prints the Pod, and stops helm test.
++for row in "e2e-suite:runtime-suite" "parity-suite:parity-suite"; do
++  IFS=: read -r target job <<<"${row}"
++  run_make image-never-pull "${target}"
++  if [[ "${status}" != 0 \
++    && "${output}" == *"The ${job} container did not start within 3 minutes:"* \
++    && "${output}" == *"${job}-x7k2p   0/1     ErrImageNeverPull"* ]]; then
++    pass "${target} fails on a container stuck on ErrImageNeverPull and prints its Pod"
++  else
++    fail "${target} on a container stuck on ErrImageNeverPull exited ${status} without the message and the Pod listing; output:
++$(excerpt "${output}")"
++  fi
++  if (( took <= START_WAIT_LIMIT )) && [[ "${calls}" == *"helm test stopped by SIGTERM"* ]]; then
++    pass "${target} stops helm test ${took} s into a container stuck on ErrImageNeverPull, ahead of its 15m timeout"
++  else
++    fail "${target} on a container stuck on ErrImageNeverPull took ${took} s of fake time, expected at most ${START_WAIT_LIMIT} s and helm test stopped; calls:
++$(excerpt "${calls}")"
++  fi
++done
++
++# Where the Job has no Pod, each `kubectl logs job/...` waits 20 s for one, so
++# ninety attempts are no longer three minutes.
++run_make no-pod e2e-suite
++if (( took <= START_WAIT_LIMIT )) && [[ "${output}" == *"The runtime-suite container did not start within 3 minutes:"* ]]; then
++  pass "e2e-suite gives up ${took} s into a Job that has no Pod"
++else
++  fail "e2e-suite on a Job that has no Pod took ${took} s of fake time, expected at most ${START_WAIT_LIMIT} s and the start message; $(grep -e '^helm test timed out' <<<"${calls}" || echo 'helm test did not time out'); calls:
++$(excerpt "${calls}")"
++fi
++
++# A suite timeout shorter than the start wait fires first, and the target
++# fails with helm's error rather than finish without it.
++run_make image-never-pull e2e-suite E2E_SUITE_TIMEOUT=2m
++if [[ "${status}" != 0 && "${output}" == *"timed out waiting for the condition"* ]]; then
++  pass "e2e-suite with E2E_SUITE_TIMEOUT=2m fails with helm test's timeout on a container that never starts"
++else
++  fail "e2e-suite with E2E_SUITE_TIMEOUT=2m on a container that never starts exited ${status} without helm test's timeout; output:
++$(excerpt "${output}")"
++fi
++
++# The test stand reads TAG and IMAGE_PULL_POLICY for images of its own, so the
++# arguments meant for the product charts must not reach it, and its own must
++# not reach them. One run per flow installs all three charts with both
++# variables set; test-stand-files, which needs Docker, is taken as up to date.
++for flow in e2e parity; do
++  run_make none -o test-stand-files "${flow}-harness" "${flow}-install" \
++    "E2E_HELM_ARGS=--set TAG=pr-123" "TEST_STAND_HELM_ARGS=--set IMAGE_PULL_POLICY=Never"
++  if [[ "${status}" != 0 ]]; then
++    fail "${flow}-harness ${flow}-install exited ${status}; output:
++$(excerpt "${output}")"
++    continue
++  fi
++  for row in \
++    "authz-test-stand|TEST_STAND_HELM_ARGS|--set IMAGE_PULL_POLICY=Never|--set TAG=pr-123" \
++    "authz-policy-admin|E2E_HELM_ARGS|--set TAG=pr-123|--set IMAGE_PULL_POLICY=Never" \
++    "authz-agent|E2E_HELM_ARGS|--set TAG=pr-123|--set IMAGE_PULL_POLICY=Never"; do
++    IFS='|' read -r release variable wanted unwanted <<<"${row}"
++    install="$(grep -e "upgrade --install ${release} " <<<"${calls}" || true)"
++    if [[ "${install}" == *"${wanted}"* && "${install}" != *"${unwanted}"* ]]; then
++      pass "${flow}: the ${release} install takes ${variable} alone"
++    else
++      fail "${flow}: the ${release} install should carry '${wanted}' and not '${unwanted}', and ran: ${install:-no such install}"
++    fi
++  done
++done
++
++echo
++if (( failures > 0 )); then
++  echo "kind make target checks: ${failures} failure(s)"
++  exit 1
++fi
++
++echo "kind make target checks: all passed"

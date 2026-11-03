@@ -33,16 +33,16 @@ goes, what a discarded call still evaluates, how context crosses a thread, and w
 `references/`, one file per ecosystem. **Before writing the first call, read the file for the repository's
 ecosystem**: `jvm.md`, `go.md`, `python.md`. Open no other.
 
-An ecosystem with no file here, such as Rust, JavaScript, or .NET, applies this file alone, and the review note says
-that no reference file covered its mechanics. Do not borrow another ecosystem's file: the three disagree on exactly
-the points a file carries.
+An ecosystem with no file here, such as Rust, JavaScript, or .NET, applies this file alone. Do not borrow another
+ecosystem's file: the three disagree on exactly the points a file carries.
 
 Which file, in this order:
 
 1. **The repository's instructions name the stack.** A line such as `Logging: SLF4J API, Micrometer for metrics,
-   OpenTelemetry API for traces` selects the file and settles the mechanics. Where the line is missing, propose it in
-   the pull request that adds the instrumentation.
-1. **Otherwise the imports of the nearest existing call decide**, then the build file.
+   OpenTelemetry API for traces` selects the file and settles the mechanics.
+1. **Otherwise the imports of the nearest existing call decide**, then the build file. Where both leave the stack
+   ambiguous, such as two logging APIs in one module, propose the line in the pull request that adds the
+   instrumentation.
 
 ## 1. The mode
 
@@ -69,11 +69,11 @@ independent: check both, and emit both where both apply. Step 5 applies when nei
 
 | # | Step | Condition | Outcome |
 | --- | --- | --- | --- |
-| 1 | **Already recoverable** | An existing signal of the kind the question needs carries the fact *and* the value that distinguishes this case | **Nothing.** Name the existing signal in the review note |
+| 1 | **Already recoverable** | An existing signal of the kind the question needs carries the fact *and* the value that distinguishes this case | **Nothing.** Where a reviewer would expect the branch to emit, name the existing signal in the review note |
 | 2 | **The caller can act** | The caller can prevent or repair it | **The caller's channel**: return, raise, or the ecosystem's warning channel, and **not also** a log call |
 | 3 | **Asked in aggregate** | The question is "how often, how long, how many right now" | **An instrument** (§4) |
 | 4 | **Asked about one unit** | The question is "what happened to this one", and the aggregate cannot reconstruct it | **One record** (§3) |
-| 5 | Neither 3 nor 4 | — | **Nothing**, and the review note says so |
+| 5 | Neither 3 nor 4 | — | **Nothing** |
 
 **Step 1 is first because the common failure is a second signal for a fact already carried.** The kind matters: a
 sampled trace or a debug record does not answer an aggregate question, and a counter does not answer "what happened
@@ -89,15 +89,22 @@ a field where none is.
 
 ### What a message on the caller's channel carries
 
-An agent offered only a way to accept the result takes it, so the message also says when accepting is wrong. Beyond what
-failed and the values involved, the message carries:
+A message that names what failed, the value that failed, the parameter, flag, or input the value came from, and the
+values it accepts is complete where the fix is to change that input:
+
+```text
+Unknown sslmode "requir"; expected disable, allow, prefer, require, verify-ca, or verify-full
+```
+
+The rows below apply where the fix is somewhere else: a limit or an expected value configured away from the call site, a
+cause the named input does not show, or a check the reader can override. Each row applies under its own condition.
 
 | Carries | Detection |
 | --- | --- |
-| **Why the check exists**, in one clause the reader can relay | The message says what failed but not what the check protects, so "why did it fail" needs the source |
-| **Where to change it**: the setting, the parameter, or the file and the key, spelled the way the reader sets or greps it | A limit or an expected value printed with no name the reader can set; a key named without its file, or a file without its key |
-| **How to find the cause**, where the code knows more than the reader: a command ready to run, or the fact itself, with every value the code holds filled in | A placeholder such as `<module>` or `<id>` where the code holds the value; "check your configuration" with no command or value |
-| **Each way out, runnable as printed and working as the code stands**: what to change when the condition is not intended; where a limit refused the operation, the change to the request that brings it under the limit, named for this operation, beside raising the limit with a value it accepts; and, where the check can be overridden, the command or setting that accepts the result | Where an override exists, only it is offered; a limit whose only way out is raising or disabling it, where the request could change instead; a remedy the code does not show to work, such as a setting the failing path never reads, or an example value that would fail the same check, such as a raised limit no larger than the one exceeded; a command that does not run as printed, such as one that names a module or a directory where the tool expects a task or a subcommand; one remedy after a list whose cases need different ones |
+| **Why the check exists**, where it refuses a value the reader may choose to allow, such as a limit or a committed list: one clause the reader can relay | The message names a limit or an expected value but not what it protects, so "should I raise it" needs the source |
+| **Where to change it**, where the limit or expected value is set away from the call site: the setting, the parameter, or the file and the key, spelled the way the reader sets or greps it | A limit or an expected value printed with no name the reader can set; a key named without its file, or a file without its key |
+| **How to find the cause**, where the named input does not show it and the code holds what the reader would look up: a command ready to run, or the fact itself, with every value the code holds filled in | A placeholder such as `<module>` or `<id>` where the code holds the value; "check your configuration" with no command or value |
+| **Each way out**: every remedy printed passes the check that failed, runs as printed, and works as the code stands. Where a limit refused a request whose size the caller chooses, the change to the request comes beside raising the limit with a value it accepts. Where the check can be overridden, the message also says when accepting the result is wrong, because an agent offered only the override takes it | A raised limit no larger than the one exceeded; a setting the failing path never reads; a command that names a module or a directory where the tool expects a task or a subcommand; only the override offered where the request could change; one remedy after a list whose cases need different ones |
 | **What to report**, where the check exists so that a reviewer sees the change: what goes into the change description or to the user, with the names and numbers to quote | The message gives the accept path and does not say to tell the reviewer |
 
 A service refusing a request over a size limit:
@@ -107,26 +114,6 @@ Request body of 12582912 bytes exceeds max-request-size=10485760 (10 MiB) in con
 one request from holding more than that much server memory. Upload the file in parts of at most 10 MiB with the
 multipart endpoint, or raise max-request-size, for example to 20MB, if requests this large are expected.
 ```
-
-A build check that compares the release jars with a committed list, with one module added and the size over its limit:
-
-```text
-The jars of the binary release do not match src/dist/src/dist/expected_release_artifacts.txt. The check catches
-dependencies that enter the release unnoticed, often transitively, and unexpected growth of the release.
-  + org.example:foo (foo-1.2.jar, 1048576 bytes)
-To see which dependency brings it in, run ./gradlew :src:dist:dependencyInsight --configuration runtimeClasspath --dependency org.example:foo
-The total size of the jars is 88080384 bytes (84 MiB), which exceeds total-size-limit=87031808 (83 MiB) in
-src/dist/src/dist/expected_release_artifacts.txt. The largest jars now:
-  12582912 bcprov-jdk18on-1.78.jar
-  ...
-If the module is not intended, exclude it or revert the dependency update that brought it in. If the growth is not
-intended, revert the update that grew the jars. If both are intended, run ./gradlew :src:dist:verifyReleaseDependencies
--PupdateExpectedJars, which also raises total-size-limit, commit the file, and name the module, the size growth, and the
-dependency update in the pull request description.
-```
-
-The examples show what each row looks like, not text to reuse. Every fact in them is true of that check only; check
-each phrase taken from them against the code the new message reports on.
 
 ## 3. The record
 
@@ -160,7 +147,7 @@ What every record carries:
 | **The joining identifier** | Concurrent workers produce interleaved streams that cannot be separated without it | The record is emitted outside any active trace context the logging bridge attaches, and its fields carry no id of the request, connection, or unit. A class name is not an identifier: the value has to distinguish two concurrent units, not two code sites |
 | **The branch that produced the value** | A record that prints its inputs and its result leaves the reader to re-derive which case fired | The clamped and the unclamped case produce the same text. Printing every input does not repair it: the *branch* has to be recoverable from the text |
 | **Names the reader can set or grep** | A private field name sends a reader holding a configuration file to a search that returns nothing | Grep each name in the message against the settable names: the property, the flag, the environment variable. The user-facing spelling wins; renaming the private field to match is the wrong direction |
-| **Which state it reports**, where a reader may wait on it | The reader's decision is wait or intervene, and "still retrying" and "gave up" must not share a text | The text and the level together leave the two indistinguishable. Adding the word "failed" is not enough: a counterpart record for the other outcome has to exist |
+| **Which state it reports**, where a reader may wait on it | The reader's decision is wait or intervene, and "still retrying" and "gave up" must not share a text | The text and the level together leave the two indistinguishable. Adding the word "failed" is not enough: the other outcome has a counterpart, a record or the error returned to the caller |
 | **The transition time**, for a published state | "It has been stuck for ten minutes" is unanswerable without it | A status field, gauge, or condition published with no transition timestamp or last-success timestamp |
 
 **A value the reader will filter or join on is a field, not prose inside the message.** Detection: the value is
@@ -182,8 +169,9 @@ or a duration.
 
 - **A new instrument is introduced with the question it answers, stated where the instrument is defined.** Whoever
   defines it states the question, because the host wiring it up cannot infer it; whoever registers it owns where it
-  goes. Detection: no alert, dashboard, or stated question names it. A generic doc comment does not satisfy this;
-  the stated question names a decision somebody makes.
+  goes. An instrument a semantic convention defines, emitted under the convention's name, needs no stated question,
+  because the convention's page states it. Detection: no alert, dashboard, or stated question names it. A generic doc
+  comment does not satisfy this; the stated question names a decision somebody makes.
 - **The failure rate is computable from one label set.** Either one instrument carries an outcome attribute
   (`error.type` in the OpenTelemetry conventions), or the failure counter and the attempts counter share a label set
   on the same path. Detection: a failure counter with no attempts counter and no outcome attribute; or a denominator
@@ -194,8 +182,6 @@ or a duration.
 - **Latency for the successful outcome is separable from overall latency**, because fast failures make a combined
   timer look healthy. One histogram with an outcome attribute satisfies this. Detection: one timer around the call
   with no outcome dimension and no separate success timer.
-- **A condition that is both recurring and logged is also counted**, where the repository exports metrics at all.
-  Detection: a new log line for a recurring condition and no counter beside it.
 - **A threshold that decides "slow", "stuck", or "too many" lives in the alert, and the emitting code exports the
   raw measurement.** A threshold in the code is in rule only beside a histogram of the same measurement, because
   then the reader can retune it. Detection: a constant compared against a measurement to decide whether to emit,
@@ -308,25 +294,25 @@ from a package variable.
 
 ## 9. Review checklist
 
-Run this over a diff that touches instrumentation or the text of an error. Every item gets an answer; an item with
-nothing to report says `none` and one line on what was checked. Where an item turns on whether an engineer holding only
-the emitted text would wait or intervene, raise it for a person and say so.
+Run this over a diff that touches instrumentation or the text of an error. Report the items with a finding, and one line
+that names the items checked with nothing found. Where an item turns on whether an engineer holding only the emitted
+text would wait or intervene, raise it for a person and say so.
 
 - **Mode** (§1, §6): does the change contain a configuration call in a library or off a service's startup path, or
   an acquisition call; is the artifact in library mode, and does it then carry a provider, an SDK, an exporter, or a
   default registry?
 - **Signal** (§2): which existing signal of the right kind was checked for the fact; does any path both log an error
-  and return or throw it; is any handler body a single log call; was a decision to emit nothing recorded?
+  and return or throw it; is any handler body a single log call?
 - **Rate** (§3): can the new call fire per item of one unit outside the three permitted shapes; where the unit is the
   state change, does it emit on transition; can the host sample or lower a per-unit record; is a debug record carrying a
   fact the reader needs in production, or sitting at a verbosity nobody enables?
 - **Contents** (§3): joining identifier or trace context, the branch that produced the value, settable names, which
   state, transition time; is a filterable value interpolated into the text; is an expensive argument guarded?
-- **Instrument** (§4): does a log line carry a count, a rate, or a duration; is the question stated where the
-  instrument is defined; is the failure rate computable from one label set; is the reason low-cardinality; is the
-  label set bounded; is success latency separable; is an unbounded value a metric attribute; does a constant decide
-  whether to emit with no instrument carrying the measurement; is an existing signal in the diff consumed by
-  nothing?
+- **Instrument** (§4): does a log line carry a count, a rate, or a duration; does an instrument outside the semantic
+  conventions state its question where it is defined; is the failure rate computable from one label set; is the reason
+  low-cardinality; is the label set bounded; is success latency separable; is an unbounded value a metric attribute;
+  does a constant decide whether to emit with no instrument carrying the measurement; is an existing signal in the diff
+  consumed by nothing?
 - **Span** (§5): does a new span duplicate an instrumented operation; does a recovered attempt set the error status;
   is an exception recorded on a rethrowing frame or on more than one frame; is one that can carry sensitive data
   recorded without a redaction filter; does new code add a span event where a logs bridge exists, for an event no
@@ -336,7 +322,6 @@ the emitted text would wait or intervene, raise it for a person and say so.
 - **Level** (§7): does it agree with the neighboring calls, and did the code continue normally afterwards?
 - **Context** (§8): does every concurrent call the change starts carry the caller's context; does every scope
   restore what it set, on every path?
-- **Caller's message** (§2): can a person or an agent holding only the text of the exception, the error response, or the
-  failed build, without the source, fix the cause or explain it to someone else? Does it say why the check exists, where
-  to change it, how to find the cause with every value the code holds filled in, each way out runnable as printed, and
-  what to report where a reviewer has to see the change?
+- **Caller's message** (§2): can a person or an agent holding only the text of the exception, the error response, or
+  the failed build, without the source, fix the cause or explain it to someone else? Does it carry each row of *What a
+  message on the caller's channel carries* whose condition holds, and nothing the condition rules out?

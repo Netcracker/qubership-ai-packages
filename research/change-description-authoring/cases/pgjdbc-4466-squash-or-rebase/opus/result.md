@@ -1,64 +1,39 @@
 ## 1. Commits
 
-Fold commits 2 (`add tests`) and 3 (`Apply suggestion from @vlsi`) into commit 1. The branch merges as one commit:
+Fold commit 2 (`add tests`) and commit 3 (`Apply suggestion from @vlsi`) into commit 1. That leaves one commit with this message:
 
 ```text
-feat: include the driver version in the default application_name
+feat: append the driver version to the default ApplicationName
 
-Previously a connection that left ApplicationName unset reported
-application_name as "PostgreSQL JDBC Driver". A database administrator
-looking at pg_stat_activity could not tell which driver version each
-application used. Issue #2404 asks for the version of the JDBC driver
-to be visible from a PostgreSQL view.
+A connection that left ApplicationName unset reported application_name
+as "PostgreSQL JDBC Driver" whatever the driver version, so
+pg_stat_activity could not show which pgjdbc version a client used.
+Users asked to see the driver version from the server side.
 
-The default ApplicationName is now DriverInfo.DRIVER_FULL_NAME, which
-is the driver name followed by a space and the version of the driver
-jar. The git sha of the build and the JDK version are not added.
+The default is now DriverInfo.DRIVER_FULL_NAME: the driver name, a
+space, and the version of the driver jar.
 
 User-visible:
-A connection that leaves ApplicationName unset reports application_name as "PostgreSQL JDBC Driver 42.7.14" (the version of the driver jar) instead of "PostgreSQL JDBC Driver", so a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
-Any role that can connect to the database reads application_name of every session in pg_stat_activity, so other database users see the driver version of connections that leave ApplicationName unset.
+A connection that leaves ApplicationName unset reports application_name as "PostgreSQL JDBC Driver <version>", for example "PostgreSQL JDBC Driver 42.7.14", instead of "PostgreSQL JDBC Driver"; a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
+Any role that can connect to the database reads application_name of every session in pg_stat_activity, so the default value shows the driver version to other database users.
 Not changed:
 An explicitly set ApplicationName is sent as given.
 
-Closes #2404
+Fixes #2404
 ```
 
 ## 2. Title
 
 ```text
-feat: include the driver version in the default application_name
+feat: append the driver version to the default ApplicationName
 ```
 
 ## 3. Description
 
 ```markdown
-### Breaking changes
+**Breaking changes.** After the upgrade, a query or dashboard that finds pgjdbc connections by their default `application_name` no longer finds them.
 
-After the upgrade, code that finds pgjdbc connections by the exact default `application_name` no longer matches them.
-
-- A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver 42.7.14` (the version of the driver jar) instead of `PostgreSQL JDBC Driver`, the value through 42.7.13. A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds these connections. Match the `PostgreSQL JDBC Driver` prefix instead, or set `ApplicationName` explicitly.
-
-### Why
-
-Users want to see in `pg_stat_activity` which driver version their applications use, and #2404 asks for the version of the JDBC driver to be visible from a PostgreSQL view. The default `application_name` named the driver but not its version.
-
-### What
-
-The default `ApplicationName` is now `DriverInfo.DRIVER_FULL_NAME`, which is the driver name followed by a space and the version of the driver jar.
-
-### User-visible changes
-
-- Any role that can connect to the database reads `application_name` of every session in `pg_stat_activity`, so other database users now see the driver version of connections that leave `ApplicationName` unset. The `ApplicationName` entry in `docs/content/documentation/use.md` now says this.
-- An explicitly set `ApplicationName` is sent as given.
-
-### Verification
-
-`ApplicationName` has a new test class, `ApplicationNameTest`, whose two tests need a running server. `defaultApplicationNameCarriesTheDriverVersion` reads the default back from `current_setting('application_name')`. It fails on `master`, where the value is `PostgreSQL JDBC Driver`. `explicitApplicationNameIsKept` checks that `ApplicationName=billing` stays `billing`, and it passes on `master` too.
-
-### Scope
-
-Closes #2404. The git sha of the build and the JDK version are left out of the default because they would add too much. They can be discussed separately.
+* A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver` followed by a space and the version of the driver jar, for example `PostgreSQL JDBC Driver 42.7.14`. Up to 42.7.13 it reported `PostgreSQL JDBC Driver`. A filter such as `application_name = 'PostgreSQL JDBC Driver'` stops matching. To keep a fixed value, set `ApplicationName` explicitly.
 
 ### All Submissions:
 
@@ -73,7 +48,16 @@ Closes #2404. The git sha of the build and the JDK version are left out of the d
 
 ### Changes to Existing Features:
 
-* [x] Does this break existing behaviour? If so please explain. Yes, see "Breaking changes" above.
+Users want to see which driver version their applications use, and `pg_stat_activity` is where they look. Before this change, every pgjdbc connection that left `ApplicationName` unset showed the same `PostgreSQL JDBC Driver`.
+
+* Any role that can connect to the database reads `application_name` of every session in `pg_stat_activity`. The default value therefore shows the driver version to other database users.
+* An explicitly set `ApplicationName` is sent as given. `explicitApplicationNameIsKept` covers this, and it passes on `master` too.
+
+**Scope.** The default leaves out the git sha of the build and the JDK version. Whether to add either one can be discussed separately.
+
+Fixes #2404.
+
+* [x] Does this break existing behaviour? If so please explain.
 * [x] Have you added an explanation of what your changes do and why you'd like us to include them?
 * [x] Have you written new tests for your core changes, as applicable?
 * [ ] Have you successfully run tests with your changes locally?

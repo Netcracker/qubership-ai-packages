@@ -1,0 +1,101 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+index ad70e90..45e7f26 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+@@ -1828,21 +1828,7 @@ public class FrameworkTests extends NullAwayTestsBase {
+ 
+   @Test
+   public void springValueFieldTest() {
+-    defaultCompilationHelper
+-        .addSourceLines(
+-            "Value.java",
+-            """
+-            package org.springframework.beans.factory.annotation;
+-            import java.lang.annotation.ElementType;
+-            import java.lang.annotation.Retention;
+-            import java.lang.annotation.RetentionPolicy;
+-            import java.lang.annotation.Target;
+-            @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+-            @Retention(RetentionPolicy.RUNTIME)
+-            public @interface Value {
+-              String value();
+-            }
+-            """)
++    addSpringValueAnnotationStub(defaultCompilationHelper)
+         .addSourceLines(
+             "NegativeCases.java",
+             """
+@@ -1888,6 +1874,73 @@ public class FrameworkTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  /**
++   * Adds a stub for the Spring {@code @Value} annotation.
++   *
++   * @param helper the test helper to add the stub to
++   * @return the test helper, for chaining
++   */
++  private static CompilationTestHelper addSpringValueAnnotationStub(CompilationTestHelper helper) {
++    return helper.addSourceLines(
++        "Value.java",
++        """
++        package org.springframework.beans.factory.annotation;
++        import java.lang.annotation.ElementType;
++        import java.lang.annotation.Retention;
++        import java.lang.annotation.RetentionPolicy;
++        import java.lang.annotation.Target;
++        @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
++        @Retention(RetentionPolicy.RUNTIME)
++        public @interface Value {
++          String value();
++        }
++        """);
++  }
++
++  @Test
++  public void springValueFieldNullUsedOnlyAsComparisonOperandIsNotFlagged() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "NullComparisonOperandOnTheRight.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class NullComparisonOperandOnTheRight {
++              @Value("#{someBean != null ? someBean.value : 'default'}")
++              String comparedToNull;
++              @Value("#{someBean != null ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullBranchValue' not initialized
++              String nullBranchValue;
++              void test() {
++                comparedToNull.toString();
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void springValueFieldNullOnLeftOfComparisonOperatorIsNotFlagged() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
++        .addSourceLines(
++            "NullComparisonOperandOnTheLeft.java",
++            """
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class NullComparisonOperandOnTheLeft {
++              @Value("#{null != someBean ? someBean.value : 'default'}")
++              String comparedToNull;
++              @Value("#{null != someBean ? null : 'default'}")
++              // BUG: Diagnostic contains: @NonNull field 'nullBranchValue' not initialized
++              String nullBranchValue;
++              void test() {
++                comparedToNull.toString();
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   @Test
+   public void mavenParameterFieldTest() {
+     defaultCompilationHelper

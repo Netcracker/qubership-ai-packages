@@ -1,0 +1,31 @@
+on the fix (build.sh exited with 0):
+  3 test files ran, 0 failed
+on the base (build.sh exited with 1):
+  3 test files ran, 3 failed
+    test/scripts/test-chart-files-merge.sh (exit 1)
+      ok: users merge in filename order (05- before 100-), after the realm's own users
+      ok: a user file's own firstName is kept, and lastName/email are still defaulted
+      ok: a user file with no profile fields gets all three defaulted from its username
+      ok: a user file name with a space is read whole, not split on the space
+      ok: two user files declaring the same username still fail the uniqueness check
+      ok: with no user files, the realm's own users pass through unchanged
+      
+      chart-files merge checks: 1 failure(s)
+    test/scripts/test-e2e-helm-args.sh (exit 1)
+      FAIL: e2e-harness installs the test stand with TEST_STAND_HELM_ARGS, not E2E_HELM_ARGS: helm --kube-context kind-authz-e2e -n authz-e2e upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set PRODUCT_MARKER=for-the-product-charts-only
+      FAIL: parity-harness installs the test stand with TEST_STAND_HELM_ARGS, not E2E_HELM_ARGS: helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set PRODUCT_MARKER=for-the-product-charts-only
+      ok: e2e-install's policy-admin chart still takes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS
+      ok: e2e-install's agent chart still takes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS
+      ok: parity-install's policy-admin chart still takes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS
+      ok: parity-install's agent chart still takes E2E_HELM_ARGS, not TEST_STAND_HELM_ARGS
+      
+      e2e/parity Helm-args checks: 2 failure(s)
+    test/scripts/test-run-suite.sh (exit 1)
+      FAIL: a suite that starts on the second poll: exit=0 output=$'kubectl --context kind-authz-e2e -n authz-e2e delete job runtime-suite --ignore-not-found --wait\nhelm --kube-context kind-authz-e2e -n authz-e2e test authz-test-stand --timeout 15m & helm_pid=$!; kubectl --context kind-authz-e2e -n authz-e2e wait --for=create job/runtime-suite --timeout=2m && for i in $(seq 90); do kubectl --context kind-authz-e2e -n authz-e2e logs job/runtime-suite >/dev/null 2>&1 && break; sleep 2; done; kubectl --context kind-authz-e2e -n authz-e2e logs -f job/runtime-suite; wait $helm_pid\nerror: unknown flag: --for'
+      ok: the log is streamed exactly once
+      FAIL: a failing suite: exit=2 output=$'kubectl --context kind-authz-e2e -n authz-e2e delete job runtime-suite --ignore-not-found --wait\nhelm --kube-context kind-authz-e2e -n authz-e2e test authz-test-stand --timeout 15m & helm_pid=$!; kubectl --context kind-authz-e2e -n authz-e2e wait --for=create job/runtime-suite --timeout=2m && for i in $(seq 90); do kubectl --context kind-authz-e2e -n authz-e2e logs job/runtime-suite >/dev/null 2>&1 && break; sleep 2; done; kubectl --context kind-authz-e2e -n authz-e2e logs -f job/runtime-suite; wait $helm_pid\nerror: unknown flag: --for\nmake: *** [e2e-suite] Error 1'
+      FAIL: a container that never starts: exit=124 output=$'kubectl --context kind-authz-e2e -n authz-e2e delete job runtime-suite --ignore-not-found --wait\nhelm --kube-context kind-authz-e2e -n authz-e2e test authz-test-stand --timeout 15m & helm_pid=$!; kubectl --context kind-authz-e2e -n authz-e2e wait --for=create job/runtime-suite --timeout=2m && for i in $(seq 90); do kubectl --context kind-authz-e2e -n authz-e2e logs job/runtime-suite >/dev/null 2>&1 && break; sleep 2; done; kubectl --context kind-authz-e2e -n authz-e2e logs -f job/runtime-suite; wait $helm_pid\nerror: unknown flag: --for\nmake: *** [e2e-suite] Terminated: 15'
+      FAIL: 'kubectl logs -f' ran for a container that never started
+      ok: helm test is killed rather than left to run out its own timeout
+      
+      run-suite checks: 4 failure(s)

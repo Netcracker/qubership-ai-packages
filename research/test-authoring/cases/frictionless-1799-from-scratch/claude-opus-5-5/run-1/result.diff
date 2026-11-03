@@ -1,0 +1,288 @@
+diff --git a/frictionless/analyzer/__spec__/test_resource.py b/frictionless/analyzer/__spec__/test_resource.py
+index fae992d..93a8f1f 100644
+--- a/frictionless/analyzer/__spec__/test_resource.py
++++ b/frictionless/analyzer/__spec__/test_resource.py
+@@ -2,6 +2,7 @@ import sys
+ 
+ import pytest
+ 
++from frictionless import Schema
+ from frictionless.resources import TableResource
+ 
+ pytestmark = pytest.mark.skipif(
+@@ -245,3 +246,28 @@ def test_analyze_resource_detailed_with_invalid_data():
+     assert analysis["rowsWithNullValues"] == 3
+     assert analysis["notNullRows"] == 1
+     assert analysis["variableTypes"] == {"integer": 3, "string": 1}
++
++
++@pytest.mark.parametrize("fields_match", ["exact", "equal"])
++def test_analyze_resource_detailed_leaves_out_fields_missing_from_header(fields_match):
++    # `c` is declared but absent from the data; the blank `b` in row 3 is the
++    # only null value.
++    source = [["a", "b"], ["1", "2"], ["3", ""]]
++    schema = Schema.from_descriptor(
++        {
++            "fields": [{"name": name, "type": "integer"} for name in ["a", "b", "c"]],
++            "fieldsMatch": fields_match,
++        }
++    )
++    analysis = TableResource(source, schema=schema).analyze(detailed=True)
++    assert {
++        "fieldStats": sorted(analysis["fieldStats"]),
++        "variableTypes": analysis["variableTypes"],
++        "rowsWithNullValues": analysis["rowsWithNullValues"],
++        "notNullRows": analysis["notNullRows"],
++    } == {
++        "fieldStats": ["a", "b"],
++        "variableTypes": {"integer": 2},
++        "rowsWithNullValues": 1,
++        "notNullRows": 1,
++    }
+diff --git a/frictionless/package/__spec__/test_validate.py b/frictionless/package/__spec__/test_validate.py
+index c96ce4c..80364da 100644
+--- a/frictionless/package/__spec__/test_validate.py
++++ b/frictionless/package/__spec__/test_validate.py
+@@ -284,8 +284,6 @@ def test_package_validate_with_schema_issue_348():
+     report = package.validate()
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 4, "missing-label"],
+-        [2, 4, "missing-cell"],
+-        [3, 4, "missing-cell"],
+     ]
+ 
+ 
+diff --git a/frictionless/resource/__spec__/test_validate_schema.py b/frictionless/resource/__spec__/test_validate_schema.py
+index d09527b..ab31dba 100644
+--- a/frictionless/resource/__spec__/test_validate_schema.py
++++ b/frictionless/resource/__spec__/test_validate_schema.py
+@@ -36,15 +36,13 @@ def test_resource_validate_invalid_resource():
+     assert note.count("[Errno 2]") and note.count("bad")
+ 
+ 
+-def test_resource_validate_schema_extra_headers_and_cells():
++def test_resource_validate_schema_extra_header_without_cell_errors():
+     schema = Schema.from_descriptor({"fields": [{"name": "id", "type": "integer"}]})
+     # resource with extra label "name"
+     resource = TableResource(path="data/table.csv", schema=schema)
+     report = resource.validate()
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 2, "extra-label"],
+-        [2, 2, "extra-cell"],
+-        [3, 2, "extra-cell"],
+     ]
+ 
+     extra_label_error = report.task.errors[0]
+@@ -276,6 +274,75 @@ def test_resource_validate_schema_primary_key_error_composite():
+ # Bugs
+ 
+ 
++@pytest.mark.parametrize("fields_match", ["exact", "equal"])
++def test_resource_validate_schema_primary_key_missing_from_header_is_not_checked(
++    fields_match,
++):
++    # The missing label is the one error; the unique field that is present
++    # still gets checked.
++    source = [["id"], ["1"], ["1"]]
++    schema = Schema.from_descriptor(
++        {
++            "fields": [
++                {"name": "id", "constraints": {"unique": True}},
++                {"name": "code"},
++            ],
++            "primaryKey": ["code"],
++            "fieldsMatch": fields_match,
++        }
++    )
++    report = TableResource(source, schema=schema).validate()
++    assert report.flatten(["rowNumber", "fieldNumber", "fieldName", "type"]) == [
++        [None, 2, "code", "missing-label"],
++        [3, 1, "id", "unique-error"],
++    ]
++
++
++@pytest.mark.parametrize("fields_match", ["exact", "equal"])
++def test_resource_validate_schema_unique_field_missing_from_header_is_not_checked(
++    fields_match,
++):
++    source = [["id"], ["1"], ["1"]]
++    schema = Schema.from_descriptor(
++        {
++            "fields": [
++                {"name": "id", "constraints": {"unique": True}},
++                {"name": "code", "constraints": {"unique": True}},
++            ],
++            "fieldsMatch": fields_match,
++        }
++    )
++    report = TableResource(source, schema=schema).validate()
++    assert report.flatten(["rowNumber", "fieldNumber", "fieldName", "type"]) == [
++        [None, 2, "code", "missing-label"],
++        [3, 1, "id", "unique-error"],
++    ]
++
++
++@pytest.mark.parametrize("fields_match", ["exact", "equal"])
++def test_resource_validate_schema_foreign_key_missing_from_header_is_not_checked(
++    fields_match,
++):
++    # `parent` is missing from the header; the foreign key on `cat` is present
++    # and still fails on row 3.
++    source = [["id", "cat"], ["1", "1"], ["2", "5"]]
++    schema = Schema.from_descriptor(
++        {
++            "fields": [{"name": "id"}, {"name": "cat"}, {"name": "parent"}],
++            "foreignKeys": [
++                {"fields": "cat", "reference": {"resource": "", "fields": "id"}},
++                {"fields": "parent", "reference": {"resource": "", "fields": "id"}},
++            ],
++            "fieldsMatch": fields_match,
++        }
++    )
++    report = TableResource(source, schema=schema).validate()
++    assert report.flatten(["rowNumber", "fieldNumber", "fieldName", "type"]) == [
++        [None, 3, "parent", "missing-label"],
++        [3, None, None, "foreign-key"],
++    ]
++
++
+ def test_resource_validate_invalid_table_schema_issue_304():
+     descriptor = {
+         "data": [["name", "age"], ["Alex", "33"]],
+@@ -368,10 +435,6 @@ def test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+     print(report.flatten(["rowNumber", "fieldNumber", "type"]))
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 3, "missing-label"],
+-        [2, 3, "constraint-error"],
+-        [2, 3, "missing-cell"],
+-        [3, 3, "constraint-error"],
+-        [3, 3, "missing-cell"],
+     ]
+ 
+ 
+@@ -543,7 +606,7 @@ def test_resource_validate_fields_match_reordered_labels(fields_match, expected)
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        ("exact", [[None, 2, "", "extra-label"], [2, 2, "", "extra-cell"]]),
++        ("exact", [[None, 2, "", "extra-label"]]),
+         ("equal", [[None, 2, "", "extra-label"]]),
+         ("superset", [[None, 2, "", "extra-label"]]),
+         ("subset", []),
+@@ -558,13 +621,7 @@ def test_resource_validate_fields_match_extra_label(fields_match, expected):
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        (
+-            "exact",
+-            [
+-                [None, 3, "extra", "missing-label"],
+-                [2, 3, "extra", "missing-cell"],
+-            ],
+-        ),
++        ("exact", [[None, 3, "extra", "missing-label"]]),
+         ("equal", [[None, 3, "extra", "missing-label"]]),
+         ("subset", [[None, 3, "extra", "missing-label"]]),
+         ("superset", []),
+@@ -576,6 +633,42 @@ def test_resource_validate_fields_match_missing_field(fields_match, expected):
+     assert report.flatten(["rowNumber", "fieldNumber", "fieldName", "type"]) == expected
+ 
+ 
++@pytest.mark.parametrize(
++    "field_names, source, expected",
++    [
++        pytest.param(
++            ["id"],
++            [["id", "name"], ["1", "english"], ["2", "中国人", "x"]],
++            [[None, 2, "", "extra-label"], [3, 3, "", "extra-cell"]],
++            id="extra label: only a row longer than the header has an extra cell",
++        ),
++        pytest.param(
++            ["id"],
++            [["id", "name"], ["1"]],
++            [[None, 2, "", "extra-label"], [2, 2, "name", "missing-cell"]],
++            id="extra label: a row shorter than the header misses the label's cell",
++        ),
++        pytest.param(
++            ["id", "name", "extra"],
++            [["id", "name"], ["1", "english"], ["2"]],
++            [[None, 3, "extra", "missing-label"], [3, 2, "name", "missing-cell"]],
++            id="missing label: only a row shorter than the header misses a cell",
++        ),
++        pytest.param(
++            ["id", "name"],
++            [["id"], ["1", "english"]],
++            [[None, 2, "name", "missing-label"], [2, 2, "", "extra-cell"]],
++            id="missing label: a row longer than the header has an extra cell",
++        ),
++    ],
++)
++def test_resource_validate_fields_match_exact_checks_row_length_against_the_header(
++    field_names, source, expected
++):
++    report = _validate_fields_match(field_names, "exact", source)
++    assert report.flatten(["rowNumber", "fieldNumber", "fieldName", "type"]) == expected
++
++
+ def test_resource_fields_match_reads_cells_by_name():
+     # The mapping drives the row stream too: the declared order is not the
+     # data's order, yet each cell is read with its own field's type.
+diff --git a/frictionless/table/__spec__/test_header.py b/frictionless/table/__spec__/test_header.py
+index 342e6a7..37a1c42 100644
+--- a/frictionless/table/__spec__/test_header.py
++++ b/frictionless/table/__spec__/test_header.py
+@@ -83,9 +83,44 @@ def _make_header(labels, field_names, *, fields_match="exact", ignore_case=False
+             ["a"],
+             "exact",
+             False,
++            ["a", "extra"],
++            id="exact: extra labels get a default any-typed field",
++        ),
++        pytest.param(
++            ["a", "a"],
++            ["a"],
++            "exact",
++            False,
++            ["a", "a2"],
++            id="exact: an extra label repeating a field name gets a numbered name",
++        ),
++        pytest.param(
++            ["a", "a2", "a"],
++            ["a"],
++            "exact",
++            False,
++            ["a", "a2", "a3"],
++            id="exact: a numbered name skips the names already taken",
++        ),
++        pytest.param(
+             ["a"],
+-            id="exact: extra labels get no field",
++            ["a", "b"],
++            "exact",
++            False,
++            ["a"],
++            id="exact: fields beyond the labels are dropped",
+         ),
++        *[
++            pytest.param(
++                [],
++                ["a", "b"],
++                mode,
++                False,
++                ["a", "b"],
++                id=f"{mode}: without a header the schema fields are returned",
++            )
++            for mode in ["exact", *NAME_MATCHED]
++        ],
+         *[
+             pytest.param(
+                 ["b", "a"],
+@@ -139,7 +174,7 @@ def test_get_expected_fields(
+     assert actual == expected_names
+ 
+ 
+-@pytest.mark.parametrize("fields_match", NAME_MATCHED)
++@pytest.mark.parametrize("fields_match", ["exact", *NAME_MATCHED])
+ def test_get_expected_fields_default_field_is_any_typed(fields_match):
+     header = _make_header(["a", "extra"], ["a"], fields_match=fields_match)
+     expected = header.get_expected_fields()

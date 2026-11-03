@@ -1,24 +1,17 @@
 ### What happened?
 
-`Quill.parse("{\"\":null}")` throws `io.quillson.JsonParseException: Internal error while reading object member at line 1, column 4 (offset 3)`, caused by `java.lang.NullPointerException: Cannot invoke "io.quillson.core.FieldName.hash()" because "name" is null`. The input is a JSON object with one member whose name is the empty string and whose value is `null`. The full trace is under Logs.
+`Quill.parse("{\"\":null}")` throws a `JsonParseException` when an object member has an empty name and a `null` value. On 3.1.4 the exception and its cause are these (the full trace is under Logs):
 
-It takes both parts. On 3.1.4, with the reproducer below and only `input` changed:
+```text
+io.quillson.JsonParseException: Internal error while reading object member at line 1, column 4 (offset 3)
+Caused by: java.lang.NullPointerException: Cannot invoke "io.quillson.core.FieldName.hash()" because "name" is null
+```
 
-| Input | 2.9.6 | 3.1.4 |
-| --- | --- | --- |
-| `{"":null}` | prints `{"":null}` | `JsonParseException`, cause NPE |
-| `{"":1}` | prints `{"":1}` | prints `{"":1}` |
-| `{"a":null}` | prints `{"a":null}` | prints `{"a":null}` |
-| `[{"":null}]` | prints `[{"":null}]` | `JsonParseException`, cause NPE |
-| `{"x":{"":null}}` | prints `{"x":{"":null}}` | `JsonParseException`, cause NPE |
+I expected it to return an object with one member, named `""`, with the value `null`, whose `toString()` prints `{"":null}`. 2.9.6 returns exactly that. On 3.1.4, `{"":1}` and `{"a":null}` both parse; only the combination of an empty name and `null` fails.
 
-`Quill.reader().parse(Reader)` on a `StringReader` of `{"":null}` fails with the same cause.
+This is a regression in 3.0.0: 2.9.6 parses the input, and 3.0.0 and 3.1.4 throw the same exception. I could not test 3.2.0 because I couldn't download it.
 
-**Expected:** `Quill.parse("{\"\":null}")` returns a `JsonValue` whose `toString()` is `{"":null}`, and the nested forms above parse the same way. That is what 3.1.4 does for `{"":1}` and `{"a":null}`, and what 2.9.6 did for all five inputs. The exception is a `NullPointerException` that quillson itself wraps as an "Internal error", not a rejection of the input.
-
-This is a regression between 2.9.6 (last good) and 3.0.0 (first bad); 3.0.0 fails with the same trace apart from quillson line numbers.
-
-In our service, which receives supplier documents from a partner's JSON export, about 40 of 180000 documents a day contain `"":null` inside an object and are rejected with this exception.
+We hit this in production on a supplier feed that writes `"":null` inside objects. About 40 of the roughly 180 thousand documents we receive each day fail this way, and the supplier won't change its export before Q1 2027.
 
 ### Reproducer
 
@@ -44,21 +37,31 @@ for v in 2.9.6 3.0.0 3.1.4; do
 done
 ```
 
-2.9.6 prints `{"":null}` and exits 0. 3.0.0 and 3.1.4 exit 1 with the trace under Logs.
+On 2.9.6 it prints `{"":null}` and exits 0. On 3.0.0 and 3.1.4 it exits 1 with the trace under Logs; only the quillson line numbers differ on 3.0.0.
+
+The same program with other values of `input`:
+
+| `input` | 2.9.6 | 3.1.4 |
+| --- | --- | --- |
+| `{"":null}` | `{"":null}` | `JsonParseException`, cause NPE |
+| `{"":1}` | `{"":1}` | `{"":1}` |
+| `{"a":null}` | `{"a":null}` | `{"a":null}` |
+| `[{"":null}]` | `[{"":null}]` | `JsonParseException`, cause NPE |
+| `{"x":{"":null}}` | `{"x":{"":null}}` | `JsonParseException`, cause NPE |
+
+`Quill.reader().parse(new StringReader("{\"\":null}"))` fails on 3.1.4 with the same cause.
 
 ### quillson version
 
-3.1.4 (also fails on 3.0.0; last good 2.9.6). Not established on 3.2.0: I could not download it yet, so I have not run the reproducer on the latest release.
+3.1.4
 
 ### JDK version
 
-Temurin 21.0.4+7. Also fails the same way on Temurin 17.0.12+7 and 23.0.1+11; only the reflection frames differ.
+Temurin 21.0.4+7. Temurin 17.0.12+7 and 23.0.1+11 fail the same way.
 
 ### Logs
 
-3.1.4 on Temurin 21.0.4+7:
-
-```text
+```shell
 Exception in thread "main" io.quillson.JsonParseException: Internal error while reading object member at line 1, column 4 (offset 3)
 	at io.quillson.core.DocumentReader.readDocument(DocumentReader.java:61)
 	at io.quillson.Quill.parse(Quill.java:143)
@@ -82,13 +85,13 @@ Caused by: java.lang.NullPointerException: Cannot invoke "io.quillson.core.Field
 
 ### Anything else?
 
-The nearest existing issue is #1043 (NPE when a custom `FieldNamingStrategy` returns null, fixed in 3.0.2). This one needs no custom strategy, and 3.1.4 already contains that fix.
+An AI assistant drafted this report from my notes and test runs.
 
-The 3.2.0 changelog lists "Field-name interning rewritten for fewer allocations (#1187)". The `Caused by` frames are in `FieldNameCache.intern`, so 3.2.0 may behave differently; I have not tested it.
+The closest existing issue is #1043, an NPE when a custom `FieldNamingStrategy` returns null. This reproducer uses no custom strategy, and 3.1.4 already contains the 3.0.2 fix for #1043.
 
-A guess from reading the 3.1.4 sources, not confirmed in a debugger; the report stands without it: a member whose value is `null` seems to take a shortcut that re-reads the name through `FieldNameCache.intern` and passes `null` when the name is empty. I don't know where the right fix is, or whether the shortcut should exist.
+**Possible cause.** This is my reading of the 3.1.4 sources, not checked in a debugger, and everything above stands without it. `ObjectReader` seems to take a shortcut for a member whose value is `null`, which reads the name again through `FieldNameCache.intern` and passes `null` there when the name is empty. The 3.2.0 changelog lists a rewrite of field-name interning (#1187), and I have not tested whether it changes this.
 
-AI assistance: an AI assistant drafted this report from my reproduction notes.
+### Checklist
 
 - [x] I searched existing issues, open and closed
 - [ ] I reproduced this on the latest release

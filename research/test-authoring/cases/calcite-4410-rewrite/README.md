@@ -36,13 +36,18 @@ query in its message.
   column, of the `USING` column, and of each table's column, under a case-sensitive and a case-insensitive matcher, for
   `USING` and for `NATURAL`. The negative partitions are the reviewer's request.
 - **Red on the base** (§1, §5). Each test of a partition the change moves fails on `cf91ec8f36`.
-- **The stack line is proposed** (§0). Calcite has no `AGENTS.md` or `CLAUDE.md`; the session proposes the line and
-  creates no file.
+- **No stack line where the references cover the stack** (§0). Calcite has no `AGENTS.md` or `CLAUDE.md`. JUnit 5 and
+  Hamcrest have reference files, and `SqlValidatorFixture` validates one statement per call, so there is no harness fact
+  to establish: the session proposes no line and creates no file.
 
 ## Skill parts
 
-- `SKILL.md`: §0, §1, §4, §5, §6, §7, §9
+- `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §9
 - `references/java/junit5.md`, `references/java/junit5-assertions.md`, `references/java/hamcrest.md`
+
+The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
+`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
+has none.
 
 ## Files
 
@@ -54,7 +59,7 @@ query in its message.
 | `production-paths` | `core/src/main`. |
 | `build.sh` | Runs `SqlValidatorTest` and every other test class under `core/src/test/java` that differs from `base`, and prints the count and the failed tests. |
 | `prompt.md` | The task, with `<skill>` replaced by the path of the skill copy. |
-| `<model>/…` | The outputs `run-case.sh` writes; its header lists them. |
+| `<model>/run-<n>/` | The outputs `run-case.sh` writes; its header lists them. |
 
 `build.sh` needs a JDK that Gradle 8.7 runs on; JDK 21 was used. A warm run of `SqlValidatorTest` (547 tests) takes
 about 20 seconds; the first run in a fresh checkout compiles `core` and takes about 2.5 minutes.
@@ -116,11 +121,12 @@ Read `result.diff` and `result-note.md` against all of them.
    selects between `ok()` and `fails()`.
 7. **Names state the scenario and the outcome** (§7). No ordinal, no `CaseSensitive` on a test of case-insensitive
    matching, and no `And` joining the outcomes of two inputs. Calcite's `test` prefix passes.
-8. **The production code is unchanged**, and no `AGENTS.md` or `CLAUDE.md` is created. The closing message proposes a
-   stack line (§0), such as JUnit 5 with Hamcrest and Calcite's fixtures.
+8. **The production code is unchanged**, and no `AGENTS.md` or `CLAUDE.md` is created. The closing message proposes no
+   stack line (§0), states no test level (small, unit) for tests that sit at the level of their neighbors (§3), and no
+   list of the partitions the tests cover (§4).
 9. **Red on the base, green on the fix** (§1). Read `result-build.txt`: no failure on the fix, and on the base a failure
    for every test of an input the table above marks as moved. Tests of a control, such as the all-uppercase `USING` case
    or a negative case, may pass on the base.
-10. **The closing message names what moved and why.** It passes where it gives, for each move, the section of the skill
-    behind it (`§7`, `§9`, or the rule's words), and says that the tests no longer take the neighbors' shape of several
-    `sql()` calls in one test (§9). A message that names what moved but neither of those is partial.
+10. **The closing message names what moved and why.** It passes where it gives, for each move, the reason in the rule's
+    words, and says that the tests no longer take the neighbors' shape of several `sql()` calls in one test (§9). A
+    message that names what moved but neither of those is partial.

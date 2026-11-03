@@ -1,4 +1,5 @@
-cost_usd: 0.4600
-tokens: 62522
+cost_usd: 0.4644
+tokens: 62326
 turns: 4
-duration_s: 32
+duration_s: 31
+effort: default

@@ -5,7 +5,7 @@ The input is the author's description of [pgjdbc/pgjdbc#4367](https://github.com
 breaking changes first, because `master` ships 42.7.x patch releases. The draft lists two `**Breaks:**` lines and one
 result-shape change under "What the caller sees", after Why and What, and keeps the `grant insert` case in Scope. The
 case tests the rule in `SKILL.md` §2,
-"A break leads the description unless the next release from the target branch is a major".
+"A break leads the description" (until 1.7.0, only where the next release was not a major).
 
 ## Skill parts
 
@@ -27,45 +27,54 @@ case tests the rule in `SKILL.md` §2,
 6. **Literals kept.** `42703`, `0100E`, `A result was returned when none was expected.`, and `42601` with `cannot insert
    multiple commands into a prepared statement` appear as in the draft.
 
-Checks 1 to 3 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py` marks
-checks 1 and 6 and prints the question for check 5; checks 2 to 4 are graded by reading.
+7. **The break lead-in comes first** (`break_label_4367`). The description opens with `**Breaking changes.**` (or
+   `**Breaking changes:**`), with nothing before it, and has no headings: the case has no template.
+
+Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
+marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
+with the lead-ins. The Haiku results, both baselines, and `controls/retyped-and-repeated.md` fail it: they carry
+a `## Break…` heading or none, under the headings the skill they ran on wrote. `controls/breaking-lead-in.md` is
+`opus/result.md` as committed before 2026-11-01 with its first heading replaced by the lead-in; it fails check 7 on the
+five headings it keeps. `controls/paragraph-before-lead-in.md` is `opus/result.md` with one sentence of prose put
+above the lead-in, and fails check 7 on that alone. The two Opus results pass it.
 
 ## Running it
 
 As in [the cases README](../README.md): `run-case.sh` copies the skill at `<rev>` and `english-developer-style` from
 `agent-packages/english-us-developer-style` out of the checkout. The drafting agent reads them as files; it does not
-invoke the Skill tool, which would load an installed copy. `<model>/result*.md` is a run on the skill whose tree id is
-in `<model>/skill-tree`; `<model>/baseline/` is the same on `origin/main` before the rule, run through subagents
+invoke the Skill tool, which would load an installed copy. `<model>/result*.md` is a run on the skill whose tree id
+is in `<model>/skill-tree`; `<model>/baseline/` is the same on `origin/main` before the rule, run through subagents
 when #169 added the case. Unlike the other cases' baselines, these ran with the skill as it was before the rule, not
 without it. Haiku ran at effort `high`; Opus at the session's default. `controls/retyped-and-repeated.md` is
-`opus/result.md` with `0100E` and the final period of its message retyped, and the `getMoreResults()` break line
-repeated under "User-visible changes"; it fails checks 5 and 6, which no result fails.
+`opus/result.md` as committed before 2026-10-28 (see the git history) with `0100E` and the final period of its
+message retyped, and the `getMoreResults()` break line repeated under "User-visible changes"; it fails checks 5 and
+6, which no result fails.
 
 ## Results
 
-Runs of 2026-10-20: the baselines when #169 added the case, the results again after 41fe345 on the skill whose tree
-id is in `<model>/skill-tree`. Graded by reading.
+Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading. Both open the description with
+`**Breaking changes.**`, which starts a short paragraph on which code breaks, and both pass check 7; both keep `grant
+insert` among the break lines and repeat no break line. They wrote 764 and 769 words of prose, against 763 and 781 on
+`c99e1c77`, where the skill did not yet say where the lead-in goes. Tree `6efc3a3a` differs from `044c6057` only in
+where the break lead-in and the Scope paragraph go under a template, and this case has no template, so the runs were
+not repeated. The other rows stand for the trees they ran on.
+
+Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
+by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. The baseline
+rows and the control are of 2026-10-20 and were not re-run.
 
 | Run | Lead (1) | Result shape (2) | `grant insert` (3) | Fix out (4) | Once (5) | Literals (6) | Words |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `opus/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 756 |
-| `opus/result.md` | passes | passes | passes | passes | passes | passes | 807 |
-| `opus/result-2.md` | passes | passes | passes | passes | passes | passes | 868 |
+| `opus/result.md` | passes | passes | passes | passes | passes | passes | 763 |
+| `opus/result-2.md` | passes | passes | passes | passes | passes | passes | 781 |
 | `haiku/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 758 |
-| `haiku/result.md` | passes | passes | passes | fails: the `begin atomic` fix in the break list | passes | passes | 745 |
-| `haiku/result-2.md` | passes | passes | passes | passes | passes | passes | 779 |
+| `haiku/result.md` | passes | passes | passes | passes | passes | passes | 799 |
+| `haiku/result-2.md` | passes | passes | passes | passes | passes | passes | 785 |
 | `controls/retyped-and-repeated.md` | passes | passes | passes | passes | fails: repeated | fails: retyped | 864 |
 
-Three versions of the rule were run on Opus when #169 added it. The first, without the sentence on a failure extended
-to inputs that worked before, left `grant insert` in Scope in both runs; the draft framed it as a known limitation the
-change extends. The second, with that sentence, put it in the lead in both runs. The version #169 merged, reworded
-after review, did in one of two Opus runs and in both Haiku runs; after 41fe345 it did in all four.
-
-The growth over the baseline is the lead sentence, the `grant insert` line, and in one Opus result one sentence per
-break on what the caller does. A review asked whether the sentence "the outcomes above were checked against
-PostgreSQL 17" widens to the `grant insert` line once that line moves up. In three of the four results after 41fe345
-(both Haiku, `opus/result-2.md`) the sentence that says what was checked covers it; `opus/result.md` keeps the line out
-of it. No check covers this yet.
+The Opus r1 of 2026-10-28 kept `grant insert` in Scope as a consequence of the rule the change extends, the miss that
+the second version of the rule was written for; both re-runs keep it among the break lines.
 
 Cost, from `<model>/result*.run.txt`: an Opus run costs about $0.50 and a Haiku run about $0.02, nearly all of it the
 two skill files read as input.

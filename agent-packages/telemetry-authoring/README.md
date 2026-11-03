@@ -23,9 +23,11 @@ failed build or CI check.
   log records where the instrumentation can migrate from span events.
 - What a library may emit: it does not decide where its output goes, it returns an error instead of also logging
   it, and it carries the host's context across the concurrency it creates.
-- The caller's channel: an error that leaves the function goes to the caller rather than also to the log, and its text
-  says why the check exists, where to change it, how to find the cause, each way out runnable as printed, and what to
-  report, so a person or an agent holding only that text can fix the failure or explain it.
+- The caller's channel: an error that leaves the function goes to the caller rather than also to the log. Its text
+  names what failed, the value, and the input it came from, which is enough where the fix is to change that input.
+  Where the fix is somewhere else, such as a limit configured away from the call site, it also says why the check
+  exists, where to change it, how to find the cause, each way out runnable as printed, and what to report, so a person
+  or an agent holding only that text can fix the failure or explain it.
 - Severity: the axis is who must act; the repository's convention owns the ladder, checked against the neighboring
   calls.
 

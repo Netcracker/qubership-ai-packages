@@ -16,6 +16,10 @@ The prompt is in `prompt.md`; the files it names are under `files/`. Run it from
 - `references/idioms.md`
 - `test-authoring`: `SKILL.md` §1, §4, §5, §10, `references/mutation-tools.md`
 
+The results also stand for test-authoring at skill tree `b11951c`, version 1.2.0. That version changed what §4 and §10
+ask the pull request to state: a partition set and a judgment are stated only where a reviewer would decide otherwise.
+This case answers in a plan or a chat reply, not in a pull request, so no run was needed.
+
 ## Checks
 
 - Explains that the mutation score, the property-test generators and/or the pairwise coverage measure the port against

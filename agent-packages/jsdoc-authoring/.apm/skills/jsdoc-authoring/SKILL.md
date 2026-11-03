@@ -88,15 +88,18 @@ A third failure, specific to a codebase that has been refactored, is **narrating
 a Promise, so callers no longer get the value synchronously` describes a transition between two versions, and the reader
 has only this one. Rewrite it as the state that holds: what the function returns, and when the value is available.
 
-One exception. **The comment on a regression test may tell history, and an equivalence is not history.** The defect is
-what the test guards, so it belongs in the comment: state the rule the test asserts first, then the defect in one
-past-tense sentence with the error class or its `code`: `An empty header value used to be reported as absent, and the
-caller then failed with a TypeError.` A comment that opens with the defect makes the reader reconstruct the broken
-version to understand the fixed one (measured on one branch: a blind reader ranked the version that opened with `used
-to` fourth of five on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast it as
-a chain of `would` clauses. History narration, which this section forbids, is a sentence whose only content is that the
-code changed. A sentence that argues the new behavior is safe **because it is identical to the old one** is rationale,
-and the old behavior is its comparison term. Keep the comparison; it is the whole argument.
+One exception. **The comment on a regression test may tell history, and an equivalence is not history.** A regression
+test owes no comment for being one. Where its `it` string states the rule, the defect and the issue number belong in the
+commit that adds the test, and a comment, where the test has one, carries what §3 leaves it: the reason or the
+construction. Tell the defect in the comment only where the rule alone would look arbitrary to the next maintainer:
+state the rule the test asserts first, then the defect in one past-tense sentence, with the error class or its `code`
+where the old code threw and the wrong result where it did not: `An empty header value used to be reported as absent,
+and the caller then failed with a TypeError.` A comment that opens with the defect makes the reader reconstruct the
+broken version to understand the fixed one (measured on one branch: a blind reader ranked the version that opened with
+`used to` fourth of five on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast
+it as a chain of `would` clauses. History narration, which this section forbids, is a sentence whose only content is
+that the code changed. A sentence that argues the new behavior is safe **because it is identical to the old one** is
+rationale, and the old behavior is its comparison term. Keep the comparison; it is the whole argument.
 
 - *Keep:* `a caller that passes no signal behaves exactly as every caller did before the option was added: the request
   runs to completion or to the timeout`
@@ -188,15 +191,16 @@ which is the membership rule §4 calls for; and an inline comment whose next sta
 flushed` above the `flush()` that flushes it), after checking that the next line really is the actor and not test setup
 standing between the comment and the call it constrains.
 
-Most declarations need slots 1 and 2 only. A getter needs slot 1. Do not manufacture the other slots to fill a template;
-an absent slot is not a gap.
+Most declarations need slots 1 and 2 only, and a getter whose name and type are its whole contract needs no comment
+(§7). Do not manufacture the other slots to fill a template; an absent slot is not a gap.
 
 **Size the comment to the declaration.** A doc comment longer than the function it documents is not automatically wrong
 (an invariant can be worth ten lines over a one-line accessor), but it is a signal to re-read. When you check, the
 surplus is almost always rationale: keep at most two sentences of it, and only for the part a reader would otherwise get
-wrong. The rest belongs in the commit message. As a working size, the comment at the top of a test file is two to five
-sentences and a function comment fits in one hover; past that you are describing the investigation, not the contract, so
-keep the rule and the exception and move the rest.
+wrong. The rest belongs in the commit message. The comment at the top of a test file, where one is owed, runs to at most
+five sentences, and a function comment fits in one hover; past that you are describing the investigation, not the
+contract, so keep the rule and the exception and move the rest. These are ceilings: a test file whose `it` strings state
+what each test establishes often needs no comment at all.
 
 ## 3. The first sentence, and where the summary ends
 
@@ -370,23 +374,30 @@ nobody.
 
 ### Property, field, and constant
 
-Document the unit, the range, the sentinel, and who may write it. A module-level constant whose membership rule is
-non-obvious needs that rule spelled out; a reader adding an entry has no other source of truth. When the type's comment
-already states the rule, the property comment shrinks to one sentence plus a link.
+Document what the type and the name leave open: the unit, the range, a sentinel value, and who may write the property
+where more than the constructor does. A `readonly #name: string` leaves nothing open and gets no comment (§7). A
+module-level constant whose membership rule is non-obvious needs that rule spelled out; a reader adding an entry has no
+other source of truth. When the type's comment already states the rule, the property comment shrinks to one sentence
+plus a link.
 
-State a default with `@defaultValue` (`@default` in JSDoc) rather than in prose, so the tooling can render it in the
-same table as the type.
+Where a reader of the comment cannot see a property's default, state it with `@defaultValue` (`@default` in JSDoc)
+rather than in prose, so the tooling can render it in the same table as the type. Declaration emit keeps the initializer
+only of a `readonly` property whose type is inferred from a literal (`readonly retries = 3`) and drops every other one
+(`retries = 3`, `readonly retries: number = 3`), so such an exported property of a published package is that case; in
+code read only from source, `retries = 3` shows the default on the line the comment sits above, and the tag repeats it.
+A constant has a value, not a default, and gets no `@defaultValue`.
 
 A limit, ceiling, or timeout documents **what it bounds**, in its own sentence, positively, and before any neighboring
 limit comes up: `This limit bounds only what the server sends.` A comment that leaves the scope to be inferred from a
 contrast (`…which governs the direction this limit does not`) makes the reader subtract one limit from another and
 reconstruct the missing verb. Both halves are facts; state them separately, this one first.
 
-A constant whose value is a size or a duration states both forms. TSDoc has no tag that inlines a constant's value, so
-the digits are typed by hand: `1 MiB (1048576 bytes)`. Both the digits and the unit can then go stale, so the pair
-belongs in the comment on the constant itself, where the initializer is on the next line, and not in a caller's comment.
-The unit has to be exact (`64000000` is `64 MB`, not `64 MiB`) or hedged in words: `about 1 GiB (1073741823 bytes)`.
-The form is `english-developer-style` §5.
+A size or duration constant whose literal does not read as a quantity at a glance (`1 << 20`, `1048576`) states both
+forms. `DEFAULT_TIMEOUT_SECONDS = 30` shows its value and its unit already. TSDoc has no tag that inlines a constant's
+value, so the digits are typed by hand: `1 MiB (1048576 bytes)`. Both the digits and the unit can then go stale, so the
+pair belongs in the comment on the constant itself, where the initializer is on the next line, and not in a caller's
+comment. The unit has to be exact (`64000000` is `64 MB`, not `64 MiB`) or hedged in words: `about 1 GiB (1073741823
+bytes)`. The form is `english-developer-style` §5.
 
 ### Inline comment
 
@@ -434,20 +445,22 @@ The comment on a test is read by whoever opened the file. The reader of a red bu
 assertion, and its message in the report, and comes here for the rule behind them; the next author comes looking for
 what this test covers and where a case goes. Both want the rule, stated once, as a claim: a negation nested in a
 negation (`fails when … does not …`) is not that, and `english-developer-style` §3 asks for what happens, not what does
-not.
+not. A test whose `it` string states the rule it checks, and whose failure is fixed in the code it exercises, needs no
+comment (§7); what follows is for a rule the `it` string does not carry, and for a failure fixed somewhere else.
 
 - **Summary = the rule the test guards**, stated positively and completely, as something you could assert. `It has to
   stay quiet when the socket did go away` leaves the reader guessing: not throw, not retry, not log? Name the
   observable. If you cannot phrase the rule as an observation, the test probably cannot check it either.
-- **Use = what to do about the red build.** Which fixture to edit, which case to add, where the failure message states
-  the rest.
+- **Use = the edit that turns the build green, where it is not a fix to the code under test.** Which fixture to edit,
+  which case to add, where the failure message states the rest. Where the fix is the code the test exercises, the rule
+  already implies it and the slot is absent (§2).
 - **The `describe` and `it` strings are the comment.** The reader sees them in the failure output before any file is
   opened, so they name the condition rather than the subject: `it('rejects with AbortError when the signal fires
   mid-flight')` beats `it('handles abort')`, and both beat `it('works')`. A doc comment above a test that repeats its
   `it` string has said everything twice and nothing once. Where the string states what the test establishes, the
   comment, if there is one, carries the reason or the construction (§3).
 
-Deliberate duplication between a test's comment, a helper's comment, and the failure message is correct, because each
+Where a test has a comment, repeating its rule in a helper's comment or the failure message is correct, because each
 reader meets exactly one of the three. It does not extend to production code, where the type's comment and the member's
 comment have the same reader.
 
@@ -530,12 +543,15 @@ versus `@default`, `@typeParam` versus `@template`), and a file that mixes them 
 - **`@returns` when the summary does not already say it.** `Returns the backing map.` followed by `@returns the backing
   map` is one sentence billed twice.
 - **`@throws`** is not in TSDoc's standard set but is widely rendered; use it to say what a caller matches on, not
-  merely that something can fail. In an async function, say whether the failure arrives as a rejection.
+  merely that something can fail. Say whether a failure throws synchronously or arrives as a rejection wherever the
+  reader cannot see `async`: declaration emit drops it, so in a published package's `.d.ts` an `async` function and
+  one that returns a Promise and throws first both read `(): Promise<T>`. In code read only from source, every failure
+  of an `async` function is a rejection, and saying so adds nothing.
 - **`@remarks`** ends the summary section (§3). Everything the index page should not carry goes after it.
 - **`@example`** earns its place on published API and almost nowhere else. It is a fenced code block, and it goes stale
   like any other code that nothing compiles.
-- **`@deprecated`** must name the replacement. Editors strike through every call site, so it is one of the few tags a
-  machine acts on.
+- **`@deprecated`** names the replacement where there is one. Editors strike through every call site, so it is one of
+  the few tags a machine acts on.
 - **`@typeParam T - …`** (`@template` in JSDoc) when a type parameter has a constraint the reader must satisfy that the
   `extends` clause does not express.
 - **`{@inheritDoc}`** is the tag for an override that adds nothing, where the repository's generator processes it. Which
@@ -648,13 +664,14 @@ longer, because every restructuring pass adds a sentence and none takes one away
 - **When you lift a rule into the type's comment, cut it from the member.** The member keeps the one sentence that
   specializes the rule, plus the link. Two full statements of the same rule is the most common outcome of a good
   structural edit and the easiest to miss, because each of the two reads well on its own.
-- **Deleting is an edit, and every cut is reported.** A list of callers, a rejected alternative, a benchmark number, a
-  reference to the pull request that introduced the code: cutting these is usually the highest-value change in the diff,
-  even though the result looks like less work. Delete sentence by sentence, and report each deleted sentence with the
-  fact it carried and where that fact now lives: a tag, another declaration, the commit message, or nowhere, with the
-  reason. A rationale sentence stays only where a maintainer reading the rule would ask why or would be tempted to relax
-  it; the test is whether the sentence would come up as a question in code review. A rewrite that reads better and says
-  less is the failure this rule exists to prevent.
+- **Deleting is an edit, and a cut that carried a fact is reported.** A list of callers, a rejected alternative, a
+  benchmark number, a reference to the pull request that introduced the code: cutting these is usually the highest-value
+  change in the diff, even though the result looks like less work. Delete sentence by sentence, and report each deleted
+  sentence that carried a fact (§7b step 1 says what counts as one) with where that fact now lives: a tag, another
+  declaration, the commit message, or nowhere, with the reason. Narration and a restated signature go without a report.
+  A rationale sentence stays only where a maintainer reading the rule would ask why or would be tempted to relax it; the
+  test is whether the sentence would come up as a question in code review. A rewrite that reads better and says less is
+  the failure this rule exists to prevent.
 - **A summary that breaks §3 is itself the fact that pays for a rewrite.** The net-delta rule governs the body, not the
   first sentence. A four-paragraph summary with no `@remarks`, or one that opens `This function is a wrapper around X`,
   stays broken until someone rewrites it, and "I had no new fact to add" is not a reason to leave it.
@@ -790,16 +807,17 @@ Each outcome names the repair it obliges. Naming it makes two people comparing t
 
 ## 8. Review checklist
 
-Run this over a comment you wrote or one you are reviewing.
+Run this over a comment you wrote or one you are reviewing. An item asks about a rule stated above, and where that rule
+has a condition, the item applies only under it.
 
 - Is the first sentence third person with the subject omitted, standing alone, with no term this comment introduces?
 - Does the summary end where you meant it to, or does a missing `@remarks` push four paragraphs onto every index page?
 - Could a reader reconstruct the first sentence from the declaration's name or the test's `it` string alone?
-- In a regression test's comment: the rule first, the old defect in one past-tense sentence, and any equivalence with
-  the old behavior kept (§1)?
+- In a regression test's comment that tells the defect: the rule first, the old defect in one past-tense sentence, and
+  any equivalence with the old behavior kept (§1)?
 - Is the contract stated positively and in one place, before any mechanism?
-- Could a caller satisfy the contract without opening the code, or a maintainer fix a failing test from the comment
-  alone?
+- On an exported declaration, could a caller satisfy the contract without opening the code (§1's table)? On a test that
+  has a comment, could a maintainer fix a failure from it alone?
 - Is any rationale here commit-message material?
 - Any sentence describing a previous version of the code: `now`, `no longer`, `used to`?
 - Any sentence describing a code path this code does not have: what would happen if the rule were broken, rather than
@@ -833,12 +851,28 @@ Run this over a comment you wrote or one you are reviewing.
 
 ## 9. Worked examples
 
-The two examples pull in opposite directions on purpose. The first shrinks, because the facts were already there. The
-second grows, because they were missing. Do not read either one as the target shape.
+The most common edit is the first one: a comment that goes. All three are constructed rather than lifted from a real
+codebase, and deliberately so: an example a sweeper can recognize in the wild is an example it will paste instead of
+derive, and a rewrite that matches this file word for word proves nothing about whether the rules were applied.
 
-Both are constructed rather than lifted from a real codebase, and deliberately so: an example a sweeper can recognize in
-the wild is an example it will paste instead of derive, and a rewrite that matches this file word for word proves
-nothing about whether the rules were applied.
+### A getter, where the comment goes
+
+**Before**: every line restates the signature.
+
+```typescript
+/**
+ * Gets the name.
+ *
+ * @returns The name of the cache.
+ */
+get name(): string {
+  return this.#name;
+}
+```
+
+**After**: no comment. The name and the type are the whole contract (§7), and since the deleted lines carried no fact,
+the cut needs no report (§7a). The same holds for the `readonly #name: string` it returns. Where the getter does more
+than return the field, such as copy it or return `undefined` before something happens, that is the line it keeps.
 
 ### A TypeScript method, where the tags restated the types
 
@@ -867,15 +901,15 @@ signature cannot: the case rule and the ownership of the returned array.
  * @remarks
  * Header names are matched case-insensitively. The array is a live view of the store: mutate it
  * and the recorded header changes with it. Copy it before handing it to a caller you do not
- * control. An unknown name yields an empty array rather than `undefined`.
+ * control. An unknown name yields a new empty array, not a view of the store.
  */
 getAll(name: string): string[] { … }
 ```
 
 What changed, slot by slot: the summary stopped restating the method name and gained the ordering guarantee (§3);
 `@param` and `@returns` went, because a type is not a fact in TypeScript (§3a, §6); the `{string[]}` in `@returns` went
-with them; and slot 2 appeared, carrying case-insensitivity, aliasing, and the empty-versus-`undefined` rule (§4). Two
-lines longer, and every added line names a fact the reader would otherwise discover by breaking something.
+with them; and slot 2 appeared, carrying case-insensitivity, aliasing, and the one case where the array is not a view
+(§4). Every added line names a fact the reader would otherwise discover by breaking something.
 
 ### A checked JavaScript function, where the failure contract was missing
 

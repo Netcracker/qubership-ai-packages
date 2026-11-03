@@ -68,3 +68,8 @@ date conventions.
    dialect-specific source needs deeper evaluation.
 1. Rerun phase 3 with the new dialect default and switch the
    `Dialect policy` section of the skill.
+
+## Regression cases
+
+[`cases/`](cases/README.md) holds the regression cases for the skill, with a script that runs a case as a consumer gets
+the skill and one that grades the results.

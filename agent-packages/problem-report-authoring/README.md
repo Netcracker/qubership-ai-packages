@@ -24,8 +24,8 @@ else's internals.
   many reports this is.
 - The framing rules: symptom before mechanism, with a library's public API counted as the symptom's
   surface, a title that names the symptom rather than the fix, causal analysis marked with its
-  confidence and the report standing without it, the goal as well as the step, and the project's own
-  field order and field meaning winning over any preference in the skill.
+  confidence and the report standing without it, the goal where the step may not be the only way to
+  it, and the project's own field order and field meaning winning over any preference in the skill.
 - The expected-behavior test: seven questions covering what a machine could check, whether it
   separates acceptable from unacceptable behavior, identifiers that resolve by content rather than
   by position, the grounding and its strength with a compatibility promise counted as the project's
@@ -42,8 +42,8 @@ else's internals.
   attach, the conditions a measurement carries, what a reproducer must contain, the stop condition
   for reducing it, running what you ship, the form each channel accepts, text where the artifact is
   text and an image where the defect is visual, and the run link where the project runs reproducers.
-- The section order where no form exists, and the obligations projects write for reports produced
-  with a tool, with the consequences they attach.
+- Where no form exists, the core first and each later section only where its condition holds, and
+  the obligations projects write for reports produced with a tool, with the consequences they attach.
 - The reports that satisfy every rule and are still useless, each with the check that catches it.
 - What the agent raises and the human decides, and the hand-over note that carries what the agent
   could not do.

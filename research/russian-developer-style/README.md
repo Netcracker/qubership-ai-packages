@@ -25,6 +25,8 @@ brief later changes.
 phase1_prompt.md, phase1_result.md     style-source shortlist
 phase2_prompt.md, phase2_result.md     deep evaluation, decision to synthesise
 phase3_prompt.md                       prompt that assembled the skill
+audit-2026-10-31-rule-ends.md          rules with no end condition: fixed and left alone (1.1.0)
+cases/                                 regression cases, see cases/README.md
 ```
 
 The phase 3 output lives in the APM package, not here, to avoid drift.

@@ -54,3 +54,58 @@ With the diff this small and the comments in hand, Opus finds both defects witho
 discriminate on Opus and stays as a no-regression case; Haiku `base-1` files the missing variables as taste. The
 discriminating case for the same two defects is `authz-agent-122-pr-at-fix-review`, where the reviewer reads the whole
 pull request.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; the reviewed commit has no skill or instruction file, so no report used it. Graded by reading
+`result.md`. Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs
+from `796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that
+table, because the change adds no instruction.
+
+| Model | Check 1 | Check 2 | Words | Cost, USD |
+| --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | 1718, 1684 | 1.02, 0.67 |
+| Haiku | pass, pass | pass, pass | 1444, 1164 | 0.15, 0.18 |
+
+- **Opus `instr-1`.** Check 1 passes: "The list of Makefile overrides leaves out the two new variables", substantive.
+  Check 2 passes: the row's "cause ("an older `make e2e`") and its action ("then `make e2e`") cover only e2e",
+  substantive.
+- **Opus `instr-2`.** Check 1 passes: "`E2E_SUITE_TIMEOUT` and `PARITY_SUITE_TIMEOUT` are missing from the page's list
+  of overrides", substantive. Check 2 passes: "its action says only "then `make e2e`" and its cause only "an older
+  `make e2e`"", substantive.
+- **Haiku `instr-1`.** Check 1 passes: the override paragraph "omits the two new ones", substantive. Check 2 passes:
+  "its action names `make e2e` only, which does not rerun the parity stand", substantive.
+- **Haiku `instr-2`.** Check 1 passes: "The override list omits the two new timeout variables", substantive. Check 2
+  passes on the cause rather than the action: "The ownership row names only `make e2e` as the cause", with Item 7
+  adding "while its symptom names `parity-harness` too", substantive.
+
+Against the `1b1ebc3e` runs, the grades are unchanged: all eight cells pass on both trees. Opus writes 1718 and 1684
+words against 1920 and 1930 and costs 1.02 and 0.67 against 0.96 and 0.76; Haiku writes 1444 and 1164 against 1379 and
+1421 and costs 0.15 and 0.18 against 0.23 and 0.11. Beyond the checks, all four new runs file that `-test.timeout 600s`
+in `suite.args` ends the suite at 10 minutes, so raising the two limits the comments name does not let a suite run
+longer; of the `1b1ebc3e` runs, Opus `instr-2` did not. The reviewed commit adds no instruction for an agent, so there
+is no table of added instructions to classify.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, at tree `3d6a0954`, graded by reading `result.md`. Final-review tree `1b139bb8` is the
+committed one. `3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which
+`3d6a0954` had shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where
+`3d6a0954` made a command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8`
+makes it one unless the reading shows the promised outcome. No check of this case reads either sentence, so its `cond`
+results stand for `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by
+the word restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read
+without "finding".
+
+| Model | Run | Check 1 | Check 2 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | 1547 | 0.82 |
+| Opus | `cond-2` | pass | pass | 1520 | 0.82 |
+| Sonnet | `cond-1` | fail | pass | 1705 | 0.32 |
+| Sonnet | `cond-2` | pass | partial | 1769 | 0.27 |
+
+- **Opus** passes both checks in both runs, as in `instr`, in shorter reports (1718 and 1684 words before).
+- **Sonnet.** `cond-1` writes "No page has a table of overrides, so none is owed" (`result.md:102`). `cond-2` files the
+  remedy row as taste, and asks for a sentence in the commit message for a reworded docs row (`result.md:29`), the one
+  run of this arm that asks to claim a hunk of wording. Opus `cond-1` says the same row "needs no claim".

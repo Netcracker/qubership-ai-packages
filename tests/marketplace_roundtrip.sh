@@ -20,7 +20,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 req="$repo_root/requirements.txt"
-APM="uvx --python 3.12 --from apm-cli --with-requirements $req apm"
+APM="uvx --python 3.15 --from apm-cli --with-requirements $req apm"
 
 real_home="${HOME}"
 work="$(mktemp -d)"

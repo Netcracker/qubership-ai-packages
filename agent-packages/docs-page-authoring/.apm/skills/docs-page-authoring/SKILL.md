@@ -3,15 +3,15 @@ name: docs-page-authoring
 description: >-
   Load before writing or editing a documentation page in a repository: a README, a reference or
   options page, a feature page, a how-to, a tutorial, a troubleshooting page, a migration guide.
-  Inside a coding task, load it as soon as the change adds, renames, or removes an option, a
-  property, a flag, an environment variable, an error a user can see, or a supported version, even
-  where the task said nothing about docs: that change owes the documentation an entry, and this
-  skill says which page and which slots. Also load for "update the docs", "document this", "does
-  this need docs", or a review of a page or a section. Governs what a page says, for whom, in what
-  order, and what it may not claim: the readers and their questions, the slots of a section and of
-  an option entry, the promise rather than the code, headings as anchors, claims a machine checks.
-  Wording is english-developer-style's and the changelog entry change-description-authoring's; load
-  those too.
+  Inside a coding task, load it as soon as the change adds, renames, or removes a user-settable
+  option, property, flag, or environment variable, an error a user can see, or a supported version,
+  even where the task said nothing about docs: this skill decides whether the change owes the
+  documentation an entry, and if it does, which page and which slots. Also load for "update the
+  docs", "document this", "does this need docs", or a review of a page or a section. Governs what a
+  page says, for whom, in what order, and what it may not claim: the readers and their questions,
+  the slots of a section and of an option entry, the promise rather than the code, headings as
+  anchors, claims a machine checks. Wording is english-developer-style's and the changelog entry
+  change-description-authoring's; load those too.
 ---
 
 # Authoring a documentation page
@@ -91,23 +91,23 @@ The most common section in a reference is the entry for one option: a configurat
 command-line flag, an environment variable, a system property. It is read by D4, who holds a configuration and a
 requirement, and by D5, who arrived from the error the option triggers. Its slots, in order:
 
-| # | Slot | Owes |
-| --- | --- | --- |
-| 1 | **Header** | The name as the code spells it, the type, the default as a value with its unit, and what "unset" means when the default is unset |
-| 2 | **Claim** | What it controls, in one sentence, before anything about why |
-| 3 | **Values** | Syntax, valid range, units, and the forms accepted, including whether a suffix is decimal or binary |
-| 4 | **Scope** | Per process, per connection, per call; when it is read (startup, reload, each use); whether a URL, a file, or a property object can set it |
-| 5 | **At the limit** | What the reader observes when the value is exceeded or invalid: the literal error, and what to do about it |
-| 6 | **Interactions** | Every other option or mode that changes this one's effect, in one sentence each, with a link to the entry that owns the detail |
-| 7 | **When to change it** | The situation that calls for a value other than the default; the default first, the escape hatch after |
-| 8 | **Version** | `Since X.Y`, where X.Y is the version the branch ships in, read from the build metadata; deprecation; replacement |
+| # | Slot | Owes | Skip when |
+| --- | --- | --- | --- |
+| 1 | **Header** | The name as the code spells it, the type, the default as a value with its unit, and what "unset" means when the default is unset | Never; always present |
+| 2 | **Claim** | What it controls, in one sentence, before anything about why | Never; always present |
+| 3 | **Values** | Syntax, valid range, units, and the forms accepted, including whether a suffix is decimal or binary | The type says it all: a boolean, or an enumeration the header lists |
+| 4 | **Scope** | Per process, per connection, per call; when it is read (startup, reload, each use); whether a URL, a file, or a property object can set it | It is the same for every option on the page, and the page says so once |
+| 5 | **At the limit** | What the reader observes when the value is exceeded or invalid: the literal error, and what to do about it | No value of the type is rejected |
+| 6 | **Interactions** | Every other option or mode that changes this one's effect, or whose effect this one changes, one sentence each | No other option or mode changes its effect, and it changes none |
+| 7 | **When to change it** | The situation that calls for a value other than the default; the default first, the escape hatch after | The claim already says it, or nothing in the change names a situation that calls for another value |
+| 8 | **Version** | `Since X.Y`, where X.Y is the version the branch ships in, read from the build metadata; deprecation; replacement | The page's entries carry no version markers, and nothing is deprecated |
 
-The order is a default: where the page's existing entries follow another order, follow theirs, and carry every slot
-regardless. Rationale for the default is optional, last, and one sentence, present only where a reader would
-otherwise mistrust the number. Slot 5 is what D5 searches for, so the error is quoted as the code emits it. Slot 6
-is stated in **both** entries of an interacting pair, because D4 opens one of them and does not know which; the
-detail lives in one, and the other says one sentence and links. An entry that opens with mechanism or rationale
-before the claim was written from the author's seat (§1).
+A boolean often needs only the header and the claim (§9). The order and the layout are the page's: where its existing
+entries follow another order or another form, follow theirs (§4). Rationale for the default is optional, last, and one
+sentence, present only where a reader would otherwise mistrust the number. Slot 5 is what D5 searches for, so the error
+is quoted as the code emits it. Slot 6 is stated in **both** entries of an interacting pair, because D4 opens one of
+them and does not know which; the detail lives in one, and the other says one sentence and links to it. An entry that
+opens with mechanism or rationale before the claim was written from the author's seat (§1).
 
 ## 3. Where the reader enters, and what they see first
 
@@ -209,10 +209,13 @@ case you are in, and prefer moving an important example into a harness over poli
 snippet as part of a wording pass, and when a snippet contradicts the code, report it as a bug rather than rewording
 around it.
 
-**A command the page tells the reader to run is a claim about a tool.** Name the script, build target, or CI job that
-runs that exact form, flags included, on the configuration the page describes. Where none does, run it there, in each
-tool version the page says it supports, or replace it with the form a job runs. That a flag exists does not settle its
-outcome: compare what its help text, reference, or source says it acts on with what the page set up.
+**A command whose outcome depends on what the page set up is a claim about a tool.** The dependence is on a property
+of that configuration: the kind of object it creates, a combination of flags, the platform, the tool version. For such
+a command, name the script, build target, or CI job that runs that exact form, flags included, on that configuration.
+Where none does, run it there, in each tool version the page says it supports, or replace it with the form a job runs.
+That a flag exists does not settle its outcome: compare what its help text, reference, or source says it acts on with
+what the page set up. A command whose outcome nothing on the page sets up, such as installing a package, needs none of
+this.
 
 **Every name the page states must exist**, spelled as the code spells it: an identifier, a configuration key, a flag,
 an environment variable. Grep each one. A name that resolves to a private symbol is a second finding: the page is
@@ -240,11 +243,11 @@ page. Scan the diff for the changes that do, and for each one name the reader an
 
 | Change in the diff | Reader | Owes |
 | --- | --- | --- |
-| A new option, flag, property, or environment variable | D4, D3 | An entry in the reference (§2), a row in every derived table (§4), a mention on each feature page it affects |
+| A new option, flag, property, or environment variable a user can set | D4, D3 | An entry in the reference (§2), and a copy in every other place its siblings occupy (§4) |
 | A removed or renamed option | D6, D4 | A deprecation or migration note with the replacement; the old entry marked, not deleted, until the version that removes it ships |
-| A changed default or limit | D4, D6 | The header and the version marker of the entry; a migration note if a working configuration can start failing |
-| A new mode, or a switch that changes several options at once | D4 | An entry of its own, and one sentence in every entry it touches (§2, slot 6) |
-| A new or changed error, exception, or log line a user can see | D5 | The literal text in the entry or the troubleshooting page that names the cause and the action |
+| A changed default or limit | D4, D6 | The header, and the version marker where the page's entries carry them; a migration note if a working configuration can start failing |
+| A new mode, or a switch that changes several options at once | D4 | An entry of its own, and the interaction in every entry it touches (§2, slot 6) |
+| A new or changed error or log line that a configuration value, the environment, or the server causes | D5 | The literal text in the entry or the troubleshooting page that names the cause and the action |
 | A changed behavior of an existing option | D4, D6 | The entry, rewritten as the state that holds (§1); the history goes to the changelog |
 | A new public type or method | D3 | The feature page that shows the task, and the generated reference it links to |
 | A supported version or platform added or dropped | D1, D6 | The compatibility table |
@@ -350,14 +353,14 @@ Run this over a section before you commit it.
 - Promise: would any sentence stop being true after a refactoring no user could observe (§1)?
 - History: any `now`, `no longer`, `used to`, `previously` outside a changelog, migration guide, or version marker
   (§1)?
-- Entry: does each option entry carry name, type, default with unit, claim, values, scope, the error at the limit,
-  interactions in both entries, and when to change it (§2)?
+- Entry: does each option entry carry the header and the claim, and every other slot whose skip condition in §2 does
+  not hold?
 - First paragraph: does it open with the claim, and does the common case come before the escape hatch (§3)?
 - Findability: does every option, error, and task the branch introduced have a heading or a row (§3)?
 - Table: any paragraph in which the same nouns recur with different values (§3)?
 - Names and numbers: does every identifier, value, unit, and quoted error match the code (§6)?
-- Commands: does a script or CI job run each command the page gives, in that exact form, and if none does, was it run
-  (§6)?
+- Commands: for each command whose outcome depends on what the page set up, does a script or CI job run that exact
+  form, and if none does, was it run (§6)?
 - Copies: is the new item in every place a sibling occupies, in that place's shape, and in no new place (§4)?
 - Links: does the feature page link the options it depends on, and the entry the error it triggers (§4)?
 - Headings: did a shipped heading change, and if so is the redirect in the same change (§5)?
@@ -366,7 +369,8 @@ Run this over a section before you commit it.
 
 ## 9. Worked example
 
-An option entry written from the author's seat, and the same entry from the reader's:
+An option entry written from the author's seat, and the same entry from the reader's. This option has content for
+every slot but scope: it is a size, it has a limit with an error, a mode changes it, and it is new.
 
 *Before:*
 
@@ -397,3 +401,11 @@ The first version opens with rationale and mechanism, names a constant the reade
 reader sees at the limit. The second opens with the claim, quotes the error D5 will search for, states the interaction
 with the mode in one sentence, and leaves the rationale out, because a reader who wants a 64 MB default explained is
 rarer than one who wants to know what happens at 65.
+
+A boolean with no limit and no interaction, on a page whose entries carry no version markers, is the header and the
+claim:
+
+```markdown
+* **`tcpKeepAlive`** (boolean, default: `false`)
+  Turns on TCP keepalive probes on the connection's socket.
+```

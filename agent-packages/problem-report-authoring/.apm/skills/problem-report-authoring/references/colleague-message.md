@@ -7,13 +7,13 @@ rules of the skill hold, which change shape, and which lapse; a rule not listed 
 | Rule | In a message to a colleague |
 | --- | --- |
 | Symptom first (§3) | Holds for the first line. In a shared repository a commit, a branch, or a symbol is shared vocabulary, so "main is red since abc123, run link" is a symptom, not internals |
-| The goal, not only the step (§3) | Holds |
+| The goal, not only the step (§3) | Holds where you ask how to do something and the step may not be the only way; a red build, a failing test, or a broken service needs none |
 | Causal analysis marked with its confidence (§3) | Holds, and the analysis may come right after the symptom, ahead of the steps: a colleague who shares the code often wants the theory early. The message still says what you saw independently of it |
 | Expected behavior (§5) | Reduced to one line each: the literal or relation you expect and what you got, where the symptom line does not say them already. "Checkout spins" says both. The seven questions are not run on a chat message |
 | Evidence attributed, nothing invented (§6) | Holds. A CI run counts by its link; a step a colleague ran is theirs |
 | Secrets removed, private names substituted (§6) | Secrets out: a token in a pasted log is a token in the chat history. Private names stay; the reader shares them |
-| Failing output pasted as text (§6) | Holds for the error text; a screenshot may accompany it, never replace it |
-| Reproducer (§6) | The command and its output where a command shows the failure, without packaging it as a project or reducing it; for something you saw on a screen, what you did and where |
+| Failing output pasted as text (§6) | Holds for the error text; a screenshot may accompany it, never replace it. Where a run link holds the rest, paste the lines that carry the claim and say nothing about the trim |
+| Reproducer (§6) | The command and its output where a command shows the failure, without packaging it as a project or reducing it; for something you saw on a screen, what you did and where. The versions of your tools only where the failure could depend on them; a failure CI shows too does not |
 | Summary first, no speculative consequences (§7) | Hold: the ask in the first message is the summary, and a consequence you did not observe stays out |
 | Ownership and currency (§4) | Reduced to naming the branch or the build where it is not the obvious one |
 | Duplicate search, routing, form lookup, the project's reproducer service | Lapse |

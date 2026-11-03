@@ -1,6 +1,6 @@
-## Merge model detection
+## Commands that detect the merge model
 
-Run these in your clone. Set `remote=upstream`, because `origin` is your fork. If no pull request exists for the branch, the second line falls back to `upstream/HEAD`.
+Run these in the clone. `upstream` is pgjdbc/pgjdbc, and the pull request does not exist yet, so the target falls back to the default branch of `upstream`.
 
 ```bash
 git fetch upstream
@@ -11,58 +11,51 @@ git log -n 40 --first-parent --format='%P%x09%s' "$target" -- | awk -F'\t' '$1 ~
 git log -n 10 --first-parent --format='%h %P%n%b%n' "$target" --
 ```
 
-Nobody has run these yet, so the text below follows the default for an unknown merge model. Every commit is written to stand alone and carries the issue number. The description is written so it can also serve as a commit body.
+The branch below has a single commit, and the description can stand as a commit body. Both work whatever these commands report.
 
 ## 1. Commits
 
-Fold commit 2 (`add tests`) and commit 3 (`Apply suggestion from @vlsi`) into commit 1. Commit 3 corrects the `CHANGELOG.md` and `use.md` lines that commit 1 adds. Commit 2 holds the tests for commit 1's behavior. One commit remains:
+Fold `add tests` and `Apply suggestion from @vlsi` into the first commit (`feat: Include driver version in default application_name`). The branch then has one commit:
 
 ```text
-feat: append the driver version to the default ApplicationName
+feat: include the driver version in the default ApplicationName
 
-Previously, a connection that left ApplicationName unset reported
-application_name as "PostgreSQL JDBC Driver" whatever the driver
-version. A database administrator looking at pg_stat_activity could not
-tell which driver version each application used, which issue #2404
-asks for.
+A connection that left ApplicationName unset sent the fixed string
+"PostgreSQL JDBC Driver" as application_name. pg_stat_activity showed
+which connections came from pgjdbc, but not which driver version each
+one used. Users asked to see that version from a view in the database
+(#2404).
 
 The default is now DriverInfo.DRIVER_FULL_NAME: "PostgreSQL JDBC
 Driver", a space, and the version of the driver jar.
 
 User-visible:
-A connection that leaves ApplicationName unset reports application_name as "PostgreSQL JDBC Driver" followed by a space and the driver version, for example "PostgreSQL JDBC Driver 42.7.14".
-A query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds connections that leave ApplicationName unset.
-Any role that can connect to the database reads the driver version of such connections in pg_stat_activity.
+When ApplicationName is unset, application_name is "PostgreSQL JDBC Driver" followed by the driver version, for example "PostgreSQL JDBC Driver 42.7.14"; a query that matches application_name = 'PostgreSQL JDBC Driver' no longer finds pgjdbc connections.
+When ApplicationName is unset, any role that can connect to the database sees the driver version of the session in pg_stat_activity.
 Not changed:
-A connection that sets ApplicationName reports that value.
+An explicitly set ApplicationName, such as ApplicationName=billing, is sent as given.
 
 Fixes #2404
 ```
 
-## 2. Title
+## 2. Pull request title
 
 ```text
-feat: append the driver version to the default ApplicationName
+feat: include the driver version in the default ApplicationName
 ```
 
-## 3. Description
+## 3. Pull request description
 
 ```markdown
-This changes a default in 42.7.14, which is not a major release. Monitoring that matches the old default `application_name` stops finding pgjdbc connections after the upgrade:
+This changes a default in 42.7.14. Connections that leave `ApplicationName` unset now send `PostgreSQL JDBC Driver 42.7.14` as `application_name` instead of `PostgreSQL JDBC Driver`. Because of that, a query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` stops finding pgjdbc connections after the upgrade. An application that needs the old value can set `ApplicationName` explicitly, because an explicit value is sent as given.
 
-- A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds connections that leave `ApplicationName` unset, which it found with 42.7.13. Match `application_name LIKE 'PostgreSQL JDBC Driver %'` instead, or set `ApplicationName=PostgreSQL JDBC Driver` on the connection to keep the old value.
+Before this change, `pg_stat_activity` showed which connections came from pgjdbc but not which driver version each one used. Users who want to know which driver version their applications run asked to see it from a view in the database (#2404).
 
-Other user-visible changes:
+The default is now `DriverInfo.DRIVER_FULL_NAME`, which is `PostgreSQL JDBC Driver` followed by a space and the version of the driver jar. Any role that can connect to the database reads `application_name` of every session in `pg_stat_activity`. So for connections that leave `ApplicationName` unset, the driver version is now visible to other database users, and the `ApplicationName` entry in `use.md` says so.
 
-- A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver` followed by a space and the driver version, for example `PostgreSQL JDBC Driver 42.7.14`.
-- Any role that can connect to the database reads the driver version of such connections in `pg_stat_activity`. The `ApplicationName` entry in `docs/content/documentation/use.md` now says so.
-- Not changed: a connection that sets `ApplicationName` reports that value.
+`explicitApplicationNameIsKept` also passes on `master`. It pins the behavior that must not change, which is that `ApplicationName=billing` is sent as `billing`.
 
-Users want to know which driver version their applications use, and `pg_stat_activity` showed `PostgreSQL JDBC Driver` for every version. The default `ApplicationName` now carries the version of the driver jar, so the view shows it directly, as #2404 asks.
-
-The build's git SHA and the JDK version were left out of the default as too much. Adding either one can be discussed separately.
-
-The new `ApplicationNameTest` needs a running server. It reads `current_setting('application_name')` back for a connection with `ApplicationName` unset and for one with it set. The test for the unset case fails on `master`.
+The default leaves out the git sha of the build and the JDK version, because that much detail is too much for it. Adding them can be discussed separately.
 
 Fixes #2404
 ```

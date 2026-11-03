@@ -1,0 +1,110 @@
+diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+index 958be01..f1994e0 100644
+--- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
++++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+@@ -5486,6 +5486,105 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+         .ok();
+   }
+ 
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * a common column of a case-insensitive {@code USING} join is matched regardless of the
++   * letter case of the join and the select list, and keeps the letter case written in the
++   * select list, not the one written in the {@code USING} clause. */
++  @Test void testJoinUsingCommonColumnCaseInsensitiveUppercaseSelectUppercaseUsing() {
++    sql("select DEPTNO from emp join dept using (DEPTNO)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * a lower-case common column, spelled differently from the upper-case column of the
++   * catalog, is still matched by a case-insensitive {@code USING} join. */
++  @Test void testJoinUsingCommonColumnCaseInsensitiveLowercaseSelectLowercaseUsing() {
++    sql("select deptno from emp join dept using (deptno)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * an upper-case select item is matched against a lower-case {@code USING} column, and keeps
++   * its own, upper-case, letter case in the result. */
++  @Test void testJoinUsingCommonColumnCaseInsensitiveUppercaseSelectLowercaseUsing() {
++    sql("select DEPTNO from emp join dept using (deptno)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * a lower-case select item is matched against an upper-case {@code USING} column, and keeps
++   * its own, lower-case, letter case in the result. */
++  @Test void testJoinUsingCommonColumnCaseInsensitiveLowercaseSelectUppercaseUsing() {
++    sql("select deptno from emp join dept using (DEPTNO)")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * a common column of a {@code NATURAL} join is still matched, and the select list may
++   * reference it unqualified, in case-sensitive mode (the mode unaffected by the bug, kept
++   * here as the baseline for the case-insensitive cases below). */
++  @Test void testNaturalJoinCommonColumnCaseSensitive() {
++    sql("select DEPTNO from emp natural join dept")
++        .withCaseSensitive(true)
++        .withValidatorIdentifierExpansion(true)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * a lower-case common column, spelled differently from the upper-case column of the
++   * catalog, is matched by a case-insensitive {@code NATURAL} join, and keeps its own,
++   * lower-case, letter case in the result. */
++  @Test void testNaturalJoinCommonColumnCaseInsensitiveLowercaseSelect() {
++    sql("select deptno from emp natural join dept")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive is false</a>:
++   * an upper-case common column, spelled the same as the column of the catalog, is matched by
++   * a case-insensitive {@code NATURAL} join. */
++  @Test void testNaturalJoinCommonColumnCaseInsensitiveUppercaseSelect() {
++    sql("select DEPTNO from emp natural join dept")
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
+   @Test void testCrossJoinOnFails() {
+     sql("select * from emp cross join dept\n"
+         + " ^on^ emp.deptno = dept.deptno")
