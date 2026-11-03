@@ -54,21 +54,18 @@ result quality or automatically determine the autonomy of the whole task.
 
 Apply these distinctions consistently:
 
-- Use `needs-human:approval-required` when an approval rule exists. Use `needs-human:risk-found` when the risk is identified
-  but the rule is missing or
-  ambiguous.
+- Use `needs-human:approval-required` when an approval rule exists. Use `needs-human:risk-found` when the risk is
+  identified but the rule is missing or ambiguous.
 - Use `needs-human:decision-required` when someone must choose. Use `needs-human:context-missing` when a fact must be
   established.
-- Use `needs-human:access-missing` when the agent cannot perform a required action. Use `needs-human:verification-blocked` when
-  it cannot establish that
-  the result is correct.
-- Use `needs-human:environment-blocked` when an available environment fails. Use `needs-human:external-dependency` when a
-  result from an external participant
-  or system is required.
+- Use `needs-human:access-missing` when the agent cannot perform a required action. Use
+  `needs-human:verification-blocked` when it cannot establish that the result is correct.
+- Use `needs-human:environment-blocked` when an available environment fails. Use `needs-human:external-dependency` when
+  a result from an external participant or system is required.
 - Use `needs-human:scope-review-required` when the task boundaries need revision. A large amount of work alone is not a
   stop reason.
-- Use `needs-human:stuck` when there is no workable path forward. Use `needs-human:budget-exhausted` when a configured limit
-  stops further work.
+- Use `needs-human:stuck` when there is no workable path forward. Use `needs-human:budget-exhausted` when a configured
+  limit stops further work.
 
 Apply a label only when the agent actually stops. If it resolves a conflict, restores the environment, or finds the
 documentation independently and continues, no stop label is required.
@@ -142,17 +139,16 @@ not a measure of autonomy.
 
 ## 5. Interpretation limits
 
-A stop reason alone does not determine the outcome. After `needs-human:access-missing`, a human might grant access, perform
-  the
-action, or take over the task entirely. These are three different outcomes.
+A stop reason alone does not determine the outcome. After `needs-human:access-missing`, a human might grant access,
+perform the action, or take over the task entirely. These are three different outcomes.
 
 Determine the final degree of autonomy from the assistance actually provided, rather than a fixed mapping from
 stop reason to autonomy level.
 
 - An absence of recorded stops establishes autonomy only if event collection is complete.
 - Record approvals separately from assistance in solving the task.
-- `needs-human:environment-blocked` and `needs-human:external-dependency` can expose limitations of the autonomous process even
-  when the agent is not at fault.
+- `needs-human:environment-blocked` and `needs-human:external-dependency` can expose limitations of the autonomous
+  process even when the agent is not at fault.
 - Interpret fewer stops together with result quality and task complexity.
 
 For the first phase, labels, structured comments, and stop history are sufficient. Use them to identify the most
