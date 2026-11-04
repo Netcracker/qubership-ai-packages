@@ -53,9 +53,23 @@ repo=$work/repo
 git init -q "$repo"
 src=$(cat "$case_dir/repo")
 [ -f "$case_dir/$src" ] && src=$case_dir/$src
-git -C "$repo" fetch -q --depth 10 "$src" "$head"
+# Fetch deeper until base..HEAD is the whole change: base is reachable, and
+# no commit of the range sits on the shallow boundary, which a merge from the
+# main branch can leave on the first-parent chain after the other parent has
+# reached base. Nothing newer than head is ever fetched. --deepen does not
+# work for a fetch by sha from a URL, so each try fetches again with twice
+# the depth.
+depth=10
+while :; do
+  git -C "$repo" fetch -q --depth "$depth" "$src" "$head"
+  if git -C "$repo" merge-base --is-ancestor "$base" FETCH_HEAD 2>/dev/null &&
+    ! git -C "$repo" rev-list "$base"..FETCH_HEAD | grep -qxFf "$repo/.git/shallow" 2>/dev/null; then
+    break
+  fi
+  [ "$depth" -lt 640 ] || { echo "base $base is not within $depth commits of head $head" >&2; exit 1; }
+  depth=$((depth * 2))
+done
 git -C "$repo" checkout -q FETCH_HEAD
-git -C "$repo" cat-file -e "$base^{commit}"
 
 : > "$work/instructions.md"
 for f in CLAUDE.md AGENTS.md; do
