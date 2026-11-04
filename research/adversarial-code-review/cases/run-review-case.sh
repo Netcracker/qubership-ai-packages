@@ -22,6 +22,12 @@
 # after the session succeeds:
 #   result.md     the session's final message, the report
 #   run.txt       the session's cost, turns, duration, and tokens per model
+#   tools.txt     every tool call the session made, one per line
+#   access.txt    the tool calls to read first: a web tool, gh, curl, wget,
+#                 a git fetch, pull, clone, or remote, a cd or pushd, or a
+#                 path outside the clone and the skill copy. It is a pointer
+#                 into tools.txt, not a verdict: a path is resolved against
+#                 the clone, so an empty file does not show a clean run
 #   skill-tree    the tree id of the skill that ran, see scripts/skill-tree.sh
 set -eu
 
@@ -53,9 +59,23 @@ repo=$work/repo
 git init -q "$repo"
 src=$(cat "$case_dir/repo")
 [ -f "$case_dir/$src" ] && src=$case_dir/$src
-git -C "$repo" fetch -q --depth 10 "$src" "$head"
+# Fetch deeper until base..HEAD is the whole change: base is reachable, and
+# no commit of the range sits on the shallow boundary, which a merge from the
+# main branch can leave on the first-parent chain after the other parent has
+# reached base. Nothing newer than head is ever fetched. --deepen does not
+# work for a fetch by sha from a URL, so each try fetches again with twice
+# the depth.
+depth=10
+while :; do
+  git -C "$repo" fetch -q --depth "$depth" "$src" "$head"
+  if git -C "$repo" merge-base --is-ancestor "$base" FETCH_HEAD 2>/dev/null &&
+    ! git -C "$repo" rev-list "$base"..FETCH_HEAD | grep -qxFf "$repo/.git/shallow" 2>/dev/null; then
+    break
+  fi
+  [ "$depth" -lt 640 ] || { echo "base $base is not within $depth commits of head $head" >&2; exit 1; }
+  depth=$((depth * 2))
+done
 git -C "$repo" checkout -q FETCH_HEAD
-git -C "$repo" cat-file -e "$base^{commit}"
 
 : > "$work/instructions.md"
 for f in CLAUDE.md AGENTS.md; do
@@ -65,13 +85,50 @@ done
 sed -e "s|<skills>|$work/skills|g" -e "s|<base>|$base|g" -e "s|<head>|$head|g" "$case_dir/prompt.md" > "$work/prompt.txt"
 (cd "$repo" &&
   claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
-    --append-system-prompt-file "$work/instructions.md" --output-format json \
-    --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.json"
+    --append-system-prompt-file "$work/instructions.md" --output-format stream-json --verbose \
+    --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.jsonl"
 
-python3 - "$work/session.json" "$work/out" <<'PY'
-import json, sys
-session, out = sys.argv[1:]
-d = json.load(open(session))
+python3 - "$work/session.jsonl" "$work/out" "$repo" "$work/skills" <<'PY'
+import json, os, re, sys
+session, out, *inside = sys.argv[1:]
+inside = [os.path.realpath(p) for p in inside]
+NETWORK = re.compile(r"\b(gh|curl|wget)\b|\bgit\b[^|;&]*\b(fetch|pull|clone|remote|ls-remote)\b")
+PATH = re.compile(r"(?<![\w./])(/[^\s'\"`;|&)]+|~[^\s'\"`;|&)]*|\.\.(?:/[^\s'\"`;|&)]*)?)")
+# After a cd, every relative path in the command means something else.
+CHDIR = re.compile(r"(?:^|[;&|(]|\bthen|\bdo)\s*(cd|pushd)\b")
+
+def outside(path):
+    # A relative path is taken from the clone, where the session starts.
+    real = os.path.realpath(os.path.join(inside[0], os.path.expanduser(path)))
+    return not any(real == p or real.startswith(p + os.sep) for p in inside) and not real.startswith('/dev/')
+
+calls, access, d = [], [], None
+for line in open(session):
+    e = json.loads(line)
+    if e['type'] == 'result':
+        d = e
+    elif e['type'] == 'assistant':
+        for c in e['message']['content']:
+            if c['type'] != 'tool_use':
+                continue
+            name, args = c['name'], c['input']
+            text = args.get('command') or args.get('file_path') or args.get('path') or args.get('url') \
+                or args.get('query') or json.dumps(args)
+            call = f"{name}: {' '.join(str(text).split())}"
+            calls.append(call)
+            paths = [args[k] for k in ('file_path', 'path', 'notebook_path') if isinstance(args.get(k), str)]
+            if name == 'Bash':
+                paths += PATH.findall(args.get('command', ''))
+            command = args.get('command', '') if name == 'Bash' else ''
+            if name in ('WebFetch', 'WebSearch') or NETWORK.search(command) or CHDIR.search(command) \
+                    or any(outside(p) for p in paths):
+                access.append(call)
+open(f'{out}/tools.txt', 'w').write(''.join(c + '\n' for c in calls))
+open(f'{out}/access.txt', 'w').write(''.join(c + '\n' for c in access))
+if access:
+    print(f"{len(access)} tool calls to check first; see access.txt", file=sys.stderr)
+if d is None:
+    sys.exit("session ended without a result")
 if d['is_error']:
     sys.exit(f"session failed: {d['result']}")
 open(f'{out}/result.md', 'w').write(d['result'].rstrip('\n') + '\n')
