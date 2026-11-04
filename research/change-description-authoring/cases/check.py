@@ -356,7 +356,8 @@ def no_old_comment_quoted_4412(text):
 
 def contradictions_located_4412(text):
     """The two comments that contradicted the code are located: the recover() comment and the batch test."""
-    markers = [('recover()', r'\brecover(\(\))?`?\s+comment|\bcomment\s+(in|on|above)\s+`?recover\b'),
+    markers = [('recover()', r'\brecover(\(\))?`?\s+comment'
+                             r'|\bcomment\s+(in|on|above)\s+(the\s+)?`?(\w+[.#])?recover\b'),
                ('the batch test', r'batchProgressNotSecuredWithinXaBranch|\bbatch[- ]test')]
     missing = [name for name, pat in markers if not re.search(pat, text, re.I)]
     return result(not missing, f'not located: {missing}' if missing else 'both located')

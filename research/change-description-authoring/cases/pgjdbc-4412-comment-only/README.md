@@ -25,7 +25,8 @@ leave them to the diff.
    paraphrase of either fails the check on reading.
 2. **Contradictions located** (`contradictions_located_4412`). The description names the `recover()` comment and the
    batch test as the two comments that contradicted the code. The script looks for `recover` next to the word
-   `comment`, because every run also names `recover()` in another comment's bullet. The description need not quote
+   `comment`, because every run also names `recover()` in another comment's bullet; a description that names either
+   comment without saying it contradicted the code fails the check on reading. The description need not quote
    `pg_has_role` or `64000`: the hunk of each comment shows the value, and §2 calls a sentence that restates it
    translation.
 3. **No run-time change, with its check** (`runtime_noop_checked_4412`, read). The description says once that nothing
