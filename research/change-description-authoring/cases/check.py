@@ -678,7 +678,7 @@ def main():
     paths = sys.argv[2:] or sorted(glob.glob(f'{case_dir}/*/result*.md') + glob.glob(f'{case_dir}/*/baseline/*.md')
                                    + glob.glob(f'{case_dir}/controls/*.md'))
     for path in paths:
-        text = unwrap(open(path).read())
+        text = unwrap(open(path, encoding='utf-8').read())
         print(os.path.relpath(path, case_dir))
         for check in CASES[name]:
             verdict, evidence = check(text)

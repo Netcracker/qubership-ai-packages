@@ -28,6 +28,17 @@ python3 research/change-description-authoring/cases/check.py research/change-des
 was found, not that the check passed: read the result against the check's question in the case README before
 recording a grade. READ marks a check the script leaves to the reader.
 
+`tests/change-description-authoring-cases/check-output.txt` records what `check.py` prints for every case, and `make
+test` fails when the output moves. After a change to `check.py`, a result, or a control, regenerate it and commit the
+diff with the change:
+
+```bash
+python3 tests/change-description-authoring-cases/test_check_output.py --regenerate
+```
+
+A marker that has to reject a near miss keeps its probe phrases in
+`tests/change-description-authoring-cases/test_check_markers.py`.
+
 ## Controls
 
 A check that never fails is not a check. Every check has failed on at least one committed output: a baseline run
