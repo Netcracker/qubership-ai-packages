@@ -24,12 +24,12 @@ leave them to the diff.
    on a connection returned by getConnection` and `2nd phase commit must be issued using an idle connection`; a
    paraphrase of either fails the check on reading.
 2. **Contradictions located** (`contradictions_located_4412`). The description names the `recover()` comment and the
-   batch test as the two comments that contradicted the code. The script looks for `recover` followed in the same
-   sentence by the ownership it got wrong, because every run also names `recover()` in another comment's bullet. It need
-   not quote `pg_has_role` or `64000`: the hunk of each comment shows the value, and §2 calls a sentence that restates
-   it translation.
-3. **No run-time change, with its check** (`runtime_noop_checked_4412`, read). One sentence says nothing changes at run
-   time and how that was checked (the files compared with comments stripped).
+   batch test as the two comments that contradicted the code. The script looks for `recover` next to the word
+   `comment`, because every run also names `recover()` in another comment's bullet. The description need not quote
+   `pg_has_role` or `64000`: the hunk of each comment shows the value, and §2 calls a sentence that restates it
+   translation.
+3. **No run-time change, with its check** (`runtime_noop_checked_4412`, read). The description says once that nothing
+   changes at run time and how that was checked (the files compared with comments stripped).
 4. **Short** (`prose_at_most_150_words`). At most 150 words outside fenced blocks.
 
 ## Running it
@@ -55,14 +55,14 @@ ran on tree `ee45a03a`, the skill at 1.7.0 as Netcracker/qubership-ai-packages#2
 | Run | Not quoted (1) | Contradictions (2) | Run time (3) | Words (4) |
 | --- | --- | --- | --- | --- |
 | Opus r1 | fails: both comments quoted | passes | passes | fails: 411 |
-| Opus r2 | fails: both comments quoted | passes | passes: the no-op and its check are two paragraphs apart | fails: 383 |
+| Opus r2 | fails: both comments quoted | passes | passes | fails: 383 |
 | `controls/opus-1.6.0-r1.md` | fails: both comments quoted | passes | passes | fails: 404 |
 | `controls/opus-1.6.0-r2.md` | fails: both comments quoted | passes | passes | fails: 400 |
 | `controls/as-posted.md` | fails | passes | passes | fails: 538 |
 | `controls/pipeline-final.md` | fails | passes | passes | fails: 260 |
-| `controls/short.md` | passes | passes | passes | passes: 104 |
-| `controls/cut-too-far.md` | passes | fails | passes | passes: 68 |
-| `controls/no-check.md` | passes | passes | fails: no check named | passes: 85 |
+| `controls/short.md` | passes | passes | passes | passes: 97 |
+| `controls/cut-too-far.md` | passes | fails | passes | passes: 77 |
+| `controls/no-check.md` | passes | passes | fails: no check named | passes: 78 |
 
 Every run quotes the stale `State.ACTIVE` comment and the removed `2nd phase commit must be issued using an idle
 connection` message, and lists the two items it left alone. Two Opus runs on 2026-11-01 under a draft of 1.7.0
