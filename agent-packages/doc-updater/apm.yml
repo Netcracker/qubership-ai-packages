@@ -1,0 +1,3 @@
+name: doc-updater
+version: 1.0.0
+description: Skill that updates a repository's documentation to match the code changes on the current branch, in the format each page already uses.
