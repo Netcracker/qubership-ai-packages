@@ -11,6 +11,7 @@ Each subcommand does its step whole, so no step can be left half-applied.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -227,6 +228,11 @@ def dirty_digest(repo: Path) -> str:
     return "sha256:" + h.hexdigest()[:32]
 
 
+def file_digest(path: Path) -> Optional[str]:
+    """Return the digest of a file's bytes, or None when there is no such file."""
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
 def snapshot_ref(run_id: str, n: int) -> str:
     return "refs/cross-review/%s/r%d" % (run_id, n)
 
@@ -297,6 +303,11 @@ def guess_symbol(repo: Path, rel_path: str, line: Optional[int]) -> Optional[str
 
 def cmd_init(args: argparse.Namespace) -> None:
     repo = repo_root(Path(args.repo).resolve() if args.repo else Path.cwd())
+    active = active_run(pointer_path(repo))
+    if active and not args.force:
+        die("%s is a run still %s at round %d; every command finds its run through the pointer, so a new "
+            "run would take it over. Read it with `status`, end it with `stop`, or pass --force to replace it."
+            % active)
     kind, base, commit = parse_scope(args.scope)
     # Before the run directory exists: a scope git cannot resolve should leave nothing behind.
     base_oid = scope_base_oid(repo, kind, base, commit)
@@ -342,6 +353,19 @@ def cmd_init(args: argparse.Namespace) -> None:
           "reviewer_name": "rvw-%s-claude" % run_id,
           "task": str(task_path) if task_path else None,
           "next": "review_run.py snapshot"})
+
+
+def active_run(ptr: Path) -> Optional[Tuple[str, str, int]]:
+    """Name the run the pointer holds, if that run has not stopped or converged."""
+    try:
+        d = Path(ptr.read_text("utf-8").strip())
+        state = read_state(d)
+        status, n = state["status"], state["round"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None  # no run, or one too damaged to resume: nothing to take over
+    if status in ("stopped", "converged"):
+        return None
+    return str(d), status, n
 
 
 def scope_base_oid(repo: Path, kind: str, base: Optional[str], commit: Optional[str]) -> str:
@@ -390,6 +414,7 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
     rd.mkdir(parents=True, exist_ok=True)
     head, snap = make_snapshot(repo, state["run_id"], n, d)
     target = {"head_oid": head, "snapshot_oid": snap, "snapshot_ref": snapshot_ref(state["run_id"], n),
+              "snapshot_tree": run(["git", "rev-parse", "%s^{tree}" % snap], cwd=repo).strip(),
               "dirty_digest": dirty_digest(repo),
               "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     (rd / "target.json").write_text(json.dumps(target, indent=2) + "\n", "utf-8")
@@ -578,7 +603,7 @@ def cmd_codex_cmd(args: argparse.Namespace) -> None:
         sid = state["codex"].get("parent_session_id")
         if not sid:
             die("no codex session recorded yet; run a review round before resuming")
-        cmd = ("timeout 1800 codex exec -C %s resume %s --json --output-schema %s -o %s -"
+        cmd = (CODEX_DEADLINE + "codex exec -C %s resume %s --json --output-schema %s -o %s -"
                % (sh(state["repo_root"]), sh(sid),
                   sh(str(SCHEMA_DIR / "adjudication.schema.json")),
                   sh(str(rd / "codex-adj.md"))))
@@ -591,7 +616,7 @@ def cmd_codex_cmd(args: argparse.Namespace) -> None:
     # A scope flag and a custom prompt are mutually exclusive in `codex exec review`, so a round
     # that carries the ledger states its scope in the prompt instead. See codex_prompt().
     selector = "-" if with_prompt else scope_flags(state)
-    cmd = ("timeout 1800 codex exec -C %s --json review %s --title %s -o %s"
+    cmd = (CODEX_DEADLINE + "codex exec -C %s --json review %s --title %s -o %s"
            % (sh(state["repo_root"]), selector,
               sh("cross-review r%d (%s)" % (n, state["run_id"])),
               sh(str(rd / "codex.last.md"))))
@@ -599,6 +624,12 @@ def cmd_codex_cmd(args: argparse.Namespace) -> None:
         cmd += " < %s" % sh(str(prompt))
     cmd += " > %s 2> %s" % (sh(str(rd / "codex.jsonl")), sh(str(rd / "codex.stderr")))
     sys.stdout.write(cmd + "\n")
+
+
+# Ends a hung Codex after 30 minutes. SIGALRM outlives exec and kills codex; Python is already a
+# requirement, where coreutils' `timeout` is missing from a stock macOS.
+CODEX_DEADLINE = ("python3 -c 'import os, signal, sys; signal.alarm(int(sys.argv[1])); "
+                  "os.execvp(sys.argv[2], sys.argv[2:])' 1800 ")
 
 
 def sh(value: str) -> str:
@@ -643,6 +674,8 @@ def cmd_codex_extract(args: argparse.Namespace) -> None:
                     % (prose, len(prose_text)))
         else:
             note = "no exited_review_mode event in stdout or the rollout file"
+            if stderr_text.strip():
+                note += "; %s ends with: %s" % (rd / "codex.stderr", stderr_text.strip()[-400:])
 
     report = build_codex_report(review_output, repo, n, target, dirty_digest(repo), status)
     out = rd / "codex.findings.json"
@@ -797,6 +830,7 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
     rd = round_dir(d, n)
     target = json.loads((rd / "target.json").read_text("utf-8"))
     schema = load_schema("finding")
+    rewind_round(state, n)
 
     legs: Dict[str, Dict[str, Any]] = {}
     degraded: List[str] = []
@@ -817,6 +851,13 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
         if errors:
             degraded.append(leg)
             sys.stderr.write("review_run: %s report fails the schema:\n  %s\n" % (leg, "\n  ".join(errors)))
+            continue
+        ids = [x["local_id"] for x in report["findings"]]
+        repeated = sorted({i for i in ids if ids.count(i) > 1})
+        if repeated:
+            degraded.append(leg)
+            sys.stderr.write("review_run: %s report gives more than one finding the local_id %s; every finding "
+                             "needs its own. Fix %s and rerun merge-prep.\n" % (leg, ", ".join(repeated), f))
             continue
         if report["status"] != "ok" or report["round"] != n:
             degraded.append(leg)
@@ -857,6 +898,11 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
 
     entry = next(r for r in state["rounds"] if r["n"] == n)
     entry["degraded"] = degraded
+    # Everything a later step derived from the previous merge-input.json describes other findings.
+    entry.update({"reports": {leg: file_digest(rd / ("%s.findings.json" % leg)) for leg in declared},
+                  "blocking_in": None, "blocking_out": None, "merge_input": None, "merged": None})
+    if n == state["round"]:
+        state["status"], state["stop_reason"] = "reviewing", None
     write_state(d, state)
     emit({"file": str(out), "raw": len(raw), "candidate_groups": len(groups),
           "dropped": len(dropped), "degraded": degraded, "stale": stale,
@@ -864,30 +910,39 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
 
 
 def pair_findings(raw: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Group findings that mechanically refer to the same place.
+    """Group findings of different reviewers that mechanically refer to the same place.
 
-    Same path plus either the same symbol or overlapping line ranges. Semantic matches that share
-    no anchor are left for the merger, which is the half that needs a model.
+    Same path plus either the same symbol or overlapping line ranges. Two findings of one reviewer
+    never share a group: a reviewer that filed two findings made two claims, and a group yields one
+    item, so grouping them here would drop the second claim's reasoning before the merger saw it, and
+    a single-reviewer run has no merger at all. Only a word-for-word repeat is dropped. Semantic
+    matches that share no anchor are left for the merger, which is the half that needs a model.
     """
     groups: List[Dict[str, Any]] = []
     dropped: List[Dict[str, Any]] = []
     for f in raw:
-        placed = False
-        for g in groups:
-            if any(same_place(f, m) for m in g["members"]):
-                if any(m["reviewer"] == f["reviewer"] and normalized(m) == normalized(f)
-                       for m in g["members"]):
-                    dropped.append({"reviewer": f["reviewer"], "local_id": f["local_id"],
-                                    "duplicate_of": g["key"],
-                                    "reason": "identical title and anchor within one reviewer"})
-                else:
-                    g["members"].append(f)
-                    g["reason"] = "same anchor"
-                placed = True
-                break
-        if not placed:
+        twin = next((g for g in groups for m in g["members"]
+                     if m["reviewer"] == f["reviewer"] and same_claim(m, f)), None)
+        if twin:
+            dropped.append({"reviewer": f["reviewer"], "local_id": f["local_id"], "duplicate_of": twin["key"],
+                            "reason": "repeats another finding of the same reviewer word for word"})
+            continue
+        home = next((g for g in groups
+                     if all(m["reviewer"] != f["reviewer"] for m in g["members"])
+                     and any(same_place(f, m) for m in g["members"])), None)
+        if home:
+            home["members"].append(f)
+            home["reason"] = "same anchor"
+        else:
             groups.append({"key": "g%d" % (len(groups) + 1), "reason": "single", "members": [f]})
     return groups, dropped
+
+
+def same_claim(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
+    """Decide whether two findings say the same thing, every field but their ids alike."""
+    def claim(f: Dict[str, Any]) -> Dict[str, Any]:
+        return {k: v for k, v in f.items() if k not in ("local_id", "prior_id")}
+    return claim(a) == claim(b)
 
 
 def same_place(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
@@ -1016,10 +1071,14 @@ def cmd_merge_auto(args: argparse.Namespace) -> None:
 def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
                decisions: Dict[str, Any], source: Optional[str]) -> None:
     rd = round_dir(d, n)
+    rewind_round(state, n)
 
     by_key = {}
     for g in prep["candidate_groups"]:
         for m in g["members"]:
+            if (m["reviewer"], m["local_id"]) in by_key:
+                die("%s lists %s/%s more than once, so a decision on it cannot say which finding it means. "
+                    "Rerun merge-prep %d." % (rd / "merge-input.json", m["reviewer"], m["local_id"], n))
             by_key[(m["reviewer"], m["local_id"])] = m
     check_decisions(decisions, set(by_key), {e["id"] for e in state["ledger"]}, source)
 
@@ -1068,6 +1127,10 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
     entry = next(r for r in state["rounds"] if r["n"] == n)
     entry["blocking_in"] = merged["stats"]["blocking"]
     entry["stale"] = prep["target"]["stale"]
+    # Decisions applied to an earlier merged.json do not cover this one.
+    entry.update({"merge_input": file_digest(rd / "merge-input.json"), "merged": None, "blocking_out": None})
+    if n == state["round"]:
+        state["stop_reason"] = None
     state["status"] = "awaiting_fixes"
     write_state(d, state)
     emit({"file": str(out), "items": len(items), "blocking": merged["stats"]["blocking"],
@@ -1237,6 +1300,7 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
             "run, and give each prior_id to one group only."
             % (rd / "merged.json", ", ".join(dupes), n, rd / "merger-output.json", n))
     decisions = {dec["id"]: dec for dec in report.get("decisions", [])}
+    rewind_round(state, n)
 
     undecided = [i["id"] for i in merged["items"] if i["blocking"] and i["id"] not in decisions]
     if undecided and not args.allow_partial:
@@ -1265,6 +1329,7 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
         if i["blocking"] and decisions.get(i["id"], {}).get("kind") not in ("fixed", "rejected", "deferred")
     )
     entry["fix_report"] = str(Path(args.fix_report).resolve())
+    entry["merged"] = file_digest(rd / "merged.json")
     state["status"] = "reviewed"
 
     # should_stop records this round's blocking ids, which the next round compares against, so it
@@ -1278,6 +1343,25 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
     emit({"round": n, "ledger": len(state["ledger"]),
           "open_blocking": entry["blocking_out"], "stop": stop, "stop_reason": reason,
           "next": "review_run.py report" if stop else "review_run.py snapshot"})
+
+
+def rewind_round(state: Dict[str, Any], n: int) -> None:
+    """Put the ledger back as it was before round n's decisions, recording it the first time.
+
+    A redone round is matched and decided against what the round before it left: otherwise its own
+    first decisions turn a finding into a regression of itself, and its blocking ids into a repeat.
+    Only the last round can be redone, since a later round's entries would go with it.
+    """
+    entry = next(r for r in state["rounds"] if r["n"] == n)
+    if "ledger_before" not in entry:
+        entry["ledger_before"] = copy.deepcopy(state["ledger"])
+        entry["last_blocking_before"] = state.get("_last_blocking_ids")
+        return
+    if n != state["round"]:
+        die("round %d is not the last round (round %d is), so it cannot be redone; fix what it missed "
+            "in the last round instead." % (n, state["round"]))
+    state["ledger"] = copy.deepcopy(entry["ledger_before"])
+    state["_last_blocking_ids"] = entry["last_blocking_before"]
 
 
 def upsert_ledger(ledger: List[Dict[str, Any]], item: Dict[str, Any],
@@ -1431,7 +1515,25 @@ def cmd_report(args: argparse.Namespace) -> None:
 
     out = d / "report.md"
     out.write_text("\n".join(lines), "utf-8")
-    emit({"file": str(out), "verdict": verdict, "degraded": degraded})
+    emit({"file": str(out), "verdict": verdict, "degraded": degraded,
+          "deleted_refs": drop_snapshot_refs(state, keep_last=verdict != "clean")})
+
+
+def drop_snapshot_refs(state: Dict[str, Any], keep_last: bool) -> List[str]:
+    """Delete the run's snapshot refs, keeping the last round's while the run may go on.
+
+    A snapshot holds every untracked file that is not ignored, so a ref left behind keeps a stray
+    secret in the object store and lists it in `git log --all`. Only the next round needs a ref: it
+    diffs against the last snapshot. The verdict reads the tree oid the round recorded, not the ref.
+    """
+    repo = Path(state["repo_root"])
+    refs = run(["git", "for-each-ref", "--format=%(refname)", "refs/cross-review/%s/" % state["run_id"]],
+               cwd=repo).split()
+    if keep_last and state["rounds"]:
+        refs = [r for r in refs if r != snapshot_ref(state["run_id"], state["rounds"][-1]["n"])]
+    for ref in refs:
+        run(["git", "update-ref", "-d", ref], cwd=repo)
+    return refs
 
 
 def last_round_gap(d: Path, state: Dict[str, Any]) -> Optional[str]:
@@ -1454,12 +1556,24 @@ def last_round_gap(d: Path, state: Dict[str, Any]) -> Optional[str]:
     if last.get("blocking_out") is None:
         return ("round %d was merged, but its decisions were not applied. Run ledger-apply %d "
                 "--fix-report <file>." % (n, n))
+    # Each step recorded the digest of the file it read; a file edited after that step makes every
+    # later result describe findings nobody decided.
+    rd = round_dir(d, n)
+    redo = "Redo the round from that step: merge-prep %d, then merge-apply or merge-auto, then ledger-apply %d." % (n, n)
+    links = [(rd / ("%s.findings.json" % leg), (last.get("reports") or {}).get(leg, ""), "merge-prep")
+             for leg in state.get("legs") or ["codex", "claude"]]
+    links += [(rd / "merge-input.json", last.get("merge_input"), "the merge"),
+              (merged_path, last.get("merged"), "ledger-apply")]
+    for path, recorded, step in links:
+        if file_digest(path) != recorded:
+            return "%s is not the file %s read in round %d. %s" % (path, step, n, redo)
     if stale:
         return "the tree changed while round %d was being reviewed. %s" % (n, another)
     # Compared by content, so committing the reviewed changes keeps the run clean, and any edit
     # after the snapshot, a fix included, does not.
     snap = last["target"]["snapshot_oid"]
-    reviewed = run(["git", "rev-parse", "%s^{tree}" % snap], cwd=Path(state["repo_root"])).strip()
+    reviewed = last["target"].get("snapshot_tree") or run(
+        ["git", "rev-parse", "%s^{tree}" % snap], cwd=Path(state["repo_root"])).strip()
     if worktree_tree(Path(state["repo_root"]), d / "report.index") != reviewed:
         return ("the code changed after round %d took its snapshot, and no round reviewed the change; "
                 "`git diff %s` shows the tracked part of it. %s" % (n, snap, another))
@@ -1496,6 +1610,7 @@ def main() -> None:
                                   "answers; both reviewers are told what the change is for")
     s.add_argument("--legs", default="codex,claude",
                    help="reviewers this run expects; a missing declared leg degrades the round")
+    s.add_argument("--force", action="store_true", help="replace a run the pointer names that has not ended")
     s.set_defaults(func=cmd_init)
 
     s = sub.add_parser("snapshot", help="open the next round: pin the tree and write its prompt")
@@ -1556,7 +1671,7 @@ def main() -> None:
     s.add_argument("--reason", required=True)
     s.set_defaults(func=cmd_stop)
 
-    s = sub.add_parser("report", help="write the final report")
+    s = sub.add_parser("report", help="write the final report and delete the snapshot refs no later round needs")
     s.set_defaults(func=cmd_report)
 
     args = p.parse_args()

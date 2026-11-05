@@ -1,15 +1,19 @@
 """review_run.py against a throwaway git repository, driven through its command line: the digest that fences a
-reviewer's reading, the ledger ids a round may reuse, and the verdict a run ends on."""
+reviewer's reading, the ledger ids a round may reuse, how findings are paired, and the verdict a run ends on."""
 import json
 import os
 import shutil
 import subprocess
 import sys
+import signal
 import tempfile
+import time
 import unittest
 
 SCRIPT = os.path.join(os.path.dirname(__file__), "..", "..", "agent-packages", "cross-review", ".apm", "skills",
                       "cross-review", "scripts", "review_run.py")
+
+FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
 SOURCE = "".join("line %d\n" % i for i in range(1, 41))
 
@@ -47,8 +51,8 @@ class ReviewRunTest(unittest.TestCase):
     def digest(self):
         return self.run_script("digest").stdout.strip()
 
-    def start_run(self, max_rounds):
-        self.run_dir = self.emitted("init", "--scope", "uncommitted", "--legs", "claude",
+    def start_run(self, max_rounds, legs="claude"):
+        self.run_dir = self.emitted("init", "--scope", "uncommitted", "--legs", legs,
                                     "--max-rounds", str(max_rounds))["review_dir"]
 
     def round_file(self, n, name):
@@ -57,6 +61,12 @@ class ReviewRunTest(unittest.TestCase):
     def review(self, findings, digest_start=None, digest_end=None):
         """Open the next round and file a claude report on it, read from the round's own target."""
         n = self.emitted("snapshot")["round"]
+        self.file_report(n, findings, digest_start, digest_end)
+        self.run_script("merge-prep")
+        return n
+
+    def file_report(self, n, findings, digest_start=None, digest_end=None):
+        """Write round n's claude report against the round's own target."""
         with open(self.round_file(n, "target.json"), encoding="utf-8") as f:
             target = json.load(f)
         report = {
@@ -69,8 +79,6 @@ class ReviewRunTest(unittest.TestCase):
         }
         with open(self.round_file(n, "claude.findings.json"), "w", encoding="utf-8") as f:
             json.dump(report, f)
-        self.run_script("merge-prep")
-        return n
 
     def decide(self, n, decisions):
         path = self.round_file(n, "fix-report.json")
@@ -258,7 +266,202 @@ class ReviewRunTest(unittest.TestCase):
         self.assertNotEqual(0, proc.returncode, "ledger-apply exit code")
         self.assertIn("more than one item the id F-001", proc.stderr)
 
+
+    # ------------------------------------------------------------------ pairing
+
+    def test_one_reviewers_nearby_findings_with_one_title_stay_two_items(self):
+        self.start_run(max_rounds=1)
+        n = self.review([{**finding("c1", 10, "Missing null check"), "why": "request.user is null when anonymous"},
+                         {**finding("c2", 13, "Missing null check"), "why": "request.address is null when absent"}])
+        self.run_script("merge-auto")
+        self.assertEqual(["request.user is null when anonymous", "request.address is null when absent"],
+                         [i["why"] for i in self.items(n)])
+
+    def test_one_reviewers_findings_at_one_line_with_one_title_stay_two_items(self):
+        self.start_run(max_rounds=1)
+        n = self.review([{**finding("c1", 10, "Missing null check"), "why": "request.user is null when anonymous"},
+                         {**finding("c2", 10, "Missing null check"), "why": "request.user is null after logout"}])
+        self.run_script("merge-auto")
+        self.assertEqual(["request.user is null when anonymous", "request.user is null after logout"],
+                         [i["why"] for i in self.items(n)])
+
+    def test_a_finding_repeated_word_for_word_is_dropped(self):
+        self.start_run(max_rounds=1)
+        n = self.review([finding("c1", 10, "Missing null check"), finding("c2", 10, "Missing null check")])
+        with open(self.round_file(n, "merge-input.json"), encoding="utf-8") as f:
+            prep = json.load(f)
+        self.assertEqual(([["c1"]], ["c2"]), ([[m["local_id"] for m in g["members"]] for g in prep["candidate_groups"]],
+                                             [x["local_id"] for x in prep["dropped"]]))
+
+    def test_a_report_repeating_a_local_id_degrades_the_round(self):
+        self.start_run(max_rounds=1)
+        n = self.review([finding("c1", 10, "Missing null check"), finding("c1", 30, "Unclosed stream")])
+        with open(self.round_file(n, "merge-input.json"), encoding="utf-8") as f:
+            self.assertEqual(["claude"], json.load(f)["degraded"])
+
+    def test_codex_and_claude_findings_at_one_line_pair_into_one_item_both_reviewers_raised(self):
+        self.start_run(max_rounds=1, legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        with open(os.path.join(FIXTURES, "codex-0.163.0-review.jsonl"), encoding="utf-8") as f:
+            stream = f.read().replace("{repo}", os.path.realpath(self.repo))
+        with open(self.round_file(n, "codex.jsonl"), "w", encoding="utf-8") as f:
+            f.write(stream)
+        extracted = self.emitted("codex-extract")
+        self.assertEqual(("ok", 1, "01a172dc-65a3-7e43-a400-94e49a4993ca"),
+                         (extracted["status"], extracted["findings"], extracted["session_id"]))
+        self.file_report(n, [finding("c1", 10, "request.user may be null")])
+        self.run_script("merge-prep")
+        with open(self.round_file(n, "merge-input.json"), encoding="utf-8") as f:
+            groups = json.load(f)["candidate_groups"]
+        self.assertEqual([["codex", "claude"]], [[m["reviewer"] for m in g["members"]] for g in groups])
+        self.run_script("merge-apply", "--decisions", self.merger_output(n, groups))
+        self.assertEqual([("both", True)], [(i["agreement"], i["blocking"]) for i in self.items(n)])
+
+    def test_codex_extract_quotes_codex_stderr_when_the_stream_holds_no_review(self):
+        self.start_run(max_rounds=1, legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        with open(self.round_file(n, "codex.stderr"), "w", encoding="utf-8") as f:
+            f.write("bash: timeout: command not found\n")
+        extracted = self.emitted("codex-extract")
+        self.assertEqual("failed", extracted["status"])
+        self.assertIn("timeout: command not found", extracted["note"])
+
+    def test_codex_cmd_bounds_codex_with_python_rather_than_coreutils_timeout(self):
+        self.start_run(max_rounds=1, legs="codex,claude")
+        self.run_script("snapshot")
+        command = self.run_script("codex-cmd").stdout
+        wrapper, rest = command.split(" 1800 ", 1)
+        self.assertEqual(("python3 -c", "codex exec "), (wrapper[:len("python3 -c")], rest[:len("codex exec ")]))
+        started = time.monotonic()
+        proc = subprocess.run(wrapper + " 1 sleep 30", shell=True, capture_output=True)
+        self.assertEqual(-signal.SIGALRM, proc.returncode, "exit of the wrapper around sleep 30 with a 1 s deadline")
+        self.assertLess(time.monotonic() - started, 10, "seconds until the wrapper ended sleep 30")
+
+    def merger_output(self, n, groups):
+        """Write a merger output that keeps merge-prep's groups as they are, and return its path."""
+        path = self.round_file(n, "merger-output.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"groups": [{"key": g["key"], "members": [{"reviewer": m["reviewer"], "local_id": m["local_id"]}
+                                                                for m in g["members"]],
+                                   "primary": {"reviewer": g["members"][0]["reviewer"],
+                                               "local_id": g["members"][0]["local_id"]},
+                                   "prior_id": None, "contradicts": None} for g in groups],
+                       "dropped": []}, f)
+        return path
+
+    # ------------------------------------------------------------------ run lifecycle
+
+    def test_init_refuses_while_the_pointer_names_an_active_run(self):
+        self.start_run(max_rounds=1)
+        proc = self.run_script("init", "--scope", "uncommitted", check=False)
+        self.assertNotEqual(0, proc.returncode, "init exit code")
+        self.assertIn("pass --force to replace it", proc.stderr)
+
+    def test_init_with_force_replaces_an_active_run(self):
+        self.start_run(max_rounds=1)
+        first = self.run_dir
+        self.run_dir = self.emitted("init", "--scope", "uncommitted", "--force")["review_dir"]
+        self.assertNotEqual(first, self.run_dir, "run directory of the replacing run")
+        self.assertEqual(self.run_dir, self.emitted("status")["review_dir"])
+
+    def test_init_starts_a_new_run_once_the_previous_one_stopped(self):
+        self.start_run(max_rounds=1)
+        self.run_script("stop", "--reason", "done")
+        self.run_script("init", "--scope", "uncommitted")
+
+    def snapshot_refs(self):
+        return subprocess.run(["git", "for-each-ref", "--format=%(refname)", "refs/cross-review/"], cwd=self.repo,
+                              check=True, capture_output=True, encoding="utf-8").stdout.split()
+
+    def test_a_clean_report_deletes_every_snapshot_ref_of_the_run(self):
+        self.start_run(max_rounds=2)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "rejected", "rationale": "r", "evidence": "e"}])
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        self.assertEqual(2, len(self.snapshot_refs()), "snapshot refs before report")
+        self.assertEqual(("clean", []), self.report())
+        self.assertEqual([], self.snapshot_refs())
+        self.assertEqual(("clean", []), self.report())
+
+    def test_an_unfinished_report_keeps_only_the_last_rounds_snapshot_ref(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "rejected", "rationale": "r", "evidence": "e"}])
+        self.review([])
+        self.assertEqual("incomplete", self.report()[0])
+        self.assertEqual([r for r in self.snapshot_refs() if r.endswith("/r2")], self.snapshot_refs())
+        self.assertEqual(1, len(self.snapshot_refs()), "snapshot refs left")
+
     # ------------------------------------------------------------------ verdict
+
+    def test_rebuilding_a_decided_merge_makes_the_run_incomplete_until_its_decisions_are_applied(self):
+        self.start_run(max_rounds=1)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        self.file_report(n, [finding("c1", 10, "Missing null check")])
+        self.run_script("merge-prep")
+        self.run_script("merge-auto")
+        verdict, notes = self.report()
+        self.assertEqual("incomplete", verdict)
+        self.assertIn("round 1 was merged, but its decisions were not applied", notes[0])
+        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.assertEqual(("clean", []), self.report())
+
+    def test_redoing_a_decided_round_matches_against_the_ledger_from_before_it(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.file_report(n, [finding("c1", 10, "Missing null check")])
+        self.run_script("merge-prep")
+        self.run_script("merge-auto")
+        self.assertEqual([("F-001", "new")], [(i["id"], i["state"]) for i in self.items(n)])
+        applied = self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.assertEqual((False, None), (applied["stop"], applied["stop_reason"]))
+
+    def test_merging_a_decided_round_again_keeps_its_ids(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.run_script("merge-auto")
+        self.assertEqual([("F-001", "new")], [(i["id"], i["state"]) for i in self.items(n)])
+
+    def test_a_decided_round_that_a_later_round_followed_cannot_be_redone(self):
+        self.start_run(max_rounds=3)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        self.review([])
+        proc = self.run_script("merge-prep", "1", check=False)
+        self.assertNotEqual(0, proc.returncode, "merge-prep 1 exit code")
+        self.assertIn("round 1 is not the last round (round 2 is)", proc.stderr)
+
+    def test_a_report_edited_after_merge_prep_makes_the_run_incomplete(self):
+        self.start_run(max_rounds=1)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        self.file_report(n, [finding("c1", 10, "Missing null check")])
+        verdict, notes = self.report()
+        self.assertEqual("incomplete", verdict)
+        self.assertIn("claude.findings.json is not the file merge-prep read in round 1", notes[0])
+
+    def test_a_merged_file_edited_after_ledger_apply_makes_the_run_incomplete(self):
+        self.start_run(max_rounds=1)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        with open(self.round_file(n, "merged.json"), "a", encoding="utf-8") as f:
+            f.write("\n")
+        verdict, notes = self.report()
+        self.assertEqual("incomplete", verdict)
+        self.assertIn("merged.json is not the file ledger-apply read in round 1", notes[0])
 
     def test_a_run_whose_last_round_read_a_moving_tree_is_incomplete(self):
         self.start_run(max_rounds=1)
