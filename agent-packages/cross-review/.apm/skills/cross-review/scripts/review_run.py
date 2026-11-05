@@ -300,10 +300,23 @@ def cmd_init(args: argparse.Namespace) -> None:
     kind, base, commit = parse_scope(args.scope)
     # Before the run directory exists: a scope git cannot resolve should leave nothing behind.
     base_oid = scope_base_oid(repo, kind, base, commit)
+    task_text = None
+    if args.task:
+        try:
+            task_text = Path(args.task).read_text("utf-8")
+        except OSError as exc:
+            die("cannot read the task statement %s: %s" % (args.task, exc))
+        if not task_text.strip():
+            die("the task statement %s is empty" % args.task)
     run_id = hashlib.sha1(("%s|%f" % (repo, time.time())).encode()).hexdigest()[:6]
     tmp = Path(os.environ.get("TMPDIR", "/tmp"))
     d = (tmp / "claude-review" / ("%s-%s" % (repo.name, run_id))).resolve()
     (d / "rounds").mkdir(parents=True, exist_ok=True)
+    # A copy, so an edit to the original mid-run cannot change what later rounds are told the change is for.
+    task_path = None
+    if task_text is not None:
+        task_path = d / "task.md"
+        task_path.write_text(task_text, "utf-8")
 
     state = {
         "schema_version": 1,
@@ -311,6 +324,7 @@ def cmd_init(args: argparse.Namespace) -> None:
         "repo_root": str(repo),
         "review_dir": str(d),
         "scope": {"kind": kind, "base": base, "commit": commit, "base_oid": base_oid},
+        "task": str(task_path) if task_path else None,
         "legs": [leg.strip() for leg in args.legs.split(",") if leg.strip()],
         "round": 0,
         "max_rounds": args.max_rounds,
@@ -326,6 +340,7 @@ def cmd_init(args: argparse.Namespace) -> None:
     ptr.write_text(str(d) + "\n", "utf-8")
     emit({"review_dir": str(d), "run_id": run_id, "pointer": str(ptr),
           "reviewer_name": "rvw-%s-claude" % run_id,
+          "task": str(task_path) if task_path else None,
           "next": "review_run.py snapshot"})
 
 
@@ -455,27 +470,50 @@ def scope_sentence(state: Dict[str, Any], n: int, snap: Optional[str] = None,
     return out
 
 
+TASK_PROMPT_LIMIT = 6000
+
+
+def task_statement(state: Dict[str, Any]) -> Optional[str]:
+    """The task statement `init --task` copied into the run, cut to what a prompt can carry."""
+    path = state.get("task")
+    if not path:
+        return None
+    try:
+        text = Path(path).read_text("utf-8").strip()
+    except OSError:
+        return None
+    if len(text) > TASK_PROMPT_LIMIT:
+        text = text[:TASK_PROMPT_LIMIT] + "\n[... cut at %d characters; the full text is %s]" % (TASK_PROMPT_LIMIT, path)
+    return text
+
+
 def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
                  prev_snap: Optional[str] = None) -> str:
     """Rebuild the reviewer's memory from the ledger.
 
-    Round 1 carries nothing, so it runs under a scope flag and Codex's own review prompt. Later
-    rounds need the ledger, and `codex exec review` rejects `--base`, `--uncommitted`, and
-    `--commit` alongside a custom prompt — they are alternative ways to say what to review. So the
-    scope moves into the prompt text from round 2 on, and so does everything else this prompt says,
-    including the adversarial instruction round 1 has no way to carry.
+    `codex exec review` rejects `--base`, `--uncommitted`, and `--commit` alongside a custom
+    prompt: they are alternative ways to say what to review. Every round therefore states its
+    scope in the prompt text, round 1 included, so the adversarial instruction and the review
+    questions reach Codex from the first round. Later rounds add the ledger.
 
     What the prompt names is the range ending at this round's snapshot, never the original scope
     argument: see scope_sentence().
     """
-    if n == 1:
-        return ""
     fixed = [e for e in state["ledger"] if e["status"] == "fixed"]
     rejected = [e for e in state["ledger"] if e["status"] == "rejected"]
     deferred = [e for e in state["ledger"] if e["status"] == "deferred"]
 
-    out = ["Re-review round %d of this change. Report prioritized, actionable findings." % n, ""]
-    out += scope_sentence(state, n, snap, prev_snap)
+    if n == 1:
+        out = ["Review this change. Report prioritized, actionable findings.", ""]
+        base_oid = state["scope"].get("base_oid")
+        if base_oid and snap:
+            out.append("The change is `git diff %s %s`. The right-hand side is a commit holding the "
+                       "current working tree, uncommitted and untracked files included." % (base_oid, snap))
+        else:
+            out += scope_sentence(state, n, snap, prev_snap)
+    else:
+        out = ["Re-review round %d of this change. Report prioritized, actionable findings." % n, ""]
+        out += scope_sentence(state, n, snap, prev_snap)
     out.append("")
     if fixed:
         out.append("Addressed since your last pass. These are claims, not verified facts: check each "
@@ -493,6 +531,16 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
         out.append("Deferred as out of scope for this change: "
                    + ", ".join("[%s] %s" % (e["id"], e["title"]) for e in deferred))
         out.append("")
+    task = task_statement(state)
+    if task:
+        out.append("The change is meant to do what this task statement asks. Check that it solves this problem, "
+                   "all of it, and not an adjacent one. For a bug fix, check that something in the diff or its tests "
+                   "shows the cause is proven and gone, not only the symptom made rarer.")
+        out.append("")
+        out.append("--- task statement ---")
+        out.append(task)
+        out.append("--- end task statement ---")
+        out.append("")
     out.append("Focus on defects this diff introduces. Report pre-existing problems separately and "
                "mark them as such.")
     out.append("")
@@ -501,6 +549,17 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
                "Then attack your own finding: name the check, the type, or the invariant that would "
                "make it impossible, and drop the finding if you find one. Report what survives, "
                "with the assumption it rests on.")
+    out.append("")
+    out.append("Answer these for the diff as a whole, and file a finding for each that applies: Does it add "
+               "behavior a caller reading the name, the signature, and the docs would not predict? Is the change "
+               "at the right abstraction layer, or does it patch a symptom where the component that owns the "
+               "invariant should change? Does it add quadratic or worse complexity in the size of an input, and "
+               "is that size bounded? Does it break a persisted format, a wire protocol, an API shape, or a "
+               "configuration key that existing readers depend on?")
+    out.append("")
+    out.append("Where a hunk repairs a defect by raising a limit or timeout, adding a retry, ignoring an "
+               "exception, sleeping, disabling a test, or moving work into another process, check that "
+               "something in the diff or its tests shows the cause is gone rather than the symptom rarer.")
     return "\n".join(out) + "\n"
 
 
@@ -629,6 +688,12 @@ def scan_codex_stream(path: Path) -> Tuple[Optional[str], Optional[Dict[str, Any
                 # `review_output` reaches only the rollout reads as a failure.
                 session_id = rec.get("thread_id") or rec.get("id")
         found = payload.get("review_output") or rec.get("review_output")
+        if not found:
+            # codex-cli records a finished review as an `item_completed` event whose
+            # `ExitedReviewMode` item carries the payload one level down.
+            for holder in (payload.get("item"), rec.get("item")):
+                if isinstance(holder, dict) and holder.get("review_output"):
+                    found = holder["review_output"]
         if found:
             review_output = found
     return session_id, review_output
@@ -1427,6 +1492,8 @@ def main() -> None:
     s = sub.add_parser("init", help="create the run directory and claim it in the git dir")
     s.add_argument("--scope", required=True, help="uncommitted, base:<branch>, or commit:<sha>")
     s.add_argument("--max-rounds", type=int, default=6)
+    s.add_argument("--task", help="file holding the task statement: the issue, the request, or the prompt the change "
+                                  "answers; both reviewers are told what the change is for")
     s.add_argument("--legs", default="codex,claude",
                    help="reviewers this run expects; a missing declared leg degrades the round")
     s.set_defaults(func=cmd_init)

@@ -18,6 +18,11 @@ subagents.
    transcript never enters the orchestrating session. What reaches the session is one merged file.
 1. Merges the two reports: pairs findings by anchor, takes the highest severity across reviewers,
    marks agreement, and flags contradictions.
+1. Before any code is written, has a fresh subagent review the plan for the fixes: the invariant each
+   fix restores, the assumptions it rests on and how each was checked, and the test that shows it
+   fails without the fix.
+1. After the fixes, has another subagent check the diff against that plan, and checks that each new
+   test fails with its fix reverted (`scripts/teeth.py`).
 1. Records every decision in a ledger — fixed, rejected, or deferred, each with the evidence that
    settles it. A later round shows a refiled finding next to the evidence that retired it.
 1. Loops until nothing blocks, the round limit is reached, or two rounds raise the same findings,
@@ -49,4 +54,5 @@ Then run `apm install` and `apm compile`. The skill deploys to the location your
 - The [Codex CLI](https://github.com/openai/codex) installed and authenticated, with `codex` on the
   `PATH`.
 - Python 3 on the `PATH`, for `scripts/review_run.py`. The script uses the standard library only.
-- An agent that can spawn subagents, for the second reviewer and the merger.
+- An agent that can spawn subagents, for the second reviewer, the merger, the plan reviewer, and the
+  diff checker.
