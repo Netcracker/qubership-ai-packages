@@ -28,6 +28,17 @@ python3 research/change-description-authoring/cases/check.py research/change-des
 was found, not that the check passed: read the result against the check's question in the case README before
 recording a grade. READ marks a check the script leaves to the reader.
 
+`tests/change-description-authoring-cases/check-output.txt` records what `check.py` prints for every case, and `make
+test` fails when the output moves. After a change to `check.py`, a result, or a control, regenerate it and commit the
+diff with the change:
+
+```bash
+python3 tests/change-description-authoring-cases/test_check_output.py --regenerate
+```
+
+A marker that has to reject a near miss keeps its probe phrases in
+`tests/change-description-authoring-cases/test_check_markers.py`.
+
 ## Controls
 
 A check that never fails is not a check. Every check has failed on at least one committed output: a baseline run
@@ -38,6 +49,9 @@ passing result with the edits the case README names, made so that each check is 
 case tests.
 
 ## The cases
+
+A case labeled `open, failing` records a problem that no rule in the skill fixes yet: every run is expected to fail the
+check that states the problem, and a run that passes it is the result worth recording.
 
 | Case | Input | Rules |
 | --- | --- | --- |
@@ -56,7 +70,7 @@ case tests.
 | [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect nobody has observed, hunks not read aloud, an answered review question |
 | [`pgjdbc-4501-manual-check`](pgjdbc-4501-manual-check/README.md) | pgjdbc#4501 description and diff | a manual check kept literal; no search result, bookkeeping, or footer |
 | [`pgjdbc-4388-contract-fix`](pgjdbc-4388-contract-fix/README.md) | pgjdbc#4388 description and diff | the old lines shown; a contract fix is not a break; no test narration |
-| [`pgjdbc-4412-comment-only`](pgjdbc-4412-comment-only/README.md) | pgjdbc#4412 description, commits, and diff | open, failing: a comment the diff rewrites is not quoted; the code it contradicted is kept |
+| [`pgjdbc-4412-comment-only`](pgjdbc-4412-comment-only/README.md) | pgjdbc#4412 description, commits, and diff | open, failing: a comment the diff rewrites is not quoted; the comments that contradicted the code are located |
 | [`pgjdbc-4420-test-sites`](pgjdbc-4420-test-sites/README.md) | pgjdbc#4420 description and diff | negative control: the pairing of tests to sites stays in a test-only change |
 
 The five `pgjdbc-4466-*` cases share their input below "Repository facts" and differ in the merge model, so a check that

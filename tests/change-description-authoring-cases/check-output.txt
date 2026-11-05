@@ -1,0 +1,879 @@
+=== calcite-5330-open-question
+controls/break-heading.md
+  PASS break_leads_5330: first heading after the Jira link: 'Breaking changes'
+  PASS maintainer_question_kept: question: "**Scope.** This needs a maintainer's decision."
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['## Breaking changes']
+controls/settled-and-reopened.md
+  PASS break_leads_5330: first heading after the Jira link: 'Breaking changes'
+  PASS maintainer_question_kept: question: 'A committer needs to decide one thing: should these functions reject a key with comparability `NONE` in 1.43.0?'
+  FAIL compatibility_not_settled: settled: ['not a breaking change']
+  FAIL answered_question_not_reopened: reopened: '### Scope Are all types comparable at run time?'
+  FAIL calcite_template_kept: a template heading is missing
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['## Breaking changes']
+haiku/baseline/result.md
+  FAIL break_leads_5330: first paragraph: '`ARG_MIN(value, key)`, `ARG_MAX(value, key)`, and their aliases `MIN_BY` and `MAX_BY` require the key to be comparable, '
+  PASS maintainer_question_kept: question: '## Open question for reviewers No decision has been recorded yet.'
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+haiku/result-2.md
+  PASS break_leads_5330: opens with '### Breaking changes'
+  PASS maintainer_question_kept: question: '### Scope Open question for a maintainer: should these functions keep accepting a key whose type reports `NONE`?'
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+haiku/result.md
+  PASS break_leads_5330: opens with '### Breaking changes'
+  PASS maintainer_question_kept: question: '### Scope - Open decision for the maintainer: keep these functions rejecting a `NONE` key, as this change does, or keep them permissive and reject only `VECTOR` keys in #5331, as #5331 already does fo'
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+opus/baseline/result.md
+  FAIL break_leads_5330: first paragraph: 'The validator accepts `ARG_MIN(value, key)` and `ARG_MAX(value, key)` when the type of the key has comparability `NONE`.'
+  FAIL maintainer_question_kept: no question or decision asked of the maintainer
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Out of scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+opus/result-2.md
+  PASS break_leads_5330: opens with the lead-in: '**Breaking changes.** A query that passes a key whose type reports comparability `NONE` to `ARG_MIN`, `ARG_MAX`, `MIN_BY'
+  PASS maintainer_question_kept: question: 'A maintainer needs to choose between two options: - Reject non-comparable keys for all four functions (this PR).'
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+opus/result.md
+  PASS break_leads_5330: opens with the lead-in: '**Breaking changes.** Before this change, `ARG_MIN`, `ARG_MAX`, `MIN_BY` and `MAX_BY` (Spark library) passed validation '
+  PASS maintainer_question_kept: question: "This needs a maintainer's decision."
+  PASS compatibility_not_settled: compatibility left to the maintainer
+  PASS answered_question_not_reopened: not asked again
+  PASS calcite_template_kept: both template headings
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+=== jdk-33173-audit
+controls/main-opus.md
+  FAIL finder_not_named: finder named: 'An automated post-integration audit of JDK-8391022 found another upcall that runs before `ValueObjectMethods` is initial'
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: 'The upcall sites drop their on-demand initializations, and `is_same_object` stays unchanged.'
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+controls/run-B.md
+  FAIL finder_not_named: finder named: 'After JDK-8391022, an audit of the VM upcalls into `ValueObjectMethods` found one more that does not initialize the clas'
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: candidate: 'If JNI `IsSameObject` compares two value objects before anything else has initialized `ValueObjectMethods`, `isSubstitutable` runs with a null `UNSAFE`.'
+  FAIL no_hunk_translation: hunk read aloud: 'The per-call-site `initialize()` calls in `InterpreterRuntime::is_substitutable`, `JVM_IHashCode`, and `SharedRuntime::find_callee_info_helper` are removed, and `Runtime1::substitutability_check` move'
+  READ alternative_by_mechanism: candidate obstacle the change removes: 'Patching the one call site leaves the next upcall free to repeat the omission, and initialization on demand had its own limit: before `System.initPhase1` the class initializer threw `NullPointerExcept'
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+controls/unnamed-and-reopened.md
+  PASS finder_not_named: what found the defect is not named
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: 'The upcall sites drop their on-demand initializations, and `is_same_object` stays unchanged.'
+  READ alternative_by_mechanism: no candidate sentence
+  FAIL answered_question_not_open: kept open: 'Should `VERBOSE` be removed altogether?'
+  FAIL property_named: the removed property is not named
+haiku/baseline/result.md
+  FAIL finder_not_named: finder named: '## The defect A post-integration audit of JDK-8391022 confirmed that fix, which added the initialization before the upca'
+  FAIL no_absence_claim: absence stated: 'No failure has been reported.'
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: '- `interpreterRuntime.cpp` and `jvm.cpp`: the `method_holder()->initialize(...)` calls are removed from `InterpreterRuntime::is_substitutable` and `JVM_IHashCode`.'
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+haiku/result-2.md
+  PASS finder_not_named: what found the defect is not named
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: 'The `initialize` calls in `InterpreterRuntime::is_substitutable`, `JVM_IHashCode`, and `SharedRuntime::find_callee_info_helper` are removed.'
+  READ alternative_by_mechanism: candidate obstacle the change removes: '`Unsafe` is now the only prerequisite, and it is initialized before `initPhase1()` rather than during it, through `LazyConstantImpl`, `Charset`, and `SystemProps`.'
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+haiku/result.md
+  PASS finder_not_named: what found the defect is not named
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: 'Because the class is initialized there, the per-site initialize calls are removed.'
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+opus/baseline/result.md
+  FAIL finder_not_named: finder named: 'An automated post-integration audit of JDK-8391022 found the missing call.'
+  FAIL no_absence_claim: absence stated: 'Nobody has reported `is_same_object` failing, and nobody has worked out what a JNI caller would see if it made the first upcall.'
+  READ no_predicted_symptom: no candidate sentence
+  FAIL no_hunk_translation: hunk read aloud: '- `interpreterRuntime.cpp`, `InterpreterRuntime::is_substitutable`, and `jvm.cpp`, `JVM_IHashCode`: remove the `method_holder()->initialize(...)` calls.'
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+opus/result-2.md
+  PASS finder_not_named: what found the defect is not named
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  PASS no_hunk_translation: no removal hunk read aloud
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+opus/result.md
+  PASS finder_not_named: what found the defect is not named
+  PASS no_absence_claim: no claim about failures seen or not seen
+  READ no_predicted_symptom: no candidate sentence
+  PASS no_hunk_translation: no removal hunk read aloud
+  READ alternative_by_mechanism: no candidate sentence
+  PASS answered_question_not_open: not presented as open
+  PASS property_named: value.bsm.debug named
+=== pgjdbc-4367-breaks
+controls/breaking-lead-in.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  FAIL break_label_4367: opens with the lead-in: True, 5 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+controls/paragraph-before-lead-in.md
+  FAIL break_lines_lead_4367: opens with '`Parser.parseJdbcSql` now classifies each statement of a multi-statement string by its own text.'
+  FAIL break_label_4367: opens with the lead-in: False, 0 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+controls/retyped-and-repeated.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  FAIL break_label_4367: opens with the lead-in: False, 6 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  FAIL literals_kept_4367: missing: ['0100E', 'A result was returned when none was expected.']
+haiku/baseline/result.md
+  FAIL break_lines_lead_4367: opens with '## Why'
+  FAIL break_label_4367: opens with the lead-in: False, 5 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+haiku/result-2.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  FAIL break_label_4367: opens with the lead-in: False, 6 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+haiku/result.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  FAIL break_label_4367: opens with the lead-in: False, 6 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+opus/baseline/result.md
+  FAIL break_lines_lead_4367: opens with '## Why'
+  FAIL break_label_4367: opens with the lead-in: False, 5 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+opus/result-2.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  PASS break_label_4367: opens with the lead-in: True, 0 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+opus/result.md
+  PASS break_lines_lead_4367: break lines among the first three blocks
+  PASS break_label_4367: opens with the lead-in: True, 0 heading(s)
+  READ stated_once_4367: read: is any break line repeated in the Why slot or a later outcome list?
+  PASS literals_kept_4367: all kept
+=== pgjdbc-4370-verbose
+controls/main-opus.md
+  FAIL prose_at_most_500_words: 732 prose words
+  PASS facts_kept_4370: all kept
+  FAIL new_test_not_marked: marked new: '`VisibleBufferedInputStreamSkipTest` (new)'
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', 'Long.MAX_VALUE', '-1, -2']
+  PASS links_at_merge_base: 3 link(s), not at the merge base: []
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.core.VisibleBufferedInputStreamSkipTest' --"
+  FAIL no_test_narration: narrated: 'Its cases cover: - a discard served from the buffer alone - a discard across several reads - a discard longer than the buffer, which leaves the buffer in place '
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 5 heading(s)
+controls/scope-lead-in.md
+  FAIL prose_at_most_500_words: 586 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 0 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  PASS scope_lead_in_4370: 1 Scope paragraph(s) naming #4359, 0 heading(s)
+controls/scope-list-after-paragraph.md
+  FAIL prose_at_most_500_words: 614 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 3 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 0 heading(s)
+controls/trimmed-wrong.md
+  FAIL prose_at_most_500_words: 677 prose words
+  FAIL facts_kept_4370: missing: ['#4359', '75 ms', '149 ms']
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: no marker: read for a sentence on the coverage lost
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', 'Long.MAX_VALUE', '-1, -2']
+  FAIL links_at_merge_base: 3 link(s), not at the merge base: ['master', 'master', 'master']
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.core.VisibleBufferedInputStreamSkipTest' --"
+  FAIL no_test_narration: narrated: 'Its cases cover: - a discard served from the buffer alone - a discard across several reads - a discard longer than the buffer, which leaves the buffer in place '
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 0 heading(s)
+haiku/baseline/result.md
+  FAIL prose_at_most_500_words: 766 prose words
+  PASS facts_kept_4370: all kept
+  FAIL new_test_not_marked: marked new: '`VisibleBufferedInputStreamSkipTest` (new)'
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', 'Long.MAX_VALUE', '8192', 'one byte short', '-1, -2']
+  PASS links_at_merge_base: 3 link(s), not at the merge base: []
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.core.VisibleBufferedInputStreamSkipTest' --"
+  FAIL no_test_narration: narrated: 'Against the old `skip`, 5 of its 15 cases fail: the unrequested timeout, the counts -1, -2, and `Long.MIN_VALUE`, and the stream whose `skip` returns 0.'
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 4 heading(s)
+haiku/result-2.md
+  FAIL prose_at_most_500_words: 641 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 1 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 5 heading(s)
+haiku/result.md
+  FAIL prose_at_most_500_words: 585 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 0 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 0 heading(s)
+opus/baseline/result.md
+  FAIL prose_at_most_500_words: 721 prose words
+  PASS facts_kept_4370: all kept
+  FAIL new_test_not_marked: marked new: 'VisibleBufferedInputStreamSkipTest` is new'
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 3 link(s), not at the merge base: []
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.core.VisibleBufferedInputStreamSkipTest' --"
+  FAIL no_test_narration: narrated: 'Against the old `skip`, 5 of its 15 cases fail: the unrequested timeout, the counts -1, -2, and `Long.MIN_VALUE`, and the stream that skips nothing.'
+  FAIL scope_lead_in_4370: 0 Scope paragraph(s) naming #4359, 4 heading(s)
+opus/result-2.md
+  FAIL prose_at_most_500_words: 541 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  PASS no_construction_in_verification: none found
+  PASS links_at_merge_base: 1 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  PASS scope_lead_in_4370: 1 Scope paragraph(s) naming #4359, 0 heading(s)
+opus/result.md
+  FAIL prose_at_most_500_words: 600 prose words
+  PASS facts_kept_4370: all kept
+  PASS new_test_not_marked: no test is marked new
+  READ coverage_lost_named: marker found: 'skipDoesNotFallBackToReadingByteByByte'
+  FAIL no_construction_in_verification: construction in the verification slot: ['Long.MIN_VALUE', '-1, -2']
+  PASS links_at_merge_base: 3 link(s), not at the merge base: []
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  PASS scope_lead_in_4370: 1 Scope paragraph(s) naming #4359, 0 heading(s)
+=== pgjdbc-4374-commit-changelog
+controls/invented-and-thin-entry.md
+  PASS outcome_lines_4374: both texts with 42601
+  FAIL nothing_invented_4374: other numbers: ['4375'], other SQLStates: []
+  FAIL changelog_entry_4374: {'reference': False, 'symptom literal': False, 'new error': False}
+haiku/baseline/result.md
+  FAIL outcome_lines_4374: no User-visible: paragraph in the commit body
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+haiku/result-2.md
+  PASS outcome_lines_4374: both texts with 42601
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+haiku/result.md
+  PASS outcome_lines_4374: both texts with 42601
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+opus/baseline/result.md
+  FAIL outcome_lines_4374: no User-visible: paragraph in the commit body
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+opus/result-2.md
+  PASS outcome_lines_4374: both texts with 42601
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+opus/result.md
+  PASS outcome_lines_4374: both texts with 42601
+  PASS nothing_invented_4374: other numbers: [], other SQLStates: []
+  PASS changelog_entry_4374: {'reference': True, 'symptom literal': True, 'new error': True}
+=== pgjdbc-4388-contract-fix
+controls/as-posted.md
+  PASS snippet_shown_4388: the old lines are shown
+  FAIL no_route_4388: route left: 'Found by'
+  PASS no_break_lead_4388: no break lead
+  FAIL no_test_command: test command: 'gradlew :postgresql:test --tests'
+  FAIL no_test_narration: narrated: 'Reverting the fix fails `closeClosesTheStreamEvenWhenTheReleaseFails` (the read after the failed close succeeds instead of reporting a closed stream) and `close'
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  FAIL prose_at_most_220_words: 255 prose words
+  FAIL no_tool_footer: tool footer present
+controls/main-haiku.md
+  FAIL snippet_shown_4388: no snippet of the old close()
+  FAIL no_route_4388: route left: 'adversarial'
+  FAIL no_break_lead_4388: opens with '## Breaking changes'
+  FAIL no_test_command: test command: 'gradlew --quiet :postgresql:test --tests'
+  FAIL no_test_narration: narrated: 'Reverting the fix fails two of them: `closeClosesTheStreamEvenWhenTheReleaseFails`, where the read after the failed close succeeds, and `closeIsIdempotentAfterA'
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  FAIL prose_at_most_220_words: 373 prose words
+  PASS no_tool_footer: no tool footer
+controls/short-draft.md
+  FAIL snippet_shown_4388: no snippet of the old close()
+  PASS no_route_4388: what found the defect is not named
+  PASS no_break_lead_4388: no break lead
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  READ passes_without_named_4388: not named: read for a sentence on the test that passes without the change
+  PASS prose_at_most_220_words: 81 prose words
+  PASS no_tool_footer: no tool footer
+haiku/result-2.md
+  PASS snippet_shown_4388: the old lines are shown
+  FAIL no_route_4388: route left: 'findings'
+  PASS no_break_lead_4388: no break lead
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  PASS prose_at_most_220_words: 208 prose words
+  PASS no_tool_footer: no tool footer
+haiku/result.md
+  PASS snippet_shown_4388: the old lines are shown
+  PASS no_route_4388: what found the defect is not named
+  PASS no_break_lead_4388: no break lead
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  PASS prose_at_most_220_words: 193 prose words
+  PASS no_tool_footer: no tool footer
+opus/result-2.md
+  PASS snippet_shown_4388: the old lines are shown
+  PASS no_route_4388: what found the defect is not named
+  PASS no_break_lead_4388: no break lead
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  PASS prose_at_most_220_words: 169 prose words
+  PASS no_tool_footer: no tool footer
+opus/result.md
+  PASS snippet_shown_4388: the old lines are shown
+  PASS no_route_4388: what found the defect is not named
+  PASS no_break_lead_4388: no break lead
+  PASS no_test_command: no test command
+  PASS no_test_narration: no test narration
+  READ passes_without_named_4388: named: read that it is the test that passes without the change
+  PASS prose_at_most_220_words: 167 prose words
+  PASS no_tool_footer: no tool footer
+=== pgjdbc-4392-no-break
+controls/empty-break-lead-in.md
+  FAIL no_lead_4392: opens with '**Breaking changes.** None.'
+  FAIL no_empty_section_4392: found: ['**Breaking changes.**']
+  PASS literals_kept_4392: both kept
+controls/empty-break-section.md
+  FAIL no_lead_4392: opens with '## Breaking changes'
+  FAIL no_empty_section_4392: found: ['## Breaking changes', 'backward compatible']
+  FAIL literals_kept_4392: missing: ['syntax error at or near "{"']
+haiku/baseline/result.md
+  PASS no_lead_4392: opens with '## Why'
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+haiku/result-2.md
+  PASS no_lead_4392: opens with 'An escape whose keyword is separated from its value by a tab or a newline is not recognized, so it r'
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+haiku/result.md
+  PASS no_lead_4392: opens with 'A JDBC escape whose keyword is separated from its value by a tab or a newline is not recognized, so '
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+opus/baseline/result.md
+  PASS no_lead_4392: opens with '## Why'
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+opus/result-2.md
+  PASS no_lead_4392: opens with 'A JDBC escape was not recognized when a tab or a newline separated its keyword from its value. The e'
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+opus/result.md
+  PASS no_lead_4392: opens with 'A JDBC escape was not recognized when its keyword was followed by a tab or a newline. It reached the'
+  PASS no_empty_section_4392: no empty section
+  PASS literals_kept_4392: both kept
+=== pgjdbc-4412-comment-only
+controls/as-posted.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 538 prose words
+controls/cut-too-far.md
+  PASS no_old_comment_quoted_4412: no removed wording quoted
+  FAIL contradictions_located_4412: not located: ['recover()', 'the batch test']
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  PASS prose_at_most_150_words: 77 prose words
+controls/no-check.md
+  PASS no_old_comment_quoted_4412: no removed wording quoted
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  PASS prose_at_most_150_words: 78 prose words
+controls/opus-1.6.0-r1.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 404 prose words
+controls/opus-1.6.0-r2.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 400 prose words
+controls/pipeline-final.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 260 prose words
+controls/short.md
+  PASS no_old_comment_quoted_4412: no removed wording quoted
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  PASS prose_at_most_150_words: 97 prose words
+opus/result-2.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 383 prose words
+opus/result.md
+  FAIL no_old_comment_quoted_4412: quoted: ['autoCommit is false on a connection returned by getConnection', '2nd phase commit must be issued using an idle connection']
+  PASS contradictions_located_4412: both located
+  READ runtime_noop_checked_4412: read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?
+  FAIL prose_at_most_150_words: 411 prose words
+=== pgjdbc-4420-test-sites
+controls/as-posted.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  PASS removed_tests_named_4420: the removed tests are named
+  FAIL no_route_4420: route left: 'I checked'
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.test.jdbc2.StatementTest' --tests 'org.post"
+  PASS prose_at_most_330_words: 319 prose words
+  FAIL no_tool_footer: tool footer present
+controls/main-haiku.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  PASS removed_tests_named_4420: the removed tests are named
+  FAIL no_route_4420: route left: 'I checked'
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.test.jdbc2.StatementTest' --tests 'org.post"
+  FAIL prose_at_most_330_words: 393 prose words
+  PASS no_tool_footer: no tool footer
+controls/removed-tests-dropped.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  FAIL removed_tests_named_4420: missing: ['testBatchEscapeProcessing']
+  FAIL no_route_4420: route left: 'I checked'
+  FAIL no_test_command: test command: "gradlew --quiet :postgresql:test --tests 'org.postgresql.test.jdbc2.StatementTest' --tests 'org.post"
+  PASS prose_at_most_330_words: 265 prose words
+  FAIL no_tool_footer: tool footer present
+controls/short-draft.md
+  FAIL site_mapping_kept_4420: sites paired with a test: ['addBatch']
+  PASS removed_tests_named_4420: the removed tests are named
+  PASS no_route_4420: no mutation narration
+  PASS no_test_command: no test command
+  PASS prose_at_most_330_words: 105 prose words
+  PASS no_tool_footer: no tool footer
+haiku/result-2.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  PASS removed_tests_named_4420: the removed tests are named
+  PASS no_route_4420: no mutation narration
+  PASS no_test_command: no test command
+  PASS prose_at_most_330_words: 330 prose words
+  PASS no_tool_footer: no tool footer
+haiku/result.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'addBatch']
+  PASS removed_tests_named_4420: the removed tests are named
+  PASS no_route_4420: no mutation narration
+  PASS no_test_command: no test command
+  PASS prose_at_most_330_words: 319 prose words
+  PASS no_tool_footer: no tool footer
+opus/result-2.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  PASS removed_tests_named_4420: the removed tests are named
+  PASS no_route_4420: no mutation narration
+  PASS no_test_command: no test command
+  PASS prose_at_most_330_words: 211 prose words
+  PASS no_tool_footer: no tool footer
+opus/result.md
+  PASS site_mapping_kept_4420: sites paired with a test: ['BaseQueryKey', 'CachedQueryCreateAction', 'QueryWithReturningColumnsKey', 'addBatch', 'executeCachedSql']
+  PASS removed_tests_named_4420: the removed tests are named
+  PASS no_route_4420: no mutation narration
+  PASS no_test_command: no test command
+  PASS prose_at_most_330_words: 273 prose words
+  PASS no_tool_footer: no tool footer
+=== pgjdbc-4423-no-outcome
+controls/entry-for-a-test-change.md
+  PASS no_outcome_slot: no outcome slot
+  FAIL no_changelog_entry: entries: ['* test: `SocketFactoryTest` runs in CI again; the `**/*Suite*` exclusion skipped it [PR #4423](https://github.com/pgjdbc/pgjdbc/pull/4423)'], absence stated: False
+haiku/baseline/result.md
+  PASS no_outcome_slot: no outcome slot
+  PASS no_changelog_entry: entries: [], absence stated: True
+haiku/result-2.md
+  PASS no_outcome_slot: no outcome slot
+  PASS no_changelog_entry: entries: [], absence stated: True
+haiku/result.md
+  PASS no_outcome_slot: no outcome slot
+  PASS no_changelog_entry: entries: [], absence stated: True
+opus/baseline/result.md
+  PASS no_outcome_slot: no outcome slot
+  PASS no_changelog_entry: entries: [], absence stated: True
+opus/result-2.md
+  FAIL no_outcome_slot: found: ['Not changed:']
+  PASS no_changelog_entry: entries: [], absence stated: True
+opus/result.md
+  PASS no_outcome_slot: no outcome slot
+  PASS no_changelog_entry: entries: [], absence stated: True
+=== pgjdbc-4424-docs-only
+controls/documentation-only.md
+  FAIL no_test_verification_named: git grep missing, build.gradle.kts missing
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 2 link(s), each at the right commit
+  FAIL unchanged_code_link_at_merge_base: no link to pgjdbc/build.gradle.kts
+controls/empty-scope-label.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  FAIL no_lead_in_labels: lead-ins: ['**Scope.**']
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 3 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+controls/posted.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  FAIL changed_files_link_at_head: links at the wrong commit: ['TESTING.md#5---extending-the-test-suite-with-new-tests@f171cd8af6', 'TESTING.md#6---guidelines-for-developing-new-tests@f171cd8af6', '.github/pull_request_template.md#changes-to-existing-features@f171cd8af6', '.github/pull_request_template.md#all-submissions@f171cd8af6']
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+haiku/baseline/result.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  FAIL section_heading_text: section cited without its heading text
+  FAIL changed_files_link_at_head: no link to the rendered TESTING.md section
+  FAIL unchanged_code_link_at_merge_base: no link to pgjdbc/build.gradle.kts
+haiku/result-2.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 1 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+haiku/result.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 2 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+opus/baseline/result.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  FAIL no_headings: 3 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  FAIL section_heading_text: section cited without its heading text
+  PASS changed_files_link_at_head: 3 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+opus/result-2.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 4 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+opus/result.md
+  PASS no_test_verification_named: git grep named, build.gradle.kts named
+  PASS no_headings: 0 heading(s)
+  PASS no_lead_in_labels: no lead-ins
+  PASS section_heading_text: heading text cited
+  PASS changed_files_link_at_head: 4 link(s), each at the right commit
+  PASS unchanged_code_link_at_merge_base: at the merge base, with lines
+=== pgjdbc-4466-detection-failed
+controls/as-pushed.md
+  FAIL detection_commands: no git log command
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL every_commit_full_with_issue: short or without #2404: ['feat: Include driver version in default application_name', 'add tests', 'Apply suggestion from @vlsi']
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+haiku/baseline/result.md
+  FAIL detection_commands: remote=upstream missing, "$target" -- missing, branch typed: ["git log --format=%s -n 200 upstream/master | grep -c '^Merge pull request'", "git log --format=%s -n 200 upstream/master | grep -c ' (#[0-9]*)$'", "git log --first-parent --format='%h %s' -n 20 upstream/master"]
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  FAIL description_as_commit_body: 7 heading(s), 9 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 6 sentence(s) on the tests: ['### Tests `ApplicationNameTest` has two tests.', 'They need a running server.', '[ ] Does your submission pass tests?', '[ ] Have you added your new test classes to an existing test suite in alphabetic', '* [x] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+haiku/result-2.md
+  PASS detection_commands: remote=upstream set, "$target" -- used, branch typed: []
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  FAIL description_as_commit_body: 6 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 2 sentence(s) on the tests: ['### Verification `ApplicationNameTest.explicitApplicationNameIsKept` passes with', 'Both tests in `ApplicationNameTest` need a running PostgreSQL server.']
+haiku/result.md
+  PASS detection_commands: remote=upstream set, "$target" -- used, branch typed: []
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 2 commit(s), each full with #2404
+  FAIL description_as_commit_body: 9 heading(s), 9 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 5 sentence(s) on the tests: ['* Both tests in `ApplicationNameTest` need a running PostgreSQL server.', '[ ] Does your submission pass tests?', '[ ] Have you added your new test classes to an existing test suite in alphabetic', '* [ ] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+opus/baseline/result.md
+  FAIL detection_commands: remote=upstream missing, "$target" -- missing, branch typed: ["git log --first-parent --format='%h %p | %s' -20 upstream/master", 'git log --merges --oneline -10 upstream/master']
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  FAIL description_as_commit_body: 6 heading(s), 9 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 5 sentence(s) on the tests: ['### Tests `ApplicationNameTest` needs a running server: - `defaultApplicationNam', '[ ] Does your submission pass tests?', '[ ] Have you added your new test classes to an existing test suite in alphabetic', '* [x] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+opus/result-2.md
+  PASS detection_commands: remote=upstream set, "$target" -- used, branch typed: []
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+opus/result.md
+  PASS detection_commands: remote=upstream set, "$target" -- used, branch typed: []
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+=== pgjdbc-4466-merge-commit-title-description
+controls/as-pushed.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL every_commit_full_with_issue: short or without #2404: ['feat: Include driver version in default application_name', 'add tests', 'Apply suggestion from @vlsi']
+  FAIL fixups_folded: subjects: ['feat: Include driver version in default application_name', 'add tests', 'Apply suggestion from @vlsi']
+  FAIL title_is_subject: title: 'feat: Include driver version in default application_name'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+haiku/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL every_commit_full_with_issue: short or without #2404: ['test: check the default and an explicit ApplicationName']
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default application_name', 'test: check the default and an explicit ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  FAIL description_as_commit_body: 6 heading(s), 6 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 4 sentence(s) on the tests: ['* `ApplicationNameTest` checks the default and an explicit value.', 'Both tests need a running PostgreSQL server.', '* [x] Have you written new tests for your core changes, as applicable?', '* [x] Have you successfully run tests with your changes locally?']
+haiku/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 2 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName', 'test: cover the default and an explicit ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 1 sentence(s) on the tests: ['Verification: `ApplicationNameTest.explicitApplicationNameIsKept` passes without']
+haiku/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  FAIL every_commit_full_with_issue: short or without #2404: ['test: pin the default and explicit ApplicationName']
+  PASS fixups_folded: subjects: ['feat: add the driver version to the default ApplicationName', 'test: pin the default and explicit ApplicationName']
+  PASS title_is_subject: title: 'feat: add the driver version to the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 1 sentence(s) on the tests: ['`explicitApplicationNameIsKept` passes without this change, since it pins a valu']
+opus/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include driver version in default application_name']
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  FAIL description_as_commit_body: 6 heading(s), 6 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 3 sentence(s) on the tests: ['## Tests `ApplicationNameTest` needs a running server: - `defaultApplicationName', '* [x] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+opus/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+opus/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+=== pgjdbc-4466-squash-default
+controls/as-pushed.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL first_commit_full_with_issue: first commit: 'feat: Include driver version in default application_name', 38 body words, #2404 missing, pg_stat_activity missing
+  FAIL title_is_subject: title: 'feat: Include driver version in default application_name'
+  FAIL template_headings_kept: template headings missing
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+controls/break-heading.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default ApplicationName', 155 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+haiku/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS first_commit_full_with_issue: first commit: 'feat: include driver version in default ApplicationName', 82 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include driver version in default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+haiku/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default ApplicationName', 148 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+haiku/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default ApplicationName', 152 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+opus/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default application_name', 149 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+opus/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default application_name', 158 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  PASS template_headings_kept: template headings in the description
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+opus/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS first_commit_full_with_issue: first commit: 'feat: include the driver version in the default application_name', 173 body words, #2404 in, pg_stat_activity in
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  PASS template_headings_kept: template headings in the description
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+=== pgjdbc-4466-squash-or-rebase
+controls/as-pushed.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL every_commit_full_with_issue: short or without #2404: ['feat: Include driver version in default application_name', 'add tests', 'Apply suggestion from @vlsi']
+  FAIL fixups_folded: subjects: ['feat: Include driver version in default application_name', 'add tests', 'Apply suggestion from @vlsi']
+  FAIL title_is_subject: title: 'feat: Include driver version in default application_name'
+  FAIL template_headings_kept: template headings missing
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+haiku/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  FAIL template_headings_kept: template headings missing
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+haiku/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  FAIL every_commit_full_with_issue: short or without #2404: ['test: cover the default and explicit ApplicationName']
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName', 'test: cover the default and explicit ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+haiku/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default ApplicationName']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): ['### Scope']
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): ['### Breaking changes']
+opus/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include driver version in default application_name']
+  PASS title_is_subject: title: 'feat: include driver version in default application_name'
+  FAIL template_headings_kept: template headings missing
+  FAIL scope_lead_in_under_template: 0 Scope lead-in(s), Scope heading(s): []
+  FAIL break_lead_in_before_headings: opens with the lead-in: False, break heading(s): []
+opus/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: include the driver version in the default application_name']
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+opus/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS every_commit_full_with_issue: 1 commit(s), each full with #2404
+  PASS fixups_folded: subjects: ['feat: append the driver version to the default ApplicationName']
+  PASS title_is_subject: title: 'feat: append the driver version to the default ApplicationName'
+  PASS template_headings_kept: template headings in the description
+  PASS scope_lead_in_under_template: 1 Scope lead-in(s), Scope heading(s): []
+  PASS break_lead_in_before_headings: opens with the lead-in: True, break heading(s): []
+=== pgjdbc-4466-squash-title-description
+controls/as-pushed.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  FAIL title_is_subject: title: 'feat: Include driver version in default application_name'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+haiku/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  FAIL description_as_commit_body: 7 heading(s), 9 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 6 sentence(s) on the tests: ['## Tests `ApplicationNameTest` needs a running PostgreSQL server and has two tes', 'On master the test fails, because the value there is `PostgreSQL JDBC Driver`.', '[ ] Does your submission pass tests?', '[ ] Have you added your new test classes to an existing test suite in alphabetic', '* [x] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+haiku/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  FAIL description_as_commit_body: 6 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 1 sentence(s) on the tests: ['- Both tests in `ApplicationNameTest` need a running PostgreSQL server.']
+haiku/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS title_is_subject: title: 'feat: suffix the default ApplicationName with the driver version'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 1 sentence(s) on the tests: ['Both tests need a running server.']
+opus/baseline/result.md
+  FAIL user_visible_without_invented_code: no User-visible label or heading
+  PASS title_is_subject: title: 'feat: include the driver version in the default application_name'
+  FAIL description_as_commit_body: 6 heading(s), 9 checkbox(es), 1 URL(s) to the repository code
+  READ verification_one_line: 5 sentence(s) on the tests: ['## Tests `ApplicationNameTest` needs a running server: - `defaultApplicationName', '[ ] Does your submission pass tests?', '[ ] Have you added your new test classes to an existing test suite in alphabetic', '* [x] Have you written new tests for your core changes, as applicable?', '* [ ] Have you successfully run tests with your changes locally?']
+opus/result-2.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 1 sentence(s) on the tests: ['Before this change, the server could not show which pgjdbc version a client uses']
+opus/result.md
+  PASS user_visible_without_invented_code: value and condition, no code
+  PASS title_is_subject: title: 'feat: include the driver version in the default ApplicationName'
+  PASS description_as_commit_body: 0 heading(s), 0 checkbox(es), 0 URL(s) to the repository code
+  READ verification_one_line: 0 sentence(s) on the tests: []
+=== pgjdbc-4501-manual-check
+controls/as-posted.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  FAIL no_route_4501: route left: 'nothing else in the repository uses'
+  FAIL no_tool_footer: tool footer present
+  PASS prose_at_most_110_words: 80 prose words
+controls/main-haiku.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  FAIL no_route_4501: route left: 'Nothing else in the repository uses'
+  FAIL no_tool_footer: tool footer present
+  FAIL prose_at_most_110_words: 136 prose words
+controls/short-draft.md
+  FAIL manual_check_literal_4501: missing: ['25433->5433', '25434->5434', 'PG_REPLICA_TWO_PUBLISH_PORT=25434']
+  PASS no_route_4501: no search result or bookkeeping
+  PASS no_tool_footer: no tool footer
+  PASS prose_at_most_110_words: 62 prose words
+haiku/result-2.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  PASS no_route_4501: no search result or bookkeeping
+  PASS no_tool_footer: no tool footer
+  PASS prose_at_most_110_words: 90 prose words
+haiku/result.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  PASS no_route_4501: no search result or bookkeeping
+  PASS no_tool_footer: no tool footer
+  PASS prose_at_most_110_words: 62 prose words
+opus/result-2.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  PASS no_route_4501: no search result or bookkeeping
+  PASS no_tool_footer: no tool footer
+  PASS prose_at_most_110_words: 54 prose words
+opus/result.md
+  PASS manual_check_literal_4501: the command and its output kept as literals
+  PASS no_route_4501: no search result or bookkeeping
+  PASS no_tool_footer: no tool footer
+  PASS prose_at_most_110_words: 54 prose words
