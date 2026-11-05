@@ -581,6 +581,13 @@ def no_route_4501(text):
     return result(not found, f'route left: {found.group(0)!r}' if found else 'no search result or bookkeeping')
 
 
+def change_named_4501(text):
+    """The description names the variable the script reads after the change, apart from the command that checks it."""
+    found = re.search(r'PG_REPLICA_TWO_PUBLISH_PORT(?!=)', prose(text))
+    return result(bool(found), 'names the variable the script reads now' if found
+                  else 'names the variable only in the command')
+    
+    
 # pgjdbc-4388-contract-fix
 
 def snippet_shown_4388(text):
@@ -656,7 +663,8 @@ CASES = {
                                    scope_lead_in_under_template, break_lead_in_before_headings],
     'jdk-33173-audit': [finder_not_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
                         alternative_by_mechanism, answered_question_not_open, property_named],
-    'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110)],
+    'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110),
+                                 change_named_4501],
     'pgjdbc-4388-contract-fix': [snippet_shown_4388, no_route_4388, no_break_lead_4388, no_test_command,
                                  no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
     'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
