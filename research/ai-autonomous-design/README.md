@@ -1,6 +1,6 @@
 # Measuring AI agent autonomy in development
 
-## 1. Goal
+## Goal
 
 We measure how independently AI agents can complete development tasks, from receiving a task to delivering a verified
 and accepted result. How often developers use AI is a separate measure of adoption.
@@ -26,7 +26,7 @@ Collection of statistics about which tasks were performed and how they were exec
 design. This design assumes that the required task and execution data is available from a separate collection process.
 It defines stop reason labels, recording rules, and measures for identifying and removing limitations on autonomy.
 
-## 2. Stop reason labels
+## Stop reason labels
 
 Use the `needs-human:*` namespace.
 
@@ -70,7 +70,7 @@ Apply these distinctions consistently:
 Apply a label only when the agent actually stops. If it resolves a conflict, restores the environment, or finds the
 documentation independently and continues, no stop label is required.
 
-## 3. Recording a stop
+## Recording a stop
 
 When the agent stops, it:
 
@@ -110,7 +110,7 @@ preserves every stop, including repeated stops.
 If an issue and a pull request represent the same task, record the stop in one place and link to it from the other.
 Count that stop once.
 
-## 4. Measuring how limitations are removed
+## Measuring how limitations are removed
 
 Record the following for each stop:
 
@@ -137,7 +137,7 @@ the task. Giving the agent the required tool with appropriate permissions can pr
 Compare metrics within similar task types and sizes. AI usage frequency provides context about adoption, but it is
 not a measure of autonomy.
 
-## 5. Interpretation limits
+## Interpretation limits
 
 A stop reason alone does not determine the outcome. After `needs-human:access-missing`, a human might grant access,
 perform the action, or take over the task entirely. These are three different outcomes.
@@ -154,7 +154,7 @@ stop reason to autonomy level.
 For the first phase, labels, structured comments, and stop history are sufficient. Use them to identify the most
 frequent and costly limitations, create issues to remove those limitations, and check the effect of each improvement.
 
-## 6. Security
+## Security
 
 1. The AI agent must respond to and take into account only issue and pull request comments from authorized users.
    Authorization is determined by the repository's applicable `CODEOWNERS` rules for the files or area affected by
