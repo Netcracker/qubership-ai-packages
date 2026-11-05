@@ -1,6 +1,6 @@
 ---
 name: cross-review
-description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use when the user asks for a cross review, a two-reviewer review, or a thorough review of a branch, the uncommitted changes, or a commit. For a cheaper single-reviewer pass, use codex-review instead.
+description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use only when the user asks for a cross-review or a two-reviewer review of a branch, the uncommitted changes, or a commit. For a cheaper single-reviewer pass, use codex-review instead.
 ---
 
 # Cross-review
@@ -67,8 +67,8 @@ This creates the run directory under `$TMPDIR`, records it in the checkout's git
 directory, the run id, and the reviewer name. Every later command finds the run through that pointer,
 so you never need to remember the path — and neither does a future you whose context was compacted.
 
-If `init` reports an existing run you did not start, read it with `python3 $S status` before
-overwriting anything.
+If `init` refuses because a run is still active, read it with `python3 $S status`; pass `--force`
+only for a run you abandoned.
 
 ## 2. Open a round
 
@@ -616,8 +616,8 @@ evidence, and anything still open. State the verdict — `clean`, `items remaini
 read a moving tree, or the code changed after its snapshot) — and say explicitly if any round was
 degraded.
 
-The run directory is kept, not deleted. The ledger is the only record of what was rejected and why,
-and it is what makes a later round cheap.
+The run directory stays under `$TMPDIR`, which the system purges: to keep the ledger of what was
+rejected and why, copy its `state.json`.
 
 ## 6a. Final review, once the loop has stopped
 

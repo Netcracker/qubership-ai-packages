@@ -23,7 +23,7 @@ Validate it yourself before you finish:
 python3 <skill-dir>/scripts/review_run.py validate <your-file> --kind finding
 ```
 
-`<skill-dir>` is the directory this reference sits in, one level up from `references/`.
+`<skill-dir>` is the parent of the `references/` directory that holds this file.
 
 ## Never write to the repository
 

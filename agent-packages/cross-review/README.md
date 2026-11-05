@@ -38,12 +38,13 @@ never appears in the diff it reviews.
 apm install Netcracker/qubership-ai-packages/agent-packages/cross-review
 ```
 
-Or add it to your `apm.yml` by hand:
+Or add it to your `apm.yml` by hand, pinned to a commit of this repository: no marketplace release
+tag contains the package yet.
 
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/cross-review@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/cross-review#<sha>
 ```
 
 Then run `apm install` and `apm compile`. The skill deploys to the location your agent reads
@@ -54,5 +55,6 @@ Then run `apm install` and `apm compile`. The skill deploys to the location your
 - The [Codex CLI](https://github.com/openai/codex) installed and authenticated, with `codex` on the
   `PATH`.
 - Python 3 on the `PATH`, for `scripts/review_run.py`. The script uses the standard library only.
-- An agent that can spawn subagents, for the second reviewer, the merger, the plan reviewer, and the
-  diff checker.
+- Claude Code. The steps call its `Agent`, `AskUserQuestion`, and background Bash tools to run the
+  second reviewer, the merger, the plan reviewer, and the diff checker, so the codex and cursor
+  targets get the files but cannot run the loop as written.
