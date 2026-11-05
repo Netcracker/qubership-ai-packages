@@ -44,16 +44,18 @@ The config names one command, one glob for the reports it writes, and the revert
       ]
     }
 
-An `edits` revert rewrites text in place and requires `find` to occur exactly once. Edits compose:
-each one matches the file as the edits before it left it, so a revert may take several edits to one
-file, and an edit may follow a `restore_from` on the same path. A `restore_from` revert takes each
-path back to the state it has in that git ref, which is the whole fix undone and needs no patch
-text.
+An `edits` revert rewrites text in place and requires `find` to occur exactly once. A line break
+in `find` matches either ending, and a bare one in `replace` takes the ending it replaces. Edits
+compose: each one matches the file as the edits before it left it, so a revert may take several
+edits to one file, and an edit may follow a `restore_from` on the same path. A `restore_from`
+revert takes each path back to the state it has in that git ref, which is the whole fix undone and
+needs no patch text.
 
-Three rules keep a stale answer from reading as a real one, and they are the reason to run this
+These rules keep a stale answer from reading as a real one, and they are the reason to run this
 rather than a hand-written loop:
 
-* the command's exit status is read, so a revert that fails to compile is reported as such;
+* the command's exit status is read, so a revert that fails to compile is reported as such, and a
+  failing exit with no failed test in the reports is a broken run, never a green one;
 * every report file is required to be newer than the run that should have written it, so the
   previous run's XML can never be mistaken for this one's;
 * Gradle is invoked with --no-watch-fs, because its file-system watching drops change events under
@@ -104,13 +106,16 @@ def run_once(config):
     time.sleep(1.05)  # report mtimes have to land strictly after the stamp
     proc = subprocess.run(command, capture_output=True, text=True)
     failed = read_reports(config["results_glob"], stamp)
-    if failed is None:
+    # A failing exit is explained only by a failed test; without one, the build or the runner broke
+    # and the reports it left say nothing about the code.
+    if failed is None or (proc.returncode != 0 and not failed):
         note = "\n".join(
             line
             for line in (proc.stdout + proc.stderr).splitlines()
             if re.search(r"error:|FAILURE:|Execution failed|Compilation failed", line)
         )
-        return None, f"exit {proc.returncode}, no report written\n{note[:800]}"
+        written = "no report written" if failed is None else "no failed test in the reports"
+        return None, f"exit {proc.returncode}, {written}\n{note[:800]}"
     return failed, ""
 
 
@@ -119,43 +124,82 @@ class Stale(Exception):
 
 
 def apply_revert(revert, repo):
-    """Applies one revert and returns the original contents keyed by path."""
+    """Applies one revert and returns the original bytes keyed by path."""
     saved = {}
     for path in revert.get("paths", []) + [e["file"] for e in revert.get("edits", [])]:
         p = pathlib.Path(path)
-        saved.setdefault(path, p.read_text())
+        saved.setdefault(path, p.read_bytes())
     try:
         if "restore_from" in revert:
             for path in revert["paths"]:
                 old = subprocess.run(
                     ["git", "-C", repo, "show", f"{revert['restore_from']}:{path}"],
                     capture_output=True,
-                    text=True,
                 )
                 if old.returncode != 0:
                     raise SystemExit(
-                        f"{revert['id']}: git show failed for {path}: {old.stderr.strip()}"
+                        f"{revert['id']}: git show failed for {path}: {old.stderr.decode(errors='replace').strip()}"
                     )
-                pathlib.Path(path).write_text(old.stdout)
+                pathlib.Path(path).write_bytes(old.stdout)
         for edit in revert.get("edits", []):
             # Read what is on disk rather than the saved copy, so that a second edit to one file
             # sees the first one, and so that an edit after a restore_from applies to the restored
             # text.
+            # surrogateescape round-trips every byte, so the lines the edit does not touch keep their
+            # endings.
             target = pathlib.Path(edit["file"])
-            text = target.read_text()
-            hits = text.count(edit["find"])
-            if hits != 1:
+            text = target.read_bytes().decode("utf-8", "surrogateescape")
+            matches = list(newline_pattern(edit["find"]).finditer(text))
+            if len(matches) != 1:
                 raise Stale(
-                    f"{revert['id']}: 'find' matches {hits} times in {edit['file']}, want 1"
+                    f"{revert['id']}: 'find' matches {len(matches)} times in {edit['file']}, want 1"
                 )
-            target.write_text(text.replace(edit["find"], edit["replace"], 1))
+            m = matches[0]
+            new = with_endings(edit["replace"], m.groups() or (line_ending(text, m.end()),))
+            target.write_bytes((text[: m.start()] + new + text[m.end():]).encode("utf-8", "surrogateescape"))
     except BaseException:
         # A half-applied revert leaves the tree modified, and every later verdict would describe
         # code nobody wrote. SystemExit is not an Exception, so catch wider.
-        for path, text in saved.items():
-            pathlib.Path(path).write_text(text)
+        restore(saved)
         raise
     return saved
+
+
+def newline_pattern(find):
+    """Matches `find` with each of its line breaks standing for a break of either ending."""
+    return re.compile(r"(\r?\n)".join(re.escape(part) for part in re.split(r"\r?\n", find)))
+
+
+def with_endings(replace, endings):
+    r"""Gives each bare \n of `replace` the ending of the matched break it stands for.
+
+    The k-th break takes the k-th matched ending, and breaks past the last take that one. An
+    explicit \r\n in `replace` is kept as written.
+    """
+    parts = re.split(r"(\r?\n)", replace)
+    out, k = [], 0
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            out.append(part)
+            continue
+        out.append(part if part == "\r\n" else endings[min(k, len(endings) - 1)])
+        k += 1
+    return "".join(out)
+
+
+def line_ending(text, pos):
+    r"""Returns the ending of the line that holds `pos`, else of the line before it, else \n."""
+    after = re.compile(r"\r?\n").search(text, pos)
+    if after:
+        return after.group()
+    before = re.findall(r"\r?\n", text[:pos])
+    return before[-1] if before else "\n"
+
+
+def restore(saved):
+    """Writes back the bytes apply_revert saved."""
+    for path, data in saved.items():
+        pathlib.Path(path).write_bytes(data)
 
 
 def verdict_for(revert, failed, baseline):
@@ -166,10 +210,15 @@ def verdict_for(revert, failed, baseline):
         return "NO TEETH", "nothing failed that passes with the fix in place"
     if not expected:
         return "teeth", f"newly failing: {', '.join(new_failures)}"
-    missing = [t for t in expected if t not in failed]
+    # A test that already fails with the fix in place shows nothing by failing again.
+    missing = [t for t in expected if t not in new_failures]
     if not missing:
         return "teeth", f"newly failing: {', '.join(new_failures)}"
-    return "PARTIAL", f"expected but still green: {', '.join(missing)}; newly failing: {', '.join(new_failures)}"
+    already = [t for t in missing if t in baseline]
+    detail = f"expected but not newly failing: {', '.join(missing)}"
+    if already:
+        detail += f" ({', '.join(already)} already fails with the fix in place)"
+    return "PARTIAL", f"{detail}; newly failing: {', '.join(new_failures)}"
 
 
 def load_directory(dirpath):
@@ -230,8 +279,7 @@ def main():
         try:
             failed, note = run_once(config)
         finally:
-            for path, text in saved.items():
-                pathlib.Path(path).write_text(text)
+            restore(saved)
         if failed is None:
             results.append((revert["id"], "NO RESULT", note))
         else:
