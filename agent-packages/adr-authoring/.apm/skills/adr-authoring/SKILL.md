@@ -20,7 +20,10 @@ vocabulary, and the reasons stay in the record.
 ## What belongs in an ADR
 
 One decision per record, with one deciding authority and one reason to change. Two decisions that different people
-settle, or that change for different reasons, mean two records. Several people may approve one decision.
+settle, or that change for different reasons, mean two records. Several people may approve one decision. Split no
+further: decisions that one authority settles for one reason, and that a change would edit together, stay one record. A
+part that changes what an earlier record decided goes into a record that supersedes that part, not into a record about
+something else.
 
 Every rule follows from the title and the Decision sentence. A rule that does not, such as the removal of an unrelated
 feature or a liveness probe in a record about tokens, belongs in a record of its own, where a reader looking for it will
