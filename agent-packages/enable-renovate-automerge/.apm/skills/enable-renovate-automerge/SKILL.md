@@ -19,9 +19,10 @@ Interpret intent from the request, not from exact keywords:
 
 - An audit, inspection, or analysis request authorizes analysis only.
 - A setup, fix, or implementation request also authorizes a verified local diff after the scope and gate decisions.
-- A request for canonical automerge, the shared preset, or all non-major updates selects the shared-preset baseline and
-  authorizes local preparation after the effective policy and required gates are decided, but not publication or live
-  changes. Preserve repository-specific rules that override the shared configuration.
+- A request for canonical automerge, the shared preset, or all non-major updates selects the shared-preset baseline,
+  including major selectors allowed by shared presets or repository configuration. It authorizes local preparation
+  after the effective policy and required gates are decided, but not publication or live changes. Preserve repository
+  rules that override shared configuration.
 - An explicit request to complete the work autonomously or end to end authorizes all in-scope stages, including needed
   publication, live settings, App access, and test PRs. It does not authorize manual approval or merge, bypassing
   protections, unrelated changes, or destructive actions.
@@ -46,11 +47,16 @@ the selected gates and reasoning in the analysis result, then continue. Otherwis
 analysis-result discussion.
 
 A generic request to configure automerge does not select scope. An explicit request for canonical automerge, the shared
-preset, all non-major updates, or named selectors does. Resolve shared presets in `extends` order, then repository
-configuration, before describing the selected scope. Explicit repository options take precedence over presets; later
-matching `packageRules` override earlier values for the same option. Record coverage gaps, residual risks, and recovery
+preset, or all non-major updates selects the shared baseline; a request for named selectors selects only those
+selectors. Resolve shared presets in `extends` order, then repository configuration, before describing the selected
+scope. Explicit repository options take precedence over presets. Later matching `packageRules` override earlier
+values for the same option. Record coverage gaps, residual risks, and recovery
 paths for the effective policy. Do not prepare source edits before the required scope and gate decisions. Implement the
 owner's choices instead of converting a coverage gap into a prohibition.
+
+For this rollout, "all non-major updates" does not exclude major selectors already allowed by shared presets or the
+repository. If the owner explicitly excludes major updates, treat that as a narrower policy: preserve the restriction
+with a matching repository override or ask before adopting a preset that would add them.
 
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
@@ -147,13 +153,17 @@ Keep schedule, manual, and default-branch push behavior. PR branch filters must 
 By default, set `on.push.branches` to the default branch only for workflows that publish required gates. A push to a
 Renovate branch uses the same SHA as the PR. GitHub accepts a skipped job as a passing required check, so a push gate
 skipped by `if: github.event_name == 'pull_request'` can satisfy it before the PR run finishes.
+Also inspect every retained non-PR trigger that can run on a PR head. In particular, `workflow_dispatch` can target
+the Renovate branch after push is limited to the default branch. Isolate its gate name from the required PR name or
+move the manual run to a separate workflow without required gates.
 Use detector outputs and `needs.*.result` in the gate rather than duplicating path matching.
 
 Before applying this default and in the result, explicitly tell the owner which workflows lose branch-push checks,
 builds, or image publication. Explain that this repository policy change prevents skipped branch-push gates from
-permitting early merge; PR validation remains. Keep this default unless the owner chooses another publication path:
+permitting early merge; PR validation remains. Keep this default unless the owner chooses another publication path.
+Isolation of every retained non-PR trigger that can run on a PR head is required in either case:
 
-1. **Event-specific gate names.** Keep the needed push branches and give the gate a different name outside PRs:
+1. **Event-specific gate names.** Keep the needed triggers and give the gate a different name outside PRs:
 
    ```yaml
    name: >-
@@ -169,7 +179,7 @@ permitting early merge; PR validation remains. Keep this default unless the owne
    the manual event under existing actor restrictions and job permissions. PR builds still use no registry login or
    push.
 
-Each required gate has one stable PR check name; branch-push runs must not report that name on a PR head SHA.
+Each required gate has one stable PR check name; no non-PR run may report that name on a PR head SHA.
 
 Keep the gate contract minimal: require the detector to succeed, require applicable validation jobs to succeed, and
 otherwise let the gate succeed. Compare required results with `success`; this rejects failure, cancellation, timeout,
@@ -193,8 +203,9 @@ validation jobs; do not add inverse checks that require each job to be `skipped`
 **Confirm.** Compare applicable and inapplicable PR changes: validation keeps its intended conditions and gates report
 in both cases. Include the Docker input check and its detector evidence in the result.
 Read exact check names and producer integration IDs on the candidate SHA; reusable workflows may report
-compound names. Avoid duplicate contexts. Preserve extra gates and required checks until a reporting replacement proves
-equivalent coverage. Default-branch runs alone do not establish PR or bot behavior.
+compound names. Inspect every retained non-PR trigger that can run on a PR head and verify that its gate name is
+different or absent there. Avoid duplicate contexts. Preserve extra gates and required checks until a reporting
+replacement proves equivalent coverage. Default-branch runs alone do not establish PR or bot behavior.
 
 See [GitHub required checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-status-checks-before-merging).
 
@@ -309,10 +320,11 @@ migration. Absence alone is not a repository defect. Show the exact user-visible
 | Other behavior | Groups, schedules, minimum release age, and other presets | Changed or unchanged | Operational effect |
 
 Let the owner decide whether the difference is acceptable and whether to migrate. An explicit request to adopt the
-canonical policy, shared preset, all non-major updates, or named selectors is that decision; do not ask for it again. A
-generic request to configure automerge is not. Preserve existing repository rules when importing shared presets;
-their effective overrides remain in force. After migration is chosen, preserve the existing `extends` entries and add
-the shared preset:
+canonical policy, shared preset, or all non-major updates accepts the resolved shared baseline, including selected
+majors allowed by shared presets or repository configuration; do not ask for that decision again. A request for named
+selectors authorizes those selectors only. A generic request to configure automerge does not select scope. Preserve
+existing repository rules when importing shared presets; their effective overrides remain in force. After migration is
+chosen, preserve the existing `extends` entries and add the shared preset:
 
 ```json
 {
