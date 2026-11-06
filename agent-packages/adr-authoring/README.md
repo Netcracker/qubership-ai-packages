@@ -1,10 +1,11 @@
 # adr-authoring
 
-An APM package that helps agents write Architecture Decision Records following the
-ADR contract used across Qubership repositories: one decision per record, stored
-under `docs/adr/` with a `NNNN-kebab-slug.md` filename, a
-`Proposed | Accepted | Rejected | Superseded` status, ISO 8601 dates, and
-immutable accepted records superseded by new ones.
+An APM package that helps agents write Architecture Decision Records that a person or
+an agent can check code against: one decision per record, a defined vocabulary, numbered
+rules that name the layer holding them, a `Proposed | Accepted | Rejected | Superseded`
+status, ISO 8601 dates, and immutable accepted records superseded by new ones. A record
+stays in the repository's existing directory, or in `docs/adr/` with a
+`NNNN-kebab-slug.md` filename where there is none.
 
 ## Contents
 
