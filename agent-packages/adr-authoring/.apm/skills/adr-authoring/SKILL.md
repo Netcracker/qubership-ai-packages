@@ -206,15 +206,16 @@ check a change:
 
 | Verdict | Meaning |
 | --- | --- |
-| Conforms | The code meets the rule. |
+| Conforms | The change touches the rule and meets it. |
 | Violates | The change touches the rule and does not meet it. Code that implements a rejected alternative counts too. |
 | Deferred | The change names the rule under `Defers`. |
 | Not touched | The change does not touch the rule. |
-| Cannot tell | The rule does not decide the case, or an open point covers it. |
+| Cannot tell | The change touches the rule, and the rule does not decide the case or an open point covers it. |
 
 A change touches a rule when it adds or changes code that runs in the case the rule describes, or names the rule under
 `Implements`. A defect in unchanged code that the change only moves or calls is not touched, and the report names it
-apart. Where two verdicts could apply, `Deferred` wins over the others, and `Cannot tell` wins over `Violates`.
+apart. Where two verdicts could apply, `Deferred` wins over the others, and `Cannot tell` wins over `Conforms` and
+`Violates`.
 
 ## Rewriting an existing record
 
