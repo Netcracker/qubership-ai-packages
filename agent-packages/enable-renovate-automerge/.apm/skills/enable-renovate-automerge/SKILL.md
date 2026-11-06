@@ -18,9 +18,10 @@ Treat analysis, local preparation, publication, live settings, and runtime exerc
 Interpret intent from the request, not from exact keywords:
 
 - An audit, inspection, or analysis request authorizes analysis only.
-- A setup, fix, or implementation request also authorizes a verified local diff after the scope decision.
-- A request for canonical automerge, the shared preset, or all non-major updates selects canonical scope and authorizes
-  local preparation, but not publication or live changes.
+- A setup, fix, or implementation request also authorizes a verified local diff after the scope and gate decisions.
+- A request for canonical automerge, the shared preset, or all non-major updates selects the shared-preset baseline and
+  authorizes local preparation after the effective policy and required gates are decided, but not publication or live
+  changes. Preserve repository-specific rules that override the shared configuration.
 - An explicit request to complete the work autonomously or end to end authorizes all in-scope stages, including needed
   publication, live settings, App access, and test PRs. It does not authorize manual approval or merge, bypassing
   protections, unrelated changes, or destructive actions.
@@ -38,17 +39,18 @@ exceptions.
 
 The required gate set is a separate owner choice. During analysis, show the current and proposed gate sets with exact
 check names and producer IDs when known, the selectors each gate covers, CI cost, and the residual risk of omitting it.
-Do not infer the gate set from the automerge scope: canonical scope does not select required checks. End analysis with
+Do not infer required checks from automerge scope. The shared baseline does not select gates. End analysis with
 both decisions before local preparation: the owner's scope choice and the exact required gate set. An explicit request
 that names checks makes the gate decision. An autonomous or end-to-end request delegates that choice to the agent; state
 the selected gates and reasoning in the analysis result, then continue. Otherwise, ask the owner to choose during the
 analysis-result discussion.
 
 A generic request to configure automerge does not select scope. An explicit request for canonical automerge, the shared
-preset, all non-major updates, or named selectors does. When canonical scope is selected, record coverage gaps,
-residual risks, and recovery paths; do not reopen the scope decision unless new evidence requires a choice outside the
-canonical policy. Do not prepare source edits before the required scope and gate decisions. Implement the owner's
-choices instead of converting a coverage gap into a prohibition.
+preset, all non-major updates, or named selectors does. Resolve shared presets in `extends` order, then repository
+configuration, before describing the selected scope. Explicit repository options take precedence over presets; later
+matching `packageRules` override earlier values for the same option. Record coverage gaps, residual risks, and recovery
+paths for the effective policy. Do not prepare source edits before the required scope and gate decisions. Implement the
+owner's choices instead of converting a coverage gap into a prohibition.
 
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
@@ -106,9 +108,9 @@ on trusted `push` or `workflow_dispatch` jobs. Do not make a container registry,
 pulls a PR SHA from that registry, part of the merge contract.
 
 **Confirm.** Every allowed selector, including all grouped members, appears in the coverage map with its residual risk
-and the owner's decision. The shared Netcracker policy allows minor, patch, pin, digest, and pin-digest updates for
-every manager, including GitHub Actions, Maven, Docker, Go modules, and non-major vulnerability fixes. Major updates
-remain manual. A coverage gap is a policy delta to disclose, not an automatic reason to narrow the shared preset.
+and the owner's decision. Derive the allowed selectors from the resolved shared presets and repository rules; do not
+infer automatic or manual handling from the update type alone. A coverage gap is a policy delta to disclose, not an
+automatic reason to narrow the shared preset.
 
 ### Requirement 2. Required workflows always report meaningful gates
 
@@ -286,9 +288,10 @@ See [Renovate Approver](https://github.com/renovatebot/renovate-approve-bot).
 ### Requirement 6. Renovate delegates the owner-selected updates to platform auto-merge
 
 **Target.** Recommend that Netcracker repositories opt in through
-`github>Netcracker/renovate-config:automerge`. The preset enables GitHub platform auto-merge for all non-major update
-types. Major updates remain manual. A deliberately narrower local policy may remain after the owner reviews the exact
-change in scope. GitHub configuration contains no `autoApprove`; approval comes from Renovate Approver.
+`github>Netcracker/renovate-config:automerge`. Resolve the current shared policy and import it as a baseline. Preserve
+other presets and repository rules, which may override its settings. Report the resulting automatic and manual update
+scope without assuming either for every major or non-major update. GitHub configuration contains no `autoApprove`;
+approval comes from Renovate Approver.
 
 **Inspect.** Determine whether the shared preset is used, at the revision recorded in working mode. Compare its
 effective policy with the repository's current effective package rules, including inherited/global automerge, rule
@@ -297,18 +300,19 @@ ordering, schedules, groups, manual exceptions, and `vulnerabilityAlerts` overri
 **Implement.** If the shared preset is absent, report that centralized automerge configuration is not used and recommend
 migration. Absence alone is not a repository defect. Show the exact user-visible delta before changing configuration:
 
-| Policy area | Current behavior | Shared preset behavior | Behavior change or risk |
+| Policy area | Current behavior | Resolved behavior after repository rules | Behavior change or risk |
 | --- | --- | --- | --- |
 | Managers, packages, update types, files | Automatic and manual scope | Automatic and manual scope | Newly automatic updates |
 | Validation and recovery | Pre-merge and post-merge checks | Checks that apply to the new scope | Detection timing and recovery path |
-| Vulnerability updates | Effective update-type behavior and overrides | Non-major automatic; major manual | Newly automatic fixes |
+| Vulnerability updates | Effective update-type behavior and overrides | Effective behavior after all rules | Newly automatic fixes |
 | Local rules | Existing exceptions and duplicate rules | Rules removed, retained, or added | Preserved or removed exceptions |
 | Other behavior | Groups, schedules, minimum release age, and other presets | Changed or unchanged | Operational effect |
 
 Let the owner decide whether the difference is acceptable and whether to migrate. An explicit request to adopt the
 canonical policy, shared preset, all non-major updates, or named selectors is that decision; do not ask for it again. A
-generic request to configure automerge is not. Otherwise, do not widen an intentionally narrow scope until the owner
-chooses. After migration is chosen, preserve the existing `extends` entries and add the shared preset:
+generic request to configure automerge is not. Preserve existing repository rules when importing shared presets;
+their effective overrides remain in force. After migration is chosen, preserve the existing `extends` entries and add
+the shared preset:
 
 ```json
 {
@@ -318,16 +322,16 @@ chooses. After migration is chosen, preserve the existing `extends` entries and 
 }
 ```
 
-Do not repeat `automergeType`, `platformAutomerge`, or the shared non-major package rule in repository-local
-configuration. Do not add a `vulnerabilityAlerts.automerge` override: non-major vulnerability fixes already match the
-shared package rule, while major vulnerability fixes remain manual. Keep only repository-specific exceptions and other
-capability presets locally. Remove obsolete duplicate automerge rules and `autoApprove`. For repositories outside
-Netcracker, use an equivalent local rule only when the shared preset is unavailable.
+Do not repeat `automergeType`, `platformAutomerge`, or package rules already supplied by the shared preset in the
+repository configuration. Do not add a `vulnerabilityAlerts.automerge` override merely to repeat the shared rule. Keep
+repository-specific exceptions and other capability presets locally. Remove only automerge rules proven redundant
+after checking the resolved policy, and remove `autoApprove`. For repositories outside Netcracker, use an equivalent
+local rule only when the shared preset is unavailable.
 
 In the same PR, remove `assignAutomerge: true` wherever it appears in the repository's Renovate configuration, at the
-top level or in a package rule. Keep `assigneesFromCodeOwners` and `reviewersFromCodeOwners`: they still route major
-updates and automerge PRs whose checks fail. Without `assignAutomerge: true`, Renovate adds configured participants to
-an automerge PR only when its checks fail.
+top level or in a package rule. Keep `assigneesFromCodeOwners` and `reviewersFromCodeOwners`: they still route updates
+kept manual and automerge PRs whose checks fail. Without `assignAutomerge: true`, Renovate adds configured participants
+to an automerge PR only when its checks fail.
 
 Prepare configuration with CI changes when useful. Put the review and required-check protections in place before
 activation unless the owner explicitly accepts a different order. Coverage gaps do not veto the owner's selected
