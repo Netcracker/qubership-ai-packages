@@ -197,11 +197,13 @@ alternative is enough.
 ## Consequences
 
 - **Negative** carries every cost the decision accepts. It keeps a checker from reporting an accepted cost as a defect.
-  Two costs are easy to miss:
+  Where the system already runs, two costs are easy to miss:
   - A request that gets a different answer than it gets today. Name the request and, where a test or a golden shows the
     answer, its name, so that a parity or regression report can cite the record.
   - What an existing installation gets on upgrade: a setting that goes away, a value that now stops the start, or trust
     that widens.
+
+  A system with no installation and no answers yet has neither cost, and the record does not mention them.
 
 - **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
   requirement.
@@ -230,7 +232,8 @@ A `Defers` target is an issue or a pull request that exists. Where no change exi
 for the rule, and name it: a guessed number or a placeholder would stay in the merged commit.
 
 `Implements` claims every case of a rule. A change that brings only some of its cases names the rule under `Defers`,
-with the change that brings the rest.
+with the change that brings the rest. A change that brings no rule and leaves none out, such as a refactoring or a fix
+that keeps every rule met, carries neither trailer.
 
 ## The reading guide
 
