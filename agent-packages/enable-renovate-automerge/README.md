@@ -19,7 +19,8 @@ updates. It applies per repository and verifies one pilot before a broader rollo
    gate names or manual branch publication when needed.
    For Docker builds, it checks detector coverage against every build context, COPY/ADD source, and both ignore-file
    forms, including newly added ignore files, and records input-path verification before declaring the gate complete.
-4. Evaluates the combined protection policy, recommends one strict ruleset, and shows a candidate consolidated policy.
+4. Evaluates the combined protection policy, recommends one ruleset with required CI and review, and shows a candidate
+   consolidated policy.
    Consolidation happens only after agreement and preserves human bypass actors and modes.
 5. Compares the current effective Renovate policy with `github>Netcracker/renovate-config:automerge`, including the
    exact visible change in automerge scope. The owner decides whether to adopt the centralized policy.

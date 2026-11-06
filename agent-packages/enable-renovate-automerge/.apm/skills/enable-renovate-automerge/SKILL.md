@@ -324,6 +324,11 @@ shared package rule, while major vulnerability fixes remain manual. Keep only re
 capability presets locally. Remove obsolete duplicate automerge rules and `autoApprove`. For repositories outside
 Netcracker, use an equivalent local rule only when the shared preset is unavailable.
 
+In the same PR, remove `assignAutomerge: true` wherever it appears in the repository's Renovate configuration, at the
+top level or in a package rule. Keep `assigneesFromCodeOwners` and `reviewersFromCodeOwners`: they still route major
+updates and automerge PRs whose checks fail. Without `assignAutomerge: true`, Renovate adds configured participants to
+an automerge PR only when its checks fail.
+
 Prepare configuration with CI changes when useful. Put the review and required-check protections in place before
 activation unless the owner explicitly accepts a different order. Coverage gaps do not veto the owner's selected
 automerge scope: record the affected updates, when failures would be detected, and how they would be recovered. If
