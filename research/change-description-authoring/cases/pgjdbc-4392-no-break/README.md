@@ -43,3 +43,9 @@ results pass all three checks: they open with the problem, carry no `Breaking ch
 compatibility, and keep both literals. Opus wrote 157 and 175 words, Haiku 192 and 172; the draft has 209. The
 baselines (run 2026-10-20 with `english-developer-style` alone, not re-run) pass too: without a break, neither model
 adds a lead. The control fails all three checks.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. Check 4, added with it, passes every committed result. The
+rows stand for the trees they ran on.

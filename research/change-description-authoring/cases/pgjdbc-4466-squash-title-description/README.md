@@ -44,10 +44,19 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Outcome (1) | Title (2) | Body shape (3) | Verification in one sentence (3, read) |
 | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes: one sentence |
-| Opus r2 | passes | passes | passes | fails: two sentences |
+| Opus r1 (`9fe02a7c`) | passes | passes | passes | passes: none |
+| Opus r2 (`9fe02a7c`) | passes | passes | passes | passes: one sentence, in the `**Not changed.**` paragraph |
+| Opus r1 (`f03479c0`) | passes | passes | passes | passes: one sentence |
+| Opus r2 (`f03479c0`) | passes | passes | passes | fails: two sentences |
 | Haiku r1 | passes | passes | passes | fails: three sentences |
 | Haiku r2 | passes | passes | fails: six headings | fails: a heading and two bullets |
 | Opus baseline | fails | passes | fails: headings, checkboxes, a URL | fails |
 | Haiku baseline | fails | passes | fails: headings, checkboxes, a URL | fails |
 | `controls/as-pushed.md` | fails | fails | passes | passes: no verification at all |
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first two rows), graded by reading, and pass every
+check, checks 4 to 6 included. Both descriptions open with `**Breaking changes.**`, put the remaining outcomes under
+`**User-visible changes.**` and `**Not changed.**` with one line each, and close with a `**Scope.**` paragraph. r2 puts
+its sentence on `explicitApplicationNameIsKept` in the `**Not changed.**` paragraph, which no check reads as a fault.
+Check 4 fails both Haiku results, check 5 fails the Haiku results, both baselines, and the control, and check 6 passes
+every committed result. The runs on `0d0fa5fa` passed every check registered then.

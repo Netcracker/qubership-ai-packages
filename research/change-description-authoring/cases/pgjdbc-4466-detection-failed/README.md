@@ -49,8 +49,10 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Command (1) | Outcome (2) | Every commit (3) | Body shape (4) | Verification in one sentence (4, read) |
 | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes | fails: two sentences |
-| Opus r2 | passes | passes | passes | passes | passes |
+| Opus r1 (`9fe02a7c`) | passes | passes | passes | passes | passes: one sentence |
+| Opus r2 (`9fe02a7c`) | passes | passes | passes | passes | passes: none |
+| Opus r1 (`f03479c0`) | passes | passes | passes | passes | fails: two sentences |
+| Opus r2 (`f03479c0`) | passes | passes | passes | passes | passes |
 | Haiku r1 | passes | passes | passes | fails: the whole template, nine headings and checkboxes | fails: two sentences, the second a precondition |
 | Haiku r2 | passes | passes | passes | fails: six headings | fails: two sentences, the second a precondition |
 | Opus baseline | fails: types `upstream/master` | fails | passes | fails | fails |
@@ -59,3 +61,10 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 Both Opus runs add `git fetch upstream` and `git remote set-head upstream --auto` above the block, which type the
 remote, not a branch. Haiku r1 and r2 keep a separate test commit; Haiku r1 gives it a body that references #2404.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first two rows), graded by reading, and pass every
+check, checks 5 to 7 included. Both commits write the outcome lead-ins in the §6 form, `User-visible changes.` and
+`Not changed.`, with each outcome on one line; both descriptions open with `**Breaking changes.**` and use the bold
+outcome lead-ins. Of the re-runs on `0d0fa5fa`, r2 wrapped its outcome lines at 72 columns, which check 7 now catches.
+The Opus results of `f03479c0` failed check 5 (r2) and check 6 (both); the Haiku results, both baselines, and the
+control fail check 6, and check 7 fails Haiku r1.

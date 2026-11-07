@@ -46,10 +46,18 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Outcome (1) | Every commit (2) | Fix-ups (3) | Title (4) | Body shape (5) | Verification in one sentence (5, read) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes | passes | passes |
-| Opus r2 | passes | passes | passes | passes | passes | fails: two sentences |
+| Opus r1 (`9fe02a7c`) | passes | passes | passes | passes | passes | passes: none |
+| Opus r2 (`9fe02a7c`) | passes | passes | passes | passes | passes | passes: one sentence |
+| Opus r1 (`f03479c0`) | passes | passes | passes | passes | passes | passes |
+| Opus r2 (`f03479c0`) | passes | passes | passes | passes | passes | fails: two sentences |
 | Haiku r1 | passes | fails: a separate test commit with no `#2404` | passes | passes | passes | passes: one sentence, with the server precondition after a semicolon |
 | Haiku r2 | passes | passes | passes | passes | passes | passes |
 | Opus baseline | fails | passes | passes | passes | fails | fails |
 | Haiku baseline | fails | fails: the test commit has no `#2404` | passes | passes | fails | fails |
 | `controls/as-pushed.md` | fails | fails | fails | fails | passes | passes |
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first two rows), graded by reading, and pass every
+check, checks 6 to 8 included: both descriptions open with `**Breaking changes.**` and mark their outcomes with the bold
+lead-ins, one line each. The re-run on `23b838fc` wrapped r1's outcome lines at 72 columns, which check 8 now catches.
+The Opus results of `f03479c0` failed check 7, and r1 also failed check 6 with plain `User-visible:` and `Not changed:`
+lines. Check 7 fails the Haiku results, both baselines, and the control; check 8 fails both Haiku results.
