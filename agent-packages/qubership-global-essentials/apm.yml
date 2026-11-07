@@ -1,11 +1,10 @@
 name: qubership-global-essentials
-version: 1.1.0
-description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials. The dependency set is unchanged."
+version: 2.0.0
+description: "Deprecated global baseline retained for existing consumers. New user workspaces should use qubership-user-essentials."
 dependencies:
   apm:
     # Sibling packages in this repository, resolved from the same commit as this one.
     - ../apm-authoring
-    - ../codex-review
     - ../english-us-developer-style
     - ../markdown-line-length-120
     - ../qubership-agent-support-pr
