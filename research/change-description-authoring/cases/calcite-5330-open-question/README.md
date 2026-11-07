@@ -36,6 +36,8 @@ lead of #169 in a repository other than pgjdbc: `main` ships 1.43.0, a minor rel
 7. **Break lead-in ahead of the template** (`break_lead_in_before_headings`). The description opens with a paragraph
    that starts with `**Breaking changes.**`, ahead of `## Jira Link`, and adds no heading that names the break. The
    Haiku results, both baselines, and both controls fail it; the Opus results pass it.
+8. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`), as in
+   [`pgjdbc-4367-breaks`](../pgjdbc-4367-breaks/README.md).
 
 ## Running it
 

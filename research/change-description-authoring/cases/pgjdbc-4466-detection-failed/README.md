@@ -16,8 +16,8 @@ remote and leaves the branch name to the variable.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request description, headings and reviewer-only content), §4, §5 (links
-  in a commit body)
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request description: a break leads the description, headings, the
+  lead-in paragraph, reviewer-only content), §4, §5 (links in a commit body)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -30,6 +30,13 @@ remote and leaves the branch name to the variable.
    [`pgjdbc-4466-squash-or-rebase`](../pgjdbc-4466-squash-or-rebase/README.md).
 4. **The description can stand as a commit body** (`description_as_commit_body`): no heading, no checkbox, no URL to
    the repository's code.
+5. **Outcome lead-ins, not labels** (`no_plain_outcome_labels`). The description, written to
+   stand as a commit body (§4, default when detection fails), has no line that opens with `User-visible:`
+   or `Not changed:`; its outcomes sit under `**User-visible changes.**` and `**Not changed.**`.
+6. **Break lead-in first** (`break_lead_in_before_headings`), as in
+   [`pgjdbc-4466-squash-default`](../pgjdbc-4466-squash-default/README.md): the new default breaks code that
+   matches the old `application_name`, so the description opens with `**Breaking changes.**`.
+7. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
 
 ## Running it
 

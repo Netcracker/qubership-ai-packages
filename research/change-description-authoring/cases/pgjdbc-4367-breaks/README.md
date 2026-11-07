@@ -29,6 +29,9 @@ case tests the rule in `SKILL.md` §2,
 
 7. **The break lead-in comes first** (`break_label_4367`). The description opens with `**Breaking changes.**` (or
    `**Breaking changes:**`), with nothing before it, and has no headings: the case has no template.
+8. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`). The description is never a commit
+   body under this merge model, so §2 keeps its outcomes in prose: it carries no `**User-visible changes.**` or
+   `**Not changed.**` lead-in, which the other slots may not carry (§2, §8 Headings).
 
 Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
 marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
