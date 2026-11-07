@@ -27,7 +27,8 @@ into a record about something else.
 
 Every rule follows from the title and the Decision sentence. A rule that does not, such as the removal of an unrelated
 feature or a liveness probe in a record about tokens, belongs in a record of its own, where a reader looking for it will
-find it by its title.
+find it by its title. Where a request covers two decisions, propose the split to the user rather than writing the second
+record unasked.
 
 Reach for an ADR when a choice affects structure (for example a pattern such as microservices), a non-functional
 requirement (security, availability, fault tolerance), a dependency, a published interface or API, or a construction
@@ -36,9 +37,10 @@ recording.
 
 ## Local conventions
 
-- **Location**: follow the directory, the filename pattern, and the heading levels the repository's records already use.
-  In a repository with no records, use `docs/adr/`, `0001-tool-for-password-management.md`, and the template below. Pick
-  the next free number by scanning the existing files. ADRs are public unless an exception is approved.
+- **Location**: follow the directory, the filename pattern, the metadata, the heading levels, and the language the
+  repository's records already use. In a repository with no records, use `docs/adr/`,
+  `0001-tool-for-password-management.md`, and the template below. Pick the next free number by scanning the existing
+  files. ADRs are public unless an exception is approved.
 - **Record numbers**: a retired record number is never reused. Where documents outside the repository cite a retired
   number, the record that takes over maps it to the new number in its Context, because a merge can drop the pull request
   description.
@@ -46,10 +48,12 @@ recording.
   only once the team has signed off and **Open points** is empty.
 - **Date**: ISO 8601 (`2025-02-16`), and only the date the decision was accepted. On acceptance, add `### Date` with
   that date after the status line.
-- **Immutability**: an accepted ADR is final. To change a decision, write a new ADR rather than editing the old one, and
-  link the two in both directions under **Related ADRs**. An accepted record takes three edits and no other: `### Date`
-  on acceptance, the status `Superseded` when a later record replaces it whole, and a line under **Related ADRs** that
-  names a later record and what it replaces.
+- **Immutability**: an accepted ADR is final once it merges. To change a decision, write a new ADR rather than editing
+  the old one. The new record links the old one under **Related ADRs** at once, and the old record links back when the
+  new one is accepted. A requirement added to an accepted record goes into a new record the same way; tell the user that
+  the accepted record stays as it is. An accepted record takes these edits and no other: `### Date` on acceptance, the
+  status `Superseded` when a later record replaces it whole, a line under **Related ADRs** that names a later record and
+  what it replaces or adds, and an editorial fix that changes no rule, such as a broken link.
 - **Superseding a whole record**: when the new record is accepted, set the old record's status to `Superseded`, and
   name the reason in the new record's **Consequences**.
 - **Superseding part of a record**: the old record stays `Accepted`. The new record names what it replaces under
@@ -122,7 +126,7 @@ Follow-ups:
 
 ## Open points
 
-- **O1.** <The question, who decides it, and the rules it affects.>
+- **O1.** <The question, the answers under consideration, who decides it, and the rules it affects.>
 ```
 
 A record with nothing to say under **Related ADRs**, **Terms**, **Follow-ups**, or **Open points** leaves that heading
@@ -137,7 +141,8 @@ which tokens, which addresses, which unit of work.
   the next reader misses it. Define a second term instead.
 - Define a boundary word by its members or by a test: "any host other than `a.svc` and `b.svc`", not "outside the
   cluster".
-- A term lives in the record that owns the concept. Other records name that record and use the word unchanged.
+- A term lives in the record that owns the concept. Another record that uses the word lists it under **Terms** with a
+  pointer, such as "**provider**: as ADR-0091 defines it", and uses it unchanged.
 - Use one word per concept in the Rules, the Justification, and the Consequences, and give each outcome one wording:
   "stops the start", not also "does not start" and "refuses to start".
 - Where only the program's entry point can produce an outcome literally, define the outcome word and say how a library
@@ -155,7 +160,8 @@ A rule is one requirement that a checker can turn into a test with a definite re
   record is the one that chose the engine. An internal field layout or function name belongs in the code; a field of a
   published interface or of a persisted format that the record decides is part of the contract, and a rule states it.
 - **Scope**: put every limit of the rule inside it. "Loads its source" passes a load of every source, and a reader who
-  needs "and no other source" will not find it in the Justification.
+  needs "and no other source" will not find it in the Justification. Where a limit arrives in a later change, state it
+  as a rule of its own, and let the rule it limits point at it by number, as **Exceptions** allows.
 - **One number, one check**: split a rule when its parts arrive in different changes or have different reasons, so
   that `Implements` can claim the part a change brings. One check whose parts sit in two layers and arrive in one change
   stays one rule, and carries both layer tags. The branches of one check stay one rule, such as a missing and an invalid
@@ -171,10 +177,10 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Layer**: `(<layer>)` names the part of the system where the check runs, so read the code before you tag a rule. The
   checker looks there first. Use the names of the repository's reading guide. Where the code does not exist yet, name
   the component that will hold the check.
-- **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or something
-  outside its pull request first cites a rule. From then on, never renumber or reuse a number. A rule added later takes
-  the next free number, under whichever topic it belongs to, and a removed rule leaves a gap. Outside its record, always
-  cite a rule with its record, as `ADR-0091 R7`.
+- **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
+  rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
+  number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
+  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
 - **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
   conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
 - **Every requirement is a rule**: nothing outside **Rules** may add a requirement. A reference such as "as ADR-0091
@@ -199,26 +205,31 @@ number. Where the record reverses an earlier answer, say so in that alternative.
 
 - **Negative** carries every cost the decision accepts. It keeps a checker from reporting an accepted cost as a defect.
   Where the decision changes an answer that existing callers get, name the case and the test that shows it. Where it
-  changes a default, a required setting, or what the system trusts, say what an existing installation gets on upgrade.
+  changes a default, a required setting, or what the system trusts, a rule states what an existing installation gets on
+  upgrade, and Negative cites it.
 
 - **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
   requirement.
 
 ## Open points
 
-An open point is a question the record does not settle yet. It names who decides and which rules it affects. A checker
-gives `Cannot tell` to each case an open point covers. The status stays `Proposed` until the list is empty.
+An open point is a question the record does not settle yet. It names who decides, the answers under consideration, and
+which rules it affects. A checker gives `Cannot tell` to a case whose outcome depends on which of those answers is
+chosen, and an open point that lists no answers gives `Cannot tell` to every case of the rules it affects. The status
+stays `Proposed` until the list is empty.
 
-Where the user's input leaves a question thin, make a reasonable assumption, write the rule as if it held, and add an
-open point that names the assumption. Do not write `Assumption:` inside a rule.
+Where the user's input leaves a value open that a rule needs, such as a count, a timeout, an error name, or a setting,
+write a visible placeholder in the rule, such as `<retry count>`, and an open point that asks for it; never invent the
+value. Ask for an owner or an approver in the conversation instead.
+Where it leaves a question thin otherwise, make a reasonable assumption, write the rule as if it held, and add an open
+point that names the assumption. Do not write `Assumption:` inside a rule.
 
 ## Delivery stays out of the record
 
-A record states what the code must do, not when it arrives. Delivery state goes stale, and an accepted record takes
-only the three edits of **Immutability**, so a change to code that a record with numbered rules governs declares
-delivery itself. Two trailers at the end
-of its commit message and of its pull request description name the rules it brings and, under `Defers`, the change that
-will bring each rule it leaves out:
+A record states what the code must do, not when it arrives. Delivery state goes stale, and an accepted record takes only
+the edits that **Immutability** lists, so a change to code that a record with numbered rules governs declares delivery
+itself. Two trailers at the end of its commit message and of its pull request description name the rules it brings
+and, under `Defers`, the change that will bring each rule it leaves out:
 
 ```text
 Implements: ADR-0092 R6, R8; ADR-0091 R54
@@ -226,7 +237,10 @@ Defers: ADR-0091 R38 to #208; ADR-0095 R2 to #215
 ```
 
 A `Defers` target is an issue or a pull request that exists. Where no change exists yet, ask the user to open an issue
-for the rule, and name it: a guessed number or a placeholder would stay in the merged commit.
+for the rule, and name it: a guessed number or a placeholder would stay in the merged commit. Without an issue, leave
+the rule out of the trailers, and say in the description which rules wait for a change that has no issue yet. In a pull
+request with several commits, each commit carries the trailers of its own part, and the description carries them for
+the whole change; a checker reads the description.
 
 `Implements` claims every case of a rule. A change that brings only some of its cases names the rule under `Defers`,
 with the change that brings the rest. A change that brings no rule and leaves none out, such as a refactoring or a fix
@@ -235,61 +249,76 @@ that keeps every rule met, carries neither trailer.
 ## The reading guide
 
 A repository that uses numbered rules keeps a `README.md` beside its records, added by the change that adds its first
-record with numbered rules. It states how to read a record, the layers with the code each one covers, the two trailers,
-that anything no rule states is the implementer's choice, which statuses bind a change, and how to check a change.
-Unless the repository decides otherwise, `Accepted` and `Proposed` records bind a change, and `Superseded` and
-`Rejected` records do not. Copy the steps, the table, and the three paragraphs after the table into the guide word for
-word, and name the version of this skill they come from, such as `adr-authoring 2.0.0`, so that a reader can compare
-the guide with the skill:
+record with numbered rules. Where the directory already has a `README.md`, add the guide as a section of it. Tell the
+user that you added it. The guide states how to read a record, the layers, each named by its role and mapped to the
+paths of its code, the two trailers, that anything no rule states is the implementer's choice, which statuses bind a
+change, and how to check a change. A change that adds code under no mapped path extends the map. Unless the repository
+decides otherwise, `Accepted` and `Proposed` records bind a change, and `Superseded` and `Rejected` records do not.
+Copy the steps, the table, and the three paragraphs after the table into the guide word for word, and name the version
+of this skill they come from, as the repository's `apm.yml` or lock file pins it, so that a reader can compare the
+guide with the skill:
 
-1. Read the two trailers. They are claims: `Implements` makes a rule touched, and `Defers` can make an untouched rule
-   `Deferred`, but neither shows that the code meets a rule.
+1. Read the two trailers in the pull request description. They are claims: `Implements` makes a rule touched, and
+   `Defers` can make an untouched rule `Deferred`, but neither shows that the code meets a rule. An entry that names no
+   rule of a binding record, or a `Defers` target that is not an existing issue or pull request, counts for nothing in
+   steps 2 and 3, and the report lists it as a trailer error.
 2. Walk every rule of a binding record that sits in a layer the change touches, every other rule of a binding record
-   that the change touches, named or not, and every rule of a binding record that the change names under `Defers`. Skip
-   a rule whose own record names it as replaced under **Related ADRs**: that line, like the status `Superseded`, is
-   added when the replacement is accepted. Where a `Proposed` record names an accepted rule as replaced, one of the two
-   governs and the walk skips the other: the new rule where the trailers name it, and the accepted rule otherwise. A
-   missing line of code shows in no diff, so this walk finds the rule a change forgot.
-3. Give each rule one verdict, and group the rows by root cause, because one defect can break several rules.
+   that the change touches, named or not, and every rule of a binding record that the change names under `Defers`. A
+   change touches a layer when it adds, changes, or removes a file that the guide maps to that layer, and a changed file
+   under no mapped path is a guide error that the report lists. Skip a rule whose
+   own record names it as replaced under **Related ADRs**: that line, like the status `Superseded`, is added when the
+   replacement is accepted. A rule of a `Proposed` record that replaces an accepted rule binds nothing until its record
+   is accepted: the walk skips it, a trailer entry that names it counts for nothing, and the accepted rule governs until
+   then. A binding record without numbered rules is not walked, and the
+   report lists it as unchecked. A missing line of code shows in no diff, so this walk finds the rule a change forgot.
+3. Give each rule one verdict, and group the rows by root cause, because one defect can break several rules. Report
+   `Not touched` rules as a count.
 
 | Verdict | Meaning |
 | --- | --- |
-| Conforms | The change touches the rule, no open point covers the case, and the change meets the rule under every reading. |
-| Violates | The change touches the rule, no open point covers the case, and the change fails the rule under every reading. |
-| Deferred | The change names the rule under `Defers` and does not touch it, and the rule is unmet under at least one reading or an open point covers it. |
+| Conforms | The change touches the rule, and in the case it meets the rule under every reading and every answer an open point lists. |
+| Violates | The change touches the rule, and in the case it fails the rule under every reading and every answer an open point lists. |
+| Deferred | The change names the rule under `Defers` and does not touch it, and the rule is unmet under at least one reading or its outcome depends on an open point. |
 | Not touched | The change does not touch the rule, and the rule is not `Deferred`. |
-| Cannot tell | The change touches the rule, and an open point covers the case, or the change meets one reading of the rule and fails another. |
+| Cannot tell | The change touches the rule, and in the case it meets the rule under one reading or answer and fails it under another, or the repository does not show the outcome. |
 
-A change touches a rule when it adds, changes, or removes any code, configuration, or file that decides the outcome of
-a case the rule describes, or names the rule under `Implements`. Without that name, a defect in unchanged code that
-the change only moves or calls does not touch the rule, and the report names it apart.
+A case of a rule is one input or condition the rule describes, with the outcome the rule requires for it: a missing
+value and an invalid value of one field are two cases of one rule, and each member of a set a rule covers, such as each
+endpoint, is a case of its own. A case meets the rule only for every value of each setting and input the rule leaves
+free. A judged case whose outcome the repository does not show, such as a limit a proxy enforces, gets `Cannot tell`,
+and the report names what it could not see. A change touches a rule when it adds, changes, or removes code,
+configuration, or a file in a way that alters the outcome of a case the rule describes, under any of its readings and
+for any value of a setting or input, or when it names the rule under `Implements`. Without that name, a defect in
+unchanged code that the change only moves or calls does not touch the rule, and the report names it apart.
 
 Code that acts only in a case no rule describes touches no rule: that case is the implementer's choice. A word that
 could reach the case, as `expired` reaches a token inside a clock-skew allowance, gives the rule two readings.
 
-Judge each case the change acts in, and every case of a rule the change names under `Implements`, by the table against
-the code as it stands after the change. A touched rule gets `Violates` if any of its cases gets `Violates`, otherwise
-`Cannot tell` if any case gets `Cannot tell`, otherwise `Conforms`. A rule named under `Defers` that the change also
-touches gets the verdict of a touched rule, and the report names the deferral beside it.
+Judge each case whose outcome the change alters for any value of a setting or input, and every case of a rule the change
+names under `Implements`, by the table against the code as it stands after the change. A touched rule gets `Violates` if
+any of its judged cases gets `Violates`, otherwise `Cannot tell` if any gets `Cannot tell`, otherwise `Conforms`. A rule
+named under `Defers` that the change also touches gets the verdict of a touched rule, and the report names the deferral
+beside it.
 
 ## Rewriting an existing record
 
-A `Proposed` record is rewritten in place. An accepted record is final, so its rewrite is a new `Proposed` record that
-supersedes the old one on acceptance. Until then the old record governs every change whose trailers name no rule of the
-new one.
+A `Proposed` record is rewritten in place. An accepted record is final once it merges, so its rewrite is a new
+`Proposed` record that supersedes the old one on acceptance, and the old record governs every change until then. Before
+rewriting accepted records, tell the user how many new records that makes, and ask whether to proceed.
 
 A rewrite must keep every decision, and a lost fact leaves no trace in the new text. List the facts of the old record
-first, then mark each as present, restated, moved, or absent, and read the new text for what it adds. Have a reader who
-did not write the new text do this. Number the rules only after the old text is settled. A sentence with two readings
-becomes an open point, not a choice, and the reading is settled against the source of the decision, not against the code
-that happens to exist.
+first, then mark each as present, restated, moved, or absent, and read the new text for what it adds. Ask the user once
+who does this check: a reader who did not write the new text, such as a fresh subagent or a colleague. Without an
+answer, do it yourself and say so. Keep the fact list in the conversation, not in the repository. Number the rules only
+after the old text is settled. A sentence with two readings becomes an open point, not a choice, and the reading is
+settled against the source of the decision, not against the code that happens to exist.
 
 ## Drafting from the user's input
 
 Turn the user's notes, meeting summary, or free-text description into the template above. Write plain, simple technical
-English. Preserve every link the user supplied. Default the status to `Proposed`. Where the user states that the
-decision is accepted and the record has no open point, set `Accepted`; where it has one, keep `Proposed` and tell the
-user which open points block acceptance.
+prose in the language of the repository's records, or in English where there are none. Preserve every link the user
+supplied. Default the status to `Proposed`. Where the user states that the decision is accepted and the record has no
+open point, set `Accepted`; where it has one, keep `Proposed` and tell the user which open points block acceptance.
 
 Before you publish a record, read each rule as a checker would, against **What belongs in an ADR**, **Form**, **One
 number, one check**, **Precedence**, **One home**, and **Every requirement is a rule**, across the whole set of related
