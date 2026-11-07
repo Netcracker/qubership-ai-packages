@@ -67,3 +67,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 The new runs no longer name the audit. Opus r1 and r2 say the interpreter, `JVM_IHashCode`, and the C2 path "no longer
 initialize" the class themselves, which the script accepts as not reading the hunk aloud; both Haiku runs say the
 initializations are removed.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.

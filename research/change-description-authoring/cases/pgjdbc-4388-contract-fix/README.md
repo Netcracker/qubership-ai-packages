@@ -62,3 +62,8 @@ baselines for this case.
 | `controls/main-haiku.md` | fails: no snippet | fails: "adversarial" | fails: "## Breaking changes" | fails | fails | fails: names the other two tests | fails: 373 | passes |
 
 Haiku r2 still points at the review's other findings; Haiku r1 only says other problems are out of scope.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.

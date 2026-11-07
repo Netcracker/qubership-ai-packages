@@ -35,7 +35,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Outcome lines (1) | Nothing invented (2) | Changelog entry (3) | Ran by accident now fails (3, read) |
 | --- | --- | --- | --- | --- |
-| Opus r1, r2 | passes | passes | passes | yes |
+| Opus r1, r2 (`9fe02a7c`) | passes | passes | passes | yes |
+| Opus r1, r2 (`f03479c0`) | passes | passes | passes | yes |
 | Haiku r1 | passes | passes | passes | yes |
 | Haiku r2 | passes | passes | passes | only by implication |
 | Opus baseline | fails: no `User-visible:` | passes | passes | only by implication |
@@ -43,3 +44,10 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 | `controls/invented-and-thin-entry.md` | passes | fails: `#4375` | fails | no |
 
 Both Opus runs state the dependency on #4363 in the commit message; neither Haiku run does.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first Opus row), graded by reading, and pass every
+check. Both write the outcome lead-ins in the §6 form, `User-visible changes.` and `Not changed.`, keep each outcome on
+one line while the rest of the body wraps at 72 columns, say that a statement that ran by accident now fails, and state
+the dependency on #4363. Of the runs on `0d0fa5fa`, r2 failed check 1: it wrapped each message over three lines, so no
+line carried the text and `42601` together. Tree `9fe02a7c` says an outcome is not wrapped where the body wraps. The
+other rows stand for the trees they ran on.

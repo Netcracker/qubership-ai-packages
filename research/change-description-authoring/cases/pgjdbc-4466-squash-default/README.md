@@ -68,9 +68,16 @@ are in the git history; the committed `opus/result*.md` are the `6efc3a3a` re-ru
 
 | Run | Outcome (1) | First commit (2) | Title (3) | Template (4) | Scope (5) | Break lead-in (6) |
 | --- | --- | --- | --- | --- | --- | --- |
+| Opus r1, r2 (`9fe02a7c`) | passes | passes | passes | passes | passes | passes |
 | Opus r1, r2 (`6efc3a3a`) | passes | passes | passes | passes | passes | passes |
 | Opus r1, r2 (`f03479c0`) | passes | passes | passes | passes | fails: a `Scope` heading | fails: a `Breaking changes` heading |
 | Haiku r1, r2 | passes | passes | passes | passes | fails: r1 a `### Scope` heading, r2 no lead-in | fails: a `### Breaking changes` heading |
 | Opus baseline | fails: outcomes under "Behavior change", no label | passes | passes | passes | fails | fails |
 | Haiku baseline | fails: no label | passes | passes | passes | fails | fails |
 | `controls/as-pushed.md` | fails | fails: no `#2404`, no reason | fails: `Include` | fails | fails | fails |
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first row), graded by reading, and pass every check,
+check 7 included. Check 7 fails both Haiku results and `controls/break-heading.md`, which wrap their outcome lines; the
+baselines and `controls/as-pushed.md` carry no outcome label for it to read. A re-run on `0d0fa5fa` put r2's
+`**Breaking changes.**` on a paragraph of its own. Check 8 passes every committed result. The other rows stand for the
+trees they ran on.

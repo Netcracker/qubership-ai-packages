@@ -40,3 +40,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 The baselines pass both checks: without the skill, neither model writes an outcome slot or an entry for this change.
 The failing run is the one that adds a `Not changed:` line to the commit body.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its checks look only for the absence of an outcome block, and
+`no_outcome_slot` matches the old and the new markers. The rows stand for the trees they ran on.

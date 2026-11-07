@@ -61,3 +61,8 @@ the two left-alone items as a Scope list. Two Haiku runs (effort `high`, not com
 "named by its place and by the code it contradicts, not by its old wording", quoted them too. The likely reason is
 §2's rule that a literal, an error text among them, is never traded for a description: the removed message is one a
 released driver emitted. The widening was left out after these runs, and the case stays failing until a rule fixes it.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.
