@@ -1,17 +1,19 @@
 # adr-authoring
 
-An APM package that helps agents write Architecture Decision Records following the
-ADR contract used across Qubership repositories: one decision per record, stored
-under `docs/adr/` with a `NNNN-kebab-slug.md` filename, a
-`Proposed | Accepted | Rejected | Superseded` status, ISO 8601 dates, and
-immutable accepted records superseded by new ones.
+An APM package that helps agents write Architecture Decision Records that a person or
+an agent can check code against: one decision per record, a defined vocabulary, numbered
+rules that name the layer holding them, a `Proposed | Accepted | Rejected | Superseded`
+status, ISO 8601 dates, and immutable accepted records superseded by new ones. A record
+stays in the repository's existing directory, or in `docs/adr/` with a
+`NNNN-kebab-slug.md` filename where there is none.
 
 ## Contents
 
 - `.apm/instructions/adr-authoring.instructions.md` — the trigger merged into
   `AGENTS.md` / `CLAUDE.md` by `apm compile`.
-- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions
-  plus the ADR template.
+- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions,
+  the ADR template, how to write terms and numbered rules, the trailers a change
+  carries, and the reading guide with the verdicts of a check.
 
 ## Install
 
@@ -24,7 +26,7 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v1.1.0
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.0.0
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger into your local
