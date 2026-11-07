@@ -1,0 +1,111 @@
+{
+ "key": "uber_NullAway_1809",
+ "summary": "Registers takeWhile as a filter-like method in the Java Stream, RxJava Observable, and Reactor Flux nullability propagator models.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Behavior change (new stream-model entries for three libraries) with no test added in initial or final; codecov 'covered' only reflects builder calls executed at startup, so nothing pins that takeWhile propagates predicate facts."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No option or documented behavior changes; stream models are internal."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Only builder entries added under existing comments ('methods that behave like .filter'), which still hold."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Short description gives the why; NullAway changelog is written at release time by the maintainer."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Three extra signature registrations; no hot-path change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Only removes false positives after takeWhile; no API change."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No diagnostics changed."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "takeWhile emits only elements for which the predicate held, so filter semantics apply; signatures in StreamNullabilityPropagatorFactory match the three libraries' APIs."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Small, obviously useful extension of an existing model."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fewer warnings after takeWhile, consistent with filter; nothing unexpected."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Consistent with neighbouring filter entries and comments."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No external spec involved beyond library method semantics."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests"
+   ]
+  ],
+  "why": "Three-line model extension; only the missing test needs attention."
+ }
+}

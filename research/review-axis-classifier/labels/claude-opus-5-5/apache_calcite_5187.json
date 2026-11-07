@@ -1,0 +1,113 @@
+{
+ "key": "apache_calcite_5187",
+ "summary": "Fixes SqlUtil operator lookup so the kind-based filter maps both the candidate's and the call's SqlKind through getFunctionKind(), with a validator regression test.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix; regression test chains SqlStdOperatorTable with itself to reach the two-candidate pass for POSITION and CHAR_LENGTH; fails without the fix."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "mihaibudiu: 'this comment could be shorter' and 'please do not submit useless comments'; the six-line inline comment and the 13-line test Javadoc were cut to two and four lines in the final diff."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Commit message and description explain the asymmetry and why; adequate."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Changes which operators survive overload resolution; previously failing calls now resolve."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fix removes a spurious 'No match found for function signature' error; no new error paths."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Mapping the call's kind too widens matching: a POSITION call now matches every OTHER_FUNCTION-mapped candidate of the same name in the fourth pass, which a focused reviewer should check cannot pick a wrong overload."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Resolution can now succeed where it failed; unlikely to surprise."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comments were verbose but consistent with the code."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness",
+    "doc_comments"
+   ]
+  ],
+  "why": "One-line fix plus a test; one reviewer can cover logic and comment length."
+ }
+}
