@@ -15,4 +15,5 @@ Fires on:
 - a described choice worth tracking (a pattern, non-functional requirement,
   dependency, interface, or tool selection), even when the user does not say "ADR";
 - any edit under `docs/adr/` or `docs/decisions/`;
-- a pull request description that has to name the rules it implements or defers.
+- a commit message or pull request description for a change to code that a record
+  with numbered rules governs, which names the rules it implements or defers.

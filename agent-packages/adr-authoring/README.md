@@ -11,9 +11,9 @@ stays in the repository's existing directory, or in `docs/adr/` with a
 
 - `.apm/instructions/adr-authoring.instructions.md` — the trigger merged into
   `AGENTS.md` / `CLAUDE.md` by `apm compile`.
-- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: the record template,
-  the rules for writing a record, and the reading guide a repository keeps beside
-  its records.
+- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions,
+  the ADR template, how to write terms and numbered rules, the trailers a change
+  carries, and the reading guide with the verdicts of a check.
 
 ## Install
 
@@ -26,7 +26,7 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v1.1.0
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.0.0
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger into your local
