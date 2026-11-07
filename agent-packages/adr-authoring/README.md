@@ -11,8 +11,9 @@ stays in the repository's existing directory, or in `docs/adr/` with a
 
 - `.apm/instructions/adr-authoring.instructions.md` — the trigger merged into
   `AGENTS.md` / `CLAUDE.md` by `apm compile`.
-- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions
-  plus the ADR template.
+- `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: the record template,
+  the rules for writing a record, and the reading guide a repository keeps beside
+  its records.
 
 ## Install
 
