@@ -338,6 +338,90 @@ def no_tool_footer(text):
     return result(not found, 'tool footer present' if found else 'no tool footer')
 
 
+# Checks of the authz-agent-208 pair: rule lines where the records number their rules, and none where they do not.
+
+RULE_LINE = re.compile(r'^[ \t>*-]*(?:\*\*)?(Implements|Defers)(?:\*\*)?:[ \t]*(.*)$', re.M)
+PLACEHOLDER = re.compile(r'\[(?:PR )?#N+\]|#N{2,}|\bTBD\b', re.I)
+
+
+def rule_line(text, key):
+    found = [m.group(2) for m in RULE_LINE.finditer(text) if m.group(1) == key]
+    return found[0] if found else None
+
+
+IMPLEMENTS_208 = {('0091', '23'), ('0091', '37'), ('0091', '38'), ('0091', '39')}
+DEFERS_208 = {('0092', '2'), ('0095', '2'), ('0095', '16')}
+
+
+def rule_pairs(line):
+    """The (record, rule) pairs a rule line names: `ADR-0095 R2, R16` gives two pairs of ADR-0095."""
+    pairs, record = set(), None
+    for adr, rule in re.findall(r'ADR-(\d{4})|\bR(\d+)\b', line):
+        if adr:
+            record = adr
+        elif record:
+            pairs.add((record, rule))
+    return pairs
+
+
+def deferred_ok(line):
+    """Whether a Defers line names exactly the three deferred rules, a placeholder target, and no number."""
+    guessed = re.findall(r'#(\d+)', line)
+    return rule_pairs(line) == DEFERS_208 and PLACEHOLDER.search(line) is not None and not guessed, guessed
+
+
+def implements_line_208(text):
+    line = rule_line(prose(description(text)), 'Implements')
+    if line is None:
+        return result(False, 'no Implements: line in the prose of the description')
+    return result(rule_pairs(line) == IMPLEMENTS_208, line[:120])
+
+
+def defers_line_208(text):
+    line = rule_line(prose(description(text)), 'Defers')
+    if line is None:
+        return result(False, 'no Defers: line in the prose of the description')
+    ok, guessed = deferred_ok(line)
+    return result(ok, line[:120] + (f' (numbers: {guessed})' if guessed else ''))
+
+
+def placeholder_flagged_208(text):
+    d = description(text)
+    found = re.search(r'(fill|replac|updat|set|number)\w*[^.\n]{0,80}before[^.\n]{0,20}merg'
+                      r'|before[^.\n]{0,20}merg[^.\n]{0,80}(fill|replac|updat)', d, re.I)
+    return result(bool(found), found.group(0)[:100] if found else 'no word on filling the placeholder before the merge')
+
+
+def scope_lead_in_208(text):
+    d = prose(description(text))
+    lead = re.search(r'\*\*Scope[.:]?\*\*', d)
+    lines = [m.start() for m in RULE_LINE.finditer(d)]
+    ok = lead is not None and bool(lines) and all(pos > lead.start() for pos in lines)
+    return result(ok, 'rule lines after **Scope.**' if ok else 'no **Scope.** lead-in ahead of the rule lines')
+
+
+def commit_trailers_208(text):
+    msgs = commits(text)
+    if not msgs:
+        return result(False, 'no commit message')
+    last = msgs[-1].rstrip().split('\n\n')[-1]
+    trailer_shaped = all(re.match(r'^[A-Za-z-]+: \S', ln) for ln in last.split('\n') if ln.strip())
+    implements, defers = rule_line(last, 'Implements'), rule_line(last, 'Defers')
+    ok = (trailer_shaped and implements is not None and rule_pairs(implements) == IMPLEMENTS_208
+          and defers is not None and deferred_ok(defers)[0])
+    return result(ok, last.replace('\n', ' | ')[:140])
+
+
+def no_rule_lines(text):
+    found = [m.group(0).strip() for m in RULE_LINE.finditer(text)]
+    return result(not found, f'rule lines: {found}' if found else 'no rule lines')
+
+
+def no_rule_numbers(text):
+    found = sorted(set(re.findall(r'\bR\d+\b', text)))
+    return result(not found, f'rule numbers: {found}' if found else 'no rule numbers')
+
+
 def links_at_merge_base(text):
     urls = re.findall(r'https://github\.com/pgjdbc/pgjdbc/blob/([^/\s)]+)/', text)
     wrong = [u[:12] for u in urls if u != MERGE_BASE]
@@ -661,6 +745,9 @@ CASES = {
                                  no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
     'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
                                prose_under(330), no_tool_footer],
+    'authz-agent-208-rule-lines': [implements_line_208, defers_line_208, placeholder_flagged_208, scope_lead_in_208,
+                                   no_headings, commit_trailers_208],
+    'authz-agent-208-prose-records': [no_rule_lines, no_rule_numbers, no_headings],
     'pgjdbc-4412-comment-only': [no_old_comment_quoted_4412, contradictions_kept_4412, renames_named_4412,
                                  runtime_noop_checked_4412, prose_under(150)],
 }

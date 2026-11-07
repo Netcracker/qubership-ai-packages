@@ -40,6 +40,10 @@ only; no code changes." `controls/empty-scope-label.md` is `opus/result.md` as c
 
 ## Results
 
+Tree `340d167d` adds the `Implements:` and `Defers:` lines to §2 (Scope), the §5 trailer table, and the §8
+checklist, for a repository whose decision records number their rules. This input has no decision records, so the
+change does not reach this case, and the results below stand for `340d167d` as they stand for the tree before it.
+
 Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
 places this case does not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites, left
 out because it changed no output on a description of pgjdbc/pgjdbc#4412; two example template headings since dropped

@@ -26,6 +26,10 @@ the question it answers.
   break block opens with `**Breaking changes.**` ahead of any heading. A Scope slot that carries a
   gap, a related or stacked pull request, or a maintainer's question opens with `**Scope.**` unless
   the template has a heading for it. No other slot opens with a lead-in.
+- In a repository whose decision records number their rules and that asks a change to name them,
+  the Scope slot ends with `Implements:` and `Defers:` lines, each deferred rule names its target by number or by a visible
+  placeholder, and a commit carries the same lines as trailers where the merge drops the
+  description. No other repository gets these lines.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the result rather than the route that reached it, and a length that follows the size
   of the change. Two to six lines of code, a command with its output, or an error text quoted whole
