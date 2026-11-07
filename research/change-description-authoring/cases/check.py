@@ -363,6 +363,131 @@ def no_tool_footer(text):
     return result(not found, 'tool footer present' if found else 'no tool footer')
 
 
+# Checks of the authz-agent cases: rule trailers where the records number their rules, and none where they do not.
+
+RULE_LINE = re.compile(r'^[ \t>*-]*(?:\*\*)?(Implements|Defers)(?:\*\*)?:[ \t]*(.*)$', re.M)
+PLACEHOLDER = re.compile(r'\[(?:PR )?#N+\]|#N{2,}|\bTBD\b|\bto the wiring change\b', re.I)
+NO_ISSUE = re.compile(r'no\s+(?:open\s+)?(?:issue|pull\s+request)|not?\s+(?:yet\s+)?(?:have|has)\s+an\s+issue'
+                      r'|without\s+an\s+issue|has\s+no\s+(?:issue|pull\s+request|number)', re.I)
+IMPLEMENTS_208 = {('0091', '23'), ('0091', '37'), ('0091', '38'), ('0091', '39')}
+WAITING_208 = {('0092', '2'), ('0095', '2'), ('0095', '16')}
+IMPLEMENTS_159 = ({('0091', r) for r in ('6', '8', '10')}
+                  | {('0094', r) for r in ('4', '5', '6', '7', '8', '10', '11', '12', '13', '16', '17', '18', '22', '24',
+                                           '25', '27', '29')})
+DEFERS_159 = {('0094', '20'): '175', ('0092', '7'): '203'}
+WAITING_159 = {('0094', '1')}
+
+
+def rule_line(text, key):
+    """Every line of the text under this key, joined, so that a second line of the same key is graded too."""
+    found = [m.group(2) for m in RULE_LINE.finditer(text) if m.group(1) == key]
+    return '; '.join(found) if found else None
+
+
+def rule_pairs(line):
+    """The (record, rule) pairs a text names: `ADR-0095 R2, R16` gives two pairs of ADR-0095."""
+    pairs, record = set(), None
+    for adr, rule in re.findall(r'ADR-(\d{4})|\bR(\d+)\b', line):
+        if adr:
+            record = adr
+        elif record:
+            pairs.add((record, rule))
+    return pairs
+
+
+def deferrals(line):
+    """Each (record, rule) pair of a Defers line, mapped to the number its segment defers it to, or None."""
+    out = {}
+    for segment in line.split(';'):
+        target = re.search(r'\bto\s+#(\d+)\b', segment)
+        for pair in rule_pairs(segment):
+            out[pair] = target.group(1) if target else None
+    return out
+
+
+def end_trailers(text):
+    """The last paragraph of a text outside fenced blocks, where every line of it is a `Key: value` trailer."""
+    last = prose(text).rstrip().split('\n\n')[-1]
+    lines = [ln for ln in last.split('\n') if ln.strip()]
+    return last if lines and all(re.match(r'^[A-Za-z-]+: \S', ln) for ln in lines) else ''
+
+
+def trailers_ok(block, implements, defers):
+    """Whether a trailer block names exactly these implemented rules and these deferrals, and nothing invented."""
+    imp, dfr = rule_line(block, 'Implements'), rule_line(block, 'Defers')
+    if imp is None or rule_pairs(imp) != implements:
+        return False
+    if not defers:
+        return dfr is None
+    return dfr is not None and deferrals(dfr) == defers and not PLACEHOLDER.search(dfr)
+
+
+def description_trailers(implements, defers):
+    def check(text):
+        block = end_trailers(description(text))
+        if not block:
+            return result(False, 'the description does not end with a trailer paragraph')
+        return result(trailers_ok(block, implements, defers), block.replace('\n', ' | ')[:150])
+    check.__name__ = 'description_ends_with_rule_trailers'
+    return check
+
+
+def commit_trailers(implements, defers):
+    def check(text):
+        msgs = commits(text)
+        if not msgs:
+            return result(False, 'no commit message')
+        block = end_trailers(msgs[-1])
+        return result(bool(block) and trailers_ok(block, implements, defers), block.replace('\n', ' | ')[:150])
+    check.__name__ = 'commit_ends_with_rule_trailers'
+    return check
+
+
+def waiting_rules_named(waiting):
+    def check(text):
+        body = prose(description(text))
+        block = end_trailers(description(text))
+        if block:
+            body = body[:body.rfind(block.split('\n')[0])]
+        named = waiting <= rule_pairs(body)
+        marker = NO_ISSUE.search(body)
+        ok = named and marker is not None
+        return result(ok, (marker.group(0) if marker else 'no word that the change has no issue')
+                      + ('' if named else f'; rules not named: {sorted(waiting - rule_pairs(body))}'))
+    check.__name__ = 'waiting_rules_named_in_prose'
+    return check
+
+
+def no_placeholder(text):
+    found = PLACEHOLDER.search(text)
+    if found:
+        return result(False, f'placeholder: {found.group(0)}')
+    for m in RULE_LINE.finditer(text):
+        if m.group(1) == 'Defers':
+            for segment in m.group(2).split(';'):
+                if rule_pairs(segment) and not re.search(r'\bto\s+#\d+\b', segment):
+                    return result(False, f'Defers target that is not a number: {segment.strip()[:80]}')
+    return result(True, 'no placeholder')
+
+
+def scope_lead_in_before_trailers(text):
+    d = prose(description(text))
+    lead = re.search(r'\*\*Scope[.:]?\*\*', d)
+    block = end_trailers(description(text))
+    ok = lead is not None and bool(block) and lead.start() < d.rfind(block.split('\n')[0])
+    return result(ok, '**Scope.** ahead of the trailers' if ok else 'no **Scope.** lead-in ahead of the trailers')
+
+
+def no_rule_lines(text):
+    found = [m.group(0).strip() for m in RULE_LINE.finditer(text)]
+    return result(not found, f'rule lines: {found}' if found else 'no rule lines')
+
+
+def no_rule_numbers(text):
+    found = sorted(set(re.findall(r'\bR\d+\b', text)))
+    return result(not found, f'rule numbers: {found}' if found else 'no rule numbers')
+
+
 def links_at_merge_base(text):
     urls = re.findall(r'https://github\.com/pgjdbc/pgjdbc/blob/([^/\s)]+)/', text)
     wrong = [u[:12] for u in urls if u != MERGE_BASE]
@@ -697,6 +822,13 @@ CASES = {
                                  no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
     'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
                                prose_under(330), no_tool_footer],
+    'authz-agent-208-rule-lines': [description_trailers(IMPLEMENTS_208, {}), waiting_rules_named(WAITING_208),
+                                   no_placeholder, scope_lead_in_before_trailers, no_headings,
+                                   commit_trailers(IMPLEMENTS_208, {})],
+    'authz-agent-159-defers-targets': [description_trailers(IMPLEMENTS_159, DEFERS_159), waiting_rules_named(WAITING_159),
+                                       no_placeholder, scope_lead_in_before_trailers, no_headings,
+                                       commit_trailers(IMPLEMENTS_159, DEFERS_159)],
+    'authz-agent-208-prose-records': [no_rule_lines, no_rule_numbers, no_headings],
     'pgjdbc-4412-comment-only': [no_old_comment_quoted_4412, contradictions_kept_4412, renames_named_4412,
                                  runtime_noop_checked_4412, prose_under(150)],
 }

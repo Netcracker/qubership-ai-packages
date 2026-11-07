@@ -28,6 +28,11 @@ the question it answers.
   the template has a heading for it. The outcome lines of a commit body, and of a description that
   becomes one, sit under `**User-visible changes.**` and `**Not changed.**`. No other slot opens
   with a lead-in, and a history with no Markdown drops the asterisks.
+- In a repository whose decision records number their rules and that asks a change to name them,
+  the commit message and the description end with `Implements:` and `Defers:` trailers, and each
+  deferred rule names an existing issue or pull request, which the agent asks the user to open
+  where none exists; a rule with neither stays out of the trailers and is named in the Scope slot.
+  No other repository gets these trailers.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the result rather than the route that reached it, and a length that follows the size
   of the change. Two to six lines of code, a command with its output, or an error text quoted whole

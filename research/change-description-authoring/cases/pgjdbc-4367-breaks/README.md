@@ -55,6 +55,10 @@ message retyped, and the `getMoreResults()` break line repeated under "User-visi
 
 ## Results
 
+Tree `27b2445d` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the §5 trailer table, and the §8
+checklist, for a repository whose decision records number their rules. This input has no decision records, so the
+change does not reach this case, and the results below stand for `27b2445d` as they stand for the tree before it.
+
 Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading. Both open the description with
 `**Breaking changes.**`, which starts a short paragraph on which code breaks, and both pass check 7; both keep `grant
 insert` among the break lines and repeat no break line. They wrote 764 and 769 words of prose, against 763 and 781 on
