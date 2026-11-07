@@ -7,14 +7,15 @@ entry and the outcome slot that #113 added, which carries the text and the code 
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Changelog entry), §3, §5 (identifiers)
+- `SKILL.md`: §2 (Commit body, slot 4; Changelog entry), §3, §5 (identifiers), §6 (asterisks around a lead-in)
 - `english-developer-style`: `SKILL.md` §5 (a quoted diagnostic is a literal), §7 (an identifier you do not have is
   not invented)
 
 ## Checks
 
-1. **Outcome lines carry the text and the code** (`outcome_lines_4374`). The commit body has a `User-visible:`
-   paragraph, and each of the two messages appears on a line of it with `42601`.
+1. **Outcome lines carry the text and the code** (`outcome_lines_4374`). The commit body has a paragraph that opens
+   with `User-visible:`, `**User-visible changes.**`, or the §6 form `User-visible changes.` on a line of its own,
+   and each of the two messages appears on a line of it with `42601`.
 2. **Nothing invented** (`nothing_invented_4374`). No issue or pull request number other than #4374 and #4363, and no
    SQLState other than `42601`. No issue was filed for this defect.
 3. **The changelog entry** (`changelog_entry_4374`). A bullet that starts with `fix:` (after `**Breaking:**` where the
@@ -34,7 +35,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Outcome lines (1) | Nothing invented (2) | Changelog entry (3) | Ran by accident now fails (3, read) |
 | --- | --- | --- | --- | --- |
-| Opus r1, r2 | passes | passes | passes | yes |
+| Opus r1, r2 (`9fe02a7c`) | passes | passes | passes | yes |
+| Opus r1, r2 (`f03479c0`) | passes | passes | passes | yes |
 | Haiku r1 | passes | passes | passes | yes |
 | Haiku r2 | passes | passes | passes | only by implication |
 | Opus baseline | fails: no `User-visible:` | passes | passes | only by implication |
@@ -42,3 +44,10 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 | `controls/invented-and-thin-entry.md` | passes | fails: `#4375` | fails | no |
 
 Both Opus runs state the dependency on #4363 in the commit message; neither Haiku run does.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first Opus row), graded by reading, and pass every
+check. Both write the outcome lead-ins in the §6 form, `User-visible changes.` and `Not changed.`, keep each outcome on
+one line while the rest of the body wraps at 72 columns, say that a statement that ran by accident now fails, and state
+the dependency on #4363. Of the runs on `0d0fa5fa`, r2 failed check 1: it wrapped each message over three lines, so no
+line carried the text and `42601` together. Tree `9fe02a7c` says an outcome is not wrapped where the body wraps. The
+other rows stand for the trees they ran on.

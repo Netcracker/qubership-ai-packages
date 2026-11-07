@@ -1,62 +1,69 @@
-## 1. Commits
+## Commits
 
-Fold `add tests` and `Apply suggestion from @vlsi` into commit 1. One commit remains, with this message:
+Fold commits 2 (`add tests`) and 3 (`Apply suggestion from @vlsi`) into commit 1. The maintainers may squash or rebase this pull request, so whichever commit lands on `master` has to stand alone. The tests and the reviewed changelog and docs text belong to the same change. One commit remains:
 
 ```text
-feat: include the driver version in the default application_name
+feat: add the driver version to the default ApplicationName
 
 Users want to know which pgjdbc version each of their applications
-runs, and the place they look is pg_stat_activity (#2404). Every
-connection that left ApplicationName unset sent the same
-"PostgreSQL JDBC Driver" as application_name, whatever the driver
-version, so the database could not tell driver versions apart.
+runs, and the server gave them no way to see it. A connection that
+leaves ApplicationName unset sent "PostgreSQL JDBC Driver" as
+application_name for every driver version, so pg_stat_activity showed
+the same value whichever version connected.
 
-The default ApplicationName is now DriverInfo.DRIVER_FULL_NAME: the
-driver name, a space, and the version of the driver jar. The git sha
-of the build and the JDK version are left out as too much for the
-default.
+The default ApplicationName is now "PostgreSQL JDBC Driver" followed by
+a space and the version of the driver jar. Adding the git sha of the
+build or the JDK version was left out because it puts too much in the
+value. Either can be discussed separately.
 
-User-visible:
-A connection that leaves ApplicationName unset reports application_name as "PostgreSQL JDBC Driver " followed by the driver version, for example "PostgreSQL JDBC Driver 42.7.14", where 42.7.13 reported "PostgreSQL JDBC Driver"; a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
-Any role that can connect to the database reads the driver version of other sessions from application_name in pg_stat_activity.
-Not changed:
-A connection that sets ApplicationName reports that value unchanged.
+User-visible changes.
+A connection that leaves ApplicationName unset reports application_name as "PostgreSQL JDBC Driver 42.7.14" for driver 42.7.14, where 42.7.13 and earlier reported "PostgreSQL JDBC Driver"; a query or dashboard that matches application_name = 'PostgreSQL JDBC Driver' no longer finds these connections.
+Any role that can connect to the database reads application_name of every session in pg_stat_activity, so the default now shows the driver version to other database users.
+
+Not changed.
+An explicitly set ApplicationName is sent as given, without the version.
 
 Fixes #2404
 ```
 
-## 2. Pull request title
+## Title
 
 ```text
-feat: include the driver version in the default ApplicationName
+feat: add the driver version to the default ApplicationName
 ```
 
-## 3. Pull request description
+## Description
 
 ```markdown
-**Breaking changes.** Code that finds pgjdbc connections by the exact default application name stops finding them after the upgrade:
+**Breaking changes.**
+Queries and dashboards that find pgjdbc connections by the exact default application name break:
 
-- A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver ` followed by the driver version, for example `PostgreSQL JDBC Driver 42.7.14`. Version 42.7.13 reported `PostgreSQL JDBC Driver`. A query or dashboard that matches `application_name = 'PostgreSQL JDBC Driver'` no longer finds these connections. Match `application_name LIKE 'PostgreSQL JDBC Driver%'` instead, or set `ApplicationName=PostgreSQL JDBC Driver` to keep the old value.
+- A connection that leaves `ApplicationName` unset reports `application_name` as `PostgreSQL JDBC Driver 42.7.14` for driver 42.7.14, where 42.7.13 and earlier reported `PostgreSQL JDBC Driver`. A match on `application_name = 'PostgreSQL JDBC Driver'` stops finding these connections. Update the match to the new value, or set `ApplicationName=PostgreSQL JDBC Driver` to keep the old one.
 
-Issue #2404 asks to see the version of the JDBC driver a client uses directly from a view in PostgreSQL. Users have asked the same thing about their applications in `pg_stat_activity`. Until now, every connection that left `ApplicationName` unset showed `PostgreSQL JDBC Driver` there, whatever the driver version.
+Users want to know which driver version each of their applications runs, as seen in `pg_stat_activity`. #2404 asks to read the version of the JDBC driver a client uses directly from a view in PostgreSQL. Until now every driver version sent the same default, so the view could not show it.
 
-The default `ApplicationName` is now `DriverInfo.DRIVER_FULL_NAME`, which is the driver name, a space, and the version of the driver jar. A connection that sets `ApplicationName` sends that value unchanged. Any role that can connect to the database can read `application_name` for every session in `pg_stat_activity`. Other database users can therefore see the driver version of each connection.
+The default `ApplicationName` is now `PostgreSQL JDBC Driver` followed by a space and the version of the driver jar. Any role that can connect to the database reads `application_name` of every session in `pg_stat_activity`, so the default now shows the driver version to other database users. `use.md` says so. An explicitly set `ApplicationName` is sent as given, without the version.
 
-`explicitApplicationNameIsKept` also passes on `master`. It covers the explicitly set value, which this change must leave alone.
-
-**Scope.** The default leaves out the git sha of the build and the JDK version. Adding them can be discussed separately.
+`explicitApplicationNameIsKept` passes on `master` too. It checks that an explicit `ApplicationName` is not changed.
 
 Fixes #2404.
+
+**Scope.** Adding the git sha of the build or the JDK version is left out because it puts too much in the value. Either can be discussed separately. `gradle.properties` names 42.7.14 as the next version. A maintainer needs to decide whether a changed default can ship in that patch release or should wait for a minor version.
 
 ### All Submissions:
 
 * [ ] Have you followed the guidelines in our [Contributing](https://github.com/pgjdbc/pgjdbc/blob/master/CONTRIBUTING.md) document?
 * [ ] Have you checked to ensure there aren't other open [Pull Requests](../../pulls) for the same update/change?
 
+### New Feature Submissions:
+
+1. [ ] Does your submission pass tests?
+2. [ ] Does `./gradlew styleCheck` pass ?
+3. [ ] Have you added your new test classes to an existing test suite in alphabetical order?
+
 ### Changes to Existing Features:
 
 * [x] Does this break existing behaviour? If so please explain.
-  Yes: see **Breaking changes** above.
 * [x] Have you added an explanation of what your changes do and why you'd like us to include them?
 * [x] Have you written new tests for your core changes, as applicable?
 * [ ] Have you successfully run tests with your changes locally?

@@ -25,7 +25,9 @@ the question it answers.
 - Headings only where the repository's template supplies them. With a template or without one, the
   break block opens with `**Breaking changes.**` ahead of any heading. A Scope slot that carries a
   gap, a related or stacked pull request, or a maintainer's question opens with `**Scope.**` unless
-  the template has a heading for it. No other slot opens with a lead-in.
+  the template has a heading for it. The outcome lines of a commit body, and of a description that
+  becomes one, sit under `**User-visible changes.**` and `**Not changed.**`. No other slot opens
+  with a lead-in, and a history with no Markdown drops the asterisks.
 - In a repository whose decision records number their rules and that asks a change to name them,
   the Scope slot ends with `Implements:` and `Defers:` lines, each deferred rule names its target by number or by a visible
   placeholder, and a commit carries the same lines as trailers where the merge drops the

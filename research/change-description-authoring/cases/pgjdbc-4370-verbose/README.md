@@ -80,3 +80,10 @@ The script passes the Haiku narration check by its regular expression; the spell
 same sentence the check rules out. The new runs no longer mark the test new or give the command, but all four stay
 above 500 words (Opus r2 comes closest, at 541), three of four still list the counts, and both Haiku runs count the
 failing cases.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c`, which marks the outcome block with
+`**User-visible changes.**` and `**Not changed.**`, keeps each outcome on one line, and says a lead-in opens its
+paragraph; graded by reading. Both pass check 9 with a `**Scope.**` paragraph and no heading, and both fail checks 1 and
+5: 592 and 597 words of prose, and the counts -1, -2, and `Long.MIN_VALUE` in the verification slot. r1 also fails check
+8 with "5 of the 15 cases ... fail" against the old `skip`. The runs on `c99e1c77` failed check 1 (600 and 541 words)
+and r1 check 5. Tree `9fe02a7c` changes no rule these checks test, so the difference is between runs, not trees.

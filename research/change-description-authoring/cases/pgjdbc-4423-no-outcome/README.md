@@ -3,7 +3,7 @@
 The input is the diff of [pgjdbc/pgjdbc#4423](https://github.com/pgjdbc/pgjdbc/pull/4423), which stops the Gradle test
 task from excluding `**/*Suite*` and renames the one test the mask hid, with the author's notes. Nothing in the driver
 jar changes. The case is the negative control for the outcome slot and for the changelog entry: the commit has no
-`User-visible:` or `Not changed:` lines, the description has no "User-visible changes" section, and the change gets no
+`User-visible` or `Not changed` lines, the description has no "User-visible changes" section, and the change gets no
 changelog entry.
 
 ## Skill parts
@@ -13,8 +13,8 @@ changelog entry.
 
 ## Checks
 
-1. **No outcome slot** (`no_outcome_slot`). No `User-visible`, `Not changed:`, or `Breaking` anywhere. A
-   `Not changed:` line that says nothing in the jar changes fails: the slot holds an outcome a reader would expect to
+1. **No outcome slot** (`no_outcome_slot`). No `User-visible`, `Not changed`, or `Breaking` anywhere. A
+   `Not changed` line that says nothing in the jar changes fails: the slot holds an outcome a reader would expect to
    change and that the change keeps, and nothing here is one.
 2. **No changelog entry** (`no_changelog_entry`). No bullet in the changelog's shape, and the output says that the
    change needs no entry.
@@ -40,3 +40,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 The baselines pass both checks: without the skill, neither model writes an outcome slot or an entry for this change.
 The failing run is the one that adds a `Not changed:` line to the commit body.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its checks look only for the absence of an outcome block, and
+`no_outcome_slot` matches the old and the new markers. The rows stand for the trees they ran on.

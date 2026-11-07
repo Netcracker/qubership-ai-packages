@@ -13,8 +13,8 @@ merge commit and stands alone (§4 rule 1), and the description is the body that
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, reviewer-only content), §4,
-  §5 (links in a commit body)
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description: a break leads the description,
+  reviewer-only content, the lead-in paragraph), §4, §5 (links in a commit body)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -27,6 +27,13 @@ merge commit and stands alone (§4 rule 1), and the description is the body that
 4. **The title is a subject** (`title_is_subject`).
 5. **The description is a commit body** (`description_as_commit_body`), as in
    [`pgjdbc-4466-squash-title-description`](../pgjdbc-4466-squash-title-description/README.md).
+6. **Outcome lead-ins, not labels** (`no_plain_outcome_labels`). The description, which becomes the commit body, has no
+   line that opens with `User-visible:` or `Not changed:`; its outcomes sit under `**User-visible changes.**`
+   and `**Not changed.**`.
+7. **Break lead-in first** (`break_lead_in_before_headings`), as in
+   [`pgjdbc-4466-squash-default`](../pgjdbc-4466-squash-default/README.md): the new default breaks code that
+   matches the old `application_name`, so the description opens with `**Breaking changes.**`.
+8. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
 
 ## Running it
 
@@ -39,10 +46,18 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Outcome (1) | Every commit (2) | Fix-ups (3) | Title (4) | Body shape (5) | Verification in one sentence (5, read) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes | passes | passes |
-| Opus r2 | passes | passes | passes | passes | passes | fails: two sentences |
+| Opus r1 (`9fe02a7c`) | passes | passes | passes | passes | passes | passes: none |
+| Opus r2 (`9fe02a7c`) | passes | passes | passes | passes | passes | passes: one sentence |
+| Opus r1 (`f03479c0`) | passes | passes | passes | passes | passes | passes |
+| Opus r2 (`f03479c0`) | passes | passes | passes | passes | passes | fails: two sentences |
 | Haiku r1 | passes | fails: a separate test commit with no `#2404` | passes | passes | passes | passes: one sentence, with the server precondition after a semicolon |
 | Haiku r2 | passes | passes | passes | passes | passes | passes |
 | Opus baseline | fails | passes | passes | passes | fails | fails |
 | Haiku baseline | fails | fails: the test commit has no `#2404` | passes | passes | fails | fails |
 | `controls/as-pushed.md` | fails | fails | fails | fails | passes | passes |
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first two rows), graded by reading, and pass every
+check, checks 6 to 8 included: both descriptions open with `**Breaking changes.**` and mark their outcomes with the bold
+lead-ins, one line each. The re-run on `23b838fc` wrapped r1's outcome lines at 72 columns, which check 8 now catches.
+The Opus results of `f03479c0` failed check 7, and r1 also failed check 6 with plain `User-visible:` and `Not changed:`
+lines. Check 7 fails the Haiku results, both baselines, and the control; check 8 fails both Haiku results.

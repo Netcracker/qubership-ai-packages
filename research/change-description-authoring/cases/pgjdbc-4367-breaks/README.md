@@ -29,6 +29,9 @@ case tests the rule in `SKILL.md` §2,
 
 7. **The break lead-in comes first** (`break_label_4367`). The description opens with `**Breaking changes.**` (or
    `**Breaking changes:**`), with nothing before it, and has no headings: the case has no template.
+8. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`). The description is never a commit
+   body under this merge model, so §2 keeps its outcomes in prose: it carries no `**User-visible changes.**` or
+   `**Not changed.**` lead-in, which the other slots may not carry (§2, §8 Headings).
 
 Checks 1 to 3 and 7 are the rule under test; 4 to 6 are the guard against the rule costing other facts. `check.py`
 marks checks 1, 6, and 7 and prints the question for check 5; checks 2 to 4 are graded by reading. Check 7 was added
@@ -72,6 +75,8 @@ rows and the control are of 2026-10-20 and were not re-run.
 | `opus/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 756 |
 | `opus/result.md` | passes | passes | passes | passes | passes | passes | 763 |
 | `opus/result-2.md` | passes | passes | passes | passes | passes | passes | 781 |
+| `opus/result.md` (`9fe02a7c`) | passes | passes | passes | passes | passes | passes | 729 |
+| `opus/result-2.md` (`9fe02a7c`) | passes | passes | passes | passes | passes | passes | 770 |
 | `haiku/baseline/result.md` | fails: Why first | fails: in slot 3 | fails: in Scope | passes | passes | passes | 758 |
 | `haiku/result.md` | passes | passes | passes | passes | passes | passes | 799 |
 | `haiku/result-2.md` | passes | passes | passes | passes | passes | passes | 785 |
@@ -82,3 +87,12 @@ the second version of the rule was written for; both re-runs keep it among the b
 
 Cost, from `<model>/result*.run.txt`: an Opus run costs about $0.50 and a Haiku run about $0.02, nearly all of it the
 two skill files read as input.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c`, which marks the outcome block with
+`**User-visible changes.**` and `**Not changed.**`, keeps each outcome on one line, and says a lead-in opens its
+paragraph; graded by reading, both pass checks 1 to 7 (the `9fe02a7c` rows). Both open the description with
+`**Breaking changes.**` on the paragraph it introduces, keep `grant insert` among the break lines, and repeat no break
+line. r1 fails check 8: it puts two non-changes under `**Not changed.**`, a lead-in §2 keeps for a description that
+becomes a commit body, which this squash with the default message never copies. r2 states them in prose and passes it.
+Of the other committed results, only the Haiku baseline fails check 8, with `**Not changed:**`. They wrote 729 and 770
+words of prose. The other rows stand for the trees they ran on.
