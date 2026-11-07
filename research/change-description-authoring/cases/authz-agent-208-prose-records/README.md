@@ -25,13 +25,8 @@ rule numbers, and six headings.
 
 ## Results
 
-Runs of 2026-11-07 on tree `340d167d`, graded by reading; both models at the default effort. All four results pass all
+Runs of 2026-11-07 on tree `27b2445d`, graded by reading; both models at the default effort. All four results pass all
 three checks. Each names ADR-0091 and ADR-0095 in a sentence, as the rule asks for a record without numbered rules,
-says in its `**Scope.**` paragraph that the wiring change has no pull request yet, and writes no rule line and no rule
-number. The descriptions run 289 to 307 words. The two earlier rounds, on trees `32d8cc58` and `b47b5b6e`, passed the
-same way.
-
-In the round on `b47b5b6e`, Sonnet r1 wrote the wiring change as `[PR #NNNN]`, "to be filled in before this merges",
-without failing a check. The Scope slot asks to state what a follow-up without a number leaves out, and the §8
-identifier item also allows a visible placeholder for a number that does not exist yet. No result of the final round
-does it.
+says in its `**Scope.**` paragraph that the wiring change has no pull request yet, and writes no rule trailer and no
+rule number. The descriptions run 286 to 297 words. Four earlier rounds the same day passed the same way, except that
+one Sonnet result on `b47b5b6e`, under the first form of the rule, wrote the wiring change as `[PR #NNNN]`.

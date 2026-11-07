@@ -54,9 +54,9 @@ pull request title and description. `controls/break-heading.md` is `opus/result.
 
 ## Results
 
-Tree `340d167d` adds the `Implements:` and `Defers:` lines to §2 (Scope), the §5 trailer table, and the §8
+Tree `27b2445d` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the §5 trailer table, and the §8
 checklist, for a repository whose decision records number their rules. This input has no decision records, so the
-change does not reach this case, and the results below stand for `340d167d` as they stand for the tree before it.
+change does not reach this case, and the results below stand for `27b2445d` as they stand for the tree before it.
 
 Opus r1 and r2 were re-run on 2026-11-02 on tree `6efc3a3a`, graded by reading; both pass every check. Each opens the
 description with a `**Breaking changes.**` paragraph ahead of the template's first heading, puts the gap in a

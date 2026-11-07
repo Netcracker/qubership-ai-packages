@@ -201,7 +201,7 @@ Six slots, in order; the last four are conditional.
 | 2 | **What** | R1, R2 | The behavioral change, not the changed files; why this approach; the rejected alternative a reviewer would raise | *R1 asks: is this the right behavior, and would I have done it differently?* |
 | 3 | **User-visible changes** | R3, R4 | Every outcome the change adds or alters that a caller can observe, one line each: what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them. Breaks first: what worked before and now fails or differs, with the version it worked in and what the reader does about it; ahead of slot 1 (below) | *R3 asks: is this new text my incident?* *R4 asks: will my upgrade break, and what do I do?* |
 | 4 | **Verification** | R1 only | Only what the diff and the CI result do not show: a manual check and its literal output; a test that passes without the change, or needs what CI lacks; a test removed or narrowed; which test guards which site, where the change has several; for a claim about the code that no test establishes, the command or file that checks it | *R1, holding the diff and green checks, asks: what am I still taking on trust?* |
-| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it; the `Implements:` and `Defers:` lines, where the repository numbers the rules of its decision records and asks a change to name them | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
+| 5 | **Scope** | R1, R5 | What is deliberately left out; the follow-up by number; related or stacked pull requests, where they overlap, which depends on which; a question from the discussion that only a maintainer can settle, with the decision it needs and the evidence for it | *R1 asks: is this gap intentional?* *R5 asks: does this need another change first?* |
 | 6 | **Release note** | R4, R3 | The user-facing sentence, or `NONE`, where the repository's tooling reads a block for it | *R4 asks: what changed for me?* |
 
 The Why slot has no skip condition. A fix, a feature, and a refactor each replace a version that
@@ -497,23 +497,27 @@ follow-up exists, name its number; where it does not, state what this change lea
 handling is outside this change`). `A separate pull request follows for that` is unfalsifiable when
 written and stale once the number exists.
 
-**Rule lines belong to a repository that numbers the rules of its decision records.** Where the
-records carry numbered rules and the repository asks a change to name them, the Scope slot ends
-with two plain lines, and leaves out the one with nothing to list:
+**Rule trailers belong to a repository that numbers the rules of its decision records.** Where
+the records carry numbered rules and the repository asks a change to name them, the commit message
+and the pull request description each end with two trailers, and leave out the one with nothing to
+list:
 
 ```text
-Implements: ADR-0012 R4, R7; ADR-0014 R2.
-Defers: ADR-0012 R9 to #318; ADR-0015 R3 to [PR #NNNN].
+Implements: ADR-0012 R4, R7; ADR-0014 R2
+Defers: ADR-0012 R9 to #318; ADR-0015 R3 to #322
 ```
 
-`Implements` lists the rules the change brings, and `Defers` each rule it leaves to a later change,
-with that change's number. A later change that has no number yet gets a visible placeholder, never
-the next free number and never a phrase such as `the wiring change`, and the description says that
-the placeholder is filled in before the merge. A `Defers` line is a deliberate gap for the
-`**Scope.**` lead-in (above); the lines take no heading of their own. The rule numbers come from the
-records or the notes, never from a guess. A record without numbered rules, or a repository without
-records, gets no rule lines, even where the change carries out a decision: name the record in the
-Why or the What slot instead.
+`Implements` lists the rules the change brings in every case, and `Defers` each rule it leaves,
+wholly or in part, to a later change, with the number of an issue or a pull request that exists.
+Where no such change exists yet, ask the user to open an issue, and never write the next free number
+or a placeholder: either would stay in the merged commit. Without an issue, leave the rule out of
+the trailers, and say in the Scope slot which rules wait for a change that has no issue yet. A
+deferred rule is a deliberate gap for the `**Scope.**` lead-in (above); the trailers take no heading
+of their own. In a pull request with several commits, each commit carries the trailers of its own
+part, and the description carries them for the whole change. The rule numbers come from the records
+or the notes, never from a guess. A record without numbered rules, or a repository without records,
+gets no rule trailers, even where the change carries out a decision: name the record in the Why or
+the What slot instead.
 
 **A question the issue or the review left open is answered, kept open, or left out.** Where the code,
 a test, or another source you verified answers it, give the answer and its evidence, and do not
@@ -735,7 +739,7 @@ consumer decides whether it is worth writing.
 | `Cc: stable@vger.kernel.org # <ver>: <sha>: <subject>` | Kernel stable team; the sequence means `git cherry-pick <sha>` then this commit | R5 | Kernel only |
 | `Reported-by:` | Credit | R2 | Someone reported it |
 | `BREAKING CHANGE:`, or `!` after the type | release-please and semantic-release: major bump | R4, through the tool | The tool is present |
-| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The description carries rule lines (§2, Scope) and the merge drops the description (§4); each commit carries the lines for its own part, `Defers:` included where its part leaves a rule to a later change, and leaves out a line with nothing to list |
+| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository numbers the rules of its decision records and asks a change to name them (§2, Scope); each commit carries them for its own part, and the description for the whole change |
 | `Co-authored-by:` | Platform attribution | none of the five | Provenance requires it |
 | `Change-Id:`, `Signed-off-by:` | Gerrit; the DCO | none of the five | The workflow requires it |
 
@@ -917,8 +921,9 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
 - Scope: is every gap named as intentional, every follow-up by number, every stacked change by its
   overlap and order (§2)? Where the repository numbers the rules of its decision records and asks a
-  change to name them, do the `Implements:` and `Defers:` lines close the slot, with a number or a
-  visible placeholder for each target, and are they absent from every other repository (§2)?
+  change to name them, do the commit message and the description end with `Implements:` and
+  `Defers:` trailers, with an existing issue or pull request for each deferred rule, and are they
+  absent from every other repository (§2)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
 - Merge model: read from the history; every commit that survives the merge written as a full body,
@@ -928,14 +933,15 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   branch (§5)?
 - Open issue: where every commit says `See #n` and none says `Fixes #n`, does the description say in
   one sentence why the issue stays open (§4)?
-- Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
-  placeholder (`english-developer-style` §7)? Does the first mention of a section of a repository
-  document carry its heading text (§5)? Links: does each first mention of a rendered section, code
-  outside the diff, a specification, or another project's documentation carry a link built from a
-  known pattern, at the merge-base commit for content the pull request leaves unchanged and at its
-  head for content it adds or changes, rebuilt after a push that changes it, never at a branch name,
-  none to text inside the diff, and in a commit body or under §4 rule 5 none to this repository's
-  code and the external ones only as a `Link:` trailer or a footnote (§5)?
+- Identifiers: does every issue, pull request, commit, and version number exist, or, except for a
+  `Defers` target, stand as a visible placeholder (`english-developer-style` §7)? Does the first
+  mention of a section of a repository document carry its heading text (§5)? Links: does each first
+  mention of a rendered section, code outside the diff, a specification, or another project's
+  documentation carry a link built from a known pattern, at the merge-base commit for content the
+  pull request leaves unchanged and at its head for content it adds or changes, rebuilt after a push
+  that changes it, never at a branch name, none to text inside the diff, and in a commit body or
+  under §4 rule 5 none to this repository's code and the external ones only as a `Link:` trailer or
+  a footnote (§5)?
 - House style: prefix, limit, sign-off applied only where the workflow consumes them (§6)?
 - Nothing: no entry for noise, no empty section, no diff paraphrase, no predicted merge difficulty
   (§7)?

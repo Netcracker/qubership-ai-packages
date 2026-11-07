@@ -1,53 +1,53 @@
-## 1. Commit message
+## Commit message
 
 ```text
-feat(token): add TOKEN_KEYS_UNAVAILABLE for keys that cannot be loaded
+feat(token): give keys that cannot be loaded a reason code of their own
 
-A token whose key is not loaded got TOKEN_KID_UNKNOWN, whether its
-source held no such key or could not be asked. During an outage of the
-identity provider, every rejection therefore looked like a token that
-someone had invented.
+A token whose kid matches no loaded key got TOKEN_KID_UNKNOWN, whether
+its source holds no such key or could not be reached. An outage of the
+identity provider therefore read like a stream of invented tokens.
 
-LookupOrReload returns keys.ErrKeysUnavailable when no loaded key
-matches and the last load got no answer about the keys of the source:
-the load failed, the wait for it ran out, or a limit refused it. Verify
-turns that into the reason code TOKEN_KEYS_UNAVAILABLE.
+LookupOrReload now returns keys.ErrKeysUnavailable when no loaded key
+matches and the last load produced no key set for the source: the load
+failed, the wait for it ran out, or a limit refused it. Verify reports
+that as TOKEN_KEYS_UNAVAILABLE. A JWKS that lacks the key is a result,
+and so is the 404 of a realm that holds no keys, so both still end in
+ErrKeyUnknown. A realm that held keys returns 404 only on a failed
+reload, and its keys stay.
 
-A JWKS that lacks the key is an answer, and so is the 404 of a realm
-that holds no keys. A realm that held keys returns 404 only on a failed
-reload, and its keys stay. A 200 response whose keys is not an array is
-a failed load for the same reason; null used to count as an empty array
-and removed the keys.
+A 200 response whose keys is not an array is a failed load too and keeps
+the keys. null used to count as an empty array and removed them.
 
-User-visible:
-When no loaded key matches and the last load of the keys of iss got no answer, Verify rejects the token with the reason code TOKEN_KEYS_UNAVAILABLE and the text `the keys of iss "<iss>" cannot be loaded, so the token cannot be checked`.
-When a 200 response has a keys value that is not an array, null included, the load fails and the loaded keys stay. null used to remove them.
-When a realm that held keys returns 404 on a reload, the load fails and the loaded keys stay.
+The packages are not wired into the service yet, so no request is
+handled differently.
 
-Not changed: a token that names a realm that does not exist, a JWKS that lacks the key, and the 404 of a realm that holds no keys keep TOKEN_KID_UNKNOWN.
-Not changed: no request is handled differently, because these packages are not wired into the service yet.
+User-visible changes.
+When no loaded key matches the kid and the last load of the keys of iss failed, ran out of wait, or was refused by a limit, LookupOrReload returns keys.ErrKeysUnavailable instead of keys.ErrKeyUnknown.
+Verify rejects such a token with the reason code TOKEN_KEYS_UNAVAILABLE and the text `the keys of iss "<iss>" cannot be loaded, so the token cannot be checked`.
+When a 200 response has a keys value that is not an array, null included, the load counts as failed and the loaded keys stay.
 
-Implements: ADR-0091 R23, R37, R38, R39.
-Defers: ADR-0092 R2 to [PR #NNNN]; ADR-0095 R2, R16 to [PR #NNNN].
+Not changed.
+A token that names a realm that does not exist keeps TOKEN_KID_UNKNOWN.
+
+Implements: ADR-0091 R23, R37, R38, R39
 ```
 
-## 2. Pull request title
+## Pull request title
 
 ```text
-feat(token): add TOKEN_KEYS_UNAVAILABLE for keys that cannot be loaded
+feat(token): report TOKEN_KEYS_UNAVAILABLE when the keys of an issuer cannot be loaded
 ```
 
-## 3. Pull request description
+## Pull request description
 
 ```markdown
-A token whose key is not loaded got `TOKEN_KID_UNKNOWN`, whether its source held no such key or could not be asked. During an outage of the identity provider, the rejections therefore read like a stream of invented tokens.
+A token whose kid matches no loaded key gets `TOKEN_KID_UNKNOWN`, whether its source holds no such key or could not be reached. An outage of the identity provider therefore reads like a stream of invented tokens.
 
-`LookupOrReload` now returns `keys.ErrKeysUnavailable` when no loaded key matches and the last load got no answer about the keys of the source: the load failed, the wait for it ran out, or a limit refused it. `Verify` turns that into the reason code `TOKEN_KEYS_UNAVAILABLE`, with the text `the keys of iss "<iss>" cannot be loaded, so the token cannot be checked`. A JWKS that lacks the key is an answer, and so is the 404 of a realm that holds no keys. Both keep `TOKEN_KID_UNKNOWN`, as does a token that names a realm that does not exist. A realm that held keys returns 404 only on a failed reload, and its keys stay. A 200 response whose `keys` is not an array is also a failed load that keeps the keys. `null` used to count as an empty array and removed them, so please check that this is the behavior you want.
+`LookupOrReload` now returns `keys.ErrKeysUnavailable` when no loaded key matches and the last load produced no key set for the source: the load failed, the wait for it ran out, or a limit refused it. `Verify` reports that as `TOKEN_KEYS_UNAVAILABLE` with the text `the keys of iss "<iss>" cannot be loaded, so the token cannot be checked`. A JWKS that lacks the key is a result, and so is the 404 of a realm that holds no keys, so both still give `TOKEN_KID_UNKNOWN`. A realm that held keys returns 404 only on a failed reload, and its keys stay. A 200 response whose `keys` is not an array, `null` included, is a failed load and keeps the keys; `null` used to count as an empty array and removed them. A token that names a realm that does not exist keeps `TOKEN_KID_UNKNOWN`. Nothing in the service calls these packages yet, so no request is handled differently.
 
-Seven existing tests changed their expectation from `ErrKeyUnknown` to `ErrKeysUnavailable`. Each exercises a limit or a wait, which is the case this change names.
+Seven existing tests changed their expectation from `ErrKeyUnknown` to `ErrKeysUnavailable`. The limit or the wait each one exercises is a case this change names, so the old expectation no longer described it.
 
-**Scope.** This pull request is stacked on #203, which sits on #159, #202, and #201, and it merges after them. The packages it touches are not wired into the service yet, so no request is handled differently. The wiring change has no pull request yet. It also adds `TOKEN_KIND_NOT_ALLOWED` and `CALLER_NOT_M2M`, which ADR-0095 lists and which depend on the route. Both `[PR #NNNN]` placeholders below, and the two in the commit message, are filled in before the merge.
+**Scope.** This branch is stacked on #203, which sits on #159, #202, and #201, and merges after them. ADR-0092 R2, ADR-0095 R2, and ADR-0095 R16 need the packages wired into the service. The wiring change covers them, has no pull request or issue yet, and so these rules are not in the trailers. It also adds the reason codes `TOKEN_KIND_NOT_ALLOWED` and `CALLER_NOT_M2M` from ADR-0095, which depend on the route.
 
-Implements: ADR-0091 R23, R37, R38, R39.
-Defers: ADR-0092 R2 to [PR #NNNN]; ADR-0095 R2, R16 to [PR #NNNN].
+Implements: ADR-0091 R23, R37, R38, R39
 ```
