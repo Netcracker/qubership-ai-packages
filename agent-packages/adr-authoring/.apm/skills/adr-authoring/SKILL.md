@@ -222,14 +222,16 @@ choice, and how to check a change:
 1. Read the two lines. They are claims: they guide the check, and a deferral counts only under the `Deferred` row.
 2. Walk every rule the two lines name and every rule of the layers the change touches. A missing line shows in no diff,
    so this walk finds the rule a change forgot. The walk covers `Proposed` and `Accepted` records. It skips `Rejected`
-   and `Superseded` records, and a rule that an accepted record names as replaced under **Related ADRs**.
+   and `Superseded` records, and a rule that an accepted record names as replaced under **Related ADRs**. Where a
+   `Proposed` record names an accepted rule as replaced, one of the two governs: the new rule where the two lines name
+   it, and the accepted rule otherwise.
 3. Give each rule one verdict, and group the rows by root cause, because one defect can break several rules.
 
 | Verdict | Meaning |
 | --- | --- |
 | Conforms | The change touches the rule and meets it. |
 | Violates | The change touches the rule and does not meet it. |
-| Deferred | The change names the rule and a target under `Defers`, and the rule is unmet both before and after it. |
+| Deferred | The change names the rule and a target under `Defers`, leaves the rule unmet, and breaks no case of it that the target branch met. |
 | Not touched | The change does not touch the rule. |
 | Cannot tell | The change touches the rule, and the rule has two readings or an open point covers it. |
 
