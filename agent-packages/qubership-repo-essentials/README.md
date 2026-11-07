@@ -1,8 +1,8 @@
 # qubership-repo-essentials
 
 APM package with the baseline agent setup for new Netcracker/Qubership repository installations. Depend on this one
-package and the agent picks up the shared conventions through the package's commit-message rules and transitive
-APM dependencies.
+package and the agent picks up the shared conventions through the package's commit-message and tool-version rules
+and transitive APM dependencies.
 
 The deprecated [`qubership-essentials`](../qubership-essentials/) package
 remains available with its original dependency set for existing consumers.
@@ -12,8 +12,9 @@ repository wants agent-run Codex reviews.
 
 ## What it includes
 
-The package requires Conventional Commits and an `Assisted-by:` trailer in commit messages, and includes these
-dependencies:
+The package requires Conventional Commits and an `Assisted-by:` trailer in commit messages. It also requires commands
+that the docs tell a user to run to work on the oldest tool versions the project supports, or on releases a year old.
+The package includes these dependencies:
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages
   (instructions, skills, prompts, agents, hooks).
