@@ -20,10 +20,10 @@ description as a commit body drops the pull request template here, where it belo
 ## Checks
 
 1. **Outcome line with no invented code** (`user_visible_without_invented_code`). The output carries a `User-visible:`
-   label or a "User-visible changes" heading, and a line under it or under "Breaking changes" names the new default
-   value and the condition (`ApplicationName` unset). No such line carries a SQLState, an exception class, or another
-   error code: the outcome emits none. Question: does a
-   line give the value, and does any line carry an identifier the outcome does not emit?
+   label, a `**User-visible changes.**` lead-in, or a "User-visible changes" heading, and a line under it or under
+   "Breaking changes" names the new default value and the condition (`ApplicationName` unset). No such line carries a
+   SQLState, an exception class, or another error code: the outcome emits none. Question: does a line give the value,
+   and does any line carry an identifier the outcome does not emit?
 2. **The first commit carries the why** (`first_commit_full_with_issue`). The first surviving commit has a body that
    states the problem (which driver version a connection uses cannot be seen in `pg_stat_activity`) and references
    `#2404`. Under the default message the body of a multi-commit squash is the list of commit messages, so this body
@@ -39,6 +39,12 @@ description as a commit body drops the pull request template here, where it belo
 6. **Break lead-in ahead of the template** (`break_lead_in_before_headings`). The new default breaks code that
    matches the old `application_name`, so the description opens with a paragraph that starts with
    `**Breaking changes.**`, ahead of the template's first heading, and adds no heading that names the break.
+7. **One line per outcome** (`outcome_lines_unwrapped`). Each outcome is one line, however long, in the commit body and
+   in the description wherever a lead-in introduces them, and no line under the lead-in continues the one above it: no
+   indented continuation, no line that starts lowercase, and no line after one that ends mid-sentence. The body may wrap
+   its other slots at 72 columns; an outcome wrapped there reads as two outcomes to the reader who greps for one.
+8. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`), as in
+   [`pgjdbc-4367-breaks`](../pgjdbc-4367-breaks/README.md).
 
 ## Running it
 

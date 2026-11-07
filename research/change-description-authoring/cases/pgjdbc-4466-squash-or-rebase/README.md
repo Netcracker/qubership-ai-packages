@@ -28,6 +28,8 @@ copies it.
 5. **The template stays** (`template_headings_kept`), as in the squash-default case.
 6. **Scope by lead-in under the template** (`scope_lead_in_under_template`), as in the squash-default case.
 7. **Break lead-in ahead of the template** (`break_lead_in_before_headings`), as in the squash-default case.
+8. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
+9. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`), as in the squash-default case.
 
 ## Running it
 

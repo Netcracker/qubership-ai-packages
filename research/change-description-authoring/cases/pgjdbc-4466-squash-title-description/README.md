@@ -13,8 +13,8 @@ reviewer-only content, verification in one line, and no URL to this repository's
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, reviewer-only content), §4,
-  §5 (links in a commit body)
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description: a break leads the description,
+  reviewer-only content, the lead-in paragraph), §4, §5 (links in a commit body)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -25,6 +25,13 @@ reviewer-only content, verification in one line, and no URL to this repository's
 3. **The description is a commit body** (`description_as_commit_body`). No Markdown heading, no checkbox, no URL to
    `github.com/pgjdbc/pgjdbc/blob/…`. Question for the reader: is verification at most one sentence naming what the
    tests establish?
+4. **Outcome lead-ins, not labels** (`no_plain_outcome_labels`). The description, which becomes the commit body, has no
+   line that opens with `User-visible:` or `Not changed:`; its outcomes sit under `**User-visible changes.**`
+   and `**Not changed.**`.
+5. **Break lead-in first** (`break_lead_in_before_headings`), as in
+   [`pgjdbc-4466-squash-default`](../pgjdbc-4466-squash-default/README.md): the new default breaks code that
+   matches the old `application_name`, so the description opens with `**Breaking changes.**`.
+6. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
 
 ## Running it
 

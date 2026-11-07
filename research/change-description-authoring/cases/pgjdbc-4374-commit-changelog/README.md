@@ -7,14 +7,15 @@ entry and the outcome slot that #113 added, which carries the text and the code 
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Changelog entry), §3, §5 (identifiers)
+- `SKILL.md`: §2 (Commit body, slot 4; Changelog entry), §3, §5 (identifiers), §6 (asterisks around a lead-in)
 - `english-developer-style`: `SKILL.md` §5 (a quoted diagnostic is a literal), §7 (an identifier you do not have is
   not invented)
 
 ## Checks
 
-1. **Outcome lines carry the text and the code** (`outcome_lines_4374`). The commit body has a `User-visible:`
-   paragraph, and each of the two messages appears on a line of it with `42601`.
+1. **Outcome lines carry the text and the code** (`outcome_lines_4374`). The commit body has a paragraph that opens
+   with `User-visible:`, `**User-visible changes.**`, or the §6 form `User-visible changes.` on a line of its own,
+   and each of the two messages appears on a line of it with `42601`.
 2. **Nothing invented** (`nothing_invented_4374`). No issue or pull request number other than #4374 and #4363, and no
    SQLState other than `42601`. No issue was filed for this defect.
 3. **The changelog entry** (`changelog_entry_4374`). A bullet that starts with `fix:` (after `**Breaking:**` where the

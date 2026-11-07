@@ -13,8 +13,8 @@ merge commit and stands alone (§4 rule 1), and the description is the body that
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, reviewer-only content), §4,
-  §5 (links in a commit body)
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description: a break leads the description,
+  reviewer-only content, the lead-in paragraph), §4, §5 (links in a commit body)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -27,6 +27,13 @@ merge commit and stands alone (§4 rule 1), and the description is the body that
 4. **The title is a subject** (`title_is_subject`).
 5. **The description is a commit body** (`description_as_commit_body`), as in
    [`pgjdbc-4466-squash-title-description`](../pgjdbc-4466-squash-title-description/README.md).
+6. **Outcome lead-ins, not labels** (`no_plain_outcome_labels`). The description, which becomes the commit body, has no
+   line that opens with `User-visible:` or `Not changed:`; its outcomes sit under `**User-visible changes.**`
+   and `**Not changed.**`.
+7. **Break lead-in first** (`break_lead_in_before_headings`), as in
+   [`pgjdbc-4466-squash-default`](../pgjdbc-4466-squash-default/README.md): the new default breaks code that
+   matches the old `application_name`, so the description opens with `**Breaking changes.**`.
+8. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
 
 ## Running it
 

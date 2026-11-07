@@ -50,7 +50,7 @@ case tests.
 | [`pgjdbc-4466-detection-failed`](pgjdbc-4466-detection-failed/README.md) | pgjdbc#4466 branch | merge model unknown; the detection command on a fork |
 | [`pgjdbc-4424-docs-only`](pgjdbc-4424-docs-only/README.md) | pgjdbc#4424 diff and notes | verification without tests, headings, section citations, links |
 | [`pgjdbc-4370-verbose`](pgjdbc-4370-verbose/README.md) | pgjdbc#4370 description | length, what the tests establish, coverage lost |
-| [`pgjdbc-4374-commit-changelog`](pgjdbc-4374-commit-changelog/README.md) | pgjdbc#4374 description | `User-visible:` lines with their SQLState, the changelog entry |
+| [`pgjdbc-4374-commit-changelog`](pgjdbc-4374-commit-changelog/README.md) | pgjdbc#4374 description | outcome lines with their SQLState, the changelog entry |
 | [`pgjdbc-4423-no-outcome`](pgjdbc-4423-no-outcome/README.md) | pgjdbc#4423 diff and notes | negative control: no outcome slot and no changelog entry |
 | [`calcite-5330-open-question`](calcite-5330-open-question/README.md) | apache/calcite#5330 discussion | a question only a maintainer can settle; a break in a minor release |
 | [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect nobody has observed, hunks not read aloud, an answered review question |
