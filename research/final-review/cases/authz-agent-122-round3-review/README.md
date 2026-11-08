@@ -116,3 +116,13 @@ Final-review tree `3d6a0954` conditions the hunk and command rules of item *Clai
 paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
 case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
 tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The new rules could reach this input only by adding comment
+findings to the report. `authz-agent-122-review`, run on the same pull request with the new tree, shows what they add to
+the comments of this repository, and `textkit-page-count-review` is the case where they would be noise.

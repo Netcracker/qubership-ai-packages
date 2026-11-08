@@ -120,3 +120,35 @@ without "finding".
 
 Every run files the 20-minute job timeout that ends the 40-minute loop, and both Opus runs put it first in the index,
 where `instr` had it third and fourth. Opus reports grew from 1692 and 1745 words. No index carries a request.
+
+## Results of the `vocab` arm, 2026-11-08
+
+Opus and Sonnet, two runs each, at final-review tree `ca8233fb` (version 1.3.0, from commit `814c1614` of the branch),
+graded by reading `result.md`.
+
+| Model | Run | Check 1 | Words | Cost, USD |
+| --- | --- | --- | --- | --- |
+| Opus | `vocab-1` | pass | 1693 | 0.85 |
+| Opus | `vocab-2` | pass | 1763 | 0.77 |
+| Sonnet | `vocab-1` | pass | 1895 | 0.21 |
+| Sonnet | `vocab-2` | pass | 1715 | 0.18 |
+
+Every run files the 20-minute job timeout that ends the 40-minute loop as substantive. It is first in the index in
+`vocab-1` of Opus, as the false comment `# Wait up to 40 min`, and in both Sonnet runs, and second in Opus `vocab-2`.
+Opus reports shrank from 2009 and 2076 words in `cond` to 1693 and 1763; Sonnet stayed near its `cond` length.
+
+The new rules of item 1 produced one real finding and three weak ones. Both Opus runs file the comment "Grab the first
+run created after the trigger event" as false, because the endpoint lists the newest run first (`vocab-2`,
+`result.md:11`). The noise:
+
+- Opus `vocab-2` files "SaaS Monorepo" as a coined term (`result.md:14`), substantive. The change polls
+  `playwright_saas_pr_trigger_monorepo_8_9.yml`, which names the same target, and Opus `vocab-1` rejects the coinage
+  for that reason (`result.md:11`).
+- Sonnet `vocab-2` asks for a comment on the timestamp step (`result.md:28`, "the comment on the timestamp step is
+  missing"), where the defect is the order of the steps, which it files again as finding 3.2. It also raises the
+  description that "triggers" understates the job, which every other run files as taste, to substantive
+  (`result.md:23`).
+
+Sonnet `vocab-1` writes one line for the terms, "Coined terms: none." (`result.md:15`), and Opus `vocab-1` one sentence
+(`result.md:11`). No run lists terms that have a source, files a dense sentence, or dumps a checklist; the change has
+only YAML comments.

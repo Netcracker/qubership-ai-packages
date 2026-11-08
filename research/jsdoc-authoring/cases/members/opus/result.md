@@ -1,35 +1,31 @@
 ```ts
 export const DEFAULT_TIMEOUT_SECONDS = 30;
 
-/** Largest value {@link EntryCache.put} accepts, in bytes: 1 MiB (1048576 bytes). */
+/**
+ * Largest value an {@link EntryCache} stores, in bytes: 1 MiB (1048576 bytes).
+ */
 export const MAX_ENTRY_BYTES = 1 << 20;
 
 /**
- * Thrown when a value stored in an {@link EntryCache} is larger than {@link MAX_ENTRY_BYTES}.
- *
- * @remarks
- * Its `name` is `"Error"`, so match it with `instanceof` or by {@link EntryTooLargeError.code}.
+ * Thrown when a value is larger than {@link MAX_ENTRY_BYTES}.
  */
 export class EntryTooLargeError extends Error {
   readonly code = "ENTRY_TOO_LARGE";
 }
 
 /**
- * Stores byte values in memory under string keys.
+ * Holds byte values in memory under string keys.
  *
  * @remarks
- * An entry stays until {@link EntryCache.evict} removes it or a later store under the same key
- * replaces it. The cache has no capacity limit and no expiry.
+ * Each value is at most {@link MAX_ENTRY_BYTES} bytes long. The number of entries and their total size are
+ * unbounded, and an entry stays until {@link EntryCache.evict} removes it.
  *
- * The cache stores each value by reference, without copying it. Mutating the array after
- * {@link EntryCache.put} or {@link EntryCache.load} changes the stored entry.
+ * The cache keeps the arrays it is given and returns them without copying. A caller that mutates one of
+ * them changes the cached entry.
  */
 export class EntryCache {
   /**
-   * Retry count that callers can read and set on the cache.
-   *
-   * @remarks
-   * No method of this class reads it, and {@link EntryCache.load} calls `fetchValue` once.
+   * Number of retries.
    *
    * @defaultValue 3
    */
@@ -51,9 +47,8 @@ export class EntryCache {
   /**
    * Stores `value` under `key`, replacing any existing entry.
    *
-   * @throws {@link EntryTooLargeError}
-   * Thrown when `value` is larger than {@link MAX_ENTRY_BYTES}. The existing entry for `key`
-   * stays in place.
+   * @throws {@link EntryTooLargeError} if `value` is larger than {@link MAX_ENTRY_BYTES}. The cache is left
+   * unchanged.
    */
   put(key: string, value: Uint8Array): void {
     if (value.byteLength > MAX_ENTRY_BYTES) {
@@ -64,10 +59,6 @@ export class EntryCache {
 
   /**
    * Removes the entry for `key`, if there is one.
-   *
-   * @remarks
-   * A key with no entry leaves the cache unchanged and does not count as an eviction for
-   * {@link EntryCache.msSinceLastEviction}.
    */
   evict(key: string): void {
     const removed = this.#entries.get(key);
@@ -79,26 +70,26 @@ export class EntryCache {
   }
 
   /**
-   * Returns the milliseconds since {@link EntryCache.evict} last removed an entry, or `undefined`
-   * if it has never removed one.
+   * Returns the milliseconds elapsed since {@link EntryCache.evict} last removed an entry, or `undefined` if
+   * it never has.
    *
    * @remarks
-   * The time comes from `Date.now()`, so a wall-clock adjustment can make the result negative.
+   * The time is read from the system clock (`Date.now()`). If the clock is adjusted, the result can jump or
+   * become negative.
    */
   msSinceLastEviction(): number | undefined {
     return this.#lastEvictionMs === undefined ? undefined : Date.now() - this.#lastEvictionMs;
   }
 
   /**
-   * Fetches the value for `key` with `fetchValue`, stores it under `key`, and returns it.
+   * Fetches the value for `key` with `fetchValue`, stores it, and returns it.
    *
    * @remarks
-   * Every call invokes `fetchValue` once, even when `key` already has an entry. When the fetch
-   * fails, the existing entry for `key` stays in place.
+   * `fetchValue` runs on every call, even when `key` already has an entry.
    *
-   * @throws {@link EntryTooLargeError}
-   * The promise rejects with this error when the fetched value is larger than
-   * {@link MAX_ENTRY_BYTES}. A rejection from `fetchValue` is passed to the caller unchanged.
+   * Every failure arrives as a rejection, never as a synchronous throw. A rejection from `fetchValue`
+   * passes through unchanged. A fetched value larger than {@link MAX_ENTRY_BYTES} rejects with
+   * {@link EntryTooLargeError}. In both cases the cache is left unchanged.
    */
   async load(key: string, fetchValue: (key: string) => Promise<Uint8Array>): Promise<Uint8Array> {
     const value = await fetchValue(key);
