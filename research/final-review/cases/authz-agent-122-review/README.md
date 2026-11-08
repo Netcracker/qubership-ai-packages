@@ -375,3 +375,53 @@ restored in "an item with a finding gives the file and line" in §2, which every
   lists the form as `none` and files only the other unrun recipe.
 - **The report.** No index carries a request; every report ends on checks it could not run (no cluster, the drift script
   on Go). The SVT Keycloak bump is filed as substantive in every run.
+
+## Results of the `vocab` arm, 2026-11-08
+
+Opus and Sonnet, two runs each, at final-review tree `ca8233fb` (version 1.3.0, from commit `814c1614` of the branch),
+graded by reading `result.md`.
+
+| Model | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `vocab-1` | pass | partial | pass | pass | pass | pass | pass | 2316 | 2.78 |
+| Opus | `vocab-2` | pass | pass | pass | pass | pass | pass | pass | 2746 | 3.49 |
+| Sonnet | `vocab-1` | pass | partial | pass | partial | pass | pass | pass | 2286 | 0.98 |
+| Sonnet | `vocab-2` | pass | partial | fail | fail | pass | fail | pass | 2513 | 0.99 |
+
+- **Check 2.** Opus `vocab-2` reads Helm 3.15.2's `GetPodLogs` and files that `--logs` fails for a Job hook
+  (`result.md:64`). Opus `vocab-1` lists the chart README's recipe, `helm test --logs` included, as run by "none" and
+  asks for one run, with the transfer image as the reason (`result.md:49`). Sonnet `vocab-1` (`result.md:54`) and
+  `vocab-2` (`result.md:62`, `:79`) say the Makefile runs `helm test` without `--logs` and ask for a run. None of the
+  three names the Job: partial.
+- **Check 3.** Sonnet `vocab-2` names the three limits and settles them: "The inner limit fires first at the defaults;
+  nothing in the change raises these" (`result.md:113`).
+- **Check 4.** Sonnet `vocab-1` names `TAG` and `IMAGE_PULL_POLICY` as shared and files nothing, because "no workflow
+  passes the variable" (`result.md:78`): partial. Sonnet `vocab-2` does not mention `E2E_HELM_ARGS`.
+- **Check 6.** Sonnet `vocab-2` searched for "two images" and concluded "No sentence still counts two. None."
+  (`result.md:134`), where `README.md` still says "CI builds both".
+
+Against `cond`, Opus gains check 6 in its second run (`cond-2` failed it) and loses check 2 to a partial in its first.
+Sonnet `vocab-1` matches `cond-2` except for check 4, which drops from pass to partial. Sonnet `vocab-2` fails three
+checks that every Sonnet `cond` run passed. Its item 1 is short, so the new rules did not crowd out the rest; two runs
+cannot tell this from variance. Reports grew: Opus from 2420 and 1965 words to 2316 and 2746, Sonnet from 1880 and
+1932 to 2286 and 2513. Cost grew with them: Opus 2.78 and 3.49 against 2.39 and 1.89, Sonnet 0.98 and 0.99 against
+0.55 and 0.78.
+
+The new rules of item 1 found real defects here. Three runs file the same dense sentence in the test comment, "a stub
+with no default route, or one with no responses, answers 404", where "one" can mean the stub or the default route
+(Opus `vocab-1` `result.md:12`, Opus `vocab-2` `:12`, Sonnet `vocab-2` `:23`). Three file the comment on `RequestURI`,
+"so that a caller that encodes a value in the path differently from one that does not can be told apart" (Opus `:11`
+in both runs, Sonnet `vocab-1` `:19`). Opus `vocab-2` finds that the selector comment in `_helpers.tpl` gives the wrong
+reason (`result.md:13`). Sonnet `vocab-1` finds that the header says the stub serves responses "per path" while the
+default route shares one sequence (`result.md:18`). Two runs ask for a comment on the `sizeLimit` fallback in
+`suite.yaml:68`, which Opus `vocab-2` also files as a limit that never fires first. The terms check is where the weak
+findings are:
+
+- Opus `vocab-1` files "part" as a "Term with no source" (`result.md:13`), substantive, because the helper's parameter
+  is `component`. That follows the rule's second source, but a reader who reads "part" does nothing wrong.
+- Opus `vocab-2` files "stand" and "test stand" as a coinage used in two senses (`result.md:16`), substantive, and asks
+  to rename the chart, its variables, and its files. The two senses are real; the rename is out of proportion to them.
+
+Both Sonnet runs check the one term they find, "default route", and report it as defined once in the package comment
+(`vocab-1` `result.md:24`, `vocab-2` `:26`). No run dumps the doc-comment checklist; Sonnet `vocab-2` answers it in
+one sentence per member (`result.md:11`).

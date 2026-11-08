@@ -164,3 +164,13 @@ restored in "an item with a finding gives the file and line" in §2, which every
   and `cond-1` says the shutdown behavior "is in a program the repository does not contain; no line here sets it, and
   I did not check it" (`result.md:59`), then asks only where the 3600 comes from.
 - **The report.** No index carries a request; every run takes the `Chart.yaml` version bump as claimed.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The change edits a Helm chart and its values comments; the
+new rules could reach it only by adding comment findings, and `textkit-page-count-review` is the case where those would
+be noise. Not measured here.

@@ -1,5 +1,4 @@
 ```go
-// Package cache provides an in-memory cache of byte-slice entries.
 package cache
 
 import (
@@ -10,13 +9,14 @@ import (
 
 const DefaultTimeoutSeconds = 30
 
-// maxEntryBytes is the largest value [EntryCache.Put] accepts, in bytes: 1 MiB (1048576 bytes).
+// maxEntryBytes is the largest value [EntryCache.Put] accepts, in bytes: 1 MiB
+// (1048576 bytes).
 const maxEntryBytes = 1 << 20
 
-// ErrTooLarge is the sentinel [EntryCache.Put] wraps for a value over the size limit.
+// ErrTooLarge is the error that [EntryCache.Put] wraps when a value exceeds the
+// entry size limit.
 var ErrTooLarge = errors.New("cache: entry too large")
 
-// Policy chooses which entry to evict.
 type Policy interface {
 	Victim(keys []string) string
 }
@@ -25,8 +25,9 @@ type oldestFirst struct{}
 
 func (oldestFirst) Victim(keys []string) string { return keys[0] }
 
-// EntryCache maps string keys to byte-slice values. Create one with [New]; the zero value
-// is not usable. It is not safe for concurrent use.
+// EntryCache is an in-memory cache of byte slices keyed by string. Create one
+// with [New]; the zero value is not ready to use. It is not safe for concurrent
+// use.
 type EntryCache struct {
 	name         string
 	entries      map[string][]byte
@@ -40,10 +41,11 @@ func New(name string) *EntryCache {
 
 func (c *EntryCache) Name() string { return c.name }
 
-// Put stores value under key, replacing any existing entry. It returns an error wrapping
-// [ErrTooLarge] and leaves the cache unchanged if value is longer than 1 MiB (1048576 bytes).
+// Put stores value under key and replaces any previous value. The cache keeps
+// value without copying it, so the caller must not modify it afterwards.
 //
-// Put keeps value without copying it, so the caller must not modify it afterward.
+// Put returns an error wrapping [ErrTooLarge] and stores nothing when value is
+// longer than 1 MiB (1048576 bytes).
 func (c *EntryCache) Put(key string, value []byte) error {
 	if len(value) > maxEntryBytes {
 		return fmt.Errorf("entry %s is %d bytes, limit %d: %w", key, len(value), maxEntryBytes, ErrTooLarge)
@@ -52,8 +54,8 @@ func (c *EntryCache) Put(key string, value []byte) error {
 	return nil
 }
 
-// Evict removes the entry stored under key and records the eviction time that
-// [EntryCache.SinceLastEviction] reports. A key with no entry is ignored.
+// Evict removes key and records the time for [EntryCache.SinceLastEviction]. A
+// key that is not in the cache is ignored and records nothing.
 func (c *EntryCache) Evict(key string) {
 	if v, ok := c.entries[key]; ok {
 		delete(c.entries, key)
@@ -62,8 +64,9 @@ func (c *EntryCache) Evict(key string) {
 	}
 }
 
-// SinceLastEviction returns the time elapsed since [EntryCache.Evict] last removed an entry.
-// The boolean is false, and the duration zero, if no entry has been evicted.
+// SinceLastEviction returns the time elapsed since [EntryCache.Evict] last
+// removed an entry. The boolean is false, and the duration zero, while no entry
+// has been evicted.
 func (c *EntryCache) SinceLastEviction() (time.Duration, bool) {
 	if c.lastEviction.IsZero() {
 		return 0, false

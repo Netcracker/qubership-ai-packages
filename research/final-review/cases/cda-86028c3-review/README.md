@@ -266,3 +266,13 @@ findings:` line of about ten words, and stay under the 2313-word limit of check 
 control `pgjdbc-4392-no-break` has no baseline arm, so it cannot show that the output did not grow (`result.md:74`): a
 new substantive request, which the restored sentence invites, in the longest report of the four. Sonnet index rows
 restate the input of their table row without its clause.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The change is a skill edit, which §2a reviews through its
+own analogue of the comments item, unchanged in `ca8233fb`. Whether a reviewer now carries the term and dense-sentence
+checks of item 1 over to a skill text is not measured: no case with a skill edit ran with the new tree.

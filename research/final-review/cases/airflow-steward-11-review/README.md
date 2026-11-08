@@ -253,3 +253,13 @@ wrapping and by the word restored in "an item with a finding gives the file and 
   "Linux/GNU only", or use Python for the dates").
 - **The report.** No index carries a request, and every report ends on a check it could not run (`prek`, network
   lookups). Every run writes one row of the table of added instructions.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The change edits a shell script and its documentation; the
+new rules could reach it only by adding comment findings, and `textkit-page-count-review` is the case where those would
+be noise. Not measured here.
