@@ -26,7 +26,10 @@ bracket syntax, and has no tags at all.
   wider vocabulary exception for a comment that ships to users.
 - Comments a tool rather than a human reads (`//go:`, `//nolint`, `+kubebuilder`), including the blank line that
   silently detaches a marker from its field.
-- How far a rewrite may grow, and how to compare two versions of a comment without being sold by the newer one.
+- Why a summary states the result rather than sending the reader to other declarations, and how to state the cases
+  this code computes a concept for without passing them off as the definition an outside specification gives.
+- How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, and how to compare two versions of
+  a comment without being sold by the newer one.
 - The extra rules for the comment on a test, for package comments, and for CRD field descriptions that reach users
   through `kubectl explain`. The test's own name, failure call, and message belong to
   [`test-authoring`](../test-authoring/).

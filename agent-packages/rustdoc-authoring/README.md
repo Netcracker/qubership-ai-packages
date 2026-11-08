@@ -30,8 +30,10 @@ comment.
 - Intra-doc links, the disambiguators a language with same-named structs and functions needs, and the rustdoc lints
   that check them, the one place Rust is stricter than Go. An issue number is an address, not a definition.
 - What a trait comment owes implementers it will never see.
-- How far a rewrite may grow, why a comment-only edit can still break a Rust build, and how to prove a sweep moved no
-  code.
+- Why a summary states the result rather than sending the reader to other items, and how to state the cases this
+  code computes a concept for without passing them off as the definition an outside specification gives.
+- How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, why a comment-only edit can still
+  break a Rust build, and how to prove a sweep moved no code.
 - The extra rules for the comment on a test, for module and crate comments, and for docs that ship to docs.rs. The
   test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 
