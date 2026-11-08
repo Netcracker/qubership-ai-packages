@@ -22,11 +22,12 @@ questions finds what the first could not. The list is short on purpose, and ever
 "none" included, so that an item cannot be skipped by not noticing it.
 
 The rules the items check belong to other skills: `test-authoring` for what a test establishes and how its failure
-reads, the doc-comment skill of the language (`javadoc-authoring` and its siblings) for what a comment says, the
-developer-style skill for wording. Load the two that apply to the change's language before filling the form, and
-cite their sections in the findings; do not restate them here. Wording enters this form only where it makes a
-sentence read wrongly, which is a finding under the first item; a pass over the prose for style alone is not this
-review.
+reads, the doc-comment skill of the change's programming language (`javadoc-authoring`, `godoc-authoring`, and their
+siblings) for what a comment says, and the developer-style skill of the language the comments are written in
+(`english-developer-style` for English) for wording. Load the ones that apply to the change before filling the form, and
+cite their sections in the findings; do not restate them here. Wording enters this form in two places only, both under
+*Comments consistent with the code and with each other*: a sentence that a reader can read wrongly or has to parse
+twice, and a word the change coins as a term. A pass over the prose for style alone is not this review.
 
 ## 1. Inputs
 
@@ -58,6 +59,55 @@ comment carries (supported inputs, accepted values, thrown exceptions) include t
 other comment in the same file, or the comment of a sibling that delegates to this member with a fixed argument,
 now say something different about the same fact? Does any comment narrate the change (`now`, `no longer`, `used to`)
 outside the one place a regression test's comment may?
+
+Then run the review checklist of the doc-comment skill over every `comment-added` and `comment-changed` member. Report a
+question it fails only where a reader would act on the comment wrongly, and label that finding substantive; a failure
+that would only make the comment better is not reported. Three failures always meet that bar, and every doc-comment
+skill states them, in §1, §3, and §4 in this order: a scope that this code chose, written as if it were the definition
+of a concept that an outside specification defines; a first sentence that defines the member through the names of other
+members rather than through its result; and a list of cases where a criterion would let the reader classify a case that
+the list omits. The two wording findings below, a dense sentence and a coined term, are substantive as well.
+
+For every added sentence that has a shape from the developer-style skill's table of over-compressed sentences
+(`english-developer-style` §4, *Unpack an over-compressed sentence*, for English) and that a reader has to parse twice,
+the finding is substantive, and the request is the unpacked sentence. Where the same construction or the same phrase
+occurs in more than one place in the change, one finding lists every place.
+
+For every added inline comment that says what a call does or handles, open each member called by the code that the
+comment sits on, and read its body and its doc comment. Where the callee already handles the case the comment describes,
+and the comment adds no reason specific to this call site, the comment restates the callee's contract: a finding, and
+the request is to delete the comment or to link the callee. Where the comment also gives such a reason, the request is
+to cut only the part that restates the callee. For every added expression that carries no comment and that a competent
+reader would misread or find arbitrary (a type operation, a cast, a fallback, a constant): a finding, and the request
+names the question the comment must answer.
+
+**Terms the change introduces.** Collect the words that the added comments and the added member names use as terms: a
+noun or a verb that names one concept in more than one added sentence, or that a new member name carries
+(`bytesLeftInEnvelope` carries `envelope`). The verb that the comments use for an operation that the source names
+(assigning, passing, returning, storing) is a term however ordinary the word, and so is the noun for the place that the
+operation targets. Other words used in their ordinary dictionary sense are not terms. The developer-style skill's rule
+on the field's word (`english-developer-style` §4a for English) gives a term three sources:
+
+- **The field defines it:** a specification or glossary that the repository's instruction file names, or a word with
+  a published definition in the sense used (`idempotent`, `backpressure`), whether or not the code used it before.
+- **The code names the thing with it:** a word that the code or its documentation uses for the same thing at the base,
+  in an identifier, a comment, or a docs page, or the name of a parameter of the member whose comment uses the word,
+  including a parameter the change adds. Search for the word as part of an identifier too (`git grep -n -i <word> <base>
+  -- <source and docs roots>`, without `-w`), so that `valueHolder` and `value_holder` count for `holder`. A hit counts
+  only for the same concept: a test fixture class named `Frame` does not make `frame` the word for a protocol message,
+  and a base comment that says a parameter receives an argument does not make `receives` the word for every place a
+  value is assigned to.
+- **The change defines it:** once, in the type or the page that the concept belongs to, before any other comment uses
+  it, for a concept that the field has no word for.
+
+A term with none of the three is a coinage, and a substantive finding, because the reader cannot look it up and the next
+comment will define it differently. A word that the repository's instruction file lists as one to replace has no source,
+whatever the base uses. The request is the field's word, the code's word, or the instruction file's replacement, or a
+definition where none exists. Where base identifiers still carry a listed word, the finding names them and requests
+their rename, which the developer-style rule makes the repair; until the rename, a comment that refers to such an
+identifier spells it as the code does. The finding lists every comment and every member name that carries the coinage,
+so that one rename covers them all. Only coinages enter the report: a term with a source is not listed, and where the
+change coins none, the terms add nothing to the item's answer.
 
 ### Item 2: claimed cases covered
 
@@ -274,8 +324,9 @@ Not findings: `:57`, `:63`.
 
 Every finding carries one of three labels, and the label is the reader's cue for what to do with it.
 
-- **Substantive**: a reader could read the sentence wrongly, the sentence states something false, a claimed case has
-  no test, a boundary or the control is missing. These are requests.
+- **Substantive**: a reader could read the sentence wrongly, the sentence states something false, a claimed case has no
+  test, a boundary or the control is missing. So are the wording findings that *Comments consistent with the code and
+  with each other* names: a sentence a reader has to parse twice, and a coined term. These are requests.
 - **Taste**: two readings and both are right; the finding names the one the reviewer prefers. Say so, and expect it
   to be declined without discussion.
 - **Churn**: the suggested version has the property it objects to, or changes wording with no fact behind it. Do not
