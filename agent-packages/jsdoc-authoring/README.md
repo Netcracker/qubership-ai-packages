@@ -43,8 +43,10 @@ difference is unreviewable.
   union type is the exception.
 - What changes when the comment ships: a `.d.ts` hover, a TypeDoc page, an API Extractor report, a generated OpenAPI
   description, including the release tag that deletes a declaration from the published types.
-- How far a rewrite may grow, how to compare two versions without being sold by the newer one, and why the usual
-  strip-the-comments proof is incomplete for checked JavaScript.
+- Why a summary states the result rather than sending the reader to other members, and how to state the cases this
+  code computes a concept for without passing them off as the definition an outside specification gives.
+- How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, how to compare two versions
+  without being sold by the newer one, and why the usual strip-the-comments proof is incomplete for checked JavaScript.
 - The extra rules for the comment on a test, where the `it` string does the comment's job, and for module
   documentation. The test's own strings, matcher, and message belong to [`test-authoring`](../test-authoring/).
 

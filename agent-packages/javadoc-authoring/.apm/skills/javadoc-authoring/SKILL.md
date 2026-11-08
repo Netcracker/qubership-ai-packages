@@ -73,6 +73,14 @@ borrowing the one above it. **State the local rule at the lowest-level API, and 
 layer where the scenario exists.** A guard found through one concrete call path does not thereby own
 that path's story.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification defines (an
+isolation level, a protocol message, a type-system operator) and computes it for fewer cases than the
+specification allows, give the specification's definition or a link to it, then state the cases this code
+computes it for as this code's scope. `A subtype of T is a class that extends T` folds a checker's choice to handle
+class types only into the JLS term, and a reader who knows the JLS asks why the definition leaves out interfaces,
+arrays, and type variables. State the scope as a criterion that covers every case, not as a list of the
+cases it excludes (§4, *The membership rule*).
+
 **Sufficiency** scales with visibility: how much the comment may leave to the code beside it.
 
 | Where | What the comment must carry |
@@ -188,7 +196,7 @@ subject: not the thing acted on (`Every backend message must be read through rea
 which names no one and lets `it` drift to the reader by the next clause), not the act (`relaxing a
 protocol check must not be reachable`), and not a member that merely performs the act for someone
 else (`markBroken must still fire` obliges `PGStream`). A named member in the subject is right only
-where that member is itself what must comply: `readUntrackedLength must leave no envelope behind`.
+where that member is itself what must comply: `readUntrackedLength must leave no byte of the message unread`.
 The party need not be human, but it must act: a driver, a check, a reader. A mode constant or a
 configured number complies with nothing.
 
@@ -206,7 +214,7 @@ Out of reach of this rule: an imperative, which already addresses the party (`Ca
 framed dialogue resumes`), including one that carries rationale (`so mirror that here`); a
 constraint on a *value* (`must be ≤ MAX_MESSAGE_SIZE`), which bounds a number rather than behavior;
 a field comment naming who writes or reads the field, which is the membership list §4 calls for; and
-an inline comment whose next statement is the actor (`// Envelope must be fully consumed` above the
+an inline comment whose next statement is the actor (`// The rest of the message must be consumed` above the
 `endMessage()` that consumes it), after checking that the next line really is the actor and not test
 setup standing between the comment and the call it constrains.
 
@@ -240,6 +248,12 @@ Javadoc extracts the first sentence into the class and member summary tables, wh
   `e.g.`, `i.e.`, `vs.`, and `Dr.` truncate it. Rewrite, or pin the boundary with `{@summary …}`
   (JDK 10+).
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other members.** `Returns the length as {@link #frameLength} computes it, as {@link #trimTo}
+  keeps it` sends the reader to two other members to learn what this one returns, and it fails §1's refactor test:
+  inline `trimTo` and the sentence has to change. State the result. The rule holds for a private member too: §1's table
+  lets its comment leave to the body what the body shows. It does not let the comment give the names of the members the
+  body calls instead of the result. Link another member only for a part of the contract that it owns and this member
+  passes through unchanged.
 - **A field or constant names itself first, with its unit.** `Largest declared length, in bytes,
   that this stream accepts for an encrypted packet.` The reason the bound has that value is slot 3,
   however interesting it is; a comment that opens with the upstream implementation it mirrors leaves
@@ -463,7 +477,7 @@ member instead.
 is fine for a test class or an internal type, and a defect for public API.
 
 **An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
-give the number so a reader can find the history: `a length taken straight from the wire sizes the
+give the number so a reader can find the history: `a length taken straight from the stream sizes the
 allocation (issue #4015)`. The number must not carry the meaning: `the shape of issue #4015`, `the
 same format as #1231`, `the bug #4015 fixed` count as content for someone who already knows the
 ticket and as nothing for everyone else. The test: cover the number and read the sentence. If what
@@ -471,7 +485,7 @@ remains states no fact, the comment has none. A bare `see #4015` fails the same 
 end, and a published page reaches readers with no access to the tracker at all.
 
 The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
-from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+from issue #4015: a field claiming more bytes than the row message still holds` passes, because
 covering the number leaves the failure named. The rule is about the number's role, not its position.
 
 The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
@@ -605,6 +619,9 @@ away.
   governs the body, not the first sentence. `Wrapper around X that implements some basic primitives`
   stays broken until someone rewrites it, and "I had no new fact to add" is not a reason to leave
   it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the change touches
+  for its distinctive words, and fix every copy in the same edit. A reviewer who found one copy will find the
+  next, and a reply that fixes only the line they pointed at costs them a second comment.
 - **Do not move code.** A comment edit that also renames a variable or reorders a statement cannot
   be verified as comment-only, and that verification makes a large sweep safe.
 
@@ -774,6 +791,10 @@ and where that rule has a condition, the item applies only under it.
   freedom rather than this method's rule?
 - Does every term here have a definition outside this comment, and does every name match what the
   code calls the thing (`english-developer-style` §4a)?
+- Does the first sentence state the result, or does it send the reader to other members (§3)?
+- Where the member implements a concept a specification defines, does the comment state this code's scope
+  as a scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on,
   or leave a maintainer unable to see why a constraint is there? If not, delete it.
 - Would deleting the whole comment lose anything?
@@ -845,11 +866,11 @@ neighboring class is compressed to its limitation; the reader is told what to do
 /**
  * Fails when a backend message type is added without a hardened reader.
  *
- * <p>Every backend reader must declare a message envelope: take the length through
- * {@code PGStream.readMessageLength} (or {@code readFixedMessageLength} or
- * {@code readPreAuthMessageLength}), bound any length it reads from the wire, and close
- * the envelope with {@code endMessage}. A reader that skips this leaves the stream off a
- * message boundary, which is the desync class of bug that issue #4015 reported.</p>
+ * <p>Every backend reader must mark where its message starts and ends: take the length
+ * through {@code PGStream.readMessageLength} (or {@code readFixedMessageLength} or
+ * {@code readPreAuthMessageLength}), bound any length it reads from the stream, and end
+ * the message with {@code endMessage}. A reader that skips this leaves the stream off a
+ * message boundary, and issue #4015 reported the failures that follow.</p>
  *
  * <p>{@link PGStream#receiveMessageType()} catches such a reader at run time, but only
  * after a test drives that message. A new message type with no test would slip through.
@@ -857,7 +878,7 @@ neighboring class is compressed to its limitation; the reader is told what to do
  * two sets: {@link #HARDENED} for backend messages the driver reads, and {@link #FRONTEND}
  * for messages the driver only sends. Add a constant to {@link PgMessageType} and this
  * test fails until you classify it. The failure message states what a backend reader
- * owes.</p>
+ * must do.</p>
  */
 ```
 
@@ -865,7 +886,7 @@ What changed, slot by slot: the summary became the guard's condition (§3, §4);
 front and gained a positive, parallel statement of the three obligations (§2); the mechanism of
 `PGStream` shrank to the one fact this comment needs (§4); `listed below` became `{@link #HARDENED}`
 and `{@link #FRONTEND}` (§5); and a Use slot appeared, naming the action and the failure message
-(§2). The issue number stayed, attached to a named class of bug (§5).
+(§2). The issue number stayed, in the sentence that names the failure it reported (§5).
 
 ### A field, where the facts were already there
 
