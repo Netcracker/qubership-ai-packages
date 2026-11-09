@@ -31,6 +31,8 @@ whose records are prose: the negative control for every check below.
 5. **No headings.** The repository has no template, so the description has no headings, and the trailers have no
    heading of their own.
 6. **Commit trailers.** The commit message ends with the same `Implements:` trailer and no `Defers:` trailer.
+7. **No squash request.** The repository rebases, so nothing asks whoever merges to copy the trailers into a squash
+   message.
 
 ## Running it
 
@@ -41,29 +43,30 @@ research/change-description-authoring/cases/run-case.sh research/change-descript
 python3 research/change-description-authoring/cases/check.py research/change-description-authoring/cases/authz-agent-208-rule-lines
 ```
 
-`check.py` marks all six checks; check 2 is a marker, so read the sentence it quotes. `controls/as-pushed.md` is the
+`check.py` marks all seven checks; check 2 is a marker, so read the sentence it quotes. `controls/as-pushed.md` is the
 commit message, title, and description of #208 as pushed on 2026-11-06, written before this rule. It fails all six
 checks: its lines sit in a fenced block under a `## Rules` heading, the target is "the wiring change", and the commit
 has no rule trailers. `controls/implements-claims-deferred.md` is a passing result with ADR-0092 R2 added to both
-`Implements:` trailers, and fails checks 1 and 6.
+`Implements:` trailers, and fails checks 1 and 6. `controls/squash-request.md` is `sonnet/result-2.md` as run on tree
+`2ed608e6`, with a sentence added to its Scope paragraph that asks for the trailer in the squash commit; it fails check
+7, which a repository that rebases never owes.
 
 No case covers a merge model that keeps the description, a pull request with several commits, or the request to open an
 issue, which a `claude -p` run cannot make.
 
 ## Results
 
-Runs of 2026-11-07 on tree `27b2445d`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. All four results pass all six checks: the description and the commit end with
-`Implements: ADR-0091 R23, R37, R38, R39` and no `Defers:` trailer, and the `**Scope.**` paragraph names the three
-waiting rules and says that the wiring change has no pull request or issue yet. The descriptions run 281 to 324 words,
-the as-pushed one 622.
+Runs of 2026-11-09 on tree `e0a0d8f7`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. All four results pass all seven checks: the description and the commit end with
+`Implements: ADR-0091 R23, R37, R38, R39` and no `Defers:` trailer, the `**Scope.**` paragraph names the three waiting
+rules and says that the wiring change has no pull request or issue yet, and nothing mentions a squash. The descriptions
+run 299 to 344 words, the as-pushed one 622.
 
-Four earlier rounds ran the same day. Three, on trees `32d8cc58`, `b47b5b6e`, and `340d167d`, ran the first form of
-this rule, which put the lines in the Scope slot with a `[PR #NNNN]` target, before #241 settled on trailers and
-existing targets; only the `340d167d` results were committed, and they are in the history of this branch. The fourth,
-on `5207d695`, ran the trailer form before `Implements` was limited to rules brought in every case, and all four
-results passed as here.
+Six earlier rounds ran. Three on 2026-11-07, on trees `32d8cc58`, `b47b5b6e`, and `340d167d`, ran the first form of this
+rule, which put the lines in the Scope slot with a `[PR #NNNN]` target, before #241 settled on trailers and existing
+targets; only the `340d167d` results were committed, and they are in the history of this branch. Three, on `5207d695`,
+`27b2445d`, and `2ed608e6`, ran the trailer form before its last wording changes, and all their results passed as here.
 
-The baselines ran the same day with `english-developer-style` alone, on the same prompt, and are graded by the current
-checks. Both pass check 2 and fail checks 1 and 3 to 6: neither description ends with trailers, both give the deferred
-rules a `Defers:` line with no number, and they carry three and five headings.
+The baselines ran on 2026-11-07 with `english-developer-style` alone, on the same prompt, and are graded by the current
+checks. Both pass checks 2 and 7 and fail checks 1 and 3 to 6: neither description ends with trailers, both give the
+deferred rules a `Defers:` line with no number, and they carry three and five headings.

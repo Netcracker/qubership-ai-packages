@@ -514,10 +514,13 @@ or a placeholder: either would stay in the merged commit. Without an issue, leav
 the trailers, and say in the Scope slot which rules wait for a change that has no issue yet. A
 deferred rule is a deliberate gap for the `**Scope.**` lead-in (above); the trailers take no heading
 of their own. In a pull request with several commits, each commit carries the trailers of its own
-part, and the description carries them for the whole change. The rule numbers come from the records
-or the notes, never from a guess. A record without numbered rules, or a repository without records,
-gets no rule trailers, even where the change carries out a decision: name the record in the Why or
-the What slot instead.
+part, and the description carries them for the whole change. A squash whose message is the title
+alone (GitHub's "pull request title", GitLab's default template) keeps neither copy (§4), so there
+whoever merges pastes the description's trailers into the body of the squash commit before merging,
+and the Scope slot asks for that in one sentence; an agent that merges the pull request itself adds
+them. The rule numbers come from the records or the notes, never from a guess. A record without
+numbered rules, or a repository without records, gets no rule trailers, even where the change
+carries out a decision: name the record in the Why or the What slot instead.
 
 **A question the issue or the review left open is answered, kept open, or left out.** Where the code,
 a test, or another source you verified answers it, give the answer and its evidence, and do not
@@ -624,7 +627,7 @@ merge commit under GitHub's "pull request title" setting from a squash, since bo
 
 | Shapes in the count | Model |
 | --- | --- |
-| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
+| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all, or a body of `Implements:` and `Defers:` trailers alone, means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
 | `plain` only | Rebase and merge, or a repository pushed to directly; the shape is the same and the consequences are too. On GitLab, also a squash under the default template, which appends no number, and only a house rule tells that apart; without one, the default at the end of this section |
 | `squash` and `plain` both | Ambiguous: squash and rebase both allowed and chosen per pull request (below), or squash beside direct pushes; without a house rule, the default at the end of this section |
 | `merge` present | Merge commits are enabled; a `squash` or `plain` line beside them is another method also enabled, or a direct push |
@@ -637,7 +640,7 @@ count; `references/merge-model.md` has the lines.
 | Model | Subject of the permanent commit | Body of the permanent commit | Branch commits that survive |
 | --- | --- | --- | --- |
 | Squash, default message | For a single-commit pull request, that commit's subject, number appended; otherwise the title, number appended | That commit's body; otherwise the branch commit messages as a bulleted list | None, and every message lands as a bullet, `Fix lint` included |
-| Squash, "pull request title" | The pull request title, number appended | Nothing | None, and no message reaches `git log` |
+| Squash, "pull request title" | The pull request title, number appended | Nothing, except the rule trailers that whoever merges adds (§2, Scope) | None, and no branch message reaches `git log` |
 | Squash, "title and commit details" | The pull request title, number appended, for one commit or many | That commit's message for one commit; the branch commit messages as a bulleted list for several | None, and every message lands as a bullet, `Fix lint` included |
 | Squash, "title and description" | The pull request title, number appended | The description | None |
 | Merge commit | Each branch commit keeps its own; the merge commit's subject is `Merge pull request #n from …` under the default message, with the title as its body, and the title with the number appended under "pull request title" and "pull request title and description" | Each branch commit keeps its own; the merge commit's body is the description under "pull request title and description" and nothing under "pull request title" | Every one, behind a merge commit that a `--first-parent` reader sees instead |
@@ -652,7 +655,8 @@ commits, and the closing issues. The merging maintainer can edit the message bef
    a merge commit, that is every commit on the branch; under the default squash and under "title
    and commit details" it is the first, since the messages land as bullets; under "title and
    description" it is none, and the description takes the role; under "pull request title" it is
-   none, and the title is all that lands.
+   none, and the title is all that lands, apart from the rule trailers that whoever merges adds to
+   the squash message (§2, Scope). The same holds for GitLab's default squash template.
 2. Under rebase and merge, and under merge commits, tidy the branch before review. A `Fix lint` or
    `Apply suggestion` commit lands on the default branch as a commit of its own, so squash it into
    the commit it corrects before the merge. Under the default squash the same commit lands as a
@@ -739,7 +743,7 @@ consumer decides whether it is worth writing.
 | `Cc: stable@vger.kernel.org # <ver>: <sha>: <subject>` | Kernel stable team; the sequence means `git cherry-pick <sha>` then this commit | R5 | Kernel only |
 | `Reported-by:` | Credit | R2 | Someone reported it |
 | `BREAKING CHANGE:`, or `!` after the type | release-please and semantic-release: major bump | R4, through the tool | The tool is present |
-| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository numbers the rules of its decision records and asks a change to name them (§2, Scope); each commit carries them for its own part, and the description for the whole change |
+| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository numbers the rules of its decision records and asks a change to name them (§2, Scope); each commit carries them for its own part, the description for the whole change, and the squash message where the setting keeps only the title (§4) |
 | `Co-authored-by:` | Platform attribution | none of the five | Provenance requires it |
 | `Change-Id:`, `Signed-off-by:` | Gerrit; the DCO | none of the five | The workflow requires it |
 
@@ -923,7 +927,8 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   overlap and order (§2)? Where the repository numbers the rules of its decision records and asks a
   change to name them, do the commit message and the description end with `Implements:` and
   `Defers:` trailers, with an existing issue or pull request for each deferred rule, and are they
-  absent from every other repository (§2)?
+  absent from every other repository (§2)? Where the squash message is the title alone, does the
+  Scope slot ask whoever merges to paste them into it (§2, §4)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
 - Merge model: read from the history; every commit that survives the merge written as a full body,

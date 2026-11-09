@@ -458,6 +458,27 @@ def waiting_rules_named(waiting):
     return check
 
 
+def squash_trailers_requested(text):
+    """A sentence of the description, outside its trailers, asks for the rule trailers in the squash commit message."""
+    body = prose(description(text))
+    block = end_trailers(description(text))
+    if block:
+        body = body[:body.rfind(block.split('\n')[0])]
+    for sentence in re.split(r'(?<=[.!?])\s+', ' '.join(body.split())):
+        if (re.search(r'squash', sentence, re.I) and re.search(r'trailer|Implements|Defers', sentence)
+                and re.search(r'\b(adds?|added|adding|pastes?|pasted|pasting|copy|copies|copied|copying|includes?|included'
+                              r'|including|puts?|putting)\b', sentence, re.I)
+                and not re.search(r"\b(not|never|no)\b|n't", sentence, re.I)):
+            return result(True, sentence[:140])
+    return result(False, 'no sentence asks for the trailers in the squash commit message')
+
+
+def no_squash_request(text):
+    """Under a merge that keeps the trailers, the description asks nobody to copy them into a squash message."""
+    asked = squash_trailers_requested(text)
+    return result(asked[0] == 'FAIL', 'no squash request' if asked[0] == 'FAIL' else f'squash request: {asked[1]}')
+
+
 def no_placeholder(text):
     found = PLACEHOLDER.search(text)
     if found:
@@ -824,10 +845,13 @@ CASES = {
                                prose_under(330), no_tool_footer],
     'authz-agent-208-rule-lines': [description_trailers(IMPLEMENTS_208, {}), waiting_rules_named(WAITING_208),
                                    no_placeholder, scope_lead_in_before_trailers, no_headings,
-                                   commit_trailers(IMPLEMENTS_208, {})],
+                                   commit_trailers(IMPLEMENTS_208, {}), no_squash_request],
     'authz-agent-159-defers-targets': [description_trailers(IMPLEMENTS_159, DEFERS_159), waiting_rules_named(WAITING_159),
                                        no_placeholder, scope_lead_in_before_trailers, no_headings,
-                                       commit_trailers(IMPLEMENTS_159, DEFERS_159)],
+                                       commit_trailers(IMPLEMENTS_159, DEFERS_159), no_squash_request],
+    'authz-agent-159-squash-title': [description_trailers(IMPLEMENTS_159, DEFERS_159), squash_trailers_requested,
+                                     waiting_rules_named(WAITING_159), no_placeholder, scope_lead_in_before_trailers,
+                                     no_headings],
     'authz-agent-208-prose-records': [no_rule_lines, no_rule_numbers, no_headings],
     'pgjdbc-4412-comment-only': [no_old_comment_quoted_4412, contradictions_kept_4412, renames_named_4412,
                                  runtime_noop_checked_4412, prose_under(150)],
