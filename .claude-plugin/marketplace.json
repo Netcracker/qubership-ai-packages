@@ -384,14 +384,25 @@
     },
     {
       "name": "adversarial-code-review",
-      "description": "Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.",
-      "version": "1.1.0",
+      "description": "Review GitHub pull requests and GitLab merge requests with one subagent per review axis and a separate verification pass, and hand the findings to review-delivery.",
+      "version": "2.0.0",
       "tags": [
         "topic:code-review",
         "activity:code-review",
         "audience:public"
       ],
       "source": "./agent-packages/adversarial-code-review"
+    },
+    {
+      "name": "review-delivery",
+      "description": "Render a finished code review as a chat report, a ledger, an email, a GitHub review, or GitLab discussions, and publish it with the user's authorization.",
+      "version": "0.1.0",
+      "tags": [
+        "topic:code-review",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/review-delivery"
     },
     {
       "name": "meeting-analysis",

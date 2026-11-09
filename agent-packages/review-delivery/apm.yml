@@ -1,0 +1,3 @@
+name: review-delivery
+version: 0.1.0
+description: Render a finished code review as a chat report, a ledger, an email, a GitHub review, or GitLab discussions, and publish it with the user's authorization.
