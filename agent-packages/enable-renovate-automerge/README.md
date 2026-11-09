@@ -15,12 +15,12 @@ updates. It applies per repository and verifies one pilot before a broader rollo
    or dry run, or keep that update class manual.
 3. Makes each required workflow report on every PR. It moves `pull_request.paths` decisions into the workflow so
    inapplicable validation jobs can skip while the final gate succeeds. By default, gated workflows accept branch pushes
-   only to the default branch. It explains which branch checks, builds, and publication stop and offers event-specific
-   gate names or manual branch publication when needed.
+   only to the default branch while preserving tag pushes. It explains which branch checks, builds, and publication
+   stop and offers event-specific gate names or manual branch publication when needed.
    For Docker builds, it checks detector coverage against every build context, COPY/ADD source, and both ignore-file
    forms, including newly added ignore files, and records input-path verification before declaring the gate complete.
-4. Evaluates the combined protection policy, recommends one ruleset with required CI and review, and shows a candidate
-   consolidated policy.
+4. Evaluates the combined protection policy, preserves the owner's up-to-date requirement, recommends one ruleset with
+   required CI and review, and shows a candidate consolidated policy.
    Consolidation happens only after agreement and preserves human bypass actors and modes.
 5. Compares the current effective Renovate policy with `github>Netcracker/renovate-config:automerge`, including the
    exact visible change in automerge scope. The owner decides whether to adopt the centralized policy.
@@ -28,7 +28,7 @@ updates. It applies per repository and verifies one pilot before a broader rollo
 7. Checks successful merge, failed/missing-check blocking, ordinary review enforcement, and approval after rebases.
 
 The full procedure and exception handling live in the [skill](.apm/skills/enable-renovate-automerge/SKILL.md).
-Each golden rule contains its target, inspection, implementation, and confirmation steps. Setup requests proceed through
+Each requirement contains its target, inspection, implementation, and confirmation steps. Setup requests proceed through
 the needed changes; audit requests evaluate the same rules read-only.
 Human and other unrelated bypass rules remain repository policy outside Renovate automerge. The skill removes no bypass
 unless its actor is identified as a direct automerge participant, and grants none to Renovate or Renovate Approver.

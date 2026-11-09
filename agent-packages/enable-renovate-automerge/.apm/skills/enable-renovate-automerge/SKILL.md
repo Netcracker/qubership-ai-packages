@@ -10,7 +10,7 @@ GitHub auto-merge only after required CI passes. Apply the checks below per repo
 
 ## Working mode and scope
 
-A setup or fix request means: inspect each golden rule, preserve what passes, correct authorized deviations, and show
+A setup or fix request means: inspect each requirement, preserve what passes, correct authorized deviations, and show
 the changes. An audit or validation request uses the same rules read-only and reports remedies without editing files,
 settings, or PRs.
 
@@ -49,14 +49,17 @@ analysis-result discussion.
 A generic request to configure automerge does not select scope. An explicit request for canonical automerge, the shared
 preset, or all non-major updates selects the shared baseline; a request for named selectors selects only those
 selectors. Resolve shared presets in `extends` order, then repository configuration, before describing the selected
-scope. Explicit repository options take precedence over presets. Later matching `packageRules` override earlier
-values for the same option. Record coverage gaps, residual risks, and recovery
-paths for the effective policy. Do not prepare source edits before the required scope and gate decisions. Implement the
-owner's choices instead of converting a coverage gap into a prohibition.
+scope. A top-level repository option overrides the same top-level preset option. Package rules then apply to each
+dependency after top-level values and update-type blocks: inherited rules, preset rules in `extends` order, and the
+repository's rules. A later matching rule overrides an earlier one for the same option. A top-level `automerge: false`
+or `major` block does not override an inherited package rule with `automerge: true`. Record coverage gaps, residual
+risks, and recovery paths for the effective policy. Do not prepare source edits before the required scope and gate
+decisions. Implement the owner's choices instead of converting a coverage gap into a prohibition.
 
-For this rollout, "all non-major updates" does not exclude major selectors already allowed by shared presets or the
-repository. If the owner explicitly excludes major updates, treat that as a narrower policy: preserve the restriction
-with a matching repository override or ask before adopting a preset that would add them.
+For the [Observability rollout](https://github.com/Netcracker/qubership-observability/issues/86),
+"all non-major updates" does not exclude major selectors already allowed by shared presets or the repository. If the
+owner explicitly excludes major updates, preserve that narrower policy with a later repository package rule such as
+`{"matchUpdateTypes": ["major"], "automerge": false}`, or ask before adopting a preset that would add them.
 
 Record the repository, host from its remote, default branch, source SHA, dirty state, and observation time. Preserve
 user changes. Use current evidence and refresh it when relevant state changes. Permissions and authorization are
@@ -149,17 +152,19 @@ Also check an unrelated path and detector failure. For example, `COPY docs /docs
 the build; adding `Dockerfile.dockerignore` must trigger it too. YAML/actionlint checks alone leave this input check
 unconfirmed. Report requirement 2 as met only after these input checks pass; keep live PR confirmation separate.
 
-Keep schedule, manual, and default-branch push behavior. PR branch filters must include the protected branch.
+Keep schedule, manual, tag-push, and default-branch push behavior. PR branch filters must include the protected branch.
 By default, set `on.push.branches` to the default branch only for workflows that publish required gates. A push to a
 Renovate branch uses the same SHA as the PR. GitHub accepts a skipped job as a passing required check, so a push gate
 skipped by `if: github.event_name == 'pull_request'` can satisfy it before the PR run finishes.
-Also inspect every retained non-PR trigger that can run on a PR head. In particular, `workflow_dispatch` can target
-the Renovate branch after push is limited to the default branch. Isolate its gate name from the required PR name or
-move the manual run to a separate workflow without required gates.
+An unfiltered `push` also runs on tags; when adding `branches`, retain that behavior with `tags: ['**']`. Preserve any
+existing tag patterns. If a tag run must stop, disclose it to the owner before making the change.
+Also inspect every retained non-PR trigger that can run on a PR head, including tag pushes. In particular,
+`workflow_dispatch` can target the Renovate branch after push is limited to the default branch. Isolate its gate name
+from the required PR name or move the manual run to a separate workflow without required gates.
 Use detector outputs and `needs.*.result` in the gate rather than duplicating path matching.
 
-Before applying this default and in the result, explicitly tell the owner which workflows lose branch-push checks,
-builds, or image publication. Explain that this repository policy change prevents skipped branch-push gates from
+Before applying this default and in the result, explicitly tell the owner which workflows lose branch-push or tag-push
+checks, builds, or image publication. Explain that this repository policy change prevents skipped branch-push gates from
 permitting early merge; PR validation remains. Keep this default unless the owner chooses another publication path.
 Isolation of every retained non-PR trigger that can run on a PR head is required in either case:
 
@@ -217,7 +222,7 @@ ruleset is the recommended end state because it makes the policy easier to inspe
 | Setting | Target |
 | --- | --- |
 | Required status checks | Verified gates selected under requirement 1 and requirement 2 |
-| `strict_required_status_checks_policy` | `false` |
+| Up-to-date requirement | Preserve the effective owner-selected value |
 | Require a pull request | Enabled |
 | `required_approving_review_count` | `1` |
 | `require_code_owner_review` | `false` |
@@ -243,16 +248,18 @@ the selected checks, review settings, bypasses, deletion and force-push restrict
 Consolidate only after the owner agrees. Add and verify combined requirements before retiring redundant rules; never
 leave the branch unprotected.
 
-Set `strict_required_status_checks_policy` to `false` on every ruleset and classic protection rule that requires status
-checks. That is the GitHub setting "Require branches to be up to date before merging"; leave it off. Required checks
-still must pass on the pull request head. GitHub must not block the merge only because the branch is behind the base.
-Renovate may still rebase on its own schedule; that rebase is not a merge gate. Preserve existing required checks unless
-replaced with verified equivalent coverage under requirement 2. Identify owner action if an inherited or classic policy
-forces the up-to-date requirement. Source-controlled changes go through an ordinary reviewed PR.
+Preserve the effective "Require branches to be up to date before merging" value unless the owner selects a change.
+Rulesets use `strict_required_status_checks_policy`; classic protection uses `required_status_checks.strict`. With
+`true`, a behind branch needs a rebase and passing checks on its new head before merging. With `false`, GitHub can merge
+a PR checked against an older base, leaving the combination of successive updates untested. The choice affects human
+PRs too. Show this trade-off, along with any change to code-owner review or review-thread resolution, before changing
+protection. The [Observability rollout](https://github.com/Netcracker/qubership-observability/issues/86) currently
+requires strict up-to-date checks. Preserve existing required checks unless replaced with verified equivalent coverage
+under requirement 2. Source-controlled changes go through an ordinary reviewed PR.
 
 **Confirm.** Re-read effective protection and compare it with the saved state. Every status-check rule has
-`strict_required_status_checks_policy` set to `false`. Use requirement 7 for enforcement evidence; stored JSON alone
-does not prove enforcement.
+its owner-selected up-to-date value in the applicable ruleset or classic protection field. Use requirement 7 for
+enforcement evidence; stored JSON alone does not prove enforcement.
 
 ### Requirement 4. Preserve unrelated bypass; remove bypass for automerge participants
 
@@ -323,8 +330,9 @@ Let the owner decide whether the difference is acceptable and whether to migrate
 canonical policy, shared preset, or all non-major updates accepts the resolved shared baseline, including selected
 majors allowed by shared presets or repository configuration; do not ask for that decision again. A request for named
 selectors authorizes those selectors only. A generic request to configure automerge does not select scope. Preserve
-existing repository rules when importing shared presets; their effective overrides remain in force. After migration is
-chosen, preserve the existing `extends` entries and add the shared preset:
+existing repository rules when importing shared presets; verify their effective overrides and add a later repository
+package rule if needed to preserve an explicitly narrower scope. After migration is chosen, preserve the existing
+`extends` entries and add the shared preset:
 
 ```json
 {
@@ -367,9 +375,9 @@ Prefer a fresh eligible PR opened by Renovate. Human imitations, old merged PRs,
 **Implement.** Observe without manually approving, merging, or bypassing protection. Do not widen scope to manufacture
 a pilot. Approver reacts to PR opening and qualifying dismissal of its own review. Installing it later, editing the
 body, or reopening an old PR alone does not prove approval will occur. Verify approval restoration after a Renovate
-update/rebase dismisses stale reviews. A pull request that is behind the default branch stays mergeable when required
-checks and approval are already present on its head SHA. Do not treat that lag as a failed merge. When Renovate itself
-rebases, record the new head SHA, the restored approval, and the required checks on that SHA.
+update/rebase dismisses stale reviews. When the up-to-date requirement is off, a pull request behind the default branch
+may merge with required checks and approval on its head SHA. When it is on, wait for the rebase and checks on the new
+head. When Renovate rebases, record the new head SHA, the restored approval, and the required checks on that SHA.
 
 For explicitly authorized negative test PRs, arrange the blocking condition before any auto-merge request. Satisfy other
 merge prerequisites to isolate the check: a red PR also lacking approval does not prove CI enforcement.
@@ -389,7 +397,7 @@ branch for a test. Missing authority blocks only the affected scenario.
 Capture the auto-merge request before merge. A bot in `merged_by` or green checks alone cannot distinguish direct merge
 from platform auto-merge. If no eligible PR or event is available, report configured with runtime pending.
 Keep missing scenarios explicit rather than treating them as passed. Unknown runner cadence does not block a merge
-while the branch is behind the base.
+while the branch is behind the base only when the up-to-date requirement is off.
 
 ## Application order
 
@@ -406,7 +414,7 @@ while the branch is behind the base.
 
 ## Result
 
-Show the coverage map and report each golden rule as met, unmet, or unconfirmed, with evidence and the remaining action.
+Show the coverage map and report each requirement as met, unmet, or unconfirmed, with evidence and the remaining action.
 Distinguish source changes prepared, live settings applied, and runtime verified. Link the diff/source PR and settings
 evidence separately. Record the selected scope, exact required gate set, and branch-push restrictions or chosen
 publication alternative. Name remaining owner actions, missing events, and the next authorization stage. Audit requests
