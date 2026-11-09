@@ -7,9 +7,10 @@ Give this to one subagent at the start of the axes. The orchestrator fills in th
 > (`git -C <workspace> worktree add <work>/measure-wt <head>`) and run everything there, never in `<workspace>`:
 > reviewers read it at the same time. Write only under `<work>/measure/` and `<work>/measure-wt`, and post nothing.
 >
-> 1. Find the tool. Where the repository's agent rules in `input.md` name one (`run pitestDiff after changing
->    src/main`), use it. For a Gradle build with Java sources, cribro applies when `settings.gradle` or
->    `settings.gradle.kts` names `io.github.cribrodev.cribro`, or when `~/.gradle/cribro/cribro.init.gradle` exists.
+> 1. Find the tool. Where the repository's agent rules in `input.md` name one
+>    (`run pitestDiff after changing src/main`), use it. For a Gradle build with Java sources, cribro applies when
+>    `settings.gradle` or `settings.gradle.kts` names `io.github.cribrodev.cribro`, or when
+>    `~/.gradle/cribro/cribro.init.gradle` exists.
 >    Load the `cribro` skill for its commands; where it is not installed, run `./gradlew -q cribro` (with
 >    `--init-script` for the init script) and follow the guide it prints. With no tool, stop and reply `skipped`.
 > 2. Measure against `<base>`, not the tool's default base (for cribro, `-Pcribro.diffBase=<base>`).

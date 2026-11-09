@@ -64,6 +64,23 @@ class RenderLedgerTest(unittest.TestCase):
         data = review([finding("F1", "nit"), finding("F2", "nit", gate="code_settled")])
         self.assertEqual(["## Findings without a class"], self.headings(data, "## "))
 
+    def test_an_unaccepted_fix_continued_as_a_nit_does_not_hold_a_branch_request(self):
+        data = review([finding("F1", "nit"), finding("F2", "nit", gate="code_settled")], previous_findings=[{
+            "thread_url": "https://example.test/t/1", "status": "fix_not_accepted", "reason": "still there.",
+            "finding_id": "F1"}])
+        self.assertEqual(["## Findings without a class", "## Previous findings"], self.headings(data, "## "))
+
+    def test_an_unaccepted_fix_without_a_finding_holds_a_branch_request(self):
+        data = review([finding("F2", "nit", gate="code_settled")], previous_findings=[{
+            "thread_url": "https://example.test/t/1", "status": "fix_not_accepted", "reason": "still there."}])
+        self.assertEqual(["## Held until the code is settled", "## Previous findings"], self.headings(data, "## "))
+
+    def test_an_unaccepted_fix_naming_a_finding_not_in_the_file_holds_a_branch_request(self):
+        data = review([finding("F2", "nit", gate="code_settled")], previous_findings=[{
+            "thread_url": "https://example.test/t/1", "status": "fix_not_accepted", "reason": "still there.",
+            "finding_id": "F9"}])
+        self.assertEqual(["## Held until the code is settled", "## Previous findings"], self.headings(data, "## "))
+
     def test_a_previous_finding_keeps_its_replies_and_follow_up(self):
         data = review([], result="approve", previous_findings=[{
             "thread_url": "https://example.test/t/1", "status": "scope_deferred", "reason": "moved to a follow-up.",

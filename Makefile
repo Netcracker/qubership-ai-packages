@@ -55,6 +55,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests/check-skill-descriptions -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/final-review -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/review-delivery -p 'test_*.py'
+	$(PYTHON) -m unittest discover -s tests/adversarial-code-review -p 'test_*.py'
 	$(PYTHON) -m unittest discover -s tests/eval-candidates -p 'test_*.py'
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/test-authoring
 	bash agent-packages/test-authoring/scripts/check-skill.sh agent-packages/final-review

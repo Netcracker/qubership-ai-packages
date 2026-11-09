@@ -5,7 +5,8 @@ Usage: extract-comments.py <repo> <base> [<file>...]
 
 <repo> is a checkout at the reviewed head. Without files, every file the change touches is read. Line numbers are at
 HEAD. Recognizes `//` and `/* ... */` comments, and `#` comments and docstrings in Python, shell, Ruby, YAML, and
-TOML files; other syntaxes, such as `--` comments, are not extracted.
+TOML files; other syntaxes, such as `--` comments, are not extracted. A file that is not UTF-8 text, or that HEAD
+does not have, is skipped with a note on stderr.
 """
 import os
 import re
@@ -17,12 +18,30 @@ FENCE = {".java": "java", ".kt": "kotlin", ".go": "go", ".rs": "rust", ".ts": "t
          ".scala": "scala", ".groovy": "groovy", ".c": "c", ".h": "c", ".cpp": "cpp", ".cs": "csharp"}
 
 
-def git(repo, *args):
-    return subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, check=True).stdout
+def git(repo, *args, text=True):
+    return subprocess.run(["git", "-C", repo, *args], capture_output=True, text=text, check=True).stdout
+
+
+def read_text(repo, path):
+    """Return the file at HEAD as text, or None, with a note on stderr, where it is missing or not UTF-8 text."""
+    try:
+        data = git(repo, "show", f"HEAD:{path}", text=False)
+    except subprocess.CalledProcessError:
+        print(f"extract-comments: skipped {path}: not in HEAD", file=sys.stderr)
+        return None
+    try:
+        text = data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = None
+    if text is None or "\0" in text:
+        print(f"extract-comments: skipped {path}: not UTF-8 text", file=sys.stderr)
+        return None
+    return text
 
 
 def added_lines(repo, base, path):
-    diff = git(repo, "diff", "-U0", f"{base}...HEAD", "--", path)
+    # Only the hunk headers are read, and a removed line may be in another encoding than the file at HEAD.
+    diff = git(repo, "diff", "-U0", f"{base}...HEAD", "--", path, text=False).decode("utf-8", "replace")
     added = set()
     for m in re.finditer(r"^@@ -\S+ \+(\d+)(?:,(\d+))? @@", diff, re.M):
         start, n = int(m.group(1)), int(m.group(2) or 1)
@@ -80,11 +99,11 @@ def is_license(lines, block):
 def main():
     repo, base, files = sys.argv[1], sys.argv[2], sys.argv[3:]
     if not files:
-        files = git(repo, "diff", "--name-only", "--diff-filter=AMR", f"{base}...HEAD").split()
+        names = git(repo, "diff", "--name-only", "-z", "--diff-filter=AMR", f"{base}...HEAD", text=False)
+        files = [os.fsdecode(p) for p in names.split(b"\0") if p]
     for path in files:
-        try:
-            text = git(repo, "show", f"HEAD:{path}")
-        except subprocess.CalledProcessError:
+        text = read_text(repo, path)
+        if text is None:
             continue
         ext = os.path.splitext(path)[1]
         added = added_lines(repo, base, path)

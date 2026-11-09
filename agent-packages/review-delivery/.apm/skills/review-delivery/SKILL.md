@@ -40,10 +40,11 @@ which appear only under *Previous findings*.
 
 **Held findings.** A finding with `gate: code_settled` asks for something about the branch rather than the code: squash
 the commits, rebase, reword a commit message. While any other `major` or `minor` finding (one with `gate: none`) is
-open, in this file or in an earlier thread `previous_findings` lists as `fix_not_accepted`, do not publish it: the next
-round rewrites the history anyway. Held findings are not counted in the result line of an email or a GitLab
-publication, which shows only what it publishes. The ledger lists them in their own section, so nothing is lost, and
-the chat report counts them on its own line.
+open, do not publish it: the next round rewrites the history anyway. An earlier thread that `previous_findings` lists as
+`fix_not_accepted` counts at the severity of the finding its `finding_id` names, and as open where it names none in this
+file. Held
+findings are not counted in the result line of an email or a GitLab publication, which shows only what it publishes.
+The ledger lists them in their own section, so nothing is lost, and the chat report counts them on its own line.
 
 **Order.** Major before minor before nit; within a severity, by id, which the verifier assigns in severity order. In the
 ledger, by class first, and the classes, with the findings without a class as one more group, by their highest severity.

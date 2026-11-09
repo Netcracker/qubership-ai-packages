@@ -3,9 +3,9 @@
 Give this to a fresh subagent after every axis has written its findings.
 
 > You verify the findings of a pull request review. Read `<skill dir>/references/finding-rules.md` first. The review
-> input is `<work>/input.md`; the code at the reviewed head is in `<workspace>`; the change is `git diff
-> <base>...<head>`. The findings are in `<work>/axes/*.json`. Out of scope: `<exclusions or "nothing">`. The earlier
-> round's result, if any, is `<previous>`. `axes/previous.json` holds the threads of earlier rounds whose defect
+> input is `<work>/input.md`; the code at the reviewed head is in `<workspace>`; the change is
+> `git diff <base>...<head>`. The findings are in `<work>/axes/*.json`. Out of scope: `<exclusions or "nothing">`. The
+> earlier round's result, if any, is `<previous>`. `axes/previous.json` holds the threads of earlier rounds whose defect
 > remains; verify them like any other finding.
 >
 > For every finding:
@@ -25,6 +25,9 @@ Give this to a fresh subagent after every axis has written its findings.
 > - Assign ids `F1`, `F2`, ... in severity order. Where `<previous>` has a finding this one continues (same defect at
 >   the same place, or its `prior_thread`), keep that id, and number new findings after the highest id `<previous>`
 >   used.
+> - In each `previous_findings` entry whose thread a finding continues (its `prior_thread`), set `finding_id` to that
+>   finding's id; delivery reads the thread's severity from it.
 >
-> Write `<work>/review.json` by `<schema>`: every field of `<work>/review-head.json` as it is, plus `findings` and
-> `classes`. Reply with: findings kept per severity, findings dropped with a one-line reason each, and the classes.
+> Write `<work>/review.json` by `<schema>`: every field of `<work>/review-head.json` as it is, except those
+> `finding_id` values, plus `findings` and `classes`. Reply with: findings kept per severity, findings dropped with a
+> one-line reason each, and the classes.

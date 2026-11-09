@@ -80,7 +80,11 @@ def held(review):
     """Return the findings held until the code is settled, by the rule in SKILL.md."""
     open_code = any(f.get("gate", "none") == "none" and f["severity"] in ("major", "minor")
                     for f in review["findings"])
-    open_code = open_code or any(p["status"] in OPEN_PREVIOUS for p in review.get("previous_findings", []))
+    # A thread that continues as a finding of this file counts at that finding's severity, in the check above. One
+    # without such a finding has no severity here, so it holds the branch requests whatever its severity was.
+    ids = {f["id"] for f in review["findings"]}
+    open_code = open_code or any(p["status"] in OPEN_PREVIOUS and p.get("finding_id") not in ids
+                                 for p in review.get("previous_findings", []))
     if not open_code:
         return set()
     return {f["id"] for f in review["findings"] if f.get("gate") == "code_settled"}
