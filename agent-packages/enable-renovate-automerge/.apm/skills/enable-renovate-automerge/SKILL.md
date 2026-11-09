@@ -52,9 +52,9 @@ selectors. Resolve shared presets in `extends` order, then repository configurat
 scope. A top-level repository option overrides the same top-level preset option. Package rules then apply to each
 dependency after top-level values and update-type blocks: inherited rules, preset rules in `extends` order, and the
 repository's rules. A later matching rule overrides an earlier one for the same option. A top-level `automerge: false`
-or `major` block does not override an inherited package rule with `automerge: true`. Record coverage gaps, residual
-risks, and recovery paths for the effective policy. Do not prepare source edits before the required scope and gate
-decisions. Implement the owner's choices instead of converting a coverage gap into a prohibition.
+or `major` block does not override a preset or inherited package rule with `automerge: true`. Record coverage gaps,
+residual risks, and recovery paths for the effective policy. Do not prepare source edits before the required scope and
+gate decisions. Implement the owner's choices instead of converting a coverage gap into a prohibition.
 
 For the [Observability rollout](https://github.com/Netcracker/qubership-observability/issues/86),
 "all non-major updates" does not exclude major selectors already allowed by shared presets or the repository. If the
@@ -253,9 +253,8 @@ Rulesets use `strict_required_status_checks_policy`; classic protection uses `re
 `true`, a behind branch needs a rebase and passing checks on its new head before merging. With `false`, GitHub can merge
 a PR checked against an older base, leaving the combination of successive updates untested. The choice affects human
 PRs too. Show this trade-off, along with any change to code-owner review or review-thread resolution, before changing
-protection. The [Observability rollout](https://github.com/Netcracker/qubership-observability/issues/86) currently
-requires strict up-to-date checks. Preserve existing required checks unless replaced with verified equivalent coverage
-under requirement 2. Source-controlled changes go through an ordinary reviewed PR.
+protection. Preserve existing required checks unless replaced with verified equivalent coverage under requirement 2.
+Source-controlled changes go through an ordinary reviewed PR.
 
 **Confirm.** Re-read effective protection and compare it with the saved state. Every status-check rule has
 its owner-selected up-to-date value in the applicable ruleset or classic protection field. Use requirement 7 for
