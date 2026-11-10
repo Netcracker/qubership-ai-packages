@@ -349,17 +349,39 @@ change detectors of §5 show themselves, so flag every test it touches and exami
 ## 7. The failure report
 
 A failing test is read as a bug report by someone holding only the runner's output. Four things write that report,
-and each fact belongs in exactly one of them. Decide what each carries before writing the next.
+and each fact belongs in exactly one of them; the comment above the test is not part of it. Decide what each carries
+before writing the next.
 
 | Part | Carries | Not |
 | --- | --- | --- |
 | **The container** (class, module path, `describe` block, parent test) | The unit under test and the condition every test in it shares | A file name; a fact true of one test |
 | **The test name** (method, subtest, `it` string, parameterized case id) | The scenario and the expected outcome, so the failure line reads as a sentence: `a negative count is refused`. A test that holds a case with its controls states the rule they establish, and the case's partition where the rule has several tests: `a type variable is rejected only when its declared bound admits null` | A location (`testEnsureBytes`), an ordinal (`case 3`), an issue number, `and` or `but` joining the outcomes of two inputs or two scenarios (`rejects a negative count and accepts zero`) |
 | **The assertion** | The values: got and want, printed by an assertion built to print them, in the operand order the framework labels | A boolean wrapped around a comparison, which prints `true` and `false` or the expression text |
-| **The message** | The function and the input where the assertion cannot print them: `ensureBytes(-2147483648)` | The scenario the name states; the values the assertion prints; `failed` |
+| **The comment above the test**, read only by someone who opened the file | Usually nothing. Otherwise one or two sentences on why a test that looks as if it cannot fail exists, or where a part of the expected value comes from when the arguments do not show it | The name or the rows retold, headings between the rows of a table included; the role of an input (`the case`, `a control`); what the code did before the change; why the expected value is that value, which the message carries |
+| **The message** | The function and the input where the assertion cannot print them: `ensureBytes(-2147483648)`. Where the expected value would look wrong to a reader who knows the specification, also why it is that value, naming the specification it departs from or the release that returns it too, not the mechanism that produces it: `size() after clear(); 2.4 returns the size before clear as well, where Collection asks for 0` | The scenario the name states; the values the assertion prints; `failed` |
 
-The name is printed in the report; the comment above the test is read only once someone opens the file. So the
-comment may repeat the rule the message states, and the message may not repeat the name.
+The name, the values, and the message are printed in the report; the comment above the test is read only by someone
+who opened the file. So a fact the red-build reader needs goes in one of the four parts, never in the comment alone, and
+the message may not repeat the name.
+
+**Most tests need no comment.** Write one only for a question that someone who opened the file would still ask after
+reading the name, the rows, and the assertions: why a test that looks as if it cannot fail exists, or where a part of
+the expected value comes from when the arguments do not show it. One or two sentences. The comment does not:
+
+- restate the name or the rule the rows already show. A comment the reader could rebuild from the method name and the
+  case names carries nothing, and §3 of the doc-comment skill of the language (`javadoc-authoring` for Java) says the
+  same of any doc comment. A heading comment between the rows of a table or a method source (`// requests that are
+  retried`) restates the rows below it: name each row instead;
+- use this skill's working words. *Case*, *control*, *partition*, *act*, and *base commit* help the writer and the
+  reviewer choose the form of a test, and mean nothing to its reader. No comment, test name, case name, or message
+  labels an input as the case or a control: name what the input is (`an empty list`, `a trailing comment`), not its role;
+- narrate the change. That an input passed before the fix, that a guard was already right, or what the code used to
+  do belongs to the commit message. The comment on a regression test may carry one past-tense sentence of the defect,
+  where §1 of the doc-comment skill allows it;
+- explain why an expected value is what it is. That reason goes in the message (the table above), where the reader of
+  a failed build sees it before deciding which side to fix. Where a part of the expected value comes from the test's
+  own arguments or setup, such as a suffix an argument adds, is construction and may stay in the comment; why the
+  unit returns that value is the message's.
 
 - **Use the assertion that prints the operands.** `assertEquals(expected, actual)` prints both; `assertTrue(expected
   == actual)` prints `expected: <true> but was: <false>`, with or without a message, and leaves the reader to
@@ -376,6 +398,12 @@ comment may repeat the rule the message states, and the message may not repeat t
 - **Several assertions on one behavior report together.** `assertAll`, `expect.soft`, `t.Error`, and `EXPECT_*` show
   every failed assertion in one run; a hard abort (`t.Fatal`, `require`, `ASSERT_*`) is for the point after which
   continuing is meaningless, such as a nil result the next line dereferences.
+- **An expected value a reader would correct carries its reason in the message.** The signal is in the task or the
+  commit message: the value departs from the specification or the method's documentation, it stays as an earlier
+  release had it (`still`, `unchanged`, `as before`), or it is pinned rather than required. Write the reason into that
+  assertion's message, naming the specification or the release, and leave the comment above the test without it. A
+  reader of the failed build who knows the specification otherwise changes the expected value to what the
+  specification says and makes the test green against the behavior it keeps.
 - **Compare error semantics, not message strings.** Assert the exception type, the sentinel, or the code; match a
   message only on the part the behavior defines. A pinned message is a change detector for wording.
 - **A wait that fails reports what it waited for and the last state it saw.** `Timed out after 60 s waiting for the
@@ -475,8 +503,11 @@ of each entry open (§8). The reference file names the runner option that prints
      subtests on one helper, or one table for each kind: a row field that selects the assertion is the condition that
      decides whether an assertion runs (§6). A table whose column can state only a weaker expectation than the case
      has, such as a boolean that means some error was returned, does not take that case; the case goes beside the
-     table, and the table keeps its rows and its assertions (§9). The reviewer checks: no row field or flag selects
-     which assertion a case runs; no case joined a table that asserts less than the case needs.
+     table, and the table keeps its rows and its assertions (§9). A test whose act and assertions are those of a
+     parameterized test in the same change is a row of that test, even where its input was written to hold a case
+     beside its control (principle 3); the row's name says how its input differs. The reviewer checks: no row field or
+     flag selects which assertion a case runs; no case joined a table that asserts less than the case needs; no test
+     of the change repeats the act and assertions of a parameterized test of the change with another input.
 
 ## 8. Determinism
 
@@ -598,6 +629,12 @@ Run this over a test you wrote or one you are reviewing.
   existing line records, and then to the user alone, never in a pull request or a review (§0)? Was an instructions file
   edited only after the user agreed, in its source where the file is generated, and was none created unasked (§0)?
 - Does the message repeat the name or the values, or say only `failed` (§7)?
+- Where an expected value would look wrong to a reader who knows the specification, does the message say why it is
+  that value, rather than a comment (§7)?
+- Does any comment above a test restate its name or rows, call an input a case or a control, or narrate the change;
+  and does every remaining comment answer a question the name, the rows, and the report leave open (§7)?
+- Does a test of the change share its act and assertions with a parameterized test of the change and differ only in
+  its input, where a row of that test would do (§7)?
 - Is there an act after an assert that starts an unrelated scenario (§7)?
 - Does each case fail on its own, under its own name: is every case that is a separate act a test, a row, or a subtest,
   or under a continuing assertion that names the row; do cases share one act only where it reports every mismatch and
@@ -811,6 +848,45 @@ void aLocalIsReportedOnlyWhenNothingReadsIt() {
         """);
 }
 ```
+
+### A comment the report needed
+
+**Before**: the first sentence of the comment restates the name, the last labels a row for the reviewer, the row
+headings restate the rows, and the middle sentence, the only fact the red-build reader lacks, is not in the report.
+
+```java
+/**
+ * The size after clear is the size before it. This keeps the 2.4 behavior, not the
+ * Collection contract, which asks for 0. The empty cache is the control.
+ */
+@ParameterizedTest
+@CsvSource({
+    // an empty cache
+    "0, 0",
+    // a cache with entries keeps its size
+    "3, 3"})
+void sizeAfterClearIsTheSizeBeforeIt(int entries, int expected) {
+    LruCache cache = cacheWith(entries);
+    cache.clear();
+    assertEquals(expected, cache.size(), "size() after clear()");
+}
+```
+
+**After**: no comment, and the reason for the value is in the message.
+
+```java
+@ParameterizedTest
+@CsvSource({"0, 0", "3, 3"})
+void sizeAfterClearIsTheSizeBeforeIt(int entries, int expected) {
+    LruCache cache = cacheWith(entries);
+    cache.clear();
+    assertEquals(expected, cache.size(),
+        "size() after clear(); 2.4 returns the size before clear as well, where Collection asks for 0");
+}
+```
+
+A reader of the failed build who knows the contract would otherwise change the expected value to 0 and make the test
+green against the behavior it keeps.
 
 ### A report that says nothing
 

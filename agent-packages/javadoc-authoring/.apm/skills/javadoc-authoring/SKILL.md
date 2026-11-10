@@ -265,9 +265,11 @@ Javadoc extracts the first sentence into the class and member summary tables, wh
 - **A first sentence a reader could reconstruct from the identifier carries nothing.** A test method
   named `aFailingOutputCloseStillClosesTheInputAndTheSocket` does not need `Checks that a failing
   output close still closes the input stream and the socket.`; the report prints the name. Where the
-  name states what the test establishes, the comment carries the reason, the construction the reader
-  would not guess, or nothing. For a field or a getter the same rule leads to §7: where the name and
-  the types are the whole contract, write no comment.
+  name states what the test establishes, the comment carries why a test that looks as if it cannot
+  fail exists, the construction the reader would not guess, or nothing. Why an expected value is what it is goes in the
+  assertion message, where the reader of a failed build sees it (`test-authoring` §7). For a field or a
+  getter the same rule leads to §7: where the name and the types are the whole contract, write no
+  comment.
 
 ## 4. Genre notes
 
@@ -440,6 +442,10 @@ and for a failure fixed somewhere else.
   away the first time` leaves the reader guessing: not throw, not close twice, not log? Name the
   observable: `and it must not touch a socket that markBroken already closed.` If you cannot phrase
   the rule as an observation, the test probably cannot check it either.
+
+A test method's comment is the exception, not the default. Its content is why a test that looks as if it
+cannot fail exists, or a construction the code does not show; why an expected value is what it is goes in the assertion
+message, and a heading between rows of a table restates the rows (`test-authoring` §7).
 
 Where the class has a comment, repeating its rule in a field comment or the assertion message is
 correct, because each reader meets exactly one of the three. It does not extend to production code,
