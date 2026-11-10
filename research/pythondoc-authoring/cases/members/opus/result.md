@@ -1,5 +1,5 @@
 ```python
-"""In-memory cache that stores byte values under string keys."""
+"""In-memory cache of byte values with a per-entry size limit."""
 
 from __future__ import annotations
 
@@ -8,20 +8,16 @@ from collections.abc import Iterator
 
 DEFAULT_TIMEOUT_SECONDS = 30
 
-# Largest value EntryCache.put accepts, 1 MiB (1048576 bytes).
+# Largest value EntryCache.put accepts: 1 MiB (1048576 bytes).
 _MAX_ENTRY_BYTES = 1 << 20
 
 
 class EntryTooLargeError(ValueError):
-    """Raised when EntryCache.put receives a value larger than 1 MiB (1048576 bytes)."""
+    """Raised when a value passed to EntryCache.put is over 1 MiB (1048576 bytes)."""
 
 
 class EntryCache:
-    """In-memory map from string keys to byte values.
-
-    An entry stays in the cache until evict removes it. The cache applies no size or age limit
-    of its own.
-    """
+    """In-memory mapping from string keys to byte values."""
 
     def __init__(self, name: str) -> None:
         self._name = name
@@ -37,18 +33,17 @@ class EntryCache:
         """Stores value under key, replacing any value already stored there.
 
         Raises:
-            EntryTooLargeError: value is longer than 1 MiB (1048576 bytes). The cache is left
-                unchanged.
+            EntryTooLargeError: If value is longer than 1 MiB (1048576 bytes).
         """
         if len(value) > _MAX_ENTRY_BYTES:
             raise EntryTooLargeError(f"entry {key} is {len(value)} bytes, limit {_MAX_ENTRY_BYTES}")
         self._entries[key] = value
 
     def evict(self, key: str) -> None:
-        """Removes the entry for key, if there is one.
+        """Removes the entry for key, and does nothing if there is none.
 
-        A key with no entry is ignored, and seconds_since_last_eviction does not count it as an
-        eviction.
+        Only a call that removes an entry updates the time that
+        seconds_since_last_eviction measures from.
         """
         removed = self._entries.pop(key, None)
         if removed is not None:
@@ -58,17 +53,18 @@ class EntryCache:
     def seconds_since_last_eviction(self) -> float | None:
         """Returns the seconds since evict last removed an entry, or None if it never has.
 
-        The time comes from a monotonic clock, so changes to the system clock do not affect it.
+        The interval is measured with time.monotonic(), so changes to the system
+        clock do not affect it.
         """
         if self._last_eviction is None:
             return None
         return time.monotonic() - self._last_eviction
 
     def keys(self) -> Iterator[str]:
-        """Yields the stored keys in ascending order.
+        """Yields the keys in sorted order.
 
-        The keys are copied when iteration starts, so the caller may put or evict entries while
-        iterating.
+        The keys are copied at the first next() call, not when keys() is called.
+        After that, the caller may put or evict entries while iterating.
         """
         yield from sorted(self._entries)
 ```

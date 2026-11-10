@@ -1,5 +1,5 @@
 ```rust
-//! In-memory cache of byte values under string keys, provided by [`EntryCache`].
+//! In-memory cache of byte values keyed by string.
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -8,14 +8,12 @@ use std::time::{Duration, Instant};
 pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
 /// Largest value that [`EntryCache::put`] accepts: 1 MiB (1048576 bytes).
-///
-/// The `# Panics` section of `put` repeats this number, so change both together.
 const MAX_ENTRY_BYTES: usize = 1 << 20;
 
-/// In-memory map from string keys to byte values that records when an entry was last evicted.
+/// A named in-memory map from string keys to byte values.
 ///
-/// An entry leaves the cache only through [`EntryCache::evict`]. The cache has no capacity limit,
-/// and no entry expires.
+/// Nothing is evicted automatically. An entry stays in the cache until [`EntryCache::evict`]
+/// removes it.
 pub struct EntryCache {
     name: String,
     entries: HashMap<String, Vec<u8>>,
@@ -24,7 +22,7 @@ pub struct EntryCache {
 }
 
 impl EntryCache {
-    /// Creates an empty cache named `name`.
+    /// Creates an empty cache with the given name.
     pub fn new(name: impl Into<String>) -> Self {
         Self { name: name.into(), entries: HashMap::new(), evicted_bytes: 0, last_eviction: None }
     }
@@ -48,9 +46,7 @@ impl EntryCache {
         self.entries.insert(key, value);
     }
 
-    /// Removes the entry under `key` and records the eviction.
-    ///
-    /// If no entry is stored under `key`, the cache is left unchanged and no eviction is recorded.
+    /// Removes the entry stored under `key`, if there is one.
     pub fn evict(&mut self, key: &str) {
         if let Some(v) = self.entries.remove(key) {
             self.evicted_bytes += v.len() as u64;
@@ -58,10 +54,10 @@ impl EntryCache {
         }
     }
 
-    /// Returns the time elapsed since the most recent eviction.
+    /// Returns the time elapsed since the last eviction.
     ///
-    /// An eviction is recorded only when [`EntryCache::evict`] removes an entry, so this returns
-    /// `None` until that happens. Replacing a value with [`EntryCache::put`] is not an eviction.
+    /// Only a call to [`EntryCache::evict`] that removes an entry counts as an eviction. A value
+    /// that [`EntryCache::put`] replaces does not count. Returns `None` until the first eviction.
     pub fn since_last_eviction(&self) -> Option<Duration> {
         self.last_eviction.map(|t| t.elapsed())
     }

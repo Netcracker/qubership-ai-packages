@@ -106,3 +106,33 @@ Final-review tree `3d6a0954` conditions the hunk and command rules of item *Clai
 paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
 case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
 tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.
+
+## Results of the `vocab` arm, 2026-11-08
+
+`vocab-<n>` ran final-review tree `ca8233fb` (`final-review` 1.3.0, from commit `814c1614` of the branch), whose item
+*Comments consistent with the code and with each other* adds the doc-comment checklist, the dense-sentence rule, the
+callee and uncommented-expression questions, and the term check. Opus, two runs, graded by reading `result.md`.
+
+| Model | Check 1 | Check 2 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, fail | 0.45, 0.62 | 1431, 1440 |
+
+- **Check 1.** `vocab-1` F2 (`result.md:40-43`) heads on `isValid(0)` but asks to "apply the new value only where it is
+  tighter than the saved one". `vocab-2` states both cases, `isValid(0)` and `isValid(30)` against `socketTimeout=5`,
+  and asks for the minimum (`result.md:35-39`).
+- **Check 2.** `vocab-1` files the equal pair as F3, substantive (`result.md:45-48`). `vocab-2` describes the race and
+  files it as taste, with the request "one sentence in the description that accepts this behavior"
+  (`result.md:44-46`).
+
+The change adds no comment, so only the question on an uncommented added expression applies, and it fires in both runs
+on `setNetworkTimeout(null, timeout * 1000)` beside `setQueryTimeout(timeout)`. `vocab-1` routes it to the defect:
+"That is a real defect rather than a missing comment, so it is filed under item 3 (F3)" (`result.md:16`). `vocab-2`
+files it as a substantive finding of item 1, a request for a comment saying why both limits are set, because "The
+cancel request goes over a separate connection and cannot unblock a read on a socket that no longer answers"
+(`result.md:11`). The request is not wrong, but it argues for the pair that check 2 asks to file as a defect, and the
+same run then labels the race taste. Two runs cannot show the rule caused the miss; `final` split the same way. Neither
+run lists terms or files a dense sentence; both say in one clause that no term is coined. The taste note on the
+spelling `savedNetworkTimeOut` (`vocab-1`, `result.md:18`) is not from the new rules.
+
+Against `instr`, Opus falls from 4 of 4 to 3 of 4, at 1431 and 1440 words against 1600 and 1537, and 0.45 and 0.62 USD
+against 0.52 and 0.49.

@@ -31,6 +31,15 @@ Runs of 2026-10-31, graded by reading; both models at the default effort, two ru
 | --- | --- | --- | --- |
 | Baseline | Opus r2 fails: `Returns the name this cache was created with.`, and a comment on the constructor | passes | passes |
 | 1.3.0 | passes | passes | passes |
+| 1.4.0 | passes | passes | passes |
 
 Checks 2 and 4 to 7 passed in every run of both arms; `@since` appeared in none, so the input does not reach the
 narrowed `@since` rule.
+
+The 1.4.0 runs are of 2026-11-08, on the skill tree in `<model>/skill-tree`, and replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`; the 1.3.0 results remain in git history, in the parent of the commit that
+adds these runs. Every check passed in every 1.4.0 run, and no run wrote `@since`. The input has no specification, so
+the §1 scope rule had nothing to reach. The §3 rule reached `nanosSinceLastEviction()`: every run stated its result, the
+time since an entry was last removed, and linked `evict` only as the event it measures from, as 1.3.0 did. The rules
+added no noise. Sonnet r1 now comments the private `lastEvictionNanos`, which its 1.3.0 run left bare, and the comment
+states the sentinel, as the 1.3.0 Sonnet r2 comment did. Cost per run: Opus $0.43 and $0.41, Sonnet $0.21 and $0.20.

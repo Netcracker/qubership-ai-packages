@@ -73,6 +73,14 @@ Provenance crosses into a callee's docstring where it is that function's own con
 local rule at the lowest-level API, and the scenario at the layer where the scenario exists.** A guard found through one
 concrete call path does not carry that path's scenario.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification defines (a data-model
+term, a typing-spec relation, PEP 440 version ordering) and computes it for fewer cases than the specification allows,
+give the specification's definition or a link to it, then state the cases this code computes it for as this code's
+scope. `A hashable value is an int, a str, or a tuple of hashable values` folds a cache's choice to accept only those
+types into the glossary term, and a reader who knows the glossary asks why the definition leaves out `frozenset`,
+`bytes`, and every class that defines `__hash__` and `__eq__`. State the scope as a criterion that covers every case,
+not as a list of the cases it excludes (§4, *The membership rule*).
+
 **Sufficiency** scales with visibility: how much the docstring may leave to the code beside it. Python marks visibility
 by convention rather than by keyword: a name listed in `__all__` or spelled without a leading underscore is public, and
 a `_name` is private (PEP 8).
@@ -247,6 +255,12 @@ Decide in this order, and never mix moods inside a project:
   has a word already, and `english-developer-style` §4a gives the test for telling a defined term from a coinage.
 - **No self-description.** Drop `This function…`, `Helper that…`, `Utility for…`. Start with the verb.
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other members.** ``Return the length as :meth:`_frame_length` computes it, as :meth:`_trim_to`
+  keeps it.`` sends the reader to two other methods to learn what this one returns, and it fails §1's refactor test:
+  inline `_trim_to` and the sentence has to change. State the result. The rule holds for a `_private` name too: §1's
+  table lets its docstring lean on the body beside it. It does not let the docstring give the names of the functions the
+  body calls instead of the result. Reference another member only for a part of the contract that it owns and this one
+  passes through unchanged.
 - **A property, an attribute, or a constant is a noun phrase, with its unit.** `Largest encrypted packet this stream
   accepts, in bytes.` A property is documented as the value it exposes, not as the method that computes it. The reason
   the bound has that value is slot 3, however interesting it is.
@@ -540,14 +554,14 @@ key, a literal, a shell command, a symbol in a service you do not import) plain 
 snippet as a code block in the project's markup.
 
 **An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then give the number so a
-reader can find the history: `a length taken straight from the wire sizes the allocation (issue #4015)`. The number
+reader can find the history: `a length taken straight from the stream sizes the allocation (issue #4015)`. The number
 must not carry the meaning: `the shape of issue #4015`, `the same format as #1231`, `the bug #4015 fixed` count as
 content for someone who already knows the ticket and as nothing for everyone else. The test: cover the number and read
 the sentence. If what remains states no fact, the comment has none. A bare `see #4015` fails the same test from the
 other end, and a rendered Sphinx page reaches readers with no access to the tracker at all.
 
 The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario from issue #4015: a
-field claiming more bytes than the row envelope still holds` passes, because covering the number leaves the failure
+field claiming more bytes than the row message still holds` passes, because covering the number leaves the failure
 named. The rule is about the number's role, not its position.
 
 The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold for a normative
@@ -708,6 +722,9 @@ longer, because every restructuring pass adds a sentence and none takes one away
 - **A summary that breaks §3 is itself the fact that pays for a rewrite.** The net-delta rule governs the body, not the
   first line. A docstring that opens with `This function is a wrapper around X` stays broken until someone rewrites it,
   and "I had no new fact to add" is not a reason to leave it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the change touches for its
+  distinctive words, and fix every copy in the same edit. A reviewer who found one copy will find the next, and a reply
+  that fixes only the line they pointed at costs them a second comment.
 - **Run what the docstring runs.** If it contains a `>>>` block, run the doctests. If it feeds a committed artifact
   (§6a), regenerate.
 - **Do not move code.** A docstring edit that also renames a variable or reorders a statement cannot be verified as
@@ -886,6 +903,10 @@ has a condition, the item applies only under it.
   this method's rule, and does the docstring you wrote carry every section the inherited one did (§6)?
 - Does every term here have a definition outside this docstring, and does every name match what the code calls the
   thing (`english-developer-style` §4a)?
+- Does the summary state the result, or does it send the reader to other members (§3)?
+- Where the object implements a concept a specification defines, does the docstring state this code's scope as a
+  scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on, or leave a
   maintainer unable to see why a constraint is there? If not, delete it.
 - Is every `# type:`, `# noqa`, `# pragma`, or `# fmt:` comment still on the exact line it governs?

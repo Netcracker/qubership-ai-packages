@@ -103,3 +103,35 @@ Final-review tree `3d6a0954` conditions the hunk and command rules of item *Clai
 paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
 case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
 tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.
+
+## Results of the `vocab` arm, 2026-11-08
+
+`vocab-<n>` ran final-review tree `ca8233fb` (`final-review` 1.3.0, from commit `814c1614` of the branch), whose item
+*Comments consistent with the code and with each other* adds the doc-comment checklist, the dense-sentence rule, the
+callee and uncommented-expression questions, and the term check. Opus, two runs, graded by reading `result.md`.
+
+| Model | Run | Check 1 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | `vocab-1` | fail | 0.78 | 1618 |
+| Opus | `vocab-2` | pass | 0.84 | 1897 |
+
+`vocab-1` never mentions `setNetworkTimeout` or the wrapper, and states that a silent server "Now it fails after 5 s"
+(`result.md:41`), which is false at the default `socketTimeout`. `vocab-2` files the bypass as its main finding, 3a
+(`result.md:51-59`), with the trace through `readMore` and the request to call `pgStream.setNetworkTimeout`. It reaches
+the same lines from item 1 too, through the new question on an uncommented expression: the direct `setSoTimeout` calls
+bypass the method "which every other read timeout in connection setup goes through", and "A competent reader would take
+the two calls as equivalent. They are not" (1c, `result.md:24`).
+
+The diff adds a Javadoc on `SSL_RESPONSE_TIMEOUT` and an inline comment above the `if` in `enableSSL`, so item 1 has
+real input here, and what it reports holds against the head commit. Both runs file the Javadoc as a dense sentence,
+substantive: "This is a comma splice ... A reader has to parse it twice" (`vocab-1`, `result.md:7`). The sentence is a
+comma splice with an ambiguous "without a timeout here", and both runs pair it with facts the comment leaves out (the
+`socketTimeout` cap, what 0 does), which are substantive on their own. Both runs file the inline comment for restating
+the condition (`vocab-1` 1d, `result.md:14`; `vocab-2` 1b, `result.md:22`). `vocab-1` also files the README row's
+missing unit (5000 beside rows in seconds) as substantive. No callee finding: the inline comment sits on an `if`, not a
+call. The term check is one line each, "No term is coined" (`vocab-1`, `result.md:15`) and "No coinages" (`vocab-2`,
+`result.md:28`). No finding of item 1 is wrong; the cost is length, four substantive rows of item 1 in `vocab-1` and two
+in `vocab-2`.
+
+Against `instr`, Opus rises from fail, fail to fail, pass: `vocab-2` is the first Opus pass since `series-1`. Cost 0.78
+and 0.84 USD against 0.84 and 0.59, at 1618 and 1897 words against 1518 and 1811.

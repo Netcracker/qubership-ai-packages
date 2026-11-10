@@ -36,6 +36,7 @@ Runs of 2026-10-31, graded by reading; both models at the default effort, two ru
 | --- | --- | --- | --- | --- |
 | Baseline | Opus r1 fails: `DEFAULT_TIMEOUT_SECONDS` is gone | passes | passes | passes |
 | 1.3.0 | passes | passes | passes | passes |
+| 1.4.0 | passes | passes | passes | passes |
 
 Checks 2 and 4 to 6 passed in every run, and no run put `@defaultValue` on a constant. Opus r1 and r2 of 1.3.0 put
 `@defaultValue 3` on the mutable `retries`, which check 7 allows. Sonnet baseline r2 commented the timeout `Timeout, in
@@ -46,3 +47,12 @@ none; three of its runs dropped the sentence, and its Sonnet r1 dropped `DEFAULT
 request pointed out that declaration emit drops `async`, so a reader of this published package's `.d.ts` cannot tell
 the two kinds of function apart. The rule now keys on whether the reader sees `async`, and the 1.3.0 row is the run of
 that tree.
+
+The 1.4.0 runs are of 2026-11-08, on the skill tree in `<model>/skill-tree`, and replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`; the 1.3.0 results remain in git history, in the parent of the commit that
+adds these runs. Every check passed in every 1.4.0 run, every run kept every declaration, and no run put `@defaultValue`
+on a constant. Opus r1 and r2 again put `@defaultValue 3` on `retries`, and Opus r1 headed it `Number of retries.`,
+which restates the name; no check covers it. The input has no specification, so the §1 scope rule had nothing to reach.
+The §3 rule reached `load`, whose body calls `put`: no run defined `load` as a call to `put`, and Opus r2 and Sonnet r2
+link `put` only for the no-copy behavior `load` passes through. Opus r2's `load` comment grew by a sentence on
+overlapping calls for one key; the rules added nothing else. Cost per run: Opus $0.49 and $0.49, Sonnet $0.22 and $0.22.

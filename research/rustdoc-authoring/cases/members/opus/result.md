@@ -1,19 +1,17 @@
 ```rust
-//! In-memory cache of byte values keyed by string.
-
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Default timeout, in seconds.
 pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
-/// Largest value that [`EntryCache::put`] accepts: 1 MiB (1048576 bytes).
+/// Largest value that [`EntryCache::put`] accepts, in bytes: 1 MiB (1048576 bytes).
 const MAX_ENTRY_BYTES: usize = 1 << 20;
 
-/// Named in-memory cache of byte values keyed by string.
+/// Named in-memory map from string keys to byte values.
 ///
-/// An entry stays in the cache until [`Self::evict`] removes it. The cache has no capacity limit
-/// and no expiry.
+/// An entry stays in the cache until [`EntryCache::evict`] removes it or [`EntryCache::put`]
+/// replaces it.
 pub struct EntryCache {
     name: String,
     entries: HashMap<String, Vec<u8>>,
@@ -54,10 +52,11 @@ impl EntryCache {
         }
     }
 
-    /// Returns the time since [`Self::evict`] last removed an entry, or `None` if it never has.
+    /// Returns the time elapsed since [`evict`](Self::evict) last removed an entry.
     ///
-    /// Only a call that removes an entry counts. A call that finds no entry under its key does
-    /// not count, and a value that [`Self::put`] replaces does not count either.
+    /// Returns `None` until `evict` removes an entry for the first time. A call to `evict` for an
+    /// absent key is not recorded, and a value replaced by [`put`](Self::put) is not counted as
+    /// removed.
     pub fn since_last_eviction(&self) -> Option<Duration> {
         self.last_eviction.map(|t| t.elapsed())
     }
