@@ -58,6 +58,23 @@ class ExtractCommentsTest(unittest.TestCase):
         self.assertEqual((0, "## b/Example.java\n\n" + EXAMPLE_REPORT, ""),
                          (result.returncode, result.stdout, result.stderr))
 
+    def test_a_comment_that_only_lost_a_line_is_read(self):
+        self.commit({"b/Example.java": "class Example {\n  /**\n   * Locks.\n   * The caller must hold the lock.\n   */\n"
+                                       "  void run() {}\n}\n"})
+        self.base = self.git("rev-parse", "HEAD").strip()
+        self.commit({"b/Example.java": "class Example {\n  /**\n   * Locks.\n   */\n  void run() {}\n}\n"})
+        result = self.run_script()
+        report = ("## b/Example.java\n\n### lines 2-4\n```java\n    2    /**\n    3     * Locks.\n    4     */\n"
+                  "    5    void run() {}\n```\n\n")
+        self.assertEqual((0, report, ""), (result.returncode, result.stdout, result.stderr))
+
+    def test_a_deletion_between_code_lines_selects_no_comment(self):
+        self.commit({"b/Example.java": "/** Says hello. */\nclass Example {\n  int a;\n  int b;\n}\n"})
+        self.base = self.git("rev-parse", "HEAD").strip()
+        self.commit({"b/Example.java": "/** Says hello. */\nclass Example {\n  int a;\n}\n"})
+        result = self.run_script()
+        self.assertEqual((0, "", ""), (result.returncode, result.stdout, result.stderr))
+
     def test_a_binary_file_is_skipped_and_the_files_after_it_are_read(self):
         self.commit({"a.png": b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR", "b/Example.java": EXAMPLE_JAVA})
         result = self.run_script()

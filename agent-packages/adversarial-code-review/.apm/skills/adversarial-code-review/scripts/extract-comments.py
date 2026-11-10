@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print every comment block a change adds or edits, each with the first code line after it.
+"""Print every comment block a change adds or edits, a deletion inside it included, each with the first code line after it.
 
 Usage: extract-comments.py <repo> <base> [<file>...]
 
@@ -39,14 +39,15 @@ def read_text(repo, path):
     return text
 
 
-def added_lines(repo, base, path):
+def touched_lines(repo, base, path):
+    """Return the HEAD line numbers the change added, and for each deletion-only hunk the two lines around the gap."""
     # Only the hunk headers are read, and a removed line may be in another encoding than the file at HEAD.
     diff = git(repo, "diff", "-U0", f"{base}...HEAD", "--", path, text=False).decode("utf-8", "replace")
-    added = set()
+    touched = set()
     for m in re.finditer(r"^@@ -\S+ \+(\d+)(?:,(\d+))? @@", diff, re.M):
         start, n = int(m.group(1)), int(m.group(2) or 1)
-        added.update(range(start, start + n))
-    return added
+        touched.update(range(start, start + n) if n else (start, start + 1))
+    return touched
 
 
 def blocks(lines, hash_comments):
@@ -106,10 +107,10 @@ def main():
         if text is None:
             continue
         ext = os.path.splitext(path)[1]
-        added = added_lines(repo, base, path)
+        touched = touched_lines(repo, base, path)
         lines = text.split("\n")
         found = [b for b in blocks(lines, ext in HASH_COMMENT)
-                 if any(n + 1 in added for n in range(b[0], b[1] + 1)) and not is_license(lines, b)]
+                 if any(n + 1 in touched for n in range(b[0], b[1] + 1)) and not is_license(lines, b)]
         if not found:
             continue
         print(f"## {path}\n")
