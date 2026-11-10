@@ -164,11 +164,16 @@ frequent and costly limitations, create issues to remove those limitations, and 
 
 ## AI agent comment signatures
 
-AI agents must append a signature to the single top-level comment or review body reporting a run's result, including
-when the agent stops for human assistance. Inline comments belonging to that review carry no signature. Report totals
-for the whole run, including subagents and retries, once rather than repeating them on every comment.
+The goal is to measure AI agents’ contribution to development by tracking their token usage and associated costs over
+a specified period.
 
-Place the signature on the last line, separated from the comment body by a blank line. Wrap it in `<sub>` tags so it
+AI agents must append a signature to the pull request description, issue body, top-level comment, or review body
+reporting a run's result, including when the agent stops for human assistance. When the result is reported in a pull
+request description or issue body, no additional comment is needed solely to carry the signature. Inline comments
+belonging to a review carry no signature. Report totals for the whole run, including subagents and retries, once
+rather than repeating them across multiple publications.
+
+Place the signature on the last line, separated from the body by a blank line. Wrap it in `<sub>` tags so it
 renders in small type, without backticks:
 
 ```markdown
@@ -176,7 +181,7 @@ renders in small type, without backticks:
 ```
 
 Start with 🤖 (ROBOT FACE, U+1F916). The first word without `=` is the model identifier reported by the runtime for the
-main agent writing the comment. The second, optional word is its reasoning effort, such as `low`, `medium`, or `high`.
+main agent publishing the result. The second, optional word is its reasoning effort, such as `low`, `medium`, or `high`.
 Usage and cost totals also include work by subagents using other models.
 
 Separate the remaining fields with spaces. Each field is `key=value`; fields may appear in any order:
