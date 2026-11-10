@@ -1,24 +1,25 @@
-I rewrote the tests in `service/internal/kubernetes/route_test.go` that your commit added. Only that file changed, and nothing is committed. The package passes in random order (`go test -shuffle=on`). I also made 8 deliberate breaks to `route.go` in a scratch copy of the repo, one per error-reporting branch (wrapping with `%v` instead of `%w`, or building the message from the full status). Every one fails at least one of the tests below.
+I rewrote the tests and helpers from the last commit in `service/internal/kubernetes/route_test.go`. That is the only file changed; `route.go` is untouched and nothing is committed.
 
-Here is the message I'd leave for the author:
+The whole module passes under `go test ./... -shuffle=on`, and `go vet` is clean. History before #125 isn't in the repository, so I couldn't run the tests against the old code to see them fail. Instead, in a scratch copy of the repo, I made 11 small breaking changes to `route.go`, one at a time, and confirmed at least one new test fails for each:
+- each `%w` changed to `%v` in the create, update and delete error branches, single and dual mode;
+- the partial-create message built from the full per-resource status instead of the summary;
+- the "try using Update endpoint" hint removed.
 
 ---
 
-Going through the exported methods and checking error semantics with `errors.Is` and `ReasonForError` is the right direction. Most of the tests stay as you wrote them. I changed these things:
+**Message for the PR author**
 
-1. **Two inputs from the deleted tests were missing.**
-   - `Test_dualModeRouteError_NoErrorDuplication` checked both partial failures, but only the case where the ingress fails was carried over. I added `Test_CreateRoute_DualMode_HTTPRouteCreateFailed_ReportsTheHTTPRouteErrorOnce` for the case where the HTTPRoute fails and the ingress is created. If the message summary is built from the full per-resource status, it now fails alongside the ingress test.
-   - The old `..._AlreadyExistsAndInternalError_...` test covered an HTTPRoute AlreadyExists together with an ingress InternalError. Your `BothCreatesFailed` test had swapped that for Forbidden + AlreadyExists, so I put the original pair back. It still checks that both errors can be matched with `errors.Is` and that the "try using Update endpoint" hint is absent.
+Thanks for moving these tests onto the exported methods. That's the right boundary. I reshaped them as follows:
 
-2. **`UpdateOrCreateRoute` had no error-semantics test,** although the commit message lists it. I added `Test_UpdateOrCreateRoute_DualMode_IngressUpdateConflict_ReturnsConflictWithUpdateHint`. It updates a route whose ingress update returns Conflict, and checks `ErrorIs`, the Conflict reason, and the hint.
+- **Two tests per resource became tables.** The `IngressDeleteRefused` / `HTTPRouteDeleteRefused` pair had the same act and the same assertions, so it is now `Test_DeleteRoute_DualMode_OneDeleteRefused_WrapsItsError`, with one row per resource. On the create side, `IngressAlreadyExists…WithUpdateHint` and `IngressCreateFailed_ReportsTheIngressErrorOnce` became `Test_CreateRoute_DualMode_OneCreateRefused_ReportsTheRefusalOnceWithUpdateHint`, with rows `ingress` and `httproute`.
+- **One dropped case is back.** The old `NoErrorDuplication` table also checked that the error isn't printed twice when the HTTPRoute is the one that fails. The rewrite had dropped that; it's now the `httproute` row. The count uses the injected error's own text, so it no longer depends on a hand-copied string.
+- **Two tests added, so every method the commit names is tested.**
+  - `Test_UpdateOrCreateRoute_RefusedUpdate_ReturnsConflictInEveryGatewayMode`: no test of the change went through `UpdateOrCreateRoute`.
+  - `Test_DeleteRoute_RefusedDelete_ReturnsForbiddenInEveryGatewayMode`: nothing could tell a wrapped error from a replaced one in single-mode delete. The existing single-mode delete tests only use `Contains`.
+- **New helper `refuse(t, k8s, gw, verb, resource, err)`.** It installs `failingReactor` on whichever fake serves the resource, so a table row only has to name the resource.
+- **Assertions.** Final checks use `assert`, so every failed assertion shows up in one run. `require.Error` stays only where `err.Error()` comes next. I removed `ReasonForError` where `ErrorIs` on the single injected error already implies it.
+- **Comments.** The comments above the tests are gone: they repeated the test name or described what the code used to do. The one useful reason, why the hint is absent when both creates fail, is now the `NotContains` message.
 
-3. **Assertions on one result now report together.** The checks after the call use `assert` instead of a `require.New(t)` that stops at the first failure. For example, a lost wrapper and a missing hint now both show up in one run. `require` stays only for the arrange step and for the `require.Error` guard that runs before `err.Error()` is called.
-
-4. **One helper instead of two.** `newGatewayAPIOnlyKubeClient` built the same client as your new `newRouteKubeClient`, so it now calls `newRouteKubeClient(t, GatewayApiDefault)`. Its callers don't change. The only difference is `UseNetworkingV1Ingress = true`, and gateway-only mode never reaches the ingress code.
-
-5. **Doc comments** no longer describe the old behavior ("used to report every failure as an internal error"). That history belongs in the commit message, where you already have it.
-
-**Proposed, not done:**
-- Many existing tests outside this commit still build the client inline, for example `Test_CreateRoute_DualMode_BothFailed_ReturnsFullStatusError`, `..._HTTPRouteFailed_IngressCreated_...`, and the `GatewayAPIOnly_*Error` tests. They could use `newRouteKubeClient` and `failingReactor`. I left them alone because the commit didn't touch them.
-- When both resources fail with different reasons, `ReasonForError` returns the HTTPRoute's reason. That only holds because the HTTPRoute error is wrapped first. The old test relied on it, and no test asserts it now. If callers are meant to depend on that order, it should be documented and tested. If not, the current tests are enough.
-- The single-mode table covers only create. Single-mode update and delete wrap the error the same way, but no test checks the reason they return.
+What I propose but didn't do:
+- **Which reason wins when both resources fail.** The deleted `AlreadyExistsAndInternalError` test pinned that `ReasonForError` returns the HTTPRoute's reason in that case. Nothing pins it now. If callers depend on it, it deserves its own test; if not, it's fine to leave it open.
+- **Older single-mode error tests.** Tests like `Test_CreateRoute_GatewayAPIOnly_HTTPRouteCreateError` and the `*_IngressCreateError` / `*_IngressDeleteError` tests still check only message text. They predate this commit, so I left them alone. They could switch to `ErrorIs` and be folded into the new tables.

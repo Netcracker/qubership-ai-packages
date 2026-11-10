@@ -1,21 +1,19 @@
-All green. Here's the message for the PR author:
+Only test files changed, nothing committed, as required. Here's the message for the PR author:
 
 ---
 
-I added the tests this change owes, without touching production code. No commit was made.
+**Tests for #1799**
 
-**Updated existing tests that encoded the old (buggy) behavior** — these failed as soon as I ran the suite against the new code, which confirms they were asserting the double-reporting the fix removes:
-- `test_resource_validate_schema_extra_headers_and_cells`, `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`, `test_resource_validate_fields_match_extra_label[exact]`, `test_resource_validate_fields_match_missing_field[exact]` (`frictionless/resource/__spec__/test_validate_schema.py`)
-- `test_package_validate_with_schema_issue_348` (`frictionless/package/__spec__/test_validate.py`)
-- the `"exact: extra labels get no field"` case of `test_get_expected_fields` (`frictionless/table/__spec__/test_header.py`)
+Your fix changed `get_expected_fields()`'s behavior under `fieldsMatch: "exact"` (it now truncates/extends to match header length), and that moved six existing assertions that encoded the old, buggy behavior — they all failed red on your commit's parent before I touched them, and pass on your commit:
 
-Each now asserts the single header-level error with no trailing per-row `missing-cell`/`extra-cell`/`constraint-error`, which is exactly the behavior the commit intends.
+- `test_header.py::test_get_expected_fields[exact: extra labels get no field]` — folded into the shared `extra labels get a default any-typed field` / `fields absent from labels are dropped` parametrizations, since exact now matches the other modes on both. Added `ALL_FIELDS_MATCH` for that.
+- `test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells`, `::test_resource_validate_less_actual_fields_with_required_constraint_issue_950`, `::test_resource_validate_fields_match_extra_label[exact]`, `::test_resource_validate_fields_match_missing_field[exact]`, and `test_validate.py::test_package_validate_with_schema_issue_348` — dropped the `extra-cell`/`missing-cell`/`constraint-error` duplicates from their expected lists, which is exactly the behavior your PR description says it fixes.
 
-**Added new tests** for partitions the diff touches that had no coverage at all:
-- `Header.get_expected_fields()` under `exact`, unit-level: header shorter than the schema (fields now truncated, not just returned unchanged), and an extra label whose text collides with an already-kept field name (the new disambiguation loop that renames it to avoid a handler collision).
-- `TableResource`-level regression tests for two crashes that the `table.py` hunk prevents, now that `header.py` can drop or synthesize fields: a `unique`-constrained field dropped by a short header, and a foreign key whose target field is dropped by a short header (both would raise `KeyError` without the `table.py` guards — I verified this by reverting just those hunks against a scratch copy).
-- An `analyzer.py` regression test: an extra label under `exact` mode synthesizes a field that isn't in `resource.schema.fields`; without the accompanying analyzer fix, `analyze()` raises (also verified by reverting just that hunk).
+I also added coverage for two side effects of the same diff that had no test at all and were silent crash bugs before your fix (confirmed red on the parent commit by reverting the three production files locally, never committed):
 
-For every new/changed test I confirmed it's red against the pre-fix code (the parent commit, or — for the two companion fixes that only matter once `header.py`'s truncation exists — against this commit with just that one hunk reverted) and green against the current code.
+- `test_resource_validate_fields_match_exact_missing_primary_key_is_reported_once`: a primary-key field truncated out of the expected fields under `exact` used to still get checked per row against all-`None` cells, raising a spurious `primary-key` error on every row.
+- `test_resource_validate_fields_match_superset_tolerates_foreign_key_on_absent_field`: a foreign key whose own field is legitimately absent under `superset` used to **raise an uncaught `KeyError`** (`row["parent"]`), crashing validation outright rather than just tolerating the mismatch.
+- `analyzer/test_resource.py::test_analyze_resource_detailed_skips_a_field_absent_from_the_header`: `detailed=True` analysis used to raise `KeyError` on `columns_data[field.name]` for a schema field the header doesn't carry (tolerated under `superset`).
+- `test_header.py::test_get_expected_fields_exact_extended_fields_avoid_name_collisions`: covers the new suffix-disambiguation loop (`label2`) when a synthesized field name would otherwise collide with an existing field.
 
-**What I didn't do:** I left the `is_integrity`/`has_primary_key` seed change and the `for field in expected_fields` → unique-loop ordering alone where I could show no observable behavior differs from before (the existing `try/except KeyError` around primary-key lookup already made that specific bit a no-op change); no test is owed there since it can't fail. I also didn't add a redundant analyzer test for the missing-field direction (schema field absent from a short header) since old and new analyzer code already produce identical output there.
+What I didn't do: I didn't add a `fieldsMatch` stack line to any instructions file — this repo already has none, and nothing here required establishing a new harness fact (pytest's own file already covers it). I also didn't touch the mutation/coverage tooling; if this repo runs one, it'd be worth scoping a run to these three files to check for any other survivor on the changed lines, particularly around the `used_names` suffix loop. Production code is untouched, nothing is committed, and `uv.lock` was left behind by `uv sync` in `.python/` setup — harmless but you may want to `git clean` it if you don't want it hanging around.

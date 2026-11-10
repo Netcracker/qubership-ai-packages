@@ -1,24 +1,20 @@
-All green, formatted, and uncommitted as requested.
+Only the test file changed, as required. Not committing, per instructions.
 
 ---
 
 **Message for the PR author:**
 
-I rewrote the 20 tests this commit added to `WildcardTests.java` per the `test-authoring` skill, without touching production code. Didn't commit, per your instructions.
+I rewrote the 20 tests this commit added to `WildcardTests.java` per the `test-authoring` skill, applying the repo's documented harness convention — `CompilationTestHelper.doTest()` stops at the first mismatched marker, but we write as if it reported every mismatch, so related cases of one rule share one source.
 
-**What changed and why:**
+What changed: I merged five groups of case/control tests that were sharing one conceptual rule but living in separate `@Test` methods with separate (often near-duplicate) `Box`/helper declarations:
+- `aTypeVariableWhoseBoundAdmitsNullFailsANonNullWildcardRequirement` + `...WithANonNullBoundMeets...` + `...MeetsANullableWildcardRequirement` → one test, `aBareTypeVariableActualsEffectiveNullnessComesFromItsDeclaredUpperBound`, with three sibling methods sharing one `Box`/`takeNonNull`/`takeNullable` setup.
+- The three "written `@Nullable`/`@NonNull` on the use" tests → `aNullnessAnnotationWrittenOnATypeVariableUseOverridesItsDeclaredBound`.
+- `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariable` + `...MeetsAWildcardBoundedByTheVariableItExtends` → `aWildcardBoundedByATypeVariableAcceptsThatVariableAndAnythingDeclaredToExtendIt`. The commit message itself states these two facts together ("That is what keeps `Box<T>` and `Box<S extends T>` assignable to a `Box<? extends T>`"), so they're one rule, not two.
+- `aTypeVariableThatAdmitsNullFailsAWildcardBoundedByOneThatDoesNot` + its silent control → `aWildcardBoundedByANonNullableTypeVariableRejectsOnlyAnActualThatMayBeNull` (a proper case+control pair in one `Holder`, per §7 principle 3).
+- `aNullableWrittenOnATypeVariableUseFailsAWildcardBoundedByThatVariable` + `aTypeVariableThatMayBeNullFailsANonNullAnnotatedWildcardRequirement` → `anExplicitNullnessAnnotationOnEitherSideOfATypeVariableBoundedWildcardIsReadLiterally`, since they're mirror images of the same fact (an explicit annotation on either side of a type-variable-named wildcard is read literally, not overridden by the other side's bound).
 
-Most of the new tests were lone assertions — either a `// BUG` case with no sibling showing the same setup *passing*, or a passing case with no sibling showing it *failing* — so none of them proved the check discriminates on the condition its name claims. The file's own established idiom (`simpleWildcardNoInference`, `wildcardCaptureParameters`, etc.) is to put a case and its one-respect-different control as sibling methods inside one compiled source, and I followed that instead of introducing a new shape.
+This took 20 tests down to 13, each named for the rule it establishes rather than a bare scenario, each avoiding the duplicated `Box`/helper boilerplate the originals repeated. I left the 8 genuinely distinct single-scenario tests alone (unbounded-wildcard, `@NullUnmarked` bound source, transitive-bound chain, under-inference variant, the two captured-actual regression checks, the override check, and the uncaptured-wildcard-actual regression check) — each exercises its own mechanism and has no natural same-shape counterpart among this commit's additions, so forcing a merge would have diluted the test name or fabricated an unrelated case.
 
-I consolidated 20 tests into 13, merging only where tests were already minimal-diff case/control pairs for the same rule (e.g. "bound admits null" vs. "bound excludes null" against the same `takeNonNull` requirement), and added the missing control where none existed (7 of the 13 tests needed one). Concretely:
-- `aTypeVariableWhoseBoundAdmitsNullFailsANonNullWildcardRequirement` + `aTypeVariableWithANonNullBoundMeetsANonNullWildcardRequirement` + the nullable/unbounded-requirement tests merged into one decision table over bound-nullness × requirement-kind.
-- The `@Nullable`/`@NonNull`-at-use-site tests merged similarly, since they're the same rule with the annotation as the varying input.
-- `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariable` (silent-only) got a new failing control (`Box<@Nullable T>` into the same `Box<? extends T>`) — I verified the exact diagnostic text by compiling it, since this is the one genuinely new assertion I added.
-- The unannotated-code, chained-bound, "extends-T" wildcard, and `@NonNull`-wildcard-bound tests each got a sibling showing the opposite outcome from a minimally different input.
-- The override-widening test got a sibling showing the non-widening override is accepted.
+I ran `:nullaway:test --tests WildcardTests` and `:nullaway:buildWithNullAway` after the rewrite and after `spotlessApply`; both pass.
 
-I left three tests standalone with no added control: the two captured-actual tests and the inference-based `Box<? extends T>` test. Each is a distinct real-world shape (CompletableFuture/supplyAsync wrapping, a bare pass-through) that the commit message specifically calls out as the exception the fix had to avoid breaking; a contrived failing counterpart for them would test something the specification doesn't define, so I didn't add one.
-
-Ran `:nullaway:test --tests WildcardTests`, the full `:nullaway:test`, and `:nullaway:buildWithNullAway` — all pass. Also ran `spotlessApply` since I hand-wrote the Java and one line exceeded the column limit; re-ran tests after, still green.
-
-**What I didn't do:** I didn't verify "red on the base commit" for any of these (that's a property of the original fix's tests, which I preserved the diagnostic text of exactly); I also didn't check whether a mutation run on `CheckIdenticalNullabilityVisitor`/`GenericsUtils` would surface a gap the new controls don't cover — worth running if you have the mutation tooling wired up for this module.
+What I proposed and did not do: I considered merging the two captured-actual tests (`aCapturedTypeArgumentMeets...`) with the uncaptured-wildcard-actual test (`aWildcardActualBoundedBy...`) to make the "captured actual is the exception" carve-out an explicit case+control triple, but their generic shapes (`Map`/`CompletableFuture` inference vs. a direct `Box` call) differ enough that I'd have had to invent a new, less faithful reduction rather than reorganize existing code — I left that for you to decide rather than guessing at a "bug" case the commit didn't already type by hand.

@@ -24,20 +24,19 @@ class EntryCacheTest {
             .hasMessageContaining("limit " + EntryCache.MAX_ENTRY_BYTES);
     }
 
+    /**
+     * {@link EntryCache#evict(String)} adds only the evicted value's length to the running total.
+     *
+     * <p>The key's length used to be added too, so the total came out too large.</p>
+     */
     @Test
     void evictedBytesCountsOnlyTheValue() {
         EntryCache cache = new EntryCache("c");
-        // The key is longer than the value, so adding the key length to the total changes the result.
         cache.put("a-long-key", new byte[3]);
         cache.evict("a-long-key");
         assertThat(cache.evictedBytes()).isEqualTo(3);
     }
 
-    /**
-     * Fails when a {@link CacheEvent} constant is added without a handler in {@link EventDispatcher}.
-     *
-     * <p>Add the handler and list the event in {@link EventDispatcher#HANDLED}.</p>
-     */
     @Test
     void everyEventHasAHandler() {
         Set<CacheEvent> missing = EnumSet.allOf(CacheEvent.class);

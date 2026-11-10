@@ -1,13 +1,17 @@
-Only the test file changed, as required. Here's the message I'd leave for the PR author:
+Clean, minimal, no production changes, nothing committed.
 
 ---
 
-I added the tests this change owes. `SpringHandler`'s `CompilationTestHelper`-based harness stops at the first mismatched line rather than reporting every mismatch (verified empirically), so I didn't fold these into the existing `springValueFieldTest` act — that test already holds cases of its own, and a second independent case sharing its act could mask a failure. Instead:
+**Message for the PR author:**
 
-- **`springValueFieldNullUsedOnlyAsComparisonOperandIsNotFlagged`** — regresion-tests the PR's own motivating example, `#{someBean != null ? someBean.value : 'default'}` (no diagnostic expected), paired with a control in the same class, `#{someBean != null ? null : 'default'}` (diagnostic still expected), which shows the fix doesn't swallow expressions that can actually produce `null`.
-- **`springValueFieldNullOnLeftOfComparisonOperatorIsNotFlagged`** — same shape, but exercises the regex's other alternative, `null != someBean`, since `NULL_COMPARISON_PATTERN` has one alternative for "null after the operator" and one for "null before it" — genuinely separate branches, not redundant values.
-- Extracted the inline `Value.java` annotation stub out of `springValueFieldTest` into a shared `addSpringValueAnnotationStub` helper so the two new tests don't duplicate it, leaving `springValueFieldTest`'s existing cases and expectations unchanged.
+The fix had no tests, so I added three cases to the existing `springValueFieldTest` in `FrameworkTests.java`, in the same `NegativeCases`/`PositiveCases` shape the file already uses:
 
-Both new tests were confirmed red on the pre-fix commit (failing with the exact false-positive symptom — `@NonNull field 'comparedToNull' not initialized` — on the line the bug affects) and green after the fix, in a throwaway worktree I removed afterward. `springValueFieldTest` was unaffected on the base commit, confirming it isn't a test this change needed to move.
+- `NegativeCases.nullCheckInTernaryCondition` — `#{someBean != null ? someBean.value : 'default'}`, the exact false positive from the PR description. I confirmed it's red on the parent commit (`bbceff5`): the old `SpringHandler` flags it as `@NonNull field 'nullCheckInTernaryCondition' not initialized`, and green with your fix.
+- `NegativeCases.reversedNullCheckInTernaryCondition` — `#{null == someBean ? 'default' : someBean.value}`, exercising the second alternation branch of `NULL_COMPARISON_PATTERN` (`null` on the left, `==` instead of `!=`). Also red on the base commit, green after.
+- `PositiveCases.ternaryNullBranchDespiteNullCheck` — `#{someBean != null ? null : 'default'}`, the control from your own PR description: the comparison is stripped, but `null` is still the branch value, so the field must still be flagged. This one was already correctly flagged on the base commit too (not a false negative you introduced), but it's the case that proves the fix didn't overreach and swallow genuine null-producing expressions.
 
-What I didn't add: a case for the `==` operator (`== null` / `null ==`). It's matched by the same regex alternative and character class as `!=` (`[!=]=`), just a different literal character, not a separate code path, so I judged it a redundant equivalence-class value rather than a distinct partition. Happy to add it if you'd rather have explicit coverage of the exact four forms named in the Javadoc.
+All three live in the same compilation/`doTest()` call as the existing cases, matching the file's convention of many fields sharing one act with per-field `BUG` markers.
+
+What I did not add, and why: a case combining `==`/`!=` on both sides isn't warranted — the regex's `[!=]=` character class treats both operators identically, so testing one operator per alternation branch (which I did) already exercises both branches without combinatorics for no added signal. I didn't add a case for `null` appearing as a bare identifier elsewhere in the expression (e.g. a variable literally named `nullable`) since that's unchanged, pre-existing `\bnull\b` word-boundary behavior, not something this diff touches.
+
+Ran `:nullaway:test` (full module, green) and `:nullaway:buildWithNullAway` (green).
