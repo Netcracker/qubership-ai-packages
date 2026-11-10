@@ -24,7 +24,8 @@ Every failure also prints `Error Trace:` with the file and line and `Test:` with
 - **Operand order is `(expected, actual)`**, the reverse of the standard library's `got, want`, and the labels
   `expected:` and `actual:` follow it. A swapped pair prints the bug as the expectation.
 - **The message is the last argument**, a format string and its arguments, printed after the values under
-  `Messages:`. It carries the function and the input (`"ensureBytes(%d)", n`), since the case name may not spell it.
+  `Messages:`. It carries the function and the input (`"ensureBytes(%d)", n`), since the case name may not spell it,
+  and for an expected value a reader would correct, why it is that value (SKILL.md §7).
 - **`assert.ErrorIs`** compares error semantics; `assert.EqualError` pins the message string and is a change detector
   for wording.
 

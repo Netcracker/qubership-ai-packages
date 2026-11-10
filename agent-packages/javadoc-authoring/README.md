@@ -33,8 +33,8 @@ so it behaves identically, and every sentence you would then have to edit was im
   code computes a concept for without passing them off as the definition an outside specification gives.
 - How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, how to compare two versions
   without being sold by the newer one, and how to prove a comment-only sweep moved no code.
-- The extra rules for the comment on a test class, and for `package-info.java`. The test's own name, assertion, and
-  message belong to [`test-authoring`](../test-authoring/).
+- The extra rules for the comment on a test class, and for `package-info.java`; why a test method usually needs no
+  comment. The test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 
 ## Scope
 

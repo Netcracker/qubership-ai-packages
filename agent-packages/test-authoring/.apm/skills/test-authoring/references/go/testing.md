@@ -29,7 +29,8 @@ if got := ensureBytes(-1); got != 0 {
 ```
 
 - **Got before want.** `%v = %v, want %v`. A swapped pair prints the bug as the expectation.
-- **Identify the function and the input.** `ensureBytes(-1) = -1, want 0` beats `wrong result: -1`.
+- **Identify the function and the input.** `ensureBytes(-1) = -1, want 0` beats `wrong result: -1`. For a want a
+  reader would correct, the format string also says why it is that value (SKILL.md §7).
 - **Compare whole values with a diff where the value is the behavior.** `cmp.Diff(want, got)` from `go-cmp` returns a
   diff labeled `(-want +got)`; print it as `t.Errorf("ensureBytes() mismatch (-want +got):\n%s", diff)`.
 - **Assert error semantics.** `errors.Is(err, ErrNegativeCount)` or `errors.As`, not `err.Error() == "…"`.
