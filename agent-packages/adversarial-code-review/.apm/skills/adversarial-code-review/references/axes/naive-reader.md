@@ -5,10 +5,13 @@ comments before the code, on purpose: once you have read the body, you no longer
 
 ## Pass 1: comments only
 
-Run `<skill dir>/scripts/extract-comments.py <workspace> <base>` and read its output, which lists every comment block
-the change adds or edits, each with the declaration it documents. Do not open the code yet. Where the change has doc
-comments in a syntax the script does not extract (its docstring names the ones it does), read those from `git diff`,
-skipping the code lines. Where the change touches many files, start with the main source files and leave tests for last.
+Run `<skill dir>/scripts/extract-comments.py --diff-base <base> --repo <workspace>` and read its output, which lists
+the doc comments the change adds or edits, each with the declaration it documents. Do not open the code yet. The script
+takes the doc comments from `sb map` (ast-bro), and its docstring names the kinds it does not print, such as a module
+docstring; read those from `git diff`, skipping the code lines. A file in which `sb` finds no declaration comes as its
+diff, and where `sb` is not installed, the whole output is the diff, with a note on stderr that links ast-bro; read the
+doc comments from it the same way, and say in your result that `sb` was missing, so the review can suggest installing
+ast-bro. Where the change touches many files, start with the main source files and leave tests for last.
 You may read the specification the project implements. For each comment, write down every question you could not answer
 from the comment itself and the other comments listed:
 
