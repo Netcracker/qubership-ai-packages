@@ -497,30 +497,27 @@ follow-up exists, name its number; where it does not, state what this change lea
 handling is outside this change`). `A separate pull request follows for that` is unfalsifiable when
 written and stale once the number exists.
 
-**Rule trailers belong to a repository that numbers the rules of its decision records.** Where
-the records carry numbered rules and the repository asks a change to name them, the commit message
-and the pull request description each end with two trailers, and leave out the one with nothing to
-list:
+**Name the numbered rules a change implements or defers, where the repository asks for it.** Where
+the decision records number their rules and the repository asks a change to name them, end the
+commit message and the pull request description with these trailers, not under a heading, and omit
+an empty one:
 
 ```text
 Implements: ADR-0012 R4, R7; ADR-0014 R2
 Defers: ADR-0012 R9 to #318; ADR-0015 R3 to #322
 ```
 
-`Implements` lists the rules the change brings in every case, and `Defers` each rule it leaves,
-wholly or in part, to a later change, with the number of an issue or a pull request that exists.
-Where no such change exists yet, ask the user to open an issue, and never write the next free number
-or a placeholder: either would stay in the merged commit. Without an issue, leave the rule out of
-the trailers, and say in the Scope slot which rules wait for a change that has no issue yet. A
-deferred rule is a deliberate gap for the `**Scope.**` lead-in (above); the trailers take no heading
-of their own. In a pull request with several commits, each commit carries the trailers of its own
-part, and the description carries them for the whole change. A squash whose message is the title
-alone (GitHub's "pull request title", GitLab's default template) keeps neither copy (§4), so there
-whoever merges pastes the description's trailers into the body of the squash commit before merging,
-and the Scope slot asks for that in one sentence; an agent that merges the pull request itself adds
-them. The rule numbers come from the records or the notes, never from a guess. A record without
-numbered rules, or a repository without records, gets no rule trailers, even where the change
-carries out a decision: name the record in the Why or the What slot instead.
+`Implements` lists the rules the change brings in fully. `Defers` lists each rule left wholly or in
+part to a later change, with the number of an existing issue or pull request. Where neither exists,
+ask the user to open an issue, and never write the next free number or a placeholder. Every deferred
+rule is also an intentional gap for the Scope slot. Where its change has no issue or pull request
+yet, say so there, and leave the rule out of the trailers. In a pull request with several commits,
+each commit carries the trailers for its own part, and the description carries them for the whole
+change. A squash that keeps only the title (GitHub's "pull request title", GitLab's default
+template) drops both copies (§4), so the Scope slot asks whoever merges, in one sentence, to paste
+the description's trailers into the body of the squash commit. A repository whose records have no
+numbered rules, or that has no records, gets no rule trailers and no rule numbers; where the change
+carries out a recorded decision, name the record in the Why or the What slot instead.
 
 **A question the issue or the review left open is answered, kept open, or left out.** Where the code,
 a test, or another source you verified answers it, give the answer and its evidence, and do not
@@ -656,7 +653,7 @@ commits, and the closing issues. The merging maintainer can edit the message bef
    and commit details" it is the first, since the messages land as bullets; under "title and
    description" it is none, and the description takes the role; under "pull request title" it is
    none, and the title is all that lands, apart from the rule trailers that whoever merges adds to
-   the squash message (§2, Scope). The same holds for GitLab's default squash template.
+   the squash message (§2, Scope).
 2. Under rebase and merge, and under merge commits, tidy the branch before review. A `Fix lint` or
    `Apply suggestion` commit lands on the default branch as a commit of its own, so squash it into
    the commit it corrects before the merge. Under the default squash the same commit lands as a
@@ -743,7 +740,7 @@ consumer decides whether it is worth writing.
 | `Cc: stable@vger.kernel.org # <ver>: <sha>: <subject>` | Kernel stable team; the sequence means `git cherry-pick <sha>` then this commit | R5 | Kernel only |
 | `Reported-by:` | Credit | R2 | Someone reported it |
 | `BREAKING CHANGE:`, or `!` after the type | release-please and semantic-release: major bump | R4, through the tool | The tool is present |
-| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository numbers the rules of its decision records and asks a change to name them (§2, Scope); each commit carries them for its own part, the description for the whole change, and the squash message where the setting keeps only the title (§4) |
+| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository asks for them (§2, Scope) |
 | `Co-authored-by:` | Platform attribution | none of the five | Provenance requires it |
 | `Change-Id:`, `Signed-off-by:` | Gerrit; the DCO | none of the five | The workflow requires it |
 
@@ -924,11 +921,10 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   Is a question dropped only when it does not bear on this change (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
 - Scope: is every gap named as intentional, every follow-up by number, every stacked change by its
-  overlap and order (§2)? Where the repository numbers the rules of its decision records and asks a
-  change to name them, do the commit message and the description end with `Implements:` and
-  `Defers:` trailers, with an existing issue or pull request for each deferred rule, and are they
-  absent from every other repository (§2)? Where the squash message is the title alone, does the
-  Scope slot ask whoever merges to paste them into it (§2, §4)?
+  overlap and order (§2)? Where the repository asks for rule trailers, do the commit message and the
+  description end with `Implements:` and `Defers:`, each `Defers` entry pointing at an existing issue
+  or pull request, and are they absent where the repository does not ask for them? Under a
+  title-only squash, does Scope ask to paste them (§2, §4)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
 - Merge model: read from the history; every commit that survives the merge written as a full body,
@@ -938,7 +934,7 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   branch (§5)?
 - Open issue: where every commit says `See #n` and none says `Fixes #n`, does the description say in
   one sentence why the issue stays open (§4)?
-- Identifiers: does every issue, pull request, commit, and version number exist, or, except for a
+- Identifiers: does every issue, pull request, commit, rule, and version number exist, or, except for a
   `Defers` target, stand as a visible placeholder (`english-developer-style` §7)? Does the first
   mention of a section of a repository document carry its heading text (§5)? Links: does each first
   mention of a rendered section, code outside the diff, a specification, or another project's

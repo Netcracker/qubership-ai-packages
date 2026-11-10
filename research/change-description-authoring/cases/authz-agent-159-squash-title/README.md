@@ -36,11 +36,13 @@ that mentions the squash and the trailers but asks for nothing does not count.
 
 ## Results
 
-Runs of 2026-11-09 on tree `e0a0d8f7`, graded by reading; both models at the default effort. All four results pass all
-six checks. Each ends its description with the same two trailers as `authz-agent-159-defers-targets`, and asks, in its
-`**Scope.**` paragraph or in a sentence of its own after it, that whoever merges paste those trailers into the body of
-the squash commit, because the squash message is the title alone. The descriptions run 321 to 336 words. An earlier
-round on `2ed608e6`, before the shapes table and the GitLab template entered the rule, passed the same way.
+Runs of 2026-11-10 on tree `6eb5690b`, graded by reading; both models at the default effort. All four results pass all
+six checks. Each ends its description with the same two trailers as `authz-agent-159-defers-targets`, and asks in one
+sentence, in its `**Scope.**` paragraph or in a paragraph of its own after it, that whoever merges paste those trailers
+into the body of the squash commit, because the squash message is the title alone. The descriptions run 325 to 340
+words. Two earlier rounds passed the same way: one on `2ed608e6`, before the shapes table and the GitLab template
+entered the rule, and one on `e0a0d8f7`. A round on `4f93fd43`, which shortened the text before the final review changed
+it again, was stopped part way, and its results are not committed.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone. Both pass check 3 and fail checks 1, 2, and 4 to
 6: neither description ends with trailers or asks for them in the squash message (Sonnet states the setting but asks

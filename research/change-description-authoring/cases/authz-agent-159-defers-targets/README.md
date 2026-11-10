@@ -43,12 +43,13 @@ owes.
 
 ## Results
 
-Runs of 2026-11-09 on tree `e0a0d8f7`, graded by reading; both models at the default effort. All four results pass all
+Runs of 2026-11-10 on tree `6eb5690b`, graded by reading; both models at the default effort. All four results pass all
 seven checks: the description and the commit end with both trailers, `Defers:` names ADR-0094 R20 to #175 and ADR-0092
 R7 to #203 and nothing else, the `**Scope.**` paragraph says that ADR-0094 R1 waits for the wiring change, which has no
 pull request or issue yet, and nothing mentions a squash. Some list the deferrals in the other order. The descriptions
-run 298 to 368 words, the as-pushed one 1518. Three earlier rounds, on `5207d695`, `27b2445d`, and `2ed608e6`, passed
-the same way.
+run 306 to 323 words, the as-pushed one 1518. Four earlier rounds, on `5207d695`, `27b2445d`, `2ed608e6`, and
+`e0a0d8f7`, passed the same way. A round on `4f93fd43`, which shortened the text before the final review changed it
+again, was stopped part way, and its results are not committed.
 
 The baselines ran on 2026-11-07 with `english-developer-style` alone. Opus ends its commit with five trailers, two
 `Implements:` and three `Defers:`, one of them "to the change that wires the token packages into the service", and its

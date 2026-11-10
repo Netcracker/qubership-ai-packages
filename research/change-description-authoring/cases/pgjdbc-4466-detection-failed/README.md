@@ -46,8 +46,10 @@ As in [the cases README](../README.md). `controls/as-pushed.md` is the branch as
 
 Tree `e0a0d8f7` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the "pull request title" row, the shapes
 table, and rule 1 of §4, the §5 trailer table, and the §8 checklist, for a repository whose decision records number
-their rules. This input has no decision records, so the change does not reach this case, and the results below stand
-for `e0a0d8f7` as they stand for the tree before it.
+their rules. Tree `6eb5690b` shortens that text in §2, rule 1 of §4, §5, and §8, and forbids an invented rule number (§2
+and the §8 Identifiers item). This input has no decision records, so both trees ask it only to leave rule trailers and
+rule numbers out, no result below carries either, and the results stand for both trees as they stand for the tree before
+them.
 
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.

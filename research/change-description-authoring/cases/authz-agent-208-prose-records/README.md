@@ -25,8 +25,9 @@ rule numbers, and six headings.
 
 ## Results
 
-Runs of 2026-11-09 on tree `e0a0d8f7`, graded by reading; both models at the default effort. All four results pass all
+Runs of 2026-11-10 on tree `6eb5690b`, graded by reading; both models at the default effort. All four results pass all
 three checks. Each names ADR-0091 and ADR-0095 in a sentence, as the rule asks for a record without numbered rules, says
 in its `**Scope.**` paragraph that the wiring change has no pull request yet, and writes no rule trailer and no rule
-number. The descriptions run 284 to 319 words. Six earlier rounds passed the same way, except that one Sonnet result on
-`b47b5b6e`, under the first form of the rule, wrote the wiring change as `[PR #NNNN]`.
+number. The descriptions run 284 to 308 words. Seven earlier rounds passed the same way, except that one Sonnet result
+on `b47b5b6e`, under the first form of the rule, wrote the wiring change as `[PR #NNNN]`. A round on `4f93fd43`, which
+shortened the text before the final review changed it again, was stopped part way, and its results are not committed.
