@@ -55,6 +55,13 @@ message retyped, and the `getMoreResults()` break line repeated under "User-visi
 
 ## Results
 
+Tree `e0a0d8f7` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the "pull request title" row, the shapes
+table, and rule 1 of §4, the §5 trailer table, and the §8 checklist, for a repository whose decision records number
+their rules. Tree `6eb5690b` shortens that text in §2, rule 1 of §4, §5, and §8, and forbids an invented rule number (§2
+and the §8 Identifiers item). This input has no decision records, so both trees ask it only to leave rule trailers and
+rule numbers out, no result below carries either, and the results stand for both trees as they stand for the tree before
+them.
+
 Opus r1 and r2 were re-run on 2026-11-02 on tree `044c6057`, graded by reading. Both open the description with
 `**Breaking changes.**`, which starts a short paragraph on which code breaks, and both pass check 7; both keep `grant
 insert` among the break lines and repeat no break line. They wrote 764 and 769 words of prose, against 763 and 781 on
