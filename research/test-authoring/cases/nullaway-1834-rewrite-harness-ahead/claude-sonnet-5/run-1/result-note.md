@@ -1,21 +1,28 @@
-Only the test file changed, nothing committed, as asked.
+Only the test file changed, as required. No commit was made, per instructions.
 
 ---
 
-Message for the author of the PR:
+**Message for the PR author:**
 
-I rewrote the 20 tests the last commit added to `WildcardTests.java`, per `test-authoring`. No production code changed; nothing is committed.
+I rewrote the 20 tests this commit added to `WildcardTests.java`, applying the `test-authoring` skill. Net effect: 14 tests, same production coverage, none of the pre-existing tests touched.
 
-**What changed and why:** The file already has an established convention — visible in `simpleWildcard`, `wildcardSuperFormalNoInference`, `superOrUnboundedWildcardAssignedToExtendsBoundedWildcard`, etc. — of putting a case together with its control(s) in one `@Test`/one source, since CompilationTestHelper's `doTest()` is written here as if it reported every mismatch (per the repo's test-stack note). The 20 new tests broke that convention: each was its own `@Test` holding either a single failing case or a single passing control, with no control alongside its case. That's the shape `test-authoring` §9 flags ("a new test takes the shape of its neighbors... the usual such shapes are... a silent case kept apart from its control").
+The driving issue: `CompilationTestHelper.doTest()` stops at the first mismatched `// BUG:` marker and names it only by source line, so (per the skill's §7) a single act can safely hold at most one failing case, and any "meets the requirement" (silent) test needs a control in the same act proving the setup can actually produce a report — otherwise a silent test is indistinguishable from a broken one. Most of the new tests violated this: many "Meets..." tests stood completely alone with no case anywhere nearby, and several `Fails.../Meets...` pairs that differed in exactly one respect were split into two separate `doTest()` calls instead of sharing one, which is exactly the "two cases that share a long setup, stated nowhere" shape this skill calls out and the file's own established convention (e.g. `simpleWildcardNoInference`'s `testPositive`/`testNegative`) already avoids.
 
-I merged cases that are direct case/control pairs of one rule into single tests, renamed for the rule, keeping every original scenario (zero loss of coverage, same expected diagnostics):
-- `aBareTypeVariableActualIsJudgedByWhetherItsDeclaredBoundAdmitsNull` — merges the explicit-nullable-bound-fails, nonnull-bound-passes, nullable-bound-vs-nullable-req, nullable-bound-vs-unbounded-req, and transitive-bound-fails cases.
-- `anExplicitAnnotationOnATypeVariableUseOverridesItsDeclaredBound` — merges the `@Nullable`/`@NonNull`-on-use cases.
-- `extendingATypeVariableMeetsAWildcardBoundedByItUnlessTheExtendingBoundIsWrittenNullable` — merges the `S extends T` family (nullable-T-bound control, nonnull-T-bound control, and the nullable-override-on-S failing case), using `NullableBoundHolder`/`NonNullBoundHolder` to avoid clashing `Holder` declarations.
-- `anExplicitAnnotationThatDivergesFromAWildcardsTypeVariableBoundIsReported` — merges the two mirror-image "annotation on one side diverges from the other" failing cases.
+What I did:
+- Merged `aTypeVariableWhoseBoundAdmitsNullFailsANonNullWildcardRequirement` with its three silent siblings (`...MeetsANonNullWildcardRequirement`, `...MeetsANullableWildcardRequirement`, `...MeetsAnUnboundedWildcardRequirement`) into one test, renamed to state the rule as a whole.
+- Likewise merged the "nullness written on the use" trio (`aNullableWrittenOnATypeVariableUseFails...`, `...MeetsANullableWildcardRequirement`, `aNonNullWrittenOnATypeVariableUseMeetsANonNullWildcardRequirement`) into one test.
+- Merged `aTypeVariableThatAdmitsNullFailsAWildcardBoundedByOneThatDoesNot` with `aTypeVariableThatAdmitsNoNullMeetsAWildcardBoundedByOneThatDoesNot` — they differed in one clause (`S extends T` vs `S extends @Nullable T`) and were separate acts.
+- Merged `aTypeVariableMeetsAWildcardBoundedByTheVariableItExtends` and `aNullableWrittenOnATypeVariableUseFailsAWildcardBoundedByThatVariable` into one test, and added a bare-use control, since both target `Box<? extends T>`.
+- Merged `aTypeVariableThatMayBeNullFailsANonNullAnnotatedWildcardRequirement` with a new control (`@NonNull`-written use meets the same `@NonNull`-annotated wildcard).
+- Added a control to `aTypeVariableBoundedByAnotherWhoseBoundAdmitsNullFailsANonNullWildcardRequirement` (a non-null bound through the same chain, meets).
+- Added a control to `aTypeVariableDeclaredInUnannotatedCodeFailsANonNullWildcardRequirement` (the same shape under `@NullMarked`, meets) — this isolates that the unannotated declaration, not something else, decides the outcome.
+- Added a control to the final wildcard-actual test (same actual with a non-null-bounded `T`, meets).
 
-Left standalone, unchanged: the two "meets a wildcard bounded by itself" tests (direct and under-inference — different enough mechanisms, each already a meaningful regression guard on its own), the unmarked-code case (matches the file's existing precedent of giving `@NullUnmarked` scenarios their own test), the two captured-type-argument tests, the override-widening test, and the wildcard-actual (not bare-variable) failing case — each is a distinct scenario without a natural case/control sibling among the new tests.
+Left untouched/standalone (deliberately — these follow the file's existing convention for a realistic-pattern regression guard rather than a general-rule partition, and I didn't have enough confidence to safely invent a verified "fails" counterpart for the capture-conversion/inference internals without risking an incorrect test):
+- `aTypeVariableMeetsAWildcardBoundedByThatSameTypeVariable` and its inference variant.
+- `aCapturedTypeArgumentMeetsANullnessAnnotatedTypeVariableRequirement` and `...MeetsABareTypeVariableRequirement`.
+- `anOverrideThatWidensANonNullProjectionInItsReturnTypeIsReported` (a different diagnostic/check path — override nullability — not the extends-bound containment path this commit changed).
 
-Net effect: 20 `@Test` methods → 11, same assertions, same diagnostics, `:nullaway:test --tests WildcardTests` and `:nullaway:buildWithNullAway` both green.
+Verified with `./gradlew :nullaway:test --tests "com.uber.nullaway.jspecify.WildcardTests"` (pass), the full `:nullaway:test` (pass), and `:nullaway:buildWithNullAway` (pass). No production code was touched.
 
-**What I propose but didn't do:** `GenericsUtils.typeVariableUpperBound` names three sources of an admits-null bound — explicit `@Nullable`, a library model override, and a declaration in unannotated code. This commit's tests cover the first and third; I didn't add a case for the library-model-override partition, since that would be a new test rather than a rewrite of an existing one, and it's outside what you asked me to do here.
+What I'd propose but didn't do: a reviewer who trusts the capture-conversion semantics more than I do might want an explicit failing counterpart for `aCapturedTypeArgumentMeetsABareTypeVariableRequirement` (it's a same-type passthrough, so nothing in a naive implementation could make it fail — it may be worth replacing with a case that actually exercises capture against a nullable-admitting bound). I'd rather the author or someone with deeper javac-capture expertise make that call.

@@ -48,3 +48,24 @@ skill parts include only §8, and only the questions that restate §1's regressi
 1.4.0 leaves as they were. The input is a new test file: it cites no specification, it has no member whose result a
 comment would state, and it edits no existing comment, so none of the three rules has anything to act on. The results
 above stand for the 1.3.0 tree they name. The `members` case, whose skill parts include §3, ran with 1.4.0.
+
+## 1.5.0, 2026-11-10
+
+Version 1.5.0 adds a paragraph to §4 *Test class*: a test method's comment is the exception, and it says why a test that
+looks as if it cannot fail exists, or a construction the code does not show. It also changes the §3 sentence on a test
+whose name states what it establishes. The case ran on the skill tree in `<model>/skill-tree`, two runs per model, with
+`sonnet` pinned to `claude-sonnet-5` through `ANTHROPIC_DEFAULT_SONNET_MODEL`. The runs replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`.
+
+| Model | No history (2) | Guard names the fix (3) |
+| --- | --- | --- |
+| Opus | 2 of 2 pass | 2 of 2 pass |
+| Sonnet 5 | 2 of 2 fail: a `used to` sentence on the regression test | 2 of 2 fail: no comment |
+
+Checks 1 and 4 passed in every run. Neither Opus run keeps the inline line on the key length.
+
+The Sonnet failures do not come from 1.5.0. More runs of the same day, kept outside the repository: two at 1.5.0 failed
+both checks; four on 1.4.0 failed check 2 in three and check 3 in four; two on `c61ab45`, the tree the 1.3.0 results
+ran on, failed both. Two runs on `claude-sonnet-5-5`, which the `sonnet` alias now selects, failed check 2 in one and
+check 3 in both. `english-developer-style` is the same in every arm, so the 1.3.0 Sonnet results no longer reproduce on
+their own tree. Cost per run: Opus $0.40 and $0.40, Sonnet $0.24 and $0.22.

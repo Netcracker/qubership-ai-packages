@@ -43,3 +43,7 @@ the §1 scope rule had nothing to reach. The §3 rule reached `nanosSinceLastEvi
 time since an entry was last removed, and linked `evict` only as the event it measures from, as 1.3.0 did. The rules
 added no noise. Sonnet r1 now comments the private `lastEvictionNanos`, which its 1.3.0 run left bare, and the comment
 states the sentinel, as the 1.3.0 Sonnet r2 comment did. Cost per run: Opus $0.43 and $0.41, Sonnet $0.21 and $0.20.
+
+Version 1.5.0 did not run this case. It changes the §3 sentence on a test method whose name states what it establishes,
+and adds a paragraph on test methods to §4 *Test class*. The input is a production class with no test, so neither
+reaches it, and the results above stand for 1.5.0 as well.

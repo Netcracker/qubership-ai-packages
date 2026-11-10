@@ -1,36 +1,30 @@
-I added and updated tests for the header-mismatch change, without touching production code or committing. The full suite passes on HEAD (1898 passed, 292 skipped). Against the parent commit's production code, all 26 new or changed cases fail, each on the bug itself: duplicated cell or integrity errors, a `KeyError` crash, or a missing field. Below is the message for the author.
+I added and updated tests for #1799 in four test files, with no production code changed and nothing committed. On HEAD the full suite passes (1903 passed, 292 skipped). Run against the base commit, 30 of the new and edited cases fail, each showing the bug itself rather than a setup error.
 
----
+**Message for the PR author**
 
-**Tests for #1799 (header mismatches no longer cause cell errors)**
+Thanks for #1799. I added the tests the change needs. Running the new cases against the old code showed it changes more than the PR description says, so I've listed what else moved below.
 
-**Existing tests updated because the behavior they asserted changed**
-- `test_get_expected_fields[exact: extra labels get no field]` is now `…get a default any-typed field` and expects `["a", "extra"]`.
-- Five validation tests no longer expect a `missing-cell` or `extra-cell` per row next to the `missing-label` or `extra-label`:
-  - `test_package_validate_with_schema_issue_348`
-  - `test_resource_validate_fields_match_extra_label[exact]`
-  - `test_resource_validate_fields_match_missing_field[exact]`
-  - `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`
-  - `test_resource_validate_schema_extra_headers_and_cells`, renamed to `…_extra_header_without_cell_errors` because its old name stated the old outcome.
-- In `issue_950`, the per-row `constraint-error` for a required field that is missing from the header also goes away. That matches what the name-matched modes already did, but it is worth a line in the changelog.
+**Existing tests updated.** These five asserted the old double reporting, where each `exact` header mismatch was also reported as a cell error on every row. Each now expects only the header error:
+- `test_resource_validate_schema_extra_headers_and_cells`, renamed `test_resource_validate_schema_extra_label` because there are no extra cells any more.
+- The `exact` rows of `test_resource_validate_fields_match_extra_label` and `test_resource_validate_fields_match_missing_field`.
+- `test_package_validate_with_schema_issue_348`.
+- `test_resource_validate_less_actual_fields_with_required_constraint_issue_950`: a missing *required* field now gets one `missing-label` and no per-row `constraint-error`. That matches what `superset` and `partial` already did. Please confirm this is what you want for #950.
 
-**New tests**
-- **`Header.get_expected_fields`** (`test_header.py`, new rows in the existing table):
-  - Under `exact`, fields beyond the labels are dropped.
-  - An extra label that repeats a field name becomes `a2`, and the numbering skips names already taken (`a3`).
-  - With no header, every mode returns the schema fields. Before, the name-matched modes returned `[]`, so every row of a headerless table was reported as `blank-row`.
-  - `exact` is added to `test_get_expected_fields_default_field_is_any_typed`.
-- **Rows whose length differs from the header** (`test_resource_validate_fields_match_exact_checks_row_length_against_the_header`): four cases backing the claim that irregular rows still report cell errors.
-  - With an extra label, a row as long as the header has no error and a longer row has an `extra-cell`. A shorter row now reports a `missing-cell` named after the extra label (`name`).
-  - With a missing label, a row as long as the header has no error and a shorter row has a `missing-cell`. A longer row now reports an `extra-cell` where the cell used to be read into the schema field.
-  - The two "now" outcomes are new behavior; please confirm they are intended.
-- **Integrity checks on a field missing from the header**, under `exact` and `equal`, for a primary key, a `unique` field and a foreign key:
-  - Each test also has a field that is present and still reports (a `unique-error` or a `foreign-key` error), so the absence of other errors shows the missing field was skipped, not that the checks were off.
-  - On the parent commit, `equal` crashed with `KeyError` for the `unique` field and the foreign key. With another field `unique`, it also reported a spurious `primary-key` error.
-- **Analyzer** (`test_analyze_resource_detailed_leaves_out_fields_missing_from_header`, `exact` and `equal`):
-  - `fieldStats`, `variableTypes` and the null-row counts now cover only the fields that are present.
-  - On the parent commit, `exact` counted every row as having a null value and `equal` crashed with `KeyError: 'c'`.
+**Tests added in `test_header.py` (`get_expected_fields`):**
+- Under `exact`, an extra label now gets an `any`-typed field, replacing the old row "extra labels get no field". Schema fields beyond the labels are dropped.
+- With no labels, every mode returns the schema fields. On the old code the name-matched modes returned `[]`, so a table read with `header=False` under `equal`, `subset`, `superset` or `partial` reported every row as `blank-row`. Your change fixes that by moving the `self.missing` check; the description doesn't mention it.
 
-**Proposed, not done**
-- Under `exact`, `read_rows()` now also returns the cells of extra labels: `{'id': 1, 'name': 'x'}` where it used to return `{'id': 1}`. That is visible to users and matches the name-matched modes. I didn't add a test for it, so you can decide whether it's intended and whether it needs a changelog entry.
-- Blank extra labels get field names `""` and then `"2"`. An empty field name probably deserves its own rule, such as `field3`; I left it untested.
+**Tests added in `test_validate_schema.py`:**
+- **Irregular rows:** under an `exact` mismatch, a row as long as the header reports nothing, but a longer or shorter row still gets `extra-cell` or `missing-cell`. Those errors are now counted against the header, not the schema.
+- **Repeated name:** an extra label that repeats a declared field's name causes no cell errors. This covers the suffix loop; without it, the two fields collide and rows break.
+- **Primary key:** a key on a field absent from the data no longer gives a `primary-key` error on every row. A key on a field that is present is still checked.
+- **Unique constraints and foreign keys,** one test each over all five `fieldsMatch` modes: a field absent from the data is skipped, and one that is present in the same table still reports. On the old code every name-matched mode crashed with `KeyError: 'Row does not have a field code'`. That is a second fix the description doesn't mention.
+
+**Test added in `analyzer/__spec__/test_resource.py`:** detailed analysis under `exact` and `partial`, with a missing label and with an extra label. Field stats cover only declared fields that are present, and rows are no longer counted as having nulls because of an absent column. On the old code, `partial` crashed with `KeyError` for a missing field and with a schema error for an extra label. Under `exact` it reported stats for the absent column and counted every row as having nulls.
+
+**Mutation check.** I applied eight hand mutants to the new lines, and the tests catch seven. The one that survives drops the `issubset(expected_field_names)` check from `has_primary_key`. It changes nothing observable: without it, `primary_key_cells` raises `KeyError`, the existing `except KeyError` branch absorbs it, and a missing key field always makes the header invalid. So it's an equivalent mutant and no test is owed. You could simplify by removing either the check or the `except` branch.
+
+**Proposed, not done:**
+- The PR description should mention the two extra fixes: no more `KeyError` with `unique` or foreign keys on absent fields under name-matched modes, and no more `blank-row` on headerless tables.
+- There's no resource-level test for reading a headerless table under a name-matched mode; only the `Header` unit rows cover it. Add one if you want the `blank-row` symptom guarded end to end.
+- Under `exact`, `duplicate-label` is detected only among the first `len(fields)` labels, so duplicates in the extra labels are never reported. That predates this PR and I left it alone.

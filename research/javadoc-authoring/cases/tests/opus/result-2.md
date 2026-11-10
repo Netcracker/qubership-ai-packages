@@ -27,15 +27,15 @@ class EntryCacheTest {
     @Test
     void evictedBytesCountsOnlyTheValue() {
         EntryCache cache = new EntryCache("c");
-        // The key is longer than the value, so the total shows whether the key was counted.
         cache.put("a-long-key", new byte[3]);
         cache.evict("a-long-key");
         assertThat(cache.evictedBytes()).isEqualTo(3);
     }
 
     /**
-     * Fails when a {@link CacheEvent} constant has no handler in {@link EventDispatcher}.
-     * Add a handler to the dispatcher for each constant the failure lists.
+     * Fails when a {@link CacheEvent} constant is missing from {@link EventDispatcher#HANDLED}.
+     * To fix a failure, add a handler in {@link EventDispatcher} for each event the assertion
+     * reports.
      */
     @Test
     void everyEventHasAHandler() {

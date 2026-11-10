@@ -28,9 +28,7 @@ its own, and whether it finds the cases the change owes.
 - `SKILL.md`: §0, §1, §3, §4, §5, §7, §9
 - `references/java/junit4.md`
 
-The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
-`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
-has none.
+The results in `<model>/run-1` and `run-2` ran at skill tree `62b0151`, test-authoring 1.3.0.
 
 ## Files
 

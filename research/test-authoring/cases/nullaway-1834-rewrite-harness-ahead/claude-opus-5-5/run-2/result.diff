@@ -1,14 +1,14 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-index 31d3188..6d1fd4f 100644
+index 31d3188..e31b71f 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
-@@ -1447,4 +1447,159 @@ public class WildcardTests extends NullAwayTestsBase {
+@@ -1447,4 +1447,154 @@ public class WildcardTests extends NullAwayTestsBase {
          JSpecifyJavacConfig.withJSpecifyModeArgs(
              Arrays.asList("-XepOpt:NullAway:OnlyNullMarked=true")));
    }
 +
 +  @Test
-+  public void aTypeArgumentFailsANonNullWildcardRequirementOnlyWhenItMayBeNull() {
++  public void aTypeVariableThatMayBeNullIsRejectedOnlyByAConcreteWildcardBoundThatExcludesNull() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -23,36 +23,35 @@ index 31d3188..6d1fd4f 100644
 +              static void takeNonNull(Box<? extends Object> b) {}
 +              static void takeNullable(Box<? extends @Nullable Object> b) {}
 +              static void takeAny(Box<?> b) {}
-+              static <T extends @Nullable Object> void boundAdmitsNull(Box<T> b) {
++              static <T extends @Nullable Object> void nullableBound(Box<T> b) {
 +                // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends Object>
 +                takeNonNull(b);
 +                takeNullable(b);
 +                takeAny(b);
 +              }
-+              static <T> void boundAdmitsNoNull(Box<T> b) {
++              static <T> void nonNullBound(Box<T> b) {
 +                takeNonNull(b);
 +              }
-+              static <T extends @Nullable Object, S extends T> void boundInheritedFromAnotherVariable(
-+                  Box<S> b) {
++              static <T extends @Nullable Object, S extends T> void boundInheritedFromNullableBound(Box<S> b) {
 +                // BUG: Diagnostic contains: incompatible types: Box<S> cannot be converted to Box<? extends Object>
 +                takeNonNull(b);
 +              }
-+              static <T extends @Nullable Object> void wildcardBoundedByTheVariable(Box<? extends T> b) {
++              static <T extends @Nullable Object> void wildcardOfNullableBound(Box<? extends T> b) {
 +                // BUG: Diagnostic contains: incompatible types: Box<? extends T> cannot be converted to Box<? extends Object>
 +                takeNonNull(b);
 +              }
-+              static <T> void nullableAtTheUse(Box<@Nullable T> b) {
++              static <T> void nullableUse(Box<@Nullable T> b) {
 +                // BUG: Diagnostic contains: incompatible types: Box<@Nullable T> cannot be converted to Box<? extends Object>
 +                takeNonNull(b);
 +                takeNullable(b);
 +              }
-+              static <T extends @Nullable Object> void nonNullAtTheUse(Box<@NonNull T> b) {
++              static <T extends @Nullable Object> void nonNullUseOfNullableBound(Box<@NonNull T> b) {
 +                takeNonNull(b);
 +              }
 +              @NullUnmarked
-+              static class Unmarked<T> {
++              static class Unannotated<T> {
 +                @NullMarked
-+                void declaredInUnannotatedCode(Box<T> b) {
++                void unannotatedBound(Box<T> b) {
 +                  // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends Object>
 +                  takeNonNull(b);
 +                }
@@ -63,8 +62,7 @@ index 31d3188..6d1fd4f 100644
 +  }
 +
 +  @Test
-+  public void
-+      aTypeArgumentFailsAWildcardBoundedByATypeVariableOnlyWhenItMayBeNullAndTheVariableMayNot() {
++  public void aWildcardBoundedByATypeVariableRejectsATypeArgumentOnlyWhereItMayBeNullAndTheBoundMayNot() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -78,50 +76,47 @@ index 31d3188..6d1fd4f 100644
 +            @NullMarked
 +            class Test {
 +              static class Box<E extends @Nullable Object> {}
-+              static class NullableVariable<T extends @Nullable Object> {
++              static class NullableBound<T extends @Nullable Object> {
 +                void takeExtendsT(Box<? extends T> b) {}
 +                void takeExtendsNonNullT(Box<? extends @NonNull T> b) {}
-+                void sameVariable(Box<T> b) {
-+                  takeExtendsT(b);
-+                  // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends T>
-+                  takeExtendsNonNullT(b);
++                Box<? extends T> sameVariable(Box<T> b) {
++                  return b;
 +                }
-+                <S extends T> void variableThatExtendsIt(Box<S> b) {
++                <S extends T> void subVariable(Box<S> b) {
 +                  takeExtendsT(b);
 +                }
-+                void nullableAtTheUse(Box<@Nullable T> b) {
++                void nullableUse(Box<@Nullable T> b) {
 +                  // BUG: Diagnostic contains: incompatible types: Box<@Nullable T> cannot be converted to Box<? extends T>
 +                  takeExtendsT(b);
 +                }
-+                void nonNullAtTheUse(Box<@NonNull T> b) {
++                void bareUseIntoNonNullUse(Box<T> b) {
++                  // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends T>
 +                  takeExtendsNonNullT(b);
 +                }
 +              }
-+              static class NonNullVariable<T> {
++              static class NonNullBound<T> {
 +                void takeExtendsT(Box<? extends T> b) {}
-+                <S extends @Nullable T> void variableThatAdmitsNull(Box<S> b) {
++                <S extends @Nullable T> void nullableSubVariable(Box<S> b) {
 +                  // BUG: Diagnostic contains: incompatible types: Box<S> cannot be converted to Box<? extends T>
 +                  takeExtendsT(b);
 +                }
-+                <S extends T> void variableThatAdmitsNoNull(Box<S> b) {
++                <S extends T> void subVariable(Box<S> b) {
 +                  takeExtendsT(b);
 +                }
 +              }
-+              interface InferredLoader<V extends @Nullable Object> {
++              interface Loader<K, V extends @Nullable Object> {
 +                V load();
-+                default CompletableFuture<? extends V> asyncLoad() {
++                Map<? extends K, ? extends V> loadAll();
++                Map<? extends K, ? extends @NonNull V> loadAllNonNull(Set<? extends K> keys);
++                default CompletableFuture<? extends V> inferredSameVariable() {
 +                  return CompletableFuture.supplyAsync(() -> load());
 +                }
-+              }
-+              interface CapturedLoader<K, V extends @Nullable Object> {
-+                Map<? extends K, ? extends @NonNull V> loadAll(Set<? extends K> keys);
-+                Map<? extends K, ? extends V> loadAny();
-+                default CompletableFuture<? extends Map<? extends K, ? extends @NonNull V>> asyncLoadAll(
-+                    Set<? extends K> keys) {
-+                  return CompletableFuture.supplyAsync(() -> loadAll(keys));
++                default Map<? extends K, ? extends V> capturedBareUse() {
++                  return loadAll();
 +                }
-+                default Map<? extends K, ? extends V> passAny() {
-+                  return loadAny();
++                default CompletableFuture<? extends Map<? extends K, ? extends @NonNull V>> capturedNonNullUse(
++                    Set<? extends K> keys) {
++                  return CompletableFuture.supplyAsync(() -> loadAllNonNull(keys));
 +                }
 +              }
 +            }
@@ -130,7 +125,7 @@ index 31d3188..6d1fd4f 100644
 +  }
 +
 +  @Test
-+  public void anOverrideMayNotReturnATypeArgumentThatMayBeNullWhereTheOverriddenOneMayNot() {
++  public void anOverrideIsReportedOnlyWhenItsReturnTypeArgumentMayBeNullWhereTheOverriddenOneMayNot() {
 +    makeHelper()
 +        .addSourceLines(
 +            "Test.java",
@@ -142,7 +137,7 @@ index 31d3188..6d1fd4f 100644
 +            @NullMarked
 +            interface Test<V extends @Nullable Object> {
 +              List<? extends @NonNull V> get();
-+              static <V extends @Nullable Object> Test<V> mayBeNull() {
++              static <V extends @Nullable Object> Test<V> bareUse() {
 +                return new Test<>() {
 +                  // BUG: Diagnostic contains: mismatched type parameter nullability
 +                  @Override public List<V> get() {
@@ -150,7 +145,7 @@ index 31d3188..6d1fd4f 100644
 +                  }
 +                };
 +              }
-+              static <V extends @Nullable Object> Test<V> mayNotBeNull() {
++              static <V extends @Nullable Object> Test<V> nonNullUse() {
 +                return new Test<>() {
 +                  @Override public List<@NonNull V> get() {
 +                    throw new UnsupportedOperationException();

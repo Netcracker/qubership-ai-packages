@@ -1,22 +1,22 @@
-All green, no production code touched, and no commit made as instructed. Here's the message I'd leave for the author of the PR:
-
 ---
 
-**Tests for #1799**
+**Message for the author of #1799:**
 
-The PR changes which errors are reported for a header/schema mismatch under `fieldsMatch: "exact"`, but it shipped with no test changes — and it actually left five existing tests asserting the *old* (now-wrong) behavior, so the suite was red on this branch. I fixed those and added the cases the fix newly owns. Everything below was verified red on the parent commit (`44661ad`) and green on this one.
+This change left five existing tests red and the new `get_expected_fields()` logic uncovered. No production code changed; I only touched test files.
 
-**Updated (stale, were asserting the pre-fix duplicate errors):**
-- `test_header.py::test_get_expected_fields` — the `"exact: extra labels get no field"` case: `get_expected_fields()` now gives an extra label a synthetic `any` field under `exact` too, so it's no longer field-less.
-- `test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells` — dropped the two now-gone per-row `extra-cell` errors.
-- `test_validate_schema.py::test_resource_validate_less_actual_fields_with_required_constraint_issue_950` — dropped the now-gone per-row `constraint-error`/`missing-cell` pairs (the field is truncated away entirely, so it's never checked per row; the single `missing-label` is all that's left).
-- `test_validate_schema.py::test_resource_validate_fields_match_extra_label` / `..._missing_field` (`exact` case) — same duplicate-error removal.
-- `test_validate.py::test_package_validate_with_schema_issue_348` — same.
+**Fixed existing tests that encoded the old (now-wrong) behavior** — each updated to drop the duplicate `extra-cell`/`missing-cell`/`constraint-error` it used to assert:
+- `frictionless/table/__spec__/test_header.py::test_get_expected_fields[exact: extra labels get no field]` — under `exact`, an extra label now *does* get a default any-typed field (needed so the handler count matches the header and rows don't re-report it); renamed and fixed.
+- `frictionless/resource/__spec__/test_validate_schema.py::test_resource_validate_schema_extra_headers_and_cells`
+- `frictionless/resource/__spec__/test_validate_schema.py::test_resource_validate_less_actual_fields_with_required_constraint_issue_950` — this one also lost its `constraint-error`: a required field absent from the header now gets no per-row handler at all under `exact`, so the "required" check never runs for it either, not just the cell-count check.
+- `frictionless/resource/__spec__/test_validate_schema.py::test_resource_validate_fields_match_extra_label[exact]` and `test_resource_validate_fields_match_missing_field[exact]` — this parametrized suite is explicitly the "end-to-end counterpart of the Header unit tests" and was carrying the exact scenario your fix targets.
+- `frictionless/package/__spec__/test_validate.py::test_package_validate_with_schema_issue_348`
 
-**New:**
-- `test_header.py`: a case for `exact` truncating fields beyond the labels (the mirror of the existing "extra labels" case), plus two tests pinning the dedup logic when a synthetic field's name collides with a real field or with another synthetic field (`"a2"`, `"x2"`).
-- `test_validate_schema.py::test_resource_validate_fields_match_exact_still_reports_an_irregular_row` — the control: with a field truncated away, a row that is itself genuinely irregular (wrong cell count for the header) still gets its own `extra-cell` error. This matters because the old code actually got this backwards: it reported a spurious error on the *regular* row and missed the real one on the irregular row.
-- `test_schema.py::test_resource_schema_primary_key_label_missing_is_not_rechecked_per_row` and `..._foreign_key_target_label_missing_does_not_raise` — the primary-key and foreign-key integrity checks now skip a field that was truncated out of `expected_fields`. The foreign-key one is the sharper of the two: I verified that if `table.py`'s new `if not set(target_key).issubset(expected_field_names): continue` guard is removed while keeping the new `header.py`, this crashes with `KeyError: 'Row does not have a field cat'`. So that line isn't just cosmetic — it prevents a real crash the `header.py` truncation would otherwise introduce.
-- `analyzer/test_resource.py::test_analyze_resource_excludes_a_field_missing_from_the_header` — `analyze(detailed=True)` no longer invents a bogus `fieldStats` entry (type `categorical`, values `{None}`) for a field with no data behind it.
+**New tests for what the change added:**
+- `test_header.py`: `exact` with fewer labels than fields (field-truncation partition had no test), the new de-duplication suffix for two extra labels that read the same text (`"x"`, `"x"` → `"x"`, `"x2"`), and extended `test_get_expected_fields_default_field_is_any_typed` to cover `exact` too.
+- `test_header.py`: a missing header (no header row at all) now falls back to the schema fields under every non-`exact` `fieldsMatch` mode. On the base commit this returned `[]`, which meant **every row silently came back as `blank-row`, discarding all data** — a severe, previously-untested regression. Added `test_resource_name_matched_fields_match_without_a_header_reads_rows_by_schema_order` in `test_general.py` to pin the end-to-end fix.
+- `test_general.py`: two regression tests for the PR's headline bug (`id`/`extra-label`/`extra-cell` and `id`/`missing-label`/`missing-cell`), each asserting a normal row gets no duplicate error while a genuinely irregular row still does.
+- `test_general.py` / `test_validate.py` (package) / `analyzer/__spec__/test_resource.py`: narrowing `get_expected_fields()` also makes handlers *disappear* for dropped fields, which exposed three `KeyError` crash risks your diff happens to guard against but never tests: a `uniqueField` constraint on a field missing from a `superset` header (**verified this actually crashes on the base commit**), a foreign key whose target field is missing from an `exact`-mode header (verified it crashes if the new `continue` guard in `table.py` is removed), and `resource.analyze(detailed=True)` over a schema field absent from a `superset` header (**also verified crashing on base**). Added one test each.
 
-**Not done, flagging for you:** the `unique` constraint path in `table.py` (`for field in expected_fields: if field.constraints.get("unique")`) changed the same way as primary/foreign keys, but I couldn't construct an observable difference — before the fix, a unique field dropped from the header just read as `None` every row and was silently skipped (`if cell is not None`), so there's no user-visible bug to pin there. I left it untested; let me know if you had a different scenario in mind for it.
+All new/changed tests pass on HEAD; I confirmed each one is red on the base commit (or fails if the relevant guard line is removed) before finalizing it. Ran the full suite minus optional-dependency extras not installed here (`ods`, `pandas`, `wkt`, sql backends) — no other breakage.
+
+**Proposed, not done:** worth a line in the PR description calling out the headless-header and the two KeyError fixes explicitly — they're real behavior changes bundled into this diff that reviewers would otherwise have to find by tracing `table.py`/`analyzer.py` by hand.

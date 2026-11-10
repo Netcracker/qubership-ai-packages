@@ -1,29 +1,26 @@
-I added two regression tests for the `SpringHandler` fix, both in `FrameworkTests.java`. Neither file is committed and the production code is unchanged. Both tests pass with the fix and both fail on the commit before it. The full `:nullaway:test` suite and `:nullaway:buildWithNullAway` also pass.
+I added four regression tests to `nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java`. Each one fails on the commit before the fix and passes on it. `FrameworkTests` passes and `./gradlew :nullaway:buildWithNullAway` is clean. I didn't run the rest of `:nullaway:test`, and I didn't touch production code or commit anything.
 
-**One proposal for you, separate from the PR message:** no reference file covers Error Prone's `CompilationTestHelper`, so I broke two cases on purpose to see what it reports. I suggest adding this line to `CLAUDE.md` (I haven't edited it):
-
-> Tests: JUnit 4 engine and assertions; Error Prone `CompilationTestHelper` stops at the first `// BUG: Diagnostic contains:` marker that gets no diagnostic and names it only by line number; an unexpected diagnostic lists every diagnostic with its field name and source line.
+**A suggestion for you, not for the PR:** `CLAUDE.md` could get a line saying how Error Prone's `CompilationTestHelper` reports failures, which I had to find out with a throwaway test. It stops at the first expected diagnostic it doesn't see. It names that one by line number and the expected text, and names an unexpected diagnostic by line number while listing every diagnostic it saw. Tell me if you want it added.
 
 ---
 
-**Message for the PR author**
+**Message for the author of #1750**
 
-I added two tests to `FrameworkTests` next to `springValueFieldTest`:
+The fix to `containsNullSpELExpression` came with no tests, so I added four to `FrameworkTests`, next to `springValueFieldTest`:
 
-- **`springValueNullComparedOnTheRightIsReportedOnlyWhenABranchYieldsNull`** is the case from the PR description, with `null` on the right of `!=`:
-  - `#{someBean != null ? someBean.value : 'default'}` gets no report.
-  - Control: `#{someBean != null ? null : 'default'}` is still reported. This shows the fix removes only the `null` used in the comparison, not every `null`.
-- **`springValueNullComparedOnTheLeftIsReportedOnlyWhenABranchYieldsNull`** covers the other half of the new pattern, with `null` on the left of `==`:
-  - `#{null == someBean ? 'default' : someBean.value}` gets no report.
-  - Control: the same expression with `null` as a branch result is still reported.
+- `springValueNullAfterNotEqualsIsNotAPossibleValue`: `someBean != null`
+- `springValueNullAfterEqualsIsNotAPossibleValue`: `someBean == null`
+- `springValueNullBeforeNotEqualsIsNotAPossibleValue`: `null != someBean`
+- `springValueNullBeforeEqualsIsNotAPossibleValue`: `null == someBean`
 
-Each test puts the case and its control in one source. They are separate tests because the test helper stops at the first expected diagnostic that's missing and names it only by line number, so two cases in one source could hide each other.
+These are the four forms that `NULL_COMPARISON_PATTERN` and the description list. Each test compiles two `@Value` fields:
+- **The first field** uses `null` only as a comparison operand, so it must not be reported. On the commit before the fix, all four tests fail with `@NonNull field 'notReported' not initialized`, which is the false positive from the issue.
+- **The second field** changes only one thing: the true branch of the ternary is `null`. It must still be reported, and it is reported both before and after the fix. This shows that removing the comparison doesn't hide a `null` that the expression can really return.
 
-I also moved the `@Value` annotation stub into a helper, `addSpringValueAnnotationStub`, next to `addSpringMockAnnotationStubs`. `springValueFieldTest` now calls it, and its expectations are unchanged.
+Error Prone's test helper stops at the first missing diagnostic and identifies it by line number. So each test holds one form plus its control rather than all four in one source, and a failure names the form in the test name.
 
-I checked that both tests catch the bug by running them on the code from before the fix. Both failed with `Saw unexpected error on line 5 … @NonNull field 'comparedOnly' not initialized`, which is the reported false positive. The control fields were reported both before and after the fix.
+The `@Value` stub that `springValueFieldTest` defined inline is now `addSpringValueAnnotationStub`, shared by the old test and the new ones. That test's expectations are unchanged. The new tests go through `checkOnlySecondValueFieldReported(notReported, reported)`, so each test is two SpEL strings on adjacent lines.
 
-**Proposed, not done:**
-- **Two more operator cases.** `NULL_COMPARISON_PATTERN` accepts `!=` and `==` on both sides, but I tested one operator per side. A test with `== null` on the right and one with `null !=` on the left would catch a regex edit that drops `=` or `!` from `[!=]`. I counted these as variations rather than separate classes of input, but they're cheap to add if you want them.
-- **No spaces around the operator.** `someBean!=null` relies on `\s*` allowing zero spaces. A case without spaces would protect that if the pattern gets tightened later.
-- **`null` inside a string literal.** `#{'x == null'}` was reported before the fix and is silently accepted now, because the comparison inside the string gets stripped. That's arguably more correct, but it's a change no test pins down. Whether a test is wanted depends on whether the heuristic is meant to see into string literals.
+**Not done, for you to decide:**
+- **`eq` / `ne`:** SpEL also has the word operators `eq` and `ne`. `#{someBean ne null ? someBean.value : 'default'}` is still a false positive, because the pattern only strips `==` and `!=`. I wrote no test that locks in the current behaviour there. If you extend the pattern, that case needs the same pair of tests.
+- **No-space spelling:** I didn't test `someBean!=null`, even though the pattern allows for it with `\s*`. If you want a test for it, add one more pair using the same helper.

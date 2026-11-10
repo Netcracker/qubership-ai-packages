@@ -66,9 +66,9 @@ Measured with `TableResource(data=…, schema=…).validate()` and `report.flatt
 - `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §8, §9
 - `references/python/pytest.md`
 
-The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
-`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
-has none.
+The results in `<model>/run-1` and `run-2` ran at skill tree `62b0151`, test-authoring 1.3.0.
+`claude-sonnet-5/run-2/result.diff` leaves out the hunk for `uv.lock`, 13080 lines, a lock file the session generated
+with `uv`.
 
 ## Files
 
@@ -88,6 +88,10 @@ existing tests above with their moved expectations and the seven tests the pull 
 environment in about 10 seconds with a warm uv cache; the tests take under 2 seconds. Fetching the base takes about two
 minutes, most of it the repository's recorded HTTP cassettes. Without the pull request's tests, the six existing tests
 fail on the fix.
+
+`build.sh` installs the `sql` extra only. An Excel test in a module the session edits fails on the fix and on the base
+with `ModuleNotFoundError: No module named 'openpyxl'`, which is the environment, not the session's tests:
+`test_general.test_resource_skip_rows_non_string_cell_issue_320` in `claude-sonnet-5/run-1`.
 
 ## How to run
 

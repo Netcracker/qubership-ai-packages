@@ -1,14 +1,20 @@
-Only the test file is modified, nothing committed, as requested. Here's the message I'd leave for the author:
+Only test files touched, no production code changed, and nothing committed, as requested.
 
 ---
 
-**Tests added**: `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`, four new `@Test` methods, one per shape the fix changes:
+Message for the PR author:
 
-1. `typeVariableActualWithNullableBoundRejectedByNonNullExtendsWildcard` — `Foo<T>` with `T extends @Nullable Object` rejected by `Foo<? extends Object>`, with a `NonNullBound` control (plain `T`) proving the check doesn't fire on a non-nullable bound.
-2. `wildcardActualWithNullableTypeVariableBoundRejectedByNonNullExtendsWildcard` — same, but the actual is `Foo<? extends T>` rather than bare `T`.
-3. `parametricExtendsWildcardRejectsNullableActualBoundOnlyWhenTargetCannotBeNull` — the formal itself is `Box<? extends T>` (a parametric requirement); `Box<S>` with `S extends @Nullable T` is rejected only when `T` itself can't be null, with two controls in the same source: `S extends T` (no `@Nullable`) stays accepted, and the whole thing stays accepted when the target's own `T` admits null.
-4. `overriddenMethodNonNullExtendsWildcardBoundRejectsNullableTypeVariableReturn` — the override-checking path reached by this fix: overriding `List<V> get()` against overridden `List<? extends @NonNull V> get()` now reports `mismatched type parameter nullability`.
+I added the regression tests this fix owed, since none shipped with it. All five are confirmed red on the pre-fix commit (09fdea5) and green on this one — I checked by running each against both commits directly.
 
-Each test is a genuine regression test, not a change detector: I checked out `CheckIdenticalNullabilityVisitor.java`/`GenericsUtils.java` at `HEAD^` with the new tests in place and confirmed all four fail (`Did not see an error... There were no errors`), then restored `HEAD` and confirmed they pass, plus the full `:nullaway:test` and `:nullaway:buildWithNullAway` are green.
+In `WildcardTests.java` (next to the other no-inference extends/super containment tests):
+- `extendsBoundWildcardRejectsTypeVariableActualWithNullableBound` — a bare `Box<T>` with `T extends @Nullable Object` passed where `Box<? extends Object>` is required, with a `Box<T>`/non-null-`T` control that still compiles.
+- `extendsBoundWildcardRejectsWildcardActualBoundToATypeVariableWithNullableBound` — the same, but the actual is `Box<? extends T>` instead of bare `T` (a different path through `wildcardUpperBound`/`typeComparedForNullness`).
+- `extendsBoundWildcardOfATypeVariableRejectsActualWithNullableBoundOverIt` — the new `lhsBound instanceof TypeVar` branch: formal `Box<? extends T>` (T a parametric requirement), with controls `Box<T>` and `Box<S extends T>` (still assignable, per the commit message), and `Box<S extends @Nullable T>` (now rejected).
+- `extendsBoundWildcardWithExplicitNonNullBoundRejectsNullableTypeVariableActual` — the explicit-`@NonNull`-bound variant: `Box<T>` (T nullable-bounded) rejected by `Box<? extends @NonNull T>`, with a `Box<@NonNull T>` control.
 
-**Not done, proposed for you to consider**: the `rhsTypeArgument instanceof Type.CapturedType` exception in `extendsBoundContains` (the "capture conversion drops type-use annotations" branch) has no dedicated test. I tried to construct one via the `identity(box)`-style capture pattern already used elsewhere in the file, but in every construction I could reason through, `asWildcard` recovers the original wildcard from `capturedType.wildcard` and the nullness answer comes out the same with or without the exception — so I couldn't find a source that actually turns this branch into a surviving mutant without deeper knowledge of the specific capture scenario (possibly from the original issue) that motivated it. If you have a concrete repro for why that check was needed, it's worth pinning down as a fifth test.
+In `GenericsTests.java` (next to the other override `mismatched type parameter nullability` tests):
+- `overrideReturnTypeRejectsNullableBoundWhereOverriddenWildcardRequiresNonNull` — covers the override-checking path the changelog calls out, using a real generic subclass (`BadSub<V>`/`OkSub<V>` implementing `Base<V>`, not an anonymous class with a concrete instantiation — my first attempt at this test used an anonymous class and I found, by running it against the base commit, that it was already green there, i.e. not a real regression test; the generic-subclass form is what actually exercises the fix).
+
+What I proposed and did not do: the commit message also calls out a deliberate exception for captured actuals ("javac's capture of `? extends @NonNull V` prints as capture of `? extends V`, so the actual carries no nullness of its own to compare"). I tried to construct a case that would distinguish the fixed code from a version without that `rhsTypeArgument instanceof Type.CapturedType` carve-out, but every construction I could build this way gave the identical (passing) result on both the base commit and this one — meaning it wasn't actually discriminating, just a compatibility check, which isn't worth adding. Getting a genuinely falsifiable test for that carve-out likely needs the specific capture scenario you had in mind when writing it; I'd suggest you add one directly, or point me at the motivating example and I'll turn it into a test.
+
+I ran `:nullaway:test` (full suite) and `:nullaway:buildWithNullAway`; both pass. Nothing was committed, per your instructions.

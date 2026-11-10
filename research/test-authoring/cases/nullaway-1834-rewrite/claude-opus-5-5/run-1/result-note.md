@@ -1,33 +1,26 @@
-I rewrote the 20 tests from the last commit as 7. Each of the 7 failed on the parent commit on its own case's marker and passes on HEAD. `./gradlew :nullaway:test` and `:nullaway:buildWithNullAway` both pass. The production code is unchanged and nothing is committed.
+I rewrote the 20 tests the last commit added to `WildcardTests.java` as 10. Every input from the original 20 is still there, and only that test file changed. `./gradlew :nullaway:test --tests "com.uber.nullaway.jspecify.WildcardTests"` passes. I didn't run `:nullaway:buildWithNullAway`, since only test code changed. Nothing is committed.
 
-**A fact about the test harness, for you rather than the author.** Error Prone's `CompilationTestHelper.doTest()` stops at the first mismatch. It names a missing expected report by line number and the marker's text, and an unexpected report by line number only, then prints every report. No reference file records this, so I learned it from a deliberate run. If you want it recorded, `CLAUDE.md` could get a line like: `Tests: JUnit 4 engine; Error Prone CompilationTestHelper stops at the first mismatch and names it by line (plus marker text for a missing report)`. I haven't added it; say if you'd like me to.
+**Message for the PR author:**
 
 ---
 
-**Message for the author:**
+I reorganised the tests this PR adds to `WildcardTests`. The production change is untouched.
 
-I rewrote the 20 tests this PR adds to `WildcardTests` as 7. The fix and the inputs being checked are the same; only the grouping changed.
+**What changed**
 
-**Why.** On the parent commit, 7 of the 20 tests fail. Those are the behavior the fix adds. The other 13 already passed there. They guard against the fix going too far (`Box<T>` into `Box<? extends T>`, the captured and inferred loaders) or pin existing behavior (`Box<@Nullable T>` reports, `Box<?>` accepts). Kept as separate tests, a "nothing is reported" test only says something while a neighbor with a near-identical source still reports, and nothing keeps the two sources in sync.
+- **Each test that expects no report now shares a compilation with an input that does report.** Before, ten tests each checked one silent call in a source of their own, so nothing showed that their silence came from the rule rather than from the setup. Each silent call is now a separate method in the same source as the reported call it differs from in one respect. Grouped this way, the 20 inputs make 10 tests:
+  - **Bound that admits null, concrete requirement.** `aTypeVariableFailsAWildcardRequirementOnlyWhenItMayBeNullAndTheWildcardBoundMayNot` puts the `T extends @Nullable Object` call to `takeNonNull` next to four silent calls: a non-null bound, a `@NonNull T` use, a `? extends @Nullable Object` requirement and a `Box<?>` requirement.
+  - **`@Nullable T` use.** `aNullableWrittenOnATypeVariableUseFailsOnlyANonNullWildcardRequirement` holds the two calls that write `@Nullable T` at the use.
+  - **Requirement bounded by a type variable (`? extends T`).** `aWildcardBoundedByATypeVariableRejectsOnlyANullableUseOfThatVariable` holds `Box<T>` returned as `Box<? extends T>`, `Box<S extends T>`, and the `CompletableFuture` inference case, with the `Box<@Nullable T>` report as their reporting control. These guard the "compare as written" branch.
+  - **Non-null type variable in the requirement.** `aTypeVariableFailsAWildcardBoundedByANonNullTypeVariableOnlyWhenItsBoundAdmitsNull` puts `S extends @Nullable T` next to `S extends T`.
+- **One test holds at most one input that is new behaviour.** I ran the PR's tests against the production code from before the fix. Seven fail there; the other 13 pass. The harness stops at the first missing diagnostic and names it only by line number. Two new cases in one compilation would therefore hide each other. Each of the seven stays in its own test, so a failure names it by test name. These four were already reported cases on their own, and I left them as they were: the unannotated-code bound, `S extends T extends @Nullable Object`, the `Box<? extends T>` actual, and the override. The `? extends @NonNull T` test also stays as it was.
+- **The two capture tests now share one compilation**, as `aCapturedTypeArgumentMeetsATypeVariableRequirementThatAnUncapturedOneFails`. I added one input as their reporting control: a `Map<? extends K, V>` returned as `Map<? extends K, ? extends @NonNull V>`, which is reported. That shows the two silent calls are silent because of the capture exception. This input is also new behaviour: it fails on the pre-fix code and passes with the fix.
 
-Each new test holds one newly reported case plus the inputs that differ from it in one respect, in a single source with one method per input. NullAway checks each method on its own. The harness stops at the first mismatch, so I didn't put two new cases in one source. Each test name states the rule and the case it covers:
+I re-ran the rewritten tests against the pre-fix code. Each of the eight tests holding a new case fails at that case's line. No control produced an unexpected report. The two tests that hold only existing behaviour pass there, as expected.
 
-| Test | Case (reports since the fix) | Inputs moved in from separate tests |
-| --- | --- | --- |
-| `aNonNullWildcardRequirementRejectsATypeVariableOnlyWhenItsUseOrItsBoundAdmitsNull` | `<T extends @Nullable Object> Box<T>` → `Box<? extends Object>` | `<T>`, nullable wildcard, `Box<?>`, `Box<@NonNull T>`, `Box<@Nullable T>` → both requirements |
-| `…RejectsATypeVariableDeclaredInUnannotatedCode` | `@NullUnmarked Holder<T>` | — |
-| `…RejectsATypeVariableBoundedByAnotherWhoseBoundAdmitsNull` | `<T extends @Nullable Object, S extends T>` | — |
-| `…RejectsAWildcardBoundedByATypeVariableWhoseBoundAdmitsNull` | `Box<? extends T>` | — |
-| `aWildcardBoundedByATypeVariableRejectsAnActualOnlyWhereItAdmitsNullAndTheVariableDoesNot` | `<S extends @Nullable T>` into `? extends T` | `<S extends T>` under both holders, `Box<@Nullable T>`, the same-variable return, the inferred and captured loaders |
-| `aNonNullWildcardBoundedByATypeVariableRejectsAnUnannotatedUseOfThatVariable` | `Box<T>` into `? extends @NonNull T` | the captured `? extends @NonNull V` loader |
-| `anOverrideMayNotReturnAnUnannotatedTypeVariableWhereItsSuperReturnsANonNullWildcard` | `List<V>` override | — |
+**Proposed, not done**
 
-**What I added.** Five new inputs, each differing from its case in one respect: a `@NullMarked` holder, `<T, S extends T>`, `<T> Box<? extends T>`, `Box<@NonNull T>` into `? extends @NonNull T`, and a `List<@NonNull V>` override. Each is silent on both the parent and HEAD. Without them, four of the cases had nothing showing that the report comes from the nullable bound rather than from the rest of the setup.
+- **Possible missed report.** `Map<? extends K, ? extends V>` returned as `Map<? extends K, ? extends @NonNull V>` (with `V extends @Nullable Object`) is accepted. The same happens through `CompletableFuture.supplyAsync`. The capture exception in `extendsBoundContains` skips the `admitsNull` check, so map values that may be null pass as non-null. I didn't add a test for this, because its expected outcome is a decision about the production code. If you agree it should be reported, it belongs in the capture test as a second case.
+- The `? extends @NonNull T` and override tests could each take a silent control: `Box<@NonNull T>` passed to `Box<? extends @NonNull T>`, and an override returning `List<@NonNull V>`. I checked that both are silent. They aren't required, since both tests already expect a report, so I left them out.
 
-**What I dropped.** No input. The two loader interfaces that were each a whole test are now nested `Loader` interfaces inside the case's source.
-
-**Checks I ran:**
-- On the parent commit, every rewritten test fails on its case's line. The only reports there come from the inputs that are supposed to report.
-- I ran the old and new tests side by side against seven mutations of the fix: removing the capture exception, the type-variable-requirement branch, either `hasNullnessAnnotation` guard, the unannotated-code bound, the `admitsNull(lhsBound)` escape, or `typeComparedForNullness`. Every mutation the old tests caught, the new ones catch too.
-
-**Proposed, not done.** When a source holds several inputs, a report on a line where none is expected is named only by line number, and the harness has no way to label it. I wrote the method names to describe each input so the line is easy to find, but the report itself doesn't name it. Error Prone's test helpers aren't in this repository, so I'm not proposing a change to the harness here.
+---

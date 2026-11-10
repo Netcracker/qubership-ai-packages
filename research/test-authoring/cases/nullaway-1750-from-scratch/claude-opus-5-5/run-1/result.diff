@@ -1,11 +1,14 @@
 diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-index ad70e90..34f97a0 100644
+index ad70e90..4f22140 100644
 --- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
 +++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
-@@ -1826,23 +1826,32 @@ public class FrameworkTests extends NullAwayTestsBase {
+@@ -1826,23 +1826,87 @@ public class FrameworkTests extends NullAwayTestsBase {
          .doTest();
    }
  
+-  @Test
+-  public void springValueFieldTest() {
+-    defaultCompilationHelper
 +  /**
 +   * Adds a source stub for Spring's {@code @Value} annotation.
 +   *
@@ -29,12 +32,20 @@ index ad70e90..34f97a0 100644
 +        """);
 +  }
 +
-   @Test
-   public void springValueFieldTest() {
--    defaultCompilationHelper
--        .addSourceLines(
++  /**
++   * Compiles a class with two {@code @Value} fields and expects NullAway to report only the second
++   * one as not initialized.
++   *
++   * @param notReportedExpression the {@code @Value} string of the field that must not be reported
++   * @param reportedExpression the {@code @Value} string of the field that must be reported
++   */
++  private void checkOnlySecondValueFieldReported(
++      String notReportedExpression, String reportedExpression) {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
+         .addSourceLines(
 -            "Value.java",
--            """
++            "Test.java",
+             """
 -            package org.springframework.beans.factory.annotation;
 -            import java.lang.annotation.ElementType;
 -            import java.lang.annotation.Retention;
@@ -44,54 +55,52 @@ index ad70e90..34f97a0 100644
 -            @Retention(RetentionPolicy.RUNTIME)
 -            public @interface Value {
 -              String value();
--            }
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("%s")
++              String notReported;
++              @Value("%s")
++              // BUG: Diagnostic contains: @NonNull field 'reported' not initialized
++              String reported;
+             }
 -            """)
++            """
++                .formatted(notReportedExpression, reportedExpression))
++        .doTest();
++  }
++
++  @Test
++  public void springValueNullAfterNotEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{someBean != null ? someBean.value : 'default'}",
++        "#{someBean != null ? null : 'default'}");
++  }
++
++  @Test
++  public void springValueNullAfterEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{someBean == null ? 'default' : someBean.value}",
++        "#{someBean == null ? null : someBean.value}");
++  }
++
++  @Test
++  public void springValueNullBeforeNotEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{null != someBean ? someBean.value : 'default'}",
++        "#{null != someBean ? null : 'default'}");
++  }
++
++  @Test
++  public void springValueNullBeforeEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{null == someBean ? 'default' : someBean.value}",
++        "#{null == someBean ? null : someBean.value}");
++  }
++
++  @Test
++  public void springValueFieldTest() {
 +    addSpringValueAnnotationStub(defaultCompilationHelper)
          .addSourceLines(
              "NegativeCases.java",
              """
-@@ -1888,6 +1897,44 @@ public class FrameworkTests extends NullAwayTestsBase {
-         .doTest();
-   }
- 
-+  @Test
-+  public void springValueNullComparedOnTheRightIsReportedOnlyWhenABranchYieldsNull() {
-+    addSpringValueAnnotationStub(defaultCompilationHelper)
-+        .addSourceLines(
-+            "SpelNullComparison.java",
-+            """
-+            package com.uber;
-+            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("#{someBean != null ? someBean.value : 'default'}")
-+              String comparedOnly;
-+              @Value("#{someBean != null ? null : 'default'}")
-+              // BUG: Diagnostic contains: @NonNull field 'comparedAndReturned' not initialized
-+              String comparedAndReturned;
-+            }
-+            """)
-+        .doTest();
-+  }
-+
-+  @Test
-+  public void springValueNullComparedOnTheLeftIsReportedOnlyWhenABranchYieldsNull() {
-+    addSpringValueAnnotationStub(defaultCompilationHelper)
-+        .addSourceLines(
-+            "SpelNullComparison.java",
-+            """
-+            package com.uber;
-+            import org.springframework.beans.factory.annotation.Value;
-+            class SpelNullComparison {
-+              @Value("#{null == someBean ? 'default' : someBean.value}")
-+              String comparedOnly;
-+              @Value("#{null == someBean ? 'default' : null}")
-+              // BUG: Diagnostic contains: @NonNull field 'comparedAndReturned' not initialized
-+              String comparedAndReturned;
-+            }
-+            """)
-+        .doTest();
-+  }
-+
-   @Test
-   public void mavenParameterFieldTest() {
-     defaultCompilationHelper

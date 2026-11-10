@@ -53,10 +53,7 @@ act per call, testify on `go test`, and cases that expect the same outcome.
 - `SKILL.md`: §0, §1, §3, §4, §5, §6, §7, §9
 - `references/go/testing.md`, `references/go/testify.md`, `references/mutation-tools.md`
 
-The results in `<model>/run-1` and `run-2` ran at skill tree `00b85c9`, test-authoring 1.2.0. They also stand for
-`b11951c`, which changed only when §0 proposes a stack line where the repository already has one, and this repository
-has none. `claude-sonnet-5/run-1` ran at `b11951c`: its first run ended on a reply to a background notification instead
-of the closing message, and was run again.
+The results in `<model>/run-1` and `run-2` ran at skill tree `62b0151`, test-authoring 1.3.0.
 
 ## Files
 

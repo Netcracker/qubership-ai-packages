@@ -86,7 +86,8 @@ JDBC asks for an `SQLException`. Sonnet's V2 messages give the mechanism, not th
   own-RETURNING value reached the message in 1 of 3 Opus runs under both V1 and V2. The duplicate check and the bullet
   on an expected value a reader would correct are not shown to work on those two.
 - No run checked that messages for unsurprising values stay as short as before.
-- The existing cases under `cases/` have not been re-run on V2.
+- The cases under `cases/` whose skill parts include §7 ran on the final text, after the wording fixes below; each
+  README names the tree, and the commit that adds the results grades them.
 
 Wording fixes after the runs, not measured: the comment may say why a test that looks as if it cannot fail exists
 (`javadoc-authoring` had allowed any reason the test exists); a part of the expected value that comes from the
