@@ -1,6 +1,7 @@
 # Axis: documentation pages
 
-Load `docs-page-authoring` and `english-developer-style`.
+Load `docs-page-authoring`. Wording, tense, sentence length, and dialect belong to the developer-style skill of the
+language the pages are written in (`english-developer-style` for English); load it too.
 
 ## Check
 

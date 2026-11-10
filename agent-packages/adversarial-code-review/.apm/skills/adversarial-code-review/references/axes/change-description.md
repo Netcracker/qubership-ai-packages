@@ -4,8 +4,9 @@ What the change says about itself, and how its branch will land. The description
 `input.md` are the claim, and the diff is what was done. The axis has two parts, read in order: the description and the
 branch. Each part has its own checks and severities; apply them one part at a time.
 
-Load `change-description-authoring` and `english-developer-style`. Follow the repository's own rules from `input.md` for
-the changelog and the pull request title.
+Load `change-description-authoring`. Wording, tense, sentence length, and dialect belong to the developer-style skill
+of the language the description is written in (`english-developer-style` for English); load it too. Follow the
+repository's own rules from `input.md` for the changelog and the pull request title.
 
 A defect that both parts see is one finding: a commit message that claims something its commit does not do is filed
 under *Description*, with `gate: none`. *Branch* covers how the commits are split, and a message too vague to tell which

@@ -2,7 +2,8 @@
 
 Do the doc comments and inline comments the change adds or edits say what the code does? Load the doc-comment skill of
 the language (`javadoc-authoring` for Java, Kotlin, Groovy, Scala; `godoc-authoring`, `rustdoc-authoring`,
-`jsdoc-authoring`, `pythondoc-authoring`) and `english-developer-style`.
+`jsdoc-authoring`, `pythondoc-authoring`). Wording, tense, sentence length, and dialect belong to the developer-style
+skill of the language the comments are written in (`english-developer-style` for English); load it too.
 
 ## Check
 

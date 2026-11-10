@@ -1,8 +1,10 @@
 # Axis: vocabulary
 
 Do the comments and the new member names use the words of the field (the specification the project implements, the
-language, the libraries it uses) and of the code, rather than words the change coined? Load `english-developer-style`
-and apply its section *Use the field's word*. Use web access to read the specification where the project implements one.
+language, the libraries it uses) and of the code, rather than words the change coined? Load the developer-style skill of
+the language the comments are written in (`english-developer-style` for English) and apply its rule on the field's
+word where it has one (*Use the field's word* in `english-developer-style`). Use web access to read the specification
+where the project implements one.
 
 ## Check
 

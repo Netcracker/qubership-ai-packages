@@ -95,7 +95,8 @@ Each axis is a file under `references/axes/`.
 | Correctness | `correctness.md` | code |
 | Compatibility | `compatibility.md` | a public API, behavior callers see, configuration, stored data, a deployment |
 | Security | `security.md` | a trust boundary, input handling, secrets, dependencies |
-| Reliability | `reliability.md` | timeouts, retries, limits, a replaced mechanism, logs or metrics |
+| Reliability | `reliability.md` | timeouts, retries, limits, a replaced mechanism |
+| Telemetry | `telemetry.md` | logs, metrics, spans, error text, started tasks, a failure, retry, or fallback branch |
 | Performance | `performance.md` | code on a path that runs per request, per item, or in a loop |
 | Architecture | `architecture.md` | code |
 | Simplicity | `simplicity.md` | code |
@@ -142,7 +143,7 @@ Never write an axis file yourself (`axes/previous.json` is the one exception), e
 already hold the evidence: write that evidence to `<work>/` and name it in `input.md`, and let the axis read it. An axis
 written in this context loads none of the skills its file names. Where the axis file requires a skill for this change
 and the reply does not name it, run that axis once more; where the second reply does not name it either, record the axis
-as `failed`.
+as `failed`. A developer-style skill that is not installed does not fail an axis: the reply names it as missing.
 
 An axis whose subagent fails, returns invalid JSON, or could not be spawned is recorded as `failed`, and its file is
 removed. A failed axis that applies to a risk-bearing part of the change makes the result `review_incomplete`.
