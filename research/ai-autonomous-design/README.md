@@ -164,28 +164,35 @@ frequent and costly limitations, create issues to remove those limitations, and 
 
 ## AI agent comment signatures
 
-AI agents must append a signature to every GitHub comment they post, including issue comments, pull request comments,
-and review comments. This identifies the model used and makes token usage and cost visible.
+AI agents must append a signature to the single top-level comment or review body reporting a run's result, including
+when the agent stops for human assistance. Inline comments belonging to that review carry no signature. Report totals
+for the whole run, including subagents and retries, once rather than repeating them on every comment.
 
-Place the signature on the last line, separated from the comment body by a blank line. Start with 🤖
-(ROBOT FACE, U+1F916), followed by semicolon-separated `key=value` pairs enclosed in a single pair of backticks:
+Place the signature on the last line, separated from the comment body by a blank line. Wrap it in `<sub>` tags so it
+renders in small type, without backticks:
 
-```text
-🤖 `model=gpt-6.1; effort=high; tokens=12k; cost=$0.08`
+```markdown
+<sub>🤖 gpt-6.1 high in=12k cached=40k out=3k usd=0.083</sub>
 ```
 
-Use the following fields in this order:
+Start with 🤖 (ROBOT FACE, U+1F916). The first word without `=` is the model identifier reported by the runtime for the
+main agent writing the comment. The second, optional word is its reasoning effort, such as `low`, `medium`, or `high`.
+Usage and cost totals also include work by subagents using other models.
 
-- `model`: the model identifier reported by the agent's runtime.
-- `effort`: the reasoning effort level, such as `low`, `medium`, or `high`.
-- `tokens`: the total input and output tokens used to prepare the comment. Use `k` for thousands, such as `12k` or `12.5k`.
-- `cost`: the cost in US dollars, rounded to two decimal places, such as `$0.08`.
+Separate the remaining fields with spaces. Each field is `key=value`; fields may appear in any order:
 
-Use usage and cost data provided by the runtime. If a value is unavailable, write `unknown`. Never invent values or
-report unavailable usage as zero.
+- `in`: input tokens that are not cache reads, including cache writes. For OpenAI, subtract `cached_tokens` from
+  `prompt_tokens`. For Anthropic, add `cache_creation_input_tokens` to `input_tokens`.
+- `cached`: input tokens read from the cache.
+- `out`: output tokens, including reasoning tokens.
+- `usd`: cost in US dollars, rounded to two significant digits, such as `0.0042`, `0.083`, or `1.3`.
 
-```text
-🤖 `model=gpt-6.1; effort=high; tokens=unknown; cost=unknown`
+Use `k` for thousands of tokens, such as `12k` or `12.5k`. Use usage and cost data provided by the runtime. Omit any
+unavailable field, including effort; a missing field means its value is unknown. Never invent values or report
+unavailable usage as zero.
+
+```markdown
+<sub>🤖 gpt-6.1 high</sub>
 ```
 
 The model identifier and numeric values above are illustrative.
