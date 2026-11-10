@@ -6,20 +6,20 @@ import java.util.Map;
 import java.util.OptionalLong;
 
 /**
- * Holds byte-array values in memory under string keys.
+ * Holds byte-array values under string keys and tracks when an entry was last evicted.
  *
- * <p>An entry stays in the cache until {@link #evict(String)} removes it. This class is not
- * thread-safe; callers must synchronize access externally.</p>
+ * <p>Instances are not thread-safe. Callers that share one must synchronize access themselves.</p>
  */
 public final class EntryCache {
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
-    /** Largest value, in bytes, that {@link #put(String, byte[])} accepts: 1 MiB ({@value} bytes). */
+    /** Largest value length, in bytes, that {@link #put} accepts: 1 MiB ({@value} bytes). */
     static final int MAX_ENTRY_BYTES = 1 << 20;
 
     private final String name;
     private final Map<String, byte[]> entries = new HashMap<>();
     private long evictedBytes;
+    /** {@link System#nanoTime()} reading taken at the last eviction, or 0 if nothing was evicted. */
     private long lastEvictionNanos;
 
     public EntryCache(String name) {
@@ -31,14 +31,14 @@ public final class EntryCache {
     }
 
     /**
-     * Stores a value under a key, replacing any existing entry for that key.
+     * Stores {@code value} under {@code key}, replacing any earlier value for that key.
      *
-     * <p>The cache keeps the array itself and does not copy it, so the caller must not modify it
-     * after this call.</p>
+     * <p>The cache keeps a reference to the array and does not copy it, so the caller must not
+     * modify the array afterwards.</p>
      *
-     * @param value the value to store, at most 1 MiB (1048576 bytes) long
-     * @throws IllegalArgumentException if {@code value} is longer than 1 MiB (1048576 bytes)
-     * @throws NullPointerException if {@code value} is {@code null}
+     * @param value the bytes to store; must not be {@code null} and must not be longer than
+     *     1048576 bytes (1 MiB)
+     * @throws IllegalArgumentException if {@code value} is longer than 1048576 bytes
      */
     public void put(String key, byte[] value) {
         if (value.length > MAX_ENTRY_BYTES) {
@@ -49,9 +49,10 @@ public final class EntryCache {
     }
 
     /**
-     * Removes the entry for a key and records the eviction.
+     * Removes the entry for {@code key}, if there is one.
      *
-     * <p>Evicting a key that has no entry changes nothing and is not recorded as an eviction.</p>
+     * <p>Removing an entry sets the time that {@link #nanosSinceLastEviction()} measures from.
+     * A key with no entry changes nothing.</p>
      */
     public void evict(String key) {
         byte[] removed = entries.remove(key);
@@ -62,7 +63,7 @@ public final class EntryCache {
     }
 
     /**
-     * Returns the time since the most recent eviction.
+     * Returns the time since the last eviction that removed an entry.
      *
      * @return the elapsed time in nanoseconds, measured with {@link System#nanoTime()}, or an
      *     empty value if no entry has been evicted

@@ -39,3 +39,12 @@ row and are not committed. 1.3.0 ties the no-comment case to a failure fixed in 
 defect and the issue number to the commit that adds the test. Across the five skills, a defect sentence remains in 2 of
 20 runs (baseline 20 of 20), and the guard test names its fix in 16 of 20 (baseline 12 of 20). A run of the same rules
 before a final-review pass, which moved one sentence, named it in 19 of 20, so the guard result varies from run to run.
+
+## 1.4.0, 2026-11-08: not run
+
+Version 1.4.0 adds a rule to §1 (a scope is not a definition), a rule to §3 (no definition through the names of other
+members), a rule to §7a (a phrase fixed once is fixed everywhere), and an §8 question for each. Of these, the case's
+skill parts include only §8, and only the questions that restate §1's regression-test exception, §2, §4, and §7, which
+1.4.0 leaves as they were. The input is a new test file: it cites no specification, it has no member whose result a
+comment would state, and it edits no existing comment, so none of the three rules has anything to act on. The results
+above stand for the 1.3.0 tree they name. The `members` case, whose skill parts include §3, ran with 1.4.0.

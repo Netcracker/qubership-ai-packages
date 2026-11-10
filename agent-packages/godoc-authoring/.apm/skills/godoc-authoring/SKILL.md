@@ -74,6 +74,16 @@ than borrowing the one above it. **State the local rule at the lowest-level API,
 at the layer where the scenario exists.** A guard found through one concrete call path does not
 thereby own that path's story.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification
+defines (a type-system relation such as the Go spec's assignability, an isolation level, a protocol
+message) and computes it for fewer cases than the specification allows, give the specification's
+definition or a link to it, then state the cases this code computes it for as this code's scope.
+`A value is assignable to T when its type is identical to T` folds a checker's choice to handle
+identical types only into the Go spec's term, and a reader who knows the spec asks why the
+definition leaves out a value whose type implements the interface T, an untyped constant, and nil.
+State the scope as a criterion that covers every case, not as a list of the cases it excludes (§4,
+*The membership rule*).
+
 **Sufficiency** scales with visibility: how much the comment may leave to the code beside it.
 
 | Where | What the comment must carry |
@@ -192,8 +202,8 @@ which names no one and lets `it` drift to the reader by the next clause), not th
 protocol check must not be reachable`), and not a declaration that merely performs the act for
 someone else (`markBroken must still be called` obliges the `Conn` that calls it). A named
 declaration in the subject is right only where that declaration is itself what must comply:
-`readUntrackedLength must leave no envelope behind`. The party need not be human, but it must act: a
-client, a check, a reader. A mode constant or a configured number complies with nothing.
+`readUntrackedLength must leave no byte of the message unread`. The party need not be human, but it
+must act: a client, a check, a reader. A mode constant or a configured number complies with nothing.
 
 A *census* is a rule for the next maintainer, written instead as a report on today's call sites:
 `Every site that dispatches on a message type reads the tag through this method`, `CopyData is the
@@ -207,9 +217,9 @@ name what does it.
 
 Out of reach of this rule: an imperative, which already addresses the party (`Call it where the
 framed dialogue resumes`), including one that carries rationale (`so mirror that here`); a
-constraint on a *value* (`must be <= maxMessageSize`), which bounds a number rather than behavior;
-a field comment naming who writes or reads the field, which is the membership list §4 calls for;
-and an inline comment whose next statement is the actor (`// The envelope must be fully consumed`
+constraint on a *value* (`must be <= maxMessageSize`), which bounds a number rather than behavior; a
+field comment naming who writes or reads the field, which is the membership list §4 calls for; and
+an inline comment whose next statement is the actor (`// The rest of the message must be consumed`
 above the `c.endMessage()` that consumes it), after checking that the next line really is the actor
 and not test setup standing between the comment and the call it constrains.
 
@@ -268,6 +278,13 @@ The rest of the summary rule carries over from Javadoc unchanged:
   field comment's first sentence fixes nothing, and on a field that ships as a CRD description it
   is churn that ships (§6a).
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other declarations.** `Len returns the length as [Frame.HeaderLen]
+  computes it, as [Frame.Trim] keeps it` sends the reader to two other methods to learn what this
+  one returns, and it fails §1's refactor test: inline `Trim` and the sentence has to change. State
+  the result. The rule holds for an unexported declaration too: §1's table lets its comment lean on
+  the body for what the body shows. It does not let the comment give the names of the functions the
+  body calls instead of the result. Link another declaration only for a part of the contract that it
+  owns and this one passes through unchanged.
 - **A constant or variable names itself first, with its unit.** `maxPacketLen is the largest
   encrypted packet that this stream accepts, in bytes.` The reason the bound has that value is slot
   3, however interesting it is; a comment that opens with the upstream implementation it mirrors
@@ -566,7 +583,7 @@ plain text is correct; Go doc comments have no inline code markup, and backticks
 backticks. Set off a longer snippet as an indented block instead.
 
 **An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
-give the number so a reader can find the history: `a length taken straight from the wire sizes the
+give the number so a reader can find the history: `a length taken straight from the stream sizes the
 allocation (issue #4015)`. The number must not carry the meaning: `the shape of issue #4015`, `the
 same format as #1231`, `the bug #4015 fixed` count as content for someone who already knows the
 ticket and as nothing for everyone else. The test: cover the number and read the sentence. If what
@@ -574,7 +591,7 @@ remains states no fact, the comment has none. A bare `see #4015` fails the same 
 end, and a published page reaches readers with no access to the tracker at all.
 
 The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
-from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+from issue #4015: a field claiming more bytes than the row message still holds` passes, because
 covering the number leaves the failure named. The rule is about the number's role, not its position.
 
 The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
@@ -719,6 +736,10 @@ away.
   governs the body, not the first sentence. A comment that opens with `This function is a wrapper
   around X` stays broken until someone rewrites it, and "I had no new fact to add" is not a reason
   to leave it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the
+  change touches for its distinctive words, and fix every copy in the same edit. A reviewer who
+  found one copy will find the next, and a reply that fixes only the line they pointed at costs them
+  a second comment.
 - **Do not move code.** A comment edit that also renames a variable or reorders a statement cannot
   be verified as comment-only, and that verification makes a large sweep safe.
 
@@ -875,6 +896,10 @@ and where that rule has a condition, the item applies only under it.
   sentence describe the interface's freedom rather than this method's rule?
 - Does every term here have a definition outside this comment, and does every name match what the
   code calls the thing (`english-developer-style` §4a)?
+- Does the first sentence state the result, or does it send the reader to other declarations (§3)?
+- Where the declaration implements a concept a specification defines, does the comment state this
+  code's scope as a scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on,
   or leave a maintainer unable to see why a constraint is there? If not, delete it.
 - Would deleting the whole comment lose anything?

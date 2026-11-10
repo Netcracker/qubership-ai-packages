@@ -36,6 +36,8 @@ lead of #169 in a repository other than pgjdbc: `main` ships 1.43.0, a minor rel
 7. **Break lead-in ahead of the template** (`break_lead_in_before_headings`). The description opens with a paragraph
    that starts with `**Breaking changes.**`, ahead of `## Jira Link`, and adds no heading that names the break. The
    Haiku results, both baselines, and both controls fail it; the Opus results pass it.
+8. **No outcome lead-in in the description** (`no_outcome_lead_ins_in_description`), as in
+   [`pgjdbc-4367-breaks`](../pgjdbc-4367-breaks/README.md).
 
 ## Running it
 
@@ -58,6 +60,7 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 | Run | Break leads (1) | Question kept (2) | Not settled (3) | Not reopened (4) | Template (5) |
 | --- | --- | --- | --- | --- | --- |
+| Opus r1, r2 (`9fe02a7c`) | passes | passes, with both pieces of evidence | passes | passes | passes |
 | Opus r1, r2 | passes | passes, with both pieces of evidence | passes | passes | passes |
 | Haiku r1, r2 | passes | passes, with both pieces of evidence | passes | passes | passes |
 | Opus baseline | fails | fails: an "Alternative" section, no question | passes | passes | passes |
@@ -66,3 +69,11 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 Both Opus runs put their "Breaking changes" section above the template's `## Jira Link`; both Haiku runs put it
 under `## Changes Proposed`.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first row), graded by reading, and pass every check. r1
+asks the maintainer whether a type that reports `NONE` but is comparable at run time should stay valid as a key; that is
+the question check 2 asks for, and check 4's snippet now skips a question that asks what should be done, where it used
+to fail r1. An earlier re-run on `0d0fa5fa` put `**Breaking changes.**` on a paragraph of its own in both results, so
+the break sentence no longer opened the description and both failed check 1; r2 also stated the maintainer's two options
+without asking for the decision and failed check 2. Check 8 passes every committed result. The other rows stand for the
+trees they ran on.

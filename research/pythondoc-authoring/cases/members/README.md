@@ -33,6 +33,14 @@ Runs of 2026-10-31, graded by reading; both models at the default effort, two ru
 | --- | --- | --- | --- |
 | Baseline | passes | passes | 4 of 4 fail: `The iterator is single-pass.`, `Single-pass: a second iteration yields nothing.` |
 | 1.3.0 | passes | passes | passes |
+| 1.4.0 | passes | passes | passes |
 
 Checks 2 and 4 to 6 passed in every run of both arms. Every 1.3.0 run still says when the keys are copied, as the reason
 the cache may change during iteration.
+
+The 1.4.0 runs are of 2026-11-08, on the skill tree in `<model>/skill-tree`, and replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`; the 1.3.0 results remain in git history, in the parent of the commit that
+adds these runs. Every check passed in every 1.4.0 run, and every run still says when `keys()` copies the keys. The
+input has no specification, so the §1 scope rule had nothing to reach. The §3 rule reached
+`seconds_since_last_eviction()`: every run stated the result and the `None` case, and named `evict` only as the event it
+measures from, as 1.3.0 did. The rules added no noise. Cost per run: Opus $0.43 and $0.43, Sonnet $0.21 and $0.21.

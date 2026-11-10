@@ -8,7 +8,10 @@ demands an answer to every item can, and the form is short enough that the items
 
 1. Comments consistent with the code and with each other: the doc comment above changed code that nobody edited,
    the first sentence of an added or changed comment, the list a comment carries, the sibling that delegates with a
-   fixed argument, history narration.
+   fixed argument, history narration; the doc-comment skill's checklist over every added comment, a sentence a reader
+   has to parse twice, an inline comment that restates its callee, an added expression a reader would misread that
+   carries no comment, and a term the change coins: one that neither the field, nor the code, nor a definition in the
+   change gives a source.
 2. Every case the task statement, the commit message, and the test class comments claim, covered by a named test,
    including the test that separates the chosen design from its alternative, and every command the change adds or edits,
    or whose outcome depends on a configuration it creates, matched to a script or CI job that runs that exact form. In
@@ -55,9 +58,13 @@ report goes out.
 
 - [`test-authoring`](../test-authoring/) owns what a test establishes and how its failure reads; items 2, 3, and 5
   cite it.
-- [`javadoc-authoring`](../javadoc-authoring/) and its siblings own what a comment says; item 1 cites them.
-- The developer-style skill of the repository's language owns wording; the review labels wording findings taste
-  unless a sentence can be read wrongly.
+- The doc-comment skill of the change's programming language owns what a comment says, and item 1 cites it:
+  [`javadoc-authoring`](../javadoc-authoring/), [`godoc-authoring`](../godoc-authoring/),
+  [`rustdoc-authoring`](../rustdoc-authoring/), [`pythondoc-authoring`](../pythondoc-authoring/), or
+  [`jsdoc-authoring`](../jsdoc-authoring/).
+- The developer-style skill of the language the comments are written in owns wording (`english-developer-style` for
+  English); the review labels wording findings taste unless a sentence can be read wrongly, has to be parsed twice, or
+  uses a coined term.
 
 ## Install
 

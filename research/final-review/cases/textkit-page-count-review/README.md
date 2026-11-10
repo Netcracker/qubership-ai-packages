@@ -90,3 +90,31 @@ The committed text also says an out-of-scope hunk is not mentioned; check 1 test
 `cond-1` does not mention the typo; Opus `cond-2` and both Sonnet runs mention it in one clause, "needs no claim"
 (Sonnet `cond-1`, `result.md:34`). The case covers a typo in prose, `README.md`; a typo fixed in a comment of a source
 file, where a reviewer could read the hunk as a change to code, has no case.
+
+## Results of the `vocab` arm, 2026-11-08
+
+`vocab-<n>` ran final-review tree `ca8233fb` (`final-review` 1.3.0, from commit `814c1614` of the branch), whose item
+*Comments consistent with the code and with each other* adds the doc-comment checklist, the dense-sentence rule, the
+callee and uncommented-expression questions, and the term check. Opus and Sonnet, two runs each, graded by reading
+`result.md`.
+
+| Model | Arm | 1 typo | 2 commands | 3 once | 4 closing | 5 length | 6 test | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `vocab` | pass, pass | pass, pass | pass, pass | pass, pass | fail, fail | pass, pass | 835, 817 | 0.47, 0.54 |
+| Sonnet | `vocab` | pass, pass | pass, pass | pass, fail | partial, pass | fail, fail | pass, pass | 1048, 810 | 0.32, 0.15 |
+
+The change adds no comment, so the new rules have nothing to find here, and no run files anything under item 1: no
+term list, no dense-sentence finding, no callee finding. Opus answers the item in about 100 words, as `cond` did (97,
+103 against 117, 115), in one sentence on the rules: "The change adds no inline comment, no term and no member name
+except the test name" (`vocab-1`, `result.md:7`). Sonnet `vocab-1` walks the new questions as bullets with empty
+answers, "**Inline comments.** None were added." and "**Unexplained expression.** `(total + per_page - 1) // per_page`
+is the standard ceiling-division idiom. ... I report nothing" (`result.md:16-17`), and its item 1 grows to 167 words
+from 124 and 97 in `cond`. That is padding, not a finding.
+
+Against `cond`, Opus loses check 5: 835 and 817 words against 796 and 774. The extra words fall outside item 1: both
+runs ask for two boundaries in item 3, and `vocab-2` opens with a line of narration. Sonnet loses two grades. `vocab-2`
+repeats its request in the index, "Add a below-one-page total, e.g. (4, 5) → 1 or (1, 5) → 1" (`result.md:69`), after
+item 3 asked for the same (`result.md:37`). `vocab-1` ends on "and I did not run the test suite" (`result.md:78`), as
+`cond-2` did. Sonnet `vocab-2`, at 810 words, is the shortest Sonnet report of the case; `vocab-1` is longer than both
+`cond` runs. The typo is no finding in any run; Opus `vocab-2` and both Sonnet runs still mention it in one clause,
+"needs no claim" (Opus `vocab-2`, `result.md:17`).

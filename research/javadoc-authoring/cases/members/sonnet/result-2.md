@@ -6,24 +6,22 @@ import java.util.Map;
 import java.util.OptionalLong;
 
 /**
- * Holds byte-array values by string key and records when an entry was last evicted.
+ * Stores byte-array entries by string key and removes them only on an explicit {@link #evict}.
  *
  * <p>Instances are not thread-safe. Callers that share one across threads must synchronize
- * access themselves.
+ * access themselves.</p>
  */
 public final class EntryCache {
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
-    /**
-     * Largest value, in bytes, that {@link #put} accepts: 1 MiB ({@value #MAX_ENTRY_BYTES} bytes).
-     */
+    /** Largest entry, in bytes, that {@link #put} accepts: 1 MiB ({@value} bytes). */
     static final int MAX_ENTRY_BYTES = 1 << 20;
 
     private final String name;
     private final Map<String, byte[]> entries = new HashMap<>();
     private long evictedBytes;
 
-    /** {@link System#nanoTime()} reading taken at the last eviction, or 0 if nothing was evicted yet. */
+    /** {@link System#nanoTime()} reading taken at the last removal, or 0 if nothing was removed. */
     private long lastEvictionNanos;
 
     public EntryCache(String name) {
@@ -35,13 +33,14 @@ public final class EntryCache {
     }
 
     /**
-     * Stores {@code value} under {@code key}, replacing any previous value.
+     * Stores {@code value} under {@code key}, replacing any earlier entry for that key.
      *
-     * <p>The cache keeps a reference to {@code value} and does not copy it, so the caller must not
-     * modify the array afterwards.
+     * <p>The cache keeps the array itself and does not copy it, so changing the array
+     * afterwards changes the cached entry.</p>
      *
-     * @param value the bytes to store, at most 1 MiB (1048576 bytes) long
-     * @throws IllegalArgumentException if {@code value} is longer than 1 MiB (1048576 bytes)
+     * @throws IllegalArgumentException if {@code value} is longer than 1 MiB (1048576 bytes);
+     *         the cache is left unchanged
+     * @throws NullPointerException if {@code value} is {@code null}
      */
     public void put(String key, byte[] value) {
         if (value.length > MAX_ENTRY_BYTES) {
@@ -54,8 +53,8 @@ public final class EntryCache {
     /**
      * Removes the entry stored under {@code key}, if there is one.
      *
-     * <p>Only a call that removes an entry counts as an eviction for
-     * {@link #nanosSinceLastEviction()}. Evicting an absent key changes nothing.
+     * <p>Evicting a key that has no entry changes nothing, including the time that
+     * {@link #nanosSinceLastEviction()} reports.</p>
      */
     public void evict(String key) {
         byte[] removed = entries.remove(key);
@@ -66,9 +65,9 @@ public final class EntryCache {
     }
 
     /**
-     * Returns the time since the last eviction that removed an entry.
+     * Returns the nanoseconds elapsed since {@link #evict} last removed an entry.
      *
-     * @return the elapsed time in nanoseconds, or an empty value if no entry has been evicted yet
+     * @return the elapsed time in nanoseconds, or empty if no entry has been removed yet
      */
     public OptionalLong nanosSinceLastEviction() {
         if (lastEvictionNanos == 0) {

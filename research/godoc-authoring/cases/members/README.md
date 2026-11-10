@@ -34,7 +34,16 @@ Runs of 2026-10-31, graded by reading; both models at the default effort, two ru
 | Baseline | Opus r1, r2 fail: `Name returns the name passed to [New].` | passes | passes |
 | 1.3.0 draft | passes | passes | Sonnet r1, r2 fail: no word on the zero value |
 | 1.3.0 | passes | passes | passes |
+| 1.4.0 | passes | passes | passes |
 
 Checks 2 and 4 to 6 passed in every run. No run wrote an `implements` line, in either arm. A draft of 1.3.0 made the
 "ready to use" clause depend on the package having no constructor, and Sonnet then dropped the true sentence that the
 zero value is not ready; 1.3.0 keeps the sentence as it was. The draft runs are not committed.
+
+The 1.4.0 runs are of 2026-11-08, on the skill tree in `<model>/skill-tree`, and replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`; the 1.3.0 results remain in git history, in the parent of the commit that
+adds these runs. Every check passed in every 1.4.0 run. No run wrote an `implements` line, and every run said the zero
+value is not ready to use. The input has no specification, so the §1 scope rule had nothing to reach. The §3 rule
+reached `SinceLastEviction` and `Evict`: every run stated the result and linked the other method only for the eviction
+time it records or reads, as 1.3.0 did. The rules added no noise. Cost per run: Opus $0.45 and $0.44, Sonnet $0.21 and
+$0.21.

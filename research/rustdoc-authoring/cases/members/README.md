@@ -33,6 +33,15 @@ Runs of 2026-10-31, graded by reading; both models at the default effort, two ru
 | --- | --- | --- | --- |
 | Baseline | passes | passes | passes |
 | 1.3.0 | passes | passes | passes |
+| 1.4.0 | passes | passes | passes |
 
 Every check passed in every run of both arms: the baseline already wrote one line on `name()` and no `# Examples`. The
 case shows the 1.3.0 text does not drop the `# Panics` section a caller can trigger.
+
+The 1.4.0 runs are of 2026-11-08, on the skill tree in `<model>/skill-tree`, and replaced the 1.3.0 results in
+`<model>/result.md` and `<model>/result-2.md`; the 1.3.0 results remain in git history, in the parent of the commit that
+adds these runs. Every check passed in every 1.4.0 run: each wrote `Returns the cache's name.` on `name()`, a `# Panics`
+section on `put`, and no `# Examples`. The input has no specification, so the §1 scope rule had nothing to reach. The §3
+rule reached `since_last_eviction()`: every run stated the result and the `None` case, and linked `evict` only as the
+event it measures from, as 1.3.0 did. The rules added no noise; the comments are about as long as the 1.3.0 ones. Cost
+per run: Opus $0.49 and $0.48, Sonnet $0.24 and $0.24.

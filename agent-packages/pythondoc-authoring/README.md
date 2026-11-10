@@ -27,7 +27,10 @@ cross-reference syntax of its own, and offers three competing section dialects i
 - Doctest examples, which are executable tests hiding inside prose.
 - Comments a tool rather than a human reads (`# type: ignore`, `# noqa`, `# fmt: off`, `# pragma: no cover`),
   including the module docstring that silently un-silences a whole file for mypy.
-- How far a rewrite may grow, and how to compare two versions without being sold by the newer one.
+- Why a summary states the result rather than sending the reader to other members, and how to state the cases this
+  code computes a concept for without passing them off as the definition an outside specification gives.
+- How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, and how to compare two versions
+  without being sold by the newer one.
 - The extra rules for the docstring on a test, for packages, and for a docstring that ships as `--help` text or an
   OpenAPI description. The test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 

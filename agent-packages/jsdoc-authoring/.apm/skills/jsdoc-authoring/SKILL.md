@@ -71,6 +71,14 @@ the declared payload length minus the header documents its own layer rather than
 local rule at the lowest-level API, and the scenario at the layer where the scenario exists.** A guard found through one
 concrete call path does not thereby own that path's story.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification defines (a thenable, an
+HTTP header's grammar, TypeScript's assignability) and computes it for fewer cases than the specification allows, give
+the specification's definition or a `{@link}` to it, then state the cases this code computes it for as this code's
+scope. `A thenable is a Promise instance` folds a helper's choice to handle native promises only into the Promises/A+
+term, and a reader who knows that specification asks why the definition leaves out every other object or function with a
+`then` method. State the scope as a criterion that covers every case, not as a list of the cases it excludes (§4, *The
+membership rule, not the membership list*).
+
 **Sufficiency** scales with visibility: how much the comment may leave to the code beside it.
 
 | Where | What the comment must carry |
@@ -229,6 +237,12 @@ The rest of the summary rule:
   gives the test for telling a defined term from a coinage.
 - **No self-description.** Drop `This class is responsible for…`, `Helper that…`, `Utility for…`. Start with the verb.
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other members.** `Returns the length as {@link FrameReader.frameLength} computes it, as {@link
+  FrameReader.trimTo} keeps it` sends the reader to two other members to learn what this one returns, and it fails §1's
+  refactor test: inline `trimTo` and the sentence has to change. State the result. The rule holds for a non-exported,
+  `private`, or `#private` member too: §1's table lets its comment lean on the body beside it. It does not let the
+  comment give the names of the members the body calls instead of the result. Link another member only for a part of the
+  contract that it owns and this member passes through unchanged.
 - **A property or constant names its unit, not its type.** `Largest payload this stream accepts, in bytes.` The type is
   already in the signature; the unit never is. The reason the bound has that value is slot 3, however interesting it is;
   a comment that opens with the upstream implementation it mirrors leaves the index saying nothing about the constant.
@@ -675,6 +689,9 @@ longer, because every restructuring pass adds a sentence and none takes one away
 - **A summary that breaks §3 is itself the fact that pays for a rewrite.** The net-delta rule governs the body, not the
   first sentence. A four-paragraph summary with no `@remarks`, or one that opens `This function is a wrapper around X`,
   stays broken until someone rewrites it, and "I had no new fact to add" is not a reason to leave it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the change touches for its
+  distinctive words, and fix every copy in the same edit. A reviewer who found one copy will find the next, and a reply
+  that fixes only the line they pointed at costs them a second comment.
 - **Do not move code.** A comment edit that also renames a variable or reorders a statement cannot be verified as
   comment-only, and that verification makes a large sweep safe. In a checked `.js` file, editing a type tag is moving
   code (§3a).
@@ -835,6 +852,10 @@ has a condition, the item applies only under it.
   needs (§6)?
 - Does every term here have a definition outside this comment, and does every name match what the code calls the thing
   (`english-developer-style` §4a)?
+- Does the first sentence state the result, or does it send the reader to other members (§3)?
+- Where the declaration implements a concept a specification defines, does the comment state this code's scope as a
+  scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on, or leave a maintainer
   unable to see why a constraint is there? If not, delete it.
 - Would deleting the whole comment lose anything?
