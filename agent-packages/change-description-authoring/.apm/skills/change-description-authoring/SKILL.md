@@ -497,6 +497,28 @@ follow-up exists, name its number; where it does not, state what this change lea
 handling is outside this change`). `A separate pull request follows for that` is unfalsifiable when
 written and stale once the number exists.
 
+**Name the numbered rules a change implements or defers, where the repository asks for it.** Where
+the decision records number their rules and the repository asks a change to name them, end the
+commit message and the pull request description with these trailers, not under a heading, and omit
+an empty one:
+
+```text
+Implements: ADR-0012 R4, R7; ADR-0014 R2
+Defers: ADR-0012 R9 to #318; ADR-0015 R3 to #322
+```
+
+`Implements` lists the rules the change brings in fully. `Defers` lists each rule left wholly or in
+part to a later change, with the number of an existing issue or pull request. Where neither exists,
+ask the user to open an issue, and never write the next free number or a placeholder. Every deferred
+rule is also an intentional gap for the Scope slot. Where its change has no issue or pull request
+yet, say so there, and leave the rule out of the trailers. In a pull request with several commits,
+each commit carries the trailers for its own part, and the description carries them for the whole
+change. A squash that keeps only the title (GitHub's "pull request title", GitLab's default
+template) drops both copies (§4), so the Scope slot asks whoever merges, in one sentence, to paste
+the description's trailers into the body of the squash commit. A repository whose records have no
+numbered rules, or that has no records, gets no rule trailers and no rule numbers; where the change
+carries out a recorded decision, name the record in the Why or the What slot instead.
+
 **A question the issue or the review left open is answered, kept open, or left out.** Where the code,
 a test, or another source you verified answers it, give the answer and its evidence, and do not
 repeat the question as open. Where only a maintainer can answer it, as with whether a compatibility
@@ -602,7 +624,7 @@ merge commit under GitHub's "pull request title" setting from a squash, since bo
 
 | Shapes in the count | Model |
 | --- | --- |
-| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
+| `squash` only | Squash merge; a body of `* subject` bullets under one of them means the default setting or "title and commit details", no body at all, or a body of `Implements:` and `Defers:` trailers alone, means "pull request title", a body shaped like a description means "title and description", unless the pull request had one commit, whose message the first two settings copy as well |
 | `plain` only | Rebase and merge, or a repository pushed to directly; the shape is the same and the consequences are too. On GitLab, also a squash under the default template, which appends no number, and only a house rule tells that apart; without one, the default at the end of this section |
 | `squash` and `plain` both | Ambiguous: squash and rebase both allowed and chosen per pull request (below), or squash beside direct pushes; without a house rule, the default at the end of this section |
 | `merge` present | Merge commits are enabled; a `squash` or `plain` line beside them is another method also enabled, or a direct push |
@@ -615,7 +637,7 @@ count; `references/merge-model.md` has the lines.
 | Model | Subject of the permanent commit | Body of the permanent commit | Branch commits that survive |
 | --- | --- | --- | --- |
 | Squash, default message | For a single-commit pull request, that commit's subject, number appended; otherwise the title, number appended | That commit's body; otherwise the branch commit messages as a bulleted list | None, and every message lands as a bullet, `Fix lint` included |
-| Squash, "pull request title" | The pull request title, number appended | Nothing | None, and no message reaches `git log` |
+| Squash, "pull request title" | The pull request title, number appended | Nothing, except the rule trailers that whoever merges adds (§2, Scope) | None, and no branch message reaches `git log` |
 | Squash, "title and commit details" | The pull request title, number appended, for one commit or many | That commit's message for one commit; the branch commit messages as a bulleted list for several | None, and every message lands as a bullet, `Fix lint` included |
 | Squash, "title and description" | The pull request title, number appended | The description | None |
 | Merge commit | Each branch commit keeps its own; the merge commit's subject is `Merge pull request #n from …` under the default message, with the title as its body, and the title with the number appended under "pull request title" and "pull request title and description" | Each branch commit keeps its own; the merge commit's body is the description under "pull request title and description" and nothing under "pull request title" | Every one, behind a merge commit that a `--first-parent` reader sees instead |
@@ -630,7 +652,8 @@ commits, and the closing issues. The merging maintainer can edit the message bef
    a merge commit, that is every commit on the branch; under the default squash and under "title
    and commit details" it is the first, since the messages land as bullets; under "title and
    description" it is none, and the description takes the role; under "pull request title" it is
-   none, and the title is all that lands.
+   none, and the title is all that lands, apart from the rule trailers that whoever merges adds to
+   the squash message (§2, Scope).
 2. Under rebase and merge, and under merge commits, tidy the branch before review. A `Fix lint` or
    `Apply suggestion` commit lands on the default branch as a commit of its own, so squash it into
    the commit it corrects before the merge. Under the default squash the same commit lands as a
@@ -717,6 +740,7 @@ consumer decides whether it is worth writing.
 | `Cc: stable@vger.kernel.org # <ver>: <sha>: <subject>` | Kernel stable team; the sequence means `git cherry-pick <sha>` then this commit | R5 | Kernel only |
 | `Reported-by:` | Credit | R2 | Someone reported it |
 | `BREAKING CHANGE:`, or `!` after the type | release-please and semantic-release: major bump | R4, through the tool | The tool is present |
+| `Implements:`, `Defers:` | A check of the change against the repository's numbered rules | R1, R2 | The repository asks for them (§2, Scope) |
 | `Co-authored-by:` | Platform attribution | none of the five | Provenance requires it |
 | `Change-Id:`, `Signed-off-by:` | Gerrit; the DCO | none of the five | The workflow requires it |
 
@@ -897,7 +921,10 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   Is a question dropped only when it does not bear on this change (§2)?
 - Title: does it name the component and the observable change, within about 100 characters (§2)?
 - Scope: is every gap named as intentional, every follow-up by number, every stacked change by its
-  overlap and order (§2)?
+  overlap and order (§2)? Where the repository asks for rule trailers, do the commit message and the
+  description end with `Implements:` and `Defers:`, each `Defers` entry pointing at an existing issue
+  or pull request, and are they absent where the repository does not ask for them? Under a
+  title-only squash, does Scope ask to paste them (§2, §4)?
 - Changelog: category, observable change, symptom, reference, compatibility, in that order; breaking
   marked in place and first; CVE leading a Security entry (§2, §3)?
 - Merge model: read from the history; every commit that survives the merge written as a full body,
@@ -907,14 +934,15 @@ better for it, and a fact that vanished leaves no trace in the text that replace
   branch (§5)?
 - Open issue: where every commit says `See #n` and none says `Fixes #n`, does the description say in
   one sentence why the issue stays open (§4)?
-- Identifiers: does every issue, pull request, commit, and version number exist, or stand as a visible
-  placeholder (`english-developer-style` §7)? Does the first mention of a section of a repository
-  document carry its heading text (§5)? Links: does each first mention of a rendered section, code
-  outside the diff, a specification, or another project's documentation carry a link built from a
-  known pattern, at the merge-base commit for content the pull request leaves unchanged and at its
-  head for content it adds or changes, rebuilt after a push that changes it, never at a branch name,
-  none to text inside the diff, and in a commit body or under §4 rule 5 none to this repository's
-  code and the external ones only as a `Link:` trailer or a footnote (§5)?
+- Identifiers: does every issue, pull request, commit, rule, and version number exist, or, except for a
+  `Defers` target, stand as a visible placeholder (`english-developer-style` §7)? Does the first
+  mention of a section of a repository document carry its heading text (§5)? Links: does each first
+  mention of a rendered section, code outside the diff, a specification, or another project's
+  documentation carry a link built from a known pattern, at the merge-base commit for content the
+  pull request leaves unchanged and at its head for content it adds or changes, rebuilt after a push
+  that changes it, never at a branch name, none to text inside the diff, and in a commit body or
+  under §4 rule 5 none to this repository's code and the external ones only as a `Link:` trailer or
+  a footnote (§5)?
 - House style: prefix, limit, sign-off applied only where the workflow consumes them (§6)?
 - Nothing: no entry for noise, no empty section, no diff paraphrase, no predicted merge difficulty
   (§7)?

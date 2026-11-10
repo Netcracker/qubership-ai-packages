@@ -58,6 +58,10 @@ case tests.
 | [`pgjdbc-4388-contract-fix`](pgjdbc-4388-contract-fix/README.md) | pgjdbc#4388 description and diff | the old lines shown; a contract fix is not a break; no test narration |
 | [`pgjdbc-4412-comment-only`](pgjdbc-4412-comment-only/README.md) | pgjdbc#4412 description, commits, and diff | open, failing: a comment the diff rewrites is not quoted; the code it contradicted is kept |
 | [`pgjdbc-4420-test-sites`](pgjdbc-4420-test-sites/README.md) | pgjdbc#4420 description and diff | negative control: the pairing of tests to sites stays in a test-only change |
+| [`authz-agent-208-rule-lines`](authz-agent-208-rule-lines/README.md) | authz-agent#208 notes | rule trailers when no deferred rule has an issue: no `Defers:` trailer, no placeholder |
+| [`authz-agent-159-defers-targets`](authz-agent-159-defers-targets/README.md) | authz-agent#159 notes | rule trailers with existing `Defers` targets, and a rule without one |
+| [`authz-agent-159-squash-title`](authz-agent-159-squash-title/README.md) | authz-agent#159 notes | rule trailers under a squash that keeps only the title: the merging maintainer adds them |
+| [`authz-agent-208-prose-records`](authz-agent-208-prose-records/README.md) | authz-agent#208 notes | negative control: no rule trailers and no rule numbers where the records are prose |
 
 The five `pgjdbc-4466-*` cases share their input below "Repository facts" and differ in the merge model, so a check that
 passes in one and fails in another isolates the row of the model table. `pgjdbc-4466-detection-failed` also asks for
