@@ -243,6 +243,11 @@ by the tag, and render the general comment from the findings whose comments are 
 
 ### Write protocol
 
+Write each request body and JSON payload to a file with the agent's file-writing tool, or build the JSON with a script
+that serializes the strings, never through a shell heredoc or a quoted command-line argument. A finding's text carries
+backticks, `$`, and quotes: an unquoted heredoc runs the backticks as commands and expands the `$`, and the published
+comment loses its code spans.
+
 For every platform write:
 
 1. Reread the platform revision. If the head moved past `revision.head`, stop: the findings describe code that is gone,
