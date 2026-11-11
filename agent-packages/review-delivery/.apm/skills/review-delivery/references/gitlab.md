@@ -137,9 +137,6 @@ List and read the draft notes after creation. Draft Notes do not appear in the r
 publication, so use the Draft Notes endpoint. Return every created ID, response body, position, path, side, line, SHA,
 and API error to the main skill. Do not mutate anything else from this reference after a partial failure.
 
-A draft note has no URL until the draft is published, so a draft summary names the finding ids without links. In
-publish mode, create the summary note after the inline notes, and link each id to its note's URL.
-
 The user may delete draft notes before publishing the review. To render the summary again, list the draft notes, match
 each one that carries a finding, inline or a reply, to that finding by the tag at the start of its `note`, and replace
 the summary draft with the *Update* command above.

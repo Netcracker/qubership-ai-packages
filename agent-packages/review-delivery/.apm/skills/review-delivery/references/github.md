@@ -27,21 +27,12 @@ gh api --method POST repos/<owner>/<repo>/pulls/<number>/reviews --input /path/t
 `side: new` in the finding is `RIGHT`, `old` is `LEFT`. Use `start_line` only when the whole range is the smallest
 useful location.
 
-Leave out `event`, so the review is created `PENDING`, visible only to the publishing account. GitHub allows one pending
-review per account per pull request: list the reviews first (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`), and
-if a `PENDING` one exists, stop and report it rather than adding to it or deleting it.
-
-The comments get their URLs only once the review exists, so the first body leaves the finding ids under *Main problems*
-unlinked. Read the comments back (*Read-back*), take each one's `html_url`, and replace the body with the linked one
-(*Replace the body of a pending review*).
-
-- **Draft:** stop there. The user submits the review in the web UI.
-- **Publish:** submit it, with `event` set to `REQUEST_CHANGES` for `request_changes` and to `COMMENT` otherwise. Use
-  `APPROVE` only when the user asked to approve: an approval is the user's merge decision, not the review's.
-
-```shell
-gh api --method POST repos/<owner>/<repo>/pulls/<number>/reviews/<review-id>/events -f event=REQUEST_CHANGES
-```
+- **Draft:** leave out `event`. The review stays `PENDING`, visible only to the publishing account, until the user
+  submits it in the web UI. GitHub allows one pending review per account per pull request: list the reviews first
+  (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`), and if a `PENDING` one exists, stop and report it rather than
+  adding to it or deleting it.
+- **Publish:** set `event` to `REQUEST_CHANGES` for `request_changes`, and to `COMMENT` otherwise. Use `APPROVE` only when
+  the user asked to approve: an approval is the user's merge decision, not the review's.
 
 A comment on a line outside every hunk fails the whole request with HTTP 422 (`pull_request_review_thread.line`). Such a
 finding belongs in the body (`in_diff: false`); if the request still fails, move the finding the error names into the

@@ -208,8 +208,8 @@ All 3 findings of the previous round are fixed: [F6](<thread_url>), [F9](<thread
 
 **Main problems**
 
-1. The realm summary line is not pinned: joinReloadErrors builds it in map order, and its test matches only prefixes. [F35](<comment_url>), [F47](<comment_url>).
-2. The User-visible lines quote the intended texts, not the emitted ones: F40, F41 below.
+1. The realm summary line is not pinned: joinReloadErrors builds it in map order, and its test matches only prefixes (F35, F47).
+2. The User-visible lines quote the intended texts, not the emitted ones (F40, F41).
 
 **Not inline**
 
@@ -227,14 +227,15 @@ Problem: …
 - *Previous findings*: the earlier findings with `fix_accepted` share one sentence, with the ids linked to their
   threads; findings that sat in an earlier review body share one link to it. Every other status needs a reason, so
   each such finding gets its own line: `- [F6](<thread_url>): <status>; <reason>`.
-- *Main problems* as in the chat report, without the severity, each finding id linked to its inline comment (each
-  platform reference says when that URL exists) and a finding of *Not inline* written as `F40 below`. A class left
-  with one published finding is dropped, because that finding already stands on its own; a held finding, or one whose
-  comment the user deleted from a draft, is not published. Link only to comments that exist.
+- *Main problems*: one line per class, without the severity: the root cause, then the ids of its findings in
+  parentheses, as plain text, not links: each inline comment opens with its tag, so a reader finds it by the id. A
+  class left with one published finding is dropped, because that finding already stands on its own; a held finding, or
+  one whose comment the user deleted from a draft, is not published.
 - *Not inline*: the findings that cannot be placed inline, each in the *One finding* form, with the location and the
   reason after the tag, and nothing between them.
 
-Do not copy inline findings, their claims, or pointers such as "See inline comment".
+The general comment carries what the inline comments cannot: the findings that are not inline, and the causes that
+several inline findings share. Do not copy inline findings, their claims, or pointers such as "See inline comment".
 
 The user may delete inline comments from a draft before submitting it. When they ask for the general comment again,
 read the draft's comments back from the platform first (each platform reference says how), match each to its finding
@@ -253,8 +254,7 @@ For every platform write:
 4. On failure or an uncertain outcome, inspect before retrying; stop writing if ambiguity remains. Report limitations,
    such as a missing permission, and partial completion. Do not undo earlier writes. Delete created entries only with
    explicit cleanup authorization; never change review or note bodies that existed before. The one exception is the
-   general comment of the publishing account's unsubmitted review or draft, rewritten to add the links to its inline
-   comments or when the user asks for it again.
+   general comment of the publishing account's unsubmitted review or draft, rewritten when the user asks for it again.
 
 At the end, report what was written, the earlier findings accepted as fixed, and, separately, every thread state change
 the table above called for that was not performed, with the reason.
