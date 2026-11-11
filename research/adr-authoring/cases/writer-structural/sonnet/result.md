@@ -1,9 +1,9 @@
 ## Request 1
 
-### File: docs/adr/0012-token-packages-free-of-http-imports.md
+### File: docs/adr/0012-token-packages-free-of-http.md
 
 ````markdown
-# Keep packages under `internal/token/` free of imports of `internal/http/` and `net/http`
+# Keep the token packages free of imports of the HTTP server and of `net/http`
 
 ## Status
 
@@ -16,7 +16,7 @@ Proposed
 
 #### Participants and approvers
 
-Architect, @example-architect: approves R1 and decides O1 and O2.
+- Architect, @example-architect: approves R1 and R2.
 
 #### Related ADRs
 
@@ -25,122 +25,116 @@ None
 
 ## Context
 
-The service checks the token of each request before policy evaluation. The packages that parse and verify a token live
-under `internal/token/`. The HTTP server, its middleware, and its handlers live under `internal/http/`.
+`internal/token/` holds the packages that parse and verify a token: `internal/token/parse` and
+`internal/token/verify`. `internal/http/` holds the HTTP server, its middleware, and its handlers.
 
-The team plans a command-line tool, `tokencheck`, that verifies tokens offline and has to build without the HTTP server.
-It can import the token packages only if they bring neither the HTTP server nor `net/http` with them.
-
-The depguard rule `token-no-http` in `.golangci.yml` already reports both imports, and CI runs it.
+The team plans a command-line tool, `tokencheck`, that verifies tokens offline. It has to build without the HTTP
+server. The depguard rule `token-no-http` in `.golangci.yml` checks the imports of `internal/http/` and of `net/http`
+in `internal/token/`, and CI runs it on every pull request.
 
 ## Decision
 
-We will keep every package under `internal/token/` free of imports of `internal/http/` and of `net/http`.
+We will keep every package under `internal/token/` free of imports of packages under `internal/http/` and of
+`net/http`.
 
 ### Terms
 
-- **token package**: a Go package whose directory is `internal/token` or a directory beneath it, such as
-  `internal/token/parse` and `internal/token/verify`. The test files in that directory belong to the package.
-- **HTTP package**: a Go package whose import path is `net/http` or `example/token-gate/internal/http`, or lies beneath
-  either path. O1 asks whether the extent beneath `net/http` is right.
-- **imports**: a Go file imports a package when an import declaration in that file names the package's import path. A
-  package that the file reaches only through another package is not imported by it. O2 asks whether that extent is
-  right.
+- **token package**: a Go package whose directory is `internal/token/` or a subdirectory of it, such as
+  `internal/token/parse`.
+- **import**: an `import` declaration in a `.go` file of the importing package, a `_test.go` file included (O1).
+  Packages that the imported package imports in turn are not imports of the importing package (O3).
 
 ### Rules
 
 #### Imports of the token packages
 
-- **R1** (`token`). No Go file in a token package, `_test.go` files included, imports an HTTP package.
+- **R1** (`token`). No `.go` file of a token package imports `example/token-gate/internal/http` or a package beneath it.
+- **R2** (`token`). No `.go` file of a token package imports `net/http` (O2).
 
 ### Confirmation
 
-- **R1**: the depguard rule `token-no-http` in `.golangci.yml` reports an import of `internal/http/` or `net/http`, and
-  the golangci-lint step that CI runs on every pull request fails on the report.
-
-### Implementation notes
-
-Adds no requirement. Where a token package needs a concept that the HTTP layer also uses, such as a refusal reason,
-define the type in the token package and let `internal/http` map it to its own representation.
+- **R1**, **R2**: the depguard rule `token-no-http` in `.golangci.yml`, which golangci-lint runs in
+  `.github/workflows/ci.yml` on every pull request.
 
 ### Justification
 
-`tokencheck` has to build without the HTTP server. A package that imports `internal/http/` brings the server into that
-build, and a package that imports `net/http` brings in the HTTP stack that the server runs on (R1).
+`tokencheck` has to build without the HTTP server. A token package that imports a package under `internal/http/` puts
+the server into that build (R1). A token package that imports `net/http` puts the HTTP server code of the standard
+library into it (R2).
 
 ### Alternatives considered
 
-- **A1. Forbid only imports of `internal/http/` and allow `net/http` in the token packages.** Rejected by R1: `net/http`
-  still puts the HTTP stack into the `tokencheck` build.
+- **A1. Let a token package import a package under `internal/http/` for shared types, such as a status code.** Rejected
+  by R1: the import puts the server package into the build of `tokencheck`.
+- **A2. Let a token package import `net/http` for its types, such as `http.Header`.** Rejected by R2: the import puts
+  the HTTP server code of the standard library into the build of `tokencheck`.
 
 ## Consequences
 
 Negative:
 
-- A token package cannot use a `net/http` identifier, such as `http.StatusUnauthorized`, and has to define its own (R1).
+- A token package cannot use a type of `net/http` or of `internal/http/`, so the HTTP layer converts between those types
+  and the types of the token packages (R1, R2).
 
 ## Open points
 
-- **O1.** Does R1 reach `_test.go` files and the packages beneath `net/http`, such as `net/http/httptest`? R1 assumes
-  that it reaches both. The answers under consideration are: both, as R1 reads; non-test files only; `net/http` itself
-  only, with its subpackages allowed. @example-architect decides. The answer affects R1 and the matching in the
-  `token-no-http` rule.
-- **O2.** Does R1 reach a package that a token package imports only through another package? R1 assumes that it does
-  not, because depguard reports only the imports a file declares. The answers under consideration are: declared imports
-  only, as R1 reads; transitive imports as well, which needs a check other than depguard. @example-architect decides.
-  The answer affects R1.
+- **O1.** Do R1 and R2 cover `_test.go` files? The record assumes they do. The alternative is that they cover only the
+  files that go into a build. @example-architect decides. Affects R1, R2.
+- **O2.** Does R2 cover the packages beneath `net/http`, such as `net/http/httptest`? The record assumes it names only
+  `net/http`. The alternative is `net/http` and every package beneath it. @example-architect decides. Affects R2.
+- **O3.** Do R1 and R2 cover an indirect path, where a token package imports a package that imports `internal/http/` or
+  `net/http`? The record assumes they cover direct imports only. The alternative is direct and indirect imports.
+  @example-architect decides. Affects R1, R2.
 ````
 
 ### File: docs/adr/README.md
 
 ````markdown
-# Reading guide for the records
+# Reading the decision records
 
-The records in this directory govern the code under the paths in the table below. A change to that code ends its commit
-message and its pull request description with the trailers described under **Trailers**.
+Records with numbered rules govern the code under the paths in **Layers**. A change to that code ends its commit
+message and its pull request description with the trailers in **Trailers**.
 
 ## Layers
 
+A rule names its layer in parentheses, such as (`token`). A test beside its code belongs to the layer of that code.
+
 | Layer | Role | Paths |
 | --- | --- | --- |
-| `token` | Parsing and verifying a token | `internal/token/`, with the tests beside the code |
-| `http` | HTTP server, middleware, and handlers | `internal/http/`, with the tests beside the code |
+| `token` | Parsing and verifying a token | `internal/token/` |
+| `http` | The HTTP server, its middleware, and its handlers | `internal/http/` |
 | `entrypoint` | The service's entry point | `cmd/token-gate/` |
-| `build` | Dependencies, lint, and CI configuration | `go.mod`, `go.sum`, `.golangci.yml`, `.github/workflows/ci.yml` |
+| `build` | Module files, lint configuration, and CI | `go.mod`, `go.sum`, `.golangci.yml`, `.github/workflows/` |
 
-These paths belong to no layer: `docs/adr/` and `AGENTS.md`. A change that adds a file that neither a layer nor this
-list covers extends one of them.
+These paths belong to no layer: `docs/adr/` and `AGENTS.md`. A change that adds a file that neither the layers nor this
+list cover extends one of them.
 
-## Records that bind a change
+## Which records bind a change
 
-`Accepted` records bind a change. `Proposed`, `Superseded`, and `Rejected` records do not. Records 0001 to 0011 have no
-numbered rules, so a trailer cannot name them.
+`Accepted` records bind a change. `Proposed`, `Superseded`, and `Rejected` records do not.
 
-## What to read
+## Writing code under a record
 
 Before you change code in a layer, read **Terms**, **Rules**, **Confirmation**, and **Implementation notes** in each
-binding record whose rules name that layer. Where no rule states a requirement, the choice is yours.
+`Accepted` record that has a rule for that layer. Anything no rule states is your choice.
 
 ## Trailers
 
-End the commit message and the pull request description of every change to code in a layer with two trailers. They name
-the rules the change brings and, for each rule it leaves out, the change that will bring it:
+End the commit message and the pull request description of a change with these trailers:
 
 ```text
-Implements: ADR-0012 R1
-Defers: ADR-0012 R2 to #208
+Implements: ADR-0012 R1, R2
+Defers: ADR-0012 R2 to #<issue or pull request number>
 ```
 
-- Cite a rule with its record, as `ADR-0012 R1`.
-- A `Defers` target is an issue or a pull request that exists.
-- `Implements` claims every case of a rule. A change that brings only some cases of a rule names it under `Defers`.
-- A change that brings no rule and leaves none out, such as a refactoring, carries neither trailer.
-- A rule of a `Proposed` record may appear in the trailers.
+`Implements` names the rules the change brings. `Defers` names each rule the change leaves out, with an existing issue
+or pull request that will bring it. A change that brings only some cases of a rule names that rule under `Defers`. A
+change that brings no rule and leaves none out, such as a refactoring, carries neither trailer.
 
 ## Checking a change
 
-[Checking a change in the adr-authoring skill](<URL of the adr-authoring skill at the version this repository pins>)
-describes how a reviewer gives a verdict on each rule.
+**Checking a change** in the [adr-authoring skill](<URL of adr-authoring SKILL.md at the pinned version>) describes how
+a change is checked against the rules.
 ````
 
 ### File: AGENTS.md
@@ -150,35 +144,31 @@ describes how a reviewer gives a verdict on each rule.
 
 - Run `go test ./...` and `golangci-lint run` before you commit.
 - Write commit messages in Conventional Commits.
-- The records in `docs/adr/` govern the code under the paths that `docs/adr/README.md` maps to layers. Read that guide
-  before you change that code, and end the commit message and the pull request description with the `Implements:` and
-  `Defers:` trailers it describes.
+- The records in `docs/adr/` govern the code under the paths that `docs/adr/README.md` maps. Read that guide before you
+  change such code, and end the commit message and the pull request description with the `Implements:` and `Defers:`
+  trailers it describes.
 ````
 
 ### Message to the user
 
-I wrote ADR-0012 with status `Proposed`, because two open points are unanswered. Both are for @example-architect:
+I wrote ADR-0012 and, because the team agreed to it, a reading guide in `docs/adr/README.md` with a matching bullet in `AGENTS.md`. This change adds documents only. It brings no rule and defers none, so its commit message and pull request description carry no trailers.
 
-- **O1:** does R1 also cover `_test.go` files and subpackages of `net/http`, such as `net/http/httptest`? I assumed it does.
-- **O2:** does R1 cover imports that arrive only through another package? I assumed it does not, because depguard reports only the imports a file declares.
-
-I could not read `.golangci.yml`. I took "the `token-no-http` rule checks both" from your notes. Please check whether its matching agrees with O1. When the record is accepted, add the `Date` heading with the acceptance date.
-
-Because the team agreed to keep a reading guide, I added `docs/adr/README.md` and a bullet in `AGENTS.md` that points to it. The layer map in the guide is my reading of the repository layout. In particular, I put `go.mod`, `go.sum`, `.golangci.yml`, and the CI workflow into one `build` layer. Please correct it if the layers should be cut differently.
-
-Two questions:
-
-1. **Skill link.** The link to "Checking a change" in the guide is a visible placeholder. Which URL and pinned version of the `adr-authoring` skill should it point to? The repository does not use APM, so there is no committed copy to link.
-2. **Where `tokencheck` will live.** Which path will it have? Its files need a layer in the guide, or a new one.
-
-This change adds no code, so its commit and pull request description carry no `Implements:` or `Defers:` trailers.
+- **Status:** the record is `Proposed`. There is no Date heading yet. Add it with the acceptance date once @example-architect signs off and the three open points below are answered.
+- **Open points:** each has an assumption written into the record.
+  - O1: do the rules cover `_test.go` files? I assumed yes.
+  - O2: does R2 cover the packages beneath `net/http`, such as `net/http/httptest`? I assumed it names only `net/http`.
+  - O3: do the rules cover indirect imports? I assumed direct imports only.
+  - Please check these against the `token-no-http` configuration in `.golangci.yml`, which I could not see.
+- **Link in the guide:** the guide links to **Checking a change** in the `adr-authoring` skill, but the repository does not use APM and I don't know the URL. The link holds the placeholder `<URL of adr-authoring SKILL.md at the pinned version>`. What URL and version should it point to?
+- **Layers:** I mapped only the directories you described. If the repository has other code, such as the policy evaluation, a change to it is a guide error until one of the layers is extended. Which paths should that code map to?
+- **Existing records:** ADR-0001 to 0011 have no numbered rules. A check of a change lists them as unchecked.
 
 ## Request 2
 
-### File: docs/adr/0013-refuse-tokens-naming-alg-none.md
+### File: docs/adr/0013-refuse-tokens-with-algorithm-none.md
 
 ````markdown
-# Refuse a token whose header names the algorithm `none` with HTTP 401 and `TOKEN_ALG_NONE`
+# Refuse a token whose header names the algorithm `none`
 
 ## Status
 
@@ -191,90 +181,76 @@ Proposed
 
 #### Participants and approvers
 
-Security architect, @example-security-architect: approves R1 and R2 and decides O1 and O2.
+- Security architect, @example-security-architect: approves R1 and R2.
 
 #### Related ADRs
 
-- [ADR-0012: Keep packages under `internal/token/` free of imports of `internal/http/` and `net/http`](0012-token-packages-free-of-http-imports.md):
-  R1 keeps `net/http` out of `internal/token/verify`, so R1 here returns an error and R2 here maps it to the status.
+- [ADR-0012: Keep the token packages free of imports of the HTTP server and of `net/http`](0012-token-packages-free-of-http.md):
+  R2 keeps `net/http` out of `internal/token/verify`, so R1 of this record returns an error and R2 sets the status.
 <!-- markdownlint-enable MD001 -->
 
 ## Context
 
-The service checks the token of each request before policy evaluation. The header of a token names the algorithm that
-signed it. A header that names the algorithm `none` declares that the token carries no signature.
-
-The security review decided that such a token is refused. The check sits in `internal/token/verify`. No test covers it
-yet.
+A token whose header names the algorithm `none` carries no signature, so anyone can create one. The security review
+decided that the service refuses such a token. `internal/token/verify` verifies tokens, and `internal/http/` answers
+requests. No test covers the refusal yet.
 
 ## Decision
 
-We will refuse every token whose header names the algorithm `none`. `internal/token/verify` returns the reason code
-`TOKEN_ALG_NONE` for it, and the HTTP server answers the request with HTTP 401 and that reason code.
+We will refuse every token whose header names the algorithm `none`, with HTTP status 401 and the reason code
+`TOKEN_ALG_NONE`, and we will make the check in `internal/token/verify`.
 
 ### Terms
 
-- **header algorithm**: the value of the `alg` field in the header of a token. O2 asks which spellings of `none` count.
+- **none-algorithm token**: a token whose header names the algorithm `none`, written exactly so (O2).
+- **refuse**: `internal/token/verify` ends the verification of a token with an error, not with a verified token.
 
 ### Rules
 
-#### The check in the verify package
+#### Refusal of a none-algorithm token
 
-- **R1** (`token`). `internal/token/verify` returns an error that carries the reason code `TOKEN_ALG_NONE`, and no
-  verified token, for a token whose header algorithm is `none`, whatever else the token contains.
-
-#### The HTTP response
-
-- **R2** (`http`). The HTTP server responds with status 401 to a request whose token `internal/token/verify` rejected
-  with the reason code `TOKEN_ALG_NONE` (R1), and the response carries that reason code in
-  `<where a response carries its reason code>`.
-
-### Implementation notes
-
-Adds no requirement. `internal/token/verify` can expose the reason code through a sentinel error or an error type that
-the HTTP layer reads with `errors.Is` or `errors.As`, so that the token package needs no HTTP type (ADR-0012 R1).
+- **R1** (`token`). `internal/token/verify` refuses a none-algorithm token, whatever else the token contains, and the
+  error it returns carries the reason code `TOKEN_ALG_NONE` (O3).
+- **R2** (`http`). The HTTP server answers a request whose token `internal/token/verify` refuses under R1 with status
+  401 and the reason code `TOKEN_ALG_NONE` in `<place of the reason code in the response>` (O1).
 
 ### Justification
 
-A token whose header names `none` carries no signature, so no claim in it is backed by one (R1). The status code belongs
-to the HTTP server, because ADR-0012 R1 keeps `net/http` out of `internal/token/verify` (R2).
+A token with algorithm `none` proves nothing about who sent it. The check sits in `internal/token/verify`, so every
+caller of that package refuses such a token, whichever way the caller treats the error (R1). The status 401 tells the
+client that its credentials failed, and the reason code tells it and the logs why (R2).
 
 ### Alternatives considered
 
-- **A1. Write the HTTP 401 response from `internal/token/verify`.** Rejected by ADR-0012 R1: the package would have to
-  import `net/http`.
+- **A1. Check for the algorithm `none` in the HTTP middleware instead of in `internal/token/verify`.** Rejected by R1:
+  code that calls `internal/token/verify` without the middleware would accept the token.
 
 ## Consequences
 
 Negative:
 
-- No test covers R1 or R2 yet, so a change to `internal/token/verify` or to the HTTP server can break either rule
-  without failing CI.
-
-Follow-ups:
-
-- Add a test in `internal/token/verify` for R1 and a test in `internal/http` for R2, then add their names under
-  **Confirmation**.
+- No environment accepts an unsigned token, a test setup included (R1).
 
 ## Open points
 
-- **O1.** Where does an HTTP response carry its reason code, such as a body field or a header? R2 needs the value. The
-  answers under consideration are the convention that the service's other error responses already use, or a new field.
-  @example-security-architect decides. The answer affects R2.
-- **O2.** Which spellings of the header algorithm does R1 refuse? R1 assumes only the exact value `none`. The answers
-  under consideration are the exact value, as R1 reads, and every case variant, such as `None` and `NONE`.
-  @example-security-architect decides. The answer affects R1.
+- **O1.** Where does the reason code appear in the response of R2: a field of the response body, or a response header?
+  The rule holds a placeholder until it is settled. @example-security-architect decides. Affects R2.
+- **O2.** Does a header that names the algorithm in another case, such as `None` or `NONE`, make a none-algorithm token?
+  The record assumes only the exact name `none` does. The alternative is a case-insensitive match. The answer also
+  decides which reason code a token with `None` gets. @example-security-architect decides. Affects R1, R2.
+- **O3.** Does `TOKEN_ALG_NONE` win where a none-algorithm token also fails another check, such as an expired
+  timestamp? The record assumes it wins, because R1 holds whatever else the token contains. The alternative is that the
+  other failure's reason code wins. @example-security-architect decides. Affects R1, R2.
 ````
 
 ### Message to the user
 
-I wrote ADR-0013 with status `Proposed`, because two open points are unanswered. Both are for @example-security-architect:
+I wrote ADR-0013 as `Proposed`. The three open points block acceptance. There is no Date heading until it is accepted.
 
-- **O1:** where does an HTTP response carry its reason code, such as a body field or a header? R2 holds the visible placeholder `<where a response carries its reason code>`, because your notes do not say. If the service's other 401 responses already carry one, tell me where and I will fill it in.
-- **O2:** does R1 refuse only the exact value `none`, or case variants such as `None` and `NONE` as well? I wrote the exact value because your notes name only `none`. I recommend refusing every case variant. Libraries have historically accepted `None` and `NONE`, and an exact match would let those through this check.
-
-I split the decision into two rules because of ADR-0012 R1. `internal/token/verify` cannot import `net/http`, so R1 makes it return an error that carries `TOKEN_ALG_NONE`. R2 puts the HTTP 401 in the HTTP server. If you wanted the status code produced inside `verify`, that conflicts with ADR-0012 R1, and that record would need a superseding one.
-
-The record has no **Confirmation** section, because no test covers either rule yet. I listed the two tests as a follow-up. Do you want me to write them? I could not read `internal/token/verify`, so the record states the decision and does not confirm that the code already behaves this way.
-
-ADR-0012 stays as it is, and this record only cites it. This change adds no code, so its commit and pull request description carry no trailers.
+- **Two rules, two layers:** ADR-0012 R2 forbids `internal/token/verify` from importing `net/http`, so R1 (`token`) has `verify` return an error with the reason code, and R2 (`http`) has the HTTP server answer with 401. This reads "refused with HTTP 401" as an HTTP-layer outcome. If the 401 is meant to come from somewhere else, tell me and I'll change R2.
+- **O1:** where does the reason code appear in the response, in the body or in a header? R2 holds a visible placeholder until you answer.
+- **O2:** does `None` or `NONE` count as the algorithm `none`? I assumed only the exact name does.
+- **O3:** does `TOKEN_ALG_NONE` win where the token also fails another check? I assumed it wins.
+- **No Confirmation section:** no check exists, so the record leaves it out. I suggest two tests: one in `internal/token/verify` for R1, and one in `internal/http` for R2. Once they land, add their entries to **Confirmation**. An accepted record takes that edit.
+- **Trailers:** this change adds a document only, so it carries no trailers. The change that adds the tests will need `Implements:` or `Defers:` trailers for R1 and R2. A `Defers` target must be an existing issue, and I don't have one. If you want to defer either rule, open an issue for the missing test and give me its number.
+- **Dependency on ADR-0012:** the record cites ADR-0012 R2. If ADR-0012 changes before it is accepted, I'll update the link and the sentence that cites it.

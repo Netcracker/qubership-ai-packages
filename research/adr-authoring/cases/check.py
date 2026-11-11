@@ -420,6 +420,96 @@ def r2_no_confirmation_entry(text):
                   else 'no Confirmation entry')
 
 
+# writer-defect-and-guarantee
+
+def rule_lines(record):
+    return [' '.join(body.split()) for _, _, body in RULE_LINE.findall(record)]
+
+
+def no_rule_on(pattern, what):
+    def check(text):
+        found = next((ln for ln in rule_lines(record_of(text, 'Request 1', '0007')) if re.search(pattern, ln, re.I)),
+                     None)
+        return result(found is None, f'rule on {what}: {found[:100]}' if found else f'no rule on {what}')
+    check.__name__ = f'r1_no_rule_on_{what.replace(" ", "_")}'
+    return check
+
+
+def r1_record_0007(text):
+    recs = records(files(section(text, 'Request 1')), '0007')
+    return result(bool(recs), recs[0][0] if recs else 'no record 0007 in Request 1')
+
+
+def r1_bug_proposed(text):
+    msg = message(section(text, 'Request 1'))
+    ok = re.search(r'\bissue\b', msg, re.I) and re.search(r'\bbug\b', msg, re.I) and re.search(r'entrypoint', msg, re.I)
+    found = re.search(r'[^\n]*\bbug\b[^\n]*', msg, re.I)
+    return result(bool(ok), found.group(0).strip()[:110] if ok else 'no Bug issue for the entrypoint in the message')
+
+
+def r1_volumes_with_the_fix(text):
+    """A chart volume named in Request 1's message after its first mention of a bug, where the proposed issue starts."""
+    msg = message(section(text, 'Request 1'))
+    bug = re.search(r'\bbug\b', msg, re.I)
+    found = bug and re.search(r'[^\n]*(?:emptyDir|/etc/ssl/certs|ca-certificates)[^\n]*', msg[bug.start():])
+    return result(bool(found), found.group(0).strip()[:110] if found else
+                  ('no chart volume after the bug' if bug else 'no bug in the message'))
+
+
+FIX_WORD = r'(?:\bbug\b|\bfix\w*|restor\w*|\buntil\b|\btracked\b|\bremov\w*|\bdrop\w*|\bswitch\w*)'
+FIX_SUBJECT = r'(?:entrypoint|Dockerfile|\bCMD\b)'
+
+
+def r1_record_names_no_fix(text):
+    """A line of Request 1's record that names the entrypoint, `CMD`, or the Dockerfile with a bug, its fix, or its tracking."""
+    rec = record_of(text, 'Request 1', '0007')
+    found = re.search(rf'[^\n]*{FIX_SUBJECT}[^\n]*{FIX_WORD}[^\n]*|[^\n]*{FIX_WORD}[^\n]*{FIX_SUBJECT}[^\n]*', rec, re.I)
+    return result(found is None, f'the record names the fix: {found.group(0).strip()[:100]}' if found
+                  else 'the record names no issue and no fix')
+
+
+def r1_no_entrypoint_choice(text):
+    block = heading_block(record_of(text, 'Request 1', '0007'), 'Open points')
+    point = re.search(r'[^\n]*entrypoint[^\n]*', block, re.I)
+    if point:
+        return result(False, f'open point: {point.group(0).strip()[:100]}')
+    for sentence in re.split(r'(?<=[.!?])\s+|\n', message(section(text, 'Request 1'))):
+        if ('?' in sentence and re.search(r'entrypoint', sentence, re.I) and re.search(r'\bor\b', sentence)
+                and re.search(r'binary|\bCMD\b|\bkeep', sentence, re.I)):
+            return result(False, f'question: {sentence.strip()[:100]}')
+    return result(True, 'no open point and no question that offers the entrypoint as a choice')
+
+
+def r1_guarantee_as_fact(text):
+    rec = record_of(text, 'Request 1', '0007')
+    if '/tmp/cert' not in rec:
+        return result(True, 'the record does not name /tmp/cert')
+    context = heading_block(rec, 'Context')
+    found = re.search(r'[^\n]*/tmp/cert[^\n]*', context)
+    ok = found is not None and re.search(r'base image|platform-base|README|contract', context, re.I)
+    return result(bool(ok), found.group(0).strip()[:110] if ok else 'Context names no /tmp/cert with its source')
+
+
+def rule_with(request, *markers):
+    def check(text):
+        found = next((ln for ln in rule_lines(record_of(text, request, '0007')) if all(m in ln for m in markers)), None)
+        return result(found is not None, found[:110] if found else f'no rule with {" and ".join(markers)}')
+    check.__name__ = f'{request.lower().replace("request ", "r")}_rule_{markers[-1].lower().replace(" ", "_")}'
+    return check
+
+
+def no_defect(request):
+    """A sentence of the request's message that names a bug or calls something a defect, other than to deny one."""
+    def check(text):
+        for sentence in re.split(r'(?<=[.!?])\s+|\n', message(section(text, request))):
+            if (re.search(r'\bbug\b|\b(?:is|as) a defect\b', sentence, re.I)
+                    and not re.search(r'\b(?:no|not (?:treated )?(?:as )?a|neither a)\s+(?:bug|defect)', sentence, re.I)):
+                return result(False, f'defect named: {sentence.strip()[:100]}')
+        return result(True, 'no bug and no defect named')
+    check.__name__ = f'{request.lower().replace("request ", "r")}_no_defect'
+    return check
+
+
 # coder-trailers
 
 def fenced_after(text, heading):
@@ -496,6 +586,14 @@ CASES = {
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,
                                no_new_record_r2, no_guide_written],
     'writer-two-decisions': [r1_at_most_one_record, r1_split_proposed, r2_one_record, r2_no_split, no_guide_written],
+    'writer-defect-and-guarantee': [r1_record_0007, no_rule_on(r'entrypoint|\bCMD\b', 'the entrypoint'),
+                                    no_rule_on(r'/tmp/cert|private CA|CA certificate|trust store', 'the certificates'),
+                                    no_rule_on(r'emptyDir|/etc/ssl/certs|ca-certificates', 'the chart volumes'),
+                                    r1_bug_proposed, r1_volumes_with_the_fix, r1_no_entrypoint_choice,
+                                    r1_guarantee_as_fact, r1_record_names_no_fix,
+                                    rule_with('Request 2', '401', 'TOKEN_ALG_NONE'),
+                                    rule_with('Request 2', '401', 'TOKEN_ALG_SYMMETRIC'), no_defect('Request 2'),
+                                    rule_with('Request 3', 'TLS', '1.2'), no_defect('Request 3'), no_guide_written],
 }
 
 

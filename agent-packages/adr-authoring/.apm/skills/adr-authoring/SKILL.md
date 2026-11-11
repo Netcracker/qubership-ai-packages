@@ -34,6 +34,23 @@ feature or a liveness probe in a record about tokens, belongs in a record of its
 find it by its title. Where a request covers two decisions, propose the split to the user rather than writing the second
 record unasked.
 
+A rule records a decision: the answer to a question that has more than one reasonable answer, which an authority
+settles for this system. Sort each requirement before you write it as a rule:
+
+- **Decision**: it becomes a rule, also where the code does not meet it yet and where a dependency already provides it.
+- **Defect**: a contract, a convention, or an accepted record already settles the requirement for this system, and the
+  code departs from it with no recorded reason. An example is a Dockerfile that replaces the entrypoint that the
+  platform's images keep. Restoring the code is a fix, not a decision: it gets no rule, also where the input restates
+  the contract as a decision, unless this record replaces the accepted record that settles it, as a rewrite or a
+  superseding record does. Propose an issue to the user instead, with its type (such as Bug), a title, and the contract
+  the code departs from, or name the issue that already reports the departure. A requirement that only makes the fix
+  work, such as a volume the restored entrypoint writes to, goes into the same issue. The proposal goes into your
+  message to the user, and the record names neither the issue nor the fix.
+- **Guarantee of a dependency**: a library, a base image, or a platform promises it to code that follows its contract,
+  and no authority chose it for this system. An example is a base image whose entrypoint adds the certificates in a
+  directory to the trust store. The guarantee gets no rule, and code that does not follow the contract falls under
+  **Defect**. Where a rule or a reason depends on the guarantee, state it in **Context** as a fact, with its source.
+
 Reach for an ADR when a choice affects structure (for example a pattern such as microservices), a non-functional
 requirement (security, availability, fault tolerance), a dependency, a published interface or API, or a construction
 technique (a library, framework, or tool). A rough test: if the decision needed a meeting to settle, it is worth
@@ -282,7 +299,8 @@ Where the user's input leaves a value open that a rule needs, such as a count, a
 write a visible placeholder in the rule, such as `<retry count>`, and an open point that asks for it; never invent the
 value. Ask for an owner or an approver in the conversation instead.
 Where it leaves a question thin otherwise, make a reasonable assumption, write the rule as if it held, and add an open
-point that names the assumption. Do not write `Assumption:` inside a rule.
+point that names the assumption. Do not write `Assumption:` inside a rule. A question about a defect gets neither the
+rule nor the open point: propose its issue (**What belongs in an ADR**).
 
 ## Delivery stays out of the record
 
@@ -424,6 +442,11 @@ Turn the user's notes, meeting summary, or free-text description into the templa
 prose in the language of the repository's records, or in English where there are none. Preserve every link the user
 supplied. Default the status to `Proposed`. Where the user states that the decision is accepted and the record has no
 open point, set `Accepted`; where it has one, keep `Proposed` and tell the user which open points block acceptance.
+
+Where the input asks a question about a defect, or you would ask one, answer it as **What belongs in an ADR** says:
+name the contract the code departs from, and propose the issue. Do not ask the user to choose between the contract and
+the departure. Where the user says that the departure is deliberate, or asks for the rule after you name the defect,
+it is a decision, and it gets a rule.
 
 Before you publish a record, read each rule as a checker would, against **What belongs in an ADR**, **Form**, **One
 number, one check**, **Precedence**, **One home**, and **Every requirement is a rule**, across the whole set of related

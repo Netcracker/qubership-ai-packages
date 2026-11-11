@@ -60,3 +60,7 @@ trailer: they fail checks 1 and 2.
 
 Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record of
 `adr-authoring`, which the session of this case does not read, so the results above stand for it.
+
+Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Drafting from the user's input", which govern
+the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
+paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.

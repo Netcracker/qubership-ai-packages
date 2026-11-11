@@ -45,24 +45,23 @@ same tree, with `3` in place of `<retry count>`; it fails check 3, and checks 2 
 
 ## Results
 
-Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. Trees `6c8380e9`, `7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change",
-its steps 1 and 4 and its paragraph on cases, which this case does not read, so these results stand for them. All four
-results pass all eight checks. Each writes `docs/adr/0001-<slug>.md` with a `<retry count>` placeholder in the retry
-rules and an open point that asks for it, keeps the 5-second timeout, leaves the owner open and asks for one, and sets
-`Proposed`. None adds a guide or changes `AGENTS.md`, and each asks whether to add `docs/adr/README.md`, naming the
-`Implements:` and `Defers:` trailers it would commit the team to. Sonnet r2 also makes the owner an open point that
-affects no rule, where the skill asks for an owner in the conversation alone. `check.py` passes check 7 for Opus r1 on
-the wrong sentence; the question it should quote, "Would you like me to add a guide in `docs/adr/README.md`?", comes two
-sentences later.
+Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
+requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
+open point, and "Drafting from the user's input" says how such a question is answered. Every requirement of the notes is
+a decision, so the new passages have to stay quiet. All four results pass all eight checks by meaning. Each writes
+`docs/adr/0001-<slug>.md` with a `<retry count>` placeholder in the retry rules and an open point that asks for it,
+keeps the 5-second timeout, leaves the owner as a placeholder and asks for one, and sets `Proposed`. None adds a guide
+or changes `AGENTS.md`, and each asks whether to add `docs/adr/README.md`, naming the `Implements:` and `Defers:`
+trailers it would commit the team to. No result names a defect or proposes an issue. `check.py` fails check 7 for Sonnet
+r1 on the marker: its question, "Do you want me to add it, with that commitment?", comes two sentences after the
+trailers, past the window the check reads.
+
+The previous round, on tree `bf6c2035`, passed all eight checks too. The intermediate trees of this change, `89cbfb4e`
+to `1db689e3`, ran this case as well and passed by meaning; their results are not kept.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since, and the current
 checks grade them. Both keep the retry count as "TBD" with no rule, keep the owner as "TBD", and ask for both: by
 meaning that passes checks 3 and 6, though not by marker. Sonnet lists the retries under "Open items", which passes
 check 4 by meaning, and Opus has no open point for them. Both fail checks 7 and 8: no word about a guide, and `Accepted`
 as the status.
-
-Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
-asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
-named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
-for the tree.
