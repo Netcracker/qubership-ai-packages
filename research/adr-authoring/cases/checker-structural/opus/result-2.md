@@ -2,22 +2,38 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0012 R1 | Violates | `internal/token/verify/problem.go` makes the token package `internal/token/verify` import `example/token-gate/internal/http/problem`. That package is an HTTP package, even though it imports only `encoding/json`. |
-| ADR-0012 R2 | Not touched | `internal/token/verify` still does not import `net/http`, directly or through `internal/http/problem`. |
+| ADR-0012 R1 | Violates | `internal/token/verify/problem.go` adds an import of `example/token-gate/internal/http/problem`, which is an HTTP package. |
+| ADR-0012 R2 | Not touched | The change adds no import of `net/http`, and `internal/http/problem` imports only `encoding/json`. |
 
-Also named in the report:
+Not touched: 1 rule (ADR-0012 R2).
 
-- Not touched: 1 rule (ADR-0012 R2).
-- ADR-0012 names the depguard rule `token-no-http` in `.golangci.yml` as the check for R1 and R2. The golangci-lint result for this change is not available, so the R1 verdict rests on the import in the diff, not on the check.
-- No trailer errors, because the change carries no trailers.
-- No guide errors: the guide maps the only changed file, `internal/token/verify/problem.go`, to the `token` layer.
+Named apart:
+
+- The `token-no-http` depguard rule in `.golangci.yml` is the confirmation check for R1 and R2. Its CI result for this change isn't available, so the R1 verdict comes from reading the diff.
+- The change has no trailers, so it claims no rule and defers none.
 
 ## Change B
 
-This check walks no rules, so Change B has no rows. The change touches only the `http` layer, through `internal/http/middleware/scope.go`, and ADR-0012 has no rule tagged `http`. The new imports of `example/token-gate/internal/token/verify` and `net/http` sit in an HTTP package, and R1 and R2 cover only token packages. No token package changes.
+| Rule | Verdict | Reason |
+| --- | --- | --- |
 
-Also named in the report:
+The check walks no rule. The change touches only the `http` layer, and ADR-0012 has no rule tagged `http`. R1 and R2 cover imports made by token packages, and this change adds imports only in `internal/http/middleware`, which is an HTTP package. The imports of `example/token-gate/internal/token/verify` and `net/http` are not relations that either rule forbids.
 
-- Not touched: 2 rules (ADR-0012 R1, R2).
-- No trailer errors, because the change carries no trailers.
-- No guide errors: the guide maps the only changed file, `internal/http/middleware/scope.go`, to the `http` layer.
+Named apart:
+
+- The change has no trailers, so it claims no rule and defers none.
+
+## Change C
+
+| Rule | Verdict | Reason |
+| --- | --- | --- |
+| ADR-0012 R1 | Violates | `internal/token/verify/admin.go` adds an import of `example/token-gate/internal/http/admin`, which is an HTTP package. It's a new forbidden import, even though the package already broke R1. |
+| ADR-0012 R2 | Not touched | The change adds no import of `net/http`, and `internal/http/admin` imports only `encoding/json`. |
+
+Not touched: 1 rule (ADR-0012 R2).
+
+Named apart:
+
+- The import of `example/token-gate/internal/http/auth` in `internal/token/verify/session.go` already broke ADR-0012 R1 before this change. The change leaves it as it was, so it isn't judged here.
+- The `token-no-http` depguard rule in `.golangci.yml` is the confirmation check for R1 and R2. Its CI result for this change isn't available, so the R1 verdict comes from reading the diff.
+- The change has no trailers, so it claims no rule and defers none.

@@ -1,11 +1,11 @@
 # Task
 
-Check two pull requests against the repository's architecture decision records. Check each one on its own, as if the
-other did not exist.
+Check three pull requests against the repository's architecture decision records. Check each one on its own, as if
+the others did not exist.
 
-For each pull request, give a heading `## Change A` or `## Change B`, then a Markdown table with one row per rule that
-your check walks: the rule as `ADR-NNNN Rn`, its verdict, and one line of reason. After the table, list anything the
-report names apart from the verdicts.
+For each pull request, give a heading `## Change A`, `## Change B`, or `## Change C`, then a Markdown table with one row
+per rule that your check walks: the rule as `ADR-NNNN Rn`, its verdict, and one line of reason. After the table, list
+anything the report names apart from the verdicts.
 
 The facts below were checked against the code; treat every fact in them as verified, and add none that they do not
 carry.
@@ -17,7 +17,7 @@ carry.
 - `docs/adr/` holds the records. `docs/adr/README.md` is the reading guide: it maps the layer `token` to
   `internal/token/` and the layer `http` to `internal/http/`, lists `docs/adr/`, `.github/`, and `.golangci.yml` as
   belonging to no layer, and says that `Accepted` records bind a change.
-- CI runs golangci-lint on every pull request. Its result for these two changes is not available to you.
+- CI runs golangci-lint on every pull request. Its result for these changes is not available to you.
 
 ## The records
 
@@ -41,8 +41,8 @@ Confirmation:
 
 ## The changes
 
-Before either change, no token package imports an HTTP package or `net/http`, and `internal/http/middleware` imports
-`example/token-gate/internal/token/verify`.
+Before Change A and before Change B, no token package imports an HTTP package or `net/http`, and
+`internal/http/middleware` imports `example/token-gate/internal/token/verify`.
 
 Change A adds `internal/token/verify/problem.go`, which imports `example/token-gate/internal/http/problem` to build an
 RFC 9457 problem document for a refused token. `internal/http/problem` imports only `encoding/json`. Nothing else
@@ -51,3 +51,9 @@ changes. Its commit message and description carry no trailers.
 Change B adds `internal/http/middleware/scope.go`, which imports `example/token-gate/internal/token/verify` and
 `net/http` to refuse a request whose token lacks a scope. Nothing else changes. Its commit message and description carry
 no trailers.
+
+Change C starts from another state of the repository, in which `internal/token/verify/session.go` already imports
+`example/token-gate/internal/http/auth`, a violation older than the change. Change C adds
+`internal/token/verify/admin.go`, which imports `example/token-gate/internal/http/admin` to check an administrator's
+token. `internal/http/admin` imports only `encoding/json`. Nothing else changes. Its commit message and description
+carry no trailers.

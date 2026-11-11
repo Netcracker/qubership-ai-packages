@@ -2,16 +2,21 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Violates | A token with a `kid` and an `exp` that passed an hour ago is accepted, where R4 requires 401 and `TOKEN_EXPIRED`. Every answer to O1 refuses such a token. |
-| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` still gets 401 and `TOKEN_KID_MISSING`. |
+| ADR-0007 R4 | Violates | A token with a `kid` whose `exp` passed an hour ago is now accepted. Both answers to O1 (0 and 30 seconds) require a refusal with `TOKEN_EXPIRED`. |
+| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before `exp`, so a token with no `kid` is still refused with `TOKEN_KID_MISSING`. |
 
-Named apart from the verdicts: nothing.
+Named apart from the verdicts:
+
+- Trailers: none present, so there are no trailer errors.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Cannot tell | A token that expired 10 seconds ago is accepted. That fails R4 under the 0-second answer to O1 and meets it under the 30-second answer, and the security architect has not decided O1. A token that expired 40 seconds ago is refused with 401 and `TOKEN_EXPIRED`, which meets R4 under both answers. |
-| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` still gets 401 and `TOKEN_KID_MISSING`. |
+| ADR-0007 R4 | Cannot tell | A token whose `exp` passed 10 seconds ago is now accepted. That fails R4 if O1 is answered 0 seconds and meets it if O1 is answered 30 seconds. A token whose `exp` passed 40 seconds ago is still refused with `TOKEN_EXPIRED`, which meets R4 under both answers. |
+| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before `exp`, so a token with no `kid` is still refused with `TOKEN_KID_MISSING`. |
 
-Named apart from the verdicts: nothing.
+Named apart from the verdicts:
+
+- Open point ADR-0007 O1 (the security architect decides) sets the outcome of the 10-second case. R4 stays `Cannot tell` until O1 is answered.
+- Trailers: none present, so there are no trailer errors.

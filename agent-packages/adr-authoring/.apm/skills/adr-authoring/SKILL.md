@@ -345,9 +345,10 @@ message and the pull request description end with the trailers. It names the gui
 
 1. Read the two trailers in the pull request description. They are claims: `Implements` makes a rule touched, and
    `Defers` can make an untouched rule `Deferred`, but neither shows that the code meets a rule. An entry that names a
-   rule of a `Proposed` record counts for no verdict and is not an error, because code often lands before its record is
-   accepted. Any other entry that names no rule of a binding record counts for nothing in the steps that follow, and so
-   does a `Defers` target that is not an existing issue or pull request; the report lists each as a trailer error.
+   `Proposed` rule that binds nothing (step 4) counts for no verdict and is not an error, because code often lands
+   before its record is accepted; an entry that names a `Proposed` rule that binds the change counts like any other. Any
+   other entry that names no rule of a binding record counts for nothing in the steps that follow, and so does a
+   `Defers` target that is not an existing issue or pull request; the report lists each as a trailer error.
 2. Walk every rule of a binding record that sits in a layer the change touches, every other rule of a binding record
    that the change touches, named or not, and every rule of a binding record that the change names under `Defers`. A
    change touches a layer when it adds, changes, or removes a file that the guide maps to that layer. A changed file
@@ -376,15 +377,19 @@ message and the pull request description end with the trailers. It names the gui
 A case of a rule is one input or condition the rule describes, with the outcome the rule requires for it: a missing
 value and an invalid value of one field are two cases of one rule, and each member of a set a rule covers, such as each
 endpoint, is a case of its own. For a structural rule, each unit the invariant ranges over, such as each package or each
-project, is a case, and a change alters its outcome only where it adds or removes such a unit, or makes one that met the
-invariant fail it, or the reverse. A file added to a package that meets the invariant before and after the change alters
-no outcome of that package. Where the change alters the outcome of no unit, the rule is `Not touched`, unless the change
+project, is a case, and so is each relation the invariant forbids, such as an import of a forbidden package. A change
+alters an outcome where it adds or removes such a unit or such a relation, or makes a unit that met the invariant fail
+it, or the reverse, so a new forbidden import alters an outcome even in a package that failed the invariant before. A
+file that adds or removes no relation the invariant forbids, and leaves every unit meeting or failing the invariant as
+before, alters no outcome. Where the change alters no outcome of the rule, the rule is `Not touched`, unless the change
 names it under `Implements`. A case meets the rule only for every value of each setting and input the rule leaves free.
 A judged case whose outcome the repository does not show, such as a limit a proxy enforces, gets `Cannot tell`, and the
 report names what it could not see. A change touches a rule when it adds, changes, or removes code, configuration, or a
 file in a way that alters the outcome of a case the rule describes, under any of its readings and for any value of a
 setting or input, or when it names the rule under `Implements`. Without that name, a defect in unchanged code that the
-change only moves or calls does not touch the rule, and the report names it apart.
+change only moves or calls does not touch the rule, and the report names it apart. The report also names apart a case of
+a touched rule that failed before the change, that the change leaves as it was, and that is not judged, such as an older
+forbidden import in a package that gains a new one.
 
 Code that acts only in a case no rule describes touches no rule: that case is the implementer's choice. A word that
 could reach the case, as `expired` reaches a token inside a clock-skew allowance, gives the rule two readings.

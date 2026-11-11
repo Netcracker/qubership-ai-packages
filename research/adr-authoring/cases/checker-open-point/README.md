@@ -35,7 +35,7 @@ in Change B; it fails checks 1 and 2.
 
 ## Results
 
-Runs of 2026-11-11 on tree `7aeb0ec4`, graded by reading; both models at the default effort. "r1" and "r2" are
+Runs of 2026-11-11 on tree `025f4b62`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The input now carries a reading guide that makes `Proposed` records bind in this
 repository, which the skill otherwise does not, so the case also runs that switch. All four results pass all four
 checks: Change A gives ADR-0007 R4 `Violates`, since a token expired an hour ago passes under both answers O1 lists, and

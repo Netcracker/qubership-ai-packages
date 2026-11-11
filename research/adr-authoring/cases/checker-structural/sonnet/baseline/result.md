@@ -3,16 +3,25 @@
 | Rule | Verdict | Reason |
 | --- | --- | --- |
 | ADR-0012 R1 | Violated | `internal/token/verify/problem.go` is in a token package and imports `example/token-gate/internal/http/problem`, an HTTP package. |
-| ADR-0012 R2 | Satisfied | No token package imports `net/http`. `internal/http/problem` imports only `encoding/json`. |
+| ADR-0012 R2 | Satisfied | The new file imports `internal/http/problem` and no `net/http`. |
 
-- The golangci-lint result, including the depguard rule `token-no-http` that confirms R1 and R2, is not available to me. Both verdicts come from the imports.
+- The `token-no-http` depguard result from CI is not available. These verdicts come from the imports.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0012 R1 | Not applicable | R1 is scoped to the `token` layer. `internal/http/middleware/scope.go` is in the `http` layer. |
-| ADR-0012 R2 | Not applicable | R2 is scoped to the `token` layer. Importing `net/http` from the `http` layer is outside it. |
+| ADR-0012 R1 | Not applicable | The new file is in `internal/http/middleware`, an HTTP package, so no token package gains an import. Its import of `internal/token/verify` is not restricted. |
+| ADR-0012 R2 | Not applicable | The new file imports `net/http`, but it is not in a token package. |
 
-- The golangci-lint result, including the depguard rule `token-no-http`, is not available to me. Both verdicts come from the imports.
-- The import of `example/token-gate/internal/token/verify` runs from the HTTP layer to the token layer. ADR-0012 has no rule against that direction, and `internal/http/middleware` already imports it.
+- The `token-no-http` depguard result from CI is not available. These verdicts come from the imports.
+
+## Change C
+
+| Rule | Verdict | Reason |
+| --- | --- | --- |
+| ADR-0012 R1 | Violated | The new `internal/token/verify/admin.go` imports `example/token-gate/internal/http/admin`, an HTTP package. |
+| ADR-0012 R2 | Satisfied | The new file imports `internal/http/admin` and no `net/http`. |
+
+- `internal/token/verify/session.go` already imports `example/token-gate/internal/http/auth`, which breaks R1. That violation predates Change C and is not counted against it. The R1 verdict rests on `admin.go` alone.
+- The `token-no-http` depguard result from CI is not available. These verdicts come from the imports.

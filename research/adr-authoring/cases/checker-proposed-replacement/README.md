@@ -44,12 +44,13 @@ ADR-0020 R3 listed under "Trailer errors"; it fails check 5.
 
 ## Results
 
-Runs of 2026-11-11 on tree `7aeb0ec4`, graded by reading; both models at the default effort. "r1" and "r2" are
+Runs of 2026-11-11 on tree `025f4b62`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The guide in the input makes only `Accepted` records bind. All four results pass all five
 checks: ADR-0010 R7 gets `Violates`, ADR-0010 R9 gets `Deferred`, ADR-0020 R3 gets no verdict and the line `would
-violate ADR-0020 R3`, and the `Defers` entry for R3 counts for no verdict and is not listed as a trailer error. An
-earlier round on 2026-11-09 used an R9 about HTTP 5xx answers to a reload, which the change made impossible to reach; R9
-is now the load at startup, which the change leaves alone.
+violate ADR-0020 R3`, and the `Defers` entry for R3 counts for no verdict and is not listed as a trailer error. Opus r2
+words the advisory line as "ADR-0020 R3 would be violated", which fails check 4 on the marker while the meaning matches.
+An earlier round on 2026-11-09 used an R9 about HTTP 5xx answers to a reload, which the change made impossible to reach;
+R9 is now the load at startup, which the change leaves alone.
 
 The baselines ran on 2026-11-11 with `english-developer-style` alone, on the input with the guide. Both say "violated"
 for R7, which matches in meaning. For R9, Opus says "violated, pre-existing" and Sonnet "violated", which judge an

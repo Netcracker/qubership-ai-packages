@@ -2,19 +2,19 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Not touched | `internal/verify` still compares `exp` before it reads `kid`, so an expired token with no `kid` still gets 401 and `TOKEN_EXPIRED`. |
-| ADR-0007 R5 | Violates | A token with no `kid` now gets 401 and `TOKEN_KID_MISSING`, but a token whose `kid` names no loaded key still gets 401 and `TOKEN_INVALID`, where R5 requires `TOKEN_KID_UNKNOWN`. `Implements: ADR-0007 R5` claims every case of the rule. |
+| ADR-0007 R4 | Not touched | The change alters no outcome for an expired token, because `internal/verify` compares `exp` before it reads `kid`, so it still returns 401 `TOKEN_EXPIRED`. |
+| ADR-0007 R5 | Violates | `Implements` claims every case. A missing `kid` now gets 401 `TOKEN_KID_MISSING`, but a `kid` that names no loaded key still gets 401 `TOKEN_INVALID`, where the rule requires `TOKEN_KID_UNKNOWN`. |
 
-Named apart from the verdicts: nothing.
+Named apart from the verdicts: none.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Not touched | `internal/verify` still compares `exp` before it reads `kid`, so an expired token with no `kid` still gets 401 and `TOKEN_EXPIRED`. |
-| ADR-0007 R5 | Conforms | The change alters one case, a token with no `kid`, which now gets 401 and `TOKEN_KID_MISSING` as R5 requires. The rule is named under `Defers` and also touched, so it gets the verdict of a touched rule, with the deferral to #12 named here. |
+| ADR-0007 R4 | Not touched | The change alters no outcome for an expired token, because `internal/verify` compares `exp` before it reads `kid`, so it still returns 401 `TOKEN_EXPIRED`. |
+| ADR-0007 R5 | Conforms | The change alters one case, a missing `kid`, which now gets 401 `TOKEN_KID_MISSING` as the rule requires. |
 
 Named apart from the verdicts:
 
-- The case of a token whose `kid` names no loaded key still gets 401 and `TOKEN_INVALID`, where R5 requires `TOKEN_KID_UNKNOWN`. The change leaves this case as it was, so it is not judged. The change names it for #12 under `Defers`.
-- `Defers: ADR-0007 R5 to #12` is a valid trailer. R5 belongs to an `Accepted` record, and #12 is an open issue that tracks the rest of R5.
+- The change defers ADR-0007 R5 to #12, an open issue. The deferral is named beside the verdict, because the change also touches R5.
+- A token whose `kid` names no loaded key gets 401 `TOKEN_INVALID`, where R5 requires `TOKEN_KID_UNKNOWN`. This case failed before the change, the change leaves it as it was, and it is not judged. Issue #12 tracks it.

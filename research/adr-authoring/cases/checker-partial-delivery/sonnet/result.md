@@ -2,16 +2,19 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Not touched | An expired token still gets 401 `TOKEN_EXPIRED`, because `exp` is compared before `kid` is read, so no case outcome changes. |
-| ADR-0007 R5 | Violates | `Implements` claims every case. A token with no `kid` now gets 401 `TOKEN_KID_MISSING`, but a token whose `kid` names no loaded key still gets 401 `TOKEN_INVALID` where the rule requires `TOKEN_KID_UNKNOWN`. |
+| ADR-0007 R4 | Not touched | The change alters no outcome for a token whose `exp` has passed: `internal/verify` still compares `exp` before it reads `kid` and returns 401 `TOKEN_EXPIRED`. |
+| ADR-0007 R5 | Violates | `Implements: ADR-0007 R5` claims every case. A token whose `kid` names no loaded key still gets 401 `TOKEN_INVALID`, where R5 requires `TOKEN_KID_UNKNOWN`. The missing-`kid` case now meets the rule with 401 `TOKEN_KID_MISSING`. |
 
-Named apart from the verdicts: nothing. The trailer names a rule of an Accepted record, and the change touches no file outside `internal/verify/`.
+Named apart from the verdicts: nothing. The trailer names a rule of a binding record, and every changed file is under `internal/verify/`, which the guide maps to a layer.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Not touched | An expired token still gets 401 `TOKEN_EXPIRED`, because `exp` is compared before `kid` is read, so no case outcome changes. |
-| ADR-0007 R5 | Conforms | The one case the change alters, a token with no `kid`, now gets 401 `TOKEN_KID_MISSING` as required. The rule is named under `Defers ... to #12`, and the unaltered `kid`-unknown case still gets `TOKEN_INVALID`, which issue #12 tracks. |
+| ADR-0007 R4 | Not touched | The change alters no outcome for a token whose `exp` has passed: `internal/verify` still compares `exp` before it reads `kid` and returns 401 `TOKEN_EXPIRED`. |
+| ADR-0007 R5 | Conforms | The change alters one case: a token with no `kid` and an `exp` that has not passed now gets 401 `TOKEN_KID_MISSING`, as R5 requires. The rule is also named under `Defers`, so the deferral stands beside this verdict. |
 
-Named apart from the verdicts: nothing. Issue #12 is open, so the `Defers` target is valid, and the change touches no file outside `internal/verify/`.
+Named apart from the verdicts:
+
+- Deferral: `Defers: ADR-0007 R5 to #12` names an existing open issue that tracks the rest of R5, so it is not a trailer error.
+- Unjudged case of R5: a token whose `kid` names no loaded key gets 401 `TOKEN_INVALID` where R5 requires `TOKEN_KID_UNKNOWN`. This failed before the change, the change leaves it as it was, and it is not judged here. The deferral to #12 covers it.

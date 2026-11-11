@@ -129,6 +129,24 @@ def no_trailer_error(rule):
     return check
 
 
+def old_violation_named(title, marker):
+    def check(text):
+        body = section(text, title)
+        rows = '\n'.join(ln for ln in body.split('\n') if not ln.lstrip().startswith('|'))
+        found = re.search(r'[^\n]*(?:' + marker + r')[^\n]*', rows)
+        return result(found is not None, found.group(0).strip()[:110] if found else f'no word of the older violation in "{title}"')
+    check.__name__ = f'{title.lower().replace(" ", "_")}_names_the_older_violation'
+    return check
+
+
+def no_advisory_for(rule):
+    def check(text):
+        found = re.search(r'[^\n]*would violate[^\n]*' + re.escape(rule) + r'[^\n]*', text, re.I)
+        return result(found is None, f'advisory for a binding rule: {found.group(0).strip()[:100]}' if found else 'no advisory line')
+    check.__name__ = f'no_advisory_{rule.split()[0].lower().replace("-", "")}_{rule.split()[1].lower()}'
+    return check
+
+
 def files(text):
     return [(m.group(1).strip(), m.group(3)) for m in FILE.finditer(text)]
 
@@ -458,7 +476,16 @@ CASES = {
     'checker-structural': [verdict_is('Change A', 'ADR-0012 R1', 'violates'),
                            verdict_not_in('Change A', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms')),
                            verdict_not_in('Change B', 'ADR-0012 R1', ('violates', 'cannot tell', 'conforms')),
-                           verdict_not_in('Change B', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms'))],
+                           verdict_not_in('Change B', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms')),
+                           verdict_is('Change C', 'ADR-0012 R1', 'violates'),
+                           verdict_not_in('Change C', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms')),
+                           old_violation_named('Change C', r'internal/http/auth|session\.go')],
+    'checker-proposed-binding': [verdict_is('Change A', 'ADR-0007 R5', 'violates'),
+                                 verdict_is('Change B', 'ADR-0007 R5', 'conforms'),
+                                 deferral_named('Change B', r'[^\n]*(?:#12|[Dd]efer)[^\n]*'),
+                                 verdict_not_in('Change A', 'ADR-0007 R4', ('violates', 'cannot tell', 'conforms')),
+                                 verdict_not_in('Change B', 'ADR-0007 R4', ('violates', 'cannot tell', 'conforms')),
+                                 no_advisory_for('ADR-0007 R5')],
     'writer-vague-notes': [record_0001, guide_not_added, retry_placeholder, retry_open_point, timeout_kept,
                            owner_not_invented, guide_asked, status_proposed],
     'writer-structural': [r1_record_0012, r1_metadata_from_repository, r1_rules_from_template, r1_structural_tag,

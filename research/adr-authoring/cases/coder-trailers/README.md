@@ -46,13 +46,13 @@ description of Change 2; it fails check 3.
 ## Results
 
 Runs of 2026-11-11 on tree `bf6c2035` of `adr-authoring` and the `change-description-authoring` of `main`, graded by
-reading; both models at the default effort. "r1" and "r2" are `result.md` and `result-2.md`. Trees `6c8380e9` and
-`7aeb0ec4` change only "Checking a change", its step 4 and its paragraph on cases, which this case does not read, so
-these results stand for them. All four results pass all three checks. Each ends the commit message and the description
-of Change 1 with one trailer paragraph, `Defers: ADR-0007 R5 to #12`, and no other trailer, and says in the body or in
-its **Scope.** paragraph that the `TOKEN_KID_UNKNOWN` case waits for #12. None puts a rule trailer on Change 2. They
-mark the move from `TOKEN_INVALID` to `TOKEN_KID_MISSING` as breaking in different ways, which
-`change-description-authoring` decides and no check here reads.
+reading; both models at the default effort. "r1" and "r2" are `result.md` and `result-2.md`. Trees `6c8380e9`,
+`7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change", its steps 1 and 4 and its paragraph on cases,
+which this case does not read, so these results stand for them. All four results pass all three checks. Each ends the
+commit message and the description of Change 1 with one trailer paragraph, `Defers: ADR-0007 R5 to #12`, and no other
+trailer, and says in the body or in its **Scope.** paragraph that the `TOKEN_KID_UNKNOWN` case waits for #12. None puts
+a rule trailer on Change 2. They mark the move from `TOKEN_INVALID` to `TOKEN_KID_MISSING` as breaking in different
+ways, which `change-description-authoring` decides and no check here reads.
 
 The baselines ran on 2026-11-11 on `prompt-baseline.md`. Both state the partial delivery in prose ("This implements part
 of ADR-0007 R5, and #12 tracks the rest"; "See #12.") and end with a `BREAKING CHANGE:` footer, but carry no rule

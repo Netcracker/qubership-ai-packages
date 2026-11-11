@@ -43,7 +43,8 @@ that writes code goes into `.apm/instructions/`.
 | [`checker-partial-delivery`](checker-partial-delivery/README.md) | checker | `Implements` claims every case; a deferral leaves only the altered cases judged |
 | [`checker-open-point`](checker-open-point/README.md) | checker | a check deleted under an open point is `Violates`; an allowance the open point decides is `Cannot tell` |
 | [`checker-proposed-replacement`](checker-proposed-replacement/README.md) | checker | a `Proposed` record gets an advisory line and no verdict; an untouched deferred rule is `Deferred` |
-| [`checker-structural`](checker-structural/README.md) | checker | an import across a structural rule is `Violates`; an import in the other direction touches no rule |
+| [`checker-structural`](checker-structural/README.md) | checker | an import across a structural rule is `Violates`, also in a package that already failed it; an import in the other direction touches no rule |
+| [`checker-proposed-binding`](checker-proposed-binding/README.md) | checker | under a guide that makes `Proposed` records bind, an `Implements` entry for a `Proposed` rule counts |
 | [`writer-vague-notes`](writer-vague-notes/README.md) | writer | a placeholder and an open point for a value the notes leave open; the guide is asked about before it is added |
 | [`writer-structural`](writer-structural/README.md) | writer | a structural rule tagged with the code it constrains and its check named; records of another template; the guide and the paragraph for the agent that writes code |
 | [`writer-accepted-record`](writer-accepted-record/README.md) | writer | an added requirement goes into a new record; a broken link is fixed in place |

@@ -18,3 +18,10 @@ Named apart from the verdicts:
 | --- | --- | --- |
 | ADR-0012 R1 | Conforms | `internal/http/middleware/scope.go` imports a token package, which R1 allows. |
 | ADR-0012 R2 | Conforms | The token packages still import no `net/http`. |
+
+## Change C
+
+| Rule | Verdict | Reason |
+| --- | --- | --- |
+| ADR-0012 R1 | Violates | `internal/token/verify/admin.go` imports `example/token-gate/internal/http/admin`. |
+| ADR-0012 R2 | Conforms | The new file imports no `net/http`. |

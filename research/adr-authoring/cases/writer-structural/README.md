@@ -51,14 +51,14 @@ exist added to record 0013 and a guide rewritten in Request 2; it fails checks 9
 ## Results
 
 Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. Trees `6c8380e9` and `7aeb0ec4` change only "Checking a change", its step 4 and its
-paragraph on cases, which this case does not read, so these results stand for them. All four results pass all ten
-checks. Each writes ADR-0012 with the repository's `####` metadata inside its markdownlint comments, **Terms**, numbered
-structural rules tagged `token`, which its guide maps to `internal/token/`, and a **Confirmation** that names
-`token-no-http`. Each writes a guide with the layers, the paths that belong to no layer, the statuses that bind, what
-the agent that writes code reads, the trailers, and a link to "Checking a change", and adds to `AGENTS.md` a section or
-a bullet that names the guide and the trailers without copying a path. None asks whether to add the guide, since the
-request says the team agreed to it.
+`result.md` and `result-2.md`. Trees `6c8380e9`, `7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change",
+its steps 1 and 4 and its paragraph on cases, which this case does not read, so these results stand for them. All four
+results pass all ten checks. Each writes ADR-0012 with the repository's `####` metadata inside its markdownlint
+comments, **Terms**, numbered structural rules tagged `token`, which its guide maps to `internal/token/`, and a
+**Confirmation** that names `token-no-http`. Each writes a guide with the layers, the paths that belong to no layer, the
+statuses that bind, what the agent that writes code reads, the trailers, and a link to "Checking a change", and adds to
+`AGENTS.md` a section or a bullet that names the guide and the trailers without copying a path. None asks whether to add
+the guide, since the request says the team agreed to it.
 
 Sonnet r2 also adds R3 (`build`), that `.golangci.yml` defines the depguard rule, with no **Confirmation** entry; check
 4 reads only the import rules. In Request 2, all four split the decision into a `token` rule, that verification refuses

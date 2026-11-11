@@ -40,7 +40,7 @@ checks 1 and 2.
 
 ## Results
 
-Runs of 2026-11-11 on tree `7aeb0ec4`, graded by reading; both models at the default effort. "r1" and "r2" are
+Runs of 2026-11-11 on tree `025f4b62`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The input now carries a reading guide that maps `verify` and makes `Accepted` records
 bind: without one, the skill reads no trailers and gives no `Deferred`. All four results pass all five checks: Change A
 gives ADR-0007 R5 `Violates` because `Implements` claims the unknown-`kid` case the change leaves wrong, and Change B
