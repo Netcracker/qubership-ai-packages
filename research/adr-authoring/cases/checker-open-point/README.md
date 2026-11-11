@@ -7,7 +7,8 @@ other: `Cannot tell`. B is the noise input for the rule that `Violates` wins whe
 
 ## Skill parts
 
-- `SKILL.md`: "The reading guide" (the verdict table with readings and answers, the judging paragraph), "Open points"
+- `SKILL.md`: "Checking a change" (the verdict table with readings and answers, the judging paragraph), "The reading
+  guide" (a guide that makes `Proposed` records bind), "Open points"
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -34,13 +35,14 @@ in Change B; it fails checks 1 and 2.
 
 ## Results
 
-Runs of 2026-11-09 on tree `61999f9e` (the skill at a49f24d), graded by reading; both models at the default effort. "r1"
-and "r2" are `result.md` and `result-2.md`. All four results pass all four checks: Change A gives ADR-0007 R4
-`Violates`, since a token expired an hour ago passes under both answers O1 lists, and Change B gives it `Cannot tell`,
-since 30 seconds meets R4 under one answer and fails it under the other. Opus leaves R5 out of the walk; Sonnet lists it
-as `Not touched`. As in `checker-partial-delivery`, an earlier input left R4 and R5 without a precedence for a token
+Runs of 2026-11-11 on tree `7aeb0ec4`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The input now carries a reading guide that makes `Proposed` records bind in this
+repository, which the skill otherwise does not, so the case also runs that switch. All four results pass all four
+checks: Change A gives ADR-0007 R4 `Violates`, since a token expired an hour ago passes under both answers O1 lists, and
+Change B gives it `Cannot tell`, since 30 seconds meets R4 under one answer and fails it under the other. All four list
+R5 as `Not touched`. As in `checker-partial-delivery`, an earlier input left R4 and R5 without a precedence for a token
 with no `kid`; R4 now covers only a token that has one.
 
-The baselines ran the same day with `english-developer-style` alone. They say "fails" or "violated" for Change A and
-"undecided, waiting on O1" or "undecided, blocked on O1" for Change B. Both fail checks 1 and 2 on the words only: the
-meaning matches both expected verdicts.
+The baselines ran on 2026-11-11 with `english-developer-style` alone, on the input with the guide. They say "violated"
+for Change A, and "undecided (O1)" or "open, depends on O1" for Change B. Both fail checks 1 and 2 on the words only:
+the meaning matches both expected verdicts.

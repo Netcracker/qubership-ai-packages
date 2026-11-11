@@ -11,11 +11,15 @@ description: >-
 
 # Authoring an ADR
 
-An ADR has three readers. An approver decides whether the decision is right. A maintainer asks later why the code is
-this way. A checker, a person or an agent, holds a diff and has to reach a verdict on every requirement of the record.
+An ADR has four readers. An approver decides whether the decision is right. A maintainer asks later why the code is
+this way. An agent that writes code under the record needs to know what the code must do and how to tell that it does.
+A checker, a person or an agent, holds a diff and has to reach a verdict on every requirement of the record.
 
-The format serves the checker without costing the other two much: requirements are numbered rules with a defined
-vocabulary, and the reasons stay in the record.
+The format serves the agent that writes code and the checker without costing the other two much: requirements are
+numbered rules with a defined vocabulary, each rule names the check that confirms it where one exists, and the reasons
+stay in the record. The agent that writes code reads **Terms**, **Rules**, **Confirmation**, and **Implementation
+notes**, and anything no rule states is its choice. It works on code, not on a record, so this skill never loads for
+it; the repository's guide and the instruction that points at the guide carry what it needs (**The reading guide**).
 
 ## What belongs in an ADR
 
@@ -37,23 +41,29 @@ recording.
 
 ## Local conventions
 
-- **Location**: follow the directory, the filename pattern, the metadata, the heading levels, and the language the
-  repository's records already use. In a repository with no records, use `docs/adr/`,
-  `0001-tool-for-password-management.md`, and the template below. Pick the next free number by scanning the existing
-  files. ADRs are public unless an exception is approved.
+- **Location and metadata**: from the repository's records, take the directory, the filename pattern, the numbering, and
+  the language, and copy their metadata block as they write it: its fields, its heading levels, and any markdownlint
+  comments around them. Take every other section from the template below, even where the existing records lack it. In a
+  repository with no records, use `docs/adr/`, `0001-tool-for-password-management.md`, and the whole template. Pick the
+  next free number by scanning the existing files. ADRs are public unless an exception is approved.
 - **Record numbers**: a retired record number is never reused. Where documents outside the repository cite a retired
   number, the record that takes over maps it to the new number in its Context, because a merge can drop the pull request
   description.
 - **Status**: one of `Proposed`, `Accepted`, `Rejected`, `Superseded`. A new record starts as `Proposed`. Set `Accepted`
-  only once the team has signed off and **Open points** is empty.
-- **Date**: ISO 8601 (`2025-02-16`), and only the date the decision was accepted. On acceptance, add `### Date` with
-  that date after the status line.
+  only once the team has signed off and **Open points** is empty. A proposal the team declines merges with the status
+  `Rejected`: it binds nothing and records why, so that the question is not reopened without new facts. Where an
+  accepted record chose another option, the declined one goes under that record's **Alternatives considered** instead.
+  Where the team wants to forbid an option, write an `Accepted` record, such as "We will not use X", with a rule a
+  checker can apply.
+- **Date**: ISO 8601 (`2025-02-16`), and only the date the decision was accepted. On acceptance, add the Date heading
+  with that date after the status line, at the level of the other metadata headings.
 - **Immutability**: an accepted ADR is final once it merges. To change a decision, write a new ADR rather than editing
   the old one. The new record links the old one under **Related ADRs** at once, and the old record links back when the
   new one is accepted. A requirement added to an accepted record goes into a new record the same way; tell the user that
-  the accepted record stays as it is. An accepted record takes these edits and no other: `### Date` on acceptance, the
-  status `Superseded` when a later record replaces it whole, a line under **Related ADRs** that names a later record and
-  what it replaces or adds, and an editorial fix that changes no rule, such as a broken link.
+  the accepted record stays as it is. An accepted record takes these edits and no other: the Date heading on acceptance,
+  the status `Superseded` when a later record replaces it whole, a line under **Related ADRs** that names a later record
+  and what it replaces or adds, an addition to or a correction of **Confirmation** or **Implementation notes**, and an
+  editorial fix that changes no rule, such as a broken link.
 - **Superseding a whole record**: when the new record is accepted, set the old record's status to `Superseded`, and
   name the reason in the new record's **Consequences**.
 - **Superseding part of a record**: the old record stays `Accepted`. The new record names what it replaces under
@@ -62,7 +72,7 @@ recording.
 
 ## Template
 
-Fill this structure.
+Fill this structure. `references/structural-invariant.md` is a whole record written in it, with structural rules.
 
 ```markdown
 # <The decision, stated as a sentence a reader can act on>
@@ -106,6 +116,14 @@ Fill this structure.
 - **R1** (`<layer>`). <One requirement.>
 - **R2** (`<layer>`). <One requirement.>
 
+### Confirmation
+
+- **R1**: <The test, lint rule, or build check that shows the rule holds.>
+
+### Implementation notes
+
+Adds no requirement. <The recommended way to meet the rules, an example, the migration of existing code.>
+
 ### Justification
 
 <Why this decision won, with the rules each reason supports: "(R3, R4)".>
@@ -115,6 +133,10 @@ Fill this structure.
 - **A1. <The rejected design, named so that a reader recognizes it in code>.** Rejected by R3: <reason>.
 
 ## Consequences
+
+Positive:
+
+- <A gain this decision brings.>
 
 Negative:
 
@@ -129,18 +151,27 @@ Follow-ups:
 - **O1.** <The question, the answers under consideration, who decides it, and the rules it affects.>
 ```
 
-A record with nothing to say under **Related ADRs**, **Terms**, **Follow-ups**, or **Open points** leaves that heading
-out.
+A record with nothing to say under **Related ADRs**, **Terms**, **Confirmation**, **Implementation notes**,
+**Positive**, **Follow-ups**, or **Open points** leaves that heading out. A record leaves **Rules** out only where
+**Form** says so.
 
 ## Terms
 
 A checker fails first on a word with two possible extents. Define a term here when a rule depends on where it stops:
 which tokens, which addresses, which unit of work.
 
+- A term fixes only the extent of a word: which things, or which outcomes, it covers. What the system does with a member
+  is a rule. Where the extent is itself the decision, such as which algorithms count as a verified signature or which
+  key sources are trusted, state it as a rule, and let the term point at the rule by number.
 - Give each term one definition and one extent. A sentence such as "counts as X here" widens a term in one place, and
   the next reader misses it. Define a second term instead.
 - Define a boundary word by its members or by a test: "any host other than `a.svc` and `b.svc`", not "outside the
-  cluster".
+  cluster". List the members in the record only for a set that does not change: an accepted record takes no edit that
+  changes a rule, so each new member of a listed set takes a new record. For a set that is expected to change, such as
+  allowed hosts, libraries, or regions, define a named set by an identifier, such as `egress-allowlist`, and state, as
+  rules, what qualifies a member and who approves a new one. The members live in one file in the repository, and the
+  code refers to the identifier, so adding a member is one pull request that changes the file and the code that handles
+  it.
 - A term lives in the record that owns the concept. Another record that uses the word lists it under **Terms** with a
   pointer, such as "**provider**: as ADR-0091 defines it", and uses it unchanged.
 - Use one word per concept in the Rules, the Justification, and the Consequences, and give each outcome one wording:
@@ -153,8 +184,18 @@ which tokens, which addresses, which unit of work.
 
 A rule is one requirement that a checker can turn into a test with a definite result.
 
-- **Form**: state the trigger, the subject, and the observable result: an input and what happens to it, a number with a
-  unit, a named error, a value in a named setting. Name who or what acts.
+- **Form**: write each rule in the shape that fits its requirement.
+  - A behavior rule states the trigger, the subject, and the observable result: an input and what happens to it, a
+    number with a unit, a named error, a value in a named setting. Name who or what acts.
+  - A structural rule states an invariant over code, dependencies, or configuration, such as "no module under `core/`
+    depends on a module under `web/`", "a new module is written in Kotlin", or "`renovate.json` extends the
+    organization preset". Prefer an invariant that a machine checks, such as an architecture test, a linter, or the
+    build, and name that check under **Confirmation**. Without such a check, the rule still has to be checkable by
+    reading the diff, such as its imports or its build files.
+
+  A decision that constrains nothing a checker can see in the repository, such as how architecture reviews are run,
+  has no **Rules**, and a check reports its record as unchecked. A process decision that leaves a trace in the
+  repository, such as a configuration file, has rules about that trace.
 - **Contract, not mechanism**: a rule states what a component guarantees to its callers, not how a caller uses it
   today. Name the role, such as "policy evaluation", rather than the engine that fills it, such as OPA, unless the
   record is the one that chose the engine. An internal field layout or function name belongs in the code; a field of a
@@ -174,21 +215,36 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Exceptions**: an exception sits inside the rule it limits, or the rule points at it by number. A rule that reads as
   unconditional gets checked as unconditional.
 - **Precedence**: where two rules can apply to one case, one of them says which wins.
-- **Layer**: `(<layer>)` names the part of the system where the check runs, so read the code before you tag a rule. The
-  checker looks there first. Use the names of the repository's reading guide. Where the code does not exist yet, name
-  the component that will hold the check.
+- **Layer**: `(<layer>)` names the code the rule constrains, and the checker looks there first, so read the code before
+  you tag a rule. For a behavior rule, that is the component whose code produces the result; for a structural rule, it
+  is the code the invariant ranges over, build files included. A rule over the whole repository carries the tag of every
+  layer. Where the check runs belongs under **Confirmation**. Use the names of the repository's reading guide. Where the
+  code does not exist yet, name the component that will hold it.
 - **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
   rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
   belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
 - **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
   conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
-- **Every requirement is a rule**: nothing outside **Rules** may add a requirement. A reference such as "as ADR-0091
-  states" points at a rule that says it.
+- **Every requirement is a rule**: nothing outside **Rules** may add a requirement that a change can fail,
+  **Confirmation** and **Implementation notes** included. A reference such as "as ADR-0091 states" points at a rule that
+  says it.
 - **No position words**: "the addresses above" and "the check below" stop working when the text moves. Cite the rule.
 - **No pointer rules**: a rule that only says that another rule applies adds a number and no requirement.
 
 Reasons belong in the Justification. Keep a reason inside a rule only where it limits how the rule reads.
+
+## Confirmation and implementation notes
+
+**Confirmation** names, for each rule, the test, lint rule, or build check that shows the rule holds. Prefer a check a
+machine runs, and name it so that a reader can find it: the test, the linter rule, or the build task. The cases that a
+passing machine check covers need no judgment from the checker (**Checking a change**, step 3). A record usually comes
+before its code, so the section starts with the checks that exist and gains entries as checks land; an accepted record
+takes those additions (**Immutability**). A rule with no check yet has no entry.
+
+**Implementation notes** gives the agent that writes the code the recommended way to meet the rules, an example, and
+the migration of existing code. It opens with "Adds no requirement.", and a checker ignores it. A sentence there that a
+change could fail belongs in **Rules**.
 
 ## Justification and alternatives
 
@@ -203,10 +259,13 @@ number. Where the record reverses an earlier answer, say so in that alternative.
 
 ## Consequences
 
-- **Negative** carries every cost the decision accepts. It keeps a checker from reporting an accepted cost as a defect.
-  Where the decision changes an answer that existing callers get, name the case and the test that shows it. Where it
-  changes a default, a required setting, or what the system trusts, a rule states what an existing installation gets on
-  upgrade, and Negative cites it.
+**Positive** and **Negative** list only consequences a reader would not infer from the decision itself: "we chose
+PostgreSQL, so we have somewhere to store data" belongs in neither. Within that limit, Negative carries every cost the
+decision accepts.
+
+- **Negative** keeps a checker from reporting an accepted cost as a defect. Where the decision changes an answer that
+  existing callers get, name the case and the test that shows it. Where it changes a default, a required setting, or
+  what the system trusts, a rule states what an existing installation gets on upgrade, and Negative cites it.
 
 - **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
   requirement.
@@ -227,9 +286,10 @@ point that names the assumption. Do not write `Assumption:` inside a rule.
 ## Delivery stays out of the record
 
 A record states what the code must do, not when it arrives. Delivery state goes stale, and an accepted record takes only
-the edits that **Immutability** lists, so a change to code that a record with numbered rules governs declares delivery
-itself. Two trailers at the end of its commit message and of its pull request description name the rules it brings
-and, under `Defers`, the change that will bring each rule it leaves out:
+the edits that **Immutability** lists. So in a repository whose guide asks for the trailers (**The reading guide**), a
+change to code that a binding record governs declares delivery itself. Two trailers at the end of its commit message and
+of its pull request description name the rules it brings and, under `Defers`, the change that will bring each rule it
+leaves out:
 
 ```text
 Implements: ADR-0092 R6, R8; ADR-0091 R54
@@ -240,7 +300,8 @@ A `Defers` target is an issue or a pull request that exists. Where no change exi
 for the rule, and name it: a guessed number or a placeholder would stay in the merged commit. Without an issue, leave
 the rule out of the trailers, and say in the description which rules wait for a change that has no issue yet. In a pull
 request with several commits, each commit carries the trailers of its own part, and the description carries them for
-the whole change; a checker reads the description.
+the whole change; a checker reads the description. The trailers may also name a rule of a `Proposed` record about the
+code, because code often lands before its record is accepted.
 
 `Implements` claims every case of a rule. A change that brings only some of its cases names the rule under `Defers`,
 with the change that brings the rest. A change that brings no rule and leaves none out, such as a refactoring or a fix
@@ -248,31 +309,61 @@ that keeps every rule met, carries neither trailer.
 
 ## The reading guide
 
-A repository that uses numbered rules keeps a `README.md` beside its records, added by the change that adds its first
-record with numbered rules. Where the directory already has a `README.md`, add the guide as a section of it. Tell the
-user that you added it. The guide states how to read a record, the layers, each named by its role and mapped to the
-paths of its code, the two trailers, that anything no rule states is the implementer's choice, which statuses bind a
-change, and how to check a change. A change that adds code under no mapped path extends the map. Unless the repository
-decides otherwise, `Accepted` and `Proposed` records bind a change, and `Superseded` and `Rejected` records do not.
-Copy the steps, the table, and the three paragraphs after the table into the guide word for word, and name the version
-of this skill they come from, as the repository's `apm.yml` or lock file pins it, so that a reader can compare the
-guide with the skill:
+A repository that wants its changes checked against numbered rules keeps a guide in a `README.md` beside its records,
+or in a section of the `README.md` already there. The guide commits the team to a process: every change to code under
+the paths it maps ends its commit message and its pull request description with the trailers. Before you add a guide,
+ask the user, and name that commitment in the question, unless the user's request already agrees to it. Without a
+guide, records still carry numbered rules, and no change owes the trailers (**Checking a change** says how such a
+repository is checked).
+
+The guide holds the following, and no copy of this skill's procedure:
+
+- the layers, each named by its role and mapped to the paths of its code, and the paths that belong to no layer, such
+  as `docs/adr/`. A path belongs to no layer only while no rule constrains it: a file that a rule constrains, such as
+  `go.mod` under a rule about dependencies or a workflow under a rule about releases, belongs to a layer. A test
+  beside its code belongs to the layer of that code, and a separate test directory belongs to the layer it tests or to
+  no layer. A change that adds a file that neither the layers nor that list cover extends one of them;
+- which statuses bind a change: unless the repository decides otherwise, `Accepted` records bind a change, and
+  `Proposed`, `Superseded`, and `Rejected` records do not. Where the guide makes `Proposed` records bind, a `Proposed`
+  rule that replaces an accepted rule still binds nothing until its record is accepted, and the accepted rule governs
+  until then;
+- what the agent that writes code reads in the records that govern it, **Terms**, **Rules**, **Confirmation**, and
+  **Implementation notes**, and that anything no rule states is its choice;
+- the two trailers;
+- a link to **Checking a change** in this skill: to a copy that `apm install` deploys into the repository, such as
+  `.agents/skills/adr-authoring/SKILL.md`, or, where the repository does not commit deployed files, to the skill on
+  GitHub at the version the repository pins.
+
+The agent that writes code under a record never loads this skill, so the guide reaches it only through a file it reads.
+When you add the guide, add a short paragraph to the repository's agent instructions: to `AGENTS.md` where it is
+written by hand, or, where `apm compile` renders `AGENTS.md`, to an instructions file in the repository's own
+`.apm/instructions/`; then run `apm compile` and commit the files it renders. The paragraph says that the records
+govern code under the paths the guide maps, that the guide is read before that code changes, and that the commit
+message and the pull request description end with the trailers. It names the guide and does not copy its map.
+
+## Checking a change
 
 1. Read the two trailers in the pull request description. They are claims: `Implements` makes a rule touched, and
-   `Defers` can make an untouched rule `Deferred`, but neither shows that the code meets a rule. An entry that names no
-   rule of a binding record, or a `Defers` target that is not an existing issue or pull request, counts for nothing in
-   steps 2 and 3, and the report lists it as a trailer error.
+   `Defers` can make an untouched rule `Deferred`, but neither shows that the code meets a rule. An entry that names a
+   rule of a `Proposed` record counts for no verdict and is not an error, because code often lands before its record is
+   accepted. Any other entry that names no rule of a binding record counts for nothing in the steps that follow, and so
+   does a `Defers` target that is not an existing issue or pull request; the report lists each as a trailer error.
 2. Walk every rule of a binding record that sits in a layer the change touches, every other rule of a binding record
    that the change touches, named or not, and every rule of a binding record that the change names under `Defers`. A
-   change touches a layer when it adds, changes, or removes a file that the guide maps to that layer, and a changed file
-   under no mapped path is a guide error that the report lists. Skip a rule whose
-   own record names it as replaced under **Related ADRs**: that line, like the status `Superseded`, is added when the
-   replacement is accepted. A rule of a `Proposed` record that replaces an accepted rule binds nothing until its record
-   is accepted: the walk skips it, a trailer entry that names it counts for nothing, and the accepted rule governs until
-   then. A binding record without numbered rules is not walked, and the
-   report lists it as unchecked. A missing line of code shows in no diff, so this walk finds the rule a change forgot.
+   change touches a layer when it adds, changes, or removes a file that the guide maps to that layer. A changed file
+   that the guide neither maps to a layer nor lists as belonging to none is a guide error, and the report lists it.
+   Skip a rule whose own record names it as replaced under **Related ADRs**: that line, like the status `Superseded`,
+   is added when the replacement is accepted. A binding record without numbered rules is not walked, and the report
+   lists it as unchecked. A missing line of code shows in no diff, so this walk finds the rule a change forgot.
 3. Give each rule one verdict, and group the rows by root cause, because one defect can break several rules. Report
-   `Not touched` rules as a count.
+   `Not touched` rules as a count. Where the machine check that a rule's **Confirmation** names ran on the change and
+   passed, and the change leaves that check and its configuration as they were, the cases the check covers meet the
+   rule without further judgment, and the report names the check. The other cases of the rule are judged as usual, and
+   so is every case where the checker cannot see the result.
+4. Read each `Proposed` rule that binds nothing, because its record does not bind the change or because it replaces an
+   accepted rule, where the rule sits in a layer the change touches or the trailers name it, as if it bound the
+   change. For each such rule that the change would fail under every reading and every answer an open point lists, the
+   report adds the line `would violate ADR-NNNN Rn`, and gives the rule no verdict.
 
 | Verdict | Meaning |
 | --- | --- |
@@ -284,12 +375,16 @@ guide with the skill:
 
 A case of a rule is one input or condition the rule describes, with the outcome the rule requires for it: a missing
 value and an invalid value of one field are two cases of one rule, and each member of a set a rule covers, such as each
-endpoint, is a case of its own. A case meets the rule only for every value of each setting and input the rule leaves
-free. A judged case whose outcome the repository does not show, such as a limit a proxy enforces, gets `Cannot tell`,
-and the report names what it could not see. A change touches a rule when it adds, changes, or removes code,
-configuration, or a file in a way that alters the outcome of a case the rule describes, under any of its readings and
-for any value of a setting or input, or when it names the rule under `Implements`. Without that name, a defect in
-unchanged code that the change only moves or calls does not touch the rule, and the report names it apart.
+endpoint, is a case of its own. For a structural rule, each unit the invariant ranges over, such as each package or each
+project, is a case, and a change alters its outcome only where it adds or removes such a unit, or makes one that met the
+invariant fail it, or the reverse. A file added to a package that meets the invariant before and after the change alters
+no outcome of that package. Where the change alters the outcome of no unit, the rule is `Not touched`, unless the change
+names it under `Implements`. A case meets the rule only for every value of each setting and input the rule leaves free.
+A judged case whose outcome the repository does not show, such as a limit a proxy enforces, gets `Cannot tell`, and the
+report names what it could not see. A change touches a rule when it adds, changes, or removes code, configuration, or a
+file in a way that alters the outcome of a case the rule describes, under any of its readings and for any value of a
+setting or input, or when it names the rule under `Implements`. Without that name, a defect in unchanged code that the
+change only moves or calls does not touch the rule, and the report names it apart.
 
 Code that acts only in a case no rule describes touches no rule: that case is the implementer's choice. A word that
 could reach the case, as `expired` reaches a token inside a clock-skew allowance, gives the rule two readings.
@@ -300,11 +395,15 @@ any of its judged cases gets `Violates`, otherwise `Cannot tell` if any gets `Ca
 named under `Defers` that the change also touches gets the verdict of a touched rule, and the report names the deferral
 beside it.
 
+In a repository without a guide, `Accepted` records bind a change, the trailers count for nothing, and no file is a
+guide error: step 2 walks only the rules the change touches, and no rule is `Deferred`.
+
 ## Rewriting an existing record
 
 A `Proposed` record is rewritten in place. An accepted record is final once it merges, so its rewrite is a new
-`Proposed` record that supersedes the old one on acceptance, and the old record governs every change until then. Before
-rewriting accepted records, tell the user how many new records that makes, and ask whether to proceed.
+`Proposed` record that supersedes the old one on acceptance, and the old record governs every change until then (**The
+reading guide**, on which statuses bind). Before rewriting accepted records, tell the user how many new records that
+makes, and ask whether to proceed.
 
 A rewrite must keep every decision, and a lost fact leaves no trace in the new text. List the facts of the old record
 first, then mark each as present, restated, moved, or absent, and read the new text for what it adds. Ask the user once

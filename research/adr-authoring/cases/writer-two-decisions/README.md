@@ -37,11 +37,12 @@ choices are in one record, and there is no need to split them."; it fails check 
 
 ## Results
 
-Runs of 2026-11-09 on tree `61999f9e` (the skill at a49f24d), graded by reading; both models at the default effort. "r1"
-and "r2" are `result.md` and `result-2.md`. All four results pass all five checks: Request 1 writes ADR-0006 for the
-security architect's decision alone and offers ADR-0007 for the health endpoint, and Request 2 writes one record for the
-three choices and proposes no split. Sonnet r1 was run again the same day, because the first run's message referred to
-the address of the account that ran it; no result names an address.
+Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. Trees `6c8380e9` and `7aeb0ec4` change only "Checking a change", its step 4 and its
+paragraph on cases, which this case does not read, so these results stand for them. All four results pass all five
+checks: Request 1 writes ADR-0006 for the security architect's decision alone and offers ADR-0007 for the health
+endpoint, and Request 2 writes one record for the three choices and proposes no split. Sonnet r2's ADR-0006 points in
+its Consequences at "the message to the user" and at a record that does not exist yet. No result names an address.
 
-The baselines ran the same day with `english-developer-style` alone. Both write two records for Request 1 without asking
-("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.
+The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
+records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.

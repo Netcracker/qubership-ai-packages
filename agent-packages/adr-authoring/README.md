@@ -1,9 +1,11 @@
 # adr-authoring
 
-An APM package that helps agents write Architecture Decision Records that a person or
-an agent can check code against: one decision per record, a defined vocabulary, numbered
-rules that name the layer holding them, a `Proposed | Accepted | Rejected | Superseded`
-status, ISO 8601 dates, and immutable accepted records superseded by new ones. A record
+An APM package that helps agents write Architecture Decision Records that an agent can
+write code under and a person or an agent can check code against: one decision per record,
+a defined vocabulary, numbered behavior or structural rules that name the code they
+constrain and the check that confirms them, a `Proposed | Accepted | Rejected | Superseded`
+status, ISO 8601 dates, and accepted records that a new record supersedes rather than an
+edit, apart from their confirming checks and implementation notes. A record
 stays in the repository's existing directory, or in `docs/adr/` with a
 `NNNN-kebab-slug.md` filename where there is none.
 
@@ -13,7 +15,10 @@ stays in the repository's existing directory, or in `docs/adr/` with a
   `AGENTS.md` / `CLAUDE.md` by `apm compile`.
 - `.apm/skills/adr-authoring/SKILL.md` — the on-demand how-to: local conventions,
   the ADR template, how to write terms and numbered rules, the trailers a change
-  carries, and the reading guide with the verdicts of a check.
+  carries, the reading guide a repository keeps, and how to check a change, with
+  the verdicts of a check.
+- `.apm/skills/adr-authoring/references/structural-invariant.md` — a whole record
+  with structural rules, as an example of the template.
 
 ## Install
 

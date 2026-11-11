@@ -2,12 +2,15 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0010 R7 | Violated | A loaded key set stays in use until the process restarts, where R7 requires a reload on the first token that needs it after 5 minutes. |
-| ADR-0010 R9 | Violated, deferred to issue #301 | `internal/keys` loads a key set on the first token that needs it, not at startup. The code did this before the change too, and the change leaves it as it was. |
-| ADR-0020 R3 | Not in force | ADR-0020 has status Proposed, so R3 does not yet replace ADR-0010 R7. If ADR-0020 is accepted, the change also violates R3, because no token reloads a key set after 1 minute. |
+| ADR-0010 R7 | Violated | ADR-0010 is Accepted, so R7 binds. R7 requires a loaded key set to expire after 5 minutes and reload on the next token that needs it. The change deletes that expiry, so a key set now stays in use until the process restarts. |
+| ADR-0010 R9 | Violated, pre-existing | Before and after the change, `internal/keys` loads a key set on the first token that needs it, not at startup. The change neither causes this nor fixes it. |
 
-The `Defers:` line in the commit message and the description names ADR-0020 R3 and ADR-0010 R9. It does not name ADR-0010 R7. R7 is the accepted rule that the change breaks, so the change neither meets it nor defers it. Deferring ADR-0020 R3 to issue #300 covers a rule that is not in force yet, and R7 is still the rule that applies to this change.
+The report also names these points apart from the verdicts:
 
-Issues #300 and #301 are both open. `docs/adr/` has no `README.md`, so the repository doesn't document what the Proposed status means or whether a `Defers:` line is an accepted way to postpone a rule. This check reads Proposed with its usual ADR meaning: proposed, not yet accepted.
+- **The `Defers:` line doesn't mention ADR-0010 R7.** R7 is the only rule this change breaks. ADR-0020 says it replaces R7, but ADR-0020 is Proposed, and only Accepted records bind a change. R7 still binds at 5 minutes.
+- **Deferring ADR-0020 R3 to #300 has nothing to defer.** R3 is in a Proposed record, so it doesn't bind this change. It also wouldn't cover the change if it were Accepted. R3 still expires a key set, after 1 minute, and the change removes expiry entirely.
+- **Deferring ADR-0010 R9 to #301 leaves its verdict unchanged.** Issue #301 is open. The facts give a `Defers:` line no effect on a verdict, so R9 is still recorded as violated. The violation predates this change.
 
-The check walked every rule in both records.
+One rule was not walked:
+
+- **ADR-0020 R3:** ADR-0020 is Proposed. The reading guide says only Accepted records bind a change.

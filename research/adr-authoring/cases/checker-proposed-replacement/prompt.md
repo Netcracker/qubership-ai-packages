@@ -12,7 +12,9 @@ carry.
 ## Repository facts
 
 - Repository: example/token-gate, a Go service that checks the token of each request before policy evaluation.
-- `docs/adr/` holds the records. There is no `README.md` there. Issues #300 and #301 are open.
+- `docs/adr/` holds the records. `docs/adr/README.md` is the reading guide: it maps the layer `keys` to
+  `internal/keys/`, lists `docs/adr/` and `.github/` as belonging to no layer, and says that `Accepted` records bind a
+  change. Issues #300 and #301 are open.
 - `internal/keys` is the code that loads and holds the signing keys of each key source. Nothing else in the repository
   decides the outcome of the cases below.
 

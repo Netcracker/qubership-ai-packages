@@ -2,19 +2,23 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Violates | A token with a `kid` whose `exp` passed an hour ago is now accepted. R4 requires HTTP 401 with `TOKEN_EXPIRED`, and an hour is past both answers that O1 lists (0 seconds and 30 seconds). |
+| ADR-0007 R4 | Violates | After the change, a token with a `kid` whose `exp` passed an hour ago is accepted. R4 requires HTTP 401 and `TOKEN_EXPIRED` for that token under both answers O1 lists, 0 seconds and 30 seconds. |
+| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` gets HTTP 401 and `TOKEN_KID_MISSING` both before and after the change. |
 
-- **Not touched:** 1 rule (ADR-0007 R5). `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` is still refused with HTTP 401 and `TOKEN_KID_MISSING`.
-- **Guide error:** `docs/adr/` has no `README.md`, so no reading guide maps a path to the `verify` layer. The changed code in `internal/verify` is under no mapped path. As a result, only rules that the change touches were walked, not every rule in the layer.
-- **Trailer errors:** none. The commit message and the description carry no trailers.
+- `Not touched`: 1 rule (ADR-0007 R5).
+- Trailer errors: none, because the change carries no trailers.
+- Guide errors: none, because every changed file is under `internal/verify/`, which the guide maps to `verify`.
+- Unchecked records: none.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R4 | Cannot tell | A token with a `kid` whose `exp` passed 10 seconds ago is now accepted. This fails R4 if O1 is answered with 0 seconds and meets it if O1 is answered with 30 seconds. A token whose `exp` passed 40 seconds ago is still refused with HTTP 401 and `TOKEN_EXPIRED`, which meets R4 under both answers. |
+| ADR-0007 R4 | Cannot tell | A token with a `kid` whose `exp` passed 10 seconds ago is accepted. That meets R4 if O1 settles on 30 seconds and fails it if O1 settles on 0 seconds. The 40-second case meets R4 under both answers. |
+| ADR-0007 R5 | Not touched | `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` gets HTTP 401 and `TOKEN_KID_MISSING` both before and after the change. |
 
-- **Not touched:** 1 rule (ADR-0007 R5). `internal/verify` reads `kid` before it compares `exp`, so a token with no `kid` is still refused with HTTP 401 and `TOKEN_KID_MISSING`.
-- **Open point:** the verdict on R4 depends on ADR-0007 O1, which the security architect decides.
-- **Guide error:** `docs/adr/` has no `README.md`, so no reading guide maps a path to the `verify` layer. The changed code in `internal/verify` is under no mapped path. As a result, only rules that the change touches were walked, not every rule in the layer.
-- **Trailer errors:** none. The commit message and the description carry no trailers.
+- `Not touched`: 1 rule (ADR-0007 R5).
+- `Cannot tell` on ADR-0007 R4 depends on open point ADR-0007 O1, the allowance after `exp`, where the answers are 0 seconds or 30 seconds. The security architect decides it.
+- Trailer errors: none, because the change carries no trailers.
+- Guide errors: none, because every changed file is under `internal/verify/`, which the guide maps to `verify`.
+- Unchecked records: none.

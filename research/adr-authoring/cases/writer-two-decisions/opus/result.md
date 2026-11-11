@@ -3,7 +3,7 @@
 ### File: docs/adr/0006-verify-token-signatures-before-policy-evaluation.md
 
 ````markdown
-# Verify the signature of every request token before policy evaluation
+# Verify the signature of every token before policy evaluation
 
 ## Status
 
@@ -11,109 +11,106 @@ Proposed
 
 ### Owner
 
-`<owner account>`
+`<GitHub account of the owner>`
 
 ### Participants and approvers
 
-- Security architect, `<account>`: approves the decision.
+- Security architect, `<GitHub account>`: approves R1 and R2.
 
 ## Context
 
-The service checks the token of each request before policy evaluation. Policy evaluation reads the claims in that token.
-Until the service verifies the token's signature, anyone could have written those claims. The security architect
-decided that the service verifies every signature, and that it refuses a token whose signature does not verify.
+token-gate checks the token of each request before policy evaluation. Policy evaluation decides on the claims that a
+token carries. Anyone who sends a request can put any claims into a token. Only a signature that verifies shows that
+the holder of a signing key issued those claims.
 
 ## Decision
 
-We will verify the signature of every request token before policy evaluation. We will refuse a request token whose
-signature does not verify with HTTP 401 and the reason code `TOKEN_SIGNATURE_INVALID`.
+We will verify the signature of every token before policy evaluation. We will refuse a token whose signature does not
+verify with HTTP 401 and the reason code `TOKEN_SIGNATURE_INVALID`.
 
 ### Terms
 
-- **request token**: the token that the service reads from a request and checks before policy evaluation. A request
-  that carries no token has no request token.
-- **verifies**: a signature verifies when it is valid for the token's header and payload under a signing key that the
-  service trusts for that token. A token with no signature has a signature that does not verify. This includes a token
-  whose header names the algorithm `none`.
+- **token**: the token that token-gate checks for a request before policy evaluation.
+- **policy evaluation**: the step that decides from a token's claims whether token-gate admits the request.
+- **signature does not verify**: covers three kinds of token. The first is a token whose signature fails the check
+  against every key and algorithm that token-gate accepts for it (O2). The second is a token with no signature. The
+  third is a token whose header names the algorithm `none`.
 
 ### Rules
 
-#### Signature verification
+#### Order of checks
 
-- **R1** (`verify`). The service verifies the signature of every request token before policy evaluation receives the
-  request.
-- **R2** (`verify`, `server`). When the signature of a request token does not verify, the service responds with HTTP
-  401 and the reason code `TOKEN_SIGNATURE_INVALID`, and policy evaluation does not receive the request. This response
-  applies even when the request token also fails another check of the service.
+- **R1** (`verify`, `server`). token-gate verifies the signature of the token of every request before policy evaluation
+  receives the request.
+
+#### Refusal
+
+- **R2** (`verify`, `server`). When the signature of a token does not verify, token-gate responds to the request with
+  HTTP 401 and the reason code `TOKEN_SIGNATURE_INVALID` in `<response field for the reason code>`, and policy
+  evaluation does not receive the request.
+
+### Implementation notes
+
+Adds no requirement. Put the signature check in `internal/verify`. Have the handler chain in `internal/server` call
+the check before it calls policy evaluation, so that one place maps a failed check to the HTTP 401 response.
 
 ### Justification
 
-The claims of a request token are only as trustworthy as its signature. Policy evaluation that reads claims from an
-unverified token decides on input that an attacker controls (R1).
-
-HTTP 401 means that the request lacks valid authentication credentials. A token with an invalid signature
-authenticates no one. A reason code of its own lets clients and operators tell a forged or corrupted token apart from
-other refusals (R2).
-
-The other checks read claims that an invalid signature leaves unverified. A reason code from one of those checks would
-describe content that may be forged, so the signature failure takes precedence (R2).
+A token whose signature has not verified can carry claims that no key holder issued, so policy evaluation receives a
+request only after the signature check (R1). HTTP 401 tells the client that token-gate did not accept its credentials,
+and that a new token may succeed (R2). A reason code of its own lets a client or an operator tell a bad signature
+apart from other refusals without reading the logs (R2).
 
 ### Alternatives considered
 
-- **A1. Verify the signature after policy evaluation, or only when policy evaluation asks for it.** Rejected by R1:
-  policy evaluation would read the claims of a token that may be forged.
-- **A2. Respond with HTTP 403 to a token whose signature does not verify.** Rejected by R2: HTTP 403 states that the
-  client is authenticated and lacks permission.
-- **A3. Report the reason code of whichever check runs first.** Rejected by R2: a token that fails an earlier check,
-  such as expiry, would hide that its signature is invalid.
+- **A1. Pass the token to policy evaluation with a flag that marks its signature as unverified, and let the policy
+  refuse it.** Rejected by R2: policy evaluation receives the request.
+- **A2. Refuse a token whose signature does not verify with HTTP 403.** Rejected by R2: HTTP 403 means that the client
+  is known and lacks permission, and a token with a bad signature does not identify a client.
 
 ## Consequences
 
 Negative:
 
-- Every request token costs one signature verification, which adds CPU time to every request (R1).
-- Some clients may now receive HTTP 401 with `TOKEN_SIGNATURE_INVALID` for a request token that the service accepted
-  before this record. This applies to any request token whose signature does not verify. A test that sends a token
-  signed with a key the service does not trust shows the change (R2).
-- A request token that fails signature verification and another check gets only `TOKEN_SIGNATURE_INVALID`. The client
-  sees the other failure only once it sends a correctly signed token (R2).
+- A client that sends a token whose signature does not verify gets the response of R2, even where policy evaluation
+  would have allowed the request.
+- Every request with a token costs a signature check, including a request that policy evaluation would refuse anyway.
+
+Follow-ups:
+
+- Write a record that decides which keys and algorithms make a signature verify (O2).
 
 ## Open points
 
-- **O1.** Which signing keys the service trusts for a request token. The record assumes the keys that the `keys` layer
-  provides. The security architect decides between confirming that assumption and naming the trusted key sources in
-  this record or in another one. Affects the term **verifies**, and through it R1 and R2.
-- **O2.** Where the response carries the reason code. The record assumes the response field in which the service
-  already reports the reason code of a refused token. The security architect decides between confirming that field and
-  naming another one. Affects R2.
-- **O3.** Whether a signature that does not verify takes precedence over every other check of a request token. The
-  record assumes that it does. The security architect decides between confirming this precedence and naming checks
-  whose reason code wins over `TOKEN_SIGNATURE_INVALID`. Affects R2.
+- **O1.** Where the reason code goes in the response: a field of the JSON response body, such as `reason`, or a
+  response header. The security architect decides. Affects R2.
+- **O2.** Which keys and algorithms make a signature verify: a list in this record, or a separate record about key
+  handling that this record points at. The security architect decides. Affects R1 and R2.
+- **O3.** The definition of **signature does not verify** assumes that a token with no signature, or with the algorithm
+  `none`, gets `TOKEN_SIGNATURE_INVALID`. The other answer is a separate reason code for an unsigned token. The
+  security architect decides. Affects R2.
 ````
 
 ### Message to the user
 
-Your notes cover two decisions, and I wrote a record for only one of them. The security architect decided the token signature check. The platform team decided the `GET /healthz` liveness answer. The two decisions have different owners and change for different reasons. A liveness probe also has nothing to do with a record about tokens, so a reader looking for it would not find it there.
+I wrote ADR-0006 for the signature decision only. The `/healthz` decision comes from a different authority (the platform team) and changes for a different reason (Kubernetes liveness), so it belongs in its own record. A liveness rule in a record about tokens would also be hard for anyone to find later. I suggest ADR-0007, "Answer `GET /healthz` with HTTP 200 while the process runs". Do you want me to write it?
 
-I wrote `docs/adr/0006-verify-token-signatures-before-policy-evaluation.md` with status `Proposed`. Should I write the health check as its own record, `docs/adr/0007-answer-healthz-while-the-process-runs.md`, owned by the platform team?
+ADR-0006 stays `Proposed` until these questions are answered:
 
-For ADR-0006, I need:
+1. Who owns the record, and what is the security architect's GitHub account? There are placeholders for both.
+2. O1: where does the response carry the reason code? Is it a JSON body field, such as `reason`, or a header? If one of the records 0001 to 0005 already sets this, tell me which one and I'll cite it.
+3. O2: which keys and algorithms count as a valid signature? Should this record decide that, or a separate key-handling record?
+4. O3: should a token with no signature, or with `alg: none`, get `TOKEN_SIGNATURE_INVALID`? Or should it get its own code?
+5. Does token-gate verify signatures today? If it doesn't, some existing clients will get a different response. I'd add that case to **Negative**, along with the test that shows it.
 
-- **Owner and approver:** the GitHub account of the owner, and the account of the security architect who approves it.
-- **O1:** Does a signature have to verify against the keys that `internal/keys` provides, or against named key sources?
-- **O2:** In which response field does the reason code go?
-- **O3:** Should `TOKEN_SIGNATURE_INVALID` take precedence over every other refusal reason?
-
-The record stays `Proposed` until all three open points are settled.
-
-I didn't change `docs/adr/README.md`. The guide already maps both layers the record uses (`verify` and `server`).
+The notes didn't give the justification or the two alternatives. I wrote them myself, so please confirm or correct them. I didn't change `docs/adr/README.md`, because both rules fall in layers it already maps.
 
 ## Request 2
 
-### File: docs/adr/0006-take-signing-keys-from-the-jwks-of-trusted-key-sources.md
+### File: docs/adr/0006-take-signing-keys-from-trusted-jwks-and-require-kid.md
 
 ````markdown
-# Take signing keys from the JWKS of each trusted key source
+# Verify tokens with keys from the JWKS of trusted key sources, and refuse a token without `kid`
 
 ## Status
 
@@ -121,131 +118,141 @@ Proposed
 
 ### Owner
 
-`<owner account>`
+`<GitHub account of the owner>`
 
 ### Participants and approvers
 
-- Security architect, `<account>`: approves the decision.
+- Security architect, `<GitHub account>`: approves R1 to R5.
 
 ## Context
 
-The service verifies the signature of each request token with a signing key before policy evaluation. The security
-architect decided three things for token verification:
-
-- where the signing keys come from;
-- how long the service uses a loaded key set;
-- how the service treats a request token whose header names no key.
-
-All three change together when the key handling changes, so this record holds them as one decision.
+token-gate checks the token of each request before policy evaluation. Checking the signature of a token needs the
+public key that signed it. A key source publishes its signing keys as a JWKS (RFC 7517), a JSON document that lists
+keys and identifies each one by its `kid`. A token names the key that signed it in the `kid` parameter of its JOSE
+header. Key sources rotate their keys, so a key that token-gate loaded can be removed or replaced later.
 
 ## Decision
 
-We will take signing keys only from the JWKS of each trusted key source, and hold a loaded key set for 5 minutes. We
-will refuse a request token whose header has no `kid` with HTTP 401 and the reason code `TOKEN_KID_MISSING`.
+We will take the signing keys that token-gate verifies tokens with from the JWKS of each trusted key source, and hold
+a loaded key set for 5 minutes. We will refuse a token whose header has no `kid` with HTTP 401 and the reason code
+`TOKEN_KID_MISSING`.
 
 ### Terms
 
-- **request token**: the token that the service reads from a request and checks before policy evaluation.
-- **trusted key source**: a key source that the service configuration lists as trusted. Every other key source is
-  untrusted, including any key source that a request token names in its header or payload.
-- **JWKS**: a JSON Web Key Set, as RFC 7517 section 5 defines it, that a trusted key source publishes.
-- **key set**: the signing keys that the service loaded in one load from the JWKS of one trusted key source.
+- **token**: the token that token-gate checks for a request before policy evaluation.
+- **policy evaluation**: the step that decides from a token's claims whether token-gate admits the request.
+- **key source**: a party that publishes its signing keys as a JWKS at a URL.
+- **trusted-key-sources**: the key sources listed in `<path of the trusted key source list>`. R2 states how a key
+  source joins.
+- **key set**: the keys that token-gate parsed from one load of the JWKS of one key source.
+- **header without `kid`**: a JOSE header that has no `kid` parameter, or whose `kid` value is not a non-empty string.
+- **stops the start**: the process exits before it serves a request. `internal/keys` meets this by returning an error
+  when it loads trusted-key-sources.
 
 ### Rules
 
 #### Key sources
 
-- **R1** (`keys`). The service verifies the signature of a request token only with a signing key from the key set of a
-  trusted key source. A signing key from any other place goes unused, including a key that the request token carries
-  in its header.
-- **R4** (`keys`). When the service configuration lists no trusted key source, the service `<outcome with no trusted
-  key source>`.
+- **R1** (`keys`). token-gate verifies the signature of a token only with a key from a key set of a key source in
+  trusted-key-sources. It uses no other key, such as a key in its own configuration, a key in the `jwk` header
+  parameter, or a key behind a URL in the `jku` or `x5u` header parameter.
+- **R2** (`keys`). A key source joins trusted-key-sources only through a pull request that changes
+  `<path of the trusted key source list>` and that the security architect approves.
+- **R3** (`keys`, `server`). When trusted-key-sources lists no key source, token-gate stops the start.
 
 #### Key set lifetime
 
-- **R2** (`keys`). After the service loads the key set of a trusted key source, it uses that key set for 5 minutes (300
-  seconds). The service doesn't load that source's JWKS again within those 5 minutes. After those 5 minutes, it loads
-  that source's JWKS again before it uses a key of that source to verify a request token.
+- **R4** (`keys`). Once token-gate loads the JWKS of a key source in trusted-key-sources, it verifies tokens with the
+  resulting key set for 5 minutes without loading that JWKS again. It verifies no token with that key set once
+  5 minutes have passed since the load.
 
-#### Tokens without a key ID
+#### Tokens without `kid`
 
-- **R3** (`verify`, `server`). When the header of a request token has no `kid` parameter, or has a `kid` whose value is
-  an empty string, the service responds with HTTP 401 and the reason code `TOKEN_KID_MISSING`. Policy evaluation does
-  not receive the request. This response applies even when the request token also fails another check of the
-  service.
+- **R5** (`verify`, `server`). When a token has a header without `kid`, token-gate responds to the request with
+  HTTP 401 and the reason code `TOKEN_KID_MISSING` in `<response field for the reason code>`, and policy evaluation
+  does not receive the request.
+
+### Implementation notes
+
+Adds no requirement. Load trusted-key-sources in `internal/keys` at start, and keep one key set per key source with
+its load time. Have `internal/verify` read `kid` from the header before it asks `internal/keys` for a key, so that a
+token without `kid` never causes a JWKS load.
 
 ### Justification
 
-A trusted key source publishes its JWKS, so it can add and remove keys without a change to the service (R1). Some
-request tokens carry their own key or point at one. If the service used such a key, anyone could sign a token that it
-accepts (R1).
-
-Holding a key set for 5 minutes limits how often the service loads each JWKS. It also limits how long a removed key
-stays usable (R2).
-
-A `kid` names the one key in the key set that verifies the token. Without a `kid`, the service would have to try every
-key. A reason code of its own shows the client what to fix (R3).
+Keys from the JWKS that a key source publishes let the source rotate its keys without a change to token-gate. Taking
+keys only from trusted key sources stops a token from naming its own key (R1). A list in a file lets a key source join
+in one pull request. A list in this record would take a new record for each key source (R2). An empty list would leave
+token-gate unable to verify any token, so it stops the start instead (R3). Holding a key set for 5 minutes limits how
+many JWKS requests token-gate sends to each key source. It also limits how long a key that a source has removed stays
+usable (R4). Without a `kid`, token-gate would have to try every key of every key source, so it refuses such a token
+before any key lookup (R5). All three choices change together when the key handling changes, so they share one record.
 
 ### Alternatives considered
 
-- **A1. Use a key that the request token carries or points at, through the `jwk`, `x5c`, or `jku` header
-  parameter.** Rejected by R1: anyone could then sign a token that the service accepts.
-- **A2. Load the JWKS for every request token.** Rejected by R2: the load on each trusted key source would grow with
-  the request rate.
-- **A3. Try every key in the key set for a request token without a `kid`.** Rejected by R3.
+- **A1. Configure each public key in token-gate as a PEM file.** Rejected by R1: the key does not come from the JWKS
+  of a trusted key source, and every key rotation would take a change to token-gate.
+- **A2. Load the key from the `jwk`, `jku`, or `x5u` parameter of the token header.** Rejected by R1: the sender of the
+  token would choose the key that verifies it.
+- **A3. Load the JWKS again for every token.** Rejected by R4.
+- **A4. Try each key of each trusted key source in turn when a token has no `kid`.** Rejected by R5.
 
 ## Consequences
 
+Positive:
+
+- A key source rotates its keys by publishing a new JWKS, and token-gate picks up the new key within 5 minutes without
+  a deployment.
+
 Negative:
 
-- A key that a trusted key source removes from its JWKS stays usable for up to 5 minutes (R2).
-- A key that a trusted key source adds to its JWKS stays unusable for up to 5 minutes (R2).
-- Some clients may now receive HTTP 401 with `TOKEN_KID_MISSING` for a request token that the service accepted before
-  this record. This applies to any request token whose header has no `kid`. A test that sends a token without a `kid`
-  shows the change (R3).
-- An existing installation that configures signing keys in another way gets the outcome that R4 states on upgrade.
+- A client whose token has a header without `kid` gets the response of R5, even where a key of a trusted key source
+  would verify its signature.
+- A key that a key source removes from its JWKS stays usable for up to 5 minutes after the removal (R4).
+- A key that a key source adds to its JWKS stays unusable until the next load, which can take up to 5 minutes (R4).
+- An installation whose trusted-key-sources list is empty after the upgrade stops the start (R3).
+
+Follow-ups:
+
+- Map `<path of the trusted key source list>` to the `keys` layer in `docs/adr/README.md`.
 
 ## Open points
 
-- **O1.** What the service does when it cannot load the JWKS of a trusted key source after the 5 minutes of R2 have
-  passed. The answers under consideration:
-  - The service keeps using the old key set until a load succeeds.
-  - The service refuses with HTTP 401 every request token whose `kid` belongs to that source, with a reason code still
-    to be named.
-
-  The security architect decides. Affects R2.
-- **O2.** Whether a `kid` whose value is an empty string counts as no `kid`. The record assumes that it does. The
-  security architect decides. Affects R3.
-- **O3.** Which setting lists the trusted key sources, and what its name is. The record assumes a list in the service
-  configuration. The security architect decides. Affects the term **trusted key source**, R1, and R4.
-- **O4.** What the service does when its configuration lists no trusted key source. This includes an existing
-  installation after the upgrade. The answers under consideration:
-  - The service exits before it serves a request.
-  - The service starts and refuses every request token with HTTP 401.
-
-  The security architect decides. Affects R4.
-- **O5.** Whether `TOKEN_KID_MISSING` takes precedence over every other check of a request token. The record assumes
-  that it does. The security architect decides between confirming this precedence and naming checks whose reason code
-  wins. Affects R3.
+- **O1.** The path and format of the file that lists trusted-key-sources. It is needed in **Terms** and R2. The
+  security architect decides.
+- **O2.** Where the response carries the reason code: a field of the JSON response body, such as `reason`, or a
+  response header. The security architect decides. Affects R5.
+- **O3.** R4 assumes that a token whose `kid` matches no key in a held key set does not cause an early load of the
+  JWKS. The other answer is an early load, limited to `<number of loads>` per `<interval>`. The security architect
+  decides. Affects R4.
+- **O4.** What token-gate does when a load of a JWKS fails after the 5 minutes have passed. One answer is to refuse
+  every token from that key source, with a status and a reason code still to be named. The other is to keep using the
+  old key set for a grace period of `<duration>`. The security architect decides. Affects R4.
+- **O5.** R2 assumes that the security architect approves each new key source. The security architect confirms this
+  or names another approver. Affects R2.
+- **O6.** R3 assumes that an empty trusted-key-sources stops the start. The other answer is that token-gate starts and
+  refuses every token. The security architect decides. Affects R3.
+- **O7.** The definition of **header without `kid`** assumes that an empty or non-string `kid` counts as missing. The
+  other answer is to treat such a `kid` as present and let the key lookup fail. The security architect decides.
+  Affects R5.
+- **O8.** Where token-gate looks up a `kid`. One answer is in the key sets of all trusted key sources. The other is
+  only in the key set of the key source that matches the token's `iss` claim. The security architect decides. Affects
+  R1.
 ````
 
 ### Message to the user
 
-I wrote `docs/adr/0006-take-signing-keys-from-the-jwks-of-trusted-key-sources.md` as one record with status `Proposed`. The three choices come from one authority, the security architect, and change together, so they belong in one record.
+I wrote this as one record, ADR-0006. The three choices have one authority (the security architect), and your notes say they change together, so the skill keeps them as one decision.
 
-Rule R4 has a visible placeholder. Your notes don't say what an installation gets on upgrade when it lists no trusted key source. Open point O4 asks for that outcome.
+ADR-0006 stays `Proposed` until these questions are answered:
 
-To finish the record, I need:
+1. Who owns the record, and what is the security architect's GitHub account? There are placeholders for both.
+2. O1: where does the list of trusted key sources live, and in what format?
+3. O2: where does the response carry the reason code? Is it a JSON body field, such as `reason`, or a header? If one of the records 0001 to 0005 already sets this, tell me which one and I'll cite it.
+4. O3: when a `kid` matches no key in the held key set, should token-gate reload the JWKS before the 5 minutes are up? I assumed it doesn't.
+5. O4: what happens when a reload fails after 5 minutes? Should token-gate refuse tokens from that key source (and with which status and code), or keep the old key set for a grace period?
+6. O5 and O6: I assumed two things. First, the security architect approves each new key source. Second, an empty list of trusted key sources stops the service from starting. Are both right?
+7. O7: should an empty or non-string `kid` count as missing?
+8. O8: should token-gate look up a `kid` across all trusted key sources, or only in the key source that matches the token's `iss`?
 
-- **Owner and approver:** the GitHub account of the owner, and the account of the security architect who approves it.
-- **O1:** When the JWKS reload fails after 5 minutes, should the service keep the old key set or refuse the tokens?
-- **O2:** Does an empty `kid` count as a missing `kid`?
-- **O3:** Which setting lists the trusted key sources, and what is its name?
-- **O4:** With no trusted key source configured, should the service exit before it serves a request, or start and refuse every request token?
-- **O5:** Should `TOKEN_KID_MISSING` take precedence over every other refusal reason?
-
-The record stays `Proposed` until all five open points are settled.
-
-Does any of ADR-0001 to ADR-0005 decide where signing keys come from? If one does, this record replaces those rules. In that case, I'll name them by number under **Related ADRs**.
-
-I didn't change `docs/adr/README.md`. The guide already maps the layers the record uses (`keys`, `verify`, and `server`).
+The notes didn't give the justification, the alternatives, or the limit in R1 that rules out keys named in the token header. I wrote them myself, so please confirm or correct them. Once the path of the list is decided, it needs to be mapped to the `keys` layer in `docs/adr/README.md`. I don't have that file's content, so I listed this as a follow-up instead of editing the file.

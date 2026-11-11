@@ -13,7 +13,9 @@ carry.
 ## Repository facts
 
 - Repository: example/token-gate, a Go service that checks the token of each request before policy evaluation.
-- `docs/adr/` holds the records. There is no `README.md` there.
+- `docs/adr/` holds the records. `docs/adr/README.md` is the reading guide: it maps the layer `verify` to
+  `internal/verify/`, lists `docs/adr/` and `.github/` as belonging to no layer, and says that in this repository
+  `Proposed` and `Accepted` records bind a change.
 - `internal/verify` is the code that checks a token. Nothing else in the repository decides the outcome of the cases
   below. Before and after either change, it reads `kid` before it compares `exp` with the time of the check.
 

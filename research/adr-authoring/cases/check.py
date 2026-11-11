@@ -96,6 +96,39 @@ def deferral_named(title, marker):
     return check
 
 
+def would_violate(rule):
+    def check(text):
+        found = re.search(r'[^\n]*would violate[^\n]*' + re.escape(rule) + r'[^\n]*|[^\n]*' + re.escape(rule)
+                          + r'[^\n]*would violate[^\n]*', text, re.I)
+        return result(found is not None, found.group(0).strip()[:110] if found else f'no "would violate {rule}" line')
+    check.__name__ = f'would_violate_{rule.split()[0].lower().replace("-", "")}_{rule.split()[1].lower()}'
+    return check
+
+
+def no_trailer_error(rule):
+    def check(text):
+        """The rule on a line that names a trailer error, or in the list items under a "Trailer errors:" label."""
+        lines = text.split('\n')
+        for i, line in enumerate(lines):
+            if not re.search(r'trailer errors?', line, re.I):
+                continue
+            if re.search(r'trailer errors?\W*(?:none|no\b|nothing)|\b(?:no|none|not)\b[^\n]*trailer error', line, re.I):
+                continue
+            items = [line]
+            if re.search(r'trailer errors?\W*:?\W*$', line, re.I):
+                for nxt in lines[i + 1:]:
+                    if not nxt.strip() and items[1:]:
+                        break
+                    if nxt.strip() and not re.match(r'\s*(?:[-*]|\d+\.)\s', nxt):
+                        break
+                    items.append(nxt)
+            if any(rule in item for item in items):
+                return result(False, f'listed as an error: {" ".join(" ".join(items).split())[:100]}')
+        return result(True, 'not an error')
+    check.__name__ = f'no_trailer_error_{rule.split()[0].lower().replace("-", "")}_{rule.split()[1].lower()}'
+    return check
+
+
 def files(text):
     return [(m.group(1).strip(), m.group(3)) for m in FILE.finditer(text)]
 
@@ -129,6 +162,8 @@ def heading_block(content, name):
 
 # writer-vague-notes
 
+RULE_LINE = re.compile(r'^\s*[-*]\s*\*\*R(\d+)\*\*\s*\(([^)]*)\)\.?\s*(.*(?:\n(?![ \t]*(?:[-*]|\d+\.)\s)[ \t]+\S.*)*)', re.M)
+
 COUNT = r'(?:\d+|one|two|three|four|five|six)'
 NUMBERED_RETRIES = re.compile(r'\b' + COUNT + r'\s+(?:(?:more|further|additional|extra)\s+)?(?:retr\w*|attempts?|tries|times)\b'
                               r'|\b(?:retr\w*|attempts?)\s+(?:(?:up to|at most)\s+)?' + COUNT
@@ -145,15 +180,14 @@ def record_0001(text):
     return result(bool(recs), recs[0][0] if recs else f'record files: {[p for p, _ in records(files(text))]}')
 
 
-def guide_added(text):
-    found = [p for p, _ in files(text) if re.search(r'docs/(?:adr|decisions)/README\.md$', p)]
-    return result(bool(found), found[0] if found else 'no README.md beside the records')
+def guide_not_added(text):
+    found = [p for p, _ in files(text) if re.search(r'(?:^|/)(?:README|AGENTS)\.md$', p)]
+    return result(not found, f'written before the user agreed: {found}' if found else 'no guide and no AGENTS.md change')
 
 
 def retry_placeholder(text):
     rec = vague_record(text)
-    rules = heading_block(rec, 'Rules') or rec
-    lines = [ln for ln in rules.split('\n') if re.search(r'retr', ln, re.I)]
+    lines = [' '.join(body.split()) for _, _, body in RULE_LINE.findall(rec) if re.search(r'retr', body, re.I)]
     holder = [ln for ln in lines if re.search(r'<[^>\n]+>', ln)]
     invented = next((m for ln in lines for m in [NUMBERED_RETRIES.search(re.sub(r'`?<[^>\n]*>`?', '', ln))] if m),
                     None)
@@ -185,9 +219,14 @@ def owner_not_invented(text):
     return result(ok, f'owner: {block.strip()[:60]!r}' + ('' if asked else '; the message does not ask for an owner'))
 
 
-def user_told_guide(text):
-    found = re.search(r'README|reading guide', message(text))
-    return result(found is not None, found.group(0) if found else 'the message does not mention the guide')
+def guide_asked(text):
+    """A question in the message that offers the guide and names the trailers it commits the team to."""
+    sentences = re.split(r'(?<=[.!?])\s+|\n(?=\S)', message(text))
+    for i, sentence in enumerate(sentences):
+        window = ' '.join(sentences[max(0, i - 1):i + 3])
+        if '?' in sentence and re.search(r'README|guide', window) and re.search(r'trailer|Implements|Defers', window):
+            return result(True, ' '.join(sentence.split())[:110])
+    return result(False, 'no question that offers the guide near a mention of the trailers')
 
 
 def status_proposed(text):
@@ -278,6 +317,129 @@ def no_guide_written(text):
     return result(not found, f'guide written: {found}' if found else 'no guide written')
 
 
+# writer-structural
+
+def request_file(text, request, pattern):
+    found = [(p, c) for p, c in files(section(text, request)) if re.search(pattern, p)]
+    return found[0] if found else (None, '')
+
+
+def record_of(text, request, number):
+    recs = records(files(section(text, request)), number)
+    return recs[0][1] if recs else ''
+
+
+def r1_record_0012(text):
+    recs = records(files(section(text, 'Request 1')), '0012')
+    return result(bool(recs), recs[0][0] if recs else 'no record 0012 in Request 1')
+
+
+def r1_metadata_from_repository(text):
+    rec = record_of(text, 'Request 1', '0012')
+    found = re.search(r'^####\s+Owner\b', rec, re.M)
+    other = re.search(r'^#{2,3}\s+Owner\b', rec, re.M)
+    return result(found is not None, '#### Owner' if found else (f'{other.group(0)!r}' if other else 'no Owner heading'))
+
+
+def r1_rules_from_template(text):
+    rec = record_of(text, 'Request 1', '0012')
+    found = re.search(r'^#{2,4}\s+Rules\b', rec, re.M) and RULE_LINE.search(rec)
+    return result(bool(found), 'a Rules heading and numbered rules' if found else 'no Rules heading or no numbered rule')
+
+
+def r1_structural_tag(text):
+    """Each rule about the HTTP imports carries a tag that the written guide maps to internal/token/."""
+    rec = record_of(text, 'Request 1', '0012')
+    _, guide = request_file(text, 'Request 1', r'docs/adr/README\.md$')
+    rules = [(n, re.findall(r'`([^`]+)`', tag) or [tag.strip()], body) for n, tag, body in RULE_LINE.findall(rec)
+             if re.search(r'internal/http|net/http|HTTP package', body)]
+    if not rules:
+        return result(False, 'no rule about importing internal/http or net/http')
+    for n, tags, _ in rules:
+        mapped = [tg for tg in tags if re.search(r'[^\n]*' + re.escape(tg) + r'[^\n]*internal/token', guide)]
+        if not mapped:
+            return result(False, f'R{n} tagged {tags}, which the guide does not map to internal/token/')
+    return result(True, '; '.join(f'R{n} ({", ".join(tags)})' for n, tags, _ in rules))
+
+
+def r1_confirmation_names_check(text):
+    block = heading_block(record_of(text, 'Request 1', '0012'), 'Confirmation')
+    return result('token-no-http' in block, 'token-no-http' if 'token-no-http' in block else 'no Confirmation naming token-no-http')
+
+
+def r1_guide_added(text):
+    path, guide = request_file(text, 'Request 1', r'docs/adr/README\.md$')
+    ok = path is not None and 'internal/token' in guide and re.search(r'`docs/(?:adr/)?`[^\n]*(?:no layer|none|outside)|'
+                                                                      r'(?:no layer|outside)[^\n]*`docs/(?:adr/)?`', guide, re.I)
+    return result(bool(ok), path if ok else ('no docs/adr/README.md' if path is None
+                                             else 'the guide maps no internal/token/ or lists no docs/adr/ outside'))
+
+
+def r1_agents_paragraph(text):
+    path, agents = request_file(text, 'Request 1', r'(?:^|/)AGENTS\.md$')
+    ok = (path is not None and 'docs/adr/README.md' in agents and re.search(r'Implements|trailer', agents)
+          and 'go test ./...' in agents and 'internal/token' not in agents)
+    return result(bool(ok), path if ok else ('no AGENTS.md change' if path is None
+                                             else 'AGENTS.md does not name the guide and the trailers, copies the map, '
+                                                  'or lost a line'))
+
+
+def r2_guide_untouched(text):
+    found = [p for p, _ in files(section(text, 'Request 2')) if re.search(r'(?:^|/)(?:README|AGENTS)\.md$', p)]
+    return result(not found, f'rewritten in Request 2: {found}' if found else 'guide and AGENTS.md left alone')
+
+
+def r2_behavior_rule(text):
+    rec = record_of(text, 'Request 2', '0013')
+    found = next((body for _, _, body in RULE_LINE.findall(rec) if '401' in body and 'TOKEN_ALG_NONE' in body), None)
+    return result(found is not None, found[:110] if found else 'no rule with HTTP 401 and TOKEN_ALG_NONE in record 0013')
+
+
+def r2_no_confirmation_entry(text):
+    block = heading_block(record_of(text, 'Request 2', '0013'), 'Confirmation')
+    entry = re.search(r'^\s*[-*]\s*\*\*R\d+[^\n]*', block, re.M)
+    return result(entry is None, f'entry for a check that does not exist: {entry.group(0).strip()[:100]}' if entry
+                  else 'no Confirmation entry')
+
+
+# coder-trailers
+
+def fenced_after(text, heading):
+    m = re.search(r'^#{2,4}\s*' + re.escape(heading) + r'[^\n]*\n+(`{3,}|~{3,})[^\n]*\n(.*?)^\1[ \t]*$', text,
+                  re.S | re.M)
+    return m.group(2) if m else ''
+
+
+def trailers(body):
+    blocks = [b for b in re.split(r'\n\s*\n', body.strip()) if b.strip()]
+    if not blocks:
+        return []
+    lines = blocks[-1].split('\n')
+    return lines if all(re.match(r'^[A-Za-z][\w-]*:\s', ln) for ln in lines) else []
+
+
+def defers_r5(change, part):
+    def check(text):
+        body = fenced_after(section(text, change), part)
+        tr = trailers(body)
+        defers = next((ln for ln in tr if ln.startswith('Defers:')), None)
+        claims = next((ln for ln in tr if ln.startswith('Implements:') and 'ADR-0007 R5' in ln), None)
+        ok = defers is not None and re.search(r'ADR-0007 R5 to #12\b', defers) and claims is None
+        return result(bool(ok), ' | '.join(tr) if tr else f'no trailer paragraph in the {part.lower()}')
+    check.__name__ = f'{change.lower().replace(" ", "_")}_{part.lower().replace(" ", "_")}_defers_r5'
+    return check
+
+
+def no_rule_trailers(change):
+    def check(text):
+        body = section(text, change)
+        found = [ln for part in ('Commit message', 'Pull request description')
+                 for ln in fenced_after(body, part).split('\n') if re.match(r'^(?:Implements|Defers):', ln)]
+        return result(not found, f'rule trailers: {found}' if found else 'no rule trailers')
+    check.__name__ = f'{change.lower().replace(" ", "_")}_no_rule_trailers'
+    return check
+
+
 CASES = {
     'checker-partial-delivery': [verdict_is('Change A', 'ADR-0007 R5', 'violates'),
                                  verdict_is('Change B', 'ADR-0007 R5', 'conforms'),
@@ -290,9 +452,20 @@ CASES = {
                            verdict_not_in('Change B', 'ADR-0007 R5', ('violates', 'cannot tell', 'conforms'))],
     'checker-proposed-replacement': [verdict_is('Change', 'ADR-0010 R7', 'violates'),
                                      verdict_is('Change', 'ADR-0010 R9', 'deferred'),
-                                     verdict_not_in(None, 'ADR-0020 R3', VERDICTS)],
-    'writer-vague-notes': [record_0001, guide_added, retry_placeholder, retry_open_point, timeout_kept,
-                           owner_not_invented, user_told_guide, status_proposed],
+                                     verdict_not_in(None, 'ADR-0020 R3', VERDICTS),
+                                     would_violate('ADR-0020 R3'),
+                                     no_trailer_error('ADR-0020 R3')],
+    'checker-structural': [verdict_is('Change A', 'ADR-0012 R1', 'violates'),
+                           verdict_not_in('Change A', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms')),
+                           verdict_not_in('Change B', 'ADR-0012 R1', ('violates', 'cannot tell', 'conforms')),
+                           verdict_not_in('Change B', 'ADR-0012 R2', ('violates', 'cannot tell', 'conforms'))],
+    'writer-vague-notes': [record_0001, guide_not_added, retry_placeholder, retry_open_point, timeout_kept,
+                           owner_not_invented, guide_asked, status_proposed],
+    'writer-structural': [r1_record_0012, r1_metadata_from_repository, r1_rules_from_template, r1_structural_tag,
+                          r1_confirmation_names_check, r1_guide_added, r1_agents_paragraph, r2_behavior_rule,
+                          r2_no_confirmation_entry, r2_guide_untouched],
+    'coder-trailers': [defers_r5('Change 1', 'Commit message'), defers_r5('Change 1', 'Pull request description'),
+                       no_rule_trailers('Change 2')],
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,
                                no_new_record_r2, no_guide_written],
     'writer-two-decisions': [r1_at_most_one_record, r1_split_proposed, r2_one_record, r2_no_split, no_guide_written],

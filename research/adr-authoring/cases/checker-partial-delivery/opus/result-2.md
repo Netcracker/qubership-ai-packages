@@ -2,22 +2,27 @@
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R5 | Violates | `Implements` claims every case of R5. A token with an unexpired `exp` whose `kid` names no loaded key still gets HTTP 401 and `TOKEN_INVALID`, but R5 requires `TOKEN_KID_UNKNOWN`. |
+| ADR-0007 R4 | Not touched | `internal/verify` checks `exp` before it reads `kid`, so an expired token still gets HTTP 401 and `TOKEN_EXPIRED`, as it did before the change. |
+| ADR-0007 R5 | Violates | `Implements` claims every case of R5, and a token whose `kid` names no loaded key still gets `TOKEN_INVALID` instead of `TOKEN_KID_UNKNOWN`. |
 
-Named apart from the verdicts:
+Other items in the report:
 
-- **Trailer:** `Implements: ADR-0007 R5` claims more than the change brings. The change brings only the no-`kid` case, which now gets HTTP 401 and `TOKEN_KID_MISSING` and meets R5. A change that brings only some cases of a rule names that rule under `Defers`, with the change that brings the rest. Issue #12 is open and tracks the rest of ADR-0007 R5.
-- **Guide error:** `docs/adr/` has no `README.md`, so no reading guide maps the `verify` layer to any paths. The changed code in `internal/verify` is under no mapped path.
-- **ADR-0007 R4 not walked:** with no guide, the change touches no mapped layer. It also changes the outcome of no case of R4, because `internal/verify` still compares `exp` with the time of the check before it reads `kid`. An expired token still gets HTTP 401 and `TOKEN_EXPIRED`.
+- 1 rule is `Not touched` (ADR-0007 R4).
+- The change adds the missing-`kid` case of R5, which now gets HTTP 401 and `TOKEN_KID_MISSING`. That case conforms, but the unknown-`kid` case still fails R5.
+- The verified facts don't say which outcome a token with no `kid` gets when its `exp` equals the time of the check. This doesn't change the R5 verdict.
+- `Implements` claims every case of a rule, and this change brings only one case of R5. The trailer that matches this change is `Defers: ADR-0007 R5 to #12`.
+- There are no trailer errors and no guide errors. ADR-0007 names no check under **Confirmation**.
 
 ## Change B
 
 | Rule | Verdict | Reason |
 | --- | --- | --- |
-| ADR-0007 R5 | Conforms (deferred to #12) | The change touches R5 by changing the outcome of one case: a token with an unexpired `exp` and no `kid` now gets HTTP 401 and `TOKEN_KID_MISSING`, which R5 requires. |
+| ADR-0007 R4 | Not touched | `internal/verify` checks `exp` before it reads `kid`, so an expired token still gets HTTP 401 and `TOKEN_EXPIRED`, as it did before the change. |
+| ADR-0007 R5 | Conforms (deferred to #12) | The change alters only the missing-`kid` case, and that case now gets HTTP 401 and `TOKEN_KID_MISSING`. |
 
-Named apart from the verdicts:
+Other items in the report:
 
-- **Deferral:** the trailer names ADR-0007 R5 under `Defers`, and the target is open issue #12, so the entry is valid. Because the change also touches R5, R5 gets the verdict of a touched rule and not `Deferred`. The change does not alter the case where the `kid` names no loaded key, so the check does not judge it. That case still gets HTTP 401 and `TOKEN_INVALID` instead of `TOKEN_KID_UNKNOWN`, and it waits on #12.
-- **Guide error:** `docs/adr/` has no `README.md`, so no reading guide maps the `verify` layer to any paths. The changed code in `internal/verify` is under no mapped path.
-- **ADR-0007 R4 not walked:** with no guide, the change touches no mapped layer. It also changes the outcome of no case of R4, because `internal/verify` still compares `exp` with the time of the check before it reads `kid`. An expired token still gets HTTP 401 and `TOKEN_EXPIRED`.
+- 1 rule is `Not touched` (ADR-0007 R4).
+- The change names ADR-0007 R5 under `Defers`, but it also touches R5. R5 therefore gets the verdict of a touched rule, and the report records the deferral to #12 next to it.
+- The change doesn't alter the unknown-`kid` case of R5, so that case isn't judged. A token whose `kid` names no loaded key still gets `TOKEN_INVALID`, and open issue #12 tracks that case.
+- There are no trailer errors, because #12 is an existing issue. There are no guide errors. ADR-0007 names no check under **Confirmation**.

@@ -3,7 +3,7 @@
 ### File: docs/adr/0006-verify-token-signature-before-policy-evaluation.md
 
 ````markdown
-# We will verify the signature of every token before policy evaluation and refuse a token whose signature does not verify
+# Verify the signature of every token before policy evaluation and refuse a token with an invalid signature
 
 ## Status
 
@@ -11,85 +11,86 @@ Proposed
 
 ### Owner
 
-`<GitHub account of the owner>`
+<owner GitHub account>
 
 ### Participants and approvers
 
-- Security architect (`<GitHub account>`): approves the decision.
+- Security architect, `<account>`: approves R1 and R2.
 
 ## Context
 
-The service checks the token of each request before policy evaluation. Policy evaluation reads claims from that token.
-A claim is only as trustworthy as the signature that covers it.
+token-gate checks the token of each request before policy evaluation. Policy evaluation reads its input from the token.
+A token whose signature has not been verified gives no assurance about who issued it or whether its content changed.
 
 ## Decision
 
-We will verify the signature of the token of every request before policy evaluation, and refuse a token whose signature
-does not verify with HTTP 401 and the reason code `TOKEN_SIGNATURE_INVALID`.
+We will verify the signature of every token before policy evaluation, and we will refuse a token whose signature does
+not verify with HTTP 401 and the reason code `TOKEN_SIGNATURE_INVALID`.
 
 ### Terms
 
-- **token**: the token that a request presents to the service for checking.
-- **signature does not verify**: the token has no signature, or its signature does not match its content under the
-  signature check.
-- **refuses a token**: the service sends the response that the rule names for the request, and does not start policy
-  evaluation for it.
+- **token**: the token a request carries. O1 asks where a request carries it.
+- **refuse**: the service answers the request with the stated HTTP status and reason code, and policy evaluation does
+  not run for the request.
 
 ### Rules
 
-#### Signature verification
+#### Verification
 
-- **R1** (`verify`). The service verifies the signature of the token of each request before policy evaluation starts for
-  that request.
-- **R2** (`verify`, `server`). The service refuses a token whose signature does not verify, with HTTP 401 and the reason
-  code `TOKEN_SIGNATURE_INVALID`.
+- **R1** (`verify`). For every request that carries a token, the service verifies the signature of the token before
+  policy evaluation of that request starts.
+
+#### Refusal
+
+- **R2** (`verify`, `server`). The service refuses a token whose signature does not verify with HTTP 401 and the
+  reason code `TOKEN_SIGNATURE_INVALID`.
 
 ### Justification
 
-Policy evaluation then never sees a claim from a token whose signature failed (R1). A caller can tell a failed signature
-from other 401 causes by its reason code (R2).
+Policy evaluation reads the content of the token, and that content can be trusted only after the signature verifies
+(R1). A refusal with a fixed status and reason code lets a client tell a bad signature from other failures (R2).
 
 ### Alternatives considered
 
-- **A1. Evaluate policy first and verify the signature afterward.** Rejected by R1: policy evaluation would read claims
-  that nothing has authenticated.
+- **A1. Evaluate policy first and verify the signature afterwards.** Rejected by R1: a decision could be made from
+  content that is not yet verified.
 
 ## Consequences
 
 Negative:
 
-- Every request pays for one signature verification before policy evaluation (R1).
-- A token with a failed signature gets HTTP 401 even where policy would have allowed the request (R2).
+- Every request that carries a token pays for a signature verification before policy evaluation (R1).
 
 ## Open points
 
-- **O1.** Where the response carries the reason code (a body field, a header, or both), and under which name. The
-  security architect decides. Affects R2.
-- **O2.** Assumption: the signature check runs in `internal/verify` and the HTTP response is written in
-  `internal/server`, so R2 carries both layer tags. The owner confirms against the code. Affects R2.
+- **O1.** Where does a request carry the token (for example the `Authorization` header), and which requests carry none?
+  The security architect decides. Affects R1 and R2.
+- **O2.** Which response field carries the reason code `TOKEN_SIGNATURE_INVALID`? The security architect decides.
+  Affects R2.
+- **O3.** The record assumes that the `verify` layer decides the refusal and the `server` layer writes the response. The
+  security architect or the maintainers of `internal/verify` and `internal/server` confirm. Affects the layer tags of
+  R2.
+- **O4.** Does a token that has no signature, or that names an algorithm the service does not support, count as a token
+  whose signature does not verify? The security architect decides. Affects R2.
 ````
 
 ### Message to the user
 
-I wrote one record, from the security architect's decision. The notes hold two decisions, and I left out the second.
+The notes hold two decisions, and I wrote only the first as ADR-0006. The signature rule comes from the security architect. The `GET /healthz` liveness probe comes from the platform team and changes for a different reason, so it needs its own record. I left it out and did not write ADR-0007. Do you want me to write it?
 
-- **Split:** the `GET /healthz` liveness probe is the platform team's decision and changes for a different reason, so it needs its own record, for example `0007-answer-healthz-while-the-process-runs.md`. Do you want me to write it?
-- **Questions for you:**
-  - What are the GitHub accounts of the owner and of the security architect? The record has placeholders for them.
-  - Where does the response carry `TOKEN_SIGNATURE_INVALID`: a body field, a header, or both (O1)?
-  - Does the signature check run in `internal/verify` and the response get written in `internal/server` (O2)?
-- **Status:** the record is `Proposed` because O1 and O2 are open. Once the team signs off and they are closed, set it to `Accepted` and add `### Date`.
-- **Reading guide:** `docs/adr/README.md` already exists with the layer map, so I did not change it.
-- **Existing records:** I could not read ADRs 0001 to 0005, so I added no **Related ADRs** entry. Tell me if one of them touches token checks.
-- **Justification and A1:** the notes gave no reasons, so I inferred these. Please confirm them.
-- **Trailers:** the change that implements this carries `Implements: ADR-0006 R1, R2`.
+The ADR is `Proposed`. Please give me:
+
+- the owner's GitHub account and the security architect's account, which I left as placeholders;
+- answers to O1 to O4, which cover where the token is carried, which field holds the reason code, which layer writes the response, and how unsigned tokens are treated.
+
+I read no existing records, so the metadata block follows the template and may need adjusting to match records 0001 to 0005. No check exists for either rule, so there is no Confirmation section. The reading guide is unchanged.
 
 ## Request 2
 
-### File: docs/adr/0006-take-signing-keys-from-the-jwks-of-each-trusted-key-source.md
+### File: docs/adr/0006-token-signing-keys-from-jwks-with-kid.md
 
 ````markdown
-# We will take signing keys from the JWKS of each trusted key source, hold a loaded key set for 5 minutes, and refuse a token without a kid
+# Take token signing keys from the JWKS of each trusted key source, hold them for 5 minutes, and require a `kid`
 
 ## Status
 
@@ -97,94 +98,94 @@ Proposed
 
 ### Owner
 
-`<GitHub account of the owner>`
+<owner GitHub account>
 
 ### Participants and approvers
 
-- Security architect (`<GitHub account>`): approves the decision.
+- Security architect, `<account>`: approves R1 to R3.
 
 ## Context
 
-The service verifies the signature of each token, and verification needs the signing key that matches the token. Key
-issuers publish their keys as a JWKS (JSON Web Key Set), and they change those keys over time. The token header carries
-the `kid` that names the key to use.
+token-gate verifies the signature of each token before policy evaluation. Verification needs the signing key that
+matches the token. The way the service obtains, holds, and selects its signing keys changes as one piece whenever key
+handling changes.
 
 ## Decision
 
 We will take signing keys from the JWKS of each trusted key source, hold a loaded key set for 5 minutes, and refuse a
-token whose header has no `kid` with HTTP 401 and the reason code `TOKEN_KID_MISSING`. The three choices are one
-decision because they change together when the key handling changes.
+token whose header has no `kid` with HTTP 401 and the reason code `TOKEN_KID_MISSING`.
 
 ### Terms
 
-- **trusted key source**: an issuer whose JWKS the service is configured to load. No other issuer is a trusted key
-  source.
-- **loaded key set**: the set of keys that the service has loaded from the JWKS of one trusted key source.
-- **token**: the token that a request presents to the service for checking.
-- **refuses a token**: the service sends the response that the rule names for the request, and does not start policy
-  evaluation for it.
+- **trusted key source**: a key source that the service is set up to trust. O1 asks how this set is defined and who
+  approves a new member.
+- **key set**: the keys in the JWKS that the service loaded from one trusted key source.
+- **refuse**: the service answers the request with the stated HTTP status and reason code, and policy evaluation does
+  not run for the request.
 
 ### Rules
 
 #### Key sources
 
-- **R1** (`keys`). The service loads signing keys from the JWKS of each trusted key source, and from no other source.
+- **R1** (`keys`). The service takes every signing key it uses for token verification from the JWKS of a trusted key
+  source, and from no other source.
 
-#### Key set lifetime
+#### Holding keys
 
-- **R2** (`keys`). The service uses a loaded key set to verify tokens for 5 minutes after it loaded that key set, and
-  loads the JWKS of that trusted key source again before it verifies a later token with it.
+- **R2** (`keys`). The service holds a key set for 5 minutes, counted from the moment it loaded the key set.
 
-#### Key identifier
+#### Tokens without a `kid`
 
-- **R3** (`verify`, `server`). The service refuses a token whose header has no `kid`, with HTTP 401 and the reason code
+- **R3** (`verify`, `server`). The service refuses a token whose header has no `kid` with HTTP 401 and the reason code
   `TOKEN_KID_MISSING`.
 
 ### Justification
 
-A JWKS lets an issuer change its keys without a change to the service, and a closed list of sources limits whose keys
-the service trusts (R1). The 5 minute limit bounds how long a key that an issuer has withdrawn stays usable, and how
-often the service fetches a JWKS (R2). The `kid` is what selects one key from a key set, so a token without it cannot
-be matched to a key (R3).
+The JWKS is the standard format in which a key source publishes its keys, so the service needs no other key format
+(R1). A held key set spares the service a JWKS load for each token (R2). A token with no `kid` cannot be matched to a key
+in the key set (R3).
 
 ### Alternatives considered
 
-- **A1. Try every key of the key set when the header has no `kid`.** Rejected by R3: the service would verify a token
-  against keys that the token never named.
+- **A1. Take signing keys from a static key configured in the service.** Rejected by R1: key rotation at a key source
+  would need a change to the service.
+- **A2. Load the JWKS again for every token.** Rejected by R2: each token would cost a request to the key source.
+- **A3. Try every key of the key set on a token with no `kid`.** Rejected by R3.
 
 ## Consequences
 
+Positive:
+
+- A change to key handling edits one record, because the key source, the holding time, and the `kid` requirement
+  belong to one decision.
+
 Negative:
 
-- A key that an issuer withdraws stays usable for up to 5 minutes after the service loaded its key set (R2).
-- Verification depends on a trusted key source being reachable at each reload (R2).
-- A token without a `kid` gets HTTP 401 even where its issuer publishes one key (R3).
+- A key that a key source withdraws can still verify tokens until the service's key set expires, which is at most 5
+  minutes (R2).
+- A token that carries no `kid` is refused even where the key set holds a single key (R3).
 
 ## Open points
 
-- **O1.** Where the list of trusted key sources is configured and how a source is named. The security architect decides.
+- **O1.** How is the set of trusted key sources defined, and who approves a new member? The security architect decides.
   Affects R1.
-- **O2.** What the service does when a reload of a JWKS fails: refuse tokens at once, or keep using the expired key set
-  for a limit. The security architect decides. Affects R2.
-- **O3.** Where the response carries the reason code (a body field, a header, or both), and under which name. The
-  security architect decides. Affects R3.
-- **O4.** Assumption: the key loading and holding run in `internal/keys`, the `kid` check runs in `internal/verify`, and
-  the HTTP response is written in `internal/server`, so R3 carries two layer tags. The owner confirms against the code.
-  Affects R1, R2, R3.
+- **O2.** What does the service do when it fails to load a key set after the 5 minutes pass: refuse the tokens, or keep
+  using the expired key set? The security architect decides. Affects R2.
+- **O3.** Does a token whose `kid` is not in the key set cause an early reload of that key set, or is it refused at
+  once? The security architect decides. Affects R2.
+- **O4.** Which response field carries the reason code `TOKEN_KID_MISSING`? The security architect decides. Affects R3.
+- **O5.** The record assumes that the `verify` layer decides the refusal and the `server` layer writes the response. The
+  security architect or the maintainers of `internal/verify` and `internal/server` confirm. Affects the layer tags of
+  R3.
 ````
 
 ### Message to the user
 
-I wrote one record. The three choices come from one deciding authority and change together, so they stay together as R1, R2, and R3.
+I wrote one record, ADR-0006. The key source, the 5-minute holding time, and the `kid` requirement come from one authority and change together, so they stay in one record. The status is `Proposed`.
 
-- **Questions for you:**
-  - What are the GitHub accounts of the owner and of the security architect? The record has placeholders for them.
-  - Where is the list of trusted key sources configured (O1)?
-  - What happens when a JWKS reload fails (O2)? R2 needs this to be testable, and the notes did not say.
-  - Where does the response carry `TOKEN_KID_MISSING` (O3)?
-  - Do `internal/keys`, `internal/verify`, and `internal/server` hold the code as I assumed (O4)?
-- **Status:** the record is `Proposed` because O1 to O4 are open. Once the team signs off and they are closed, set it to `Accepted` and add `### Date`.
-- **Reading guide:** `docs/adr/README.md` already exists with the layer map, so I did not change it.
-- **Existing records:** I could not read ADRs 0001 to 0005, so I added no **Related ADRs** entry. If one of them decides part of this, I would add it, and I would supersede that part rather than edit the old record.
-- **Justification and A1:** the notes gave no reasons, so I inferred these. Please confirm them.
-- **Trailers:** the change that implements this carries `Implements: ADR-0006 R1, R2, R3`. If a change leaves one out, it goes under `Defers` with an existing issue or pull request.
+Please give me:
+
+- the owner's GitHub account and the security architect's account, which I left as placeholders;
+- answers to O1 to O5, which cover how trusted key sources are defined, what happens when a reload fails or a `kid` is unknown, which field holds the reason code, and which layer writes the response.
+
+I read no existing records, so the metadata block follows the template and may need adjusting to match records 0001 to 0005. No check exists for any rule, so there is no Confirmation section. The reading guide is unchanged.

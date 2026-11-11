@@ -9,6 +9,13 @@
 # With --baseline it reads english-developer-style alone, which shows what a
 # check catches when the skill under test is absent.
 #
+# A case whose reader is not the writer or the checker of a record, such as the
+# agent that writes code under one, lists in a file <case directory>/skills the
+# skill directories its session reads instead of adr-authoring, one per line.
+# Such a case may also hold prompt-baseline.md: --baseline then answers that
+# prompt with the same skills, so the baseline differs from the run only in the
+# input the skill under test produces.
+#
 # Run from the repository root:
 #   research/adr-authoring/cases/run-case.sh [--baseline] <case directory> <model> <out name> [<rev>]
 # <model> is a claude --model alias (haiku, opus). With <rev>, the skills are
@@ -43,12 +50,21 @@ copy() {
 }
 rev=${4:-}
 copy "$style"
+prompt=$case_dir/prompt.md
+if [ -f "$case_dir/skills" ]; then
+  read_skills=$(grep -v '^[[:space:]]*$' "$case_dir/skills")
+  if [ -n "$baseline" ] && [ -f "$case_dir/prompt-baseline.md" ]; then prompt=$case_dir/prompt-baseline.md; baseline=; fi
+else
+  read_skills=$skill
+fi
 if [ -z "$baseline" ]; then
-  copy "$skill"
-  if [ -n "$rev" ]; then
-    scripts/skill-tree.sh "$skill" "$rev" > "$work/out/skill-tree"
-  else
-    scripts/skill-tree.sh "$skill" > "$work/out/skill-tree"
+  for s in $read_skills; do copy "$s"; done
+  if [ "$prompt" = "$case_dir/prompt.md" ]; then
+    if [ -n "$rev" ]; then
+      scripts/skill-tree.sh "$skill" "$rev" > "$work/out/skill-tree"
+    else
+      scripts/skill-tree.sh "$skill" > "$work/out/skill-tree"
+    fi
   fi
 fi
 
@@ -56,9 +72,12 @@ fi
   echo 'Before you write anything, read each of these files in full with the Read tool, and follow them:'
   echo
   if [ -z "$baseline" ]; then
-    echo "- $work/skills/adr-authoring/SKILL.md"
-    for f in "$work"/skills/adr-authoring/references/*.md; do
-      if [ -e "$f" ]; then echo "- $f"; fi
+    for s in $read_skills; do
+      n=$(basename "$s")
+      echo "- $work/skills/$n/SKILL.md"
+      for f in "$work"/skills/"$n"/references/*.md; do
+        if [ -e "$f" ]; then echo "- $f"; fi
+      done
     done
   fi
   echo "- $work/skills/english-developer-style/SKILL.md"
@@ -66,7 +85,7 @@ fi
   echo 'There is no repository checkout and no network: everything you know about the change is below. Your final'
   echo 'message is the deliverable: give the requested text only, with no preamble and no notes about your process.'
   echo
-  cat "$case_dir/prompt.md"
+  cat "$prompt"
 } > "$work/prompt.txt"
 
 effort=
@@ -94,7 +113,7 @@ open(f'{out}/{name}.run.txt', 'w').write(
 EOF
 
 dest=$case_dir/$model
-if [ -n "$baseline" ]; then dest=$dest/baseline; fi
+if [ -n "$baseline" ] || [ "$prompt" != "$case_dir/prompt.md" ]; then dest=$dest/baseline; fi
 mkdir -p "$dest"
 cp "$work/out/"* "$dest/"
 rm -rf "$work"
