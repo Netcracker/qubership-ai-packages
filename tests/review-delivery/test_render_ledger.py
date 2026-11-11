@@ -46,8 +46,8 @@ class RenderLedgerTest(unittest.TestCase):
 
     def test_findings_of_one_severity_are_ordered_by_the_number_in_their_id(self):
         data = review([finding("F10", "minor"), finding("F2", "minor"), finding("F1", "major")])
-        self.assertEqual(["### F1 [major] title F1 (tests)", "### F2 [minor] title F2 (tests)",
-                          "### F10 [minor] title F10 (tests)"], self.headings(data, "### "))
+        self.assertEqual(["### F1 major: title F1 (tests)", "### F2 minor: title F2 (tests)",
+                          "### F10 minor: title F10 (tests)"], self.headings(data, "### "))
 
     def test_groups_are_ordered_by_their_highest_severity_with_unclassed_findings_as_a_group(self):
         data = review([finding("F1", "major"), finding("F2", "nit", cls="C1"), finding("F3", "minor", cls="C2")],

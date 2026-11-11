@@ -61,16 +61,35 @@ Result: REVIEW_INCOMPLETE
 `REVIEW_INCOMPLETE` has no counts, because the totals may be incomplete, and is followed by `Coverage: <coverage_gap>`.
 Never write `Coverage: complete`.
 
-**One finding**, in an email and on a platform. A short title, the severity, `Confidence: high` or `medium`, the
-location, then two fields:
+**One finding**, in an email and on a platform. Three paragraphs:
 
-- `Problem`: from `problem`, with the decisive `evidence`;
-- `Proposed solution`: from `proposed_solution`.
+```markdown
+**F36 minor** The no-usable-key error copies every skipped key's reason, unbounded and unescaped, into each failed load.
 
-Word an `evidence` item with `basis: inference` conditionally (`can`, `may`, or the condition it depends on), and a
-`kind: question` finding as a question. Keep the two fields to about three sentences unless the finding would be
-ambiguous; do not drop the condition, the impact, or the expected outcome to save words. The tone is direct and
-neutral: no praise, thanks, apology, greeting, or closer, and no softening of a defect.
+Problem: a 1 MiB JWKS gives a 26.8 MB error; a raw newline from `kty` reaches the log as is; the warning already listed the same keys.
+
+Proposed solution: cap the list at N reasons with "and M more", quote each with %q, and drop the list from the error or from the warning.
+```
+
+- The first line is the tag and the claim. A collapsed thread and a notification email show only that line, so the
+  claim, from `title`, is a sentence that stands alone. There is no separate title line.
+- The tag is `**F<id> <severity>**`: the id, the severity in lowercase, and nothing else in bold. `confidence: medium`
+  adds `, medium confidence` inside the bold; `high` adds nothing. `kind: question` adds `, question`, and the claim is
+  worded as a question: `**F1 minor, medium confidence, question**`. The tag stays in English whatever the language of
+  the rest, so that an agent can match a comment to its finding with `^\*\*F(\d+) (major|minor|nit)\b`.
+- `Problem:` is from `problem` and the decisive `evidence`: the evidence and the impact, never a restatement of the
+  first line.
+- `Proposed solution:` is from `proposed_solution`, and may be one phrase where the fix is obvious.
+- The lead-ins `Problem:` and `Proposed solution:` are plain text, not bold.
+- Each paragraph is one line, with no hard wraps: the platform wraps it.
+- An inline comment carries no location: the platform shows it. Anywhere else, the location follows the tag:
+  ``**F50 nit** `internal/x.go:122`, outside the diff: …``. A finding with no location names what it is about in the
+  claim (the description, a commit message).
+
+Word an `evidence` item with `basis: inference` conditionally (`can`, `may`, or the condition it depends on). Keep
+`Problem` and `Proposed solution` to two to four sentences together unless the finding would be ambiguous; do not drop
+the condition, the impact, or the expected outcome to save words. The tone is direct and neutral: no praise, thanks,
+apology, greeting, or closer, and no softening of a defect.
 
 **Scope.** Where `scope_exclusions` is not empty, state it once, near the result: the reader must know what was not
 reviewed.
@@ -97,8 +116,8 @@ Held until the code is settled: <n> findings (in the ledger)
 
 ## Findings
 
-- F1 [major] <short finding title> · `path/to/file:42`
-- F2 [minor] ...
+- **F1 major** `path/to/file:42`: <claim>
+- **F2 minor, medium confidence** ...
 
 ## Needed to complete the review
 
@@ -106,9 +125,10 @@ Held until the code is settled: <n> findings (in the ledger)
 ```
 
 *Main problems* lists the classes, ordered by the highest severity among their findings, so the author sees the few
-causes before the many symptoms; it is absent when no class has two findings. *Findings* gives each finding one line,
-its title in the request's language; the problem and the proposed solution are in the ledger, which the chat report
-does not repeat. Omit an empty section. End with the path of `review.json`, and of every file this delivery wrote.
+causes before the many symptoms; it is absent when no class has two findings. *Findings* gives each finding one line:
+its tag as in *One finding*, its location, and its claim in the request's language. The problem and the proposed
+solution are in the ledger, which the chat report does not repeat.
+Omit an empty section. End with the path of `review.json`, and of every file this delivery wrote.
 
 ## Ledger
 
@@ -125,9 +145,10 @@ field the ledger reads; send the file back with the message, as for a file that 
 ## Email
 
 `email.md` holds a `Subject:` line (`Review of <title>: <result line>`), a blank line, and a plain-text body: the
-result, the revision, the out-of-scope line, then the findings in the order above, each with its location written as a
-link to the line at the reviewed head (`https://github.com/<repo>/blob/<head>/<path>#L<line>`, or the GitLab
-`/-/blob/<head>/<path>#L<line>` form). Held findings are left out, as on a platform. Sending is the user's step.
+result, the revision, the out-of-scope line, then the findings in the order above, in the *One finding* form without
+the bold markers. Each location is a link to the line at the reviewed head
+(`https://github.com/<repo>/blob/<head>/<path>#L<line>`, or the GitLab `/-/blob/<head>/<path>#L<line>` form).
+Held findings are left out, as on a platform. Sending is the user's step.
 
 ## Publish to a platform
 
@@ -172,14 +193,52 @@ replies and state changes already satisfied.
 ### Content
 
 Publish each finding once, inline at its `location`. A finding with no location, or with `in_diff: false`, goes into the
-general comment with its exact location and the reason it is not inline, keeping its severity and confidence.
+general comment.
 
 On GitLab, start the general comment with the result line. On GitHub, leave it out for `APPROVE` and `REQUEST_CHANGES`:
 the state of the submitted review (changes requested, or commented) shows the decision. Keep it for
-`REVIEW_INCOMPLETE`, which no review state shows. The rest of the general comment is only the revision, optional
-`Assessed by`, the out-of-scope line, `Previous findings` when there are any, *Main problems* as in the chat report
-(each finding id linked to its inline comment), and findings that cannot be placed inline. Include `Coverage` only for
-`REVIEW_INCOMPLETE`. Do not copy inline findings, their titles, or pointers such as "See inline comment".
+`REVIEW_INCOMPLETE`, which no review state shows. The rest of the general comment is only these parts, in this order:
+
+```markdown
+Revision: `3c85f644...0c8d9fd3`.
+
+Out of scope: rules of ADR-0091 to ADR-0096 that #202 and #232 implement.
+
+All 3 findings of the previous round are fixed: [F6](<thread_url>), [F9](<thread_url>), and F22 from the [review body](<review_url>).
+
+**Main problems**
+
+1. The realm summary line is not pinned: joinReloadErrors builds it in map order, and its test matches only prefixes. [F35](<comment_url>), [F47](<comment_url>).
+2. The User-visible lines quote the intended texts, not the emitted ones: F40, F41 below.
+
+**Not inline**
+
+**F40 minor** Two log texts quoted in the description and the top commit differ from what the code emits.
+
+Problem: …
+
+**F50 nit** `internal/token/keys/timing_test.go:122`, outside the diff: the comment on publish says it sets "the JWKS of every source", which no longer holds for realms.
+
+Problem: …
+```
+
+- *Revision*, optional `Assessed by`, and *Out of scope* take one line each. Include `Coverage` only for
+  `REVIEW_INCOMPLETE`.
+- *Previous findings*: the earlier findings with `fix_accepted` share one sentence, with the ids linked to their
+  threads; findings that sat in an earlier review body share one link to it. Every other status needs a reason, so
+  each such finding gets its own line: `- [F6](<thread_url>): <status>; <reason>`.
+- *Main problems* as in the chat report, without the severity, each finding id linked to its inline comment (each
+  platform reference says when that URL exists) and a finding of *Not inline* written as `F40 below`. A class left
+  with one published finding is dropped, because that finding already stands on its own; a held finding, or one whose
+  comment the user deleted from a draft, is not published. Link only to comments that exist.
+- *Not inline*: the findings that cannot be placed inline, each in the *One finding* form, with the location and the
+  reason after the tag, and nothing between them.
+
+Do not copy inline findings, their claims, or pointers such as "See inline comment".
+
+The user may delete inline comments from a draft before submitting it. When they ask for the general comment again,
+read the draft's comments back from the platform first (each platform reference says how), match each to its finding
+by the tag, and render the general comment from the findings whose comments are still there.
 
 ### Write protocol
 
@@ -193,7 +252,9 @@ For every platform write:
    Report created IDs and inspection URLs; never claim a closure without the confirmed state.
 4. On failure or an uncertain outcome, inspect before retrying; stop writing if ambiguity remains. Report limitations,
    such as a missing permission, and partial completion. Do not undo earlier writes. Delete created entries only with
-   explicit cleanup authorization; never change review or note bodies that existed before.
+   explicit cleanup authorization; never change review or note bodies that existed before. The one exception is the
+   general comment of the publishing account's unsubmitted review or draft, rewritten to add the links to its inline
+   comments or when the user asks for it again.
 
 At the end, report what was written, the earlier findings accepted as fixed, and, separately, every thread state change
 the table above called for that was not performed, with the reason.

@@ -64,7 +64,7 @@ def location(f):
 
 def finding(f):
     kind = " (question)" if f["kind"] == "question" else ""
-    out = [f"### {f['id']} [{f['severity']}] {f['title']}{kind} ({f['axis']})", "",
+    out = [f"### {f['id']} {f['severity']}: {f['title']}{kind} ({f['axis']})", "",
            f"{location(f)} · Confidence: {f['confidence']}", "",
            f"- Problem: {f['problem']}"]
     for e in f.get("evidence", []):

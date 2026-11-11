@@ -266,7 +266,8 @@
           "description": "Stable across rounds of the same review, e.g. F3."
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "description": "The claim: one sentence that states the defect, or asks the question, and stands alone, since it is the first line of the rendered comment."
         },
         "kind": {
           "enum": [
@@ -356,7 +357,7 @@
         },
         "problem": {
           "type": "string",
-          "description": "The condition, the defect or the question, and its concrete impact."
+          "description": "The condition and the concrete impact, without restating the title."
         },
         "evidence": {
           "type": "array",

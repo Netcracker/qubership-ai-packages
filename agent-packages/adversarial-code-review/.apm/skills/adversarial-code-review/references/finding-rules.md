@@ -51,8 +51,9 @@ the line is outside every hunk. Use `location: null` only for a finding with no 
 
 ## Content
 
-- `title`: the defect in a few words, not the topic.
-- `problem`: the condition, the defect or the question, and its concrete impact.
+- `title`: the claim, one sentence that states the defect (not the topic) or asks the question. It is the first line of
+  the published comment, and often the only line a reader sees, so it stands alone.
+- `problem`: the condition and the concrete impact, without restating `title`.
 - `evidence`: the decisive facts only, each marked `fact` (read or run) or `inference` (derived). Quote code and text
   exactly, with `path:line`.
 - `proposed_solution`: the smallest outcome that resolves the problem, without prescribing a rewrite a local change
