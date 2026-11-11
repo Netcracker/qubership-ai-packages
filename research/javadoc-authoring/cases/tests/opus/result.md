@@ -33,8 +33,9 @@ class EntryCacheTest {
     }
 
     /**
-     * Fails when a {@link CacheEvent} constant is added without a handler in {@link EventDispatcher}.
-     * The failure lists the constants that lack one.
+     * Fails when a constant is added to {@link CacheEvent} without a handler in {@link EventDispatcher}.
+     *
+     * <p>To fix a failure, give {@link EventDispatcher} a handler for each event the assertion lists.
      */
     @Test
     void everyEventHasAHandler() {

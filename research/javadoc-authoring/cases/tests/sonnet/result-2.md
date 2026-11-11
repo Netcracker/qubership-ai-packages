@@ -24,6 +24,11 @@ class EntryCacheTest {
             .hasMessageContaining("limit " + EntryCache.MAX_ENTRY_BYTES);
     }
 
+    /**
+     * Evicted bytes counts only the length of the evicted value. {@link EntryCache#evict(String)}
+     * used to add the key's length to the total as well, so {@link EntryCache#evictedBytes()}
+     * returned a count larger than the bytes actually evicted.
+     */
     @Test
     void evictedBytesCountsOnlyTheValue() {
         EntryCache cache = new EntryCache("c");
@@ -32,10 +37,6 @@ class EntryCacheTest {
         assertThat(cache.evictedBytes()).isEqualTo(3);
     }
 
-    /**
-     * Fails until every {@link CacheEvent} constant is in {@link EventDispatcher#HANDLED}.
-     * Add the handler to the dispatcher, then list the event there.
-     */
     @Test
     void everyEventHasAHandler() {
         Set<CacheEvent> missing = EnumSet.allOf(CacheEvent.class);

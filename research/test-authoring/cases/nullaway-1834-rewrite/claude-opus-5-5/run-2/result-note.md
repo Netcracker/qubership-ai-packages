@@ -1,44 +1,40 @@
-I rewrote the 20 tests that commit added as 9 tests in `nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java`. Only that file changed, and nothing is committed. All 55 tests in `WildcardTests` pass with the fix, and `:nullaway:buildWithNullAway` passes. I also ran the rewritten tests against the production code from before the fix: exactly the 7 tests for newly reported cases fail, each at its expected-report line.
+I rewrote the 20 tests the commit added as 10 tests. Every input they had is still there, and I added 9 new silent inputs, each a near variant of a reporting one. Production code is untouched and nothing is committed.
 
-I found a false positive the fix introduces, which I left out of the tests and describe at the end of the message below.
+Results:
+- **The full suite passes:** `./gradlew :nullaway:test` ran 1109 tests with 0 failures, and `./gradlew :nullaway:buildWithNullAway` passes.
+- **On the base commit:** with the production code from `HEAD~1`, exactly 7 tests fail, each with "Did not see an error on line N" and nothing reported anywhere else. So none of the new inputs moved the old behaviour.
+- **The other 3 tests** pass on the base commit. I mutated the production code once for each of them, and each mutant made its test fail.
+
+One suggestion for you, not for the PR: `CLAUDE.md` has no line naming the test stack. I could add one saying the tests run on JUnit 4 and Error Prone's `CompilationTestHelper`, and that one compilation stops at the first missing diagnostic (naming it by line) but lists every diagnostic it produced. I didn't edit the file, so say if you want it.
+
+I couldn't load the English style and Javadoc skills the test skill points to, because neither is installed here. Wording follows the file's existing style.
 
 ---
 
 **Message for the PR author**
 
-**Why I changed the tests.** I ran your 20 tests against the code from before the fix. 7 of them fail there; those are the behaviour this PR adds. The other 13 already passed, so they are controls: inputs whose result shouldn't change. Several of those passing tests checked only that nothing was reported, with nothing next to them that does get reported. A test like that also passes when its setup is wrong.
+I regrouped the tests this PR adds to `WildcardTests.java` from 20 methods into 10. Every input from the original tests is still there. I ran the new tests against the production code from both this PR and its parent.
 
-I also checked how Error Prone's test helper reports failures. One compilation stops at the first mismatch (`Did not see an error on line N matching …`). So two new cases can't share one source file: the first failure would hide the second.
+**Why fewer tests.** Each method had a single input, so a test that expected no diagnostic proved nothing alone: it would pass just as well if the source were set up wrong. Now each test pairs the input this PR starts reporting with near variants that differ in one respect and stay silent. The name states that rule. I checked how `CompilationTestHelper` reports with a throwaway test. One compilation stops at the first missing `// BUG` diagnostic and names it only by line number, but it lists every diagnostic produced. So each test holds exactly one expected-diagnostic input, plus any number of silent ones.
 
-**What I changed.** Each of the 7 new cases is now its own test. Its controls sit in the same source file, and each control differs from the case in one way:
+**The new tests, and which old tests they absorb:**
+1. `aTypeVariableFailsANonNullWildcardOnlyWhenItsDeclaredBoundAdmitsNull`: the `T extends @Nullable Object` case, plus the old `<T>`, `? extends @Nullable Object` and `Box<?>` tests.
+2. `aTypeVariableDeclaredInUnannotatedCodeFailsANonNullWildcard`: adds a `@NullMarked` holder that stays silent.
+3. `aTypeVariableFailsANonNullWildcardWhenTheVariableItExtendsAdmitsNull`: adds `<T, S extends T>`, which stays silent.
+4. `aWildcardBoundedByATypeVariableFailsANonNullWildcardWhenThatBoundAdmitsNull`: adds `<T> Box<? extends T>`, which stays silent.
+5. `aNullnessAnnotationOnATypeVariableUseDecidesOverItsDeclaredBound`: the `@NonNull T` and both `@Nullable T` tests, plus `Box<@Nullable T>` with a nullable bound.
+6. `aTypeVariableMeetsAWildcardBoundedByItselfUnlessItsUseIsNullable`: the "same type variable" test, its inference variant (now a nested `Loader` interface), and the `@Nullable T` into `? extends T` test.
+7. `aTypeVariableFailsAWildcardBoundedByTheVariableItExtendsOnlyWhenItAloneAdmitsNull`: the `S extends @Nullable T` case and both `S extends T` tests, plus `S extends @Nullable T` under a nullable `T`, which stays silent.
+8. `aTypeVariableThatMayBeNullFailsAWildcardBoundedByItsNonNullUse`: adds `Box<@NonNull T>`, which stays silent.
+9. `aCapturedTypeArgumentIsComparedToATypeVariableRequirementAsWritten`: both captured-argument tests in one interface. It adds `passNullable()`, which returns a captured `? extends @Nullable V` and is reported both with and without this PR.
+10. `anOverrideReturningATypeVariableThatMayBeNullFailsANonNullProjection`: adds an override returning `List<@NonNull V>`, which stays silent.
 
-- **Concrete `? extends Object` requirement:**
-  - A type variable whose bound admits null is reported.
-  - Controls: a non-null bound, a `@Nullable` wildcard requirement, `Box<?>`, and `Box<@NonNull T>`.
-- **Separate partitions, one test each:**
-  - **Variable declared in `@NullUnmarked` code.** I added a `@NullMarked` holder as its control.
-  - **Variable bounded by another variable whose bound is nullable.** Controls: a holder whose `T` is non-null, and passing the same value to a `Box<? extends T>` parameter.
-  - **Wildcard bounded by a nullable type variable.** I added a non-null bound as its control.
-- **Requirement that names a type variable:**
-  - `S extends @Nullable T` into `? extends T`, with `S extends T` as the control.
-  - `Box<T>` into `? extends @NonNull T`. Its controls are `? extends T` and the capture and `CompletableFuture` inference inputs. I checked these by mutation: removing the `CapturedType` exception makes this test fail on the capture line.
-- **The two behaviours that already worked** (`@Nullable T` written at the use site) keep their own tests, each with its silent control.
+**Evidence.**
+- With the parent commit's production code, tests 1–4, 7, 8 and 10 fail, each with "Did not see an error on line N … There were no errors". So every new silent input was already silent before this PR.
+- Tests 5, 6 and 9 pass on the parent commit. Each fails under one mutant of `CheckIdenticalNullabilityVisitor`:
+  - Dropping `!hasNullnessAnnotation` from `typeComparedForNullness` fails test 5.
+  - Disabling the `lhsBound instanceof Type.TypeVar` branch fails tests 6, 7 and 9.
+  - Dropping the `CapturedType` exemption fails test 9.
+- `:nullaway:test` and `:nullaway:buildWithNullAway` pass.
 
-I renamed the tests so each name states the rule, for example `aTypeVariableIsRejectedByANonNullWildcardOnlyWhenItsDeclaredBoundAdmitsNull`. Every input whose result already held before the fix is still in some test.
-
-**The override test.** I moved it from `new Test<>() { … }` to a named `class Impl<V> implements Test<V>`, and added `List<V> get()` overriding `List<? extends V>` as its control. In the diamond form, the control is reported too. So the original test passed whether or not the `@NonNull` rule worked.
-
-**A bug I propose fixing and did not fix.** Since this fix, an anonymous class created with a diamond reports a correct override as an error:
-
-```java
-interface Test<V extends @Nullable Object> {
-  List<? extends V> get();
-  static <V extends @Nullable Object> Test<V> make() {
-    return new Test<>() {
-      @Override public List<V> get() { … }  // reported: mismatched type parameter nullability
-    };
-  }
-}
-```
-
-This was silent before the fix. The same override with `new Test<V>()`, or in a named class, is still silent. The type the diamond infers seems to reach `extendsBoundContains` in a form where `admitsNull`/`typeComparedForNullness` read it differently. I didn't add a failing test for it, because it needs a production change. Once that's fixed, a diamond control could join the override test. The CHANGELOG's sub-bullet about override checks should probably wait until then too.
+**Proposed, not done.** The comment on the capture exemption says capture conversion drops type-use annotations. In test 9, though, a captured `? extends @Nullable V` keeps its `@Nullable`; the report prints `capture of ? extends @Nullable V`. Only `@NonNull` seems to be lost. You may want to narrow that comment. I didn't change the production code.

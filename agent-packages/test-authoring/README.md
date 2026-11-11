@@ -41,7 +41,9 @@ rule can be satisfied by a test worth nothing.
   and names each by content, a fact learned once per harness and proposed for the repository's instructions, which may
   accept a form ahead of the harness; the reader sees each input whole and the difference between cases on one line,
   through a helper that takes the varying value or one act's input, never a helper that assembles the input from pieces;
-  a silent case stands with a control that reports; and the form follows the assertions.
+  a silent case stands with a control that reports; and the form follows the assertions; why an expected value a
+  reader would correct is what it is, carried in the assertion message; and the comment above a test, which most tests
+  do without.
 - Determinism as a checklist keyed by cause, each with its one fix, and the random-order run for the cause the file
   does not show.
 - Organization: the varying input and the expected value in the test body and the shared part written once, in one

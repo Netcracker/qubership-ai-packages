@@ -27,7 +27,8 @@ expectation in the matcher, and keep `toBe(true)` for a function that returns a 
 
 - **The actual value goes inside `expect()`**, the expected value in the matcher.
 - **`expect(actual, message)` takes a message as the second argument**, printed as a prefix of the first line; it
-  carries the function and the input, not the values.
+  carries the function and the input, not the values, and for an expected value a reader would correct, why it is
+  that value (SKILL.md §7).
 - **`expect(fn).toThrow(RangeError)`** prints the expected class; match a message only on the part the behavior
   defines.
 

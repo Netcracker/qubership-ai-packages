@@ -1,37 +1,23 @@
-I rewrote the two CALCITE-7051 tests in `core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java` as seven tests, and production code is unchanged. Six of the seven fail on the code before your fix and pass with it. The full `SqlValidatorTest` class passes (552 run, 0 failed, 7 skipped), and `checkstyleTest` is clean. Nothing is committed.
+I rewrote the two tests from the last commit as eight tests plus one helper in `SqlValidatorTest.java`. The 553 tests in `SqlValidatorTest` pass on the fix. Checkstyle and autostyle could not run, because their dependencies can't be downloaded offline. I didn't touch the production code and didn't commit; the test file is the only change in the working tree.
 
-Here is the message for the author:
+On the code before the fix, 6 of the new tests fail with the bug itself: "Column 'deptno' is ambiguous", or an `AssertionError` inside `expandExprFromJoin`. The other 3 pass there, which is expected, since they check behaviour that was already right.
 
 ---
 
-Thanks for the fix. I rewrote the tests it added in `SqlValidatorTest`; here is what changed and why.
+**Message for the PR author**
 
-**The old tests could not fail on the wrong result.** Every query ended in `.ok()`, which only checks that validation doesn't throw. Suppose the expansion picked the wrong column, skipped the COALESCE, or took the alias from the wrong place. The tests would still pass as long as nothing threw. Each test now asserts the rewritten SQL with `rewritesTo(...)`, which shows two things:
-- The common column becomes `COALESCE(EMP.DEPTNO, DEPT.DEPTNO)`.
-- Its alias is spelled as in the select list, not as in the USING clause. That is the `identifier.getSimple()` change.
+Thanks for the fix. I rewrote the tests for CALCITE-7051 in `SqlValidatorTest`; here is what changed and why.
 
-**One query per test.** `testSelectJoinUsingCommonColumnCaseSensitive` had four queries in one method, so the first failure hid the rest. The name also said "CaseSensitive" while every query ran case-insensitive. Each query is now its own test, named for the case it covers:
+1. **The tests now check the result, not only that validation succeeds.** `.ok()` only proves nothing was thrown. Each test now asserts the result type, for example `.type("RecordType(INTEGER NOT NULL deptno) NOT NULL")`. That also checks your change to the column alias: the column takes the select item's spelling, not the `USING` list's. Without that change, `select DEPTNO … using (deptno)` and both case-insensitive spellings of the NATURAL JOIN query fail again with "Column … is ambiguous". The old tests would not have noticed.
 
-| Test | Query | Before the fix |
-| --- | --- | --- |
-| `testJoinUsingCaseInsensitiveCommonColumnInCatalogCaseIsCoalesced` | `DEPTNO … using (DEPTNO)` | already passed; kept as the control |
-| `testJoinUsingCaseInsensitiveCommonColumnInOtherCaseIsCoalesced` | `deptno … using (deptno)` | `AssertionError` in `expandExprFromJoin` |
-| `testJoinUsingCaseInsensitiveSelectItemMatchesLowerCaseUsingColumn` | `DEPTNO … using (deptno)` | `Column 'DEPTNO' is ambiguous` |
-| `testJoinUsingCaseInsensitiveSelectItemMatchesUpperCaseUsingColumn` | `deptno, empno … using (DEPTNO)` | `Column 'deptno' is ambiguous` |
-| `testNaturalJoinCommonColumnIsCoalesced` (case-sensitive) | `deptno, empno … natural join dept` | `Column 'DEPTNO' is ambiguous` |
-| `testNaturalJoinCaseInsensitiveCommonColumnInCatalogCaseIsCoalesced` | `DEPTNO … natural join dept` | `Column 'DEPTNO' is ambiguous` |
-| `testNaturalJoinCaseInsensitiveCommonColumnInOtherCaseIsCoalesced` | `deptno … natural join dept` | `Column 'deptno' is ambiguous` |
+2. **One query per test.** Each old method validated four queries in a row and stopped at the first failure, so a red build showed one broken spelling and hid the rest. Each query is now its own `@Test`, and the name says which spelling of the select item, the `USING` column or the table column it covers. The repeated case-insensitive settings moved into a helper, `caseInsensitiveWithExpansion(sql)`, so each test body is one line and the SQL is visible whole.
 
-**Other changes:**
-- **Shared setup:** the four repeated setup lines (case-insensitive, `Casing.UNCHANGED` for quoted and unquoted names, identifier expansion) are now one helper, `sqlCaseInsensitiveExpanded(sql)`. Only the query differs between tests, and it stays in the test body.
-- **A column that is not common:** `empno` is now in two queries. It must stay a plain `EMP.EMPNO`, which catches a name match that accepts too much, or a NATURAL column list that takes every field. It expands the same way before and after the fix.
-- **A dropped query:** the case-sensitive `select DEPTNO … natural join dept` duplicated the `deptno` one. The parser upper-cases unquoted names, so both reach the validator as the same query.
-- **NATURAL JOIN also changed when case-sensitive.** Before the fix, a NATURAL JOIN with identifier expansion failed as ambiguous even with case-sensitive matching. So `testNaturalJoinCommonColumnIsCoalesced` covers the new NATURAL expansion, not only the case handling. It may be worth saying so in the JIRA issue or the commit message.
+3. **New test: `testJoinUsingCaseSensitiveRejectsItemInOtherCaseThanUsingColumn`.** With case-sensitive matching, `select deptno from EMP join DEPT using (DEPTNO)` must still fail with "Column 'deptno' not found in any table". If the expansion ignored the case-sensitivity setting, every other test would still pass; this one fails.
 
-**Checks I ran:**
-- All seven tests on the code before the fix: six fail as in the table, and the catalog-case control passes.
-- With the alias set back to `name`, three tests fail: the two mixed-case USING tests and the lower-case NATURAL one.
+4. **Kept and dropped queries.**
+   * I kept `select DEPTNO … using (DEPTNO)` with case-insensitive matching. It worked before the fix too, and it shows the exact-match spelling still expands.
+   * I dropped one of the two case-sensitive NATURAL JOIN queries. With the default upper-casing, `deptno` and `DEPTNO` parse to the same identifier, so the second added nothing.
 
 **Proposed, not done:**
-1. **A three-table join:** `… using (deptno) join bonus using (ename)` with a lower-case `deptno`. On the old code this hit the same `AssertionError` through the recursive call into the inner join. Its NATURAL form would cover `deriveNaturalJoinColumnList` on an inner join.
-2. **An outer join:** `left join … using (deptno)`, case-insensitive. That is where taking COALESCE over a single qualified column would give different results.
+* Checkstyle and autostyle could not run here (dependencies not cached offline), so please run them before merging.
+* I asserted the result type rather than the rewritten SQL text. If you also want the `COALESCE(EMP.DEPTNO, DEPT.DEPTNO)` expansion pinned, a `rewritesTo` check on one case-insensitive query would do it.

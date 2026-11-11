@@ -54,6 +54,7 @@ ab-refs-by-role.md                     the references split by role against the 
 ab-go-prs.md                           three Go pull requests, with and without the skill, against their own tests and hand-made mutants
 ab-javadoc-reread.md                   whether a re-read-the-comment rule in javadoc-authoring changes the output; it did not
 ab-final-review.md                     a checklist review in a fresh subagent (the final-review package) against two real reviews
+ab-pr4394-test-comments.md             which skill text put comments above tests, and the reason for an expected value moved into the message
 cases/<case>/                          a regression case: the tag it starts from, the task, and each model's result
 ```
 

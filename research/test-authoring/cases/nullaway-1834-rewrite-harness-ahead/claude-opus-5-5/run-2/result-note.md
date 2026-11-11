@@ -1,32 +1,20 @@
-I rewrote the 20 tests the last commit added to `WildcardTests.java` as 3 tests, one per rule. `WildcardTests` passes on the fixed code (49 tests). Production code is untouched and nothing is committed. I didn't run `./gradlew :nullaway:buildWithNullAway`, because only a test source changed.
-
-The skill also points to a writing-style skill and a Javadoc skill, but neither is installed here, so the wording follows this file's own conventions. The repository's `CLAUDE.md` already describes how `CompilationTestHelper` reports mismatches, and nothing I found adds to it, so I'm not proposing any change there.
+I rewrote the 20 tests the last commit added to `WildcardTests.java` as 3 tests, one per rule. Production code is untouched and nothing is committed. `./gradlew :nullaway:test` passes. When I put the production code back to the base commit, each of the 3 tests fails at a diagnostic that never appears. That is the bug itself (the silence), not a compile error.
 
 ---
 
-**Message for the author of the pull request**
+**Message for the author of the PR**
 
-I rewrote the tests in `WildcardTests.java` without touching the fix. The 20 single-case tests are now 3 tests, one per rule the change sets. Every input from the original tests is still there.
+Thanks for the fix and for testing it from both sides. I've regrouped the tests in `WildcardTests.java`. Every input and expected diagnostic you wrote is still there.
 
-1. **`aTypeArgumentFailsANonNullWildcardRequirementOnlyWhenItMayBeNull`** covers a concrete requirement (`? extends Object`). Each method in the source is named for its partition:
-   - **Reported:** a bound that admits null, a bound inherited from another variable, a wildcard actual `? extends T`, `@Nullable` at the use, and a variable declared in `@NullUnmarked` code.
-   - **Not reported:** a non-null bound, `@NonNull` at the use, and the `? extends @Nullable Object` and `?` requirements.
-2. **`aTypeArgumentFailsAWildcardBoundedByATypeVariableOnlyWhenItMayBeNullAndTheVariableMayNot`** covers a requirement that names a type variable:
-   - **Reported:** `Box<T>` passed to `? extends @NonNull T`, `Box<S extends @Nullable T>` where `T` cannot be null, and `Box<@Nullable T>`.
-   - **Not reported:** the same variable, `S extends T`, the inference case, and both captured-actual cases.
-3. **`anOverrideMayNotReturnATypeArgumentThatMayBeNullWhereTheOverriddenOneMayNot`** covers the override path.
+**What changed**
 
-**Why.** Before, each silent test kept its own copy of the source, apart from the test that reports. Nothing kept the two copies alike, and the reader had to compare them line by line to find the one difference. Now each silent input sits in the same compilation as the inputs that do report, so the difference is one method signature. This follows the repository's stack line, which keeps one rule's cases in one source. The names now state the rule, not a single case.
+- **20 tests became 3, one per rule.** Each pair like `…FailsANonNullWildcardRequirement` / `…MeetsANonNullWildcardRequirement` had two copies of the same source differing in one line. Nothing kept those copies in sync, and a reader had to compare them to find the difference. Our convention (CLAUDE.md) is that the cases of one rule live in one source. So each rule now has one source, and each case is a method in it whose signature shows what differs on one line:
+  - **`aTypeVariableThatMayBeNullIsRejectedOnlyByAConcreteWildcardBoundThatExcludesNull`** covers `Box<? extends Object>`, `Box<? extends @Nullable Object>` and `Box<?>` as targets. It checks a nullable bound, a non-null bound, a bound inherited through `S extends T`, `Box<? extends T>`, `@Nullable T` and `@NonNull T` at the use site, and a type variable declared in `@NullUnmarked` code.
+  - **`aWildcardBoundedByATypeVariableRejectsATypeArgumentOnlyWhereItMayBeNullAndTheBoundMayNot`** covers targets that name a type variable (`? extends T`, `? extends @NonNull T`). It checks `T` with a nullable bound and with a non-null bound, the `CompletableFuture` inference case, and both captured-type cases. The captured and inference cases expect no report, so they now sit in the same source as the cases that do report. That way a broken setup can't make them pass by accident.
+  - **`anOverrideIsReportedOnlyWhenItsReturnTypeArgumentMayBeNullWhereTheOverriddenOneMayNot`**: the override case is the one that got a new input.
+- **One new input:** an override that returns `List<@NonNull V>` and expects no report. Without it, the override test would also pass if NullAway reported every override of that method. It differs from the reported override in one annotation.
+- **Every expectation was checked against the base commit,** one at a time in a throwaway class (now deleted). The 7 expected reports all fail on the base and pass with the fix. One of them is `Box<? extends T>` into `Box<? extends Object>`, which the base also missed. The 14 cases that expect no report hold both before and after the fix.
 
-**What I added.** Two inputs that check the report really depends on nullness:
-- `nonNullAtTheUse(Box<@NonNull T>)` passed to `? extends @NonNull T`.
-- A second override returning `List<@NonNull V>`.
+**Proposed but not done**
 
-Neither is reported, with or without the fix.
-
-**How I checked it, with the production code reverted to the parent commit:**
-- With the 7 markers for reports the fix adds removed, all 3 tests pass. So every input that is expected to stay silent, and the two `@Nullable`-at-the-use reports, already behaved that way before the fix.
-- With any one of those 7 markers put back, its test fails.
-- On the fixed code, all 3 tests pass.
-
-**What I propose but didn't do.** Since `doTest()` stops at the first mismatch, a failure in a test with several cases shows only one of them. Fixing a regression may take a second run to see the next one. The repository's guidance accepts that until the test helper reports every mismatch.
+- One test still has 7 markers, and `doTest()` stops at the first mismatch and identifies it only by line number. If two cases break at once, the report names just the first. CLAUDE.md accepts that for now. A per-marker label would need a change to Error Prone's `CompilationTestHelper`, which isn't in this repository, so I haven't proposed it here.
