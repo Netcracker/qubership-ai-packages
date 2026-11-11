@@ -52,3 +52,8 @@ does not state.
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Opus passes all
 six checks without the skill, though it offers to move the rule into ADR-0007 instead. Sonnet fails checks 1, 2, and 3:
 it adds the rule to ADR-0007 in place as R6 and writes no new record.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

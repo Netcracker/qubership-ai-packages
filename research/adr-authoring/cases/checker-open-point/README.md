@@ -46,3 +46,8 @@ with no `kid`; R4 now covers only a token that has one.
 The baselines ran on 2026-11-11 with `english-developer-style` alone, on the input with the guide. They say "violated"
 for Change A, and "undecided (O1)" or "open, depends on O1" for Change B. Both fail checks 1 and 2 on the words only:
 the meaning matches both expected verdicts.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

@@ -50,7 +50,7 @@ server.
 #### The allowed libraries
 
 - **R3** (`build`). A library joins core-allowed-libraries only where no artifact on its runtime classpath provides an
-  HTTP server, and the owner of this record approves the pull request that adds it.
+  HTTP server.
 
 ### Confirmation
 

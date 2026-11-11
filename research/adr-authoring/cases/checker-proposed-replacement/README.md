@@ -56,3 +56,8 @@ The baselines ran on 2026-11-11 with `english-developer-style` alone, on the inp
 for R7, which matches in meaning. For R9, Opus says "violated, pre-existing" and Sonnet "violated", which judge an
 untouched rule, and neither writes the advisory line for R3. Both fail checks 1, 2, and 4 on the words, and checks 2 and
 4 on the meaning too.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

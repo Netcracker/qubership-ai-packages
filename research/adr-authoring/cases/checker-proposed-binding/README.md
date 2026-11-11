@@ -53,3 +53,8 @@ input with an `Accepted` record, `checker-partial-delivery`, Sonnet has passed c
 The baselines ran on 2026-11-11 with `english-developer-style` alone. Opus says "fail" for Change A and "deferred" for
 Change B; Sonnet says "violated" and "deferred". Both fail checks 1 and 2 on the words, where Sonnet's Change A matches
 in meaning, and check 2 on the meaning too: neither judges Change B by the case it alters.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

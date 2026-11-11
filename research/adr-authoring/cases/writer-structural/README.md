@@ -69,3 +69,8 @@ away from HTTP; none invents a test name. Two guides show the trailers with numb
 The baselines ran on 2026-11-11 with `english-developer-style` alone. Both keep the repository's metadata, but write no
 numbered rules, name `token-no-http` only in the Decision, and write a guide that maps no layer. They fail checks 3 to 6
 and 8, and Sonnet also fails check 7: its line in `AGENTS.md` never names the guide.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

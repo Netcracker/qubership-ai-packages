@@ -61,3 +61,8 @@ checks grade them. Both keep the retry count as "TBD" with no rule, keep the own
 meaning that passes checks 3 and 6, though not by marker. Sonnet lists the retries under "Open items", which passes
 check 4 by meaning, and Opus has no open point for them. Both fail checks 7 and 8: no word about a guide, and `Accepted`
 as the status.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.

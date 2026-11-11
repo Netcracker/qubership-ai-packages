@@ -7,7 +7,8 @@ decision and one record. Request 2 is the noise input for the split rule.
 
 ## Skill parts
 
-- `SKILL.md`: "What belongs in an ADR" (one decision per record, split no further, propose the split)
+- `SKILL.md`: "What belongs in an ADR" (one decision per record, split no further, propose the split); "Terms" (a named
+  set for the trusted key sources, a set that is expected to change; no check reads it)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -37,13 +38,18 @@ choices are in one record, and there is no need to split them."; it fails check 
 
 ## Results
 
-Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. Trees `6c8380e9`, `7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change",
-its steps 1 and 4 and its paragraph on cases, which this case does not read, so these results stand for them. All four
-results pass all five checks: Request 1 writes ADR-0006 for the security architect's decision alone and offers ADR-0007
-for the health endpoint, and Request 2 writes one record for the three choices and proposes no split. Sonnet r2's
-ADR-0006 points in its Consequences at "the message to the user" and at a record that does not exist yet. No result
-names an address.
+Runs of 2026-11-11 on tree `3b230c74`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because its trusted key sources form a set that is
+expected to change, which the bullet on named sets under "Terms" covers, and that bullet changed. All four results pass
+all five checks: Request 1 writes ADR-0006 for the security architect's decision alone and offers ADR-0007 for the
+health endpoint, and Request 2 writes one record for the three choices and proposes no split. Sonnet r2 proposes the
+split in a sentence that also says the probe "does not follow from a record about tokens", so `check.py` skips it and
+fails check 2 on the marker, while the meaning matches. Three of them define the trusted key sources as a named set,
+`trusted-key-sources`, and Sonnet r2 as the sources the service is configured to trust; all four leave the criterion to
+an open point, and none writes a rule about who approves a member. No result names an address.
+
+The previous round, on tree `bf6c2035`, passed the same way, and three of its four results added an open point on who
+approves a new trusted key source, as the bullet on named sets then asked.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
 records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.

@@ -57,3 +57,6 @@ ways, which `change-description-authoring` decides and no check here reads.
 The baselines ran on 2026-11-11 on `prompt-baseline.md`. Both state the partial delivery in prose ("This implements part
 of ADR-0007 R5, and #12 tracks the rest"; "See #12.") and end with a `BREAKING CHANGE:` footer, but carry no rule
 trailer: they fail checks 1 and 2.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record of
+`adr-authoring`, which the session of this case does not read, so the results above stand for it.

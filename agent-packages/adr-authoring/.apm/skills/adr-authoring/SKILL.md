@@ -168,10 +168,11 @@ which tokens, which addresses, which unit of work.
 - Define a boundary word by its members or by a test: "any host other than `a.svc` and `b.svc`", not "outside the
   cluster". List the members in the record only for a set that does not change: an accepted record takes no edit that
   changes a rule, so each new member of a listed set takes a new record. For a set that is expected to change, such as
-  allowed hosts, libraries, or regions, define a named set by an identifier, such as `egress-allowlist`, and state, as
-  rules, what qualifies a member and who approves a new one. The members live in one file in the repository, and the
-  code refers to the identifier, so adding a member is one pull request that changes the file and the code that handles
-  it.
+  allowed hosts, libraries, or regions, define a named set by an identifier, such as `egress-allowlist`, state as a rule
+  what qualifies a member, keep the members in one file in the repository, and let the code refer to the identifier.
+  Adding a member is then one pull request that changes the file and the code that handles it. Where the criterion
+  cannot be checked from the repository, such as a security review of a key source, it goes into the definition of the
+  term, and a rule that requires an entry in `CODEOWNERS` for that file takes the place of the criterion's rule.
 - A term lives in the record that owns the concept. Another record that uses the word lists it under **Terms** with a
   pointer, such as "**provider**: as ADR-0091 defines it", and uses it unchanged.
 - Use one word per concept in the Rules, the Justification, and the Consequences, and give each outcome one wording:

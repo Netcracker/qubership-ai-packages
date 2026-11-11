@@ -55,3 +55,8 @@ The baselines ran on 2026-11-11 with `english-developer-style` alone, on the inp
 for both changes; Sonnet says "violated" for Change A and "partly met, remainder deferred" for Change B. Both fail check
 1 on the word, where Sonnet's meaning matches, and check 2 on the meaning: neither judges Change B by the case the
 change alters.
+
+Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
+asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
+named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
+for the tree.
