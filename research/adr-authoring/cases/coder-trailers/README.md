@@ -64,3 +64,9 @@ Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 
 Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Drafting from the user's input", which govern
 the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
 paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.
+
+Tree `d8b52781` changes only "Rules": **One home** says when a rule cites another rule, that a citation of a rule of
+another record copies none of that rule's conditions in any section, and that a rule other rules imply is left out, and
+it takes in **No pointer rules**; **Every requirement is a rule** asks for a rule number instead of a record. The
+session of this case does not read `adr-authoring`, and its input does not change, so the results above stand for the
+tree.

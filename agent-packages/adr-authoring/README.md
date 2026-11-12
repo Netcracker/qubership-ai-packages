@@ -33,7 +33,7 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.1.0
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.2.0
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger into your local

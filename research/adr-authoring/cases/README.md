@@ -50,8 +50,9 @@ should each give a rule.
 | [`checker-structural`](checker-structural/README.md) | checker | an import across a structural rule is `Violates`, also in a package that already failed it; an import in the other direction touches no rule |
 | [`checker-proposed-binding`](checker-proposed-binding/README.md) | checker | under a guide that makes `Proposed` records bind, an `Implements` entry for a `Proposed` rule counts |
 | [`writer-vague-notes`](writer-vague-notes/README.md) | writer | a placeholder and an open point for a value the notes leave open; the guide is asked about before it is added |
-| [`writer-structural`](writer-structural/README.md) | writer | a structural rule tagged with the code it constrains and its check named; records of another template; the guide and the paragraph for the agent that writes code |
+| [`writer-structural`](writer-structural/README.md) | writer | a structural rule tagged with the code it constrains and its check named; records of another template; the guide and the paragraph for the agent that writes code; a citation of the structural rule that copies none of its conditions |
 | [`writer-accepted-record`](writer-accepted-record/README.md) | writer | an added requirement goes into a new record; a broken link is fixed in place |
 | [`writer-two-decisions`](writer-two-decisions/README.md) | writer | two decisions get a proposed split; one decision stays one record |
 | [`writer-defect-and-guarantee`](writer-defect-and-guarantee/README.md) | writer | a defect fix becomes a proposed Bug that the record does not name, not a rule or an open point; a base image's guarantee is a fact in Context; a decision stays a rule where the code does not meet it yet or a dependency already provides it |
+| [`writer-one-home`](writer-one-home/README.md) | writer | a rule cites another record's rule only where the citation changes what it requires, and no section copies the cited rule's values; a rule that other rules imply is left out |
 | [`coder-trailers`](coder-trailers/README.md) | agent that writes code | the paragraph in `AGENTS.md` leads to the trailers; a partial delivery is deferred |

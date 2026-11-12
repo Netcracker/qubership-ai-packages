@@ -51,3 +51,9 @@ The previous rounds, on trees `3b230c74` and `bf6c2035`, passed the same way. Th
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
 records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.
+
+Tree `d8b52781` changes only "Rules": **One home** says when a rule cites another rule, that a citation of a rule of
+another record copies none of that rule's conditions in any section, and that a rule other rules imply is left out, and
+it takes in **No pointer rules**; **Every requirement is a rule** asks for a rule number instead of a record. This case
+writes records, but its skill parts list no part of "Rules", and its inputs hold no rule of another record, so the
+results above stand for the tree.
