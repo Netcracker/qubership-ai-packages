@@ -79,13 +79,13 @@ service and the request or the input that fails, unless the failure crosses a se
 because the repository path already names the owner. The duplicate search is the backlog itself,
 including what was closed as not now. The private names of §6 stay as they are, because the channel
 does not leave the organization; secrets still come out. What does not change is the
-expected-behavior test and, for a request, the acceptance criterion and the non-goals, the two slots
-a backlog item most often lacks. The opening still states the symptom first, and its subject may be
+expected-behavior test and, for a request, the acceptance criterion, the slot a backlog item most
+often lacks. The opening still states the symptom first, and its subject may be
 internal: a class, a service, or a commit is shared vocabulary here, as in a colleague message, as
 long as the paragraph says what the caller or the user observed. An issue you file to fix yourself
 owes the symptom, the version, and the reproducer or the observation, because the reader of the
-closed issue months later has only them; ownership, duplicates, and disclosure are answered in a
-line each.
+closed issue months later has only them; ownership, duplicates, and disclosure need no line in
+it.
 
 ## A vendor's support form
 

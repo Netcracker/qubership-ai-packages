@@ -10,8 +10,8 @@ while the coverage a narrowed test loses stays.
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Pull request description: headings; What each paragraph must earn, length, the result not the
-  route; Verification), §5 (links), §7a
+- `SKILL.md`: §2 (Pull request description: headings and lead-in labels; What each paragraph must earn, length, the
+  result not the route; Verification), §5 (links), §7a
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -30,9 +30,16 @@ while the coverage a narrowed test loses stays.
 7. **No test command** (`no_test_command`). No `./gradlew … test` block: CI runs the tests.
 8. **No test narration** (`no_test_narration`). No sentence counts the cases that fail against the old code or the
    tests that pass.
+9. **Scope by lead-in** (`scope_lead_in_4370`). The overlap with #4359 is in a paragraph that opens with
+   `**Scope.**`, or in a list that follows that paragraph with no other paragraph between, and the description has no
+   headings. The case has no template, and the two open pull requests share `VisibleBufferedInputStreamSkipTest.java`,
+   so the Scope slot carries a related pull request.
 
-Headings are no longer checked: the skill allows them for the two overlapping pull requests and no longer requires
-them for a fenced command.
+Check 9 was added with the lead-in labels. The Haiku results, the baselines, and the older controls fail it, four of
+the six with four or five headings, because the skill they ran on asked for headings where a description named a
+related pull request. `controls/scope-lead-in.md` is `haiku/result.md`, which has no headings, with `**Scope.**` put
+before its paragraph on #4359 and #4360. `controls/scope-list-after-paragraph.md` is `opus/result.md` with a paragraph
+of prose put between the Scope paragraph and the list that names #4359, and fails check 9.
 
 ## Running it
 
@@ -44,13 +51,27 @@ for the command.
 
 ## Results
 
+Tree `e0a0d8f7` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the "pull request title" row, the shapes
+table, and rule 1 of §4, the §5 trailer table, and the §8 checklist, for a repository whose decision records number
+their rules. Tree `6eb5690b` shortens that text in §2, rule 1 of §4, §5, and §8, and forbids an invented rule number (§2
+and the §8 Identifiers item). This input has no decision records, so both trees ask it only to leave rule trailers and
+rule numbers out, no result below carries either, and the results stand for both trees as they stand for the tree before
+them.
+
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+places this case does not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites, left
+out because it changed no output on a description of pgjdbc/pgjdbc#4412; two example template headings since dropped
+from one sentence; and where the break lead-in and a Scope lead-in under a template go, which needs a break or a
+template with headings, and this case has neither. Both runs pass check 9, each opening its paragraph on #4359 and #4360
+with `**Scope.**` and carrying no heading. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Prose words (1) | Facts (2) | New not marked (3) | Coverage lost (4) | No construction (5) | Links (6) | No command (7) | No narration (8) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | fails: 541 | passes | passes | passes | passes | passes | passes | passes |
-| Opus r2 | fails: 658 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes | passes | fails: "5 of the 15 cases fail" |
+| Opus r1 | fails: 600 | passes | passes | passes | fails: "`Long.MIN_VALUE`", "-1, -2" | passes | passes | passes |
+| Opus r2 | fails: 541 | passes | passes | passes | passes | passes | passes | passes |
 | Haiku r1 | fails: 585 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes (no links) | passes | fails: "fails five of its 15 cases" |
 | Haiku r2 | fails: 641 | passes | passes | passes | fails: "the counts -1, -2, and `Long.MIN_VALUE`" | passes | passes | fails: "Five of the fifteen cases … fail" |
 | Opus baseline | fails: 721 | passes | fails: "is new" | passes | fails | passes | fails | fails: "5 of its 15 cases fail" |
@@ -60,4 +81,12 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 
 The script passes the Haiku narration check by its regular expression; the spelled-out "five of its 15 cases" is the
 same sentence the check rules out. The new runs no longer mark the test new or give the command, but all four stay
-above 500 words (Opus r1 comes closest, at 541) and three of four still list the counts and the failing cases.
+above 500 words (Opus r2 comes closest, at 541), three of four still list the counts, and both Haiku runs count the
+failing cases.
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c`, which marks the outcome block with
+`**User-visible changes.**` and `**Not changed.**`, keeps each outcome on one line, and says a lead-in opens its
+paragraph; graded by reading. Both pass check 9 with a `**Scope.**` paragraph and no heading, and both fail checks 1 and
+5: 592 and 597 words of prose, and the counts -1, -2, and `Long.MIN_VALUE` in the verification slot. r1 also fails check
+8 with "5 of the 15 cases ... fail" against the old `skip`. The runs on `c99e1c77` failed check 1 (600 and 541 words)
+and r1 check 5. Tree `9fe02a7c` changes no rule these checks test, so the difference is between runs, not trees.

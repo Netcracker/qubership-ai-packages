@@ -29,10 +29,12 @@ so it behaves identically, and every sentence you would then have to edit was im
 - Why a list of members should usually be the rule that defines them, and the one question that decides which.
 - What changes when the comment ships as documentation: published javadoc pages, or a description a generator lifts
   into an OpenAPI spec.
-- How far a rewrite may grow, how to compare two versions without being sold by the newer one, and how to prove a
-  comment-only sweep moved no code.
-- The extra rules for the comment on a test class, and for `package-info.java`. The test's own name, assertion, and
-  message belong to [`test-authoring`](../test-authoring/).
+- Why a summary states the result rather than sending the reader to other members, and how to state the cases this
+  code computes a concept for without passing them off as the definition an outside specification gives.
+- How far a rewrite may grow, why a phrase fixed in one place is fixed in every copy, how to compare two versions
+  without being sold by the newer one, and how to prove a comment-only sweep moved no code.
+- The extra rules for the comment on a test class, and for `package-info.java`; why a test method usually needs no
+  comment. The test's own name, assertion, and message belong to [`test-authoring`](../test-authoring/).
 
 ## Scope
 

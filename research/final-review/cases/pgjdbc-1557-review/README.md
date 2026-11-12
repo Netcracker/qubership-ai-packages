@@ -62,3 +62,77 @@ two runs, as a no-regression check against the arm named below.
 | 2 | pass | pass | fail, pass |
 
 No regression; both runs file the equal pair of check 2. Cost 0.42 and 0.36 USD against 0.48 and 0.45.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
+`apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
+before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
+`result.md`. Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs
+from `796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that
+table, because the change adds no instruction.
+
+| Model | Check 1 | Check 2 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | 0.52, 0.49 | 1600, 1537 |
+| Haiku | fail, partial | fail, fail | 0.10, 0.10 | 1108, 1073 |
+
+- **Opus.** Both runs file the replaced `socketTimeout` and ask to keep the smaller value (`instr-1`, `result.md:85`:
+  "`isValid(0)` and large timeouts replace the user's `socketTimeout` with a longer one", with "Only lower the timeout";
+  `instr-2`, `result.md:67-68`: "Use the smaller of the two non-zero limits" and "A `timeout` larger than the configured
+  `socketTimeout` raises the limit for the call"). Both file the equal pair (`instr-1`, `result.md:86`: "Socket timeout
+  equal to query timeout races the cancel; on a slow but healthy server the connection is aborted instead of cancelled";
+  `instr-2`, `result.md:72`: "The read timeout equals the query timeout and races the cancel timer").
+- **Haiku `instr-1`.** Both checks fail. No finding says the caller's `socketTimeout` is raised or removed; `isValid(0)`
+  appears only as an untested claim, "`isValid(0)` leaves the network timeout unchanged. **No test.**" (`result.md:15`).
+  The equal pair is noted under item 3 and left open: "The statement's query timeout is set to the same `timeout` in
+  seconds" and "I did not verify whether that cancel runs off the calling thread" (`result.md:25`); no row files it.
+- **Haiku `instr-2`.** Check 1 is partial. F3 (`result.md:52`) states both cases, "For `isValid(0)` SO_TIMEOUT becomes 0
+  (infinite)" and "For `isValid(n)` with a longer `n` it lengthens the bound", but asks to keep the configured value
+  only for `timeout == 0` and to "State the precedence" otherwise. Check 2 fails: item 3 says the query timeout "is set
+  to the same value and does not unblock the caller's blocked read, so it does not bound the call" (`result.md:28`),
+  which drops the race instead of filing it.
+
+Against tree `1b1ebc3e` Opus is unchanged, 4 of 4 passes, at a cost of 0.52, 0.49 against 0.67, 0.51 and 1600, 1537
+words against 1538, 1597. Haiku loses three of its passes: `instr-1` falls from pass, pass to fail, fail, and `instr-2`
+from fail, pass to partial, fail, so the one gain is check 1 of `instr-2`, from fail to partial. Haiku cost 0.10, 0.10
+against 0.12, 0.06, and its reports shrank from 1258, 1436 to 1108, 1073 words. The change is a Java diff, and no run
+writes a table of added instructions or the `Added instructions:` line. Haiku `instr-2` has a `### Not findings` list
+(`result.md:56`), but it names items 1, 4 and 5 that had nothing to review, not instructions.
+
+## The `cond` arm, 2026-10-31: not run
+
+Final-review tree `3d6a0954` conditions the hunk and command rules of item *Claimed cases covered*, the twin-path
+paragraph of item *Siblings of the change*, and the analogues of §2a, and changes the report of §4 to an index. This
+case's check tests a paragraph of item *Boundaries, partitions, and the negative control* on a code change, which the
+tree leaves as it was, and no check reads the report's shape, so its results stand for tree `3d6a0954` without a run.
+
+## Results of the `vocab` arm, 2026-11-08
+
+`vocab-<n>` ran final-review tree `ca8233fb` (`final-review` 1.3.0, from commit `814c1614` of the branch), whose item
+*Comments consistent with the code and with each other* adds the doc-comment checklist, the dense-sentence rule, the
+callee and uncommented-expression questions, and the term check. Opus, two runs, graded by reading `result.md`.
+
+| Model | Check 1 | Check 2 | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, fail | 0.45, 0.62 | 1431, 1440 |
+
+- **Check 1.** `vocab-1` F2 (`result.md:40-43`) heads on `isValid(0)` but asks to "apply the new value only where it is
+  tighter than the saved one". `vocab-2` states both cases, `isValid(0)` and `isValid(30)` against `socketTimeout=5`,
+  and asks for the minimum (`result.md:35-39`).
+- **Check 2.** `vocab-1` files the equal pair as F3, substantive (`result.md:45-48`). `vocab-2` describes the race and
+  files it as taste, with the request "one sentence in the description that accepts this behavior"
+  (`result.md:44-46`).
+
+The change adds no comment, so only the question on an uncommented added expression applies, and it fires in both runs
+on `setNetworkTimeout(null, timeout * 1000)` beside `setQueryTimeout(timeout)`. `vocab-1` routes it to the defect:
+"That is a real defect rather than a missing comment, so it is filed under item 3 (F3)" (`result.md:16`). `vocab-2`
+files it as a substantive finding of item 1, a request for a comment saying why both limits are set, because "The
+cancel request goes over a separate connection and cannot unblock a read on a socket that no longer answers"
+(`result.md:11`). The request is not wrong, but it argues for the pair that check 2 asks to file as a defect, and the
+same run then labels the race taste. Two runs cannot show the rule caused the miss; `final` split the same way. Neither
+run lists terms or files a dense sentence; both say in one clause that no term is coined. The taste note on the
+spelling `savedNetworkTimeOut` (`vocab-1`, `result.md:18`) is not from the new rules.
+
+Against `instr`, Opus falls from 4 of 4 to 3 of 4, at 1431 and 1440 words against 1600 and 1537, and 0.45 and 0.62 USD
+against 0.52 and 0.49.

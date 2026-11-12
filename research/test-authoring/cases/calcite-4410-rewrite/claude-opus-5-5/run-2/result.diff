@@ -1,0 +1,93 @@
+diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+index 958be01..6046550 100644
+--- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
++++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+@@ -5486,6 +5486,88 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+         .ok();
+   }
+ 
++  /** Returns a fixture that expands identifiers, matches names
++   * case-insensitively, and keeps the case of identifiers as written. */
++  private SqlValidatorFixture sqlCaseInsensitive(String sql) {
++    return sql(sql)
++        .withCaseSensitive(false)
++        .withValidatorIdentifierExpansion(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED);
++  }
++
++  @Test void testJoinUsingCaseInsensitiveMatchesColumnInTableCase() {
++    sqlCaseInsensitive("select DEPTNO from emp join dept using (DEPTNO)")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveMatchesColumnInOtherCase() {
++    sqlCaseInsensitive("select deptno from emp join dept using (deptno)")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveMatchesUsingColumnInOtherCase() {
++    sqlCaseInsensitive("select DEPTNO from emp join dept using (deptno)")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveNamesColumnAsSelectItemSpellsIt() {
++    sqlCaseInsensitive("select deptno from emp join dept using (DEPTNO)")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  @Test void testJoinUsingCaseSensitiveRejectsColumnInOtherCase() {
++    sql("select ^\"deptno\"^ from emp join dept using (deptno)")
++        .withValidatorIdentifierExpansion(true)
++        .fails("Column 'deptno' not found in any table.*");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinExpandsCommonColumn() {
++    sql("select deptno from emp natural join dept")
++        .withValidatorIdentifierExpansion(true)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveMatchesColumnInTableCase() {
++    sqlCaseInsensitive("select DEPTNO from emp natural join dept")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveMatchesColumnInOtherCase() {
++    sqlCaseInsensitive("select deptno from emp natural join dept")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  @Test void testNaturalJoinCaseSensitiveRejectsColumnInOtherCase() {
++    sql("select ^\"deptno\"^ from emp natural join dept")
++        .withValidatorIdentifierExpansion(true)
++        .fails("Column 'deptno' not found in any table.*");
++  }
++
+   @Test void testCrossJoinOnFails() {
+     sql("select * from emp cross join dept\n"
+         + " ^on^ emp.deptno = dept.deptno")

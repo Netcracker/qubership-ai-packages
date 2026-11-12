@@ -1,0 +1,166 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+index 31d3188..5a2e41c 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/jspecify/WildcardTests.java
+@@ -1442,6 +1442,161 @@ public class WildcardTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
++  @Test
++  public void typeVariableArgumentIsRejectedForNonNullWildcardOnlyWhenItsBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static void takesNonNull(Box<? extends Object> box) {}
++              static <N extends @Nullable Object, M> void test(
++                  Box<N> nullableBound, Box<@NonNull N> nonNullUse, Box<M> nonNullBound) {
++                // BUG: Diagnostic contains: incompatible types: Box<N> cannot be converted to Box<? extends Object>
++                takesNonNull(nullableBound);
++                takesNonNull(nonNullUse);
++                takesNonNull(nonNullBound);
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void wildcardArgumentIsRejectedForNonNullWildcardOnlyWhenItsTypeVariableBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static <N extends @Nullable Object, M> void test(
++                  Box<? extends N> nullableBound, Box<? extends M> nonNullBound) {
++                // BUG: Diagnostic contains: incompatible types: Box<? extends N> cannot be converted to Box<? extends Object>
++                Box<? extends Object> fromNullableBound = nullableBound;
++                Box<? extends Object> fromNonNullBound = nonNullBound;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void typeVariableArgumentIsRejectedForNonNullWildcardWhenDeclaredInNullUnmarkedCode() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              @NullUnmarked
++              static class Unmarked<U> {
++                @NullMarked
++                class Inner {
++                  void test(Box<U> box) {
++                    // BUG: Diagnostic contains: incompatible types: Box<U> cannot be converted to Box<? extends Object>
++                    Box<? extends Object> nonNull = box;
++                  }
++                }
++              }
++              static class Marked<U> {
++                class Inner {
++                  void test(Box<U> box) {
++                    Box<? extends Object> nonNull = box;
++                  }
++                }
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void typeVariableArgumentIsRejectedForTypeVariableWildcardOnlyWhenItMayBeNullAndTheBoundMayNot() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static <T, S extends @Nullable T, R extends T> void nonNullBound(
++                  Box<S> nullableSubtype, Box<T> same, Box<R> nonNullSubtype) {
++                // BUG: Diagnostic contains: incompatible types: Box<S> cannot be converted to Box<? extends T>
++                Box<? extends T> fromNullableSubtype = nullableSubtype;
++                Box<? extends T> fromSame = same;
++                Box<? extends T> fromNonNullSubtype = nonNullSubtype;
++              }
++              static <T extends @Nullable Object, S extends @Nullable T> void nullableBound(
++                  Box<S> nullableSubtype) {
++                Box<? extends T> fromNullableSubtype = nullableSubtype;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void typeVariableArgumentIsRejectedForNonNullTypeVariableWildcardOnlyWhenItsBoundAdmitsNull() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              static <T extends @Nullable Object> void nullableBound(
++                  Box<T> unannotated, Box<@NonNull T> nonNullUse) {
++                // the diagnostic prints the wildcard bound without its @NonNull
++                // BUG: Diagnostic contains: incompatible types: Box<T> cannot be converted to Box<? extends T>
++                Box<? extends @NonNull T> fromUnannotated = unannotated;
++                Box<? extends @NonNull T> fromNonNullUse = nonNullUse;
++              }
++              static <T> void nonNullBound(Box<T> unannotated) {
++                Box<? extends @NonNull T> fromUnannotated = unannotated;
++              }
++            }
++            """)
++        .doTest();
++  }
++
++  @Test
++  public void overrideReturningTypeVariableArgumentIsRejectedWhereNonNullTypeVariableWildcardIsReturned() {
++    makeHelper()
++        .addSourceLines(
++            "Test.java",
++            """
++            import org.jspecify.annotations.*;
++            @NullMarked
++            class Test {
++              static class Box<T extends @Nullable Object> {}
++              abstract static class Base<V extends @Nullable Object> {
++                abstract Box<? extends @NonNull V> get();
++              }
++              abstract static class Unannotated<V extends @Nullable Object> extends Base<V> {
++                @Override
++                // the diagnostic prints the wildcard bound without its @NonNull
++                // BUG: Diagnostic contains: Method returns Box<V>, but overridden method returns Box<? extends V>, which has mismatched type parameter nullability
++                abstract Box<V> get();
++              }
++              abstract static class NonNullUse<V extends @Nullable Object> extends Base<V> {
++                @Override
++                abstract Box<@NonNull V> get();
++              }
++            }
++            """)
++        .doTest();
++  }
++
+   private CompilationTestHelper makeHelper() {
+     return makeTestHelperWithArgs(
+         JSpecifyJavacConfig.withJSpecifyModeArgs(

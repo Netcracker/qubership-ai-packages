@@ -42,6 +42,20 @@ property taken out, and the answer to the review question replaced by the questi
 
 ## Results
 
+Tree `e0a0d8f7` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the "pull request title" row, the shapes
+table, and rule 1 of §4, the §5 trailer table, and the §8 checklist, for a repository whose decision records number
+their rules. Tree `6eb5690b` shortens that text in §2, rule 1 of §4, §5, and §8, and forbids an invented rule number (§2
+and the §8 Identifiers item). This input has no decision records, so both trees ask it only to leave rule trailers and
+rule numbers out, no result below carries either, and the results stand for both trees as they stand for the tree before
+them.
+
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+places this case does not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites, left
+out because it changed no output on a description of pgjdbc/pgjdbc#4412; two example template headings since dropped
+from one sentence; and where the break lead-in and a Scope lead-in under a template go, which needs a break or a
+template with headings, and this case has neither. Both pass every check, at 359 and 368 words, and neither carries a
+`**Scope.**` lead-in: the one review question is answered, not open. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
@@ -60,3 +74,8 @@ by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `resu
 The new runs no longer name the audit. Opus r1 and r2 say the interpreter, `JVM_IHashCode`, and the C2 path "no longer
 initialize" the class themselves, which the script accepts as not reading the hunk aloud; both Haiku runs say the
 initializations are removed.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.

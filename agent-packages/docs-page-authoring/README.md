@@ -14,7 +14,7 @@ Every rule names the reader whose question it answers.
 - The seven readers, what each one holds, which page each one opens, and what each one asks.
 - The slots of a section (claim, contract, rationale, use) and of an option entry (name and default with its unit, what
   it controls, values, scope, what happens at the limit, interactions, when to change it, version), in the order that
-  serves the reader who arrives mid-page.
+  serves the reader who arrives mid-page, and when each slot past the name and the claim is absent.
 - The promise rather than the code: the refactoring test that separates a contract from a description of the current
   implementation, and the three places history may live (a changelog, a migration guide, a named version marker).
 - Where a reader enters a page, why the first paragraph of every section has to stand alone, and when a topic earns a

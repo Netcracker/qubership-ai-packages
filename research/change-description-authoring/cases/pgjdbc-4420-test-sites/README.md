@@ -55,3 +55,8 @@ baselines for this case.
 
 The script passes Haiku r1 on check 3: "checked by breaking" is not one of its markers. Haiku r2 sits exactly at the
 330-word limit.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.

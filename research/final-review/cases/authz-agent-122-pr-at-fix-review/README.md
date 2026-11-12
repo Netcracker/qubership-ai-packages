@@ -78,3 +78,88 @@ Opus, two runs per arm.
 
 `authz-agent-122-fix-review` reviews the fix commit alone, with the comments it answered as the task statement. There
 the control already finds checks 1 and 2 on Opus.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; the change has no skill or instruction file, so no report used it. Graded by reading `result.md`.
+Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs from
+`796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that table,
+because the change adds no instruction.
+
+| Model | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, pass | pass, pass | pass, pass | fail, pass | 3102, 2457 | 2.06, 1.91 |
+| Haiku | fail, pass | fail, fail | fail, pass | pass, pass | pass, fail | 1612, 1687 | 0.98, 0.70 |
+
+- Opus checks 1 to 4 pass in both runs. Check 1: "The new suite-timeout variables are missing from the overrides list"
+  (`instr-1`), "missing from the README list of overrides" (`instr-2`). Check 2: "The troubleshooting action names only
+  `make e2e` for a symptom that includes `parity-harness`" (`instr-1`), "Remedy row names `make e2e` only, though its
+  symptom names `parity-harness` too" (`instr-2`). Check 3: "`TAG` and `IMAGE_PULL_POLICY` ask for images nothing
+  builds" (`instr-1`), "`--set TAG=…` or `IMAGE_PULL_POLICY=Always` aimed at the agent breaks the stand's `local/*`
+  images" (`instr-2`), each substantive. Check 4: the SVT Keycloak bump is in a substantive row of both tables.
+- Opus check 5: `instr-2` passes ("'CI builds both' is stale; the dev config builds five images"). `instr-1` has no
+  finding on `README.md` "CI builds both" or on "two-entry"; its Item 7 covers the troubleshooting row, the override
+  list, `kubectl wait --for=create`, and pip-stub's other users.
+- Haiku check 1: `instr-2` F22 passes ("`E2E_SUITE_TIMEOUT` and `PARITY_SUITE_TIMEOUT` are missing from the override
+  list"). `instr-1` has no finding on the override list; its Item 7 reads "The Makefile twins (`e2e-*`/`parity-*`) are
+  symmetric."
+- Haiku check 2: `instr-1` row 4 asks for a run of the `make e2e-down` remedy and does not mention the second path.
+  `instr-2` settles it in Item 7: "the ownership troubleshooting row names both targets and one action that covers both
+  namespaces."
+- Haiku check 3: `instr-2` F21 passes ("`--set TAG=x`, meant for the agent, makes the stand ask for
+  `local/pip-stub:x` and others, none built"). `instr-1` names neither `E2E_HELM_ARGS` nor `TAG`.
+- Haiku check 4: both runs file the Keycloak bump as substantive, `instr-1` row 7 ("changes 26.0 to 26.3.5@digest") and
+  `instr-2` F11.
+- Haiku check 5: `instr-1` row 9 passes ("the README says CI "builds both" images from the dev config, which now lists
+  five. The publication doc says "The two-entry array""). `instr-2` files the dev config only as an unclaimed hunk
+  (F13, "Adds three components to the dev build config. Not claimed.").
+
+Against the `1b1ebc3e` runs. Opus went from ten passes in ten to nine: check 5 of `instr-1` went from pass to fail. It
+writes 3102 and 2457 words against 2735 and 2729 and costs 2.06 and 1.91 against 2.20 and 1.77. Haiku stays at five
+passes in ten, on different cells: check 1 `instr-2` fail to pass, check 3 `instr-1` pass to fail, check 5 `instr-1`
+fail to pass and `instr-2` pass to fail; check 2 is fail, fail on both trees and check 4 pass, pass. Haiku writes 1612
+and 1687 words against 1721 and 1812 and costs 0.98 and 0.70 against 0.61 and 0.54; `instr-1` took 58 turns against
+37.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, at tree `3d6a0954`, graded by reading `result.md`. Final-review tree `1b139bb8` is the
+committed one. `3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which
+`3d6a0954` had shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where
+`3d6a0954` made a command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8`
+makes it one unless the reading shows the promised outcome. No check of this case reads either sentence, so its `cond`
+results stand for `1b139bb8`. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by
+the word restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read
+without "finding".
+
+| Model | Run | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | pass | pass | pass | 2706 | 2.25 |
+| Opus | `cond-2` | pass | pass | pass | pass | pass | 2563 | 2.99 |
+| Sonnet | `cond-1` | fail | fail | pass | fail | fail | 2264 | 0.86 |
+| Sonnet | `cond-2` | pass | fail | pass | pass | fail | 1864 | 0.60 |
+
+- **Opus** passes all ten, against nine in `instr` (3102 and 2457 words): `cond-1` now files "CI builds both"
+  (`result.md:113`), and `cond-2` also the two-entry array. Check 4, the SVT Keycloak bump, stays substantive in both
+  runs under the narrowed hunk rule, which still covers a version.
+- **Sonnet.** `cond-1` writes "Hunks beyond the claims: none" and says it did not read the `docker-compose.yml` hunk
+  (`result.md:63`); it files "CI builds both" as taste with no request. `cond-2` passes checks 1, 3, and 4, and is the
+  one run of the arm whose index carries the request, in the finding cell ("Request: claim it in a message…",
+  `result.md:106`).
+- **Sonnet at the base tree.** `base-1` and `base-2` ran final-review at `925b910`, before this change, to tell a
+  regression on check 4 from noise; only check 4 was graded. Both file the SVT bump as substantive (`base-1`,
+  `result.md:65`; `base-2`, `result.md:54`), against one of two `cond` runs. The narrowed rule still covers a version,
+  and `cond-1` says it did not read that hunk, so two runs cannot tell whether the old wording, "every hunk of the diff
+  belongs to a sentence", made Sonnet read every hunk. The base runs wrote 3537 and 2479 words and cost 0.64 and 0.54
+  USD.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The new rules could reach this input only by adding comment
+findings to the report. `authz-agent-122-review`, run on the same pull request with the new tree, shows what they add to
+the comments of this repository, and `textkit-page-count-review` is the case where they would be noise.

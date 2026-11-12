@@ -1,0 +1,7 @@
+on the fix: 51 tests ran, 0 failed
+on the base: 51 tests ran, 5 failed
+  WildcardTests.typeVariableActualWhoseBoundAdmitsNullIsRejectedByAWildcardBoundedByANonNullUse
+  WildcardTests.wildcardActualBoundedByTypeVariableIsRejectedOnlyWhenThatBoundAdmitsNull
+  WildcardTests.typeVariableActualIsContainedInAWildcardBoundedByATypeVariableUnlessOnlyTheActualAdmitsNull
+  WildcardTests.typeVariableActualIsRejectedOnlyWhenItsDeclaredBoundAdmitsNull
+  WildcardTests.overrideReturningATypeVariableArgumentWhoseBoundAdmitsNullIsRejectedWhereANonNullUseIsRequired

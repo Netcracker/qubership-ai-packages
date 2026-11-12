@@ -25,7 +25,8 @@ keep `assertTrue` for a method that returns a boolean.
 
 - **Operand order is `(expected, actual)`.** A swapped pair prints the bug as the expectation.
 - **The message is the last argument**, a `String` or a `Supplier<String>`, and the framework appends its own clause
-  after `==>`. The message carries the function and the input (`ensureBytes(-1)`), never the values.
+  after `==>`. The message carries the function and the input (`ensureBytes(-1)`), never the values, and for an
+  expected value a reader would correct, why it is that value (SKILL.md §7).
 
 ## Grouping assertions
 

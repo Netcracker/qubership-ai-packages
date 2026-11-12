@@ -1,0 +1,1 @@
+invalid --jobs=%d: the value must be a positive integer. pgsync copies that many tables in parallel, so a value below 1 would copy none. Pass --jobs with an integer of 1 or more, such as --jobs=4 (the default), or omit the flag.

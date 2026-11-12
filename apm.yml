@@ -27,7 +27,7 @@ marketplace:
     - name: apm-authoring
       description: Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).
       source: ./agent-packages/apm-authoring
-      version: 1.1.0
+      version: 1.2.1
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
     - name: troubleshooting-skill-creator
@@ -81,19 +81,19 @@ marketplace:
     - name: english-developer-style
       description: "Compatibility alias for the original package name; resolves to english-us-developer-style, so the bare name defaults to American English."
       source: ./agent-packages/english-developer-style
-      version: 2.1.0
+      version: 2.2.0
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-uk-developer-style
       description: "British-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localisation files."
       source: ./agent-packages/english-uk-developer-style
-      version: 2.1.0
+      version: 2.2.0
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: english-us-developer-style
       description: "American-English-first style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and English localization files."
       source: ./agent-packages/english-us-developer-style
-      version: 2.1.0
+      version: 2.2.0
       tags: ["topic:documentation", "lang:en", "activity:authoring", "audience:public"]
 
     - name: french-developer-style
@@ -105,7 +105,7 @@ marketplace:
     - name: russian-developer-style
       description: "Russian style guidance for developer-facing text: docs, code comments, commit messages, UI strings, and Russian localisation files."
       source: ./agent-packages/russian-developer-style
-      version: 1.0.1
+      version: 1.1.0
       tags: ["topic:documentation", "lang:ru", "activity:authoring", "audience:public"]
 
     - name: markdown-line-length-120
@@ -121,63 +121,63 @@ marketplace:
       tags: ["topic:devops", "topic:dependencies", "activity:maintenance", "audience:public"]
 
     - name: enable-renovate-automerge
-      description: Skill that enables Renovate automerge on a repository behind a real test/style required check.
+      description: Configure GitHub Renovate automerge with required review, Renovate Approver, and verified CI coverage.
       source: ./agent-packages/enable-renovate-automerge
-      version: 1.1.0
+      version: 2.0.0
       tags: ["topic:devops", "topic:dependencies", "stack:github-actions", "activity:maintenance", "audience:public"]
 
     - name: adr-authoring
       description: Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.
       source: ./agent-packages/adr-authoring
-      version: 1.0.0
+      version: 2.0.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
     - name: javadoc-authoring
       description: "Structure and content rules for Javadoc and its JVM siblings (KDoc, Groovydoc, Scaladoc): what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/javadoc-authoring
-      version: 1.2.0
+      version: 1.5.0
       tags: ["topic:documentation", "stack:java", "stack:kotlin", "stack:groovy", "stack:scala", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: godoc-authoring
       description: "Structure and content rules for Go doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/godoc-authoring
-      version: 1.2.0
+      version: 1.4.0
       tags: ["topic:documentation", "stack:go", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: rustdoc-authoring
       description: "Structure and content rules for Rust doc comments and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/rustdoc-authoring
-      version: 1.2.0
+      version: 1.4.0
       tags: ["topic:documentation", "stack:rust", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: jsdoc-authoring
       description: "Structure and content rules for JSDoc and TSDoc comments in JavaScript and TypeScript: what a doc comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/jsdoc-authoring
-      version: 1.2.0
+      version: 1.4.0
       tags: ["topic:documentation", "stack:javascript", "stack:typescript", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: pythondoc-authoring
       description: "Structure and content rules for Python docstrings and inline comments: what a comment says, in what order, and how far a rewrite may grow."
       source: ./agent-packages/pythondoc-authoring
-      version: 1.2.0
+      version: 1.4.0
       tags: ["topic:documentation", "stack:python", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: change-description-authoring
       description: "Structure and content rules for commit messages, pull request descriptions, and changelog entries: which reader each part serves, what goes where, and what the merge model does to it."
       source: ./agent-packages/change-description-authoring
-      version: 1.6.0
+      version: 1.9.0
       tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: docs-page-authoring
       description: "Structure and content rules for documentation pages: which reader a section serves, what an option entry carries, what a change owes the documentation, and what a page may not claim."
       source: ./agent-packages/docs-page-authoring
-      version: 1.0.0
+      version: 1.1.0
       tags: ["topic:documentation", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: test-authoring
       description: "Content and structure rules for tests: which level a change owes a test at, which inputs the test set uses, how a test is shown able to fail, how it stays green across a refactoring, and how its failure reads in the runner's report."
       source: ./agent-packages/test-authoring
-      version: 1.1.2
+      version: 1.3.0
       tags: ["topic:testing", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: blackbox-test-design
@@ -189,19 +189,19 @@ marketplace:
     - name: final-review
       description: "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands."
       source: ./agent-packages/final-review
-      version: 1.0.0
+      version: 1.3.0
       tags: ["topic:testing", "topic:code-review", "activity:code-review", "audience:public"]
 
     - name: problem-report-authoring
       description: "Structure and content rules for problem reports: bug reports in any tracker or on a mailing list, in someone else's project or your own, feature and change requests, questions and vendor support tickets, comments on existing reports, and short problem messages to a colleague."
       source: ./agent-packages/problem-report-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:documentation", "topic:code-review", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: telemetry-authoring
       description: "Rules for instrumentation in libraries and services, and for the error text a person or an agent reads: which signal an event owes (a record, an instrument, a span, the caller's channel, or nothing), what a record carries, the rate it may be emitted at, and what a library may not decide for its host."
       source: ./agent-packages/telemetry-authoring
-      version: 1.1.0
+      version: 1.2.0
       tags: ["topic:observability", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: codex-review
@@ -213,7 +213,7 @@ marketplace:
     - name: adversarial-code-review
       description: Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.
       source: ./agent-packages/adversarial-code-review
-      version: 1.0.5
+      version: 1.1.0
       tags: ["topic:code-review", "activity:code-review", "audience:public"]
 
     - name: meeting-analysis
@@ -235,7 +235,7 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: 8c2c44b419f1977d570cd4fdc7bc3db854d99555  # main
+      ref: f74bea00b3ef950425d2f4a0e69d2f5209c05f9b  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
@@ -259,35 +259,35 @@ marketplace:
     - name: dbaas-mounted-secret-migration
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/dbaas-mounted-secret-migration
-      ref: 62569d71f9e8093b66002889e9aa2dc54aa14568  # main
+      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: migrate-core-operator-dbaas-declarations
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations
-      ref: 62569d71f9e8093b66002889e9aa2dc54aa14568  # main
+      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: qubership-workflow-hub-usage
       source: Netcracker/qubership-workflow-hub
       subdir: agent-packages/qubership-workflow-hub-usage
-      ref: 93a4ff0542012e0839b4261f109c38fdc2f275f0  # main
+      ref: 665288138e45c18b5ae16af55605bfb0e70edd77  # main
       tags: ["topic:devops", "stack:github-actions", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: core-mesh-to-istio-migration
       source: Netcracker/qubership-core-control-plane
       subdir: agent-packages/core-mesh-to-istio-migration
-      ref: 7cec756af409f1fc2c9f377f1b86c10a088cf817  # main
+      ref: f0ffff457170a0a2342fa392a87e6a95f9c2e97e  # main
       tags: ["topic:cloud-core", "topic:service-mesh", "topic:istio", "activity:migration", "audience:public"]
 
     - name: ai-agent-telemetry
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry
-      ref: c7de411139332dab92b9d472e8f484aba92f57f6  # v1.3.1
+      ref: 466c5b9a1e0971161230fb52e73bb2460995c523  # v1.4.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]
 
     - name: ai-agent-telemetry-configure
       source: Netcracker/qubership-ai-agent-telemetry
       subdir: agent-packages/ai-agent-telemetry-configure
-      ref: c7de411139332dab92b9d472e8f484aba92f57f6  # v1.3.1
+      ref: 466c5b9a1e0971161230fb52e73bb2460995c523  # v1.4.0
       tags: ["topic:observability", "activity:telemetry", "audience:public"]

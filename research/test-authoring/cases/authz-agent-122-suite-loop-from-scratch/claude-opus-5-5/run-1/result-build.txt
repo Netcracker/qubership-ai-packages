@@ -1,0 +1,29 @@
+on the fix (build.sh exited with 1):
+  2 test files ran, 1 failed
+    test/scripts/test-suite-targets.sh (exit 1)
+      ok: e2e-harness installs the test stand with TEST_STAND_HELM_ARGS only
+      ok: e2e-install installs authz-policy-admin with E2E_HELM_ARGS only
+      ok: e2e-install installs authz-agent with E2E_HELM_ARGS only
+      ok: parity-harness installs the test stand with TEST_STAND_HELM_ARGS only
+      ok: parity-install installs authz-policy-admin with E2E_HELM_ARGS only
+      ok: parity-install installs authz-agent with E2E_HELM_ARGS only
+      
+      suite target checks: 3 failure(s)
+on the base (build.sh exited with 1):
+  2 test files ran, 2 failed
+    test/scripts/test-chart-files.sh (exit 1)
+      ok: with no user files, the parity realm keeps its own users
+      FAIL: user files are merged in the order of their names: [.users[-2:][].username] is ["parity-r2-beta","parity-r1-alpha"], expected ["parity-r1-alpha","parity-r2-beta"]
+      FAIL: the users of a file whose name has a space are merged with their profile: the stage failed with status 2: jq: error: Could not open file users/r29: No such file or directory
+      jq: error: Could not open file users.json: No such file or directory
+      
+      chart files checks: 2 failure(s)
+    test/scripts/test-suite-targets.sh (exit 1)
+      FAIL: e2e-harness installs the test stand with TEST_STAND_HELM_ARGS only: helm --kube-context kind-authz-e2e -n authz-e2e upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/test-stand-values.yaml --set suite.env.BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=pr-123; expected 'TAG=stand-7' and no 'TAG=pr-123'
+      ok: e2e-install installs authz-policy-admin with E2E_HELM_ARGS only
+      ok: e2e-install installs authz-agent with E2E_HELM_ARGS only
+      FAIL: parity-harness installs the test stand with TEST_STAND_HELM_ARGS only: helm --kube-context kind-authz-e2e -n authz-parity upgrade --install authz-test-stand helm-templates/authz-test-stand --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=http://authz-agent:8080 --wait --timeout 10m --set TAG=pr-123; expected 'TAG=stand-7' and no 'TAG=pr-123'
+      ok: parity-install installs authz-policy-admin with E2E_HELM_ARGS only
+      ok: parity-install installs authz-agent with E2E_HELM_ARGS only
+      
+      suite target checks: 13 failure(s)

@@ -50,13 +50,18 @@ case tests.
 | [`pgjdbc-4466-detection-failed`](pgjdbc-4466-detection-failed/README.md) | pgjdbc#4466 branch | merge model unknown; the detection command on a fork |
 | [`pgjdbc-4424-docs-only`](pgjdbc-4424-docs-only/README.md) | pgjdbc#4424 diff and notes | verification without tests, headings, section citations, links |
 | [`pgjdbc-4370-verbose`](pgjdbc-4370-verbose/README.md) | pgjdbc#4370 description | length, what the tests establish, coverage lost |
-| [`pgjdbc-4374-commit-changelog`](pgjdbc-4374-commit-changelog/README.md) | pgjdbc#4374 description | `User-visible:` lines with their SQLState, the changelog entry |
+| [`pgjdbc-4374-commit-changelog`](pgjdbc-4374-commit-changelog/README.md) | pgjdbc#4374 description | outcome lines with their SQLState, the changelog entry |
 | [`pgjdbc-4423-no-outcome`](pgjdbc-4423-no-outcome/README.md) | pgjdbc#4423 diff and notes | negative control: no outcome slot and no changelog entry |
 | [`calcite-5330-open-question`](calcite-5330-open-question/README.md) | apache/calcite#5330 discussion | a question only a maintainer can settle; a break in a minor release |
 | [`jdk-33173-audit`](jdk-33173-audit/README.md) | openjdk/jdk#33173 notes | a defect nobody has observed, hunks not read aloud, an answered review question |
 | [`pgjdbc-4501-manual-check`](pgjdbc-4501-manual-check/README.md) | pgjdbc#4501 description and diff | a manual check kept literal; no search result, bookkeeping, or footer |
 | [`pgjdbc-4388-contract-fix`](pgjdbc-4388-contract-fix/README.md) | pgjdbc#4388 description and diff | the old lines shown; a contract fix is not a break; no test narration |
+| [`pgjdbc-4412-comment-only`](pgjdbc-4412-comment-only/README.md) | pgjdbc#4412 description, commits, and diff | open, failing: a comment the diff rewrites is not quoted; the code it contradicted is kept |
 | [`pgjdbc-4420-test-sites`](pgjdbc-4420-test-sites/README.md) | pgjdbc#4420 description and diff | negative control: the pairing of tests to sites stays in a test-only change |
+| [`authz-agent-208-rule-lines`](authz-agent-208-rule-lines/README.md) | authz-agent#208 notes | rule trailers when no deferred rule has an issue: no `Defers:` trailer, no placeholder |
+| [`authz-agent-159-defers-targets`](authz-agent-159-defers-targets/README.md) | authz-agent#159 notes | rule trailers with existing `Defers` targets, and a rule without one |
+| [`authz-agent-159-squash-title`](authz-agent-159-squash-title/README.md) | authz-agent#159 notes | rule trailers under a squash that keeps only the title: the merging maintainer adds them |
+| [`authz-agent-208-prose-records`](authz-agent-208-prose-records/README.md) | authz-agent#208 notes | negative control: no rule trailers and no rule numbers where the records are prose |
 
 The five `pgjdbc-4466-*` cases share their input below "Repository facts" and differ in the merge model, so a check that
 passes in one and fails in another isolates the row of the model table. `pgjdbc-4466-detection-failed` also asks for

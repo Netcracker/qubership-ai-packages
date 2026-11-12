@@ -10,4 +10,4 @@ dependencies:
     - ../change-description-authoring
     - ../docs-page-authoring
     # Packages hosted in other repositories.
-    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#3511065e91edef101ca84ed1c88cfef7120dface  # main
+    - Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#e6afd0a6bcc4f24d73e3e4d5fb9a31ada009e3f1  # v2.8.2

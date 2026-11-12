@@ -1,0 +1,34 @@
+on the fix (build.sh exited with 0):
+  191 tests ran, 0 failed
+on the base (build.sh exited with 1):
+  191 tests ran, 30 failed
+    test_resource.test_analyze_resource_detailed_with_header_mismatch[exact, missing label]
+    test_resource.test_analyze_resource_detailed_with_header_mismatch[partial, missing label]
+    test_resource.test_analyze_resource_detailed_with_header_mismatch[partial, extra label]
+    test_validate.test_package_validate_with_schema_issue_348
+    test_validate_schema.test_resource_validate_schema_extra_label
+    test_validate_schema.test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+    test_validate_schema.test_resource_validate_fields_match_extra_label[exact-expected0]
+    test_validate_schema.test_resource_validate_fields_match_missing_field[exact-expected0]
+    test_validate_schema.test_resource_validate_exact_header_mismatch_leaves_cell_errors_to_irregular_rows[extra label]
+    test_validate_schema.test_resource_validate_exact_header_mismatch_leaves_cell_errors_to_irregular_rows[missing label]
+    test_validate_schema.test_resource_validate_exact_extra_label_repeating_a_field_name
+    test_validate_schema.test_resource_validate_exact_primary_key_is_checked_only_when_present[on a field absent from the data]
+    test_validate_schema.test_resource_validate_exact_primary_key_is_checked_only_when_present[on a field present in the data]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_on_present_fields[exact-expected0]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_on_present_fields[equal-expected1]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_on_present_fields[subset-expected2]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_on_present_fields[superset-expected3]
+    test_validate_schema.test_resource_validate_unique_constraint_is_checked_only_on_present_fields[partial-expected4]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_on_present_fields[exact-expected0]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_on_present_fields[equal-expected1]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_on_present_fields[subset-expected2]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_on_present_fields[superset-expected3]
+    test_validate_schema.test_resource_validate_foreign_key_is_checked_only_on_present_fields[partial-expected4]
+    test_header.test_get_expected_fields[exact: extra labels get a default any-typed field]
+    test_header.test_get_expected_fields[exact: fields beyond the labels are dropped]
+    test_header.test_get_expected_fields[equal: without labels, schema fields are returned as-is]
+    test_header.test_get_expected_fields[subset: without labels, schema fields are returned as-is]
+    test_header.test_get_expected_fields[superset: without labels, schema fields are returned as-is]
+    test_header.test_get_expected_fields[partial: without labels, schema fields are returned as-is]
+    test_header.test_get_expected_fields_default_field_is_any_typed[exact]

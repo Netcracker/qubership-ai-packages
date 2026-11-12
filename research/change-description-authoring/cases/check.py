@@ -20,6 +20,7 @@ import sys
 FENCE = re.compile(r'^(`{3,}|~{3,})([^\n`]*)\n(.*?)^\1[ \t]*$', re.S | re.M)
 SUBJECT = re.compile(r'^[a-z]+(\([^)]*\))?!?: \S')
 HEADING = re.compile(r'^#{1,6} ', re.M)
+LEAD_IN = re.compile(r'\*\*(Scope|Breaking changes|User-visible changes|Not changed)[.:]?\*\*')
 CHECKBOX = re.compile(r'^\s*(?:[*-]|\d+\.)\s*\[[ xX]\]', re.M)
 MERGE_BASE = 'f171cd8af6fc5f341c765309af0c1ab0db6fbfb7'
 HEAD_4424 = 'e6bf0181251063d4cb2fc8324e28fc4f6cde1313'
@@ -115,15 +116,28 @@ def result(ok, evidence):
 # Checks shared by the pgjdbc-4466 variants.
 
 def outcome_blocks(text):
-    """The text under each User-visible label or Breaking heading, up to the next label or heading."""
+    """The text under each User-visible marker or Breaking heading, up to the next marker or heading."""
     return [m.group(0) for m in re.finditer(
-        r'(User-visible|Breaking)[^\n]*\n.*?(?=\n\s*(Not changed:|#{1,6} |\*\*[A-Z]|```)|\Z)', text, re.S)]
+        r'(User-visible|Breaking)[^\n]*\n.*?(?=\n\s*((\*\*)?Not changed|#{1,6} |\*\*[A-Z]|```)|\Z)', text, re.S)]
+
+
+def outcome_lines_unwrapped(text):
+    """Each outcome under a lead-in or label is one line: no indented continuation, and no line after one that ends mid-sentence."""
+    wrapped = []
+    for m in re.finditer(r'^(?:(?:\*\*)?(?:User-visible changes|Not changed|Breaking changes)\.(?:\*\*)?|(?:User-visible|Not changed):)(.*)\n((?:[^\n]*\S[^\n]*\n?)*)',
+                         text, re.M):
+        lines = ([m.group(1).strip()] if m.group(1).strip() else []) + m.group(2).rstrip('\n').split('\n')
+        lines = [l for l in lines if l.strip() and not l.startswith('```')]
+        for prev, line in zip(lines, lines[1:]):
+            if line[0].isspace() or line[0].islower() or not re.search(r'[.:;!?)`"\']\*{0,2}$', prev.rstrip()):
+                wrapped.append(line.strip()[:40])
+    return result(not wrapped, f'wrapped outcome lines: {wrapped}' if wrapped else 'one line per outcome')
 
 
 def user_visible_without_invented_code(text):
     blocks = outcome_blocks(text)
     if not re.search(r'User-visible', text):
-        return result(False, 'no User-visible label or heading')
+        return result(False, 'no User-visible marker or heading')
     found = [b for b in blocks if re.search(r'PostgreSQL JDBC Driver[ `]+(X\.Y\.Z|42\.7|<|followed|suffixed|and the|plus|with)', b)
              or re.search(r'driver version|version of the driver', b)]
     if not found:
@@ -210,6 +224,23 @@ def no_headings(text):
     return result(not heads, f'{len(heads)} heading(s)')
 
 
+def no_plain_outcome_labels(text):
+    """A description that becomes a commit body marks its outcomes with the lead-ins, not the plain labels."""
+    found = re.findall(r'^(?:User-visible|Not changed):', description(text), re.M)
+    return result(not found, f'plain labels: {found}' if found else 'no plain outcome labels')
+
+
+def no_lead_in_labels(text):
+    found = [m.group(0) for m in LEAD_IN.finditer(description(text))]
+    return result(not found, f'lead-ins: {found}' if found else 'no lead-ins')
+
+
+def no_outcome_lead_ins_in_description(text):
+    """A description that is never a commit body carries its outcomes in prose, not under the body's lead-ins."""
+    found = re.findall(r'\*\*(?:User-visible changes|Not changed)[.:]?\*\*', description(text))
+    return result(not found, f'outcome lead-ins: {found}' if found else 'no outcome lead-ins')
+
+
 def section_heading_text(text):
     ok = 'Extending the test suite with new tests' in text
     return result(ok, 'heading text cited' if ok else 'section cited without its heading text')
@@ -249,6 +280,44 @@ def facts_kept_4370(text):
     markers = ['SocketTimeoutException', '#4358', '#4359', '75 ms', '149 ms', 'EOFException']
     missing = [m for m in markers if m not in text]
     return result(not missing, f'missing: {missing}' if missing else 'all kept')
+
+
+def scope_lead_in_4370(text):
+    """The overlap with #4359 sits in a Scope slot that opens with the lead-in, not under a heading."""
+    paras = [x.strip() for x in re.split(r'\n\s*\n', prose(description(text))) if x.strip()]
+    # The Scope paragraph and the list that follows it, up to the next paragraph of prose.
+    blocks = []
+    extending = False
+    for x in paras:
+        m = LEAD_IN.match(x)
+        if m and m.group(1) == 'Scope':
+            blocks.append(x)
+            extending = True
+        elif extending and re.match(r'[*-] |\d+\. ', x):
+            blocks[-1] += '\n\n' + x
+        else:
+            extending = False
+    ok = [x for x in blocks if '#4359' in x]
+    heads = HEADING.findall(description(text))
+    return result(bool(ok) and not heads, f'{len(ok)} Scope paragraph(s) naming #4359, {len(heads)} heading(s)')
+
+
+def scope_lead_in_under_template(text):
+    """The template has no Scope heading, so the Scope slot opens with the lead-in under one of its headings."""
+    d = description(text)
+    paras = [x.strip() for x in re.split(r'\n\s*\n', prose(d)) if x.strip()]
+    ok = [x for x in paras if (m := LEAD_IN.match(x)) and m.group(1) == 'Scope']
+    added = re.findall(r'^#{1,6} .*\bScope\b.*$', d, re.M | re.I)
+    return result(bool(ok) and not added, f'{len(ok)} Scope lead-in(s), Scope heading(s): {added}')
+
+
+def break_lead_in_before_headings(text):
+    """The break opens the description with its lead-in, ahead of the template's first heading, under no heading."""
+    d = description(text)
+    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:1]
+    ok = bool(first) and (m := LEAD_IN.match(first[0])) is not None and m.group(1) == 'Breaking changes'
+    added = re.findall(r'^#{1,6} .*\bbreak.*$', d, re.M | re.I)
+    return result(ok and not added, f'opens with the lead-in: {ok}, break heading(s): {added}')
 
 
 def new_test_not_marked(text):
@@ -294,10 +363,183 @@ def no_tool_footer(text):
     return result(not found, 'tool footer present' if found else 'no tool footer')
 
 
+# Checks of the authz-agent cases: rule trailers where the records number their rules, and none where they do not.
+
+RULE_LINE = re.compile(r'^[ \t>*-]*(?:\*\*)?(Implements|Defers)(?:\*\*)?:[ \t]*(.*)$', re.M)
+PLACEHOLDER = re.compile(r'\[(?:PR )?#N+\]|#N{2,}|\bTBD\b|\bto the wiring change\b', re.I)
+NO_ISSUE = re.compile(r'no\s+(?:open\s+)?(?:issue|pull\s+request)|not?\s+(?:yet\s+)?(?:have|has)\s+an\s+issue'
+                      r'|without\s+an\s+issue|has\s+no\s+(?:issue|pull\s+request|number)', re.I)
+IMPLEMENTS_208 = {('0091', '23'), ('0091', '37'), ('0091', '38'), ('0091', '39')}
+WAITING_208 = {('0092', '2'), ('0095', '2'), ('0095', '16')}
+IMPLEMENTS_159 = ({('0091', r) for r in ('6', '8', '10')}
+                  | {('0094', r) for r in ('4', '5', '6', '7', '8', '10', '11', '12', '13', '16', '17', '18', '22', '24',
+                                           '25', '27', '29')})
+DEFERS_159 = {('0094', '20'): '175', ('0092', '7'): '203'}
+WAITING_159 = {('0094', '1')}
+
+
+def rule_line(text, key):
+    """Every line of the text under this key, joined, so that a second line of the same key is graded too."""
+    found = [m.group(2) for m in RULE_LINE.finditer(text) if m.group(1) == key]
+    return '; '.join(found) if found else None
+
+
+def rule_pairs(line):
+    """The (record, rule) pairs a text names: `ADR-0095 R2, R16` gives two pairs of ADR-0095."""
+    pairs, record = set(), None
+    for adr, rule in re.findall(r'ADR-(\d{4})|\bR(\d+)\b', line):
+        if adr:
+            record = adr
+        elif record:
+            pairs.add((record, rule))
+    return pairs
+
+
+def deferrals(line):
+    """Each (record, rule) pair of a Defers line, mapped to the number its segment defers it to, or None."""
+    out = {}
+    for segment in line.split(';'):
+        target = re.search(r'\bto\s+#(\d+)\b', segment)
+        for pair in rule_pairs(segment):
+            out[pair] = target.group(1) if target else None
+    return out
+
+
+def end_trailers(text):
+    """The last paragraph of a text outside fenced blocks, where every line of it is a `Key: value` trailer."""
+    last = prose(text).rstrip().split('\n\n')[-1]
+    lines = [ln for ln in last.split('\n') if ln.strip()]
+    return last if lines and all(re.match(r'^[A-Za-z-]+: \S', ln) for ln in lines) else ''
+
+
+def trailers_ok(block, implements, defers):
+    """Whether a trailer block names exactly these implemented rules and these deferrals, and nothing invented."""
+    imp, dfr = rule_line(block, 'Implements'), rule_line(block, 'Defers')
+    if imp is None or rule_pairs(imp) != implements:
+        return False
+    if not defers:
+        return dfr is None
+    return dfr is not None and deferrals(dfr) == defers and not PLACEHOLDER.search(dfr)
+
+
+def description_trailers(implements, defers):
+    def check(text):
+        block = end_trailers(description(text))
+        if not block:
+            return result(False, 'the description does not end with a trailer paragraph')
+        return result(trailers_ok(block, implements, defers), block.replace('\n', ' | ')[:150])
+    check.__name__ = 'description_ends_with_rule_trailers'
+    return check
+
+
+def commit_trailers(implements, defers):
+    def check(text):
+        msgs = commits(text)
+        if not msgs:
+            return result(False, 'no commit message')
+        block = end_trailers(msgs[-1])
+        return result(bool(block) and trailers_ok(block, implements, defers), block.replace('\n', ' | ')[:150])
+    check.__name__ = 'commit_ends_with_rule_trailers'
+    return check
+
+
+def waiting_rules_named(waiting):
+    def check(text):
+        body = prose(description(text))
+        block = end_trailers(description(text))
+        if block:
+            body = body[:body.rfind(block.split('\n')[0])]
+        named = waiting <= rule_pairs(body)
+        marker = NO_ISSUE.search(body)
+        ok = named and marker is not None
+        return result(ok, (marker.group(0) if marker else 'no word that the change has no issue')
+                      + ('' if named else f'; rules not named: {sorted(waiting - rule_pairs(body))}'))
+    check.__name__ = 'waiting_rules_named_in_prose'
+    return check
+
+
+def squash_trailers_requested(text):
+    """A sentence of the description, outside its trailers, asks for the rule trailers in the squash commit message."""
+    body = prose(description(text))
+    block = end_trailers(description(text))
+    if block:
+        body = body[:body.rfind(block.split('\n')[0])]
+    for sentence in re.split(r'(?<=[.!?])\s+', ' '.join(body.split())):
+        if (re.search(r'squash', sentence, re.I) and re.search(r'trailer|Implements|Defers', sentence)
+                and re.search(r'\b(adds?|added|adding|pastes?|pasted|pasting|copy|copies|copied|copying|includes?|included'
+                              r'|including|puts?|putting)\b', sentence, re.I)
+                and not re.search(r"\b(not|never|no)\b|n't", sentence, re.I)):
+            return result(True, sentence[:140])
+    return result(False, 'no sentence asks for the trailers in the squash commit message')
+
+
+def no_squash_request(text):
+    """Under a merge that keeps the trailers, the description asks nobody to copy them into a squash message."""
+    asked = squash_trailers_requested(text)
+    return result(asked[0] == 'FAIL', 'no squash request' if asked[0] == 'FAIL' else f'squash request: {asked[1]}')
+
+
+def no_placeholder(text):
+    found = PLACEHOLDER.search(text)
+    if found:
+        return result(False, f'placeholder: {found.group(0)}')
+    for m in RULE_LINE.finditer(text):
+        if m.group(1) == 'Defers':
+            for segment in m.group(2).split(';'):
+                if rule_pairs(segment) and not re.search(r'\bto\s+#\d+\b', segment):
+                    return result(False, f'Defers target that is not a number: {segment.strip()[:80]}')
+    return result(True, 'no placeholder')
+
+
+def scope_lead_in_before_trailers(text):
+    d = prose(description(text))
+    lead = re.search(r'\*\*Scope[.:]?\*\*', d)
+    block = end_trailers(description(text))
+    ok = lead is not None and bool(block) and lead.start() < d.rfind(block.split('\n')[0])
+    return result(ok, '**Scope.** ahead of the trailers' if ok else 'no **Scope.** lead-in ahead of the trailers')
+
+
+def no_rule_lines(text):
+    found = [m.group(0).strip() for m in RULE_LINE.finditer(text)]
+    return result(not found, f'rule lines: {found}' if found else 'no rule lines')
+
+
+def no_rule_numbers(text):
+    found = sorted(set(re.findall(r'\bR\d+\b', text)))
+    return result(not found, f'rule numbers: {found}' if found else 'no rule numbers')
+
+
 def links_at_merge_base(text):
     urls = re.findall(r'https://github\.com/pgjdbc/pgjdbc/blob/([^/\s)]+)/', text)
     wrong = [u[:12] for u in urls if u != MERGE_BASE]
     return result(not wrong, f'{len(urls)} link(s), not at the merge base: {wrong}')
+
+
+# pgjdbc-4412-comment-only
+
+def no_old_comment_quoted_4412(text):
+    """The comments and messages the diff removes are shown by the diff and are not quoted again."""
+    old = ['autoCommit is false on a connection returned by getConnection',
+           '2nd phase commit must be issued using an idle connection',
+           'should have restored connection autocommit mode']
+    found = [m for m in old if m.lower() in text.lower()]
+    return result(not found, f'quoted: {found}' if found else 'no removed wording quoted')
+
+
+def contradictions_kept_4412(text):
+    """The two comments that contradicted the code keep the code side, which the comment hunk does not show."""
+    missing = [m for m in ['pg_has_role', '64000'] if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'both kept')
+
+
+def renames_named_4412(text):
+    missing = [m for m in ['onePhaseBranch_leavesAutoCommitUnchanged', 'endThenJoinBranch_leavesAutoCommitUnchanged']
+               if m not in text]
+    return result(not missing, f'missing: {missing}' if missing else 'both new names')
+
+
+def runtime_noop_checked_4412(text):
+    return ('READ', 'read: is "nothing changes at run time" stated once, with how it was checked (comments stripped)?')
 
 
 # pgjdbc-4367-breaks and pgjdbc-4392-no-break
@@ -307,6 +549,15 @@ def break_lines_lead_4367(text):
     ok = (re.search(r'\bbreak', first[0], re.I) if first else False) or any(
         re.search(r'\*\*Breaks?:?\*\*|^#{1,6} .*[Bb]reak', p, re.M) for p in first)
     return result(ok, 'break lines among the first three blocks' if ok else f'opens with {first[0][:100]!r}')
+
+
+def break_label_4367(text):
+    """The case has no template, so the description opens with the break lead-in, under no heading."""
+    d = description(text)
+    first = [x for x in re.split(r'\n\s*\n', prose(d).strip()) if x.strip()][:1]
+    ok = bool(first) and (m := LEAD_IN.match(first[0])) is not None and m.group(1) == 'Breaking changes'
+    heads = HEADING.findall(d)
+    return result(ok and not heads, f'opens with the lead-in: {ok}, {len(heads)} heading(s)')
 
 
 def literals_kept_4367(text):
@@ -327,7 +578,7 @@ def no_lead_4392(text):
 
 
 def no_empty_section_4392(text):
-    found = re.findall(r'^#{1,6} .*[Bb]reak.*$|nothing breaks|no breaking|backward[s-]? compatible|fully compatible|is compatible',
+    found = re.findall(r'^#{1,6} .*[Bb]reak.*$|\*\*Breaking changes[.:]?\*\*|nothing breaks|no breaking|backward[s-]? compatible|fully compatible|is compatible',
                        text, re.M | re.I)
     return result(not found, f'found: {found}' if found else 'no empty section')
 
@@ -343,9 +594,9 @@ def literals_kept_4392(text):
 def outcome_lines_4374(text):
     msgs = commits(text)
     body = commit_body(msgs[0]) if msgs else ''
-    m = re.search(r'^User-visible:.*?(?=\n\s*\n(?!\S*\s*(?:"|`|When|Unterminated|JDBC))|\Z)', body, re.S | re.M)
+    m = re.search(r'^(?:User-visible:|(?:\*\*)?User-visible changes\.(?:\*\*)?$).*?(?=\n\s*\n(?!\S*\s*(?:"|`|When|Unterminated|JDBC))|\Z)', body, re.S | re.M)
     if not m:
-        return result(False, 'no User-visible: paragraph in the commit body')
+        return result(False, 'no User-visible paragraph in the commit body')
     lines = [line for line in m.group(0).split('\n') if line.strip()]
     texts = ['has no argument list', 'Unterminated JDBC escape function call']
     bad = [t for t in texts if not any(t in line and '42601' in line for line in lines)]
@@ -374,7 +625,7 @@ def changelog_entry_4374(text):
 # pgjdbc-4423-no-outcome
 
 def no_outcome_slot(text):
-    found = re.findall(r'User-visible|Not changed:|Breaking', text)
+    found = re.findall(r'User-visible|Not changed|Breaking', text)
     return result(not found, f'found: {found}' if found else 'no outcome slot')
 
 
@@ -444,9 +695,14 @@ def property_named(text):
 def break_leads_5330(text):
     """The break (a key reporting NONE validated before and now fails) opens the description, ahead of the problem.
 
-    The template's Jira Link section may come first. The break lines may follow one short paragraph that says which
-    code breaks, under a heading of their own."""
+    The break may open with its lead-in ahead of every template heading. A run of an earlier skill put the template's
+    Jira Link section first, and the break lines after one short paragraph that says which code breaks, or under a
+    heading of their own."""
     t = prose(text)
+    opening = [x for x in re.split(r'\n\s*\n', t.strip()) if x.strip()][:1]
+    if (opening and (m := LEAD_IN.match(opening[0])) and m.group(1) == 'Breaking changes'
+            and re.search(r'NONE|reject|fail', opening[0])):
+        return result(True, f'opens with the lead-in: {opening[0][:120]!r}')
     heads = [h for h in re.findall(r'^#{1,6} (.*)$', t, re.M) if h.strip() != 'Jira Link']
     if heads and re.search(r'break', heads[0], re.I):
         return result(True, f'first heading after the Jira link: {heads[0]!r}')
@@ -465,7 +721,7 @@ def break_leads_5330(text):
 def maintainer_question_kept(text):
     found = [x for x in sentences(text)
              if ('?' in x and re.search(r'NONE|permissive|#5331|VECTOR|reject|close', x))
-             or re.search(r'\b(decide|decision)\b', x, re.I)]
+             or re.search(r'\b(decide|decision|choose)\b', x, re.I)]
     return result(bool(found), f'question: {found[0][:200]!r}' if found else 'no question or decision asked of the maintainer')
 
 
@@ -475,7 +731,9 @@ def compatibility_not_settled(text):
 
 
 def answered_question_not_reopened(text):
-    found = [x for x in sentences(text) if '?' in x and re.search(r'comparable at run ?time|all types', x, re.I)]
+    """A question on whether types are comparable at run time; the maintainer's "should a type" question is check 2's."""
+    found = [x for x in sentences(text) if '?' in x and re.search(r'comparable at run ?time|all types', x, re.I)
+             and not re.search(r'\bshould (?:a|such a) type\b', x, re.I)]
     return result(not found, f'reopened: {found[0][:160]!r}' if found else 'not asked again')
 
 
@@ -544,28 +802,40 @@ def no_route_4420(text):
 
 
 CASES = {
-    'pgjdbc-4367-breaks': [break_lines_lead_4367, stated_once_4367, literals_kept_4367],
-    'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392],
+    'pgjdbc-4367-breaks': [break_lines_lead_4367, break_label_4367, stated_once_4367, literals_kept_4367,
+                           no_outcome_lead_ins_in_description],
+    'pgjdbc-4392-no-break': [no_lead_4392, no_empty_section_4392, literals_kept_4392,
+                             no_outcome_lead_ins_in_description],
     'pgjdbc-4466-squash-default': [user_visible_without_invented_code, first_commit_full_with_issue,
-                                   title_is_subject, template_headings_kept],
+                                   title_is_subject, template_headings_kept, scope_lead_in_under_template,
+                                   break_lead_in_before_headings, outcome_lines_unwrapped,
+                                   no_outcome_lead_ins_in_description],
     'pgjdbc-4466-squash-title-description': [user_visible_without_invented_code, title_is_subject,
-                                             description_as_commit_body, verification_one_line],
+                                             description_as_commit_body, verification_one_line,
+                                             no_plain_outcome_labels, break_lead_in_before_headings,
+                                             outcome_lines_unwrapped],
     'pgjdbc-4466-squash-or-rebase': [user_visible_without_invented_code, every_commit_full_with_issue,
-                                     fixups_folded, title_is_subject, template_headings_kept],
+                                     fixups_folded, title_is_subject, template_headings_kept,
+                                     scope_lead_in_under_template, break_lead_in_before_headings,
+                                     outcome_lines_unwrapped, no_outcome_lead_ins_in_description],
     'pgjdbc-4466-merge-commit-title-description': [user_visible_without_invented_code, every_commit_full_with_issue,
                                                    fixups_folded, title_is_subject, description_as_commit_body,
-                                                   verification_one_line],
+                                                   verification_one_line, no_plain_outcome_labels,
+                                                   break_lead_in_before_headings, outcome_lines_unwrapped],
     'pgjdbc-4466-detection-failed': [detection_commands, user_visible_without_invented_code,
-                                     every_commit_full_with_issue, description_as_commit_body, verification_one_line],
-    'pgjdbc-4424-docs-only': [no_test_verification_named, no_headings, section_heading_text,
+                                     every_commit_full_with_issue, description_as_commit_body, verification_one_line,
+                                     no_plain_outcome_labels, break_lead_in_before_headings, outcome_lines_unwrapped],
+    'pgjdbc-4424-docs-only': [no_test_verification_named, no_headings, no_lead_in_labels, section_heading_text,
                               changed_files_link_at_head, unchanged_code_link_at_merge_base],
     'pgjdbc-4370-verbose': [prose_under(500), facts_kept_4370, new_test_not_marked, coverage_lost_named,
                             no_construction_in_verification, links_at_merge_base, no_test_command,
-                            no_test_narration],
+                            no_test_narration, scope_lead_in_4370],
     'pgjdbc-4374-commit-changelog': [outcome_lines_4374, nothing_invented_4374, changelog_entry_4374],
     'pgjdbc-4423-no-outcome': [no_outcome_slot, no_changelog_entry],
     'calcite-5330-open-question': [break_leads_5330, maintainer_question_kept, compatibility_not_settled,
-                                   answered_question_not_reopened, calcite_template_kept],
+                                   answered_question_not_reopened, calcite_template_kept,
+                                   scope_lead_in_under_template, break_lead_in_before_headings,
+                                   no_outcome_lead_ins_in_description],
     'jdk-33173-audit': [finder_not_named, no_absence_claim, no_predicted_symptom, no_hunk_translation,
                         alternative_by_mechanism, answered_question_not_open, property_named],
     'pgjdbc-4501-manual-check': [manual_check_literal_4501, no_route_4501, no_tool_footer, prose_under(110)],
@@ -573,6 +843,18 @@ CASES = {
                                  no_test_narration, passes_without_named_4388, prose_under(220), no_tool_footer],
     'pgjdbc-4420-test-sites': [site_mapping_kept_4420, removed_tests_named_4420, no_route_4420, no_test_command,
                                prose_under(330), no_tool_footer],
+    'authz-agent-208-rule-lines': [description_trailers(IMPLEMENTS_208, {}), waiting_rules_named(WAITING_208),
+                                   no_placeholder, scope_lead_in_before_trailers, no_headings,
+                                   commit_trailers(IMPLEMENTS_208, {}), no_squash_request],
+    'authz-agent-159-defers-targets': [description_trailers(IMPLEMENTS_159, DEFERS_159), waiting_rules_named(WAITING_159),
+                                       no_placeholder, scope_lead_in_before_trailers, no_headings,
+                                       commit_trailers(IMPLEMENTS_159, DEFERS_159), no_squash_request],
+    'authz-agent-159-squash-title': [description_trailers(IMPLEMENTS_159, DEFERS_159), squash_trailers_requested,
+                                     waiting_rules_named(WAITING_159), no_placeholder, scope_lead_in_before_trailers,
+                                     no_headings],
+    'authz-agent-208-prose-records': [no_rule_lines, no_rule_numbers, no_headings],
+    'pgjdbc-4412-comment-only': [no_old_comment_quoted_4412, contradictions_kept_4412, renames_named_4412,
+                                 runtime_noop_checked_4412, prose_under(150)],
 }
 
 

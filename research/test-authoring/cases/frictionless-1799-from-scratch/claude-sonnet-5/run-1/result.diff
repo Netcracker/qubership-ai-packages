@@ -1,0 +1,271 @@
+diff --git a/frictionless/analyzer/__spec__/test_resource.py b/frictionless/analyzer/__spec__/test_resource.py
+index fae992d..bd4ea7c 100644
+--- a/frictionless/analyzer/__spec__/test_resource.py
++++ b/frictionless/analyzer/__spec__/test_resource.py
+@@ -2,6 +2,7 @@ import sys
+ 
+ import pytest
+ 
++from frictionless import Schema, fields
+ from frictionless.resources import TableResource
+ 
+ pytestmark = pytest.mark.skipif(
+@@ -245,3 +246,18 @@ def test_analyze_resource_detailed_with_invalid_data():
+     assert analysis["rowsWithNullValues"] == 3
+     assert analysis["notNullRows"] == 1
+     assert analysis["variableTypes"] == {"integer": 3, "string": 1}
++
++
++# Bugs
++
++
++def test_analyze_resource_detailed_does_not_crash_on_a_field_missing_from_a_superset_header():
++    # "extra" is absent from the header, which "superset" tolerates; it never
++    # has any data, so it is not a column to compute stats for.
++    schema = Schema(
++        fields=[fields.AnyField(name="id"), fields.IntegerField(name="extra")],
++        fields_match="superset",
++    )
++    resource = TableResource(data=[["id"], [1], [2]], schema=schema)
++    analysis = resource.analyze(detailed=True)
++    assert list(analysis["fieldStats"].keys()) == ["id"]
+diff --git a/frictionless/package/__spec__/test_validate.py b/frictionless/package/__spec__/test_validate.py
+index c96ce4c..1168623 100644
+--- a/frictionless/package/__spec__/test_validate.py
++++ b/frictionless/package/__spec__/test_validate.py
+@@ -282,10 +282,11 @@ def test_package_validate_with_schema_issue_348():
+     }
+     package = Package(descriptor)
+     report = package.validate()
++    # "dob" is already reported once as a header error; a row that matches
++    # the header's length no longer owes a duplicate missing-cell error for
++    # it.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 4, "missing-label"],
+-        [2, 4, "missing-cell"],
+-        [3, 4, "missing-cell"],
+     ]
+ 
+ 
+@@ -535,6 +536,19 @@ def test_package_validate_schema_foreign_key_not_defined():
+     assert report.valid
+ 
+ 
++def test_package_validate_schema_foreign_key_target_missing_from_header():
++    # "next_id" is part of a foreign key but absent from the "cities" header;
++    # the mismatch is reported once by the header, and the foreign-key check
++    # must skip it rather than crash on a field no row has.
++    descriptor = deepcopy(DESCRIPTOR_FK)
++    descriptor["resources"][0]["data"] = [["id", "name"], [1, "london"], [2, "paris"]]
++    package = Package(descriptor)
++    report = package.validate()
++    assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
++        [None, 3, "missing-label"],
++    ]
++
++
+ def test_package_validate_schema_foreign_key_self_referenced_resource_violation():
+     descriptor = deepcopy(DESCRIPTOR_FK)
+     del descriptor["resources"][0]["data"][4]
+diff --git a/frictionless/resource/__spec__/test_validate_schema.py b/frictionless/resource/__spec__/test_validate_schema.py
+index d09527b..8312f92 100644
+--- a/frictionless/resource/__spec__/test_validate_schema.py
++++ b/frictionless/resource/__spec__/test_validate_schema.py
+@@ -41,10 +41,10 @@ def test_resource_validate_schema_extra_headers_and_cells():
+     # resource with extra label "name"
+     resource = TableResource(path="data/table.csv", schema=schema)
+     report = resource.validate()
++    # "name" is already reported once as a header error; a row that matches
++    # the header's length no longer owes a duplicate extra-cell error for it.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 2, "extra-label"],
+-        [2, 2, "extra-cell"],
+-        [3, 2, "extra-cell"],
+     ]
+ 
+     extra_label_error = report.task.errors[0]
+@@ -365,13 +365,11 @@ def test_resource_validate_less_actual_fields_with_required_constraint_issue_950
+     schema = Schema.describe("data/table.csv")
+     schema.add_field(fields.AnyField(name="bad", constraints={"required": True}))
+     report = TableResource(path="data/table.csv", schema=schema).validate()
+-    print(report.flatten(["rowNumber", "fieldNumber", "type"]))
++    # "bad" is already reported once as a header error; a row that matches
++    # the header's length no longer owes a duplicate missing-cell or
++    # constraint-error for a field no row ever had.
+     assert report.flatten(["rowNumber", "fieldNumber", "type"]) == [
+         [None, 3, "missing-label"],
+-        [2, 3, "constraint-error"],
+-        [2, 3, "missing-cell"],
+-        [3, 3, "constraint-error"],
+-        [3, 3, "missing-cell"],
+     ]
+ 
+ 
+@@ -543,7 +541,7 @@ def test_resource_validate_fields_match_reordered_labels(fields_match, expected)
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        ("exact", [[None, 2, "", "extra-label"], [2, 2, "", "extra-cell"]]),
++        ("exact", [[None, 2, "", "extra-label"]]),
+         ("equal", [[None, 2, "", "extra-label"]]),
+         ("superset", [[None, 2, "", "extra-label"]]),
+         ("subset", []),
+@@ -558,13 +556,7 @@ def test_resource_validate_fields_match_extra_label(fields_match, expected):
+ @pytest.mark.parametrize(
+     "fields_match, expected",
+     [
+-        (
+-            "exact",
+-            [
+-                [None, 3, "extra", "missing-label"],
+-                [2, 3, "extra", "missing-cell"],
+-            ],
+-        ),
++        ("exact", [[None, 3, "extra", "missing-label"]]),
+         ("equal", [[None, 3, "extra", "missing-label"]]),
+         ("subset", [[None, 3, "extra", "missing-label"]]),
+         ("superset", []),
+diff --git a/frictionless/resources/__spec__/table/test_general.py b/frictionless/resources/__spec__/table/test_general.py
+index 3458988..59da6f7 100644
+--- a/frictionless/resources/__spec__/table/test_general.py
++++ b/frictionless/resources/__spec__/table/test_general.py
+@@ -2,7 +2,7 @@ import sys
+ 
+ import pytest
+ 
+-from frictionless import Control, Dialect, platform
++from frictionless import Control, Dialect, Schema, fields, platform
+ from frictionless.resources import TableResource
+ 
+ BASEURL = "https://raw.githubusercontent.com/frictionlessdata/frictionless-py/master/%s"
+@@ -307,3 +307,68 @@ def test_resource_path_with_brackets_issue_1206():
+         {"id": 1, "name": "english"},
+         {"id": 2, "name": "中国人"},
+     ]
++
++
++def test_resource_exact_header_mismatch_reports_an_extra_label_only_once_issue_1791():
++    # The extra label is already reported once as a header error; a row that
++    # matches the header's length no longer owes a duplicate extra-cell error
++    # for it. A row that is also irregular on top of that still reports one.
++    schema = Schema(fields=[fields.AnyField(name="id")])
++    with TableResource(
++        data=[["id", "name"], [1, "london"], [2, "paris", "irregular"]], schema=schema
++    ) as resource:
++        rows = resource.read_rows()
++    assert [e.type for e in resource.header.errors] == ["extra-label"]
++    assert rows[0] == {"id": 1, "name": "london"}
++    assert rows[0].errors == []
++    assert [e.type for e in rows[1].errors] == ["extra-cell"]
++
++
++def test_resource_exact_header_mismatch_reports_a_missing_label_only_once_issue_1791():
++    # The missing label is already reported once as a header error; a row
++    # that matches the header's length no longer owes a duplicate
++    # missing-cell error for it. A row that is also irregular on top of that
++    # still reports one.
++    schema = Schema(
++        fields=[
++            fields.AnyField(name="id"),
++            fields.AnyField(name="code"),
++            fields.AnyField(name="name"),
++        ]
++    )
++    with TableResource(data=[["id", "code"], [1, "x"], [2]], schema=schema) as resource:
++        rows = resource.read_rows()
++    assert [e.type for e in resource.header.errors] == ["missing-label"]
++    assert rows[0] == {"id": 1, "code": "x"}
++    assert rows[0].errors == []
++    assert [e.type for e in rows[1].errors] == ["missing-cell"]
++
++
++def test_resource_name_matched_fields_match_without_a_header_reads_rows_by_schema_order():
++    # Without a header there is nothing to match labels against; every row of
++    # a non-"exact" fieldsMatch mode used to come back empty in this case.
++    schema = Schema(
++        fields=[fields.AnyField(name="a"), fields.AnyField(name="b")],
++        fields_match="equal",
++    )
++    dialect = Dialect(header=False)
++    with TableResource(data=[[1, 2], [3, 4]], schema=schema, dialect=dialect) as resource:
++        rows = resource.read_rows()
++    assert [dict(row) for row in rows] == [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
++    assert all(row.errors == [] for row in rows)
++
++
++def test_resource_unique_constraint_does_not_crash_on_a_field_missing_from_a_superset_header():
++    # "extra" is absent from the header, which "superset" tolerates; checking
++    # its uniqueness must not crash on a field no row ever read.
++    schema = Schema(
++        fields=[
++            fields.AnyField(name="id"),
++            fields.AnyField(name="extra", constraints={"unique": True}),
++        ],
++        fields_match="superset",
++    )
++    with TableResource(data=[["id"], [1], [2]], schema=schema) as resource:
++        rows = resource.read_rows()
++    assert resource.header.valid
++    assert all(row.errors == [] for row in rows)
+diff --git a/frictionless/table/__spec__/test_header.py b/frictionless/table/__spec__/test_header.py
+index 342e6a7..5c14d7d 100644
+--- a/frictionless/table/__spec__/test_header.py
++++ b/frictionless/table/__spec__/test_header.py
+@@ -83,8 +83,16 @@ def _make_header(labels, field_names, *, fields_match="exact", ignore_case=False
+             ["a"],
+             "exact",
+             False,
++            ["a", "extra"],
++            id="exact: extra labels get a default any-typed field too",
++        ),
++        pytest.param(
++            ["a"],
++            ["a", "b"],
++            "exact",
++            False,
+             ["a"],
+-            id="exact: extra labels get no field",
++            id="exact: fields beyond the labels are dropped",
+         ),
+         *[
+             pytest.param(
+@@ -119,6 +127,17 @@ def _make_header(labels, field_names, *, fields_match="exact", ignore_case=False
+             )
+             for mode in NAME_MATCHED
+         ],
++        *[
++            pytest.param(
++                [],
++                ["a", "b"],
++                mode,
++                False,
++                ["a", "b"],
++                id=f"{mode}: a missing header falls back to the schema fields",
++            )
++            for mode in NAME_MATCHED
++        ],
+         pytest.param(
+             ["B", "A"],
+             ["a", "b"],
+@@ -139,13 +158,20 @@ def test_get_expected_fields(
+     assert actual == expected_names
+ 
+ 
+-@pytest.mark.parametrize("fields_match", NAME_MATCHED)
++@pytest.mark.parametrize("fields_match", ["exact", *NAME_MATCHED])
+ def test_get_expected_fields_default_field_is_any_typed(fields_match):
+     header = _make_header(["a", "extra"], ["a"], fields_match=fields_match)
+     expected = header.get_expected_fields()
+     assert expected[1].type == "any"
+ 
+ 
++def test_get_expected_fields_exact_extra_labels_get_distinct_default_names():
++    # Two extra labels that read the same text would otherwise collide on the
++    # same default field name.
++    header = _make_header(["a", "x", "x"], ["a"], fields_match="exact")
++    assert [f.name for f in header.get_expected_fields()] == ["a", "x", "x2"]
++
++
+ @pytest.mark.parametrize("fields_match", NAME_MATCHED)
+ def test_get_expected_fields_raises_on_duplicate_labels(fields_match):
+     header = _make_header(["a", "a"], ["a"], fields_match=fields_match)

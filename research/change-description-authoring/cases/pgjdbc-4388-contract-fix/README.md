@@ -39,14 +39,22 @@ open-book: they show the skill's example is followed, not that the rule carries 
 
 ## Results
 
+Opus r1 and r2 were re-run on 2026-11-01 on tree `c99e1c77`, graded by reading. That tree differs from this change's in
+places this case does not reach: a widening of the §2 translation rule to a comment the diff removes or rewrites, left
+out because it changed no output on a description of pgjdbc/pgjdbc#4412; two example template headings since dropped
+from one sentence; and where the break lead-in and a Scope lead-in under a template go, which needs a break or a
+template with headings, and this case has neither. Both pass every check, at 167 and 169 words. Both open the sentence
+on the open #4364, which fixes the same defect in `BlobOutputStream`, with `**Scope.**`, as the rule asks for a related
+pull request. The other rows stand for the trees they ran on.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`. There are no
 baselines for this case.
 
 | Run | Old lines (1) | No route (2) | No break lead (3) | No command (4) | No narration (5) | Passes without (6) | Words (7) | No footer (8) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes | passes | passes | passes: 176 | passes |
-| Opus r2 | passes | passes | passes | passes | passes | passes | passes: 170 | passes |
+| Opus r1 | passes | passes | passes | passes | passes | passes | passes: 167 | passes |
+| Opus r2 | passes | passes | passes | passes | passes | passes | passes: 169 | passes |
 | Haiku r1 | passes | passes | passes | passes | passes | passes | passes: 193 | passes |
 | Haiku r2 | passes | fails: "The other findings on `BlobInputStream`" | passes | passes | passes | passes | passes: 208 | passes |
 | `controls/as-posted.md` | passes | fails: "Found by" | passes | fails | fails | fails: names the other two tests | fails: 255 | fails |
@@ -54,3 +62,8 @@ baselines for this case.
 | `controls/main-haiku.md` | fails: no snippet | fails: "adversarial" | fails: "## Breaking changes" | fails | fails | fails: names the other two tests | fails: 373 | passes |
 
 Haiku r2 still points at the review's other findings; Haiku r1 only says other problems are out of scope.
+
+Tree `9fe02a7c` (2026-11-06) marks the outcome block with `**User-visible changes.**` and `**Not changed.**`, keeps each
+outcome on one line that is not wrapped, says a lead-in opens its paragraph, and says what a description that becomes a
+commit body keeps. This case was not re-run on it: its Opus results carry no outcome block, any `**Scope.**` lead-in in
+them already opens its paragraph, and no check reads either. The rows stand for the trees they ran on.

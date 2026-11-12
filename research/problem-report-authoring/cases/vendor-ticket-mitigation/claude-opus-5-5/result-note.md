@@ -1,40 +1,40 @@
-# Hand-over note: Tessary support case for the 2026-09-21 SlowDown burst
+# Hand-over note: Tessary case for the 2026-09-21 SlowDown burst
 
-Not part of the case. The case text is in `result.md`; paste each block into the portal field of the same name. Nothing was filed, and no network lookup was made: everything comes from the session notes.
+Nothing has been filed or sent. The case text is in `draft.md`, one block per portal field.
 
-## Before you file
+## Decide before filing
 
-- **Deadline.** SLA §6 wants the ticket within 30 days of the incident, so file by 2026-10-20 to be safe (30 days after 2026-09-21 is 2026-10-21).
-- **Severity S3.** The workload recovered at 14:44:51 UTC and the backoff is still in place; S3 matches the portal's own definition ("resolved or mitigated; you need a root cause, a credit, or information"). S2 would claim an ongoing impairment we do not have.
-- **Read the CSV before attaching it.** I did not open `slowdown-requests-2026-09-21.csv`. The notes say it holds timestamp, bucket, object key, request ID, and host ID for 1217 rows. Check that it has no other column (for example our hostname or the service name) and that the row count is 1217.
-- **Source addresses.** `203.0.113.41` and `203.0.113.42` sit in 203.0.113.0/24, which is the documentation range (TEST-NET-3). If the notes carry sanitized values, put the real egress addresses in the case or delete that line; Tessary may use them to find the traffic.
-- **Access key ID.** I replaced the key ID and the signature in the debug log with placeholders. Tessary can find the requests by request ID, so the key ID should not be needed; if they ask for it, give only the key ID, never the secret.
+- **The SLA claim window has probably closed.** SLA section 6 says to open a ticket "within 30 days of the incident". The incident was on 2026-09-21, so the window ended around 2026-10-21, and today is 2026-10-31. Decide whether to keep the credit request anyway, take it to the Tessary account manager, or drop it. To drop it, delete the "Service credit" paragraph at the end of the description and item 3 under "What do you need from us?". The case still stands without them, and S3 still fits because it asks for a root cause.
+- **Severity S3.** The errors stopped at 14:44:51 UTC, the backoff mitigated them, and the ask is a root cause and a credit. That matches the S3 definition. Change it if you see it differently.
+- **The SLA figure is our arithmetic, not Tessary's.** The 99.907% assumes two things. First, the eight intervals count as unavailable on a PUT-only basis. The SLA text in the notes doesn't say what the Error Rate denominator is. If it includes GETs, we need per-interval GET counts to check each interval, and the notes only have the 40-minute total (41210 GETs, 9 SlowDown). Second, no other September interval was unavailable. 99.907% is above 99.9%, so the claim is for the 10% tier, not 25%. The case says this conditionally and leaves the Error Rate to Tessary's records.
 
-## Company rule on vendor tickets
+## Not established
 
-The rule "No internal hostnames, internal service names, or credentials in tickets to vendors" is applied: `ingest-07.lm-prod.internal` is redacted, `mediapipe-uploader` is called "our client", and the credentials are placeholders. Bucket names, the account ID, request IDs, and Tessary's host IDs stay, because Tessary locates the resources by them. The `lm-prod` in the bucket names is part of a Tessary resource name, not an internal hostname; confirm you read the rule the same way.
+Tessary is likely to ask about these:
 
-## Left out of the case on purpose
+- **Our PUT rate before 14:05 UTC, and whether anything changed on our side at 14:05.** The notes don't cover either. Tessary will want to know whether the burst started with a jump in our traffic. The on-call thread links to a SlowDown incident the week before that turned out to be a bad deploy. Check the uploader request log for 13:00–14:05 UTC and the deploy history for 2026-09-21 before 14:05 UTC. If the rate was steady, add one line to the description saying so, with the numbers.
+- **The PUT rate after 14:45 UTC was lower** (about 2.6 PUT/s against about 6.4 PUT/s during the burst). The case states this. Tessary may point to it, but both rates are far below the documented 3,500 per prefix.
+- **Known-issues page.** The notes cover only the status page and its history. If Tessary has a known-issues or incident-history page apart from the status page, check it for 2026-09-21 in eu-north-2.
+- **Status page and docs quotes** come from the notes taken on 2026-09-21 and 2026-09-22. I did not re-fetch them, because this session had no network access. Before filing, check that the request-rate page and the SLA sections still say what the case quotes.
 
-- The on-call Slack thread and the link to last week's bad-deploy incident: nothing in them is evidence about Tessary.
-- The Grafana "Uploads Overview" panels (CPU, memory, GC, queue depth): internal, and no question from Tessary depends on them.
-- Rolling back the thumbnail-service deploy and raising the pod memory limit: internal changes with no effect, and naming the service would break the vendor rule. The pod restart and the DNS cache flush stay, stated without service names, because they rule out a stuck client or a stale endpoint.
-- The queue backlog draining by 14:58 UTC: internal, and the failed-upload counts already carry the impact.
+## Check before attaching
 
-## Not established, and how to close it
+- **`slowdown-requests-2026-09-21.csv`**: I couldn't open it. Per the notes it has 1217 rows with timestamp, bucket, object key, request ID, and host ID, and it's 118 KB, which is under the 25 MB limit. Before attaching it, confirm that no column or row contains an internal host name, an internal service name, or credentials, as the vendor-communication rule requires. The object keys are UUIDs under `ingest/...` prefixes. Tessary can look requests up by them.
 
-- **Tessary known-issues page.** Not checked; the notes cite only the status page. Look for a known-issues or incident-history page for Object Storage eu-north-2 on 2026-09-21 and, if it lists something, cite it in the case.
-- **GET counts per five-minute interval.** The SLA Error Rate may be computed over all requests, not only PUT. The case gives the 40-minute total (2.17%, above 1%) but not the per-interval figure. Pull GET counts per interval from the request log if Tessary disputes any interval.
-- **Billing month.** The 99.907% figure assumes the billing month is the calendar month of September (8640 intervals) and that no other interval this month was unavailable. September has not ended.
-- **Credit tier.** 99.907% is below 99.99% and above 99.9%, which is the 10% tier of §5, not the 25% tier. The case asks Tessary to apply the §5 credit rather than naming a percentage, since Tessary's own interval count decides it. Tell Finance to expect 10% of the September eu-north-2 storage charges if Tessary accepts the intervals.
-- **Time of the DNS cache flush.** The notes do not give it; the case says only "during the event". Add the time if you have it.
-- **Which bucket the busiest prefix belongs to.** The notes give `ingest/2026/09/21/` at 5.9 PUT/s without a bucket; the case does the same.
-- **Whether our backoff ended the burst.** The per-attempt 503 rate stayed at about 8% for twenty minutes after the backoff went in, then stopped at 14:44:51 UTC. The case states those facts and draws no conclusion; Tessary's answer to question 1 decides it.
+## What was redacted, and what was kept
 
-## Numbers I computed from the notes
+- Replaced in the debug log line: the internal host name `ingest-07.lm-prod.internal`. Removed: the access key ID in the `Credential=` part and the request signature. The service name `mediapipe-uploader` is called "our upload service" in the case.
+- Kept, because Tessary finds the requests and resources by them: the account ID, the bucket names, the object key in the log line, the request IDs, the host IDs, and the egress addresses.
 
-The per-interval error rates, the 7.94% total, the 2.17% combined PUT and GET rate (1226 of 56531), and 8632/8640 = 99.907% are my arithmetic on the notes' tables. I did not re-derive any count from the raw request log.
+## Left out of the case
 
-## Disclosure
+None of these helps Tessary answer the three questions. They're available if Tessary asks.
 
-Neither Tessary nor Lindqvist Media has an AI policy, so the case says nothing about how it was drafted.
+- The on-call Slack thread and the Grafana "Uploads Overview" panels.
+- Actions that changed nothing during the incident: restarting the uploader pods (16:14 CEST), rolling back the thumbnail-service deploy (16:18 CEST), raising the pod memory limit, and flushing the node DNS cache.
+- The manual re-queue of the 662 failed uploads at 14:52 UTC, which all succeeded, and the queue backlog that drained by 14:58 UTC.
+
+## Other
+
+- All times in the case are UTC. The on-call thread uses CEST (UTC+2), so 16:05–16:45 CEST is 14:05–14:45 UTC.
+- Neither Tessary nor Lindqvist Media has an AI policy, so the case carries no disclosure. You should still be able to answer Tessary's follow-up questions without this draft.

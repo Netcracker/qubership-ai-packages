@@ -13,8 +13,8 @@ reviewer-only content, verification in one line, and no URL to this repository's
 
 ## Skill parts
 
-- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description, reviewer-only content), §4,
-  §5 (links in a commit body)
+- `SKILL.md`: §2 (Commit body, slot 4; Pull request title; Pull request description: a break leads the description,
+  reviewer-only content, the lead-in paragraph), §4, §5 (links in a commit body)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -25,6 +25,13 @@ reviewer-only content, verification in one line, and no URL to this repository's
 3. **The description is a commit body** (`description_as_commit_body`). No Markdown heading, no checkbox, no URL to
    `github.com/pgjdbc/pgjdbc/blob/…`. Question for the reader: is verification at most one sentence naming what the
    tests establish?
+4. **Outcome lead-ins, not labels** (`no_plain_outcome_labels`). The description, which becomes the commit body, has no
+   line that opens with `User-visible:` or `Not changed:`; its outcomes sit under `**User-visible changes.**`
+   and `**Not changed.**`.
+5. **Break lead-in first** (`break_lead_in_before_headings`), as in
+   [`pgjdbc-4466-squash-default`](../pgjdbc-4466-squash-default/README.md): the new default breaks code that
+   matches the old `application_name`, so the description opens with `**Breaking changes.**`.
+6. **One line per outcome** (`outcome_lines_unwrapped`), as in the squash-default case.
 
 ## Running it
 
@@ -32,15 +39,31 @@ As in [the cases README](../README.md). `controls/as-pushed.md` is the branch as
 
 ## Results
 
+Tree `e0a0d8f7` adds the `Implements:` and `Defers:` trailers to §2 (Scope), the "pull request title" row, the shapes
+table, and rule 1 of §4, the §5 trailer table, and the §8 checklist, for a repository whose decision records number
+their rules. Tree `6eb5690b` shortens that text in §2, rule 1 of §4, §5, and §8, and forbids an invented rule number (§2
+and the §8 Identifiers item). This input has no decision records, so both trees ask it only to leave rule trailers and
+rule numbers out, no result below carries either, and the results stand for both trees as they stand for the tree before
+them.
+
 Runs of 2026-10-28 on the skill whose tree id is in `<model>/skill-tree` (`f03479c0`, branch `vs/cda-concise`), graded
 by reading; Haiku at effort `high`, Opus at the default. "r1" and "r2" are `result.md` and `result-2.md`.
 
 | Run | Outcome (1) | Title (2) | Body shape (3) | Verification in one sentence (3, read) |
 | --- | --- | --- | --- | --- |
-| Opus r1 | passes | passes | passes | passes: one sentence |
-| Opus r2 | passes | passes | passes | fails: two sentences |
+| Opus r1 (`9fe02a7c`) | passes | passes | passes | passes: none |
+| Opus r2 (`9fe02a7c`) | passes | passes | passes | passes: one sentence, in the `**Not changed.**` paragraph |
+| Opus r1 (`f03479c0`) | passes | passes | passes | passes: one sentence |
+| Opus r2 (`f03479c0`) | passes | passes | passes | fails: two sentences |
 | Haiku r1 | passes | passes | passes | fails: three sentences |
 | Haiku r2 | passes | passes | fails: six headings | fails: a heading and two bullets |
 | Opus baseline | fails | passes | fails: headings, checkboxes, a URL | fails |
 | Haiku baseline | fails | passes | fails: headings, checkboxes, a URL | fails |
 | `controls/as-pushed.md` | fails | fails | passes | passes: no verification at all |
+
+Opus r1 and r2 were re-run on 2026-11-06 on tree `9fe02a7c` (the first two rows), graded by reading, and pass every
+check, checks 4 to 6 included. Both descriptions open with `**Breaking changes.**`, put the remaining outcomes under
+`**User-visible changes.**` and `**Not changed.**` with one line each, and close with a `**Scope.**` paragraph. r2 puts
+its sentence on `explicitApplicationNameIsKept` in the `**Not changed.**` paragraph, which no check reads as a fault.
+Check 4 fails both Haiku results, check 5 fails the Haiku results, both baselines, and the control, and check 6 passes
+every committed result. The runs on `0d0fa5fa` passed every check registered then.

@@ -294,3 +294,134 @@ runs.
 - **Check 2.** `cut-1` lists the README's `helm test … --logs` as run by nothing and files no finding; `cut-2` files it
   with two other unrun recipes and asks to run them, with no reason tied to the Job, the check's partial. The `series`
   and `doccmd` arms missed it in one run each as well.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with `apm-authoring` supplied to
+the reviewer as well; this change has no skill or instruction file, so no report used it. Graded by reading `result.md`.
+Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs from
+`796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that table,
+because the change adds no instruction.
+
+| Model | Check 1 | Check 2 | Check 3 | Check 4 | Check 5 | Check 6 | Check 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | pass, pass | pass, partial | pass, pass | pass, pass | pass, pass | pass, fail | pass, pass | 2023, 2459 | 2.43, 2.16 |
+| Haiku | pass, pass | partial, partial | pass, pass | fail, partial | pass, pass | pass, pass | pass, pass | 1750, 1653 | 0.60, 0.73 |
+
+- **Check 2.** Opus `instr-1` puts it first among its three worst problems: "`--logs` reads the log of a Pod named after
+  the test hook (`pkg/action/release_testing.go:127`). Here the hook is a Job", read in Helm 3.15.2, and asks to run
+  it or replace it with `kubectl logs job/<name>`. Opus `instr-2` lists the README's `helm test … --timeout 15m --logs`
+  as run by "none" and asks for one run, with reasons that are the tag form and the 15-minute limit, not the Job: the
+  check's partial. Haiku `instr-1` files it as F8 and asks for a run; it names the Job only as an open question
+  ("Whether `--logs` prints the log of a Job-created pod is unverified"), so it does not find that the form prints no
+  log: partial. Haiku `instr-2` files the README's install path with `helm test … --logs` as having no run (F12), with
+  no reason tied to the Job: partial.
+- **Check 6.** Opus `instr-2` checks the image set in Item 7 and settles it: "`git grep 'qubership-authz-policy-admin'`
+  finds no other list of the images. None." It files neither "CI builds both" nor "two-entry". The other three file
+  "CI builds both"; Opus `instr-1` files "two-entry" with it.
+- **Check 4.** Both Opus runs file it and show the failure with `TAG` (`instr-1`: "With `--set TAG=1.2.3`, I got
+  `local/pip-stub:1.2.3`"). Haiku `instr-1` settles it on the documented example: "The example
+  `IMAGE_PULL_POLICY=Never` means the same to both. I found no case where a value means something different, so no
+  finding." Haiku `instr-2` names the shared keys and files nothing ("both mean the same thing to every consumer.
+  None.").
+- **Check 3.** All four file the pair of the Job's deadline and the fixed `helm test --timeout 15m`. Opus `instr-1`:
+  "Raising `activeDeadlineSeconds` past 900 has no effect"; Haiku `instr-1` (F9): "Limits not derived. The Job deadline
+  `activeDeadlineSeconds: 900` equals `helm test --timeout 15m`", and Haiku `instr-2` (F8) asks to raise the `helm
+  test` timeout past 900 s or derive one from the other. Neither Haiku run says that raising the deadline has no effect.
+- **Check 1.** All four name the objects and Helm's refusal and ask for a run from the old state or the remedy; Opus
+  `instr-2` quotes "invalid ownership metadata".
+- **Check 7.** All four compare the old 3-minute `wait … Ready` with about 15 minutes on a missing image and ask to run
+  the fault or bound the wait; both Opus runs add the harness, 2 minutes against 10.
+- **Cost.** Opus costs 2.43 and 2.16, Haiku 0.60 and 0.73, under a third of Opus.
+
+Against the `1b1ebc3e` runs. Opus: check 2 went from fail, fail to pass, partial and check 6 from pass, pass to pass,
+fail; the other checks are unchanged. Opus `instr-1` is 3158 words before and 2023 now at the same cost, and Opus
+`instr-2` costs 2.16 against 3.25 (24 turns against 53). Haiku: check 2 went from partial, fail to partial, partial,
+check 3 from fail, fail to pass, pass, check 4 from partial, fail to fail, partial, and check 6 from fail, pass to
+pass, pass; checks 1, 5, and 7 are unchanged. No report of either tree carries a table of added instructions, since the
+change adds no skill or instruction file; Haiku `instr-2` says so ("the §2a instruction table does not apply"). The
+check 2 failures of the `1b1ebc3e` runs therefore came from how the reviewer reads Helm, not from the §2a wording, and
+Opus failed check 2 in both runs of the `main` and `pr180` arms too. Of the new runs, only Opus `instr-1` read Helm's
+source and found the Job; the other three list the `--logs` form as unrun.
+
+## Results of the `cond` arm, 2026-10-31
+
+Graded by reading `result.md`. Final-review tree `1b139bb8` is the committed one. `3d6a0954` differs from it in two
+sentences: the analogue of *What the writer says it verified*, which `3d6a0954` had shortened and `1b139bb8` keeps as
+before, and the command rule of item *Claimed cases covered*, where `3d6a0954` made a command with no run a finding only
+where reading the tool "leaves the outcome in doubt" and `1b139bb8` makes it one unless the reading shows the promised
+outcome. Check 2 reads the command rule. Opus ran `3d6a0954` and passes check 2 in both runs, which `1b139bb8` only
+makes easier to file, so its results stand. Sonnet ran `3d6a0954` as `draft-<n>` and `1b139bb8` as `cond-<n>`. Opus
+`cond-1` was run twice: the first session ended on a reply to a late background-task notification (4 turns, 21 s) and
+was replaced. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by the word
+restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read without
+"finding".
+
+| Model | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | pass | pass | pass | pass | pass | pass | pass | 2420 | 2.39 |
+| Opus | `cond-2` | pass | pass | pass | pass | pass | fail | pass | 1965 | 1.89 |
+| Sonnet | `draft-1` | pass | fail | pass | pass | pass | pass | pass | 2099 | 0.80 |
+| Sonnet | `draft-2` | pass | fail | fail | pass | pass | fail | pass | 2826 | 1.05 |
+| Sonnet | `cond-1` | pass | fail | pass | pass | pass | pass | pass | 1880 | 0.55 |
+| Sonnet | `cond-2` | pass | partial | pass | pass | pass | pass | pass | 1932 | 0.78 |
+
+- **Opus** gains check 2 against `instr` (pass, partial): both runs read Helm 3's `GetPodLogs` and file that the
+  README's `helm test … --logs` fails for a Job hook (`cond-1`, `result.md:50`). `cond-2` misses "CI builds both", as
+  `instr-2` did.
+- **Sonnet, check 2.** On `3d6a0954` neither run read the tool: `draft-1` filed the form as taste, "both are documented
+  paths that I expect to work", and `draft-2` settled it because the flag exists. On `1b139bb8`, `cond-2` files the
+  unrun form as substantive and asks to run it or use the Makefile's (`result.md:54`), which is the partial; `cond-1`
+  lists the form as `none` and files only the other unrun recipe.
+- **The report.** No index carries a request; every report ends on checks it could not run (no cluster, the drift script
+  on Go). The SVT Keycloak bump is filed as substantive in every run.
+
+## Results of the `vocab` arm, 2026-11-08
+
+Opus and Sonnet, two runs each, at final-review tree `ca8233fb` (version 1.3.0, from commit `814c1614` of the branch),
+graded by reading `result.md`.
+
+| Model | Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `vocab-1` | pass | partial | pass | pass | pass | pass | pass | 2316 | 2.78 |
+| Opus | `vocab-2` | pass | pass | pass | pass | pass | pass | pass | 2746 | 3.49 |
+| Sonnet | `vocab-1` | pass | partial | pass | partial | pass | pass | pass | 2286 | 0.98 |
+| Sonnet | `vocab-2` | pass | partial | fail | fail | pass | fail | pass | 2513 | 0.99 |
+
+- **Check 2.** Opus `vocab-2` reads Helm 3.15.2's `GetPodLogs` and files that `--logs` fails for a Job hook
+  (`result.md:64`). Opus `vocab-1` lists the chart README's recipe, `helm test --logs` included, as run by "none" and
+  asks for one run, with the transfer image as the reason (`result.md:49`). Sonnet `vocab-1` (`result.md:54`) and
+  `vocab-2` (`result.md:62`, `:79`) say the Makefile runs `helm test` without `--logs` and ask for a run. None of the
+  three names the Job: partial.
+- **Check 3.** Sonnet `vocab-2` names the three limits and settles them: "The inner limit fires first at the defaults;
+  nothing in the change raises these" (`result.md:113`).
+- **Check 4.** Sonnet `vocab-1` names `TAG` and `IMAGE_PULL_POLICY` as shared and files nothing, because "no workflow
+  passes the variable" (`result.md:78`): partial. Sonnet `vocab-2` does not mention `E2E_HELM_ARGS`.
+- **Check 6.** Sonnet `vocab-2` searched for "two images" and concluded "No sentence still counts two. None."
+  (`result.md:134`), where `README.md` still says "CI builds both".
+
+Against `cond`, Opus gains check 6 in its second run (`cond-2` failed it) and loses check 2 to a partial in its first.
+Sonnet `vocab-1` matches `cond-2` except for check 4, which drops from pass to partial. Sonnet `vocab-2` fails three
+checks that every Sonnet `cond` run passed. Its item 1 is short, so the new rules did not crowd out the rest; two runs
+cannot tell this from variance. Reports grew: Opus from 2420 and 1965 words to 2316 and 2746, Sonnet from 1880 and
+1932 to 2286 and 2513. Cost grew with them: Opus 2.78 and 3.49 against 2.39 and 1.89, Sonnet 0.98 and 0.99 against
+0.55 and 0.78.
+
+The new rules of item 1 found real defects here. Three runs file the same dense sentence in the test comment, "a stub
+with no default route, or one with no responses, answers 404", where "one" can mean the stub or the default route
+(Opus `vocab-1` `result.md:12`, Opus `vocab-2` `:12`, Sonnet `vocab-2` `:23`). Three file the comment on `RequestURI`,
+"so that a caller that encodes a value in the path differently from one that does not can be told apart" (Opus `:11`
+in both runs, Sonnet `vocab-1` `:19`). Opus `vocab-2` finds that the selector comment in `_helpers.tpl` gives the wrong
+reason (`result.md:13`). Sonnet `vocab-1` finds that the header says the stub serves responses "per path" while the
+default route shares one sequence (`result.md:18`). Two runs ask for a comment on the `sizeLimit` fallback in
+`suite.yaml:68`, which Opus `vocab-2` also files as a limit that never fires first. The terms check is where the weak
+findings are:
+
+- Opus `vocab-1` files "part" as a "Term with no source" (`result.md:13`), substantive, because the helper's parameter
+  is `component`. That follows the rule's second source, but a reader who reads "part" does nothing wrong.
+- Opus `vocab-2` files "stand" and "test stand" as a coinage used in two senses (`result.md:16`), substantive, and asks
+  to rename the chart, its variables, and its files. The two senses are real; the rename is out of proportion to them.
+
+Both Sonnet runs check the one term they find, "default route", and report it as defined once in the package comment
+(`vocab-1` `result.md:24`, `vocab-2` `:26`). No run dumps the doc-comment checklist; Sonnet `vocab-2` answers it in
+one sentence per member (`result.md:11`).

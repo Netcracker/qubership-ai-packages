@@ -1,0 +1,100 @@
+diff --git a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+index 958be01..0d121a8 100644
+--- a/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
++++ b/core/src/test/java/org/apache/calcite/test/SqlValidatorTest.java
+@@ -5486,6 +5486,95 @@ private ImmutableList<ImmutableBitSet> cube(ImmutableBitSet... sets) {
+         .ok();
+   }
+ 
++  /** Returns a fixture that validates {@code sql} with identifier expansion,
++   * matching names case-insensitively and keeping them in the case they are
++   * written in. */
++  private SqlValidatorFixture caseInsensitiveWithExpansion(String sql) {
++    return sql(sql)
++        .withCaseSensitive(false)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .withValidatorIdentifierExpansion(true);
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsColumnSpelledAsInTable() {
++    caseInsensitiveWithExpansion("select DEPTNO from emp join dept using (DEPTNO)")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsUsingColumnInOtherCaseThanTable() {
++    caseInsensitiveWithExpansion("select deptno from emp join dept using (deptno)")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsLowerCaseItemOfUpperCaseUsingColumn() {
++    caseInsensitiveWithExpansion("select deptno from emp join dept using (DEPTNO)")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseInsensitiveExpandsUpperCaseItemOfLowerCaseUsingColumn() {
++    caseInsensitiveWithExpansion("select DEPTNO from emp join dept using (deptno)")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testJoinUsingCaseSensitiveRejectsItemInOtherCaseThanUsingColumn() {
++    sql("select ^deptno^ from EMP join DEPT using (DEPTNO)")
++        .withCaseSensitive(true)
++        .withQuotedCasing(Casing.UNCHANGED)
++        .withUnquotedCasing(Casing.UNCHANGED)
++        .withValidatorIdentifierExpansion(true)
++        .fails("Column 'deptno' not found in any table.*");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseSensitiveExpandsCommonColumn() {
++    sql("select deptno from emp natural join dept")
++        .withCaseSensitive(true)
++        .withValidatorIdentifierExpansion(true)
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveExpandsCommonColumnSpelledAsInTable() {
++    caseInsensitiveWithExpansion("select DEPTNO from emp natural join dept")
++        .type("RecordType(INTEGER NOT NULL DEPTNO) NOT NULL");
++  }
++
++  /** Test case for
++   * <a href="https://issues.apache.org/jira/browse/CALCITE-7051">[CALCITE-7051]
++   * JOIN with USING does not match the appropriate columns when caseSensitive
++   * is false</a>. */
++  @Test void testNaturalJoinCaseInsensitiveExpandsCommonColumnInOtherCaseThanTable() {
++    caseInsensitiveWithExpansion("select deptno from emp natural join dept")
++        .type("RecordType(INTEGER NOT NULL deptno) NOT NULL");
++  }
++
+   @Test void testCrossJoinOnFails() {
+     sql("select * from emp cross join dept\n"
+         + " ^on^ emp.deptno = dept.deptno")

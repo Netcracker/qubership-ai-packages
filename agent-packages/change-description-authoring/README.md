@@ -21,8 +21,18 @@ the question it answers.
   list each outcome on its own line, with the exact text and its error code or exception class where
   the outcome emits them.
 - Where a change breaks code that works on the released version: the description opens with the
-  breaks unless the next release from the target branch is a major, read from the branch's version
-  file, milestone, or name, and the commit body keeps them first in its outcome slot.
+  breaks, whatever release it targets, and the commit body keeps them first in its outcome slot.
+- Headings only where the repository's template supplies them. With a template or without one, the
+  break block opens with `**Breaking changes.**` ahead of any heading. A Scope slot that carries a
+  gap, a related or stacked pull request, or a maintainer's question opens with `**Scope.**` unless
+  the template has a heading for it. The outcome lines of a commit body, and of a description that
+  becomes one, sit under `**User-visible changes.**` and `**Not changed.**`. No other slot opens
+  with a lead-in, and a history with no Markdown drops the asterisks.
+- In a repository whose decision records number their rules and that asks a change to name them,
+  the commit message and the description end with `Implements:` and `Defers:` trailers, and each
+  deferred rule names an existing issue or pull request, which the agent asks the user to open
+  where none exists; a rule with neither stays out of the trailers and is named in the Scope slot.
+  No other repository gets these trailers.
 - What each paragraph of a pull request description must earn: the review decision that gets harder
   without it, the result rather than the route that reached it, and a length that follows the size
   of the change. Two to six lines of code, a command with its output, or an error text quoted whole

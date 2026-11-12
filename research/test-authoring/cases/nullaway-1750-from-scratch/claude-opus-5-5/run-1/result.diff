@@ -1,0 +1,106 @@
+diff --git a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+index ad70e90..4f22140 100644
+--- a/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
++++ b/nullaway/src/test/java/com/uber/nullaway/FrameworkTests.java
+@@ -1826,23 +1826,87 @@ public class FrameworkTests extends NullAwayTestsBase {
+         .doTest();
+   }
+ 
+-  @Test
+-  public void springValueFieldTest() {
+-    defaultCompilationHelper
++  /**
++   * Adds a source stub for Spring's {@code @Value} annotation.
++   *
++   * @param helper the test helper to add the stub to
++   * @return the test helper, for chaining
++   */
++  private static CompilationTestHelper addSpringValueAnnotationStub(CompilationTestHelper helper) {
++    return helper.addSourceLines(
++        "Value.java",
++        """
++        package org.springframework.beans.factory.annotation;
++        import java.lang.annotation.ElementType;
++        import java.lang.annotation.Retention;
++        import java.lang.annotation.RetentionPolicy;
++        import java.lang.annotation.Target;
++        @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
++        @Retention(RetentionPolicy.RUNTIME)
++        public @interface Value {
++          String value();
++        }
++        """);
++  }
++
++  /**
++   * Compiles a class with two {@code @Value} fields and expects NullAway to report only the second
++   * one as not initialized.
++   *
++   * @param notReportedExpression the {@code @Value} string of the field that must not be reported
++   * @param reportedExpression the {@code @Value} string of the field that must be reported
++   */
++  private void checkOnlySecondValueFieldReported(
++      String notReportedExpression, String reportedExpression) {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
+         .addSourceLines(
+-            "Value.java",
++            "Test.java",
+             """
+-            package org.springframework.beans.factory.annotation;
+-            import java.lang.annotation.ElementType;
+-            import java.lang.annotation.Retention;
+-            import java.lang.annotation.RetentionPolicy;
+-            import java.lang.annotation.Target;
+-            @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+-            @Retention(RetentionPolicy.RUNTIME)
+-            public @interface Value {
+-              String value();
++            package com.uber;
++            import org.springframework.beans.factory.annotation.Value;
++            class Test {
++              @Value("%s")
++              String notReported;
++              @Value("%s")
++              // BUG: Diagnostic contains: @NonNull field 'reported' not initialized
++              String reported;
+             }
+-            """)
++            """
++                .formatted(notReportedExpression, reportedExpression))
++        .doTest();
++  }
++
++  @Test
++  public void springValueNullAfterNotEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{someBean != null ? someBean.value : 'default'}",
++        "#{someBean != null ? null : 'default'}");
++  }
++
++  @Test
++  public void springValueNullAfterEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{someBean == null ? 'default' : someBean.value}",
++        "#{someBean == null ? null : someBean.value}");
++  }
++
++  @Test
++  public void springValueNullBeforeNotEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{null != someBean ? someBean.value : 'default'}",
++        "#{null != someBean ? null : 'default'}");
++  }
++
++  @Test
++  public void springValueNullBeforeEqualsIsNotAPossibleValue() {
++    checkOnlySecondValueFieldReported(
++        "#{null == someBean ? 'default' : someBean.value}",
++        "#{null == someBean ? null : someBean.value}");
++  }
++
++  @Test
++  public void springValueFieldTest() {
++    addSpringValueAnnotationStub(defaultCompilationHelper)
+         .addSourceLines(
+             "NegativeCases.java",
+             """

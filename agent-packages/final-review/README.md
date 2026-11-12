@@ -8,11 +8,15 @@ demands an answer to every item can, and the form is short enough that the items
 
 1. Comments consistent with the code and with each other: the doc comment above changed code that nobody edited,
    the first sentence of an added or changed comment, the list a comment carries, the sibling that delegates with a
-   fixed argument, history narration.
+   fixed argument, history narration; the doc-comment skill's checklist over every added comment, a sentence a reader
+   has to parse twice, an inline comment that restates its callee, an added expression a reader would misread that
+   carries no comment, and a term the change coins: one that neither the field, nor the code, nor a definition in the
+   change gives a source.
 2. Every case the task statement, the commit message, and the test class comments claim, covered by a named test,
-   including the test that separates the chosen design from its alternative, and every command the change tells
-   someone to run, matched to a script or CI job that runs that exact form. In the other direction, every hunk of the
-   diff belongs to a sentence of the commit message or the description.
+   including the test that separates the chosen design from its alternative, and every command the change adds or edits,
+   or whose outcome depends on a configuration it creates, matched to a script or CI job that runs that exact form. In
+   the other direction, every hunk that changes behavior, a version, or a dependency belongs to a sentence of the commit
+   message or the description.
 3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and, where
    the change reads or replaces state an earlier version left behind, a test or run that starts from it. Where the
    change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one
@@ -27,6 +31,16 @@ demands an answer to every item can, and the form is short enough that the items
 7. The siblings of the change: other callers of the helper the fix touched, other builders of the same literal,
    found with `git grep` (or `sb callers` where that code-search command is installed), each judged for the same defect;
    every list and count of a set the change adds a member to; every parallel path a fix has to cover.
+
+A change with no code (a skill, an `AGENTS.md` or `CLAUDE.md`, a docs page, a configuration) is checked through the same
+items read as analogues. For a skill or an instruction file the report adds a table of the instructions the change adds
+or widens, one row per rule however many sentences it takes: an input inside the instruction's own condition where its
+item is noise or drops something, what an agent writes there, and the condition that would end the instruction. An
+instruction the artifact already ends for that input gets no row, only its line number below the table, and an ambiguity
+or a conflict with another rule goes to the comments item instead; with no row left, one line replaces the table. The
+analogues also ask whether a worked example teaches what the sentence after it forbids, whether a sentence could appear
+in any tutorial, and whether the cases for an instruction added after a bad output also check that the output did not
+grow.
 
 Every finding is labelled substantive, taste, or churn; only the first is a request, and churn is deleted before the
 report goes out.
@@ -44,9 +58,13 @@ report goes out.
 
 - [`test-authoring`](../test-authoring/) owns what a test establishes and how its failure reads; items 2, 3, and 5
   cite it.
-- [`javadoc-authoring`](../javadoc-authoring/) and its siblings own what a comment says; item 1 cites them.
-- The developer-style skill of the repository's language owns wording; the review labels wording findings taste
-  unless a sentence can be read wrongly.
+- The doc-comment skill of the change's programming language owns what a comment says, and item 1 cites it:
+  [`javadoc-authoring`](../javadoc-authoring/), [`godoc-authoring`](../godoc-authoring/),
+  [`rustdoc-authoring`](../rustdoc-authoring/), [`pythondoc-authoring`](../pythondoc-authoring/), or
+  [`jsdoc-authoring`](../jsdoc-authoring/).
+- The developer-style skill of the language the comments are written in owns wording (`english-developer-style` for
+  English); the review labels wording findings taste unless a sentence can be read wrongly, has to be parsed twice, or
+  uses a coined term.
 
 ## Install
 

@@ -73,6 +73,14 @@ borrowing the one above it. **State the local rule at the lowest-level API, and 
 layer where the scenario exists.** A guard found through one concrete call path does not thereby own
 that path's story.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification defines (an
+isolation level, a protocol message, a type-system operator) and computes it for fewer cases than the
+specification allows, give the specification's definition or a link to it, then state the cases this code
+computes it for as this code's scope. `A subtype of T is a class that extends T` folds a checker's choice to handle
+class types only into the JLS term, and a reader who knows the JLS asks why the definition leaves out interfaces,
+arrays, and type variables. State the scope as a criterion that covers every case, not as a list of the
+cases it excludes (§4, *The membership rule*).
+
 **Sufficiency** scales with visibility: how much the comment may leave to the code beside it.
 
 | Where | What the comment must carry |
@@ -91,14 +99,18 @@ history**. `The pool now hands back a wrapper, so unwrap() no longer returns the
 connection` describes a transition between two versions, and the reader has only this one. Rewrite
 it as the state that holds: what `unwrap()` returns, and why.
 
-One exception. **The comment on a regression test may tell history, and an equivalence is not history.**
-The defect is what the test guards, so it belongs in the comment: state the rule the test asserts
-first, then the defect in one past-tense sentence with the exception class: `A negative count used to
-be reported as available, and the caller then failed with StringIndexOutOfBoundsException.` A comment
-that opens with the defect makes the reader reconstruct the broken version to understand the fixed
-one (measured on one branch: a blind reader ranked the version that opened with `used to` fourth of
-five on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast
-it as a chain of `would` clauses. History narration, which this section forbids, is a sentence whose
+One exception. **The comment on a regression test may tell history, and an equivalence is not
+history.** A regression test owes no comment for being one. Where its name states the rule, the
+defect and the issue number belong in the commit that adds the test, and a comment, where the test
+has one, carries what §3 leaves it: the reason or the construction. Tell the defect in the comment
+only where the rule alone would look arbitrary to the next maintainer: state the rule the test
+asserts first, then the defect in one past-tense sentence, with the exception class where the old
+code threw one and the wrong result where it did not: `A negative count used to be reported as
+available, and the caller then failed with StringIndexOutOfBoundsException.` A comment that opens
+with the defect makes the reader reconstruct the broken version to understand the fixed one
+(measured on one branch: a blind reader ranked the version that opened with `used to` fourth of five
+on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast it
+as a chain of `would` clauses. History narration, which this section forbids, is a sentence whose
 only content is that the code changed. A sentence that argues the new behavior is safe **because it
 is identical to the old one** is rationale, and the old behavior is its comparison term. Keep the
 comparison; it is the whole argument.
@@ -184,7 +196,7 @@ subject: not the thing acted on (`Every backend message must be read through rea
 which names no one and lets `it` drift to the reader by the next clause), not the act (`relaxing a
 protocol check must not be reachable`), and not a member that merely performs the act for someone
 else (`markBroken must still fire` obliges `PGStream`). A named member in the subject is right only
-where that member is itself what must comply: `readUntrackedLength must leave no envelope behind`.
+where that member is itself what must comply: `readUntrackedLength must leave no byte of the message unread`.
 The party need not be human, but it must act: a driver, a check, a reader. A mode constant or a
 configured number complies with nothing.
 
@@ -202,20 +214,21 @@ Out of reach of this rule: an imperative, which already addresses the party (`Ca
 framed dialogue resumes`), including one that carries rationale (`so mirror that here`); a
 constraint on a *value* (`must be ≤ MAX_MESSAGE_SIZE`), which bounds a number rather than behavior;
 a field comment naming who writes or reads the field, which is the membership list §4 calls for; and
-an inline comment whose next statement is the actor (`// Envelope must be fully consumed` above the
+an inline comment whose next statement is the actor (`// The rest of the message must be consumed` above the
 `endMessage()` that consumes it), after checking that the next line really is the actor and not test
 setup standing between the comment and the call it constrains.
 
-Most members need slots 1 and 2 only. A getter needs slot 1. Do not manufacture the other slots to
-fill a template; an absent slot is not a gap.
+Most members need slots 1 and 2 only, and a getter whose name and type are its whole contract needs
+no comment (§7). Do not manufacture the other slots to fill a template; an absent slot is not a gap.
 
 **Size the comment to the member.** A doc comment longer than the member it documents is not
 automatically wrong (an invariant can be worth ten lines over a one-line getter), but it is a signal
 to re-read. When you check, the surplus is almost always rationale: keep at most two sentences of
 it, and only for the part a reader would otherwise get wrong. The rest belongs in the commit
-message. As a working size, a test-class comment is two to five sentences and a method comment fits
-in one glance; past that you are describing the investigation, not the contract, so keep the rule
-and the exception and move the rest.
+message. A test-class comment, where one is owed, runs to at most five sentences, and a method
+comment fits in one glance; past that you are describing the investigation, not the contract, so
+keep the rule and the exception and move the rest. These are ceilings: a test whose name states what
+it establishes often needs no comment at all.
 
 ## 3. The first sentence is a summary fragment
 
@@ -235,6 +248,12 @@ Javadoc extracts the first sentence into the class and member summary tables, wh
   `e.g.`, `i.e.`, `vs.`, and `Dr.` truncate it. Rewrite, or pin the boundary with `{@summary …}`
   (JDK 10+).
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other members.** `Returns the length as {@link #frameLength} computes it, as {@link #trimTo}
+  keeps it` sends the reader to two other members to learn what this one returns, and it fails §1's refactor test:
+  inline `trimTo` and the sentence has to change. State the result. The rule holds for a private member too: §1's table
+  lets its comment leave to the body what the body shows. It does not let the comment give the names of the members the
+  body calls instead of the result. Link another member only for a part of the contract that it owns and this member
+  passes through unchanged.
 - **A field or constant names itself first, with its unit.** `Largest declared length, in bytes,
   that this stream accepts for an encrypted packet.` The reason the bound has that value is slot 3,
   however interesting it is; a comment that opens with the upstream implementation it mirrors leaves
@@ -246,9 +265,11 @@ Javadoc extracts the first sentence into the class and member summary tables, wh
 - **A first sentence a reader could reconstruct from the identifier carries nothing.** A test method
   named `aFailingOutputCloseStillClosesTheInputAndTheSocket` does not need `Checks that a failing
   output close still closes the input stream and the socket.`; the report prints the name. Where the
-  name states what the test establishes, the comment carries the reason, the construction the reader
-  would not guess, or nothing. For a field or a getter the same rule leads to §7: where the name and
-  the types are the whole contract, write no comment.
+  name states what the test establishes, the comment carries why a test that looks as if it cannot
+  fail exists, the construction the reader would not guess, or nothing. Why an expected value is what it is goes in the
+  assertion message, where the reader of a failed build sees it (`test-authoring` §7). For a field or a
+  getter the same rule leads to §7: where the name and the types are the whole contract, write no
+  comment.
 
 ## 4. Genre notes
 
@@ -345,10 +366,11 @@ supertype itself does looks arbitrary to nobody.
 
 ### Field and constant
 
-Document the unit, the range, the sentinel, and who may write it. A `private static final` set whose
-membership rule is non-obvious needs that rule spelled out; a reader adding an entry has no other
-source of truth. When the class comment already states the rule, the field comment shrinks to one
-sentence plus a link.
+Document what the type and the name leave open: the unit, the range, a sentinel value, and who may
+write the field where more than the constructor does. `private final String name` leaves nothing
+open and gets no comment (§7). A `private static final` set whose membership rule is non-obvious
+needs that rule spelled out; a reader adding an entry has no other source of truth. When the class
+comment already states the rule, the field comment shrinks to one sentence plus a link.
 
 A limit, ceiling, or timeout documents **what it bounds**, in its own sentence, positively, and
 before any neighboring limit comes up: `This ceiling bounds only what the server sends.` A comment
@@ -356,12 +378,13 @@ that leaves the scope to be inferred from a contrast (`…which governs the dire
 does not`) makes the reader subtract one limit from another and reconstruct the missing verb. Both
 halves are facts; state them separately, this one first.
 
-A constant whose value is a size or a duration states both forms, and `{@value}` supplies the
-digits: `1 MiB ({@value #MAX_CSTRING_LENGTH} bytes)`. The doclet renders the evaluated constant
-without grouping (`1 << 20` and `8 + 8000` come out as `1048576` and `8008`), and the digits follow
-the field when someone changes it. Only the unit can go stale, so it has to be exact (`64000000` is
-`64 MB`, not `64 MiB`) or hedged in words: `about 1 GiB ({@value #MAX_MESSAGE_SIZE} bytes)`. The
-form is `english-developer-style` §5.
+A size or duration constant whose literal does not read as a quantity at a glance (`1 << 20`,
+`1048576`) states both forms, and `{@value}` supplies the digits:
+`1 MiB ({@value #MAX_CSTRING_LENGTH} bytes)`. `DEFAULT_TIMEOUT_SECONDS = 30` shows its value and its unit already.
+The doclet renders the evaluated constant without grouping (`1 << 20` and `8 + 8000` come out as
+`1048576` and `8008`), and the digits follow the field when someone changes it. Only the unit can go
+stale, so it has to be exact (`64000000` is `64 MB`, not `64 MiB`) or hedged in words: `about 1 GiB
+({@value #MAX_MESSAGE_SIZE} bytes)`. The form is `english-developer-style` §5.
 
 ### Inline comment
 
@@ -396,7 +419,9 @@ Two placement hazards when you restructure code around them:
 The comment on a test is read by whoever opened the file. The reader of a red build already holds
 the test's name, its assertion, and its message in the report, and comes here for the rule behind
 them; the next author comes looking for what this class covers and where a case goes. Both want the
-rule, stated once.
+rule, stated once. A test whose name states the rule it checks, and whose failure is fixed in the
+code it exercises, needs no comment (§7); the slots below are for a rule the name does not carry,
+and for a failure fixed somewhere else.
 
 - **Summary = the rule the class guards, as a claim.** `A parameter the driver inlines arrives
   unchanged and leaves no warning on a server with standard_conforming_strings off` beats `Tests
@@ -410,14 +435,19 @@ rule, stated once.
 - **Contract = the rest of the rule**, where one sentence could not hold it whole: the inputs, the
   condition, what the reader has to satisfy. Stated positively and completely; the reader has to
   satisfy the rule, not reverse-engineer it from the assertion.
-- **Use = what to do about the red build.** Which set to edit, which annotation to add, where the
-  failure message states the rest.
+- **Use = the edit that turns the build green, where it is not a fix to the code under test.** Which
+  set to edit, which annotation to add, where the failure message states the rest. Where the fix is
+  the code the test exercises, the contract already implies it and the slot is absent (§2).
 - **State the rule as something you could assert.** `It has to stay quiet when the socket did go
   away the first time` leaves the reader guessing: not throw, not close twice, not log? Name the
   observable: `and it must not touch a socket that markBroken already closed.` If you cannot phrase
   the rule as an observation, the test probably cannot check it either.
 
-Deliberate duplication between this class comment, a field comment, and the assertion message is
+A test method's comment is the exception, not the default. Its content is why a test that looks as if it
+cannot fail exists, or a construction the code does not show; why an expected value is what it is goes in the assertion
+message, and a heading between rows of a table restates the rows (`test-authoring` §7).
+
+Where the class has a comment, repeating its rule in a field comment or the assertion message is
 correct, because each reader meets exactly one of the three. It does not extend to production code,
 where the class comment and the member comment have the same reader.
 
@@ -453,7 +483,7 @@ member instead.
 is fine for a test class or an internal type, and a defect for public API.
 
 **An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then
-give the number so a reader can find the history: `a length taken straight from the wire sizes the
+give the number so a reader can find the history: `a length taken straight from the stream sizes the
 allocation (issue #4015)`. The number must not carry the meaning: `the shape of issue #4015`, `the
 same format as #1231`, `the bug #4015 fixed` count as content for someone who already knows the
 ticket and as nothing for everyone else. The test: cover the number and read the sentence. If what
@@ -461,7 +491,7 @@ remains states no fact, the comment has none. A bare `see #4015` fails the same 
 end, and a published page reaches readers with no access to the tracker at all.
 
 The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario
-from issue #4015: a field claiming more bytes than the row envelope still holds` passes, because
+from issue #4015: a field claiming more bytes than the row message still holds` passes, because
 covering the number leaves the failure named. The rule is about the number's role, not its position.
 
 The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold
@@ -495,8 +525,9 @@ in the code. Use that name, and cite the number once, where the history belongs.
   untouched, or write `@return {@inheritDoc} …` and add to the inherited text on purpose. The same
   holds for `@param` and `@throws`. Judge it by the complete tag the reader ends up with, not by the
   sentence you moved.
-- **`@since`** on new public API. **`@deprecated`** must name the replacement and is paired with the
-  `@Deprecated` annotation.
+- **`@since`** on new public API, in a project that tags its API with it; where the other public
+  types carry none, add none. **`@deprecated`** names the replacement where there is one, and is
+  paired with the `@Deprecated` annotation.
 - Tag order: `@param`, `@return`, `@throws`, `@since`, `@see`, `@deprecated`.
 
 Markup: `<p>` opens a paragraph and is not closed in traditional Javadoc; closing it is harmless and
@@ -581,18 +612,22 @@ away.
   sentence that specializes the rule, plus the link. Two full statements of the same rule is the
   most common outcome of a good structural edit and the easiest to miss, because each of the two
   reads well on its own.
-- **Deleting is an edit, and every cut is reported.** A list of callers, a rejected alternative, a
-  cost estimate, a reference to the PR that introduced the code: cutting these is usually the
-  highest-value change in the diff, even though the result looks like less work. Delete sentence by
-  sentence, and report each deleted sentence with the fact it carried and where that fact now lives:
-  a tag, another member, the commit message, or nowhere, with the reason. A rationale sentence stays
-  only where a maintainer reading the rule would ask why or would be tempted to relax it; the test
-  is whether the sentence would come up as a question in code review. A rewrite that reads better and
-  says less is the failure this rule exists to prevent.
+- **Deleting is an edit, and a cut that carried a fact is reported.** A list of callers, a rejected
+  alternative, a cost estimate, a reference to the PR that introduced the code: cutting these is
+  usually the highest-value change in the diff, even though the result looks like less work. Delete
+  sentence by sentence, and report each deleted sentence that carried a fact (§7b step 1 says what
+  counts as one) with where that fact now lives: a tag, another member, the commit message, or
+  nowhere, with the reason. Narration and a restated signature go without a report. A rationale
+  sentence stays only where a maintainer reading the rule would ask why or would be tempted to relax
+  it; the test is whether the sentence would come up as a question in code review. A rewrite that
+  reads better and says less is the failure this rule exists to prevent.
 - **A summary that breaks §3 is itself the fact that pays for a rewrite.** The net-delta rule
   governs the body, not the first sentence. `Wrapper around X that implements some basic primitives`
   stays broken until someone rewrites it, and "I had no new fact to add" is not a reason to leave
   it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the change touches
+  for its distinctive words, and fix every copy in the same edit. A reviewer who found one copy will find the
+  next, and a reply that fixes only the line they pointed at costs them a second comment.
 - **Do not move code.** A comment edit that also renames a variable or reorders a statement cannot
   be verified as comment-only, and that verification makes a large sweep safe.
 
@@ -737,16 +772,17 @@ dropped the timeout, and the new text carries no sign that one exists. Step 2 of
 
 ## 8. Review checklist
 
-Run this over a comment you wrote or one you are reviewing.
+Run this over a comment you wrote or one you are reviewing. An item asks about a rule stated above,
+and where that rule has a condition, the item applies only under it.
 
 - Does the first sentence stand alone in a summary table, with no term this comment introduces?
 - Does the first sentence terminate where you think it does, or does an `e.g.` cut it short?
 - Could a reader reconstruct the first sentence from the member's name alone?
-- In a regression test's comment: the rule first, the old defect in one past-tense sentence, and any
-  equivalence with the old behavior kept (§1)?
+- In a regression test's comment that tells the defect: the rule first, the old defect in one
+  past-tense sentence, and any equivalence with the old behavior kept (§1)?
 - Is the contract stated positively and in one place, before any mechanism?
-- Could a reader satisfy the contract without opening the code, or a maintainer fix a failing test
-  from the comment alone?
+- On a `public` or `protected` member, could a reader satisfy the contract without opening the code
+  (§1's table)? On a test that has a comment, could a maintainer fix a failure from it alone?
 - Is any rationale here PR-description material?
 - Any sentence describing a previous version of the code: `now`, `no longer`, `used to`?
 - Any sentence describing a code path this code does not have: what would happen if the rule were
@@ -761,6 +797,10 @@ Run this over a comment you wrote or one you are reviewing.
   freedom rather than this method's rule?
 - Does every term here have a definition outside this comment, and does every name match what the
   code calls the thing (`english-developer-style` §4a)?
+- Does the first sentence state the result, or does it send the reader to other members (§3)?
+- Where the member implements a concept a specification defines, does the comment state this code's scope
+  as a scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on,
   or leave a maintainer unable to see why a constraint is there? If not, delete it.
 - Would deleting the whole comment lose anything?
@@ -778,12 +818,30 @@ Run this over a comment you wrote or one you are reviewing.
 
 ## 9. Worked examples
 
-The two examples pull in opposite directions on purpose. The first grows, because facts were
-missing; the second shrinks, because they were not. Do not read either one as the target shape.
+The most common edit is the first one: a comment that goes. The other two come from a real codebase,
+which makes them a hazard: an example you can recognize in the wild is an example you will paste
+instead of derive. A rewrite that matches this file word for word proves nothing about whether the
+rules were applied to the comment in front of you.
 
-Both come from a real codebase, which makes them a hazard: an example you can recognize in the wild
-is an example you will paste instead of derive. A rewrite that matches this file word for word
-proves nothing about whether the rules were applied to the comment in front of you.
+### A getter, where the comment goes
+
+**Before**: every line restates the signature.
+
+```java
+  /**
+   * Gets the name.
+   *
+   * @return the name of this cache
+   */
+  public String getName() {
+    return name;
+  }
+```
+
+**After**: no comment. The name and the return type are the whole contract (§7), so nothing is lost,
+and since the deleted lines carried no fact, the cut needs no report (§7a). The same holds for the
+`private final String name` it returns. Where the getter does more than return the field, such as
+copy it, compute it, or return `null` before something happens, that is the one line it keeps.
 
 ### A test class, where facts were missing
 
@@ -814,11 +872,11 @@ neighboring class is compressed to its limitation; the reader is told what to do
 /**
  * Fails when a backend message type is added without a hardened reader.
  *
- * <p>Every backend reader must declare a message envelope: take the length through
- * {@code PGStream.readMessageLength} (or {@code readFixedMessageLength} or
- * {@code readPreAuthMessageLength}), bound any length it reads from the wire, and close
- * the envelope with {@code endMessage}. A reader that skips this leaves the stream off a
- * message boundary, which is the desync class of bug that issue #4015 reported.</p>
+ * <p>Every backend reader must mark where its message starts and ends: take the length
+ * through {@code PGStream.readMessageLength} (or {@code readFixedMessageLength} or
+ * {@code readPreAuthMessageLength}), bound any length it reads from the stream, and end
+ * the message with {@code endMessage}. A reader that skips this leaves the stream off a
+ * message boundary, and issue #4015 reported the failures that follow.</p>
  *
  * <p>{@link PGStream#receiveMessageType()} catches such a reader at run time, but only
  * after a test drives that message. A new message type with no test would slip through.
@@ -826,7 +884,7 @@ neighboring class is compressed to its limitation; the reader is told what to do
  * two sets: {@link #HARDENED} for backend messages the driver reads, and {@link #FRONTEND}
  * for messages the driver only sends. Add a constant to {@link PgMessageType} and this
  * test fails until you classify it. The failure message states what a backend reader
- * owes.</p>
+ * must do.</p>
  */
 ```
 
@@ -834,12 +892,12 @@ What changed, slot by slot: the summary became the guard's condition (§3, §4);
 front and gained a positive, parallel statement of the three obligations (§2); the mechanism of
 `PGStream` shrank to the one fact this comment needs (§4); `listed below` became `{@link #HARDENED}`
 and `{@link #FRONTEND}` (§5); and a Use slot appeared, naming the action and the failure message
-(§2). The issue number stayed, attached to a named class of bug (§5).
+(§2). The issue number stayed, in the sentence that names the failure it reported (§5).
 
 ### A field, where the facts were already there
 
-The example above grew. Most edits go the other way: nothing is missing, and the comment has
-accreted a list that a tool serves better.
+The example above grew. Here nothing is missing, and the comment has accreted a list that a tool
+serves better.
 
 **Before**: enumerates the methods that touch the field. That list is find-usages transcribed by
 hand, and it is wrong after the next refactor.

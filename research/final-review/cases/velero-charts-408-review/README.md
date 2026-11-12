@@ -92,3 +92,85 @@ two runs, as a no-regression check against the arm named below.
 Unchanged. The new questions find that `helm upgrade --reuse-values`, which the README documents, never gets the new
 default, and that `restic.*` has no counterpart of the new key. `series-2` also lists the restic DaemonSet hunk as
 unclaimed, which commit `98041d0` does claim. Cost 0.45 and 0.55 USD against 0.58 and 0.50.
+
+## Results of the `instr` arm, 2026-10-30
+
+`instr-<n>` ran final-review tree `796a9b8d` on branch `vs/instruction-patch-rules`, with the runner also supplying
+`apm-authoring`. In this tree §2a takes the input for an added instruction from what the artifact names, labels it
+before writing a row, and replaces an empty table with the line `Added instructions: <n>, no rows.` Graded by reading
+`result.md`. Opus and Haiku, two runs each. The results stand for tree `8545c2eb` as well, without a new run: it differs
+from `796a9b8d` by one sentence in step 2 of the §2a table of added instructions, and no run of this case writes that
+table, because the change adds no instruction.
+
+| Model | Check 1 | Check 2 (false pair) | Cost, USD | Words |
+| --- | --- | --- | --- | --- |
+| Opus | strong, strong | filed, none | 0.49, 1.10 | 1459, 1775 |
+| Haiku | partial, fail | filed, filed | 0.06, 0.03 | 1179, 1207 |
+
+- **Opus `instr-1`.** Check 1 is a strong pass in the sense of the 2026-10-23 grades: under "Other limits on the same
+  work" it lists "(a) Velero's SIGTERM handling" as the limit that decides whether the value does anything, and the
+  finding (`result.md:76`) asks to "Cite the Velero v1.9.2 shutdown line, or run a backup, delete the pod, and show the
+  backup completes". It names no controller-runtime timeout. It also files the pair of check 2 as substantive
+  (`result.md:77`): "`--restic-timeout` (Velero default 240m) exceeds the 3600 s default grace period on the same
+  backup", with "Derive one from the other".
+- **Opus `instr-2`.** Strong pass: its table of limits (`result.md:62`) names "a controller-runtime graceful-shutdown
+  timeout, 30 s by default", and the finding (`result.md:95`) asks for "the line in Velero v1.9 that waits for the
+  in-flight backup, or run SIGTERM during a backup". It says `resticTimeout` "bounds one pod-volume backup, after which
+  the backup carries on, so the skill doesn't count it" (`result.md:64`): no pair.
+- **Haiku `instr-1`.** Check 1 is partial, as on `1b1ebc3e`: velero's shutdown appears only inside the `resticTimeout`
+  pair, F3 (`result.md:52`), which says "the PR's use case needs the grace period to outlast the work it waits for" and
+  asks to "Check the Velero shutdown path in the binary". Check 2 is filed by the same F3, substantive.
+- **Haiku `instr-2`.** Check 1 fails: the report never mentions SIGTERM or velero's shutdown, and the evidence finding
+  (`result.md:58`) asks only for "the `helm template` output for the default and for an override". Check 2 is filed:
+  finding 2 (`result.md:53`) says of the grace period and `resticTimeout` "At defaults both are 3600 s, so neither fires
+  first", as substantive.
+
+Against tree `1b1ebc3e` four grades changed, one of them for the better. Opus `instr-1` rose on check 1 from pass to
+strong but now files the `resticTimeout` pair as substantive, where before it listed `resticTimeout` as taste with no
+claim that one limit caps the other; Opus `instr-2` is unchanged, strong with no pair. Opus cost 0.49, 1.10 against
+0.57, 0.50, at 1459, 1775 words against 1709, 1703. Haiku `instr-1` is unchanged, partial with the pair filed; Haiku
+`instr-2` fell from pass to fail on check 1 and now files the `resticTimeout` pair, where before it paired the grace
+period only with Helm's `--timeout` and said that bounds the rollout. Haiku cost 0.06, 0.03 against 0.06, 0.09, at 1179,
+1207 words against 1261, 1159. The case adds no skill or instruction file, and no run writes a table of added
+instructions or the `Added instructions:` line.
+
+## Results of the `cond` arm, 2026-10-31
+
+Opus and Sonnet, two runs each, graded by reading `result.md`. Final-review tree `1b139bb8` is the committed one.
+`3d6a0954` differs from it in two sentences: the analogue of *What the writer says it verified*, which `3d6a0954` had
+shortened and `1b139bb8` keeps as before, and the command rule of item *Claimed cases covered*, where `3d6a0954` made a
+command with no run a finding only where reading the tool "leaves the outcome in doubt" and `1b139bb8` makes it one
+unless the reading shows the promised outcome. Opus ran `3d6a0954`; its check reads neither sentence, so its results
+stand. Sonnet ran `3d6a0954` as `draft-<n>` and `1b139bb8` as `cond-<n>`, since item *Claimed cases covered* also
+reaches check 1. The committed tree is `a24f8021`: it differs from `1b139bb8` only by line wrapping and by the word
+restored in "an item with a finding gives the file and line" in §2, which every run since `3d6a0954` read without
+"finding".
+
+| Model | Run | Check 1 | Check 2 (false pair) | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `cond-1` | strong | filed | 1817 | 0.48 |
+| Opus | `cond-2` | strong | filed | 1492 | 0.56 |
+| Sonnet | `draft-1` | fail | none | 1160 | 0.14 |
+| Sonnet | `draft-2` | fail | none | 1541 | 0.22 |
+| Sonnet | `cond-1` | fail | none | 1673 | 0.35 |
+| Sonnet | `cond-2` | fail | none | 1308 | 0.24 |
+
+- **Opus** keeps check 1 strong in both runs (`cond-1`, `result.md:62`: the velero server's SIGTERM handling as the
+  inner limit). Both runs file the `resticTimeout` pair as substantive, against one of two in `instr`; the earlier
+  `final` arm filed it in all four runs, so two runs cannot tell this from noise. The §2a analogue now says that each
+  question of item 3 applies as written instead of naming the paragraph on limits; the paragraph's rule on which limits
+  count did not change.
+- **Sonnet** fails check 1 in all four runs. `draft-1` labels the server's shutdown taste with no request for evidence,
+  and `cond-1` says the shutdown behavior "is in a program the repository does not contain; no line here sets it, and
+  I did not check it" (`result.md:59`), then asks only where the 3600 comes from.
+- **The report.** No index carries a request; every run takes the `Chart.yaml` version bump as claimed.
+
+## The `vocab` arm, 2026-11-08: not run
+
+Final-review tree `ca8233fb` (branch commit `814c1614`) changes item *Comments consistent with the code and with each
+other*, the text above §1, and the list of substantive labels in §3; it leaves every item and analogue this case checks
+unchanged. The text above §1 now names the doc-comment and developer-style skills by rule, and says that wording enters
+the form only under the comments item, as a sentence a reader has to parse twice or a coined term. The results above
+therefore stand for the tree they name, not for `ca8233fb`. The change edits a Helm chart and its values comments; the
+new rules could reach it only by adding comment findings, and `textkit-page-count-review` is the case where those would
+be noise. Not measured here.

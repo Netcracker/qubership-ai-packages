@@ -123,9 +123,11 @@ in it.
   expectation in the project's own code, its documentation, or the error it raises is required by §5,
   and saying why the behavior is wrong is not the same as saying where it breaks.
 
-- **State the goal, not only the step you got stuck on.** R2, R5. *Test:* a sentence names the task
-  you, or the user you stand for, could not complete, in words that do not depend on the project's
-  API.
+- **State the goal where the step you got stuck on may not be the only way to it.** R2, R5. A
+  maintainer who knows another way to the task answers the goal, not the step. A crash, a red build,
+  a typo, or a broken page is its own goal, and the report needs no sentence for it. *Test:* where a
+  reader could know another way to what you were doing, a sentence names the task you, or the user
+  you stand for, could not complete, in words that do not depend on the project's API.
 - **Describe what you did and what the machine did, in order.** R1, R3. Each step has an observable
   result. A step is a command, a click, a request, or a deploy; the result is what you saw after it.
 - **Where the target form disagrees with this skill on order or on the meaning of a field, the form
@@ -170,19 +172,21 @@ in it.
 
 ## 4. Before you file: ownership, currency, duplicates, count
 
-- **Isolate which project owns the defect, and put the evidence in the report.** R1, R2. A symptom
-  seen through a stack is not evidence about any layer in it. Where the project's guide publishes its
-  own isolation procedure, run that one. Where none is published and the failure can be re-run,
-  remove one layer at a time and record each result. Where nothing can be re-run (a production
-  incident, a hosted service, a visual defect), isolate by observation with one thing varied: which
-  layer's code the trace stops in, which browser or theme or platform shows it and which does not,
-  which build first showed it. Report the elimination, not the conclusion. *Test:* the report
-  contains either a sequence a reviewer can re-run whose last step uses only the target project, or
-  the observations that vary one thing at a time and what each showed. Where the defect only appears
-  through a dependency, the last step is the shortest chain that still fails, and the report names
-  the dependency that stays and why: either it was removed and the failure went with it, or the
-  symptom cannot exist without it. For a request there is no failing run, and the argument comes from
-  the contract instead (`references/request-genre.md`).
+- **Isolate which project owns the defect, where more than one could, and put the evidence in the
+  report.** R1, R2. A symptom seen through a stack is not evidence about any layer in it. Where the
+  symptom sits in the project's own files, as a typo, a dead link, or a crash whose trace stops in
+  its code, the place the report names is the evidence, and no isolation is owed. Where the
+  project's guide publishes its own isolation procedure, run that one. Where none is published and
+  the failure can be re-run, remove one layer at a time and record each result. Where nothing can be
+  re-run (a production incident, a hosted service, a visual defect), isolate by observation with one
+  thing varied: which layer's code the trace stops in, which browser or theme or platform shows it
+  and which does not, which build first showed it. Report the elimination, not the conclusion.
+  *Test:* the report contains either a sequence a reviewer can re-run whose last step uses only the
+  target project, or the observations that vary one thing at a time and what each showed. Where the
+  defect only appears through a dependency, the last step is the shortest chain that still fails,
+  and the report names the dependency that stays and why: either it was removed and the failure went
+  with it, or the symptom cannot exist without it. For a request there is no failing run, and the
+  argument comes from the contract instead (`references/request-genre.md`).
 - **Reproduce on a version the project still supports, and say which.** R1, R2. A defect already
   fixed in a release you did not test is a common reason a report comes back as not reproducible. For
   a team's own project, the supported version is the release that is deployed or the branch the team
@@ -194,7 +198,9 @@ in it.
   the last good and the first bad, and the bisected commit where you have it.
 - **Search for the report, and act on what you find.** R1, R4. Search the tracker with closed and
   resolved items included, or the list archive where reports travel by email, and write the nearest
-  hit into the report with what makes yours different. An open report of the same defect takes your
+  hit into the report with what makes yours different. The nearest hit is the closest item the
+  search returned, one with another symptom included: the sentence on the difference spares a
+  triager the same search. An open report of the same defect takes your
   evidence as a comment, not a second report, unless the project's process says otherwise. The
   comment carries the version you saw it on, what in your case differs from the thread, and your
   transcript where the thread has none or a different one; it restates nothing the thread already
@@ -205,8 +211,10 @@ in it.
   names the nearest hit and the difference in one sentence, and the query goes to the hand-over
   note. An open pull request that already makes the change is the nearest hit; whether a comment
   there serves better than a new report is for the person filing (§10). Where the search
-  found nothing, the sentence that says so carries the query, because a null result establishes
-  nothing on its own and a reader can judge it only by the query. Where you cannot reach
+  found nothing, the report says so only in a slot the form or the genre has for what you searched,
+  and the sentence there carries the query, because a null result establishes nothing on its own
+  and a reader can judge it only by the query; with no such slot, the query goes to the hand-over
+  note. Where you cannot reach
   the tracker, the hand-over note (§10) carries the queries the person filing should run; an
   unreachable tracker is a gap to hand over, not a step to drop.
 - **File one report per owner, one expected block per independently actionable problem, and describe
@@ -218,8 +226,10 @@ in it.
   issue (a step 2 lookup), and two linked reports where they share no component or the guide asks
   for one problem per issue. Two outcomes a maintainer cannot fix separately are one block. Where
   you cannot tell, file separately and link the two: a maintainer can merge two reports and cannot
-  split one. Each report says what it depends on: nothing, the other report, or a coordinated change
-  on both sides, as in a protocol change that needs the client and the server together.
+  split one. Where the count produced several reports, or a related report is known, each report
+  says what it depends on: nothing, the other report, or a coordinated change on both sides, as in a
+  protocol change that needs the client and the server together. A single report with no known
+  relative says nothing about dependencies.
 - **Obey the project's routing.** R1. Contact links, "ask here instead" lines, issue types, and
   component questions decide where this belongs. A correct report in the wrong queue is moved or
   closed, and either way it waits. A suspected vulnerability never goes to a public tracker, forum,
@@ -250,26 +260,29 @@ Send every expected block through seven questions in order. The first "no" is th
    offset, a line number, or an array index, keep the ordinal and put the content beside it.
 1. **Question 4. Is the grounding named, and how strong?** State what the expectation rests on,
    naming something fetchable, in the block or in a section of its own that the block points to.
-   Seven sources, strongest first. (1) The project's own documentation or specification, which
-   includes its compatibility promise, so a documented or tested behavior that changed with no
-   changelog entry, a public API a semantic versioning statement covers, and a behavior an earlier
-   release the project still supports had, with the last good and the first bad named, are all
-   grounded here, whether or not a page states the behavior; where the project's compatibility
-   statement excludes undocumented behavior, a regression of such behavior is source 6. (2) Runtime
-   logic, meaning a crash, an assertion, or an error the project itself raises. (3) The expectation
-   of its user community. Weaker: (4) an industry standard the project does not claim to implement,
-   (5) another product's behavior, (6) a behavior the project never documented and you relied on,
-   and (7) your own preference. The order is not taste: maintainers act on the first three, a report
-   grounded only in the next three is the one commonly closed as invalid, and a personal preference
-   is weak because nothing outside you supports it. Use a weak grounding where it is all you have,
-   and say what it rests on in plain words, such as "I am the only case I know of"; do not write the
-   word "weak" into the report. Where the artifact follows the rule you expect everywhere except in
-   the place you report, as with a file that pins every call but one, that consistency supports the
-   block once you have checked that the exception has no stated reason: a comment, a document, or a
-   difference in what it does. It is not the project's specification. Name the strongest grounding
-   first, and add another only where it establishes a requirement the first does not: a policy the
-   project is bound by, such as one of the organization that owns it, or a constraint of the person
-   asking, attributed to them, that explains why an existing option does not serve them
+   Where the observation shows the expectation by itself, as a crash, a misspelled name beside the
+   right one, or a link that returns 404 does, the observation is the grounding and needs no
+   sentence of its own. Seven sources, strongest first. (1) The project's own documentation or
+   specification, which includes its compatibility promise, so a documented or tested behavior that
+   changed with no changelog entry, a public API a semantic versioning statement covers, and a
+   behavior an earlier release the project still supports had, with the last good and the first bad
+   named, are all grounded here, whether or not a page states the behavior; where the project's
+   compatibility statement excludes undocumented behavior, a regression of such behavior is source
+   6. (2) Runtime logic, meaning a crash, an assertion, or an error the project itself raises. (3)
+   The expectation of its user community. Weaker: (4) an industry standard the project does not
+   claim to implement, (5) another product's behavior, (6) a behavior the project never documented
+   and you relied on, and (7) your own preference. The order is not taste: maintainers act on the
+   first three, a report grounded only in the next three is the one commonly closed as invalid, and
+   a personal preference is weak because nothing outside you supports it. Use a weak grounding where
+   it is all you have, and say what it rests on in plain words, such as "nothing in the
+   documentation promises this; it rests on our own setup"; do not write the word "weak" into the
+   report. Where the artifact follows the rule you expect everywhere except in the place you report,
+   as with a file that pins every call but one, that consistency supports the block once you have
+   checked that the exception has no stated reason: a comment, a document, or a difference in what
+   it does. It is not the project's specification. Name the strongest grounding first, and add
+   another only where it establishes a requirement the first does not: a policy the project is bound
+   by, such as one of the organization that owns it, or a constraint of the person asking,
+   attributed to them, that explains why an existing option does not serve them
    (`references/request-genre.md`).
 1. **Question 5. Was every claim about today's behavior observed, or read from a document?** The
    expected behavior may not exist anywhere yet, so nothing runs it. Everything you say around it
@@ -303,7 +316,9 @@ all it rests on. Worked repairs: `references/worked-cases.md`.
 
 ## 6. Evidence and the reproducer
 
-- **Every claim carries its source.** R1, R2. There are four kinds, and the report says which:
+- **Every claim carries its source.** R1, R2. There are four kinds, and the report says which
+  wherever a reader could take one for another; a report whose evidence is all your own pasted
+  output needs no label. The kinds:
   reproduced by you in this session, with the transcript; observed by the reporter or another
   person, with their transcript, log, or recording and their name or role; documented, with the
   document; inferred, and marked as such. The inferred kind is the kind of a causal analysis no
@@ -336,8 +351,9 @@ all it rests on. Worked repairs: `references/worked-cases.md`.
   name (`references/question-and-support-ticket.md`). In the organization's own tracker or chat the
   real names stay, because the reader finds the service, the class, and the host by them; where one
   report has to serve both readers, the sanitized copy is a second document. Code that is public, on
-  GitHub, GitLab, or a package registry, is named and linked as it is. Say in one sentence that
-  names were changed and what kinds of value were removed; do not list the originals. Two kinds of
+  GitHub, GitLab, or a package registry, is named and linked as it is. Where you changed or removed
+  anything, say in one sentence that names were changed and what kinds of value were removed; do not
+  list the originals, and where nothing changed, say nothing. Two kinds of
   content take the changes differently. Captured evidence (a log, a trace, an incident record) is
   redacted in place and labeled as redacted; nothing re-runs it, because the event is past. A
   reproducer whose inputs you changed is re-run before it ships, under the run rule below, because a
@@ -391,12 +407,15 @@ all it rests on. Worked repairs: `references/worked-cases.md`.
   becomes: the image was taken with default settings or a fresh profile where the defect survives
   them, and the build is visible in it or stated beside it. The redaction rule reads the image like
   any other evidence: document text, file names, and account names in it are content.
-- **Give the version of the target project and of every layer between it and the symptom.** R1, R4.
-  For an application on a device, the identifier is the build number with the platform and the OS
+- **Give the version of the target project and of every layer between it and the symptom whose
+  behavior the symptom could depend on.** R1, R4. A misspelled name in a README fails under any
+  version of the tool that reads it, and the report gives the page and its commit, not the tool's
+  version (§4). For an application on a device, the identifier is the build number with the platform and the OS
   version, not the marketing version alone. For a deployment, the chain includes the cluster or
   platform version, the operator or chart version, and the values or the resource that produced the
   failure, with private values substituted. *Test:* every tool, runtime, browser, operating system,
-  or service named in the reproduction chain has a version or an identifier somewhere in the report.
+  or service in the reproduction chain whose version could change the outcome has a version or an
+  identifier somewhere in the report.
 - **Where the project runs reproducers for you, use it and link the run.** R1, R2. A playground, a
   build scan, a CI job for reproducers, or a sandbox the project hosts produces a run a triager can
   open, which no sentence in your report is. A suspected vulnerability never goes there (§4).
@@ -461,11 +480,17 @@ report you review is held to all of them whoever wrote it.
   go in the body. Your own sections may sit inside a field or after the form's last field; they
   never replace one. An optional field you have nothing for, or nothing that passes the reader
   deletion test (§7), is left blank; a required one never.
-  Where there is no form and no guide, the sections of a defect report are these, in this order:
-  what you did and what you observed, with the pasted output; what you expected and what that rests
-  on; the version of every layer; the reproducer; the workaround where one exists; the analysis,
-  marked. Any form's order replaces it. A request and a question take the slots their references
-  name, in that order.
+  Where there is no form and no guide, a defect report opens with the core (§7): what you did and
+  what you observed, with the pasted output, and what you expected. The parts below follow it in
+  this order, each only where its condition holds: what the expectation rests on, where the core
+  does not show it (§5, question 4); the version of every layer, where the symptom could depend on
+  more than the project's files at the commit the report names (§6); the reproducer, where
+  reproducing takes more than opening the place the report names or running the command it pastes;
+  the workaround, where one exists; the analysis, marked, where you have one. A report whose parts
+  fit in a few sentences carries no headings: a misspelled name in a document is a title and two
+  sentences (`references/worked-cases.md`, case 7). Any form's order replaces this one. A request and
+  a question take the slots their references name, in that order, under the same rule: a slot whose
+  condition does not hold is left out, and one that fits in a few paragraphs carries no headings.
 - **A required field you have no evidence for says what is missing, not a plausible guess.** R1, R2.
   "Not established: I could not test on Windows" is usable. An invented environment is worse than a
   blank. The same sentence in an optional field is noise: leave the field blank.
@@ -520,21 +545,22 @@ file of its own, the command that files it with `--body-file`, and the note outs
 
 ## 11. Review checklist
 
-Run it over a draft, yours or someone else's. For a report filed in a tracker or sent to a list,
-every item gets an answer, "none" included. The answers are the reviewer's, not the report's: an
-item is answered by pointing at a sentence the report already has, or in the hand-over note, and a
-sentence added to the report to answer an item passes the reader deletion test (§7) first. A
-report to a team's own backlog owes every item, with
-Ownership, Duplicates, and Redaction reduced as `references/project-conventions.md` says; an issue
-you file in your own repository to fix yourself owes the same, and its Ownership, Duplicates, and
-Disclosure answers are one line each. A question owes every item except Expected behavior and
-Analysis, which it does not carry, and it owes the Question or support ticket item below. A support
-ticket owes every item, with Currency, Reproducer, Ownership, Duplicates, and Grounding read through
-the table in `references/question-and-support-ticket.md`. A comment on an existing report owes
-Channel, Currency, Execution, Attribution, Redaction, Disclosure, the comment half of Duplicates,
-and Reproducer for the transcript it pastes, and Expected behavior where it adds an expected
-outcome. A colleague message owes only the items its reference table keeps, and the Colleague
-message item below.
+Run it over a draft, yours or someone else's. An item applies only where the rule it asks about
+applies, and each rule above says when that is; an item whose condition the draft does not meet is
+skipped, not answered with "none". An item that applies is answered by pointing at a sentence the
+report already has, or by naming the finding. The answers are the reviewer's, not the report's: they
+go in the review or the hand-over note, and a sentence added to the report to answer an item passes
+the reader deletion test (§7) first. A report to a team's own backlog is read against every item,
+with Ownership, Duplicates, and Redaction reduced as `references/project-conventions.md` says; an
+issue you file in your own repository to fix yourself is read the same way, and its Ownership,
+Duplicates, and Disclosure answers go in the hand-over note where they name anything, not in the
+issue. A question owes every item except Expected behavior and Analysis, which it does not carry,
+and it owes the Question or support ticket item below. A support ticket owes every item, with
+Currency, Reproducer, Ownership, Duplicates, and Grounding read through the table in
+`references/question-and-support-ticket.md`. A comment on an existing report owes Channel, Currency,
+Execution, Attribution, Redaction, Disclosure, the comment half of Duplicates, and Reproducer for
+the transcript it pastes, and Expected behavior where it adds an expected outcome. A colleague
+message owes only the items its reference table keeps, and the Colleague message item below.
 
 - Channel: is this the place the project names for this kind of report, and is the markup the one it
   renders?
@@ -548,33 +574,37 @@ message item below.
   sentence pass the reader deletion test, and past about 300 words of prose, was it read sentence by
   sentence? Does every optional field carry only what passes the test, and is every pasted output
   trimmed to the lines the report points at (§7)?
-- Goal: is the task you could not finish stated, and not only the step you got stuck on?
+- Goal: where a reader could know another way to what you were doing, is the task you could not
+  finish stated, and not only the step you got stuck on?
 - Routing: does the project want this here, does the report match none of its redirect conditions,
   where you are not sure it is a defect, does the report say so and go where questions go, and where
   it may be a vulnerability, is it kept out of the public queue, the public search, and any public
   reproducer run?
-- Ownership: is the isolation in the report as re-runnable steps or as observations with one thing
-  varied, for a request as the contract argument, or only as a conclusion?
+- Ownership: where more than one project could own the defect, is the isolation in the report as
+  re-runnable steps or as observations with one thing varied, for a request as the contract
+  argument, or only as a conclusion?
 - Currency: is the version an identifier that resolves to one build, inside the support window, the
   same one the reproducer declares, and for a regression are last good and first bad both stated?
-- Duplicates: is the nearest hit in the report with what makes this one different, is the query
-  recorded where §4 puts it, and does an open report of the same defect get a comment rather than a
-  second report, carrying the version, the difference, your transcript where the thread lacks one,
-  and nothing the thread already says?
+- Duplicates: where the search found something, is the nearest hit in the report with what makes
+  this one different; is the query recorded where §4 puts it; and does an open report of the same
+  defect get a comment rather than a second report, carrying the version, the difference, your
+  transcript where the thread lacks one, and nothing the thread already says?
 - Count: how many owners, so how many reports; under one owner, how many independently fixable
   problems, so how many expected blocks in one report where they share a component, or linked reports
-  where they do not or the project asks for one problem per issue; and does each report say what it
-  depends on?
+  where they do not or the project asks for one problem per issue; and where there are several
+  reports or a related one is known, does each say what it depends on?
 - Expected behavior, for a filed report: run the seven questions of §5 over every block, and name which
   question failed.
-- Grounding: which of the seven sources is it, and is a compatibility promise or a documented
+- Grounding: where the core does not show the expectation, which of the seven sources is it, and
+  is a compatibility promise or a documented
   behavior that changed counted as the project's own specification, unless the project's
   compatibility statement excludes undocumented behavior?
 - Execution: does every claim about what a tool does today carry a transcript, an attributed
   observation, or a cited document, does a claim about a run carry a run, and is a proposed
   rendering marked as one possible shape?
-- Attribution: does each transcript, log, or recording say who produced it, and is nothing the reporter
-  observed written as if you reproduced it?
+- Attribution: where a reader could take one kind of evidence for another, does each transcript,
+  log, or recording say who produced it, and is nothing the reporter observed written as if you
+  reproduced it?
 - Analysis: is the block marked with its confidence, does the report stand when you delete it, and
   does any sentence you wrote name the cause inside the symptom or the steps?
 - Workarounds: is a setting that works placed after everything that states the problem, or in the
@@ -586,9 +616,10 @@ message item below.
   nothing outside the target project or name the layer that stays and why, does the pasted output
   carry incidental detail and match the reproducer's own identifiers, does each step have an
   observable result, is the failing output pasted as text where it is text, does every layer in the
-  chain carry a version, and where the project runs reproducers, is the run linked, unless the
-  defect may be a vulnerability? Where the reproducer came from someone else's draft, was it read
-  before it ran, and was the run authorized and isolated or marked as not established?
+  chain whose version could change the outcome carry one, and where the project runs reproducers, is
+  the run linked, unless the defect may be a vulnerability? Where the reproducer came from someone
+  else's draft, was it read before it ran, and was the run authorized and isolated or marked as not
+  established?
 - Observation set, where nothing reproduces on demand: count, window, rate, first-seen build,
   correlations, and the attempts made and their results; for a crash on a user's device, the crash
   report by its ID, the device and OS versions, and the user's steps attributed to the user?
@@ -603,15 +634,17 @@ message item below.
   except an identifier the reader finds the resource by, and where it does not, are the real names
   kept; where a personal datum is the failing input, was a synthetic value tried in its place; does
   the reproducer still run with no placeholder in its way; was it re-run after the substitution; is
-  captured evidence labeled as redacted; and does one sentence say what was changed?
+  captured evidence labeled as redacted; and where anything was changed, does one sentence say
+  what?
 - Disclosure: does the project ask anything of a report written with a tool, and is it answered?
 - Form: do the form's fields, or the fields the person filing named, appear by name in that order,
   does each carry what its label asks for, are your own sections inside or after them and never in
   place of one, does every required field carry an observation or an explicit "not established", is
-  every optional field you had nothing for left blank, and where there is no form, are the sections
-  the ones §8 names, in its order?
-- Request: are the slots of `references/request-genre.md` present, and does it pass the API
-  deletion test?
+  every optional field you had nothing for left blank, and where there is no form, does the report
+  open on the core and carry only the parts of §8 whose condition holds, in its order?
+- Request: does it state the problem and the acceptance criterion, does it carry each other slot of
+  `references/request-genre.md` where that slot's condition holds, and does it pass the API deletion
+  test?
 - Question or support ticket: are the slots of `references/question-and-support-ticket.md` present,
   and is the ask stated?
 - Colleague message: is the ask in the first message, is what you ruled out stated where you ruled

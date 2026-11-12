@@ -27,6 +27,8 @@ harness's current behavior.
 - `SKILL.md`: §0, §1, §4, §5, §7, §9
 - `references/java/junit4.md`
 
+The results in `<model>/run-1` and `run-2` ran at skill tree `62b0151`, test-authoring 1.3.0.
+
 ## Files
 
 The files are those of `nullaway-1834-rewrite`, plus `instructions.md`, which `run-nullaway-case.sh` appends to
@@ -66,7 +68,7 @@ diagnostic:
 
 ```bash
 python3 research/test-authoring/cases/check-nullaway-case.py \
-  research/test-authoring/cases/nullaway-1834-rewrite-harness-ahead/claude-opus-5-5 \
+  research/test-authoring/cases/nullaway-1834-rewrite-harness-ahead/claude-opus-5-5/run-1 \
   'incompatible types: Box<T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<@Nullable T> cannot be converted to Box<? extends Object>' \
   'incompatible types: Box<S> cannot be converted to Box<? extends Object>' \

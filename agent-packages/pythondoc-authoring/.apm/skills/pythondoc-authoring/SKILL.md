@@ -73,6 +73,14 @@ Provenance crosses into a callee's docstring where it is that function's own con
 local rule at the lowest-level API, and the scenario at the layer where the scenario exists.** A guard found through one
 concrete call path does not carry that path's scenario.
 
+**A scope is not a definition.** Where the code implements a concept an outside specification defines (a data-model
+term, a typing-spec relation, PEP 440 version ordering) and computes it for fewer cases than the specification allows,
+give the specification's definition or a link to it, then state the cases this code computes it for as this code's
+scope. `A hashable value is an int, a str, or a tuple of hashable values` folds a cache's choice to accept only those
+types into the glossary term, and a reader who knows the glossary asks why the definition leaves out `frozenset`,
+`bytes`, and every class that defines `__hash__` and `__eq__`. State the scope as a criterion that covers every case,
+not as a list of the cases it excludes (§4, *The membership rule*).
+
 **Sufficiency** scales with visibility: how much the docstring may leave to the code beside it. Python marks visibility
 by convention rather than by keyword: a name listed in `__all__` or spelled without a leading underscore is public, and
 a `_name` is private (PEP 8).
@@ -93,15 +101,18 @@ now returns a copy, so callers can no longer mutate the cached row` describes a 
 reader has only this one. Rewrite it as the state that holds: what the session returns, and what the caller may do with
 it.
 
-One exception. **The docstring on a regression test may tell history, and an equivalence is not history.** The defect is
-what the test guards, so it belongs in the docstring: state the rule the test asserts first, then the defect in one
-past-tense sentence with the exception class: `A negative count used to be reported as available, and the caller then
-failed with IndexError.` A docstring that opens with the defect makes the reader reconstruct the broken version to
-understand the fixed one (measured on one branch: a blind reader ranked the version that opened with `used to` fourth of
-five on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast it as a chain of
-`would` clauses. History narration, which this section forbids, is a sentence whose only content is that the code
-changed. A sentence that argues the new behavior is safe **because it is identical to the old one** is rationale, and
-the old behavior is its comparison term. Keep the comparison; it is the whole argument.
+One exception. **The docstring on a regression test may tell history, and an equivalence is not history.** A regression
+test owes no docstring for being one. Where its name states the rule, the defect and the issue number belong in the
+commit that adds the test, and a docstring, where the test has one, carries what §3 leaves it: the reason or the
+construction. Tell the defect in the docstring only where the rule alone would look arbitrary to the next maintainer:
+state the rule the test asserts first, then the defect in one past-tense sentence, with the exception class where the
+old code raised and the wrong result where it did not: `A negative count used to be reported as available, and the
+caller then failed with IndexError.` A docstring that opens with the defect makes the reader reconstruct the broken
+version to understand the fixed one (measured on one branch: a blind reader ranked the version that opened with `used
+to` fourth of five on that ground alone). Do not narrate the old mechanism in the present tense, and do not recast it as
+a chain of `would` clauses. History narration, which this section forbids, is a sentence whose only content is that the
+code changed. A sentence that argues the new behavior is safe **because it is identical to the old one** is rationale,
+and the old behavior is its comparison term. Keep the comparison; it is the whole argument.
 
 - *Keep:* `a reader that has not yet observed the write behaves exactly as every reader did before this attribute was
   added: it reads from the buffer and the wrapped stream as if nothing were closed`
@@ -197,15 +208,17 @@ which is the membership rule §4 calls for; and a `#` comment whose next stateme
 drained` above the `drain()` that drains it), after checking that the next line really is the actor and not test setup
 standing between the comment and the call it constrains.
 
-Most objects need slots 1 and 2 only. A property needs slot 1. Do not manufacture the other slots to fill a template; an
-absent slot is not a gap, and a `Returns:` section that repeats the summary is the commonest way one gets manufactured.
+Most objects need slots 1 and 2 only, and a property whose name and annotation are its whole contract needs no docstring
+(§7). Do not manufacture the other slots to fill a template; an absent slot is not a gap, and a `Returns:` section that
+repeats the summary is the commonest way one gets manufactured.
 
 **Size the docstring to the object.** A docstring longer than the function it documents is not automatically wrong (an
 invariant can be worth ten lines over a three-line method), but it is a signal to re-read. When you check, the surplus
 is almost always rationale: keep at most two sentences of it, and only for the part a reader would otherwise get wrong.
-The rest belongs in the commit message. As a working size, a test module's docstring is two to five sentences and a
-function's docstring fits in one glance; past that you are describing the investigation, not the contract, so keep the
-rule and the exception and move the rest.
+The rest belongs in the commit message. A test module's docstring, where one is owed, runs to at most five sentences,
+and a function's docstring fits in one glance; past that you are describing the investigation, not the contract, so keep
+the rule and the exception and move the rest. These are ceilings: a test whose name states what it establishes often
+needs no docstring at all.
 
 ## 3. The first line
 
@@ -242,6 +255,12 @@ Decide in this order, and never mix moods inside a project:
   has a word already, and `english-developer-style` §4a gives the test for telling a defined term from a coinage.
 - **No self-description.** Drop `This function…`, `Helper that…`, `Utility for…`. Start with the verb.
 - **One sentence.** If it takes two, the first one is not the summary.
+- **No definition through other members.** ``Return the length as :meth:`_frame_length` computes it, as :meth:`_trim_to`
+  keeps it.`` sends the reader to two other methods to learn what this one returns, and it fails §1's refactor test:
+  inline `_trim_to` and the sentence has to change. State the result. The rule holds for a `_private` name too: §1's
+  table lets its docstring lean on the body beside it. It does not let the docstring give the names of the functions the
+  body calls instead of the result. Reference another member only for a part of the contract that it owns and this one
+  passes through unchanged.
 - **A property, an attribute, or a constant is a noun phrase, with its unit.** `Largest encrypted packet this stream
   accepts, in bytes.` A property is documented as the value it exposes, not as the method that computes it. The reason
   the bound has that value is slot 3, however interesting it is.
@@ -351,8 +370,9 @@ Slot 2 carries the work. State these, and only where the signature and its annot
 - units, ranges, encodings, time bases (`seconds`, `UTF-8 bytes`, `0-based`), and `bytes` versus `str` where the
   annotation is `str | bytes`;
 - side effects the name does not advertise, including I/O, global state, and anything that happens at import time;
-- **laziness**, which annotations hide: a function returning `Iterator[Row]` may have done nothing yet, may be
-  single-pass, and may hold a connection open until it is exhausted;
+- **laziness**, which annotations hide, where it changes what the caller must do: a function returning `Iterator[Row]`
+  that holds a connection open until it is exhausted, or that may be iterated only once where a caller would iterate it
+  twice;
 - idempotence, thread-safety, and ordering guarantees;
 - whether the call blocks, whether an `async def` blocks the event loop anyway, and what canceling the task does;
 - resource obligations: what the caller must close, and whether the object is meant to be used as a context manager;
@@ -370,10 +390,12 @@ A function whose contract is exhausted by its name and annotations needs one lin
 
 ### Generator, coroutine, and context manager
 
-Three contracts the signature will not carry. A generator says whether it is single-pass, what closing it early does,
-and what it holds open while suspended. A coroutine says what cancellation leaves behind: a half-written file, an open
-connection, a released lock. A context manager says what `__exit__` does with an exception: suppress it, roll back, or
-let it through.
+Three contracts the signature will not carry, each owed only where it holds a resource or can leave partial state. A
+generator that holds a file, a connection, or a lock while suspended says so, and what closing it early does. A
+coroutine that can leave work half done says what cancellation leaves behind: a half-written file, an open connection, a
+released lock. A context manager that does more than release what it acquired says what `__exit__` does with an
+exception: suppress it, roll back, or let it through. A generator over an in-memory snapshot, such as `yield from
+sorted(self._entries)`, holds nothing and owes none of these.
 
 ### Override
 
@@ -412,8 +434,10 @@ otherwise relax the rule; a rule that matches what the base class itself does lo
 
 ### Attribute, property, and constant
 
-Document the unit, the range, the sentinel, and who may write it. A module-level constant whose invariant is non-obvious
-needs that invariant spelled out; a reader adding a value has no other source of truth.
+Document what the annotation and the name leave open: the unit, the range, a sentinel value, and who may write the
+attribute where more than `__init__` does. `self._name = name` leaves nothing open and gets no comment (§7). A
+module-level constant whose invariant is non-obvious needs that invariant spelled out; a reader adding a value has no
+other source of truth.
 
 An **attribute docstring**, a bare string literal on the line after an assignment, is read by Sphinx autodoc, by
 mkdocstrings, and by Pydantic when `use_attribute_docstrings` is on. The interpreter is not among them: a variable has
@@ -428,10 +452,11 @@ limit comes up: `This ceiling bounds only what the server sends.` A docstring th
 a contrast (`…which governs the direction this ceiling does not`) makes the reader subtract one limit from another and
 reconstruct the missing verb. Both halves are facts; state them separately, this one first.
 
-A constant whose value is a size or a duration states both forms: `1 MiB (1048576 bytes)`. The docstring text carries
-the digits by hand: nothing in Python substitutes the constant's value into its own docstring, so check the digits on
-every edit to the constant. A generated page may show the value beside the text (Sphinx documents `autodata` as
-rendering it), and that does not update the digits in the docstring. The unit has to be exact (`64000000` is `64 MB`,
+A size or duration constant whose literal does not read as a quantity at a glance (`1 << 20`, `1048576`) states both
+forms: `1 MiB (1048576 bytes)`. `DEFAULT_TIMEOUT_SECONDS = 30` shows its value and its unit already. The docstring text
+carries the digits by hand: nothing in Python substitutes the constant's value into its own docstring, so check the
+digits on every edit to the constant. A generated page may show the value beside the text (Sphinx documents `autodata`
+as rendering it), and that does not update the digits in the docstring. The unit has to be exact (`64000000` is `64 MB`,
 not `64 MiB`) or hedged in words: `about 1 GiB (1073741823 bytes)`. The form is `english-developer-style` §5.
 
 ### Exception class
@@ -479,7 +504,8 @@ The comment on a test is read by whoever opened the file. The reader of a red bu
 assertion, and its message in the report, and comes here for the rule behind them; the next author comes looking for
 what this test covers and where a case goes. Both want the rule, stated once, as a claim: a negation nested in a
 negation (`fails when … does not …`) is not that, and `english-developer-style` §3 asks for what happens, not what does
-not.
+not. A test whose name states the rule it checks, and whose failure is fixed in the code it exercises, needs no
+docstring (§7); what follows is for a rule the name does not carry, and for a failure fixed somewhere else.
 
 pytest's progress line and its short summary print the node id and nothing else, so **the test's name is its summary**:
 `test_retry_preserves_caller_headers`, not `test_headers_2`. The docstring still has a reader: pytest prints the failing
@@ -488,13 +514,14 @@ function's source in the traceback, docstring included, so it is the first prose
 - **Docstring = the rule the test guards**, stated positively and completely, as something you could assert. `It has to
   stay quiet when the socket did go away` leaves the reader guessing: not raise, not close twice, not log? Name the
   observable. If you cannot phrase the rule as an observation, the test probably cannot check it either.
-- **Use = what to do about the red build.** Which fixture to look at, which case to add, where the assertion message
-  states the rest.
+- **Use = the edit that turns the build green, where it is not a fix to the code under test.** Which fixture to look at,
+  which case to add, where the assertion message states the rest. Where the fix is the code the test exercises, the rule
+  already implies it and the slot is absent (§2).
 - **An assertion message is read before either.** Put the observable there; the docstring carries the rule behind it.
 
-Deliberate duplication between the test's docstring, a fixture's docstring, and the assertion message is correct,
-because each reader meets exactly one of the three. It does not extend to production code, where the class docstring and
-the method docstring have the same reader.
+Where a test has a docstring, repeating its rule in a fixture's docstring or the assertion message is correct, because
+each reader meets exactly one of the three. It does not extend to production code, where the class docstring and the
+method docstring have the same reader.
 
 The name, the assertion, and its message are the test's, not its docstring's. Which fact each of them carries in
 the traceback and the summary line, and which assertion pytest rewrites to print the operands, is `test-authoring`.
@@ -527,14 +554,14 @@ key, a literal, a shell command, a symbol in a service you do not import) plain 
 snippet as a code block in the project's markup.
 
 **An issue or PR number is an address, not a definition.** Name the phenomenon in the comment, then give the number so a
-reader can find the history: `a length taken straight from the wire sizes the allocation (issue #4015)`. The number
+reader can find the history: `a length taken straight from the stream sizes the allocation (issue #4015)`. The number
 must not carry the meaning: `the shape of issue #4015`, `the same format as #1231`, `the bug #4015 fixed` count as
 content for someone who already knows the ticket and as nothing for everyone else. The test: cover the number and read
 the sentence. If what remains states no fact, the comment has none. A bare `see #4015` fails the same test from the
 other end, and a rendered Sphinx page reaches readers with no access to the tracker at all.
 
 The number may open the sentence, as long as the phenomenon arrives in the same one. `The scenario from issue #4015: a
-field claiming more bytes than the row envelope still holds` passes, because covering the number leaves the failure
+field claiming more bytes than the row message still holds` passes, because covering the number leaves the failure
 named. The rule is about the number's role, not its position.
 
 The same holds for a commit hash, a mailing-list thread, or a released version. It does **not** hold for a normative
@@ -572,7 +599,7 @@ Whichever dialect the project uses, the content rules are the same:
 - **`Raises:` is the only record a caller has.** No annotation carries it and no checker derives it. List the exceptions
   a caller can act on, not every one that could escape; a `KeyError` from a misspelled config key is a bug report, not a
   contract.
-- **`Yields:` for a generator**, and it is the place to say single-pass (§4).
+- **`Yields:` for a generator**, and it is the place for the generator notes §4 owes, where it owes any.
 - **What the base class permits is not a fact of this method's contract**, and it pays for nothing under §7a: `the
   base class allows None here, but this implementation never returns it` spends a sentence on the provenance of a
   guarantee the caller already has. Which case an override is in, and what its body may say, is §4's *Override* genre.
@@ -684,16 +711,20 @@ longer, because every restructuring pass adds a sentence and none takes one away
 - **When you lift a rule into the class docstring, cut it from the method.** The method keeps the one sentence that
   specializes the rule, plus the reference. Two full statements of the same rule is the most common outcome of a good
   structural edit and the easiest to miss, because each of the two reads well on its own.
-- **Deleting is an edit, and every cut is reported.** A list of callers, a rejected alternative, a cost estimate, a
-  reference to the change that introduced the code: cutting these is usually the highest-value change in the diff, even
-  though the result looks like less work. Delete sentence by sentence, and report each deleted sentence with the fact it
-  carried and where that fact now lives: a section, another object, the commit message, or nowhere, with the reason. A
-  rationale sentence stays only where a maintainer reading the rule would ask why or would be tempted to relax it; the
-  test is whether the sentence would come up as a question in code review. A rewrite that reads better and says less has
-  lost a fact, and this rule catches it.
+- **Deleting is an edit, and a cut that carried a fact is reported.** A list of callers, a rejected alternative, a cost
+  estimate, a reference to the change that introduced the code: cutting these is usually the highest-value change in the
+  diff, even though the result looks like less work. Delete sentence by sentence, and report each deleted sentence that
+  carried a fact (§7b step 1 says what counts as one) with where that fact now lives: a section, another object, the
+  commit message, or nowhere, with the reason. Narration and a restated signature go without a report. A rationale
+  sentence stays only where a maintainer reading the rule would ask why or would be tempted to relax it; the test is
+  whether the sentence would come up as a question in code review. A rewrite that reads better and says less has lost a
+  fact, and this rule catches it.
 - **A summary that breaks §3 is itself the fact that pays for a rewrite.** The net-delta rule governs the body, not the
   first line. A docstring that opens with `This function is a wrapper around X` stays broken until someone rewrites it,
   and "I had no new fact to add" is not a reason to leave it.
+- **A phrase fixed once is fixed everywhere.** After rewording a sentence, search the files the change touches for its
+  distinctive words, and fix every copy in the same edit. A reviewer who found one copy will find the next, and a reply
+  that fixes only the line they pointed at costs them a second comment.
 - **Run what the docstring runs.** If it contains a `>>>` block, run the doctests. If it feeds a committed artifact
   (§6a), regenerate.
 - **Do not move code.** A docstring edit that also renames a variable or reorders a statement cannot be verified as
@@ -843,20 +874,21 @@ Each outcome names the repair it obliges. Naming it makes two people comparing t
 
 ## 8. Review checklist
 
-Run this over a comment you wrote or one you are reviewing.
+Run this over a comment you wrote or one you are reviewing. An item asks about a rule stated above, and where that rule
+has a condition, the item applies only under it.
 
 - Is the summary one line, ending in a period, and does it stand alone with no term the docstring introduces?
 - Is its mood the one the rest of the project uses (§3)?
 - Could a reader reconstruct the summary from the object's name alone?
 - Is the docstring still the first statement, and is it a plain string rather than an f-string?
-- In a regression test's docstring: the rule first, the old defect in one past-tense sentence, and any equivalence with
-  the old behavior kept (§1)?
+- In a regression test's docstring that tells the defect: the rule first, the old defect in one past-tense sentence, and
+  any equivalence with the old behavior kept (§1)?
 - Is the contract stated positively and in one place, before any mechanism?
-- Could a caller satisfy the contract without opening the code, or a maintainer fix a failing test from the docstring
-  alone?
+- On a public object, could a caller satisfy the contract without opening the code (§1's table)? On a test that has a
+  docstring, could a maintainer fix a failure from it alone?
 - Does any parameter line say more than the annotation already does?
 - Does `Raises:` list what a caller can act on, and can the code actually raise each entry?
-- For anything returning an iterator: is laziness, single-pass, and what it holds open stated?
+- For a generator that holds a resource while suspended: is what it holds, and what closing it early does, stated?
 - Is any rationale here commit-message material?
 - Any sentence describing a previous version of the code: `now`, `no longer`, `used to`?
 - Any sentence describing a code path this code does not have: what would happen if the rule were broken, rather than
@@ -871,6 +903,10 @@ Run this over a comment you wrote or one you are reviewing.
   this method's rule, and does the docstring you wrote carry every section the inherited one did (§6)?
 - Does every term here have a definition outside this docstring, and does every name match what the code calls the
   thing (`english-developer-style` §4a)?
+- Does the summary state the result, or does it send the reader to other members (§3)?
+- Where the object implements a concept a specification defines, does the docstring state this code's scope as a
+  scope, rather than as the definition (§1)?
+- If you reworded a phrase: does a copy of the old wording remain anywhere in the change (§7a)?
 - For each rationale sentence: would deleting just that sentence change what a caller may rely on, or leave a
   maintainer unable to see why a constraint is there? If not, delete it.
 - Is every `# type:`, `# noqa`, `# pragma`, or `# fmt:` comment still on the exact line it governs?
@@ -887,16 +923,32 @@ Run this over a comment you wrote or one you are reviewing.
 
 ## 9. Worked examples
 
-The two examples pull in opposite directions on purpose. The first shrinks, because the template was carrying the
-annotations. The second grows, because a fact was missing. Do not read either one as the target shape.
+The most common edit is the first one: a docstring that goes. All three are constructed rather than lifted from a real
+codebase, and deliberately so: an example a sweeper can recognize in the wild is an example it will paste instead of
+derive, and a rewrite that matches this file word for word proves nothing about whether the rules were applied.
 
-Both are constructed rather than lifted from a real codebase, and deliberately so: an example a sweeper can recognize in
-the wild is an example it will paste instead of derive, and a rewrite that matches this file word for word proves
-nothing about whether the rules were applied.
+All three also sit in a project that has settled on the Google convention: descriptive summaries, Google sections. In a
+PEP 257 project the summaries would be imperative and the sections would be reStructuredText fields, and nothing else in
+any rewrite would change (§3, §6).
 
-Both also sit in a project that has settled on the Google convention: descriptive summaries, Google sections. In a PEP
-257 project the summaries would be imperative and the sections would be reStructuredText fields, and nothing else in
-either rewrite would change (§3, §6).
+### A property, where the docstring goes
+
+**Before**: the summary and the section both restate the signature.
+
+```python
+@property
+def name(self) -> str:
+    """Gets the name.
+
+    Returns:
+        str: The name of the cache.
+    """
+    return self._name
+```
+
+**After**: no docstring. The name and the annotation are the whole contract (§7), and since the deleted lines carried no
+fact, the cut needs no report (§7a). The same holds for the `self._name` attribute it returns. Where the property does
+more than return the attribute, such as copy it or return `None` before something happens, that is the line it keeps.
 
 ### A docstring the annotations had already outgrown
 
