@@ -116,3 +116,7 @@ and fail check 9: Opus says that its rule 4 holds only if token-gate runs behind
 switching to the base entrypoint as an option. By meaning both also fail checks 3 and 7: each states the `/tmp/cert`
 trust as its rule 4 and offers the two entrypoints under an "Open question" heading. Sonnet's rule 5 requires the base
 entrypoint, which fails check 2.
+
+Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
+**Related ADRs** of a record that a rule cites. This case writes no guide, so the results above stand for that tree as
+well.

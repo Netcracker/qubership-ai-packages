@@ -72,3 +72,7 @@ about and none of what it decides, that a rule other rules imply is left out, an
 leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
 rule number instead of a record. This case writes records, but its skill parts list no part of "Rules", and its inputs
 hold no rule of another record, so the results above stand for the tree.
+
+Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
+**Related ADRs** of a record that a rule cites. This case writes no guide, so the results above stand for that tree as
+well.

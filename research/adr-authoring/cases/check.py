@@ -393,6 +393,14 @@ def r1_guide_added(text):
                                              else 'the guide maps no internal/token/ or lists no docs/adr/ outside'))
 
 
+def r1_guide_names_replacements(text):
+    """Text of the guide Request 1 writes that sends the reader to **Related ADRs** for a replaced rule."""
+    _, guide = request_file(text, 'Request 1', r'docs/adr/README\.md$')
+    found = re.search(r'Related ADRs[^.:;]*[.:;]?\s*[^.:;]*?(?:replac|supersed)\w*[^.:;]*', ' '.join(guide.split()), re.I)
+    return result(found is not None, found.group(0)[:110] if found
+                  else 'the guide does not send the reader to Related ADRs for a replaced rule')
+
+
 def r1_agents_paragraph(text):
     path, agents = request_file(text, 'Request 1', r'(?:^|/)AGENTS\.md$')
     ok = (path is not None and 'docs/adr/README.md' in agents and re.search(r'Implements|trailer', agents)
@@ -677,7 +685,8 @@ CASES = {
                            owner_not_invented, guide_asked, status_proposed],
     'writer-structural': [r1_record_0012, r1_metadata_from_repository, r1_rules_from_template, r1_structural_tag,
                           r1_confirmation_names_check, r1_guide_added, r1_agents_paragraph, r2_behavior_rule,
-                          r2_no_confirmation_entry, r2_guide_untouched, r2_citation_without_condition],
+                          r2_no_confirmation_entry, r2_guide_untouched, r2_citation_without_condition,
+                          r1_guide_names_replacements],
     'coder-trailers': [defers_r5('Change 1', 'Commit message'), defers_r5('Change 1', 'Pull request description'),
                        no_rule_trailers('Change 2')],
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,

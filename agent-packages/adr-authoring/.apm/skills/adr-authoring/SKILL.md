@@ -369,7 +369,9 @@ The guide holds the following, and no copy of this skill's procedure:
   rule that replaces an accepted rule still binds nothing until its record is accepted, and the accepted rule governs
   until then;
 - what the agent that writes code reads in the records that govern it, **Terms**, **Rules**, **Confirmation**, and
-  **Implementation notes**, and that anything no rule states is its choice;
+  **Implementation notes**, and that anything no rule states is its choice. Where a rule cites a rule of another
+  record, the agent also reads that record's **Related ADRs**, where a line names any later record that replaces the
+  cited rule;
 - the two trailers;
 - a link to **Checking a change** in this skill: to a copy that `apm install` deploys into the repository, such as
   `.agents/skills/adr-authoring/SKILL.md`, or, where the repository does not commit deployed files, to the skill on

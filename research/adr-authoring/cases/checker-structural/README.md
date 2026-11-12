@@ -80,3 +80,7 @@ about and none of what it decides, that a rule other rules imply is left out, an
 leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
 rule number instead of a record. This case checks changes against records that exist and writes no record, so the
 results above stand for the tree.
+
+Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
+**Related ADRs** of a record that a rule cites. This case checks changes against records and a guide that exist, and
+writes neither, so the results above stand for that tree as well.

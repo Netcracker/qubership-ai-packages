@@ -66,3 +66,7 @@ change; their results are not kept.
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Opus passes all
 six checks without the skill, though it offers to move the rule into ADR-0007 instead. Sonnet fails checks 1, 2, and 3:
 it adds the rule to ADR-0007 in place as R6 and writes no new record.
+
+Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
+**Related ADRs** of a record that a rule cites. This case writes no guide, so the results above stand for that tree as
+well.

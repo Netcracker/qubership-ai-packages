@@ -111,3 +111,7 @@ the marker. Both restate ADR-0004 R1, R3, and R5, ADR-0003 R4, and ADR-0005 R2, 
 and neither links the records it cites under **Related ADRs**, which fails check 15.
 Opus restates ADR-0005 R2 inside the exception rule of Request 2 as well: "gets the response that ADR-0005 R2 sets,
 HTTP 503 with `Retry-After: 5`".
+
+Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
+**Related ADRs** of a record that a rule cites. This case writes no guide, so the results above stand for that tree as
+well.
