@@ -66,7 +66,9 @@ requirement into a decision, a defect, or a guarantee of a dependency; under "Op
 defect gets no open point; and under "Drafting from the user's input", how such a question is answered. This case checks
 changes against records that exist and writes no record, so the results above stand for the tree.
 
-Tree `d8b52781` changes only "Rules": **One home** says when a rule cites another rule, that a citation of a rule of
-another record copies none of that rule's conditions in any section, and that a rule other rules imply is left out, and
-it takes in **No pointer rules**; **Every requirement is a rule** asks for a rule number instead of a record. This case
-checks changes against records that exist and writes no record, so the results above stand for the tree.
+Tree `b7a46b78` changes only "Rules": **Numbers freeze** asks for a link under **Related ADRs** to every cited record;
+**One home** says when a rule cites another rule, that a citation of a rule of another record names what that rule is
+about and none of what it decides, that a rule other rules imply is left out, and that a case a rule of another record
+leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
+rule number instead of a record. This case checks changes against records that exist and writes no record, so the
+results above stand for the tree.

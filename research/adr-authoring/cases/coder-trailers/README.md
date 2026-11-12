@@ -65,8 +65,9 @@ Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Draft
 the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
 paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.
 
-Tree `d8b52781` changes only "Rules": **One home** says when a rule cites another rule, that a citation of a rule of
-another record copies none of that rule's conditions in any section, and that a rule other rules imply is left out, and
-it takes in **No pointer rules**; **Every requirement is a rule** asks for a rule number instead of a record. The
-session of this case does not read `adr-authoring`, and its input does not change, so the results above stand for the
-tree.
+Tree `b7a46b78` changes only "Rules": **Numbers freeze** asks for a link under **Related ADRs** to every cited record;
+**One home** says when a rule cites another rule, that a citation of a rule of another record names what that rule is
+about and none of what it decides, that a rule other rules imply is left out, and that a case a rule of another record
+leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
+rule number instead of a record. The session of this case does not read `adr-authoring`, and its input does not change,
+so the results above stand for the tree.

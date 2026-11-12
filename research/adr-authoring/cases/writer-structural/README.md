@@ -33,8 +33,9 @@ citation copies none of that rule's conditions.
 9. **No invented check.** Record 0013's **Confirmation** has no entry: no test covers the rule yet.
 10. **Guide left alone.** Request 2 writes neither `docs/adr/README.md` nor `AGENTS.md`: both exist after Request 1,
     and a behavior rule in a mapped layer changes neither.
-11. **Citation without the condition.** No line of record 0013 names `net/http`, the import that ADR-0012 forbids,
-    outside the text of a link: a citation of ADR-0012 names the rule and what it is about.
+11. **Citation without the condition.** No sentence of record 0013 says, outside the text of a link, what ADR-0012
+    requires of `net/http`, such as that a token package cannot import it. A citation that names the rule by its
+    subject, as in "the `net/http` import rule of ADR-0012 R2", passes.
 
 ## Running it
 
@@ -55,23 +56,22 @@ record 0013 says that ADR-0012 R2 keeps `net/http` out of the token packages, so
 
 ## Results
 
-Runs of 2026-11-12 on tree `d8b52781`, graded by reading; both models at the default effort. "r1" and "r2" are
+Runs of 2026-11-12 on tree `b7a46b78`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because **One home** now says how a citation of another
-record's rule reads, and Request 2 cites ADR-0012. All four results pass checks 1 to 10 by meaning. Each writes ADR-0012
-with the repository's `####` metadata, numbered import rules tagged `token`, which its guide maps to `internal/token/`,
-and a **Confirmation** that names `token-no-http`; each writes the guide and adds to `AGENTS.md` a paragraph that names
-the guide and the trailers. In Request 2, Opus r2 writes the HTTP 401 and `TOKEN_ALG_NONE` in one rule tagged `token`
-and `http`, the others in a `token` rule and an `http` rule, and none invents a test name. `check.py` fails Sonnet r1 on
-checks 6 and 10 by the marker alone. Its guide lists `docs/adr/` among the paths of no layer on the line after "no
-layer". Its Request 2 rewrites the guide, but only to map `internal/http/` to a new layer `http`: its own guide of
-Request 1 had left that path in no layer, and its R2 of record 0013 is tagged `http`, so the guide owes the change.
+record's rule reads, and Request 2 cites ADR-0012. All four results pass checks 1 to 10. Each writes ADR-0012 with the
+repository's `####` metadata, numbered import rules tagged `token`, which its guide maps to `internal/token/`, and a
+**Confirmation** that names `token-no-http`; each writes the guide and adds to `AGENTS.md` a paragraph that names the
+guide and the trailers. In Request 2, Opus r1 writes the HTTP 401 and `TOKEN_ALG_NONE` in one rule tagged `token` and
+`http`, the others in a `token` rule and an `http` rule, and none invents a test name.
 
-Check 11 passes in three of four results. Opus r1 cites "the import rule of ADR-0012 R1", Sonnet r2 "the import rules of
-ADR-0012 R1 and R2", and Sonnet r1 says that "R1 and R2 apply to the package that holds the check". Opus r2 fails it:
-under **Related ADRs** it writes "the `net/http` import rule of ADR-0012 R2", which names the module the rule forbids.
-On tree `d42618eb`, before this change, all four results said that ADR-0012 keeps `net/http` out of the token packages,
-and the results of that tree, replaced in this commit, all fail check 11. On `ba170d99`, an earlier tree of this change,
-two of four passed it by meaning; its results are not kept.
+Check 11 passes in three of four results. Opus r1 and Sonnet r2 name the rule as "the `net/http` import rule of ADR-0012
+R2", which names its subject and says nothing of what it requires; Opus r2 does not cite ADR-0012; its **Related ADRs**
+reads "None". Sonnet r1 fails it: its Justification says that the HTTP server sets the status "because the verifier
+cannot import `net/http`". On tree `d42618eb`, before this change, all four results said that ADR-0012 keeps `net/http`
+out of the token packages, and the results of that tree, replaced in this commit, all fail check 11. Two earlier trees
+of this change ran the case and their results are not kept: on `ba170d99` two of four passed check 11, and on `d8b52781`
+all four passed the narrower check that this tree's results are graded by. That tree still allowed a citation with no
+subject, and only Opus r2 named the module in it.
 
 No result names a defect. The intermediate trees of the previous change, `89cbfb4e` to `1db689e3`, ran this case as
 well and passed checks 1 to 10 by meaning; their results are not kept.

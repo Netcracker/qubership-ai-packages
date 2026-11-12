@@ -66,8 +66,9 @@ meaning that passes checks 3 and 6, though not by marker. Sonnet lists the retri
 check 4 by meaning, and Opus has no open point for them. Both fail checks 7 and 8: no word about a guide, and `Accepted`
 as the status.
 
-Tree `d8b52781` changes only "Rules": **One home** says when a rule cites another rule, that a citation of a rule of
-another record copies none of that rule's conditions in any section, and that a rule other rules imply is left out, and
-it takes in **No pointer rules**; **Every requirement is a rule** asks for a rule number instead of a record. This case
-writes records, but its skill parts list no part of "Rules", and its inputs hold no rule of another record, so the
-results above stand for the tree.
+Tree `b7a46b78` changes only "Rules": **Numbers freeze** asks for a link under **Related ADRs** to every cited record;
+**One home** says when a rule cites another rule, that a citation of a rule of another record names what that rule is
+about and none of what it decides, that a rule other rules imply is left out, and that a case a rule of another record
+leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
+rule number instead of a record. This case writes records, but its skill parts list no part of "Rules", and its inputs
+hold no rule of another record, so the results above stand for the tree.

@@ -41,15 +41,19 @@ Request 1, another line of ADR-0007 changed in Request 2, and a record 0009 adde
 
 ## Results
 
-Runs of 2026-11-12 on tree `d8b52781`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. The case ran again on this tree because **One home** now says when a rule cites a rule
-of another record, and the new record has to say how R1 relates to ADR-0007 R4 and R5, so the citation has to stay.
-All four results pass all six checks: Request 1 writes a `Proposed` ADR-0008 with a `TOKEN_ALG_NONE` rule that names
-ADR-0007, leaves ADR-0007 as it is, and says so; Request 2 fixes the link and changes no other line; neither writes a
-guide. Each writes the precedence over ADR-0007 R4 and R5 into R1, with `TOKEN_ALG_NONE` winning, and cites those rules
-by number, three of them by subject as well, such as "the `kid` check of ADR-0007 R5". No Context says what ADR-0007 R4
-or R5 accepts or refuses. Where a Negative consequence names the reason code that ADR-0007 R4 or R5 gave before, it
-names the answer this record replaces, which **One home** allows.
+Runs of 2026-11-12 on tree `b7a46b78`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because **One home** now says when a rule cites a rule of
+another record and that the citation names its subject, **Numbers freeze** asks for a link to every cited record, and
+the new record has to say how R1 relates to ADR-0007 R4 and R5, so the citation has to stay. All four results pass all
+six checks: Request 1 writes a `Proposed` ADR-0008 with a `TOKEN_ALG_NONE` rule that names ADR-0007, leaves ADR-0007 as
+it is, and says so; Request 2 fixes the link and changes no other line; neither writes a guide. Each writes the
+precedence over ADR-0007 R4 and R5 into R1 and cites those rules by subject, such as "the `kid` check of ADR-0007 R5",
+and each links ADR-0007 under **Related ADRs**. Opus r1 and r2 let the reason codes of ADR-0007 win, and Sonnet r1 and
+r2 `TOKEN_ALG_NONE`; each keeps the answer it assumed as an open point. No Context says what ADR-0007 R4 or R5 accepts
+or refuses.
+
+An earlier tree of this change, `d8b52781`, ran the case too and passed all six checks; there all four wrote the
+precedence into R1 with `TOKEN_ALG_NONE` winning, and its results are not kept.
 
 On tree `d42618eb`, before this change, the four results passed all six checks as well; there all four raised the
 precedence as an open point, and Sonnet r1 also made it a rule.

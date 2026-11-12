@@ -89,7 +89,7 @@ only after the Bug is fixed. It fails check 3, and checks 10 and 11 on the marke
 
 ## Results
 
-Runs of 2026-11-12 on tree `d8b52781`, graded by reading; both models at the default effort. "r1" and "r2" are
+Runs of 2026-11-12 on tree `b7a46b78`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because **One home** now leaves out a rule that other
 rules imply, and the TLS rule of Request 3 is met by Go's default, which is no rule, so it has to stay. All four
 results pass all fifteen checks, by the marker and by meaning. Each writes ADR-0007 with rules for the configuration,
@@ -99,8 +99,8 @@ entrypoint; each Context states, from the base image's README, what its entrypoi
 all four refuse `none` and the HMAC algorithms in rules with HTTP 401, and in Request 3 all four write a rule for TLS
 1.2 or later, though Go's default already meets it.
 
-An earlier tree of this change, `ba170d99`, ran the case too and passed by meaning; `check.py` failed three of its
-checks on the marker, and its results are not kept.
+Two earlier trees of this change ran the case too, and their results are not kept: on `ba170d99` all four passed by
+meaning, and `check.py` failed three checks on the marker; on `d8b52781` all four passed every check.
 
 On tree `d42618eb`, before this change, all four results passed all fifteen checks by meaning as well; `check.py`
 failed three of them on the marker.

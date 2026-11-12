@@ -1,9 +1,9 @@
 ## Request 1
 
-### File: docs/adr/0007-treat-realm-and-service-account-tokens-as-m2m-and-limit-other-tokens-to-their-own-tenant.md
+### File: docs/adr/0007-m2m-tokens-and-tenant-access.md
 
 ````markdown
-# Treat realm tokens with ROLE_M2M and all service account tokens as M2M tokens, and let only M2M tokens name any tenant
+# Treat realm tokens with `ROLE_M2M` and service account tokens as M2M tokens, and let only M2M tokens name any tenant
 
 ## Status
 
@@ -19,92 +19,99 @@ Proposed
 
 ### Related ADRs
 
-- [ADR-0004: <title>](<link>): the `sub` check of R3 and the namespace check of R5 bound who can hold a service account token (see Justification).
+- [ADR-0003: <title>](<link>): the `sub` and issuer checks that a token passes before R1 and R2 apply (R4 of ADR-0003).
+- [ADR-0004: <title>](<link>): the `sub` check (R3) and the namespace check (R5) that the Justification of R2 relies on.
 
 ## Context
 
-token-gate checks the token of each request before policy evaluation. Two kinds of token reach it: realm tokens, which
-Keycloak signs, and service account tokens, which the Kubernetes API server signs. The setting `M2M_AUTH_MODE` takes
-`legacy` or `k8s`. Until now no record says which of these tokens come from a machine caller, or which tenants a caller
-may reach.
+The service handles two kinds of token in `Authorization`: realm tokens and service account tokens. The architecture
+meeting settled which of them are M2M tokens, and which tenants a token that is not M2M may reach.
 
 ## Decision
 
-We will treat a realm token with the role `ROLE_M2M` and every service account token as an M2M token, let only an M2M
-token name any tenant, and refuse any other tenant to a token that is not M2M.
+We will treat a realm token with the role `ROLE_M2M` and every service account token as an M2M token, and we will let
+only an M2M token name any tenant.
 
 ### Terms
 
 - **realm token**: a token that Keycloak signs for a realm.
 - **service account token**: a token that the Kubernetes API server signs for a service account.
-- **M2M token**: a token in `Authorization` that R1 or R2 makes an M2M token.
-- **named tenant**: the tenant that a request addresses, as `<tenant source>` gives it (O1).
+- **M2M token**: a token in `Authorization` that R1 or R2 names as M2M.
+- **target tenant**: the tenant that a request names in `<tenant source>` (O1).
 
 ### Rules
 
 #### Which tokens are M2M tokens
 
-- **R1** (`verify`). A realm token is an M2M token when its `realm_access.roles` holds `ROLE_M2M`, and is not an M2M
-  token otherwise.
-- **R2** (`verify`). A service account token is an M2M token.
+- **R1** (`verify`). A realm token in `Authorization` that passes verification is an M2M token when its
+  `realm_access.roles` holds `ROLE_M2M`, and is not an M2M token otherwise.
+- **R2** (`verify`). A service account token in `Authorization` that passes verification is an M2M token.
 
-#### Tenant access
+#### Which tenants a token may reach
 
-- **R3** (`server`). A request whose token in `Authorization` has passed the `verify` layer and is an M2M token may name
-  any tenant, and the tenant check does not give it `CALLER_TENANT_MISMATCH`.
-- **R4** (`server`). A request whose token in `Authorization` has passed the `verify` layer and is not an M2M token gets
-  HTTP 403 with `CALLER_TENANT_MISMATCH` when its named tenant differs from the value of the `tenant-id` claim of the
-  token, or when the token has no `tenant-id` claim.
+- **R3** (`verify`). A request whose token in `Authorization` is an M2M token gets no `CALLER_TENANT_MISMATCH`,
+  whichever tenant is its target tenant.
+- **R4** (`verify`). A request whose token in `Authorization` is not an M2M token gets HTTP 403 with
+  `CALLER_TENANT_MISMATCH` when its target tenant is not the tenant of the `tenant-id` claim of that token, or when
+  that token has no `tenant-id` claim (O2).
 
 ### Justification
 
-A service account token needs no further condition to count as M2M, because the `sub` check of ADR-0004 R3 and the
-namespace check of ADR-0004 R5 already limit who can hold one (R2). A realm token already carries its roles in
-`realm_access.roles`, so R1 adds no new claim. An M2M token acts for a machine and not for one tenant, so it may name
-any tenant (R3). Every other token stays inside the tenant of its own `tenant-id` claim (R4).
+A service account token needs no tenant limit (R2), because the `sub` check of ADR-0004 R3 and the namespace check of
+ADR-0004 R5 already restrict which service account tokens the service accepts. A token without the role `ROLE_M2M` is
+tied to the tenant of its own `tenant-id` claim (R1, R4), so only a caller that holds M2M standing can act across
+tenants (R3).
 
 ### Alternatives considered
 
-- **A1. Let a token that is not M2M name a tenant other than its own.** Rejected by R4: the architect decided that a
-  token that is not M2M never reaches another tenant.
+- **A1. Treat a service account token as not M2M, so that it reaches only the tenant of its `tenant-id` claim.**
+  Rejected by R2: the checks of ADR-0004 R3 and R5 already limit who can present one.
+- **A2. Let a token that is not M2M name another tenant.** Rejected by R4: such a token never reaches another tenant.
 
 ## Consequences
 
 Negative:
 
-- A service account token from a namespace that the topology file lists may name any tenant (R2, R3).
+- A service account token from a listed namespace can name any tenant (R2, R3). A leaked one therefore exposes every
+  tenant, and the checks of ADR-0004 R3 and R5 are the only limit.
+- A realm token without `ROLE_M2M` is refused for every tenant but its own (R1, R4).
 
 ## Open points
 
-- **O1.** How a request names its tenant, such as a path segment, a header, or a body field, and which component reads
-  it. The architect decides. It affects R3 and R4, and the layer tag of both.
-- **O2.** Assumption: a token that is not M2M and has no `tenant-id` claim gets the response of R4, since every tenant
-  differs from a missing one. The architect confirms or names another outcome. It affects R4.
+- **O1.** Where does a request name its target tenant: a path segment, a header, or a body field? The architect decides.
+  It affects R3 and R4.
+- **O2.** Assumption: a token that is not M2M and has no `tenant-id` claim reaches no tenant, so it gets the response of
+  R4. The architect confirms or changes this. It affects R4.
 ````
 
 ### Message to the user
 
-I wrote ADR-0007 as `Proposed`, because two open points block acceptance:
+I wrote ADR-0007 as `Proposed`. Two open points block acceptance:
 
-- **O1.** The notes don't say how a request names its tenant. R3 and R4 use the placeholder `<tenant source>`, and I tagged both rules `server` on the assumption that this layer reads it.
-- **O2.** The notes don't cover a token that is not M2M and has no `tenant-id` claim. R4 refuses it, and I recorded that as an assumption for the architect to confirm.
+- **O1:** the notes do not say where a request names its tenant. R3 and R4 use the placeholder `<tenant source>` until you tell me.
+- **O2:** I assumed that a token that is not M2M and has no `tenant-id` claim gets `CALLER_TENANT_MISMATCH`. Please confirm.
 
-I left out the note that a service account token gets `TOKEN_ISSUER_UNKNOWN` in the mode `legacy`. ADR-0004 R1 and ADR-0003 R4 already produce that result together, and restating it would drift from them.
+I left two statements of the notes out of the rules:
 
-Placeholders and assumptions to check:
+- **`legacy` mode:** the case where a service account token gets `TOKEN_ISSUER_UNKNOWN` follows from ADR-0003 R4 and ADR-0004 R1, so a rule would restate them.
+- **Non-M2M tokens:** "never reaches another tenant" restates R4.
 
-- **Related ADRs:** the title and link of ADR-0004 are placeholders, because I could not see the record's filename.
-- **Owner and approver:** I set `example-architect` for both. Tell me if the owner should be someone else.
-- **Terms:** I defined "realm token" and "service account token" here from the repository facts. If an earlier record already owns them, replace them with a pointer to that record.
+Questions for you:
 
-No accepted record changes. Nothing else changes either, including the guide: there is no code yet, so the record has no **Confirmation** entries.
+- **Owner:** I put `example-architect` as owner. Is that right?
+- **Links:** I could not see the titles and filenames of ADR-0003 and ADR-0004, so the Related ADRs entries hold `<title>` and `<link>` placeholders. Please fill them in.
+- **Terms:** I defined "realm token" and "service account token" in this record. If an earlier record already owns them, replace the definitions with a pointer to it.
+- **Layer:** I tagged R1 to R4 `verify`. If the tenant check runs in `internal/server`, R3 and R4 need the `server` tag.
+- **Existing behavior:** what does a token that is not M2M get today when it names another tenant? If the answer differs from R4, Consequences needs a Negative entry for that case.
+
+The README guide needs no change, because the record adds no new paths. The code change that implements these rules ends its commit message and pull request description with `Implements: ADR-0007 R1, R2, R3, R4`.
 
 ## Request 2
 
-### File: docs/adr/0007-reject-a-token-that-fails-verification-before-policy-evaluation.md
+### File: docs/adr/0007-token-verification-failure-response.md
 
 ````markdown
-# Reject a token that fails verification with HTTP 401 and the code of the failed check, before policy evaluation
+# Reject a token that fails verification with HTTP 401 and the code of the failed check before policy evaluation
 
 ## Status
 
@@ -120,99 +127,80 @@ Proposed
 
 ### Related ADRs
 
-- [ADR-0005: <title>](<link>): R2 gives the response for a token that gets `TOKEN_KEYS_UNAVAILABLE`, and R2 of this record points at it.
-- [ADR-0003: <title>](<link>): R4 and R9 name codes of checks that R2 of this record covers.
-- [ADR-0004: <title>](<link>): R3 and R5 are checks that R2 of this record covers.
+- [ADR-0003: <title>](<link>): the `TOKEN_ISSUER_UNKNOWN` check (R4) and the `TOKEN_KEYS_UNAVAILABLE` outcome (R9) that R2 covers.
+- [ADR-0004: <title>](<link>): the `sub` check (R3) and the namespace check (R5) that R2 covers.
+- [ADR-0005: <title>](<link>): the response to `TOKEN_KEYS_UNAVAILABLE` (R2) that R2 of this record uses.
 
 ## Context
 
-token-gate checks the token of each request before policy evaluation. Several accepted rules already give a failing
-token its response: the `iss` check of ADR-0003 R4 and the `sub` check of ADR-0004 R3 give HTTP 401 with a code, and
-ADR-0005 R2 gives the response for `TOKEN_KEYS_UNAVAILABLE`. The namespace check of ADR-0004 R5 names no status and no
-code. No accepted rule says that a failing token never reaches policy evaluation, or what status a failing check gets
-where its rule names none.
+The service checks the token of each request before policy evaluation. Existing records give some checks their own
+HTTP status and error code, such as the issuer check of ADR-0003 R4 and the `sub` check of ADR-0004 R3. The namespace
+check of ADR-0004 R5 names no status or code. No record states one response for every check.
 
 ## Decision
 
-We will reject a token in `Authorization` that fails verification with HTTP 401 and the code of the check that failed,
-before policy evaluation, except that a token that gets `TOKEN_KEYS_UNAVAILABLE` gets the response of ADR-0005 R2
-instead, so that the client retries.
+We will answer a request whose token fails a verification check with HTTP 401 and the error code of that check, before
+policy evaluation, except where the token gets `TOKEN_KEYS_UNAVAILABLE`.
 
 ### Terms
 
-- **verification**: the checks that the `verify` layer and the `keys` layer apply to a token in `Authorization`. A token
-  fails verification when one of these checks refuses it.
-- **check code**: the error code that the rule of a check names for a token that the check refuses, such as
-  `TOKEN_ISSUER_UNKNOWN`.
+- **verification check**: a check that the service runs on a token in `Authorization` before policy evaluation, and
+  whose failure rejects the token. The outcome `TOKEN_KEYS_UNAVAILABLE` is the failure of one such check.
 
 ### Rules
 
-#### Rejecting a failing token
+#### Response to a failed check
 
-- **R1** (`server`). Policy evaluation of a request with a token in `Authorization` starts only after the token passes
-  verification.
-- **R2** (`verify`, `server`). A token in `Authorization` that fails verification gets HTTP 401 with the check code of
-  the check that refused it, except a token that gets `TOKEN_KEYS_UNAVAILABLE`, which gets the response of ADR-0005 R2
-  instead.
+- **R1** (`server`). Policy evaluation does not run for a request whose token in `Authorization` fails a verification
+  check.
+- **R2** (`verify`). A request whose token in `Authorization` fails a verification check gets HTTP 401 with the error
+  code of the check that failed. A request whose token gets `TOKEN_KEYS_UNAVAILABLE` gets the response of ADR-0005 R2
+  instead (O1).
 
 ### Justification
 
-Policy evaluation then never decides on the claims of a token that failed a check (R1). The client learns which check
-failed from the code, and the status is the same for every failing check unless R2 names an exception (R2). A token
-whose provider has no keys fails for a reason that may pass, so the client gets the response that tells it to retry
-(R2).
+A client that gets HTTP 401 with the error code of the failed check can tell which part of its token to correct (R2).
+A request whose token gets `TOKEN_KEYS_UNAVAILABLE` fails because the service has no keys, not because of the token,
+so the client has to retry. It therefore gets the response of ADR-0005 R2 and not a 401 (R2). Stopping every failed
+request before policy evaluation keeps an unverified token out of it (R1).
 
 ### Alternatives considered
 
-- **A1. Evaluate policy on a token that fails verification.** Rejected by R1: policy would decide on claims that no
-  check has confirmed.
-- **A2. Give a token that gets `TOKEN_KEYS_UNAVAILABLE` HTTP 401 like any other failing check.** Rejected by the
-  exception in R2: the client would not retry.
+- **A1. Answer HTTP 401 for `TOKEN_KEYS_UNAVAILABLE` too.** Rejected by R2: a 401 tells the client that its token is
+  wrong, so the client does not retry.
+- **A2. Answer one generic HTTP 401 for every failed check.** Rejected by R2: the client cannot tell which check
+  failed.
 
 ## Consequences
 
+Positive:
+
+- A client tells a rejected token (HTTP 401) from a temporary lack of keys (the response of ADR-0005 R2).
+
 Negative:
 
-- A token that a check refuses without a check code has no code to return, so R2 cannot give its case a result until
-  O1 is settled.
-
-Follow-ups:
-
-- When O1 is settled, update ADR-0004 or add a record that names the code for the namespace check of ADR-0004 R5.
+- Every verification check needs its own error code (R2). The namespace check of ADR-0004 R5 has none in the records
+  yet (O1).
 
 ## Open points
 
-- **O1.** The code that a token gets when the namespace check of ADR-0004 R5 refuses it, because R5 names none. Answers:
-  a new code, `<code>`, named in a record that the architect approves, or an existing code. The architect decides. It
-  affects R2.
-- **O2.** Which check code a token gets when more than one check would refuse it. Answers: the first check in the
-  order that the `verify` and `keys` layers run, with the order named in a rule, or no defined order. The architect
-  decides. It affects R2.
+- **O1.** Which error code does the namespace check of ADR-0004 R5 give, and does any other verification check lack an
+  error code? The architect decides. It affects R2.
 ````
 
 ### Message to the user
 
-I wrote ADR-0007 as `Proposed`, with two open points that block acceptance.
+I wrote ADR-0007 as `Proposed`. One open point blocks acceptance:
 
-Most of the notes are already settled by accepted records:
+- **O1:** the notes say the response carries "the code of the check that failed". ADR-0004 R5, the namespace check, names no code in the records I have. Which code should it give? If other checks have no code either, please list them.
 
-- ADR-0003 R4 and ADR-0004 R3 already give HTTP 401 with a code.
-- ADR-0003 R9 and ADR-0005 R2 already give the `TOKEN_KEYS_UNAVAILABLE` response.
+I put the exception for `TOKEN_KEYS_UNAVAILABLE` inside R2. ADR-0005 R2 already fixes that response, so R2 only cites it.
 
-So the record states only what no rule settles yet:
+Questions for you:
 
-- **R1:** a failing token never reaches policy evaluation.
-- **R2:** a general rule that a failing check gets 401 with its code, with the ADR-0005 R2 exception. The exception has to be in R2, because the general rule would otherwise give `TOKEN_KEYS_UNAVAILABLE` a 401.
+- **Owner:** I put `example-architect` as owner. Is that right?
+- **Links:** I could not see the titles and filenames of ADR-0003, ADR-0004, and ADR-0005, so the Related ADRs entries hold `<title>` and `<link>` placeholders. Please fill them in.
+- **Layers:** I tagged R1 `server` because it is about ordering before policy evaluation, and R2 `verify`. Please correct the tags if the code sits elsewhere.
+- **Existing behavior:** what does a request that fails the namespace check get today? If it is not a 401, Consequences needs a Negative entry for that case, with the test that shows it.
 
-Open points:
-
-- **O1.** ADR-0004 R5 names no error code. What code does a token from an unlisted namespace get? The architect decides.
-- **O2.** The notes don't say which code wins when two checks would both refuse a token. The architect decides.
-
-Other things to check:
-
-- **Related ADRs:** the titles and links are placeholders, because I could not see the filenames.
-- **Owner and approver:** I set `example-architect` for both. Tell me if the owner should be someone else.
-- **Layer tags:** I tagged R2 `verify` and `server` because the check code comes from `verify` and the status from `server`. I could not check this against code.
-
-No accepted record changes. Nothing else changes either, including the guide, and the record has no **Confirmation** entries because no check exists yet.
+The README guide needs no change. The code change that implements these rules ends its commit message and pull request description with `Implements: ADR-0007 R1, R2`.

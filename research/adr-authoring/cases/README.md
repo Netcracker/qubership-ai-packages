@@ -54,5 +54,5 @@ should each give a rule.
 | [`writer-accepted-record`](writer-accepted-record/README.md) | writer | an added requirement goes into a new record; a broken link is fixed in place |
 | [`writer-two-decisions`](writer-two-decisions/README.md) | writer | two decisions get a proposed split; one decision stays one record |
 | [`writer-defect-and-guarantee`](writer-defect-and-guarantee/README.md) | writer | a defect fix becomes a proposed Bug that the record does not name, not a rule or an open point; a base image's guarantee is a fact in Context; a decision stays a rule where the code does not meet it yet or a dependency already provides it |
-| [`writer-one-home`](writer-one-home/README.md) | writer | a rule cites another record's rule only where the citation changes what it requires, and no section copies the cited rule's values; a rule that other rules imply is left out |
+| [`writer-one-home`](writer-one-home/README.md) | writer | a rule cites another record's rule only where the citation changes what it requires, and no section copies what the cited rule decides; a rule that other rules imply is left out; every cited record is linked |
 | [`coder-trailers`](coder-trailers/README.md) | agent that writes code | the paragraph in `AGENTS.md` leads to the trailers; a partial delivery is deferred |

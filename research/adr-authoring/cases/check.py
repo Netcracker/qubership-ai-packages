@@ -408,11 +408,13 @@ def r2_guide_untouched(text):
 
 
 def r2_citation_without_condition(text):
-    """A line of record 0013 that names `net/http`, which ADR-0012 forbids the token packages, outside a link."""
+    """A sentence of record 0013, outside a link, that says what ADR-0012 requires of `net/http`."""
     rec = re.sub(r'\[[^\]]*\]\([^)]*\)', '', record_of(text, 'Request 2', '0013'))
-    found = re.search(r'[^\n]*net/http[^\n]*', rec)
-    return result(found is None, f'condition of ADR-0012 copied: {found.group(0).strip()[:100]}' if found
-                  else 'no condition of ADR-0012 copied')
+    for sentence in re.split(r'(?<=[.;:])\s+', ' '.join(rec.split())):
+        if 'net/http' in sentence and re.search(r"\b(?:out of|free of|cannot|can't|can not|must not|may not|not import"
+                                                r"|never import|forbid\w*|no token package)\b", sentence, re.I):
+            return result(False, f'condition of ADR-0012 copied: {sentence[:100]}')
+    return result(True, 'no condition of ADR-0012 copied')
 
 
 def r2_behavior_rule(text):
@@ -557,6 +559,20 @@ def r2_no_401_copied(text):
     return result(True, 'no 401 of a cited rule outside the rules')
 
 
+def cited_records_linked(text):
+    """A record that a record 0007 cites outside **Related ADRs** but does not link under it, in either request."""
+    missing = []
+    for request in ('Request 1', 'Request 2'):
+        rec = record_of(text, request, '0007')
+        related = heading_block(rec, 'Related ADRs')
+        linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', related)
+                  for n in re.findall(r'ADR-(\d{4})', label)}
+        cited = set(re.findall(r'ADR-(\d{4})', rec.replace(related, '') if related else rec)) - {'0007'}
+        missing += [f'{request}: ADR-{n}' for n in sorted(cited - linked)]
+    return result(not missing, f'cited but not linked: {", ".join(missing)}' if missing
+                  else 'every cited record is linked under Related ADRs')
+
+
 def not_copied(request, pattern, what):
     """A line of the request's record that copies a condition of a rule of another record."""
     def check(text):
@@ -682,7 +698,7 @@ CASES = {
                         r1_no_legacy_rule, r1_other_records_untouched, record_0007_in('Request 2'),
                         rule_with('Request 2', '401'), r2_exception_cites,
                         not_copied('Request 2', r'\b503\b|Retry-After', '503 response'), r2_no_401_copied,
-                        no_guide_written],
+                        cited_records_linked, no_guide_written],
 }
 
 
