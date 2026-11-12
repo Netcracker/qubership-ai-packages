@@ -33,6 +33,16 @@
         "requirements.txt"
       ],
       "groupName": "python ci tools"
+    },
+    {
+      "description": "Leave package dependencies to the built-in apm manager, which updates the SHA and the tag of #<sha>  # <tag> together. The shared apm preset's regex manager matches the same lines and writes #<new tag>, dropping the SHA that tests/marketplace_roundtrip.sh requires.",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchFileNames": [
+        "agent-packages/*/apm.yml"
+      ],
+      "enabled": false
     }
   ]
 }
