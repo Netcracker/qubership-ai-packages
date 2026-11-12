@@ -38,18 +38,16 @@ choices are in one record, and there is no need to split them."; it fails check 
 
 ## Results
 
-Runs of 2026-11-11 on tree `3b230c74`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. The case ran again on this tree because its trusted key sources form a set that is
-expected to change, which the bullet on named sets under "Terms" covers, and that bullet changed. All four results pass
-all five checks: Request 1 writes ADR-0006 for the security architect's decision alone and offers ADR-0007 for the
-health endpoint, and Request 2 writes one record for the three choices and proposes no split. Sonnet r2 proposes the
-split in a sentence that also says the probe "does not follow from a record about tokens", so `check.py` skips it and
-fails check 2 on the marker, while the meaning matches. Three of them define the trusted key sources as a named set,
-`trusted-key-sources`, and Sonnet r2 as the sources the service is configured to trust; all four leave the criterion to
-an open point, and none writes a rule about who approves a member. No result names an address.
+Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
+requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
+open point, and "Drafting from the user's input" says how such a question is answered. Every requirement of the notes is
+a decision, so the new passages have to stay quiet. All four results pass all five checks: Request 1 writes ADR-0006 for
+the security architect's decision alone and offers a separate record for the health endpoint, and Request 2 writes one
+record for the three choices and proposes no split. No result names a defect or proposes an issue.
 
-The previous round, on tree `bf6c2035`, passed the same way, and three of its four results added an open point on who
-approves a new trusted key source, as the bullet on named sets then asked.
+The previous rounds, on trees `3b230c74` and `bf6c2035`, passed the same way. The intermediate trees of this change,
+`89cbfb4e` to `1db689e3`, ran this case as well and passed by meaning; their results are not kept.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
 records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.

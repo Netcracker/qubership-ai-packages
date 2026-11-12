@@ -50,27 +50,22 @@ exist added to record 0013 and a guide rewritten in Request 2; it fails checks 9
 
 ## Results
 
-Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. Trees `6c8380e9`, `7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change",
-its steps 1 and 4 and its paragraph on cases, which this case does not read, so these results stand for them. All four
-results pass all ten checks. Each writes ADR-0012 with the repository's `####` metadata inside its markdownlint
-comments, **Terms**, numbered structural rules tagged `token`, which its guide maps to `internal/token/`, and a
-**Confirmation** that names `token-no-http`. Each writes a guide with the layers, the paths that belong to no layer, the
-statuses that bind, what the agent that writes code reads, the trailers, and a link to "Checking a change", and adds to
-`AGENTS.md` a section or a bullet that names the guide and the trailers without copying a path. None asks whether to add
-the guide, since the request says the team agreed to it.
+Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
+requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
+open point, and "Drafting from the user's input" says how such a question is answered. Every requirement of its two
+requests is a decision, so the new passages have to stay quiet. All four results pass all ten checks. Each writes
+ADR-0012 with the repository's `####` metadata, numbered import rules tagged `token`, which its guide maps to
+`internal/token/`, and a **Confirmation** that names `token-no-http`. Each writes the guide and adds to `AGENTS.md` a
+paragraph that names the guide and the trailers. In Request 2, each cites ADR-0012 and invents no test name. Opus r1,
+Opus r2, and Sonnet r1 write a `token` rule, that verification refuses the token with `TOKEN_ALG_NONE`, and an `http`
+rule for the HTTP 401; Sonnet r2 writes one rule tagged `token` and `http` for the response.
 
-Sonnet r2 also adds R3 (`build`), that `.golangci.yml` defines the depguard rule, with no **Confirmation** entry; check
-4 reads only the import rules. In Request 2, all four split the decision into a `token` rule, that verification refuses
-the token with `TOKEN_ALG_NONE`, and an `http` rule for the HTTP 401, and cite ADR-0012, which keeps the token packages
-away from HTTP; none invents a test name. Two guides show the trailers with numbers that look real: Sonnet r1 writes
-`Defers: ADR-0012 R2 to #208`, and Sonnet r2 `#123`.
+No result names a defect. Sonnet r2 suggests an issue of the type Task for the missing tests of Request 2, as Opus r2 of
+the previous round asked whether to open one; both rules stay rules. The guide of Opus r2 shows the trailers with a
+number that looks real, `Defers: ADR-0013 R3 to #42`. The intermediate trees of this change, `89cbfb4e` to `1db689e3`,
+ran this case as well and passed by meaning; their results are not kept.
 
 The baselines ran on 2026-11-11 with `english-developer-style` alone. Both keep the repository's metadata, but write no
 numbered rules, name `token-no-http` only in the Decision, and write a guide that maps no layer. They fail checks 3 to 6
 and 8, and Sonnet also fails check 7: its line in `AGENTS.md` never names the guide.
-
-Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
-asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
-named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
-for the tree.

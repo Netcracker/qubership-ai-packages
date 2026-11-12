@@ -129,7 +129,7 @@ marketplace:
     - name: adr-authoring
       description: Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.
       source: ./agent-packages/adr-authoring
-      version: 2.0.0
+      version: 2.1.0
       tags: ["topic:documentation", "activity:authoring", "audience:public"]
 
     - name: javadoc-authoring

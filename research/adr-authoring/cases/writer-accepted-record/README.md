@@ -40,20 +40,20 @@ Request 1, another line of ADR-0007 changed in Request 2, and a record 0009 adde
 
 ## Results
 
-Runs of 2026-11-11 on tree `bf6c2035`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. Trees `6c8380e9`, `7aeb0ec4`, `9fb67955`, and `025f4b62` change only "Checking a change",
-its steps 1 and 4 and its paragraph on cases, which this case does not read, so these results stand for them. All four
-results pass all six checks: Request 1 writes a `Proposed` ADR-0008 with one `TOKEN_ALG_NONE` rule that names ADR-0007,
-leaves ADR-0007 as it is, and says so; Request 2 fixes the link and changes no other line; neither writes a guide. All
-four raise the letter case of `none` and the precedence over ADR-0007 R4 and R5 as open points, and Sonnet r2 makes the
-precedence a rule of its own. Opus r2 and Sonnet r2 say that the guide puts `docs/adr/` in no layer, which the input
-does not state.
+Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
+requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
+open point, and "Drafting from the user's input" says how such a question is answered. The requirement added to ADR-0007
+is a decision, so the new passages have to stay quiet. All four results pass all six checks: Request 1 writes a
+`Proposed` ADR-0008 with a `TOKEN_ALG_NONE` rule that names ADR-0007, leaves ADR-0007 as it is, and says so; Request 2
+fixes the link and changes no other line; neither writes a guide. All four raise the letter case of `none` and the
+precedence over ADR-0007 R4 and R5 as open points, and Sonnet r1 also makes the precedence a rule. No result names a
+defect or proposes an issue.
+
+In the previous round, on tree `bf6c2035`, Sonnet r2 made the precedence a rule, and Opus r2 and Sonnet r2 said that the
+guide puts `docs/adr/` in no layer, which the input does not state. The intermediate trees of this change, `89cbfb4e` to
+`1db689e3`, ran this case as well and passed; their results are not kept.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Opus passes all
 six checks without the skill, though it offers to move the rule into ADR-0007 instead. Sonnet fails checks 1, 2, and 3:
 it adds the rule to ADR-0007 in place as R6 and writes no new record.
-
-Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 of the example record, so that neither
-asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
-named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
-for the tree.

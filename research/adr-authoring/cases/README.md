@@ -26,12 +26,16 @@ met", the check fails on the marker and the README says whether the meaning matc
 verdicts of the skill, so a synonym still fails them. Where a result keeps a value open with "TBD" instead of a
 placeholder in angle brackets, the README grades the meaning too.
 
-The cases cover two kinds of decision of `agent-packages/adr-authoring/AGENTS.md`, the behavior of a service and a
-structural invariant, all in one Go repository. Not covered yet: the other six kinds; a request that states a decision
-is accepted with nothing open, which should give `Accepted`; a check in a repository without a guide; a machine check
-from **Confirmation** that ran and passed; a `Proposed` rule that replaces an accepted one under a guide that makes
-`Proposed` records bind; and a repository where `apm compile` renders `AGENTS.md`, so that the paragraph for the agent
-that writes code goes into `.apm/instructions/`.
+The cases cover three kinds of decision of `agent-packages/adr-authoring/AGENTS.md`, all in one Go repository: the
+behavior of a service, a structural invariant, and a cross-cutting requirement. The last is the platform the service
+runs on, in `writer-defect-and-guarantee`. Not covered yet: the other five kinds; a request that states a decision is
+accepted with nothing open, which should give `Accepted`; a check in a repository without a guide; a machine check from
+**Confirmation** that ran and passed; a `Proposed` rule that replaces an accepted one under a guide that makes
+`Proposed` records bind; a repository where `apm compile` renders `AGENTS.md`, so that the paragraph for the agent that
+writes code goes into `.apm/instructions/`; a defect that departs from an accepted record rather than a convention; a
+departure with a recorded reason, which is no defect; a rewrite or a superseding record that keeps a rule the code does
+not meet; and a departure that the user calls deliberate, or a rule the user asks for after the defect is named, which
+should each give a rule.
 
 `coder-trailers` lists in its `skills` file the skills its session reads instead of `adr-authoring`, and holds a
 `prompt-baseline.md` that `--baseline` answers with the same skills; `run-case.sh` says how.
@@ -49,4 +53,5 @@ that writes code goes into `.apm/instructions/`.
 | [`writer-structural`](writer-structural/README.md) | writer | a structural rule tagged with the code it constrains and its check named; records of another template; the guide and the paragraph for the agent that writes code |
 | [`writer-accepted-record`](writer-accepted-record/README.md) | writer | an added requirement goes into a new record; a broken link is fixed in place |
 | [`writer-two-decisions`](writer-two-decisions/README.md) | writer | two decisions get a proposed split; one decision stays one record |
+| [`writer-defect-and-guarantee`](writer-defect-and-guarantee/README.md) | writer | a defect fix becomes a proposed Bug that the record does not name, not a rule or an open point; a base image's guarantee is a fact in Context; a decision stays a rule where the code does not meet it yet or a dependency already provides it |
 | [`coder-trailers`](coder-trailers/README.md) | agent that writes code | the paragraph in `AGENTS.md` leads to the trailers; a partial delivery is deferred |

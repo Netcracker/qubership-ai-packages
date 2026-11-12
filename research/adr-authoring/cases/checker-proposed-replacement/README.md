@@ -61,3 +61,8 @@ Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 
 asks for an approver as a rule. No input of this case has a set that is expected to change, and no result of it writes a
 named set, an approval rule, or a `CODEOWNERS` entry, though every session reads the example; the results above stand
 for the tree.
+
+Tree `d42618eb` adds three passages for the writer of a record: under "What belongs in an ADR", the sorting of a
+requirement into a decision, a defect, or a guarantee of a dependency; under "Open points", that a question about a
+defect gets no open point; and under "Drafting from the user's input", how such a question is answered. This case checks
+changes against records that exist and writes no record, so the results above stand for the tree.
