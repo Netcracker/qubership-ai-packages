@@ -1,17 +1,17 @@
 ---
-description: Trigger for the adr-authoring skill — write or supersede an Architecture Decision Record under docs/adr.
-applyTo: "**/docs/adr/**"
+description: Trigger for the adr-authoring skill — write or supersede an Architecture Decision Record, under docs/adr or docs/decisions.
+applyTo: "**/docs/{adr,decisions}/**"
 ---
 
 ## Skill trigger: `adr-authoring`
 
 When the user wants to capture an architecture or system-design decision —
-writing a new record under `docs/adr/`, drafting one from notes, or superseding
-an existing one — apply the `adr-authoring` skill.
+writing a new record under `docs/adr/` or `docs/decisions/`, drafting one from
+notes, or superseding an existing one — apply the `adr-authoring` skill.
 
 Fires on:
 
 - "write an ADR", "document this decision", "add a decision record";
 - a described choice worth tracking (a pattern, non-functional requirement,
   dependency, interface, or tool selection), even when the user does not say "ADR";
-- any edit under `docs/adr/`.
+- any edit under `docs/adr/` or `docs/decisions/`.

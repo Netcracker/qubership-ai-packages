@@ -85,8 +85,11 @@ dependencies:
     - ../english-us-developer-style
 ```
 
-A package in another repository is a remote reference pinned to a commit SHA, with the tracked branch or tag in
-a trailing comment: `Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#<sha>  # main`.
+A package in another repository is a remote reference pinned to the commit of a release tag, with the tag in a trailing
+comment: `Netcracker/qubership-workflow-hub/agent-packages/qubership-workflow-hub-usage#<sha>  # v2.8.2`. Renovate
+updates the SHA and the tag together;
+[Renovate APM dependency updates](renovate-apm-dependencies.md#what-renovate-updates) lists the forms it leaves as
+written.
 
 ## Add a package from another repository
 
