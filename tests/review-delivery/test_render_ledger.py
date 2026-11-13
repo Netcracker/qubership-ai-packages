@@ -1,6 +1,6 @@
 """render-ledger.py on small review.json files: the order of findings and of their groups, held findings with and
-without open code findings, findings the change did not make, the fields of a previous finding, and the exit status
-for a file it cannot render."""
+without open code findings, findings the change did not make, the fields of a previous finding, the retest line, and the
+exit status for a file it cannot render."""
 import json
 import os
 import subprocess
@@ -143,6 +143,12 @@ class RenderLedgerTest(unittest.TestCase):
         lines = [line for line in self.ledger(data).splitlines() if line.startswith("Axes run:")]
         self.assertEqual(["Axes run: tests (group-1, profile low), comments; "
                           "skipped: security (no input handling changed); failed: none"], lines)
+
+    def test_a_retest_is_printed_only_for_a_finding_that_has_one(self):
+        data = review([finding("F1", "major", retest="parse('') returns an empty list"),
+                       finding("F2", "minor", retest=None)])
+        self.assertEqual(["- Retest: parse('') returns an empty list"],
+                         [line for line in self.ledger(data).splitlines() if line.startswith("- Retest:")])
 
     def test_a_stack_finding_without_its_request_exits_with_status_2_and_names_it(self):
         result = self.run_script(review([finding("F1", "minor", origin="stack", introduced_by={"commit": "c"})]))

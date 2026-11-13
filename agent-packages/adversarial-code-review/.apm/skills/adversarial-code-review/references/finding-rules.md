@@ -63,6 +63,9 @@ the line is outside every hunk. Use `location: null` only for a finding with no 
   exactly, with `path:line`.
 - `proposed_solution`: the smallest outcome that resolves the problem, without prescribing a rewrite a local change
   avoids.
+- `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
+  must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
+  `proposed_solution`, and so that it fails at the reviewed head. For a `question`, name the answer that settles it.
 - `prior_thread`: the URL of an earlier thread this finding continues.
 - Leave out `origin`, `introduced_by`, `disposition`, and `follow_up_url`: the verifier sets the first three, and
   delivery sets the last once an issue tracks the defect.

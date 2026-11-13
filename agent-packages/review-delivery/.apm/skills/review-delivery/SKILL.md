@@ -83,6 +83,7 @@ Proposed solution: cap the list at N reasons with "and M more", quote each with 
 - `Problem:` is from `problem` and the decisive `evidence`: the evidence and the impact, never a restatement of the
   first line.
 - `Proposed solution:` is from `proposed_solution`, and may be one phrase where the fix is obvious.
+- `retest` is not rendered here: the ledger and the next round read it from `review.json`.
 - The lead-ins `Problem:` and `Proposed solution:` are plain text, not bold.
 - Each paragraph is one line, with no hard wraps: the platform wraps it.
 - A finding with `origin: preexisting` adds `, pre-existing` to the tag, after the severity, and changes its last
@@ -135,7 +136,8 @@ authorizes no issue. Where the user agrees, for each finding:
 
 1. Load `problem-report-authoring`, and the developer-style skill of the language the issue is written in
    (`english-developer-style` for English). It searches for a report that already exists and writes the issue from the
-   finding's `problem`, `evidence`, `introduced_by.commit`, and `proposed_solution`, at the reviewed head's revision.
+   finding's `problem`, `evidence`, `introduced_by.commit`, `proposed_solution`, and `retest`, at the reviewed head's
+   revision.
 2. File the issue in the repository that `problem-report-authoring` finds owns the defect, or link the report its
    search found.
 3. Set the finding's `follow_up_url` in `review.json`, and render the ledger again.
@@ -198,7 +200,8 @@ Omit an empty section. End with the path of `review.json`, and of every file thi
 ## Ledger
 
 The ledger is the input of whoever fixes the findings, and it keeps everything the chat report folds: the class of each
-finding, its axis, its evidence, and the held findings. Render it with the script; do not write or edit it yourself:
+finding, its axis, its evidence, its `retest`, and the held findings. Render it with the script; do not write or edit
+it yourself:
 
 ```bash
 <skill dir>/scripts/render-ledger.py <review.json>

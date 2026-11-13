@@ -87,6 +87,8 @@ def finding(f):
     for e in f.get("evidence", []):
         out.append(f"  - {e['basis']}: {e['text']}")
     out.append(f"- Proposed solution: {f['proposed_solution']}")
+    if f.get("retest"):
+        out.append(f"- Retest: {f['retest']}")
     if f.get("prior_thread"):
         out.append(f"- Continues: {f['prior_thread']}")
     by = f.get("introduced_by") or {}

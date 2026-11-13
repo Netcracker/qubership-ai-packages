@@ -385,6 +385,13 @@
         "proposed_solution": {
           "type": "string"
         },
+        "retest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What a later round checks to accept a fix: an input and the result it must give, or a test that must exist and fail without the fix. It holds for any fix that resolves the problem, not only proposed_solution. For a question, the answer that settles it."
+        },
         "prior_thread": {
           "type": [
             "string",

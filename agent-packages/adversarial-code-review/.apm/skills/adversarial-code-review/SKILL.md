@@ -89,12 +89,19 @@ each as a `previous_findings` entry with its status and reason.
 - Distinguish an existing contract from a new restriction, which needs a compatibility check. A promised fix leaves the
   finding open; an accepted scope deferral needs a tracked follow-up and is not a fix.
 - Keep a partial fix with the original finding; assess an independent defect separately.
+- Where the finding in `<previous>` has a `retest`, decide by it first. For a defect, run it where it names a test or a
+  command, and otherwise read the code at the current head against it; where it asks for a test that fails without the
+  fix, check that the test exists and fails at the earlier round's head. A fix that passes it is accepted unless the
+  change makes the same defect reachable another way. A fix that fails it is not accepted, unless the `retest` holds
+  only for one implementation; then judge the defect directly and rewrite the `retest`. For a question, check whether
+  the thread or the code gives the answer the `retest` names.
 - A thread for a `preexisting` finding whose `follow_up_url` is set is `scope_deferred`, with that URL. Where the author
   answered an `extend_scope` finding by choosing the follow-up, the finding continues with `disposition: follow_up`.
   Any other remaining thread keeps its finding's `origin` and `disposition`.
 
 Every thread whose defect remains (`fix_not_accepted`, or a partial fix) is also a finding of this round: write it to
-`<work>/axes/previous.json` as a finding record with `axis: previous`, `prior_thread` set, and its current severity. A
+`<work>/axes/previous.json` as a finding record with `axis: previous`, `prior_thread` set, its current severity, and the
+`retest` of the finding it continues, if any. A
 remaining `major` with `origin: change` from an earlier round keeps the change from being approved even when no axis
 finds it again.
 
