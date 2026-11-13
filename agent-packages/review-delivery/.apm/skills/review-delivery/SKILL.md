@@ -325,7 +325,8 @@ For every platform write:
    and the review has to run again. For a discussion write, also reread the thread and skip a duplicate action.
 2. Treat a reply and a resolve or reopen as separate writes. After posting a required explanation, restart at step 1
    before changing the thread's state. Keep drafts unpublished unless submission was explicitly authorized.
-3. Read back each write: the exact review, note, or discussion ID, content, state, revision, path, side, and line.
+3. Read back each write: the exact review, note, or discussion ID, content, state, revision, path, side, and line
+   range.
    Report created IDs and inspection URLs; never claim a closure without the confirmed state.
 4. On failure or an uncertain outcome, inspect before retrying; stop writing if ambiguity remains. Report limitations,
    such as a missing permission, and partial completion. Do not undo earlier writes. Delete created entries only with

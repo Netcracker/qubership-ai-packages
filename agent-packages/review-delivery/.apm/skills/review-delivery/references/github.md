@@ -24,8 +24,11 @@ gh api --method POST repos/<owner>/<repo>/pulls/<number>/reviews --input /path/t
 }
 ```
 
-`side: new` in the finding is `RIGHT`, `old` is `LEFT`. Use `start_line` only when the whole range is the smallest
-useful location.
+`side: new` in the finding is `RIGHT`, `old` is `LEFT`; always send `side`. Publish the finding's range: where
+`end_line` is after `start_line`, also send `start_line` with that value, `start_side` equal to `side`, and `line` equal
+to `end_line`; otherwise send `line` equal to `start_line`. GitHub rejects a range whose ends are not in one hunk, so
+where part of the range lies outside the hunk that holds most of its lines, clip the range to that hunk before sending
+it.
 
 - **Draft:** leave out `event`. The review stays `PENDING`, visible only to the publishing account, until the user
   submits it in the web UI. GitHub allows one pending review per account per pull request: list the reviews first
@@ -70,7 +73,8 @@ when a pull request has more than 100.
 
 ## Read-back
 
-Read the created review and its comments back and compare path, side, line, and body with what was sent:
+Read the created review and its comments back and compare path, side, start line, start side, line, and body with what
+was sent:
 
 ```shell
 gh api repos/<owner>/<repo>/pulls/<number>/reviews/<review-id>

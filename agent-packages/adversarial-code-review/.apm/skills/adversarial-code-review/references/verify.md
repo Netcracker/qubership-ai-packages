@@ -17,7 +17,8 @@ Give this to a fresh subagent after every axis has written its findings.
 > 2. Drop it where the request put it out of scope.
 > 3. Check the severity against the question in `finding-rules.md`, and correct it.
 > 4. Check that `proposed_solution` resolves the problem without a side effect the finding does not mention.
-> 5. For a `defect`, check that `retest` fails at the reviewed head and would pass after any fix that resolves the
+> 5. Check the `location` range against *Location* in `finding-rules.md`, and correct it.
+> 6. For a `defect`, check that `retest` fails at the reviewed head and would pass after any fix that resolves the
 >    problem. For a `question`, check that it names the answer that settles the question. Rewrite it where it does not.
 >    A finding from `axes/previous.json` keeps the `retest` it carries, unless the earlier one was wrong; then rewrite
 >    it and say why in `problem`.

@@ -79,8 +79,9 @@ A reply to an existing discussion, for a finding with `prior_thread`, is a draft
 
 Create the summary as a draft note without a position. For each inline draft note, supply the pinned base, start, and
 head SHAs, `old_path`, `new_path`, `position_type: text`, and the correct old or new line. Use `new_line` for added
-lines, `old_line` for removed lines, and both only when GitLab identifies an unchanged line in both sides. Use a line
-range only when the whole range is the smallest useful location.
+lines, `old_line` for removed lines, and both only when GitLab identifies an unchanged line in both sides. Where the
+finding's `end_line` is after `start_line`, publish the range as a multiline draft (described below), clipped to the
+hunk that holds most of its lines.
 
 Create a summary from a Markdown file:
 

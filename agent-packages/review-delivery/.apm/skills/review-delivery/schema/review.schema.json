@@ -333,13 +333,15 @@
                   "description": "old for a removed line."
                 },
                 "start_line": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "First line of the range an inline comment covers."
                 },
                 "end_line": {
                   "type": [
                     "integer",
                     "null"
-                  ]
+                  ],
+                  "description": "Last line of that range; equal to start_line, or null, for a single line."
                 },
                 "symbol": {
                   "type": [
@@ -349,7 +351,7 @@
                 },
                 "in_diff": {
                   "type": "boolean",
-                  "description": "False when the line is outside every hunk, so it cannot carry an inline comment."
+                  "description": "False when no line of the range is inside a hunk, so it cannot carry an inline comment."
                 }
               }
             }

@@ -51,8 +51,18 @@ commit message. Everything else is `gate: none`.
 
 ## Location
 
-The smallest useful range in the new file (`side: new`), or the removed line (`side: old`). Set `in_diff: false` when
-the line is outside every hunk. Use `location: null` only for a finding with no line, such as a missing changelog entry.
+The lines a reader has to see beside the comment to judge the claim, in the new file (`side: new`), or the removed
+lines (`side: old`). Delivery publishes `start_line` to `end_line` as the comment's range, and the platform shows the
+range next to the comment. A comment anchored to the first line of a Javadoc shows only that line, so the reader cannot
+compare the text with the proposed solution.
+
+- A claim about a comment covers the comment and the declaration it describes; a claim about a condition covers the
+  condition and the branch it guards; a claim about one line is that line, with `end_line` equal to `start_line`.
+- Keep the range within one hunk and to about 25 lines. Where the subject is longer, such as a whole method or test,
+  narrow the range to the lines the claim is about: the signature, the one branch, the one assertion.
+
+Set `in_diff: false` when no line of the range is inside a hunk. Use `location: null` only for a finding with no line,
+such as a missing changelog entry.
 
 ## Content
 
