@@ -1,9 +1,9 @@
 ## Request 1
 
-### File: docs/adr/0008-refuse-tokens-with-alg-none.md
+### File: docs/adr/0008-refuse-alg-none-tokens.md
 
 ````markdown
-# Refuse every token whose `alg` is `none` before policy evaluation
+# Refuse every token whose `alg` is `none` with a reason code of its own
 
 ## Status
 
@@ -11,86 +11,92 @@ Proposed
 
 ### Owner
 
-@security-architect
+<GitHub account of the owner>
 
 ### Participants and approvers
 
-- Security architect, @security-architect: approves R1.
+- <role>, <GitHub account>: approves R1.
 
 ### Related ADRs
 
 - [ADR-0007: Verify every token in Authorization before policy evaluation](0007-verify-every-token.md): defines
-  **token**. R1 adds a rule to its verification rules, and replaces its R4 and R5 for a token that R1 refuses.
+  **token**, and holds the `exp` check (R4) and the `kid` check (R5) that take precedence over R1.
 
 ## Context
 
-ADR-0007 requires the service to verify the signature and the lifetime of every token before policy evaluation. Its
-rules cover the `exp` of a token (R4) and the `kid` in its header (R5), and no rule covers the `alg` in its header. RFC
-7518, section 3.6, defines the `alg` value `none` for an unsecured JWS, which carries no signature. A token with `alg`
-set to `none`, a `kid`, and an `exp` later than the time of the check meets ADR-0007 R4 and R5.
+The `alg` header parameter of a JSON Web Token names the algorithm that secures the token. The value `none` marks an
+unsecured token, which carries no signature (RFC 7519, section 6).
+
+ADR-0007 decides that the service verifies the signature and the lifetime of every token before policy evaluation. It
+has rules for the `exp` check (R4) and the `kid` check (R5). None of its rules names the HTTP status or the reason code
+for a token whose `alg` is `none`.
 
 ## Decision
 
-We will refuse every token whose `alg` is `none` before the request reaches policy evaluation.
+We will refuse a token whose `alg` is `none` with HTTP 401 and a reason code of its own.
 
 ### Terms
 
 - **token**: as ADR-0007 defines it.
+- **`alg`**: the `alg` parameter in the JOSE header of a token. Its value is case-sensitive (RFC 7515, section 4.1.1),
+  so `None` and `NONE` are not `none`.
 
 ### Rules
 
 #### Verification
 
-- **R1** (`verify`). A token whose header has an `alg` value equal to `none`, compared without regard to case, is
-  refused with HTTP 401 and the reason code `TOKEN_ALG_NONE`. Where ADR-0007 R4 or R5 also applies to the token, R1
-  takes precedence, and the token gets `TOKEN_ALG_NONE`.
+- **R1** (`verify`). A token whose `alg` is `none` is refused with HTTP 401 and the reason code `TOKEN_ALG_NONE`. Where
+  the `exp` check of ADR-0007 R4 or the `kid` check of ADR-0007 R5 also refuses the token, the reason code of that
+  rule wins.
 
 ### Justification
 
-A token with `alg` set to `none` carries no signature, so the subject it names is bound to no key source, and any caller
-could name any subject (R1). The case-insensitive comparison also covers `None` and `NONE`, which some JWT libraries
-have treated as unsecured (R1). The `exp` and the `kid` of such a token are unsigned, so a refusal on either of them
-would report a value that no one has verified. `TOKEN_ALG_NONE` takes precedence for that reason (R1).
+A token whose `alg` is `none` carries no signature, so the subject it names can be any subject. A reason code of its
+own lets an operator find these tokens in the logs and tell a forgery attempt or a misconfigured issuer apart from an
+expired token (R1). The precedence in R1 keeps every reason code that ADR-0007 already gives, so ADR-0007 stays as it is
+(R1).
 
 ### Alternatives considered
 
-- **A1. Leave tokens with `alg` set to `none` to the `exp` and `kid` checks of ADR-0007.** Rejected by R1: a token with
-  `alg` set to `none`, a `kid`, and a future `exp` passes both checks.
+- **A1. Accept a token whose `alg` is `none` as a token without a signature.** Rejected by R1: policy evaluation would
+  trust a subject that nothing signed.
+- **A2. Refuse a token whose `alg` is `none` with a reason code that other signature failures share.** Rejected by R1:
+  the logs would not show which callers send unsigned tokens.
 
 ## Consequences
 
 Negative:
 
-- A token with `alg` set to `none` that ADR-0007 R4 or R5 refused with `TOKEN_EXPIRED` or `TOKEN_KID_MISSING` gets
-  `TOKEN_ALG_NONE` instead (R1). A client or a dashboard that matches the old reason codes sees the new one for these
-  tokens.
+- A token whose `alg` is `none` and that the `exp` check of ADR-0007 R4 or the `kid` check of ADR-0007 R5 refuses gets
+  the reason code of that rule, so a count of `TOKEN_ALG_NONE` misses those tokens (R1).
 
 Follow-ups:
 
-- When this record is accepted, add a line under **Related ADRs** in ADR-0007 that names this record, R1, and the
-  replacement of R4 and R5 for a token that R1 refuses.
+- When this record is accepted, add a line under **Related ADRs** in ADR-0007 that names this record and the rule it
+  adds, R1.
 
 ## Open points
 
-- **O1.** Does R1 match `alg` without regard to case, so that `None` and `NONE` are refused too, or only the exact
-  value `none`? R1 assumes the comparison ignores case. @security-architect decides. Affects R1.
-- **O2.** When a token with `alg` set to `none` also meets the condition of ADR-0007 R4 or R5, which reason code does
-  it get: `TOKEN_ALG_NONE`, or the reason code of ADR-0007 R4 or R5? R1 assumes `TOKEN_ALG_NONE`. If ADR-0007 takes
-  precedence, R1 no longer replaces R4 and R5, and the line under **Related ADRs** and the **Negative** consequence
-  go. @security-architect decides. Affects R1.
+- **O1.** Which reason code a token gets when its `alg` is `none` and the `exp` check of ADR-0007 R4 or the `kid` check
+  of ADR-0007 R5 also refuses it. R1 assumes that the reason code of ADR-0007 wins, so that ADR-0007 stays as it is.
+  The other answer is `TOKEN_ALG_NONE`. That answer would narrow ADR-0007 R4 and R5, so this record would then replace
+  both rules in part and state them again in full. The approver of this record decides. The answer affects R1.
 ````
 
 ### Message to the user
 
-I left ADR-0007 unchanged because it is `Accepted`, and a requirement added to an accepted record has to go into a new record. I wrote the new requirement as ADR-0008 R1 in `docs/adr/0008-refuse-tokens-with-alg-none.md`, with the status `Proposed`. When ADR-0008 is accepted, ADR-0007 gets one line under **Related ADRs** pointing back to it. That's listed as a follow-up.
+ADR-0007 is accepted, so I left it unchanged. An accepted record can't take a new requirement. I put the requirement in a new record instead, `docs/adr/0008-refuse-alg-none-tokens.md`, with the status `Proposed`. Its R1 refuses a token whose `alg` is `none` with HTTP 401 and `TOKEN_ALG_NONE`.
 
-Before ADR-0008 can be accepted, please answer these:
+I need two things from you before the record can be accepted:
 
-1. **Owner and approver:** I used @security-architect for both, as in ADR-0007. Is that right?
-2. **O1:** Should `None` and `NONE` be refused the same way as `none`? R1 assumes yes, because some JWT libraries have treated those spellings as unsecured.
-3. **O2:** A token with `alg` set to `none` often has no `kid`, and it might also be expired. Should it get `TOKEN_ALG_NONE` or the reason code from ADR-0007 R4 or R5? R1 assumes `TOKEN_ALG_NONE`. That choice partly replaces ADR-0007 R4 and R5 for these tokens, and the record says so.
+1. **Owner and approvers:** who owns ADR-0008, and who approves R1? I left placeholders under **Owner** and **Participants and approvers**. Is it @security-architect again, as on ADR-0007?
+2. **Precedence (O1):** a token can have `alg` set to `none` and also fail the `exp` check (ADR-0007 R4) or the `kid` check (ADR-0007 R5). Which reason code should it get?
+   - **Keep ADR-0007's code:** this is what R1 assumes now. ADR-0007 stays as it is.
+   - **Use `TOKEN_ALG_NONE`:** ADR-0008 would then have to replace ADR-0007 R4 and R5 in part.
 
-Separately, the ADR-0006 link in ADR-0007 points to `0006-key-sources.md`, but that file doesn't exist. Fixing the link is an editorial change that the accepted record can take directly.
+   O1 keeps the status at `Proposed` until you answer.
+
+Once ADR-0008 is accepted, ADR-0007 gets a line under **Related ADRs** that points to ADR-0008 R1. The repository has a reading guide, so the change that adds the check should end its commit message and pull request description with `Implements: ADR-0008 R1`.
 
 ## Request 2
 
@@ -161,6 +167,6 @@ Negative:
 
 ### Message to the user
 
-I fixed the link in ADR-0007. Under **Related ADRs**, it now points to `0006-trusted-key-sources.md` instead of `0006-key-sources.md`, which doesn't exist. No rule changed, so this is an editorial fix that an accepted record can take directly, and no new record is needed.
+I fixed the link in ADR-0007. Under **Related ADRs**, it pointed to `0006-key-sources.md`, which doesn't exist; it now points to `0006-trusted-key-sources.md`. ADR-0007 is accepted, but a broken link is an editorial fix that changes no rule, so it can be made in place. Nothing else in the file changed.
 
-I kept the link text "ADR-0006: Trust only listed key sources" as it was, but I couldn't see the heading of `0006-trusted-key-sources.md`. If that heading reads differently, should the link text be changed to match it?
+The link text still reads "ADR-0006: Trust only listed key sources". I couldn't open ADR-0006 to check that this matches its title. Could you confirm that it does?
