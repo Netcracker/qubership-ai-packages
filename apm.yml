@@ -235,7 +235,7 @@ marketplace:
     - name: adapt-nifi-flows-to-2-x
       source: Netcracker/qubership-nifi
       subdir: agent-packages/adapt-nifi-flows-to-2-x
-      ref: f74bea00b3ef950425d2f4a0e69d2f5209c05f9b  # main
+      ref: 429771267adc90fa8c3983d9fe35eeb93c507f0e  # main
       tags: ["topic:integration", "stack:nifi", "activity:migration", "audience:public"]
 
     - name: api-diff-authoring
@@ -259,13 +259,13 @@ marketplace:
     - name: dbaas-mounted-secret-migration
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/dbaas-mounted-secret-migration
-      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
+      ref: 2861e61479c612b08f9fa147a98ce01dd08555fb  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: migrate-core-operator-dbaas-declarations
       source: Netcracker/qubership-dbaas
       subdir: dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations
-      ref: 7b8e8be8c72eb842bd502bf7355a8da90a93df08  # main
+      ref: 2861e61479c612b08f9fa147a98ce01dd08555fb  # main
       tags: ["topic:database", "stack:kubernetes", "activity:migration", "audience:public"]
 
     - name: qubership-workflow-hub-usage
