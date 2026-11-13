@@ -12,6 +12,7 @@ import re
 import sys
 
 SEVERITIES = ("major", "minor", "nit")
+ORIGINS = ("change", "stack", "preexisting")
 OPEN_PREVIOUS = ("fix_not_accepted",)
 
 
@@ -37,12 +38,27 @@ def check(review):
             fail(f"findings[{n}].severity: unknown value '{f['severity']}'")
         if f.get("gate", "none") not in ("none", "code_settled"):
             fail(f"findings[{n}].gate: unknown value '{f['gate']}'")
+        if origin(f) not in ORIGINS:
+            fail(f"findings[{n}].origin: unknown value '{f['origin']}'")
+        if origin(f) == "stack" and not (f.get("introduced_by") or {}).get("request"):
+            fail(f"findings[{n}].introduced_by.request: required for a stack finding")
+        if origin(f) == "preexisting" and f.get("disposition") not in ("extend_scope", "follow_up"):
+            fail(f"findings[{n}].disposition: required for a preexisting finding")
+
+
+def origin(f):
+    return f.get("origin", "change")
+
+
+def own(review):
+    """Return the findings the change makes: only they count in the result and hold the branch requests."""
+    return [f for f in review["findings"] if origin(f) == "change"]
 
 
 def result_line(review):
     if review["result"] == "review_incomplete":
         return f"Result: REVIEW_INCOMPLETE\nCoverage: {review['coverage_gap']}"
-    counts = {s: sum(1 for f in review["findings"] if f["severity"] == s) for s in SEVERITIES}
+    counts = {s: sum(1 for f in own(review) if f["severity"] == s) for s in SEVERITIES}
     return (f"Result: {review['result'].upper()} "
             f"({counts['major']} major, {counts['minor']} minor, {counts['nit']} nit)")
 
@@ -64,7 +80,8 @@ def location(f):
 
 def finding(f):
     kind = " (question)" if f["kind"] == "question" else ""
-    out = [f"### {f['id']} {f['severity']}: {f['title']}{kind} ({f['axis']})", "",
+    older = ", pre-existing" if origin(f) == "preexisting" else ""
+    out = [f"### {f['id']} {f['severity']}{older}: {f['title']}{kind} ({f['axis']})", "",
            f"{location(f)} · Confidence: {f['confidence']}", "",
            f"- Problem: {f['problem']}"]
     for e in f.get("evidence", []):
@@ -72,14 +89,21 @@ def finding(f):
     out.append(f"- Proposed solution: {f['proposed_solution']}")
     if f.get("prior_thread"):
         out.append(f"- Continues: {f['prior_thread']}")
+    by = f.get("introduced_by") or {}
+    if by.get("request") or by.get("commit"):
+        out.append(f"- Introduced by: {', '.join(v for v in (by.get('request'), by.get('commit')) if v)}")
+    if origin(f) == "preexisting":
+        out.append(f"- Disposition: {f['disposition']}")
+        out.append(f"- Follow-up: {f.get('follow_up_url') or 'not filed'}")
     out.append("")
     return out
 
 
 def held(review):
     """Return the findings held until the code is settled, by the rule in SKILL.md."""
+    # An extend_scope finding asks for a code change in this change too, so it keeps the branch requests waiting.
     open_code = any(f.get("gate", "none") == "none" and f["severity"] in ("major", "minor")
-                    for f in review["findings"])
+                    for f in review["findings"] if in_classes(f))
     # A thread that continues as a finding of this file counts at that finding's severity, in the check above. One
     # without such a finding has no severity here, so it holds the branch requests whatever its severity was.
     ids = {f["id"] for f in review["findings"]}
@@ -87,7 +111,15 @@ def held(review):
                                  for p in review.get("previous_findings", []))
     if not open_code:
         return set()
-    return {f["id"] for f in review["findings"] if f.get("gate") == "code_settled"}
+    return {f["id"] for f in own(review) if f.get("gate") == "code_settled"}
+
+
+def in_classes(f):
+    """An extend_scope finding asks for a fix in this change, so it sits with the change's findings until an issue
+    takes it over."""
+    if origin(f) == "preexisting":
+        return f["disposition"] == "extend_scope" and not f.get("follow_up_url")
+    return origin(f) == "change"
 
 
 def id_key(f):
@@ -122,7 +154,7 @@ def render(review):
     out.append("")
 
     held_ids = held(review)
-    shown = [f for f in review["findings"] if f["id"] not in held_ids]
+    shown = [f for f in review["findings"] if f["id"] not in held_ids and in_classes(f)]
     class_ids = {c["id"] for c in review.get("classes", [])}
     groups = []
     for c in review.get("classes", []):
@@ -142,6 +174,16 @@ def render(review):
     if held_ids:
         out += ["## Held until the code is settled", ""]
         for f in by_impact([f for f in review["findings"] if f["id"] in held_ids]):
+            out += finding(f)
+    follow_ups = [f for f in review["findings"] if origin(f) == "preexisting" and not in_classes(f)]
+    if follow_ups:
+        out += ["## Older than this change", ""]
+        for f in by_impact(follow_ups):
+            out += finding(f)
+    stack = [f for f in review["findings"] if origin(f) == "stack"]
+    if stack:
+        out += ["## Made by other requests", ""]
+        for f in by_impact(stack):
             out += finding(f)
     if review.get("previous_findings"):
         out += ["## Previous findings", ""]

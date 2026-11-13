@@ -15,4 +15,9 @@ Severity is `major`, `minor`, or `nit`, decided by what happens if the author do
 not merge, the reviewer fixes it, or it stays. Requests about the branch rather than the code (squash, rebase, reword a
 commit) are held back while any `major` or `minor` finding is open. There is no cap on the number of findings.
 
+A defect older than the change, where the reviewer leaves it to a follow-up, is published only with the issue that
+tracks it: with the user's agreement, delivery files the issue through `problem-report-authoring`, which looks for an
+existing report first, and the comment links it. A defect older than the change that the change's purpose reaches is
+published as a proposal to handle it here, with the follow-up as the alternative. Neither counts in the result.
+
 Writing to GitHub or GitLab needs the user's authorization, given once per review: publish now, or prepare a draft.

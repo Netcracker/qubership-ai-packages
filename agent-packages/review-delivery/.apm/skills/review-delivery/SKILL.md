@@ -6,7 +6,8 @@ description: Render a finished code review (a review.json file) as a chat report
 # Deliver a code review
 
 This skill turns a finished review into the form the user asked for. It does not review: it never adds, drops, or
-re-grades a finding, and it never reads the code to decide whether a finding holds. Its input is a `review.json` that
+re-grades a finding, and it never reads the code to decide whether a finding holds. The one field of `review.json` it
+writes is `follow_up_url` (see *Follow-up issues*). Its input is a `review.json` that
 follows [the schema](schema/review.schema.json), written by `adversarial-code-review` or by another review skill.
 
 Read the file and check it against the schema before rendering. A file that does not validate goes back to whoever wrote
@@ -35,21 +36,23 @@ another language. Translate headings and labels; keep identifiers,
 paths, severities, and result labels as they are.
 
 **Every finding is rendered.** There is no cap on the number of findings: the user reads the draft and deletes what is
-not worth sending. The two exceptions are held findings (next paragraph) and findings an earlier round already settled,
-which appear only under *Previous findings*.
+not worth sending. The exceptions are held findings (next paragraph), findings an earlier round already settled, which
+appear only under *Previous findings*, and the findings *Findings the change did not make* keeps off the platform.
 
 **Held findings.** A finding with `gate: code_settled` asks for something about the branch rather than the code: squash
 the commits, rebase, reword a commit message. While any other `major` or `minor` finding (one with `gate: none`) is
-open, do not publish it: the next round rewrites the history anyway. An earlier thread that `previous_findings` lists as
-`fix_not_accepted` counts at the severity of the finding its `finding_id` names, and as open where it names none in this
-file. Held
-findings are not counted in the result line of an email or a GitLab publication, which shows only what it publishes.
-The ledger lists them in their own section, so nothing is lost, and the chat report counts them on its own line.
+open, do not publish it: the next round rewrites the history anyway. A finding counts here where it has `origin: change`
+(or no `origin`), or `disposition: extend_scope` and no `follow_up_url`; only a `change` finding is ever held. An
+earlier thread that `previous_findings` lists as `fix_not_accepted` counts at the severity of the finding its
+`finding_id` names, and as open where it names none in this file. Held findings are not counted in the result line of
+an email or a GitLab publication, which shows only what it publishes. The ledger lists them in their own section, so
+nothing is lost, and the chat report counts them on its own line.
 
 **Order.** Major before minor before nit; within a severity, by id, which the verifier assigns in severity order. In the
 ledger, by class first, and the classes, with the findings without a class as one more group, by their highest severity.
 
-**Result line.** The same in every renderer that shows it, with every severity counted, zeros included. A GitHub review
+**Result line.** The same in every renderer that shows it, with every severity counted, zeros included. It counts only
+findings with `origin: change` (or no `origin`): the others do not decide the result. A GitHub review
 shows it only for `REVIEW_INCOMPLETE` (see *Content*):
 
 ```markdown
@@ -82,6 +85,8 @@ Proposed solution: cap the list at N reasons with "and M more", quote each with 
 - `Proposed solution:` is from `proposed_solution`, and may be one phrase where the fix is obvious.
 - The lead-ins `Problem:` and `Proposed solution:` are plain text, not bold.
 - Each paragraph is one line, with no hard wraps: the platform wraps it.
+- A finding with `origin: preexisting` adds `, pre-existing` to the tag, after the severity, and changes its last
+  paragraph (see *Findings the change did not make*).
 - An inline comment carries no location: the platform shows it. Anywhere else, the location follows the tag:
   ``**F50 nit** `internal/x.go:122`, outside the diff: …``. A finding with no location names what it is about in the
   claim (the description, a commit message).
@@ -93,6 +98,54 @@ apology, greeting, or closer, and no softening of a defect.
 
 **Scope.** Where `scope_exclusions` is not empty, state it once, near the result: the reader must know what was not
 reviewed.
+
+## Findings the change did not make
+
+A finding's `origin` says whose defect it is. The author of this change owes a fix only for `change` findings, so a
+comment on any other has to say so, and the comment for a defect that is older than the change points at the issue
+that tracks it rather than asking for a fix here.
+
+| `origin` and `disposition` | Email and platform |
+| --- | --- |
+| `stack` | Not published on this request. |
+| `preexisting`, `extend_scope` | Published, with the last paragraph below. |
+| `preexisting`, `follow_up`, with `follow_up_url` | Published, with the last paragraph below. |
+| `preexisting`, `follow_up`, no `follow_up_url` | Not published. |
+
+The last paragraph of a published `preexisting` finding, in place of `Proposed solution:`:
+
+```markdown
+Follow-up: this fails before this change too, so I filed <follow_up_url> to fix it separately.
+```
+
+- Write `filed` where this delivery filed the issue, and `it is tracked in <follow_up_url>` where it already existed.
+- For `extend_scope`, keep `Proposed solution:` and add the alternative after it: `Follow-up: this fails before this
+  change too. If you would rather keep the change narrow, say so, and it moves to a follow-up issue.` Where
+  `follow_up_url` is set, the author already chose the follow-up: render it as `follow_up`.
+
+### Follow-up issues
+
+Before the first email or platform write, and in the chat report when nothing is published, ask once about every
+`preexisting` finding with `disposition: follow_up` and no `follow_up_url`:
+
+> F7 and F9 are older than this change. File a follow-up issue for each, and link it from the review?
+
+Filing writes to the tracker, so it needs this answer even where publication is already authorized; a draft mode
+authorizes no issue. Where the user agrees, for each finding:
+
+1. Load `problem-report-authoring`, and the developer-style skill of the language the issue is written in
+   (`english-developer-style` for English). It searches for a report that already exists and writes the issue from the
+   finding's `problem`, `evidence`, `introduced_by.commit`, and `proposed_solution`, at the reviewed head's revision.
+2. File the issue in the repository that `problem-report-authoring` finds owns the defect, or link the report its
+   search found.
+3. Set the finding's `follow_up_url` in `review.json`, and render the ledger again.
+
+Where the user declines, the finding stays in the chat report and the ledger, and is not published: a comment that
+names an old defect with no issue to track it asks the author for a fix the change does not owe.
+
+A `stack` finding belongs to the request its `introduced_by.request` names. The chat report lists it under that
+request and offers to review that request together with this one, as a stack: the stack review moves the finding to
+that request.
 
 ## Chat report
 
@@ -118,6 +171,15 @@ Held until the code is settled: <n> findings (in the ledger)
 
 - **F1 major** `path/to/file:42`: <claim>
 - **F2 minor, medium confidence** ...
+- **F8 minor, pre-existing** `path/to/file:120`: <claim>
+
+## Older than this change
+
+- **F7 minor, pre-existing** `path/to/file:88`: <claim>. Follow-up issue: <follow_up_url, or "not filed">.
+
+## Made by other requests
+
+- <introduced_by.request>: **F9 major** `path/to/file:17`: <claim>.
 
 ## Needed to complete the review
 
@@ -127,7 +189,10 @@ Held until the code is settled: <n> findings (in the ledger)
 *Main problems* lists the classes, ordered by the highest severity among their findings, so the author sees the few
 causes before the many symptoms; it is absent when no class has two findings. *Findings* gives each finding one line:
 its tag as in *One finding*, its location, and its claim in the request's language. The problem and the proposed
-solution are in the ledger, which the chat report does not repeat.
+solution are in the ledger, which the chat report does not repeat. *Findings* holds the findings the author is asked
+to fix in this change: `change` findings, and `preexisting` findings with `disposition: extend_scope` and no
+`follow_up_url`. The other `preexisting` findings go to *Older than this change*, the `stack` findings to *Made by
+other requests*, and the question from *Follow-up issues* follows them.
 Omit an empty section. End with the path of `review.json`, and of every file this delivery wrote.
 
 ## Ledger
@@ -139,8 +204,10 @@ finding, its axis, its evidence, and the held findings. Render it with the scrip
 <skill dir>/scripts/render-ledger.py <review.json>
 ```
 
-It writes `ledger.md` next to `review.json` and prints the path. Where it exits with status 2, `review.json` lacks a
-field the ledger reads; send the file back with the message, as for a file that does not validate.
+It writes `ledger.md` next to `review.json` and prints the path. Its classes hold the same findings as the chat
+report's *Findings*, and its *Older than this change* and *Made by other requests* sections the rest. Where it exits
+with status 2, `review.json` lacks a field the ledger reads; send the file back with the message, as for a file that
+does not validate.
 
 ## Email
 
@@ -148,7 +215,8 @@ field the ledger reads; send the file back with the message, as for a file that 
 result, the revision, the out-of-scope line, then the findings in the order above, in the *One finding* form without
 the bold markers. Each location is a link to the line at the reviewed head
 (`https://github.com/<repo>/blob/<head>/<path>#L<line>`, or the GitLab `/-/blob/<head>/<path>#L<line>` form).
-Held findings are left out, as on a platform. Sending is the user's step.
+Held findings, and those *Findings the change did not make* keeps off a platform, are left out, as on a platform.
+Sending is the user's step.
 
 ## Publish to a platform
 

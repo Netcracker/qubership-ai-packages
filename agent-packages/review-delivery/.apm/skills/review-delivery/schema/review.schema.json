@@ -391,8 +391,111 @@
             "null"
           ],
           "description": "URL of an earlier thread this finding continues."
+        },
+        "origin": {
+          "enum": [
+            "change",
+            "stack",
+            "preexisting"
+          ],
+          "default": "change",
+          "description": "change: the reviewed change makes the defect; stack: another open request the change builds on makes it; preexisting: it exists on the branch the change merges into. Only change findings decide the result."
+        },
+        "introduced_by": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "request": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "URL of the open request that adds the commit; required for a stack finding."
+            }
+          }
+        },
+        "disposition": {
+          "enum": [
+            "extend_scope",
+            "follow_up",
+            null
+          ],
+          "description": "For a preexisting finding: extend_scope asks the author to handle the case in this change; follow_up leaves it to an issue."
+        },
+        "follow_up_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The issue that tracks a preexisting defect, set by delivery once the issue exists."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "origin"
+            ],
+            "properties": {
+              "origin": {
+                "const": "stack"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "introduced_by"
+            ],
+            "properties": {
+              "introduced_by": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "origin"
+            ],
+            "properties": {
+              "origin": {
+                "const": "preexisting"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "disposition"
+            ],
+            "properties": {
+              "disposition": {
+                "enum": [
+                  "extend_scope",
+                  "follow_up"
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

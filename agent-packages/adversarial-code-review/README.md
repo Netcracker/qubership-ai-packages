@@ -26,6 +26,11 @@ How a review runs:
 
 Severity is `major`, `minor`, or `nit`, decided by what happens if the author does not fix the finding: the change does
 not merge, the reviewer fixes it, or it stays. The result is `approve`, `request_changes` (at least one `major`), or
-`review_incomplete`.
+`review_incomplete`; only the findings the change makes count.
+
+A defect the change did not make does not decide the result. One that another open request in the stack makes belongs
+to that request, and a review of several dependent requests moves it there. One that already exists on the target
+branch is either proposed for this change, where the change's purpose reaches it, or left to a follow-up issue that
+`review-delivery` files with the user's agreement and links from the comment.
 
 Invoke `adversarial-code-review` with a pull or merge request URL, or an unambiguous repository and request number.

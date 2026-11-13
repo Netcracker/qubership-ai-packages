@@ -1,3 +1,7 @@
 name: review-delivery
-version: 0.1.0
+version: 0.2.0
 description: Render a finished code review as a chat report, a ledger, an email, a GitHub review, or GitLab discussions, and publish it with the user's authorization.
+dependencies:
+  apm:
+    # Sibling package, resolved from the same commit as this one: writes the follow-up issue for an older defect.
+    - ../problem-report-authoring

@@ -44,6 +44,13 @@ Each round gets a subdirectory, `round-<n>-<head:8>/`, numbered after the highes
 3. The commit history, conversation comments, reviewer and approval state, submitted reviews, and inline discussions
    with replies, authors, and resolution or outdated state.
 4. Every changed path, including deletions, renames, generated files, lockfiles, binaries, and submodules.
+5. The branch the change merges into and, under a *Stack* heading, every other open request it depends on: the one
+   whose head branch is this request's base branch, and, for each commit in `<base>..<head>`, the open requests that
+   contain it (GitHub: `gh api repos/<owner>/<repo>/commits/<sha>/pulls`; GitLab: the commit's `merge_requests`
+   endpoint). Record each request's URL, its base and head branches, its head SHA, and the commits it adds. Where the
+   base branch is another request's, follow its base the same way until a branch that no open request has as its head:
+   that branch is the one the stack merges into. Record its SHA too, and fetch every SHA recorded here into the
+   workspace, so that an axis can check out any of them.
 
 Record any material metadata, discussion, or content the platform cannot supply. When the platform marks content as
 collapsed, too large, unavailable, stale, or unpositioned, record the exact material and path; preserve any thread body,
@@ -80,10 +87,14 @@ each as a `previous_findings` entry with its status and reason.
 - Distinguish an existing contract from a new restriction, which needs a compatibility check. A promised fix leaves the
   finding open; an accepted scope deferral needs a tracked follow-up and is not a fix.
 - Keep a partial fix with the original finding; assess an independent defect separately.
+- A thread for a `preexisting` finding whose `follow_up_url` is set is `scope_deferred`, with that URL. Where the author
+  answered an `extend_scope` finding by choosing the follow-up, the finding continues with `disposition: follow_up`.
+  Any other remaining thread keeps its finding's `origin` and `disposition`.
 
 Every thread whose defect remains (`fix_not_accepted`, or a partial fix) is also a finding of this round: write it to
 `<work>/axes/previous.json` as a finding record with `axis: previous`, `prior_thread` set, and its current severity. A
-remaining `major` from an earlier round keeps the change from being approved even when no axis finds it again.
+remaining `major` with `origin: change` from an earlier round keeps the change from being approved even when no axis
+finds it again.
 
 ## Choose the axes
 
@@ -163,6 +174,20 @@ and let the user decide.
 
 Keep in `open_questions` only what the review needs to finish, each with why it can change the result.
 
+## Review a stack
+
+Where the user names several requests that depend on one another, or asks to review a stack, review each request as
+above, with its own directory and its own `review.json`, from the bottom of the stack up. Hand nothing over until every
+request is verified. Then move each `stack` finding to the `review.json` of the request its `introduced_by.request`
+names, where that request was reviewed in this run: set its `origin` to `change` and `introduced_by` to `null`,
+recheck that its location exists at that request's head (the line can sit elsewhere there, and a finding whose line is
+gone becomes `location: null` with the path in `problem`), and give it an id there: the id of the same defect in that
+request's `<previous>`, or else the next free one. Where that review already holds a finding for the same defect, drop
+the moved one and add its evidence to the existing one.
+
+A `stack` finding whose request was not reviewed stays where it is: delivery offers to review that request together
+with this one, as a stack, which moves the finding there.
+
 ## Result
 
 Choose one result in this order and write it to `review.json`:
@@ -170,8 +195,11 @@ Choose one result in this order and write it to `review.json`:
 1. `review_incomplete` when missing material context prevents review of a risk-bearing path, an axis that applies to one
    failed, or a stable revision cannot be reviewed after the pinned one changed. Set `coverage_gap` to the exact
    material. The `measurements` entry in `axes` is not an axis here: a failed measurement does not count.
-2. `request_changes` when at least one `major` finding remains.
+2. `request_changes` when at least one `major` finding with `origin: change` remains.
 3. `approve` otherwise.
+
+A `stack` or `preexisting` finding never changes the result: the first belongs to another request, and the second was
+there before the change.
 
 ## Hand over
 
@@ -183,7 +211,7 @@ language, and any publication authorization the request already gave.
 
 ## Clean up
 
-After delivery, remove only the clones and worktrees created for this review, the axes' and the measurement's included,
-and verify that they are gone, unless the user asked to keep them. Keep the review's directory: `review.json` and the
-ledger are the record of the review and the input of a next round. Never delete a user-provided directory, a
-pre-existing worktree, or unrelated worktree metadata.
+After delivery, remove only the clones and worktrees created for this review, the axes', the verifier's, and the
+measurement's included, and verify that they are gone, unless the user asked to keep them. Keep the review's directory:
+`review.json` and the ledger are the record of the review and the input of a next round. Never delete a user-provided
+directory, a pre-existing worktree, or unrelated worktree metadata.

@@ -14,6 +14,11 @@ in `input.md` as the claim, and the diff as what was done.
   branch, a dependency moved in a file the change otherwise leaves alone. The tests of a claimed change, and the
   generated or lock output it produces, are claimed with it. Ask for a sentence that claims it, with the run that checks
   it, or for the hunk to move to its own change.
+- Where the change fixes or extends a behavior, the cases next to it: the same input on a path that shares the changed
+  code or that the change's claim names, and the changed code meeting a configuration, a state, or a caller it did not
+  consider. A case the change claims is `origin: change`; one it does not claim and that failed before the change too
+  is `preexisting`, with the `disposition` that `finding-rules.md` *Origin* chooses: handle it here, or move it to a
+  follow-up issue.
 
 ## Not a finding
 
