@@ -19,6 +19,15 @@ How a review runs:
    request can add axes, narrow to some, and put surfaces out of scope. Where the build reports diff coverage and
    mutation testing (cribro, for example), one more subagent runs the changed modules' tests and the mutation tool
    alongside the first axes, and the tests and correctness axes start once it reports. This runs the request's code.
+
+   The request can name a cheaper profile. Both cheaper profiles order the axes first: the two the reviewer judges most
+   likely to find a `major` finding in this change, then a fixed order ranked by the findings of earlier reviews.
+   `medium` runs the first three axes one per subagent, the next five in one subagent, and the rest in one more; `low`
+   runs two subagents, the first four axes and the rest. A subagent that holds several axes checks each less deeply. On
+   two pull requests reviewed at all three profiles, the axis subagents of `medium` cost 39–45% less than one subagent
+   per axis and found 3 of the 6 `major` findings; those of `low` cost 64–77% less and found 1 of 6. A rerun of single
+   axes missed some of the same findings, so part of the loss is run-to-run variance. A change of more than 1000 lines,
+   not counting generated and lock files, runs `medium` where the request asked for `low`.
 4. A fresh subagent verifies every finding against the code, merges duplicates, and groups the rest into root-cause
    classes.
 5. The result, `review.json`, goes to `review-delivery`: a chat report and a ledger by default, or an email, a GitHub

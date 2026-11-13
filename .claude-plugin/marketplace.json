@@ -385,7 +385,7 @@
     {
       "name": "adversarial-code-review",
       "description": "Review GitHub pull requests and GitLab merge requests with one subagent per review axis and a separate verification pass, and hand the findings to review-delivery.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "topic:code-review",
         "activity:code-review",
@@ -396,7 +396,7 @@
     {
       "name": "review-delivery",
       "description": "Render a finished code review as a chat report, a ledger, an email, a GitHub review, or GitLab discussions, and publish it with the user's authorization.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "tags": [
         "topic:code-review",
         "activity:code-review",

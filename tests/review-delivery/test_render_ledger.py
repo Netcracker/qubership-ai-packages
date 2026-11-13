@@ -136,6 +136,14 @@ class RenderLedgerTest(unittest.TestCase):
         self.assertIn("- Introduced by: abc\n- Disposition: follow_up\n- Follow-up: https://example.test/issues/9\n",
                       text)
 
+    def test_the_axes_line_shows_the_reason_of_an_axis_that_ran_and_of_one_that_was_skipped(self):
+        data = review([], axes=[{"axis": "tests", "status": "ran", "reason": "group-1, profile low"},
+                                {"axis": "comments", "status": "ran"},
+                                {"axis": "security", "status": "skipped", "reason": "no input handling changed"}])
+        lines = [line for line in self.ledger(data).splitlines() if line.startswith("Axes run:")]
+        self.assertEqual(["Axes run: tests (group-1, profile low), comments; "
+                          "skipped: security (no input handling changed); failed: none"], lines)
+
     def test_a_stack_finding_without_its_request_exits_with_status_2_and_names_it(self):
         result = self.run_script(review([finding("F1", "minor", origin="stack", introduced_by={"commit": "c"})]))
         self.assertEqual(2, result.returncode)

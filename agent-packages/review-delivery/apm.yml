@@ -1,5 +1,5 @@
 name: review-delivery
-version: 0.2.0
+version: 0.2.1
 description: Render a finished code review as a chat report, a ledger, an email, a GitHub review, or GitLab discussions, and publish it with the user's authorization.
 dependencies:
   apm:

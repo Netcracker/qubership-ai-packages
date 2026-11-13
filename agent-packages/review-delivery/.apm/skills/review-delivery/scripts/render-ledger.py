@@ -147,7 +147,7 @@ def render(review):
         return ", ".join(a["axis"] + (f" ({a['reason']})" if a.get("reason") else "") for a in items) or "none"
 
     if axes:
-        out.append(f"Axes run: {', '.join(a['axis'] for a in groups['ran']) or 'none'}; "
+        out.append(f"Axes run: {names(groups['ran'])}; "
                    f"skipped: {names(groups['skipped'])}; failed: {names(groups['failed'])}")
     if review.get("scope_exclusions"):
         out.append(f"Out of scope: {'; '.join(e.rstrip('.') for e in review['scope_exclusions'])}")

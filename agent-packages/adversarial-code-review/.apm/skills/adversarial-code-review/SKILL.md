@@ -20,6 +20,8 @@ Record from the request:
 - the target: a pull or merge request URL, or an unambiguous repository and number;
 - **scope exclusions**, as the user said them ("the wiki is out of scope");
 - **axes** the user added ("also check vocabulary") or narrowed to ("only compatibility");
+- the **profile**, `high`, `medium`, or `low`, where the user named one ("a cheap review" is `low`). With none, the
+  profile is `high`;
 - the **delivery** asked for (a draft, a publication, a ledger, an email). With none, the result is the chat report and
   the ledger;
 - the language of the request, for the chat report.
@@ -123,6 +125,34 @@ Each axis is a file under `references/axes/`.
 Run every axis that applies, plus the ones the user added, minus the ones the user excluded. Record every axis in `axes`
 with `ran`, or `skipped` and the reason ("no comments changed", "excluded by the request").
 
+## Group the axes by profile
+
+The profile decides how many axes one subagent holds. A subagent that holds several axes costs less than one subagent
+per axis and checks each of its axes less deeply.
+
+| Profile | Subagents |
+| --- | --- |
+| `high` | one per axis |
+| `medium` | one for each of the first three axes; one for the next five; one for the rest |
+| `low` | one for the first four axes; one for the rest |
+
+Where the change has more than 1000 changed lines, generated and lock files not counted, run `medium` in place of `low`,
+and say so in the chat. On a change of 4700 lines, `low` found none of the three `major` findings that `high` found.
+
+For `medium` and `low`, order the axes that run before grouping them:
+
+1. First, the two axes most likely to find a `major` finding, judged from the description and the diff: a claim the
+   description makes, a path the change alters, a contract it touches.
+2. Then the other axes in this order, which ranks them by the verified findings of earlier reviews: tests, change
+   description and branch, comments, correctness, naive reader, change reach, reliability, architecture,
+   documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, performance,
+   simplicity.
+
+Where fewer axes run than the groups take, the last groups get fewer axes, and a group with none is not run. Within a
+group, naive reader goes first, because it reads the comments before the code. Name the groups `group-1`, `group-2`,
+and so on, in that order. In `axes`, give each axis that ran a `reason` that names its group and the profile:
+"group-2, profile medium". A group of one axis is run with the one-axis brief and writes `<axis>.json`.
+
 ## Run the axes
 
 Fill in every placeholder of the briefs (here, in `references/measure.md`, and in `references/verify.md`) before sending
@@ -132,12 +162,16 @@ one: `<work>` and `<previous>` from *Collect the review input*, `<workspace>` fr
 side by side, so look next to `<skill dir>`, following symbolic links by name rather than by target). Paths are
 absolute.
 
-Run one subagent per axis, in two waves:
+Run one subagent per axis or per group, in two waves:
 
-1. In one message, the measurement subagent and every axis except tests and correctness.
-2. When the measurement subagent replies, fails, or was not started, tests and correctness in one message.
+1. In one message, the measurement subagent and every subagent that holds neither tests nor correctness.
+2. When the measurement subagent replies, fails, or was not started, the subagents that hold tests or correctness, in
+   one message.
 
-Give each axis the same brief:
+Under `low`, and for most axes under `medium`, a group holds tests or correctness, so its other axes wait for the
+measurement subagent too: a cheaper profile is not a faster one.
+
+Give a subagent that holds one axis this brief:
 
 > You are one reviewer of a pull request, responsible for one axis only. Read `<skill dir>/references/axes/<axis>.md`
 > and `<skill dir>/references/finding-rules.md` first and follow them. The review input is `<work>/input.md`; the code
@@ -150,14 +184,33 @@ Give each axis the same brief:
 > edit the workspace, run nothing that writes outside `<work>`, and post nothing. Reply with the number of findings per
 > severity and the skills you loaded.
 
+Give a subagent that holds a group this brief, with the group's axes in their order:
+
+> You are one reviewer of a pull request, responsible for these axes only: `<axis>`, `<axis>`, .... Read
+> `<skill dir>/references/finding-rules.md` first and follow it. Then take the axes one at a time, in the order listed:
+> read `<skill dir>/references/axes/<axis>.md`, load the skills it names, and check the change against that axis as
+> thoroughly as a reviewer who held only that axis would, before you move to the next. The review input is
+> `<work>/input.md`; the code at the reviewed head is in `<workspace>`; the change is `git diff <base>...<head>`. Where
+> `<work>/measure/` exists, its `README.md` says what was measured, and lists the reports, the tests the tools did not
+> run, and the build's output where the reviewed head does not build. Out of scope: `<exclusions or "nothing">`. To run
+> anything, add your own worktree first (`git -C <workspace> worktree add <work>/axes/<group>-wt <sha>`) and run there,
+> never in `<workspace>`: other reviewers read it at the same time. Write the findings of all your axes as one JSON
+> array of finding records (the `finding` definition in `<schema>`, without `id` and `class`), each with `axis` set to
+> the axis that found it, to `<work>/axes/<group>.json`, and `[]` if there are none. Do not edit the workspace, run
+> nothing that writes outside `<work>`, and post nothing. Reply with the number of findings per axis and severity, and
+> the skills you loaded.
+
 Never write an axis file yourself (`axes/previous.json` is the one exception), even where your own probes and test runs
 already hold the evidence: write that evidence to `<work>/` and name it in `input.md`, and let the axis read it. An axis
 written in this context loads none of the skills its file names. Where the axis file requires a skill for this change
-and the reply does not name it, run that axis once more; where the second reply does not name it either, record the axis
-as `failed`. A developer-style skill that is not installed does not fail an axis: the reply names it as missing.
+and the reply does not name it, run that axis once more, in a subagent of its own with the one-axis brief, and remove
+that axis's records from the group's file; where the second reply does not name it either, record the axis as
+`failed`. A developer-style skill that is not installed does
+not fail an axis: the reply names it as missing.
 
-An axis whose subagent fails, returns invalid JSON, or could not be spawned is recorded as `failed`, and its file is
-removed. A failed axis that applies to a risk-bearing part of the change makes the result `review_incomplete`.
+Where a subagent fails, returns invalid JSON, or could not be spawned, every axis it held is recorded as `failed`, and
+its file is removed. A failed axis that applies to a risk-bearing part of the change makes the result
+`review_incomplete`.
 
 ## Verify and group
 
