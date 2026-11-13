@@ -1,0 +1,510 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review-delivery/review.schema.json",
+  "title": "Code review result",
+  "description": "What a review found, before it is rendered. Written in English by the reviewing skill; review-delivery renders it as a chat report, a ledger, a GitHub review, GitLab discussions, or an email.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "target",
+    "revision",
+    "result",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "platform",
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "enum": [
+            "github",
+            "gitlab",
+            "local"
+          ]
+        },
+        "url": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "number": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "revision": {
+      "description": "The revision the findings describe. GitLab positions need all three SHAs; GitHub uses base and head.",
+      "type": "object",
+      "required": [
+        "base",
+        "head"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "string"
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "head": {
+          "type": "string"
+        }
+      }
+    },
+    "result": {
+      "enum": [
+        "approve",
+        "request_changes",
+        "review_incomplete"
+      ]
+    },
+    "coverage_gap": {
+      "description": "Only for review_incomplete: the exact material the review could not inspect.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "scope_exclusions": {
+      "description": "What the requester put out of scope, as they said it. Rendered so a reader knows what was not reviewed.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "axes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "axis",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ran",
+              "skipped",
+              "failed"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "open_questions": {
+      "description": "Information the review needs to finish, each with why it can change the result.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "classes": {
+      "description": "Groups of findings that likely share a root cause; the unit a fixing session works on.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "root_cause": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "previous_findings": {
+      "description": "Earlier review threads rechecked in this round.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "thread_url",
+          "status",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "thread_url": {
+            "type": "string"
+          },
+          "thread_id": {
+            "type": "string"
+          },
+          "thread_author": {
+            "type": "string",
+            "description": "Account that opened the thread; delivery changes state only on its own threads."
+          },
+          "finding_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The finding in this file that continues the thread, if any."
+          },
+          "status": {
+            "enum": [
+              "fix_accepted",
+              "fix_not_accepted",
+              "resolved_by_clarification",
+              "withdrawn",
+              "scope_deferred",
+              "unable_to_verify"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "follow_up_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Tracked follow-up for scope_deferred."
+          },
+          "reply_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Replies that decided the status, linked in the rendered reason."
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "review_incomplete"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "coverage_gap"
+        ],
+        "properties": {
+          "coverage_gap": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "kind",
+        "severity",
+        "confidence",
+        "axis",
+        "location",
+        "problem",
+        "proposed_solution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable across rounds of the same review, e.g. F3."
+        },
+        "title": {
+          "type": "string",
+          "description": "The claim: one sentence that states the defect, or asks the question, and stands alone, since it is the first line of the rendered comment."
+        },
+        "kind": {
+          "enum": [
+            "defect",
+            "question"
+          ],
+          "description": "A question where missing context could invalidate the finding."
+        },
+        "severity": {
+          "enum": [
+            "major",
+            "minor",
+            "nit"
+          ],
+          "description": "If the author does not fix it: major, the change does not merge; minor, the reviewer fixes it; nit, it stays."
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium"
+          ]
+        },
+        "axis": {
+          "type": "string"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gate": {
+          "enum": [
+            "none",
+            "code_settled"
+          ],
+          "default": "none",
+          "description": "code_settled: a request about the branch (squash, rebase, reword a commit) that is held back while any major or minor finding is open."
+        },
+        "location": {
+          "description": "Null when the finding has no line, such as a missing changelog entry or a commit to squash.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "path",
+                "side",
+                "start_line"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "side": {
+                  "enum": [
+                    "new",
+                    "old"
+                  ],
+                  "description": "old for a removed line."
+                },
+                "start_line": {
+                  "type": "integer",
+                  "description": "First line of the range an inline comment covers."
+                },
+                "end_line": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Last line of that range; equal to start_line, or null, for a single line."
+                },
+                "symbol": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "in_diff": {
+                  "type": "boolean",
+                  "description": "False when no line of the range is inside a hunk, so it cannot carry an inline comment."
+                }
+              }
+            }
+          ]
+        },
+        "problem": {
+          "type": "string",
+          "description": "The condition and the concrete impact, without restating the title."
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "text",
+              "basis"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "basis": {
+                "enum": [
+                  "fact",
+                  "inference"
+                ],
+                "description": "fact: read or run; inference: derived, worded conditionally when rendered."
+              }
+            }
+          }
+        },
+        "proposed_solution": {
+          "type": "string"
+        },
+        "retest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What a later round checks to accept a fix: an input and the result it must give, or a test that must exist and fail without the fix. It holds for any fix that resolves the problem, not only proposed_solution. For a question, the answer that settles it."
+        },
+        "prior_thread": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "URL of an earlier thread this finding continues."
+        },
+        "origin": {
+          "enum": [
+            "change",
+            "stack",
+            "preexisting"
+          ],
+          "default": "change",
+          "description": "change: the reviewed change makes the defect; stack: another open request the change builds on makes it; preexisting: it exists on the branch the change merges into. Only change findings decide the result."
+        },
+        "introduced_by": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "request": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "URL of the open request that adds the commit; required for a stack finding."
+            }
+          }
+        },
+        "disposition": {
+          "enum": [
+            "extend_scope",
+            "follow_up",
+            null
+          ],
+          "description": "For a preexisting finding: extend_scope asks the author to handle the case in this change; follow_up leaves it to an issue."
+        },
+        "follow_up_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The issue that tracks a preexisting defect, set by delivery once the issue exists."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "origin"
+            ],
+            "properties": {
+              "origin": {
+                "const": "stack"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "introduced_by"
+            ],
+            "properties": {
+              "introduced_by": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "origin"
+            ],
+            "properties": {
+              "origin": {
+                "const": "preexisting"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "disposition"
+            ],
+            "properties": {
+              "disposition": {
+                "enum": [
+                  "extend_scope",
+                  "follow_up"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

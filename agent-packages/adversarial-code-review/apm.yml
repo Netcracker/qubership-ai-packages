@@ -1,3 +1,17 @@
 name: adversarial-code-review
-version: 1.1.0
-description: Review GitHub pull requests and GitLab merge requests from an isolated Git workspace and publish feedback with user authorization.
+version: 2.2.0
+description: Review GitHub pull requests and GitLab merge requests with one subagent per review axis and a separate verification pass, and hand the findings to review-delivery.
+dependencies:
+  apm:
+    # Sibling package, resolved from the same commit as this one: renders and publishes the findings.
+    - ../review-delivery
+    # Authoring skills the axes load to judge the text a change adds.
+    - ../change-description-authoring
+    - ../docs-page-authoring
+    - ../godoc-authoring
+    - ../javadoc-authoring
+    - ../jsdoc-authoring
+    - ../pythondoc-authoring
+    - ../rustdoc-authoring
+    - ../telemetry-authoring
+    - ../test-authoring
