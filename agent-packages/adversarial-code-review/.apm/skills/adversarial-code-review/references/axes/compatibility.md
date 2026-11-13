@@ -12,6 +12,8 @@ deployment that others run. Check the matching list, and both where it is both.
   input and the old and new outcome.
 - Configuration: a renamed or removed option, a changed default or meaning.
 - Output other tools parse: message text that is documented or matched by known consumers, a file format.
+- Stored data the library or tool writes, migrates, compacts, expires, or deletes: apply the **Stored-data steps** check
+  below.
 
 ## Service or deployment
 
@@ -25,6 +27,12 @@ deployment that others run. Check the matching list, and both where it is both.
   pre-existing state it will meet: configuration files, keys or certificates, persisted data or schemas, caches, lock
   files, and objects an earlier chart or `kubectl apply` created. Check that a test or a run starts from that state, not
   only from a fresh install, or that the change documents the remedy and shows it run on that state.
+- **Stored-data steps:** where the change writes, migrates, compacts, expires, or deletes stored data in more than one
+  step, or outside one transaction, list each step whose effect outlives the process. For each, say what the next start
+  finds when the process stops between two steps, and check that the retry neither loses, duplicates, nor orphans data,
+  and does not repeat an irreversible step. Check that a concurrent reader sees the old or the new state, never a mix;
+  that a migration started on partially or fully migrated data finishes or leaves it unchanged; and that an item exactly
+  at the retention or expiration age is kept or removed as the setting's name or documentation says.
 - **Passed values:** where an existing setting (a pass-through variable, a flag, an environment variable) now reaches a
   consumer it did not reach before, list the names the new consumer reads that the old consumers also read, such as a
   values key both charts define. For each, say what a value meant for the old consumers does to the new one; the
@@ -40,4 +48,5 @@ replaced technology is impractical, the finding is a missing migration path, not
 ## Severity
 
 An unannounced break for an input, call, or configuration that worked before is `major`. A passed value that means
-something else for the new consumer, or makes it ask for something nothing provides, is `major`.
+something else for the new consumer, or makes it ask for something nothing provides, is `major`. A stop between
+steps, or a retry, that loses or duplicates stored data, or repeats an irreversible step, is `major`.

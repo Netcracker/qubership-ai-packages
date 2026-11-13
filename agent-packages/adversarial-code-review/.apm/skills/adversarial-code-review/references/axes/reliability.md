@@ -4,7 +4,8 @@
 
 Timeouts, retries, recovery, failure isolation, resource cleanup, and safe operator controls. What the change logs,
 measures, or traces, and the text of its errors, belong to the telemetry axis, except what a replaced mechanism prints
-when it fails, which the check below compares.
+when it fails, which the check below compares. What a stop or a retry does to stored data belongs to the compatibility
+axis.
 
 For each limit the change sets or exposes, find the other limits on the same work in the caller or the wrapper, in what
 the code starts, and in the environment; a limit on one operation inside that work, or on work that only overlaps it,
