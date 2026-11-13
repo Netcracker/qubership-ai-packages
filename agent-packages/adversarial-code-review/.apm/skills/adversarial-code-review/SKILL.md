@@ -50,7 +50,7 @@ Each round gets a subdirectory, `round-<n>-<head:8>/`, numbered after the highes
    endpoint). Record each request's URL, its base and head branches, its head SHA, and the commits it adds. Where the
    base branch is another request's, follow its base the same way until a branch that no open request has as its head:
    that branch is the one the stack merges into. Record its SHA too, and fetch every SHA recorded here into the
-   workspace, so that an axis can check out any of them.
+   workspace, so that the verifier can read any of them.
 
 Record any material metadata, discussion, or content the platform cannot supply. When the platform marks content as
 collapsed, too large, unavailable, stale, or unpositioned, record the exact material and path; preserve any thread body,
