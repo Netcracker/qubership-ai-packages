@@ -1,0 +1,115 @@
+{
+ "key": "pgjdbc_pgjdbc_4272",
+ "summary": "Security fix: under channelBinding=require, fails the SCRAM connection when no tls-server-end-point hash can be derived from the server certificate (e.g. Ed25519) and when the negotiated mechanism is not -PLUS, instead of silently downgrading.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Regression test covers the Ed25519 path, but the authoritative post-negotiation isPlus check has no test (Codecov: 18% patch coverage, 9 lines missed) and requireRejectsConnectionWithoutSsl only re-tests pre-existing behaviour."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "README/use.md already say require 'must employ channel binding'; the fix brings code in line, only an optional note on unsupported certificate algorithms."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Inline comments explain the fail-closed reasoning and match the code; test class Javadoc names the advisory."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Security fix (GHSA-j92g-9f8w-j867) with no CHANGELOG.md entry although 42.7.12 has an empty '### Security' heading; entries were added in later docs commits on master."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Connection-setup only; no hot path."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Changes SCRAM channel-binding enforcement (authentication downgrade); fail-closed logic in ScramAuthenticator.java needs a focused check."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Connections with channelBinding=require to Ed25519-certificate servers that previously (insecurely) succeeded now fail; intended per the advisory."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared state or resources touched."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Adds two CONNECTION_REJECTED PSQLExceptions with new messages; they escape the narrower catch blocks correctly and the message names the algorithm and remediation."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Small conditional logic; the main risk is covered by the security axis."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No new feature or API."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "require now fails where it used to connect, which is what users of require expect."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description matches the code; existing advertisedMechanisms check left as described."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Deliberately keeps scram-client 3.2; no dependency or build change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Failures surface as exceptions to the caller; no silent path added."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Interprets RFC 5929 tls-server-end-point (no defined hash for Ed25519) and SCRAM -PLUS negotiation semantics."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "change_description",
+    "security",
+    "error_model",
+    "spec_conformance"
+   ]
+  ],
+  "why": "A small, security-focused change in one class; one reviewer covers enforcement, errors, spec, and tests together."
+ }
+}

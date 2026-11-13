@@ -1,0 +1,112 @@
+{
+ "key": "apache_calcite_5171",
+ "summary": "Stops JoinAggregateTransposeRule from pulling an Aggregate with an empty group set above a join unless metadata proves its input non-empty, fixing lost rows on empty input.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix; three plan tests (empty, possibly empty, known non-empty) plus a Quidem result test that mihaibudiu asked for ('can you add a quidem test which exhibits the bug?'), present in the labeled snapshot."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal rule fix; no documented behavior."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Three-line inline comment explains the guard; accurate."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description explains the bug and fix clearly, though the PR template text is left in the body."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "One metadata call in matches(); negligible."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Rule now fires in fewer cases, changing plans only where the old result was wrong."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error paths."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Semantic guard on a rewrite rule; mihaibudiu checked that it is conservative in the right direction (Boolean.FALSE.equals(mq.isEmpty(...)) so unknown means no rewrite)."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix, no new feature."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Restores expected results."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Comment, tests, and description agree."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "SQL semantics of scalar aggregates on empty input are the bug's premise, not an interpretation question."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "correctness"
+   ]
+  ],
+  "why": "Five-line guard with focused tests; one reviewer suffices."
+ }
+}

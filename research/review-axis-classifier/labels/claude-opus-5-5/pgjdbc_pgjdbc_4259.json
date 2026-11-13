@@ -1,0 +1,114 @@
+{
+ "key": "pgjdbc_pgjdbc_4259",
+ "summary": "On PostgreSQL 18+, invalidate the server-prepared statement cache when the server reports a search_path change via ParameterStatus (GUC_REPORT), and skip the SET/RESET command-tag scan once search_path is reported.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Behavior change on PG18+; SchemaTest adds searchPathPreparedStatementInPlpgsqlInvalidatesOnGucReport covering both pre-18 failure and 18+ re-prepare, and existing SET/RESET tests now run through the report path. Mandated, no concrete gap."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "server-prepare.md is rewritten to say PG18 'detects them wherever they happen and re-prepares automatically'; sehrope showed the $user + SET ROLE case where search_path text is unchanged, and the author agreed to tighten the wording and add a note about the limitation."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Non-obvious logic in receiveParameterStatus/processResults comes with accurate comments; test Javadocs updated consistently."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "User-visible behavior change with no CHANGELOG.md entry under the open 42.7.12 section (the entry was added later in the release-notes PR #4270)."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "receiveParameterStatus adds a string compare per search_path report and the SET scan is skipped on 18+; cheap, no measurement owed."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No auth, TLS, or untrusted-input parsing change; search_path value only compared."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "PG17 and older keep the command-tag scan unchanged; on 18+ invalidation becomes value-based, which only adds invalidations (and skips none that changed the value)."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "deallocateEpoch is bumped on the protocol-reading thread like the existing scan; no new shared state."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error path added or changed."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial protocol-driven invalidation; sehrope's review exposed that '\"$user\", public' plus SET ROLE changes resolution without a search_path value change, so the stale-plan error still occurs (pre-existing, but now claimed covered)."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes the real 'cached plan must not change result type' after hidden search_path changes on PG18; no new option."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "On 18+ changes inside PL/pgSQL now invalidate the cache; the user-visible effect is fewer errors, not surprises."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Docs claim versus the $user limitation is counted under user_docs; code comments, tests, and description agree."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build or CI change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Cache invalidation is silent as before; no new failure or fallback."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Relies on PostgreSQL 18 marking search_path GUC_REPORT and on ParameterStatus semantics; the use is correct and version-gated by the presence of the parameter."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "user_docs",
+    "change_description",
+    "correctness"
+   ]
+  ],
+  "why": "Small, cohesive change to one invalidation path; one reviewer can cover correctness, docs claims, and tests together."
+ }
+}

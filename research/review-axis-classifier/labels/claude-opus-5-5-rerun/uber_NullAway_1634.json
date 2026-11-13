@@ -1,0 +1,111 @@
+{
+ "key": "uber_NullAway_1634",
+ "summary": "Bumps the Gradle wrapper from 9.5.0 to 9.6.1 and the Android Gradle Plugin from 8.13.0 to 9.3.0, with regenerated wrapper scripts.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description is only 'To stay up to date'; internal build-only change owes no changelog entry, but a major AGP bump could note that nothing needed changing."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "correctness": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Build tooling change including a major AGP bump (8.13.0 -> 9.3.0, gradle/libs.versions.toml:9) that affects sample-app and jar-infer/test-android-lib-jarinfer (com.android.* plugins); CI passed and no follow-up change was needed."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "build_ci"
+   ]
+  ],
+  "why": "A small build-only version bump needs one build/CI check."
+ }
+}

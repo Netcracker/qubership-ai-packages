@@ -1,0 +1,21 @@
+{"key": "apache_calcite_5187",
+ "summary": "Fixes SqlUtil.filterOperatorRoutinesByKind to map the requested SqlKind through getFunctionKind() as well, so an operator whose kind is remapped (POSITION, CHAR_LENGTH) still matches itself when two candidates share a name.",
+ "axes": {
+  "tests": {"label": 2, "mandated": true, "finding": false, "evidence": "Bug fix; regression test chains SqlStdOperatorTable with itself and validates position/char_length/character_length, which fails without the fix."},
+  "user_docs": {"label": 0, "mandated": false, "finding": false, "evidence": "Internal lookup fix; no documented behavior changes."},
+  "doc_comments": {"label": 2, "mandated": false, "finding": true, "evidence": "mihaibudiu: 'this comment could be shorter' on SqlUtil and 'this comment is too long; please do not submit useless comments' on the test; both were cut in the follow-up commit 'Shorten comments per review comments'."},
+  "change_description": {"label": 2, "mandated": false, "finding": true, "evidence": "PR title is truncated with an ellipsis and the commit subject is overlong; mihaibudiu: 'Your commit message should be as long as the PR title'; the PR was resubmitted as #5197."},
+  "performance": {"label": 0, "mandated": false, "finding": false, "evidence": "Hoists one call out of the filter; no hot-path concern."},
+  "security": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "backward_compat": {"label": 1, "mandated": false, "finding": false, "evidence": "Operator lookup now accepts calls it wrongly rejected; kinds mapped to OTHER_FUNCTION now match each other in the fourth pass."},
+  "concurrency": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "error_model": {"label": 0, "mandated": false, "finding": false, "evidence": "Removes a spurious 'No match found' error; no error path added."},
+  "correctness": {"label": 1, "mandated": true, "finding": false, "evidence": "One-line symmetric mapping in SqlUtil.java:519; a quick check that widening the match for OTHER_FUNCTION-mapped kinds does not select a wrong overload is enough."},
+  "user_value": {"label": 0, "mandated": false, "finding": false, "evidence": "Bug fix, no new API."},
+  "surprising_behavior": {"label": 0, "mandated": false, "finding": false, "evidence": "Restores expected behavior."},
+  "contradictions": {"label": 1, "mandated": false, "finding": false, "evidence": "Comments and description agree with the code; only length was an issue."},
+  "build_ci": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "observability": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "spec_conformance": {"label": 0, "mandated": false, "finding": false, "evidence": "No external spec involved."}
+ },
+ "plan": {"mode": "single", "groups": [["tests", "doc_comments", "change_description"]], "why": "One-line fix plus a test; one reviewer can cover the code and the prose."}}

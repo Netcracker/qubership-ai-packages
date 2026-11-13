@@ -1,0 +1,114 @@
+{
+ "key": "uber_NullAway_1827",
+ "summary": "Adds renovate.json (schedule, dashboard approval for majors, version-catalog pins by sharedVariableName, disabled entries, GitHub actions grouping) and a workflow that validates the config and checks the pinned catalog aliases still exist.",
+ "axes": {
+  "tests": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Configuration only; verified by a local renovate dry-run and the alias check in CI, no unit tests owed."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Rule descriptions and workflow comments are extensive and mostly match the config; the one mismatch is counted under contradictions."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Long, well-reasoned description; it was later extended with the cooldown paragraph but was not deficient for the submitted change."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "security": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Supply-chain policy: msridhar asked for a 7-day cooldown against broken/hacked releases, added later as minimumReleaseAge with exemptions (final renovate.json); CodeRabbit also flagged the unpinned renovate/renovate:latest image run with the checkout mounted (kept deliberately, justified in a comment)."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Workflow copies the concurrency group #1818 settled on."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The alias-check script's core.setFailed messages name the missing aliases; a glance suffices."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial matching logic (matchJsonata on sharedVariableName, Gradle ranges, groupName vs group:monorepos) plus a JS alias checker; CodeRabbit found the Error Prone 'at any time' rule does not override dependencyDashboardApproval for majors, so Error Prone majors still wait for approval."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Maintainer-facing automation; reviewer debated whether manual approval for majors is worth it and kept it 'to see how annoying it is'."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Every major across managers goes to the dashboard; description states it."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Error Prone rule description says PRs 'open as soon as a release lands', but the global major rule still requires dashboard approval; the final version adds 'A major Error Prone release still needs dependency dashboard approval' to the description."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New .github/workflows/renovate-config-lint.yml and renovate.json drive dependency updates and CI; the whole PR is build/dependency infrastructure."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Relies on Renovate config semantics (Gradle range syntax, packageRules merging); the dashboard-approval merge issue is counted under correctness."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "build_ci",
+    "security",
+    "correctness",
+    "contradictions"
+   ]
+  ],
+  "why": "Two cohesive config files; one reviewer versed in Renovate and Actions can cover supply-chain, rule logic and description consistency together."
+ }
+}
