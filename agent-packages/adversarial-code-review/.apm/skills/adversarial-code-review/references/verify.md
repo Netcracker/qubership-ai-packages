@@ -30,7 +30,14 @@ Give this to a fresh subagent after every axis has written its findings.
 >
 > Then across findings:
 >
-> - Merge findings from different axes that ask for the same change; keep the higher severity and both axes' evidence.
+> - Drop a finding that raises again the defect or question of a `previous_findings` entry in
+>   `<work>/review-head.json` whose `status` is `scope_deferred`: its follow-up issue tracks it. Drop one that raises
+>   again an entry with `withdrawn` or `resolved_by_clarification` too, unless its evidence answers the entry's `reason`
+>   or shows a consequence the thread did not consider. Keep such a finding as a continuation of the thread: set its
+>   `prior_thread` to the entry's `thread_url`, and the entry's `status` to `fix_not_accepted`, with a `reason` that
+>   says what the evidence adds.
+> - Merge findings from different axes that ask for the same change; keep the higher severity, both axes' evidence, and
+>   any `prior_thread`.
 > - Set the `origin`, `introduced_by`, and `disposition` of every remaining finding by `origin.md`, so that each defect
 >   is traced once; a finding from `axes/previous.json` keeps the ones it carries. To run anything, add your own
 >   worktree first
@@ -45,6 +52,6 @@ Give this to a fresh subagent after every axis has written its findings.
 > - In each `previous_findings` entry whose thread a finding continues (its `prior_thread`), set `finding_id` to that
 >   finding's id; delivery reads the thread's severity from it.
 >
-> Write `<work>/review.json` by `<schema>`: every field of `<work>/review-head.json` as it is, except those
-> `finding_id` values, plus `findings` and `classes`. Reply with: findings kept per severity, findings dropped with a
-> one-line reason each, and the classes.
+> Write `<work>/review.json` by `<schema>`: every field of `<work>/review-head.json` as it is, except the
+> `previous_findings` entries changed above, plus `findings` and `classes`. Reply with: findings kept per severity,
+> findings dropped with a one-line reason each, and the classes.
