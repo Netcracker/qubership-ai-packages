@@ -58,8 +58,9 @@ compare the text with the proposed solution.
 
 - A claim about a comment covers the comment and the declaration it describes; a claim about a condition covers the
   condition and the branch it guards; a claim about one line is that line, with `end_line` equal to `start_line`.
-- Keep the range within one hunk and to about 25 lines. Where the subject is longer, such as a whole method or test,
-  narrow the range to the lines the claim is about: the signature, the one branch, the one assertion.
+- Keep the range within one hunk and to at most 25 lines as the diff shows them: the lines of the range and the removed
+  lines between them, since the platform shows both above the comment. Where the subject is longer, such as a whole
+  method or test, narrow the range to the lines the claim is about: the signature, the one branch, the one assertion.
 
 Where the finding carries a `suggestion`, the range is exactly the lines the suggestion replaces, on the new side.
 
