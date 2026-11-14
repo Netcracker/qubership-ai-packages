@@ -304,14 +304,11 @@ the state of the submitted review (changes requested, or commented) shows the de
 `REVIEW_INCOMPLETE`, which no review state shows. The rest of the general comment is only these parts, in this order:
 
 ```markdown
-Revision: `3c85f644...0c8d9fd3`.
-
 Out of scope: rules of ADR-0091 to ADR-0096 that #202 and #232 implement.
 
-**Main problems**
+Two things block the merge for me. A key that fails to parse now drops every key of its realm (F31), and no test reloads a realm whose source fails (F33).
 
-1. The realm summary line is not pinned: joinReloadErrors builds it in map order, and its test matches only prefixes (F35, F47).
-2. The User-visible lines quote the intended texts, not the emitted ones (F40, F41).
+F35 and F47 are one change: build the realm summary line in a fixed order, and pin the whole line in its test. The rest are small.
 
 **Not inline**
 
@@ -320,26 +317,38 @@ Out of scope: rules of ADR-0091 to ADR-0096 that #202 and #232 implement.
 Problem: …
 
 **F50 nit** `internal/token/keys/timing_test.go:122`, outside the diff: the comment on publish says it sets "the JWKS of every source", which no longer holds for realms.
+
+Reviewed at [`0c8d9fd3`](https://github.com/<owner>/<repo>/compare/3c85f644...0c8d9fd3).
 ```
 
-- *Revision*, optional `Assessed by`, and *Out of scope* take one line each. Include `Coverage` only for
-  `REVIEW_INCOMPLETE`.
+The parts are paragraphs with no headings, except the lead-in of *Not inline*, and each is absent when it would be
+empty:
+
+- *Out of scope*: one line, first.
 - *Previous findings*: only the earlier threads the publishing account does not own, with a status other than
   `fix_accepted`, one line each: `- [F6](<thread_url>): <status>; <reason>`. A `fix_accepted` thread is resolved, the
   other statuses are answered in their own thread (*Synchronize discussion state*), and a remaining defect is a finding
   of this round, so the general comment does not repeat them.
-- *Main problems*: one line per class, without the severity: the root cause, then the ids of its findings in
-  parentheses, as plain text, not links: each inline comment opens with its tag, so a reader finds it by the id. A
-  class left with one published finding is dropped, because that finding already stands on its own; a held finding, or
-  one whose comment the user deleted from a draft, is not published.
+- *What blocks the merge*: one clause for each published `major` finding of this change, saying what goes wrong for
+  which input in the author's terms, with its id in parentheses. A commit hash or the inner workings of a method do not
+  belong here; the inline comment carries them.
+- *Shared fixes*: one sentence per class with at least two published findings, saying which one change resolves them,
+  with their ids as plain text. A class left with one published finding is dropped, because that finding already
+  stands on its own; a held finding, or one whose comment the user deleted from a draft, is not published. Where
+  findings remain that block nothing, a short sentence says so instead of listing them.
 - *Not inline*: the findings that cannot be placed inline, each in the *One finding* form, with the location and the
   reason after the tag, and nothing between them.
+- *Reviewed at*, last, with `Assessed by` and `Coverage` (for `REVIEW_INCOMPLETE` only) on lines before it: the head as
+  a link to the reviewed range. On GitHub that is `https://github.com/<owner>/<repo>/compare/<base>...<head>`: the
+  pull request's files view accepts only its own commits, and the base is not one. On GitLab it is
+  `<project web_url>/-/compare/<base>...<head>`.
 
 Write the general comment to `review-body.md` next to `ledger.md`, and give the user its path with the review's URL:
 GitHub does not show the body of a pending review in its web UI.
 
-The general comment carries what the inline comments cannot: the findings that are not inline, and the causes that
-several inline findings share. Do not copy inline findings, their claims, or pointers such as "See inline comment".
+The general comment carries what the inline comments cannot: what blocks the merge, the findings that are not inline,
+and the fixes that several inline findings share. Do not copy inline findings, their problems, or pointers such as
+"See inline comment".
 
 The user may delete inline comments from a draft before submitting it. When they ask for the general comment again,
 read the draft's comments back from the platform first (each platform reference says how), match each to its finding
