@@ -4,6 +4,37 @@ What did this code promise people who already depend on it, and does the change 
 repository is, from its build and README: a library or tool that others call or build against, or a service or
 deployment that others run. Check the matching list, and both where it is both.
 
+## Released contracts
+
+A contract is what a release shipped. Take the newest release by version: the release tags sorted with `git tag --list
+--sort=-v:refname`, skipping pre-release and moving tags such as `latest`, or the newest published package or chart
+version. Where that release is not an ancestor of `<base>` (`git merge-base --is-ancestor`), compare with its tree
+rather than with the base branch. An API, parameter, default, or format added after that release, on the base branch or
+earlier in this change, is not a contract yet, and changing or removing it is not a finding. Where the repository has
+no releases, treat the base branch as released.
+
+## Support window
+
+A Netcracker repository, on GitHub under `Netcracker/` or on the company's own GitLab, follows the platform policy
+below, and a window the repository documents applies there only where it is longer. Any other repository follows the
+window it documents in `AGENTS.md`, `CONTRIBUTING.md`, or a compatibility policy.
+
+- A released contract stays until it is deprecated, and a deprecated one stays for 3 years after the deprecation date.
+  The contract covers APIs, events, data formats, feature behavior, and deployment and runtime parameters with their
+  names, meaning, defaults, and optionality. An optional parameter or feature that leaves existing consumers unchanged
+  can be added at any time.
+- Before the window ends, each of these is a break: removing or incompatibly changing the contract, renaming or removing
+  a parameter, making an optional parameter required, changing a default so that existing consumers behave differently,
+  and an upgrade that needs the consumer to edit its configuration, pipelines, or descriptors.
+- A removal after the window ships in a new major version. Take the deprecation date from the repository: a deprecation
+  annotation, the changelog, or the documentation. Where the repository does not record it, write a `kind: question`
+  finding that asks for it. Where the change sets the version (a build file, a chart, a `!` or `BREAKING CHANGE` commit
+  marker), check that it is a new major version; where the version is set at release time, ask in a `kind: question`
+  finding.
+- A change that deprecates something states, in a deprecation annotation, the changelog, or the description, what
+  replaces it, the deprecation date, and the earliest removal date, at least 3 years later. The description names the
+  entry in the platform deprecation registry.
+
 ## Library or tool
 
 - Source and binary API.
@@ -17,7 +48,7 @@ deployment that others run. Check the matching list, and both where it is both.
 
 ## Service or deployment
 
-- **Baseline:** unless the repository documents a different support window or intentional breaking migration, use
+- **Baseline:** where no support window applies and the repository documents no intentional breaking migration, use
   project-defined installation and deployment parameters that were valid two years before the head commit.
 - **Contracts:** keep existing APIs and CRDs, request and schema payloads, and installation or deployment parameter sets
   valid. New fields and parameters must be optional or have compatibility-preserving defaults.
@@ -42,11 +73,15 @@ deployment that others run. Check the matching list, and both where it is both.
 
 ## Not a finding
 
-An intended break the description states, with the migration path a user follows. Where exact compatibility with a
-replaced technology is impractical, the finding is a missing migration path, not the replacement.
+An intended break the description states, with the migration path a user follows. Under the platform policy, that
+holds only for a removal after the window in a new major version, or for a break the description says was approved as
+an exception to the policy. Where exact compatibility with a replaced technology is impractical, the finding is a
+missing migration path, not the replacement.
 
 ## Severity
 
 An unannounced break for an input, call, or configuration that worked before is `major`. A passed value that means
 something else for the new consumer, or makes it ask for something nothing provides, is `major`. A stop between
 steps, or a retry, that loses or duplicates stored data, or repeats an irreversible step, is `major`.
+Under the platform policy, a break before the window ends, or a removal outside a new major version, is `major`. A
+deprecation that does not state its replacement, deprecation date, earliest removal date, or registry entry is `minor`.
