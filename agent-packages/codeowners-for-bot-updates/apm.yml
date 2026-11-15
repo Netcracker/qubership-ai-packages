@@ -1,0 +1,3 @@
+name: codeowners-for-bot-updates
+version: 1.0.0
+description: Edit CODEOWNERS so automerged Renovate and Dependabot PRs stop requesting review from code owners.
