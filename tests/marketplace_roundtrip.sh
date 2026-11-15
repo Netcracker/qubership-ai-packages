@@ -113,6 +113,8 @@ require_dep_count() {  # $1 = manifest, $2 = expected count
 legacy_repo="$repo_root/agent-packages/qubership-essentials/apm.yml"
 legacy_global="$repo_root/agent-packages/qubership-global-essentials/apm.yml"
 new_user="$repo_root/agent-packages/qubership-user-essentials/apm.yml"
+new_repo="$repo_root/agent-packages/qubership-repo-essentials/apm.yml"
+common="$repo_root/agent-packages/qubership-common-essentials/apm.yml"
 
 grep -qE '^description: .*Deprecated' "$legacy_repo" || fail "qubership-essentials must be marked deprecated"
 for dep in apm-authoring codex-review english-us-developer-style markdown-line-length-120 \
@@ -131,8 +133,13 @@ require_dep_count "$legacy_global" 8
 for manifest in "$legacy_repo" "$legacy_global"; do
   reject_dep "$manifest" qubership-repo-essentials
   reject_dep "$manifest" qubership-user-essentials
+  reject_dep "$manifest" qubership-common-essentials
 done
-require_dep "$new_user" qubership-repo-essentials
+require_dep "$new_user" qubership-common-essentials
+require_dep "$new_repo" qubership-common-essentials
+# The backward-compatibility rule of qubership-repo-essentials must not reach a developer machine.
+reject_dep "$new_user" qubership-repo-essentials
+reject_dep "$common" qubership-repo-essentials
 
 root_dependencies="$(sed -n '/^dependencies:/,/^marketplace:/p' "$repo_root/apm.yml")"
 printf '%s\n' "$root_dependencies" | grep -Fq 'agent-packages/qubership-essentials' || \
@@ -147,7 +154,7 @@ grep -Fq 'agent-packages/qubership-essentials' "$support_skill" || \
 if grep -Fq 'agent-packages/qubership-repo-essentials' "$support_skill"; then
   fail "existing repository onboarding migration is out of scope"
 fi
-ok "deprecated essentials stay independent while new user essentials nests repo essentials"
+ok "deprecated essentials stay independent while new repo and user essentials share common essentials"
 
 write_pkg() {  # $1 = version
   mkdir -p "$pkg/.apm/skills/demo" "$pkg/.apm/instructions" "$dep_pkg/.apm/skills/demo-dep"

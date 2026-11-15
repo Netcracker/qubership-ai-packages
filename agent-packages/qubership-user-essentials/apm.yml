@@ -1,11 +1,11 @@
 name: qubership-user-essentials
-version: 1.5.0
-description: "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, a final pre-commit review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, test authoring, problem-report authoring, telemetry authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
+version: 1.6.0
+description: "Umbrella package with the Qubership agent setup for a global user workspace: the shared Qubership baseline plus code review, a final pre-commit review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, test authoring, problem-report authoring, telemetry authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python."
 dependencies:
   apm:
-    # The per-repository baseline and the other sibling packages in this
-    # repository, resolved from the same commit as this one.
-    - ../qubership-repo-essentials
+    # The base shared with qubership-repo-essentials and the other sibling
+    # packages in this repository, resolved from the same commit as this one.
+    - ../qubership-common-essentials
     - ../triage-dependency-prs
     - ../enable-renovate-automerge
     - ../adr-authoring
