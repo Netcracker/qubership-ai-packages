@@ -236,28 +236,30 @@ Classify each item. Your advantage over both reviewers is that you know why the 
   findings and rejected none; **a run that never rejects is not agreeing with its reviewers, it is
   not checking them**.
 
-- **An item at the symbol of an earlier fix may be the same property again.** `merge-apply` prints,
-  under `same_site`, the earlier fixes at each item's symbol, and at its own id where an earlier
-  round fixed it. Decide which of them get wrong the property the new item does (*which requests act
-  for a user*, *which targets have unspecified nullness*), list those in the decision's
-  `same_property` (`[]` where none does; an item's own earlier fix is always listed), and name the
-  property in `family`: one sentence, reused verbatim for every member. `ledger-apply` refuses the
-  round until you do, and the listed fixes join the family, so two properties at one symbol stay
-  apart. A rejected item needs neither field. A follow-up stays on the report's list until a later
-  fix of the same item, or of another member of its family, removes the cause. Where an earlier fix
-  in the family added a case (`fix_shape: adds_case`), the new item is an input that case list
-  missed, and another case is what the next round refiles on the input beside it. A case analysis
-  over a closed set, such as an enum, a sealed hierarchy, or the productions of a grammar, has no
-  input beside it: a fix that makes it exhaustive is `removes_cause`. Otherwise, fix it so the
-  property is computed where it is owned (`removes_cause`), or take out of the change the decisions
-  that depend on it (`narrows`), with a `follow_up` naming the issue or change that will compute it.
-  Where computing it is more work than the change's own purpose, the choice is the user's: ask,
-  listing the inputs that failed.
+- **An item at the symbol of an earlier fix may be the same property again.** A fix that handles
+  one more input of a property removes the finding that reported it, and the next round reports the
+  input beside it under a new id, so the run adds one case per round until `max_rounds`. For each
+  item that `merge-apply` lists under `same_site` (the earlier fixes at its symbol, and its own id
+  where an earlier round fixed it):
 
-  Measured on one run: `subject_of` gained one input per round, the query as well as the body, then
-  an empty value read as absent, then the first value as `replay.user_id`, which owns it, reads it.
-  The third fix landed at `max_rounds`, so nothing reviewed it. §5b asks for the invariant of one
-  fix, and the two fixes before it were not in front of the author, so it caught none of them.
+  1. **Name the property** the new item gets wrong, in one sentence about the input rather than the
+     code: *which callers act for a user*, *whether a value can be absent*. Reuse the sentence
+     verbatim, in `family`, for every member.
+  2. **List the earlier fixes that get it wrong too** in `same_property`: `[]` where none does, and
+     the item's own earlier fix always. The listed fixes join the family, so two properties at one
+     symbol stay apart. `ledger-apply` refuses the round until the list is there; a rejected item
+     needs neither field.
+  3. **Choose the shape of the fix.** Where an earlier fix in the family added a case
+     (`fix_shape: adds_case`), the new item is an input that case list missed, and `ledger-apply`
+     refuses another case. Compute the property where it is owned (`removes_cause`), or take the
+     decisions that depend on it out of the change (`narrows`), with a `follow_up` naming the issue
+     or change that will compute it. Where computing it is more work than the change's own purpose,
+     the choice is the user's: ask, listing the inputs that failed. A case analysis over a closed
+     set, such as an enum, a sealed hierarchy, or the productions of a grammar, has no input beside
+     it: a fix that makes it exhaustive is `removes_cause`.
+
+  A follow-up stays on the report's list until a later fix of the same item, or of another member of
+  its family, removes the cause.
 
 - **A comment finding is two different findings.** *This sentence states something the code does not
   do* is a defect like any other: it misleads the next reader, and the next round's reviewer is one

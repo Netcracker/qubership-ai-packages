@@ -1304,7 +1304,7 @@ def outstanding_follow_ups(state: Dict[str, Any]) -> List[Tuple[str, str]]:
 
 def same_symbol(a: Optional[str], b: Optional[str]) -> bool:
     """Tell whether two anchor symbols name one declaration, where one reviewer qualified it and the other
-    did not (``PlaceCfg#subject_of`` and ``subject_of``)."""
+    did not (``Parser#parse`` and ``parse``)."""
     if not a or not b:
         return False
     short, long_ = sorted((a, b), key=len)
