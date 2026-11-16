@@ -307,12 +307,15 @@ def pattern_sort_key(pattern):
 
 
 def strip_block(text):
-    """Return the lines of text without the generated block."""
+    """Return the lines of text without the generated block, and the number of
+    lines before the block, or None when text has no block."""
     begin = BLOCK_BEGIN.split(":")[0]
-    out, inside = [], False
+    out, inside, at = [], False, None
     for line in text.splitlines():
         if line.strip().startswith(begin):
             inside = True
+            if at is None:
+                at = len(out)
         elif line.strip() == BLOCK_END and inside:
             inside = False
         elif not inside:
@@ -320,21 +323,26 @@ def strip_block(text):
     if inside:
         raise ValueError("%s has no %s line after it; restore the line so the lines after "
                          "the block are not lost" % (begin, BLOCK_END))
-    return out
+    return out, at
 
 
-def block_position(lines):
-    """Return the number of lines the generated block goes after: those up to
-    the last * line, or all of them when no line is *."""
-    stars = [no for no, pattern, _ in parse_codeowners("\n".join(lines)) if pattern == "*"]
-    return stars[-1] if stars else len(lines)
+def block_position(text):
+    """Return the lines of text without the generated block, and the number of
+    lines the block goes after. The block stays where it is, so a block the
+    user moved by hand stays at its new place; a file without one gets it
+    after the last * line, or at the end when no line is *."""
+    lines, at = strip_block(text)
+    if at is None:
+        stars = [no for no, pattern, _ in parse_codeowners("\n".join(lines)) if pattern == "*"]
+        at = stars[-1] if stars else len(lines)
+    return lines, at
 
 
 def replace_block(text, lines):
-    """Remove the generated block from text and insert a new one with lines
-    right after the * line, so the lines after it override the block."""
-    out = strip_block(text)
-    at = block_position(out)
+    """Replace the generated block in text with one that holds lines, or add
+    it after the last * line, or at the end when no line is *, so the lines
+    after it override the block."""
+    out, at = block_position(text)
     head, tail = out[:at], out[at:]
     while head and not head[-1].strip():
         head.pop()
@@ -343,18 +351,17 @@ def replace_block(text, lines):
     while tail and not tail[-1].strip():
         tail.pop()
     block = [BLOCK_BEGIN, BLOCK_COMMENT] + lines + [BLOCK_END]
-    return "\n".join(head + [""] + block + ([""] + tail if tail else [])) + "\n"
+    return "\n".join(head + ([""] if head else []) + block + ([""] + tail if tail else [])) + "\n"
 
 
 def override_owners(text, matcher, paths):
     """Map each of paths to the owners an override line in the block must give
-    it: those of its last matching line up to the * line. A path whose last
-    matching line follows the * line keeps its owners without an override, and
+    it: those of its last matching line before the block. A path whose last
+    matching line follows the block keeps its owners without an override, and
     one whose last matching line has no owners gets none. The generated block
     is left out, or a rerun would copy the owners of the previous run's
     override lines."""
-    lines = strip_block(text)
-    at = block_position(lines)
+    lines, at = block_position(text)
     found = last_match(parse_codeowners("\n".join(lines)), matcher, paths)
     return {p: rule[2] for p, rule in found.items() if rule and rule[2] and rule[0] <= at}
 

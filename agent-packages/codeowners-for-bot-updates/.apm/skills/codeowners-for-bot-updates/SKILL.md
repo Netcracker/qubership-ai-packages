@@ -56,9 +56,10 @@ The summary lines decide whether the change is safe at all:
   removes the code-owner approval requirement from human PRs to those files too, `.github/workflows/` included, not
   just a review request. With `false`, the change removes only review requests: say so in the PR description.
 - `pr_assigner_workflows` and `pr_assigner_warnings`: Netcracker's `pr-assigner` assigns the owners of the first line
-  that starts with `*`, or of the last line when no line does. The block goes right after the `*` line, so the `*` line
-  stays the first one; a CODEOWNERS file with no `*` line gets the block at the end and needs the user's decision before
-  it is written, because the block's `*Dockerfile*` or `*.gradle` line would come first.
+  that starts with `*`, or of the last line when no line does. The first run puts the block right after the `*` line, so
+  the `*` line stays the first one, and a block moved above it makes pr-assigner read a block line, which
+  `pr_assigner_warnings` reports; a CODEOWNERS file with no `*` line gets the block at the end and needs the user's
+  decision before it is written, because the block's `*Dockerfile*` or `*.gradle` line would come first.
 - `lock_file_maintenance`: when `turn_on_automerge` is `true`, lock file maintenance PRs were merged by hand, and their
   files go ownerless anyway. The same PR then sets `"lockFileMaintenance": {"automerge": true}` in
   `renovate.json`, unless a preset the repository extends already does (Netcracker's
@@ -102,11 +103,11 @@ presets it extends (`github>Netcracker/renovate-config:automerge` and others), f
   assignees from CODEOWNERS, the block changes those too.
 
 When a pattern in the block matches a `keep` path, the script keeps the pattern so it covers files added later. A path
-whose last matching line comes after the `*` line keeps its owners through that line. A path owned by the `*` line, or
-by any line of a file that has no `*` line, gets an override line after the patterns, inside the block, with that line's
-owners; the old block is left out of this lookup, so a rerun follows an ownership change. A path whose last matching
-line has no owners gets no override and shows in the check of step 5. Check that the owners on each override line are
-the ones the user wants.
+whose last matching line comes after the block keeps its owners through that line. A path owned by a line before the
+block, the `*` line or a line a user put above a moved block, gets an override line after the patterns, inside the
+block, with that line's owners; the old block is left out of this lookup, so a rerun follows an ownership change. A path
+whose last matching line has no owners gets no override and shows in the check of step 5. Check that the owners on each
+override line are the ones the user wants.
 
 ## 4. Write the block
 
@@ -116,13 +117,13 @@ Write it with the script, which replaces the block in the clone's CODEOWNERS fil
 python3 -I <skill-dir>/scripts/bot_paths.py --repo <owner>/<name> --repo-dir <clone> --write
 ```
 
-The block sits right after the last `*` line, or at the end of a file with no `*` line, between
-`# BEGIN codeowners-for-bot-updates: ...` and `# END codeowners-for-bot-updates`. A later run with `--write` removes
-the old block and writes the new one in that place, so the block follows the history without hand edits. Lines outside
-the markers, the `*` line and its owners included, stay as they are, and project lines that override the block belong
-after it. The patterns are sorted by name, ignoring a leading `/` or `*`, and the comment in the block links to this
-skill. Remove an earlier ownerless block written by hand before the first run, or it stays in the file beside the
-generated one.
+The first run puts the block right after the last `*` line, or at the end of a file with no `*` line, between
+`# BEGIN codeowners-for-bot-updates: ...` and `# END codeowners-for-bot-updates`. A later run with `--write` replaces
+what is between the markers and leaves the block where it stands, so the block follows the history without hand edits,
+and a block the user moved stays at its new place. Lines outside the markers, the `*` line and its owners included, stay
+as they are, and project lines that override the block belong after it. The patterns are sorted by name, ignoring a
+leading `/` or `*`, and the comment in the block links to this skill. Remove an earlier ownerless block written by hand
+before the first run, or it stays in the file beside the generated one.
 
 A pattern comes from the history, from the always-on list (`/.github/workflows/`, `*Dockerfile*`, the compose files,
 `*.gradle`, `*.gradle.kts`), or from an ecosystem found in the tree: `go.mod` and `go.sum` for Go, `pom.xml` for

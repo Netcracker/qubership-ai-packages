@@ -33,8 +33,9 @@ skill asks the user before writing it.
    after the block owns.
 4. Reports what decides whether the change is safe: whether the branch rules require code-owner review, how
    `pr-assigner` reads the file, and how lock file maintenance PRs are merged.
-5. Writes the block between marker lines right after the `*` line of CODEOWNERS, so a later run replaces it, and checks
-   the result against the same history before the PR is opened.
+5. Writes the block between marker lines right after the `*` line of CODEOWNERS, and checks the result against the same
+   history before the PR is opened. A later run replaces the block where it stands, so a block moved by hand stays at
+   its new place.
 
 The script needs `gh` with read access to the repository, `git`, and Python 3.9 or later. It does not change any
 repository.

@@ -12,10 +12,11 @@ change against that goal:
   `charts/production/values.yaml` added after the run. Do not add code that reads the effective Renovate configuration,
   inherited presets included, or that tracks each such file. The owners fix one with a line after the block or with
   `--keep`.
-- **Project ownership lives after the block.** The block goes right after the `*` line, so every line after it wins
-  over the block, and a bot PR to a file such a line owns still requests review: the report lists those paths, and
-  that is accepted too. Override lines inside the block cover only the kept paths that no line after the block owns;
-  their owners are read from the file with the old block left out.
+- **Project ownership lives after the block.** The first run puts the block right after the last `*` line, and a rerun
+  keeps it where it stands, so a block a user moved stays there. Every line after the block wins over it, and a bot PR
+  to a file such a line owns still requests review: the report lists those paths, and that is accepted too. Override
+  lines inside the block cover only the kept paths that no line after the block owns; their owners are read from the
+  lines before the block, with the old block left out.
 - **Well-known files go ownerless for people's PRs too.** The always-on patterns, `/.github/workflows/` included,
   and the ecosystem manifests cover files no bot changed yet, so a person's PR that changes only them requests no
   review. The guard is the check of the branch rules: where they require code-owner review, the skill asks the user

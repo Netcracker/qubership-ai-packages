@@ -190,12 +190,19 @@ class ReplaceBlockTest(unittest.TestCase):
                                     bot_paths.BLOCK_COMMENT, "go.mod", bot_paths.BLOCK_END, "",
                                     "/docs/ @writers"]) + "\n", got)
 
-    def test_a_rerun_moves_a_block_from_the_end_to_after_the_star_line(self):
+    def test_a_rerun_replaces_the_block_where_it_stands_after_project_lines(self):
         old = "\n".join(["* @owner", "/docs/ @writers", "", bot_paths.BLOCK_BEGIN, "go.mod",
-                         bot_paths.BLOCK_END]) + "\n"
+                         bot_paths.BLOCK_END, "", "/apps/ @apps-team"]) + "\n"
         got = bot_paths.replace_block(old, ["pom.xml"])
-        self.assertEqual("\n".join(["* @owner", "", bot_paths.BLOCK_BEGIN, bot_paths.BLOCK_COMMENT,
-                                    "pom.xml", bot_paths.BLOCK_END, "", "/docs/ @writers"]) + "\n", got)
+        self.assertEqual("\n".join(["* @owner", "/docs/ @writers", "", bot_paths.BLOCK_BEGIN,
+                                    bot_paths.BLOCK_COMMENT, "pom.xml", bot_paths.BLOCK_END, "",
+                                    "/apps/ @apps-team"]) + "\n", got)
+
+    def test_a_block_moved_above_the_star_line_stays_there(self):
+        old = "\n".join([bot_paths.BLOCK_BEGIN, "go.mod", bot_paths.BLOCK_END, "* @owner"]) + "\n"
+        got = bot_paths.replace_block(old, ["pom.xml"])
+        self.assertEqual("\n".join([bot_paths.BLOCK_BEGIN, bot_paths.BLOCK_COMMENT, "pom.xml",
+                                    bot_paths.BLOCK_END, "", "* @owner"]) + "\n", got)
 
     def test_the_block_goes_after_the_last_of_two_star_lines_and_a_rerun_changes_nothing(self):
         once = bot_paths.replace_block("* @a\n/docs/ @writers\n* @b\n# apps\n/apps/ @apps-team\n", ["go.mod"])
@@ -225,6 +232,12 @@ class OverrideOwnersTest(unittest.TestCase):
         got = bot_paths.override_owners(text, self.matcher, ["apps/ui/package.json", "tools/package.json"])
         self.assertEqual({"apps/ui/package.json": ["@owner"], "tools/package.json": ["@owner"]}, got,
                          "the override lines of the old block give @ui-team, which no line outside it does")
+
+    def test_a_path_a_line_above_a_moved_block_owns_gets_an_override(self):
+        text = "\n".join(["* @owner", "/apps/ui/ @ui-team", bot_paths.BLOCK_BEGIN, "package.json",
+                          bot_paths.BLOCK_END, "/tools/ @tools-team"]) + "\n"
+        got = bot_paths.override_owners(text, self.matcher, ["apps/ui/package.json", "tools/package.json"])
+        self.assertEqual({"apps/ui/package.json": ["@ui-team"]}, got)
 
     def test_without_a_star_line_every_owned_path_gets_an_override(self):
         got = bot_paths.override_owners("/apps/ui/ @ui-team\n", self.matcher, ["apps/ui/package.json"])
