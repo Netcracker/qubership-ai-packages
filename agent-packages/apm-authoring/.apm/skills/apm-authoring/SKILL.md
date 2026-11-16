@@ -216,7 +216,9 @@ Avoid in the trigger:
 
 The skill is what the agent reads **after** it decides to engage. Its job
 is to teach the agent things it cannot infer from imports, types, or
-generic documentation. Four rules:
+generic documentation. What any instruction tells an agent, in any
+harness, and how to change one after a failed case or eval run, is
+`agent-instruction-authoring`. Four rules:
 
 ### 1. Encode platform-specific knowledge, nothing else
 
@@ -282,18 +284,20 @@ once, in active voice, and let them apply to both directions.
 
 ### 4. Fix a bad output where the rule stops, not by adding what to write
 
-This applies to a skill and to any instruction file an agent reads
-(`*.instructions.md`, `AGENTS.md`, `CLAUDE.md`, a rule file). When an
-agent leaves a part of its output empty or fills it with something wrong
-(a commit body that guesses at a cause, a review that pads a section
-with "none found because…"), first give that part a condition that ends
-it: when the part is absent, and, where it is owed, what to state and
-where to stop. A clause on where to stop bounds the part on the inputs
-that need it; only the condition on when it is absent keeps it off the
-inputs where it is noise. A rule that says "write X" fires on every
-input, including those where X is noise, and such rules pile up one per
-bad output until every output carries all of them. Add one only where
-the reader needs X on every input.
+This is `agent-instruction-authoring` rule *Give every rule its
+boundary*, applied to one part of an output. It applies to a skill and
+to any instruction file an agent reads (`*.instructions.md`,
+`AGENTS.md`, `CLAUDE.md`, a rule file). When an agent leaves a part of
+its output empty or fills it with something wrong (a commit body that
+guesses at a cause, a review that pads a section with "none found
+because…"), first give that part a condition that ends it: when the part
+is absent, and, where it is owed, what to state and where to stop. A
+clause on where to stop bounds the part on the inputs that need it; only
+the condition on when it is absent keeps it off the inputs where it is
+noise. A rule that says "write X" fires on every input, including those
+where X is noise, and such rules pile up one per bad output until every
+output carries all of them. Add one only where the reader needs X on
+every input.
 
 Before adding a rule to a section, read the rules that earlier failures
 added there (`git log -S '<phrase>'` finds each one's commit and
