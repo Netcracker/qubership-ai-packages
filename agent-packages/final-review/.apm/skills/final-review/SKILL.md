@@ -5,13 +5,13 @@ description: >-
   written and before the commit is final: "run the final review" or "check the change before I
   commit". Reviews one change against a fixed form: every doc comment added or changed, and every
   comment left above changed code, consistent with the code and with the other comments in the
-  file; every case the task statement, the commit message, and the class comments claim, covered
-  by a named test; boundaries, invalid partitions, and the negative control present; names and
-  comments that refer by content rather than by position or ordinal; assertions that print the
-  operands. Every item gets an answer, "none" included, with evidence. Findings are sorted
-  substantive, taste, or churn, and only the first kind is a request. A change with no code, such
-  as a skill, AGENTS.md, a docs page, or a configuration, fills the same form through the
-  analogues the skill names. Not a general code review; for that use the code-review skills.
+  file; every claimed case covered by a named test; boundaries, invalid partitions, and the
+  negative control present; names by content rather than by position; assertions that print the
+  operands; a member the branch kept adding cases to. Every item gets an answer, "none" included,
+  with evidence. Findings are sorted substantive, taste, or churn, and only the first kind is a
+  request. A change with no code, such as a skill, AGENTS.md, a docs page, or a configuration,
+  fills the same form through the analogues the skill names. Not a general code review; for that
+  use the code-review skills.
 ---
 
 # Final review of a change
@@ -43,6 +43,10 @@ twice, and a word the change coins as a term. A pass over the prose for style al
   followed by its line, tagged `code-changed, comment-unchanged`, `comment-added`, `comment-changed`, or
   `code-changed, no-comment`. The first tag is the list of comments to re-read that nobody edited; the parse is
   approximate, so a member it misses is still yours to find.
+- The output of `scripts/comment-drift.py --history <base> [<head>]`, for item 8: every member outside the test sources
+  that three or more commits of the branch changed, with the subject of each commit.
+- The `report.md` of a cross-review run over the change, where one ran: its families stand in for the history of a
+  change squashed into one commit.
 
 ## 2. The form
 
@@ -143,7 +147,8 @@ other value of that setting, or the other mode, present as the control that stay
 suite that tests only the failing corner is a finding, named as such. Where the change reads or replaces something an
 earlier version left behind (a configuration file, keys, a persisted format, a cache, deployed objects), ask which
 pre-existing state the change will meet. A change whose every test and run starts from a fresh install is a finding;
-the request is a test or a run that starts from that state, or the documented remedy, run on that state.
+the request is a test or a run that starts from that state, or the documented remedy, run on that state. Where the
+missing input is one more shape for a member item 8 files a finding on, the request is item 8's.
 
 The values users already pass are such state too. Where an existing setting (a pass-through variable, a flag, an
 environment variable) now reaches a consumer it did not reach before, check the values users pass through it, not only
@@ -231,6 +236,33 @@ helper does not find: a twin target, the other major version of a tool, the othe
 remedy, troubleshooting row, and step the change writes: list the paths its symptom or its cause names, and check that
 its action names a step for each. A row whose symptom names two targets and whose action names one is a finding. A fix
 made in answer to a review comment is where this is missed: the comment names one path, and the fix covers that one.
+Where the uncovered path is one more shape for a member item 8 files a finding on, the request is item 8's, not the
+path.
+
+### Item 8: cases added at one site
+
+For each member the `--history` output lists, read the commit subjects and their hunks in it, and decide whether two or
+more of them each made the member handle one more input shape for the same decision (`Preserve annotated targets for
+conditional method references`, `Preserve unmarked target exemptions through generic lambda returns`). A member edited
+for unrelated reasons is not a finding, and neither is a case analysis over a closed set, such as an enum, a sealed
+hierarchy, or the productions of a grammar, which has no inputs beside the listed ones. Where the branch has fewer than
+three commits, read the previous report of this form, or the `report.md` of the cross-review run the change went
+through, instead (§1): each fix the report requested at one member, and each fix in one cross-review family, counts as a
+commit. `--history` parses the JVM languages only; for another language, read the subjects of the commits that changed
+each file of the diff (`git log --format='%h %s' <base>.. -- <file>`) and their hunks. The parse is line-based: a listed
+name the file does not declare is a call it took for a declaration, and is skipped.
+
+Where they did, state in one sentence the property the cases stand in for (*which targets have unspecified nullness*),
+and try two inputs beside the listed ones: the same shape one level deeper, and the shape passed through a wrapper or a
+generic call. Read the code for each, or run it where the test harness makes that cheap, and say which. Two inputs
+that get a different answer than the property gives are a finding. The request is to compute the property in the one
+place that owns it, or to narrow the change to its stated purpose and open an issue for the property that names the
+failing inputs; adding them as further cases is not a remedy.
+
+On uber/NullAway#2080, `getTargetTypeFromParentContext` changed in 14 commits, among them `Preserve method-reference
+targets through switch results`, `Preserve inferred targets through conditional and switch arguments`, and `Preserve
+unmarked target exemptions through generic lambda returns`, and a reviewer of the branch called it a pile of hacks. Each
+case had its own test, so items 2 and 3 had nothing to request beyond more shapes, and item 7 asked for the next path.
 
 ## 2a. A change with no code
 
@@ -282,6 +314,11 @@ doc-comment skill.
   body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
   the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
   still counts the set as before.
+- **Cases added at one site.** The site is a rule of a skill or an instruction file, and a case is an exception, a
+  carve-out, or a worked example a commit added to it after a failure (`git log --format='%h %s' <base>.. -- <file>`).
+  Where two or more commits each added one to the same rule, state what the rule should decide, and try two situations
+  beside the listed ones; two that the rule's text decides wrongly are a finding with item 8's request. For a docs page
+  or a configuration, `none` with the reason.
 
 For a skill or an instruction file, the report carries one more table, of the instructions the change adds or widens.
 Count them before filling a row: an instruction is one thing the change tells the agent to do. A rule that takes several
@@ -325,8 +362,9 @@ Not findings: `:57`, `:63`.
 Every finding carries one of three labels, and the label is the reader's cue for what to do with it.
 
 - **Substantive**: a reader could read the sentence wrongly, the sentence states something false, a claimed case has no
-  test, a boundary or the control is missing. So are the wording findings that *Comments consistent with the code and
-  with each other* names: a sentence a reader has to parse twice, and a coined term. These are requests.
+  test, a boundary or the control is missing, a list of cases fails on the inputs beside it (item 8). So are the wording
+  findings that *Comments consistent with the code and with each other* names: a sentence a reader has to parse twice,
+  and a coined term. These are requests.
 - **Taste**: two readings and both are right; the finding names the one the reviewer prefers. Say so, and expect it
   to be declined without discussion.
 - **Churn**: the suggested version has the property it objects to, or changes wording with no fact behind it. Do not

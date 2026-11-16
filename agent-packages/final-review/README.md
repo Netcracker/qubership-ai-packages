@@ -31,6 +31,10 @@ demands an answer to every item can, and the form is short enough that the items
 7. The siblings of the change: other callers of the helper the fix touched, other builders of the same literal,
    found with `git grep` (or `sb callers` where that code-search command is installed), each judged for the same defect;
    every list and count of a set the change adds a member to; every parallel path a fix has to cover.
+8. Cases added at one site: a member that three or more commits of the branch changed (`comment-drift.py --history`),
+   or a cross-review family, where two of those commits each handled one more input shape. The review states the
+   property the cases stand in for and tries two inputs beside them; two that fail are a request to compute the
+   property in one place, or to narrow the change and open an issue, not to add a case.
 
 A change with no code (a skill, an `AGENTS.md` or `CLAUDE.md`, a docs page, a configuration) is checked through the same
 items read as analogues. For a skill or an instruction file the report adds a table of the instructions the change adds

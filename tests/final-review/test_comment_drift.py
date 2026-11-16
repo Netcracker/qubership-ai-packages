@@ -170,5 +170,72 @@ class CommentDriftTest(unittest.TestCase):
                          self.drift())
 
 
+    # ------------------------------------------------------------------ --history
+
+    def history(self, *refs):
+        return subprocess.run([sys.executable, os.path.abspath(SCRIPT), "--history", *refs], cwd=self.repo,
+                              check=True, capture_output=True, encoding="utf-8").stdout
+
+    def commit_edit(self, name, old, new, subject):
+        """Replace old with new in name, which must contain it, and commit the change as subject."""
+        with open(os.path.join(self.repo, name), encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn(old, text, name)
+        self.write(name, text.replace(old, new))
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", subject)
+        return subprocess.run(["git", "log", "-1", "--format=%h %s"], cwd=self.repo, check=True,
+                              capture_output=True, encoding="utf-8").stdout.strip()
+
+    def test_a_member_three_commits_changed_is_listed_with_their_subjects(self):
+        labels = [self.commit_edit("Reader.java", "return count;", "return count + 1;", "Handle a header"),
+                  self.commit_edit("Reader.java", "return count + 1;", "return count + 2;", "Handle a trailer"),
+                  self.commit_edit("Reader.java", "    return 0;", "    return -1;", "Skip nothing"),
+                  self.commit_edit("Reader.java", "return count + 2;", "return count + 3;", "Handle a footer")]
+        self.assertEqual("== Reader.java\n  read: 3 commits (Reader.read(int))\n"
+                         "    %s\n    %s\n    %s\n" % (labels[0], labels[1], labels[3]),
+                         self.history("HEAD~4"))
+
+    def test_a_member_in_a_test_source_set_is_left_out(self):
+        os.makedirs(os.path.join(self.repo, "src", "test", "java"))
+        self.write("src/test/java/ReaderTest.java", "class ReaderTest {\n  void reads() {\n    int n = 0;\n  }\n}\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Add a test")
+        labels = []
+        for i in range(3):
+            self.commit_edit("src/test/java/ReaderTest.java", "int n = %d;" % i, "int n = %d;" % (i + 1), "Test %d" % i)
+            labels.append(self.commit_edit("Reader.java", "return count%s;" % (" + %d" % i if i else ""),
+                                           "return count + %d;" % (i + 1), "Handle %d" % i))
+        self.assertEqual("== Reader.java\n  read: 3 commits (Reader.read(int))\n"
+                         "    %s\n    %s\n    %s\n" % tuple(labels),
+                         self.history("HEAD~6"))
+
+    def test_a_file_moved_out_of_a_test_source_set_keeps_its_count(self):
+        os.makedirs(os.path.join(self.repo, "src", "integrationTest"))
+        self.write("src/integrationTest/Probe.java", "class Probe {\n  int g() {\n    return 0;\n  }\n}\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Add a probe")
+        labels = [self.commit_edit("src/integrationTest/Probe.java", "return %d;" % i, "return %d;" % (i + 1),
+                                   "Probe %d" % i) for i in range(3)]
+        os.makedirs(os.path.join(self.repo, "src", "main", "java"))
+        self.git("mv", "src/integrationTest/Probe.java", "src/main/java/Probe.java")
+        self.git("commit", "-q", "-m", "Move the probe to main")
+        self.assertEqual("== src/main/java/Probe.java\n  g: 3 commits (Probe.g())\n"
+                         "    %s\n    %s\n    %s\n" % tuple(labels),
+                         self.history("HEAD~4", "HEAD"))
+
+    def test_an_uncommitted_rename_to_an_untracked_path_counts_as_one_more_step(self):
+        labels = [self.commit_edit("Reader.java", "return count;", "return count + 1;", "Handle a header"),
+                  self.commit_edit("Reader.java", "return count + 1;", "return count + 2;", "Handle a trailer")]
+        os.rename(os.path.join(self.repo, "Reader.java"), os.path.join(self.repo, "Renamed.java"))
+        self.write("Renamed.java", BASE.replace("return count;", "return count + 3;"))
+        output = self.history("HEAD~2")
+        staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=self.repo, check=True,
+                                capture_output=True, encoding="utf-8").stdout
+        self.assertEqual(("== Renamed.java\n  read: 3 commits (Reader.read(int))\n"
+                          "    %s\n    %s\n    (uncommitted)\n" % tuple(labels), ""),
+                         (output, staged), "(--history output, files staged in the real index)")
+
+
 if __name__ == "__main__":
     unittest.main()
