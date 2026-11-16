@@ -493,7 +493,7 @@
         },
         "proposed_solution": {
           "type": "string",
-          "description": "The smallest outcome that removes the cause; never one more case for a family that has had an adds_case fix. Only what suggestion does not show, and empty where it shows all of it."
+          "description": "The smallest outcome that removes the cause; never one more case for a family that has had an adds_case fix. Only what title and suggestion do not show, and empty where they show all of it or where the fix is the standard one the author would write unasked."
         },
         "reproducer": {
           "description": "Code that shows the defect, or the case a missing test needs, with the current and the expected result as comments; null where no code shows the claim better than the title.",
@@ -525,7 +525,7 @@
             "string",
             "null"
           ],
-          "description": "The whole lines, with their indentation, that replace the new-side lines location covers; null where the fix is not new text for those lines."
+          "description": "The whole lines, with their indentation, that replace the new-side lines location covers; null where the fix is not new text for those lines. It changes only what the finding asks for; in prose, a right line that lacks a detail is left to the author."
         },
         "retest": {
           "type": [

@@ -73,7 +73,10 @@ such as a missing changelog entry.
   the published comment, and often the only line a reader sees, so it stands alone.
 - `problem`: what the author needs beyond `title` to accept the claim: the condition it holds under and the impact,
   where `title` does not already state them. It ends at the impact; the facts behind it go to `evidence`. Leave it empty
-  where `title` carries the whole claim, as it does for most findings about a name or a comment.
+  where an author who reads `title` would accept the claim and see what it costs without being told: most findings about
+  a name or a comment, and a breach of a standard idiom of the language or a rule the repository states, such as a
+  resource left open or an error left unchecked. Where the fix is standard and the reason it is needed is not, `problem`
+  states the reason. How the defect came about, such as the code it copied, is neither condition nor impact.
 - `reproducer`: the code a reader runs to see the defect, such as a test case, a source file the checker reports on,
   or a command, with the current and the expected result as comments; for a missing test, the case the test needs.
   `language` is its code-block tag. Cut it to the lines that show the defect, without the imports and scaffolding the
@@ -82,7 +85,11 @@ such as a missing changelog entry.
 - `evidence`: the decisive facts only, each marked `fact` (read or run) or `inference` (derived). Quote code and text
   exactly, with `path:line`.
 - `proposed_solution`: the smallest outcome that removes the cause, without prescribing a rewrite a local change at the
-  cause avoids. For a finding about what the code does, name the decision that goes wrong, then what it should decide.
+  cause avoids. Leave it empty where `title` names the fix, or where the fix is the standard idiom of the language or
+  the rule of the repository for that defect and the author would write it unasked; `title` may then end in that fix as
+  a short clause (`…leaves the stream open on the error path; wrap it in using`). A fix that adds one more case to a
+  list is not such a fix: the rule below decides it.
+  For a finding about what the code does, name the decision that goes wrong, then what it should decide.
   Where the decision is a list of cases
   (a branch per kind of input, an exemption list, a walk that stops at listed node kinds) and the only local change is
   one more case, propose computing the property the list approximates in the place that owns it, or removing the
@@ -92,12 +99,18 @@ such as a missing changelog entry.
   outcome is never another case, not even as a stopgap. Where the family is `recurring`, its `sites` have absorbed
   cases twice, so the property belongs somewhere else. Name what the code would have to represent for the property to
   travel with the value, such as a state on the type or a field the analysis carries, and say whether this change can
-  do without it. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a reworded
-  comment, or a changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to what they
-  do not show (the other call sites of a renamed method), or empty.
+  do without it. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a comment whose
+  meaning is wrong, or a changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to
+  what they do not show (the other call sites of a renamed method), or empty.
 - `suggestion`: the whole lines that replace the lines `location` covers, with their indentation, where applying them
   is the whole fix and `location` is on the new side and in the diff; otherwise `null`. A rename with call sites
-  outside the range is not such a fix.
+  outside the range is not such a fix. It changes only what the finding asks for: the range starts and ends at a line
+  that changes, or at the one unchanged line an added line attaches to, and a line between two changed lines is copied
+  as it is. In prose (a changelog, a docs page, a comment), it replaces a line whose meaning is wrong or adds a line
+  that is missing; a line that is right and lacks a detail, such as a link, a default, or a unit, stays as the author
+  wrote it, and `proposed_solution` names what is missing for the author to word. In code, it may rewrite the lines it
+  covers, such as the assertions of a test that cannot fail, but changes nothing in them, such as a local's name, that
+  the finding does not ask for.
 - `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
   must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
   `proposed_solution`, and so that it fails at the reviewed head. Where the defect is one input of a property the code

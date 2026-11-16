@@ -23,11 +23,14 @@ Give this to a fresh subagent after every axis has written its findings.
 >    problem. For a `question`, check that it names the answer that settles the question. Rewrite it where it does not.
 >    A finding from `axes/previous.json` keeps the `retest` it carries, unless the earlier one was wrong; then rewrite
 >    it and say why in `evidence`.
-> 7. Cut from `problem` what `title`, `evidence`, or `suggestion` already says, and leave it empty where nothing is
->    left. Where `proposed_solution` describes new text for the lines in `location`, move that text to `suggestion`, and
->    check that it replaces the whole range and nothing beyond it. Where `evidence` cites a probe or a run whose code
->    shows the defect, put that code in `reproducer`, cut to the lines that show it, with the current and the expected
->    result as comments, and drop from `problem` and `proposed_solution` what it shows.
+> 7. Cut from `problem` and `proposed_solution` what `title`, `evidence`, or `suggestion` already says, and leave each
+>    empty where nothing is left or where *Content* in `finding-rules.md` leaves it empty. Where `proposed_solution`
+>    describes new text for the lines in `location`, move that text to `suggestion`, and check that it replaces the
+>    whole range and nothing beyond it, and changes only what *Content* lets a `suggestion` change; where it changes
+>    more, narrow it and `location` with it, and move a detail the author is to word into `proposed_solution`. Where
+>    `evidence` cites a probe or a run whose code shows the defect, put that code in `reproducer`, cut to the lines that
+>    show it, with the current and the expected result as comments, and drop from `problem` and `proposed_solution`
+>    what it shows.
 >
 > Then across findings:
 >

@@ -96,8 +96,10 @@ Proposed solution: cap the list at N reasons with "and M more", quote each with 
   ````
 
   An email has no collapsed blocks: there it is `Reproducer:` and the code block.
-- `Proposed solution:` is from `proposed_solution`, and may be one phrase where the fix is obvious. Where it is empty,
-  the paragraph is absent.
+- `Proposed solution:` is from `proposed_solution`, never a restatement of a fix the first line names or the suggestion
+  shows. Where it is empty, the paragraph is absent. A finding whose other parts are all empty is its first line alone,
+  which then names the fix too: ``**F12 minor** The migration adds `orders.customer_id` with no index; add one, as the
+  other foreign keys have.``
 - A `suggestion` follows `Proposed solution:`. In an inline comment that is not a reply to an earlier thread it is the
   platform's suggestion block, which the author applies with one click (each platform reference says how); anywhere
   else, a code block tagged with the file's language. A nit about a comment is usually the first line and this block:
@@ -169,9 +171,9 @@ Filing writes to the tracker, so it needs this answer even where publication is 
 authorizes no issue. Where the user agrees, for each finding:
 
 1. Load `problem-report-authoring`, and the developer-style skill of the language the issue is written in
-   (`english-developer-style` for English). It searches for a report that already exists and writes the issue from the
-   finding's `problem`, `evidence`, `reproducer`, `introduced_by.commit`, `proposed_solution`, `suggestion`, and
-   `retest`, at the reviewed head's revision.
+   (`english-developer-style` for English). It searches for a report that already exists and writes the issue from
+   the finding's `title`, `problem`, `evidence`, `reproducer`, `introduced_by.commit`, `proposed_solution`,
+   `suggestion`, and `retest`, at the reviewed head's revision.
 2. File the issue in the repository that `problem-report-authoring` finds owns the defect, or link the report its
    search found.
 3. Set the finding's `follow_up_url` in `review.json`, and render the ledger again.
