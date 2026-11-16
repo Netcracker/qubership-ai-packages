@@ -3,7 +3,7 @@
 ### File: docs/adr/0007-support-token-gate-under-docker-without-kubernetes.md
 
 ````markdown
-# Support token-gate under Docker without Kubernetes
+# Support token-gate under Docker without Kubernetes, with a Compose example that CI starts
 
 ## Status
 
@@ -11,105 +11,96 @@ Proposed
 
 ### Owner
 
-`example-architect`
+<owner GitHub account>
 
 ### Participants and approvers
 
-- Architect, `example-architect`: approves R1 to R4.
+- Architect, `example-architect`: approves R1 to R3.
 
 ## Context
 
-token-gate ships as a container image and as a Helm chart. Operators who do not run Kubernetes need to run the image
-under Docker.
+token-gate ships as a container image and a Helm chart. Operators who run the image under Docker without Kubernetes
+configure it through the container's environment and mounted files.
 
-Under Docker, operators trust a private CA for the HTTPS calls from token-gate to the identity provider. They mount the
-CA certificate under `/tmp/cert`, as for every image of the platform. The image builds on the platform base image
-`ghcr.io/example/platform-base`. According to the README of the base image, its entrypoint `/usr/bin/entrypoint.sh` adds
-every certificate in a `.crt`, `.cer`, or `.pem` file under `/tmp/cert` to the trust store of the container, runs the
-scripts in `/app/init.d`, and then runs its arguments.
+These operators need to trust a private CA for the HTTPS calls from token-gate to the identity provider. The README of
+the platform base image `ghcr.io/example/platform-base` states that its entrypoint, `/usr/bin/entrypoint.sh`, adds every
+certificate in a `.crt`, `.cer`, or `.pem` file under `/tmp/cert` to the trust store of the container. Operators mount
+the certificate of their CA there, as for every image of the platform.
 
 ## Decision
 
-We will support token-gate under Docker without Kubernetes, configured by environment variables and mounted files alone.
-We will ship a Compose example under `deploy/docker/`, and a CI job will start it on every pull request and call
-`GET /ready`.
+We will support token-gate under Docker without Kubernetes, configured by environment variables and mounted files
+alone, ship a Compose example for it under `deploy/docker/`, and start that example in CI on every pull request.
 
 ### Terms
 
-- **Docker deployment**: a run of the token-gate image by Docker or Docker Compose where no Kubernetes cluster is
-  involved.
-- **mounted file**: a file that a Docker deployment makes visible inside the container through a bind mount or a volume.
-- **Compose example**: the Compose file under `deploy/docker/` that runs token-gate.
+- **ready**: the state in which `GET /ready` returns HTTP 200.
+- **Compose example**: the Compose project under `deploy/docker/` that R2 requires.
 
 ### Rules
 
 #### Running under Docker
 
-- **R1** (`server`). In a Docker deployment, token-gate takes all of its configuration from environment variables and
-  mounted files.
-- **R2** (`server`). In a Docker deployment, token-gate starts and serves requests where no Kubernetes API is
-  reachable.
+- **R1** (`server`, `docker`). Under Docker without Kubernetes, token-gate becomes ready when its configuration comes
+  from environment variables and from files mounted into the container, and from no other source.
 
 #### The Compose example
 
-- **R3** (`docker`). `deploy/docker/` holds a Compose example that runs token-gate as a Docker deployment.
-- **R4** (`ci`). A workflow under `.github/workflows/` runs on every pull request, with no path or branch filter. Its job
-  starts the Compose example, calls `GET /ready` on token-gate, and fails where the response status is not 200.
-
-### Confirmation
-
-- **R2, R3**: the job of R4 starts the Compose example on a runner that has no Kubernetes cluster.
+- **R2** (`docker`). `deploy/docker/` holds a Compose example that starts token-gate.
+- **R3** (`ci`). On every pull request, a CI job starts the Compose example and calls `GET /ready`. The job fails
+  unless token-gate is ready.
 
 ### Justification
 
-A Compose example that CI starts on every pull request stays working as the code changes (R3, R4). Environment variables
-and mounted files are what Docker offers without Kubernetes objects, so an operator needs nothing else to run the
-service (R1, R2).
-
-### Alternatives considered
-
-- **A1. Support token-gate only on Kubernetes, through the Helm chart.** Rejected by R2: operators without a cluster
-  could not run the service.
+Operators without Kubernetes need a supported way to run token-gate (R1). A Compose example gives them a working
+starting point (R2), and the CI job keeps that example and the readiness of the service from breaking unnoticed (R3).
 
 ## Consequences
 
 Negative:
 
-- Every pull request pays for the start of the Compose example (R4).
+- Every pull request runs a Compose job, and a pull request cannot merge while the Compose example fails to start
+  token-gate (R3).
+- The Compose example is an artifact the team maintains alongside the Helm chart (R2).
 
 ## Open points
 
-- **O1.** R4 assumes that `GET /ready` returns HTTP 200 when token-gate is ready. The architect confirms the status, or
-  names another success criterion. This affects R4.
+- **O1.** The notes do not name the success status of `GET /ready`. The record assumes HTTP 200, in the definition of
+  **ready**. The architect confirms the status. It affects R1 and R3.
 ````
 
-### Message to the user
+### Message to user
 
-I wrote ADR-0007 as `Proposed`. It has one open point, O1, which blocks acceptance. It asks you to confirm that `GET /ready` returns HTTP 200 when the service is ready, because R4 assumes that status.
+I wrote the record as `docs/adr/0007-support-token-gate-under-docker-without-kubernetes.md`, with status `Proposed`.
 
-**The entrypoint question is a defect, so the record has no rule for it.** The platform guide and the base image README say that service images keep `/usr/bin/entrypoint.sh` and set the binary as `CMD`. `build/token-admin/Dockerfile` does this, with `CMD ["token-admin"]`. `build/token-gate/Dockerfile` ends with `ENTRYPOINT ["/usr/local/bin/token-gate"]`, and no record or issue explains that line. The record keeps the base-image contract in Context as a fact and names neither the issue nor the fix. I propose this issue:
+- **Owner:** the Owner heading holds the placeholder `<owner GitHub account>`. Who owns this record?
+- **O1 blocks acceptance:** the notes don't give the success status of `GET /ready`, so I assumed HTTP 200. Please confirm it.
+- **Layer tags:** I tagged R1 `server` and `docker` because I couldn't see where configuration is read. Correct the tag if that code lives elsewhere.
+
+Your open question, whether to keep the binary as the entrypoint, is not a decision, so the record has no rule or open point for it. The platform base image and the platform's guide for service images already settle it:
+
+- The base README says its entrypoint, `/usr/bin/entrypoint.sh`, adds the certificates under `/tmp/cert`, runs `/app/init.d`, and then runs its arguments.
+- The guide says to keep that entrypoint and set the binary as `CMD`.
+- `build/token-admin/Dockerfile` already does this with `CMD ["token-admin"]`.
+- `build/token-gate/Dockerfile` replaces the entrypoint with `ENTRYPOINT ["/usr/local/bin/token-gate"]`. No record or issue explains the line.
+
+So the Docker CA setup you describe fails for token-gate today. I suggest this issue:
 
 - **Type:** Bug
-- **Title:** token-gate image replaces the platform base entrypoint, so certificates under `/tmp/cert` are never trusted
-- **Contract it departs from:** the README of `ghcr.io/example/platform-base` and the platform guide for service images, which say to keep `/usr/bin/entrypoint.sh` and set the binary as `CMD`.
-- **Scope:** the issue covers the Dockerfile fix and the chart change that goes with it. Change the last line of `build/token-gate/Dockerfile` to `CMD ["token-gate"]`, as in the token-admin image. Add `emptyDir` volumes at `/etc/ssl/certs` and `/usr/local/share/ca-certificates` to the chart, because the base entrypoint writes there and the Pod has a read-only root file system.
+- **Title:** token-gate image replaces the platform entrypoint, so certificates under `/tmp/cert` are not trusted
+- **Contract departed from:** the platform-base README and the platform guide for service images, as above.
+- **Fix:**
+  - In `build/token-gate/Dockerfile`, replace the `ENTRYPOINT` line with `CMD ["token-gate"]`.
+  - In the chart, add `emptyDir` volumes at `/etc/ssl/certs` and `/usr/local/share/ca-certificates`. The base entrypoint writes there, and the Pod has a read-only root file system.
 
-If keeping the binary as the entrypoint is deliberate, tell me. It then becomes a decision and gets a rule.
-
-**Questions and assumptions:**
-
-- I took `example-architect` as the owner and sole approver. Please confirm.
-- I assumed the configuration loading and the start-up code sit under `internal/server`, so R1 and R2 carry the `server` tag. Please confirm.
-- Records 0001 to 0006 were not available to me, so I linked no related ADRs. If one of them covers configuration or the readiness endpoint, the link belongs under **Related ADRs**.
-
-No existing record or the `README.md` guide changes. I wrote no Confirmation entry for R1, because no check shows that configuration comes from environment variables and mounted files alone. Reviewers read the diff for that.
+If the `ENTRYPOINT` is deliberate, tell me and I will add a rule for it. A change that implements R2 or R3 should end its commit message and pull request description with the `Implements` trailer once the record is accepted.
 
 ## Request 2
 
-### File: docs/adr/0007-refuse-tokens-with-the-none-or-an-hmac-algorithm.md
+### File: docs/adr/0007-refuse-tokens-whose-algorithm-is-none-or-hmac.md
 
 ````markdown
-# Refuse tokens whose header names the algorithm `none` or an HMAC algorithm
+# Refuse a token whose algorithm is `none` or an HMAC algorithm
 
 ## Status
 
@@ -117,110 +108,89 @@ Proposed
 
 ### Owner
 
-`example-security-architect`
+<owner GitHub account>
 
 ### Participants and approvers
 
-- Security architect, `example-security-architect`: approves R1 to R3.
+- Security architect, `example-security-architect`: approves R1 and R2.
 
 ## Context
 
 token-gate checks the token of each request before policy evaluation. `internal/verify` verifies signatures with the
-`jwx` library. `jwx` refuses a token whose `alg` is `none` when it verifies a signature. It accepts `HS256`, `HS384`, and
-`HS512` when the key set holds a symmetric key, and `internal/verify` passes it every key that the JWKS of an issuer
-holds. A symmetric key in the JWKS of an issuer therefore makes the service accept a token signed with an HMAC.
+`jwx` library.
+
+`jwx` refuses a token whose `alg` is `none` when it verifies a signature. It accepts `HS256`, `HS384`, and `HS512` when
+the key set holds a symmetric key. `internal/verify` passes `jwx` every key that the JWKS of an issuer holds, so a
+symmetric key in that JWKS makes a token signed with an HMAC algorithm verify.
 
 ## Decision
 
-We will refuse a token whose header names the algorithm `none` with HTTP 401 and the reason code `TOKEN_ALG_NONE`. We
-will refuse a token signed with `HS256`, `HS384`, or `HS512` with HTTP 401 and the reason code `TOKEN_ALG_SYMMETRIC`.
+We will refuse a token whose header names the algorithm `none` or an HMAC algorithm, each with HTTP 401 and its own
+reason code.
 
 ### Terms
 
-- **request token**: the token that token-gate takes from a request to check before policy evaluation.
-- **header algorithm**: the value of the `alg` parameter in the header of a request token.
-- **refuse**: token-gate answers the request with the stated HTTP status and reason code, and does not pass the request
-  to policy evaluation.
+- **HMAC algorithm**: `HS256`, `HS384`, or `HS512`, and no other algorithm.
 
 ### Rules
 
 #### Refused algorithms
 
-- **R1** (`verify`, `server`). token-gate refuses a request token whose header algorithm is exactly `none`, with HTTP
-  401 and the reason code `TOKEN_ALG_NONE`.
-- **R2** (`verify`, `server`). token-gate refuses a request token whose header algorithm is `HS256`, `HS384`, or
-  `HS512`, with HTTP 401 and the reason code `TOKEN_ALG_SYMMETRIC`, whatever keys the JWKS of its issuer holds.
-
-#### Precedence
-
-- **R3** (`verify`, `server`). Where a request token fails R1 or R2 and also fails another check of the token, the
-  response carries the reason code of R1 or R2.
+- **R1** (`verify`, `server`). A token whose header `alg` is `none` is refused with HTTP 401 and the reason code
+  `TOKEN_ALG_NONE`.
+- **R2** (`verify`, `server`). A token whose header `alg` is an HMAC algorithm is refused with HTTP 401 and the reason
+  code `TOKEN_ALG_SYMMETRIC`, also where the JWKS of its issuer holds a symmetric key.
 
 ### Implementation notes
 
-Adds no requirement. Read the header algorithm before the signature is verified, and refuse the token there. Keep
-symmetric keys out of the key set that `internal/verify` passes to `jwx`, so that the library cannot accept an HMAC
-token even if the check is bypassed.
+Adds no requirement. `jwx` refuses `none` with its own error, so `internal/verify` can read the header `alg` before it
+calls `jwx` and return `TOKEN_ALG_NONE` itself. The same check can return `TOKEN_ALG_SYMMETRIC`, which also keeps a
+symmetric key in a JWKS from making a token verify.
 
 ### Justification
 
-`jwx` already refuses `none` but gives the caller no reason code, so R1 states the answer that the service returns. It
-accepts an HMAC token whenever the JWKS of an issuer holds a symmetric key, so R2 closes that case whatever the key set
-holds (R2). R3 gives a caller one reason code for a token that fails several checks.
+`jwx` already refuses `none`, but its refusal carries no reason code, and R1 fixes the answer that callers get. `jwx`
+accepts an HMAC algorithm whenever a symmetric key is among the keys that `internal/verify` passes it, and R2 removes
+that case.
 
 ### Alternatives considered
 
-- **A1. Accept HMAC with a shared secret per issuer.** Rejected by R2: the security review considered it and rejected it.
-- **A2. Pass every key of the JWKS of an issuer to the library and rely on the library to refuse the algorithm.**
-  Rejected by R1 and R2: the library accepts `HS256`, `HS384`, and `HS512` where the key set holds a symmetric key, and
-  it gives no reason code for `none`.
+- **A1. Accept HMAC with a shared secret per issuer.** Rejected by R2: a token signed with an HMAC algorithm is refused
+  for every issuer.
 
 ## Consequences
 
-Positive:
-
-- A caller tells a refused `none` token from a refused HMAC token by the reason code (R1, R2).
-
 Negative:
 
-- An issuer that signs tokens with `HS256`, `HS384`, or `HS512` gets HTTP 401 with `TOKEN_ALG_SYMMETRIC` for every
-  token, including an issuer whose JWKS holds a symmetric key and whose tokens the service accepted before (R2).
+- A token signed with an HMAC algorithm is refused with `TOKEN_ALG_SYMMETRIC`, so an issuer that signs this way and
+  publishes a symmetric key in its JWKS no longer authenticates (R2).
 
 ## Open points
 
-- **O1.** R1 and R2 match the header algorithm exactly. The security architect decides whether a case variant such as
-  `None` or `hs256` is refused with the same codes (case-insensitive match), or falls to the handling of any other
-  unsupported algorithm (exact match). This affects R1 and R2.
-- **O2.** R3 assumes that the algorithm refusal wins over every other refusal reason. The security architect confirms
-  this, or names the checks whose reason code wins. This affects R3.
+- **O1.** The notes do not say where the response carries a reason code. The record assumes the place where the
+  responses of token-gate already carry theirs. The security architect confirms it. It affects R1 and R2.
 ````
 
-### Message to the user
+### Message to user
 
-I wrote ADR-0007 as `Proposed`. Two open points block acceptance:
+I wrote the record as `docs/adr/0007-refuse-tokens-whose-algorithm-is-none-or-hmac.md`, with status `Proposed`.
 
-- **O1:** whether a case variant such as `None` or `hs256` gets the same refusal as the exact value.
-- **O2:** whether the algorithm refusal wins over every other refusal reason. I wrote R3 on that assumption because a token can fail several checks at once.
+- **Owner:** the Owner heading holds the placeholder `<owner GitHub account>`. Who owns this record?
+- **O1 blocks acceptance:** where does a 401 response carry the reason code? I assumed the place that existing reason codes use.
+- **Reason for rejecting HMAC:** the notes only say it was considered and rejected. What was the security reason? I'd add it to the Justification and A1.
+- **Layer tags:** I tagged both rules `verify` and `server`, assuming `internal/verify` decides and `internal/server` writes the response. Correct the tags if that's wrong.
+- **Not covered by the notes:**
+  - R1 matches the lowercase `none`. A header with `None` or `NONE` falls outside it.
+  - The notes don't say which reason code wins when a token also fails another check, such as expiry.
 
-**Questions and assumptions:**
-
-- The notes give no reason for rejecting a shared secret per issuer, so A1 says only that the review rejected it. Please send the reason.
-- I took `example-security-architect` as the owner and sole approver. Please confirm.
-- I tagged R1 to R3 with `verify` and `server`, on the assumption that `internal/verify` decides the refusal and `internal/server` produces the 401. Please confirm.
-- Records 0001 to 0006 were not available to me, so I linked no related ADRs. If an earlier record owns the reason codes or the 401 response, add its link under **Related ADRs**.
-
-**Notes on the record:**
-
-- The `none` refusal already comes from `jwx`, but R1 stays a rule because it fixes the code that callers see.
-- There is no **Confirmation** section yet, because no test for these rules exists. Add it when tests land. Suggested tests: one per algorithm, plus one for an issuer whose JWKS holds a symmetric key.
-- Upgrade effect: issuers that sign with HMAC now get 401. The record lists this under **Negative**, citing R2.
+Tell me how you want either handled and I'll add a rule.
 
 ## Request 3
 
-### File: docs/adr/0007-use-tls-1-2-or-later-for-outgoing-connections-of-token-gate.md
+### File: docs/adr/0007-use-tls-1-2-or-later-for-outgoing-connections.md
 
 ````markdown
-# Use TLS 1.2 or later for the outgoing TLS connections of token-gate
+# Use TLS 1.2 or later for every outgoing TLS connection of token-gate
 
 ## Status
 
@@ -228,7 +198,7 @@ Proposed
 
 ### Owner
 
-`example-security-architect`
+<owner GitHub account>
 
 ### Participants and approvers
 
@@ -236,58 +206,48 @@ Proposed
 
 ## Context
 
-token-gate calls other services over TLS, such as the identity provider. According to the documentation of Go's
-`crypto/tls` package, a client refuses TLS 1.1 and older by default. token-gate sets no minimum version of its own, so
-the default applies to every outgoing connection.
+token-gate opens TLS connections as a client, such as the HTTPS calls to an identity provider. The `crypto/tls` client
+of Go refuses TLS 1.1 and older by default, and token-gate sets no minimum version of its own.
 
 ## Decision
 
-We will use TLS 1.2 or later for the outgoing TLS connections of token-gate.
+We will use TLS 1.2 or later for every outgoing TLS connection of token-gate.
 
 ### Terms
 
-- **outgoing TLS connection**: a TLS connection that the token-gate process opens as the client, whatever the peer.
+- **outgoing TLS connection**: a TLS connection that the token-gate process opens as the client, to any host. A
+  connection that token-gate accepts as a server is not one.
 
 ### Rules
 
 #### Protocol version
 
-- **R1** (`verify`, `server`). An outgoing TLS connection is established only with TLS 1.2 or later. Where the peer
-  offers no version from TLS 1.2 on, the handshake fails.
+- **R1** (`verify`, `server`). token-gate opens an outgoing TLS connection only where the handshake negotiates TLS 1.2
+  or later. A handshake with a server that supports only TLS 1.1 or older fails.
 
 ### Implementation notes
 
-Adds no requirement. The default of the `crypto/tls` client already meets R1, so the code needs no change. Setting
-`MinVersion: tls.VersionTLS12` in the `tls.Config` that token-gate uses for outgoing connections keeps the floor in
-place if a later Go release changes the default.
+Adds no requirement. A client `tls.Config` that leaves `MinVersion` unset meets R1 under the Go default, which refuses
+TLS 1.1 and older. A test can start a local TLS server limited to TLS 1.1 and check that the outgoing call fails.
 
 ### Justification
 
-RFC 8996 deprecates TLS 1.0 and TLS 1.1, so TLS 1.2 is the oldest version that the service accepts (R1).
-
-### Alternatives considered
-
-- **A1. Accept TLS 1.0 and TLS 1.1 for identity providers that offer nothing newer.** Rejected by R1.
+The security review decided R1. The Go default already refuses older versions, so token-gate needs no setting of its own
+to meet it.
 
 ## Consequences
 
 Negative:
 
-- token-gate cannot reach a peer that offers only TLS 1.1 or older, such as an old identity provider. Its calls to that
-  peer fail at the handshake (R1).
+- token-gate cannot reach an identity provider, or any other host, that supports only TLS 1.1 or older (R1).
 ````
 
-### Message to the user
+### Message to user
 
-I wrote ADR-0007 as `Proposed`. It has no open points, so it can become `Accepted` once the team signs off. Add the Date heading with the acceptance date at that point.
+I wrote the record as `docs/adr/0007-use-tls-1-2-or-later-for-outgoing-connections.md`, with status `Proposed`. If the team has signed off, set `Accepted` and add the Date heading.
 
-**Questions and assumptions:**
-
-- I wrote R1 as a rule even though the Go default already provides the behavior. The security architect chose TLS 1.2 or later for this system, which makes it a decision. The rule keeps the requirement if the Go default changes.
-- The notes give no reason for the choice. I added RFC 8996, which deprecates TLS 1.0 and TLS 1.1, to the Justification. Please confirm it matches the reasoning of the review, or replace it.
-- I took `example-security-architect` as the owner and sole approver. Please confirm.
-- I assumed the outgoing connections come from `internal/verify` and `internal/server`, and tagged R1 with both. Please confirm which code opens them.
-- The scope is the token-gate process. `token-admin` is not covered. If it should be, say so.
-- Records 0001 to 0006 were not available to me, so I linked no related ADRs.
-
-There is no **Confirmation** section yet, because no check exists for R1. A test that fails the handshake against a server limited to TLS 1.1 would fill it.
+- **Owner:** the Owner heading holds the placeholder `<owner GitHub account>`. Who owns this record?
+- **Reason for the decision:** the notes give none, so the Justification only says the Go default already meets R1. What was the security reason? I'd add it.
+- **Layer tags:** I tagged R1 `verify` and `server`, assuming those packages open the outgoing connections. Correct the tags if another package does.
+- **Rule form and test:** R1 states the requirement as behavior, not as "token-gate sets no `MinVersion`". That way a future change that sets a lower minimum fails R1, and a change to the Go default doesn't affect the rule. No check exists yet, so the record has no Confirmation section. A test against a local TLS 1.1 server, as in the Implementation notes, would be the natural check.
+- **Incoming connections:** they are outside the rule, as in the notes. A separate record would cover them.

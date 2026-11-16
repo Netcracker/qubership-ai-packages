@@ -10,9 +10,9 @@ citation copies none of that rule's conditions.
 ## Skill parts
 
 - `SKILL.md`: "Local conventions" (**Location and metadata**), "Template", "Rules" (**Form**, the structural rule and
-  the behavior rule; **Layer**; **One home**, a citation that copies no condition of the cited rule), "Confirmation and
-  implementation notes", "The reading guide" (the guide's contents, among them the line that sends the agent that
-  writes code to the **Related ADRs** of a cited record, and the paragraph for the agent that writes code)
+  the behavior rule; **Layer**; **One home**, a citation by what the rule is about, not by what it decides),
+  "Confirmation and implementation notes", "The reading guide" (the guide's contents, among them the line that sends the
+  agent that writes code to the **Related ADRs** of a cited record, and the paragraph for the agent that writes code)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -60,26 +60,24 @@ record 0013 says that ADR-0012 R2 keeps `net/http` out of the token packages, an
 
 ## Results
 
-Runs of 2026-11-12 on tree `8fe854e2`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. The case ran again on this tree because **One home** now says how a citation of another
-record's rule reads, and Request 2 cites ADR-0012, and because the guide's contents now send the agent that writes code
-to the **Related ADRs** of a cited record. All four results pass checks 1 to 10 and 12 by meaning. Each writes ADR-0012
-with the repository's `####` metadata, numbered import rules tagged `token`, which its guide maps to `internal/token/`,
-and a **Confirmation** that names `token-no-http`; each writes the guide and adds to `AGENTS.md` a paragraph that names
-the guide and the trailers. Each guide says, in one sentence or two, that where a rule cites a rule of another record,
-the reader also reads that record's **Related ADRs**, where a line names any later record that replaces the cited rule.
-In Request 2, Sonnet r2 writes one rule tagged `token` and `http`, the others a `token` rule and an `http` rule, and
-none invents a test name. `check.py` fails Sonnet r2 on check 8 by the marker alone: its HTTP 401 sits in the term
-"refuse", which its R1 uses.
+Runs of 2026-11-16 on tree `0b92dea7`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because **One home** and the items after it now say when
+and how a record cites a rule of another record, and Request 2 cites ADR-0012, and because the guide's contents now send
+the agent that writes code to the **Related ADRs** of a cited record. All four results pass checks 1 to 10 and 12. Each
+writes ADR-0012 with the repository's `####` metadata, numbered import rules tagged `token`, which its guide maps to
+`internal/token/`, and a **Confirmation** that names `token-no-http`; each writes the guide and adds to `AGENTS.md` a
+paragraph that names the guide and the trailers. Each guide says that where a rule cites a rule of another record, the
+reader also reads that record's **Related ADRs** for a later record that replaces it. In Request 2, Opus r1 writes one
+rule tagged `token` and `http`, the others two rules, and none invents a test name.
 
-Check 11 passes in two of four results. Opus r1 and r2 cite "the import rule of ADR-0012 R1" and say nothing of what it
-requires. Sonnet r1 and r2 fail it: Sonnet r1 says that "the import rule of ADR-0012 R1 keeps `net/http` out of
-`internal/token/verify`", and Sonnet r2 that "the `net/http` import rule of ADR-0012 R2 keeps the status constants of
-`net/http` out of" the token package. On tree `d42618eb`, before this change, all four results said that ADR-0012 keeps
-`net/http` out of the token packages, and the results of that tree, replaced in this commit, all fail check 11. Three
-earlier trees of this change ran the case and their results are not kept: on `ba170d99` two of four passed check 11, on
-`d8b52781` four of four, and on `b7a46b78` three of four. No result of those trees passes check 12, which their skill
-did not ask for.
+Check 11 passes in three of four results by meaning. Opus r1, Opus r2, and Sonnet r1 do not cite ADR-0012 in record 0013
+at all, and their **Related ADRs** reads "None". Sonnet r2 cites it and fails check 11 by meaning, though not on the
+marker: its Justification says that "a token package cannot import HTTP packages (ADR-0012 R1)", and its line under
+**Related ADRs** that "R1 bars imports of HTTP packages from `internal/token/`". On tree `d42618eb`, before this change,
+all four results said that ADR-0012 keeps `net/http` out of the token packages, and the results of that tree, replaced
+in this commit, all fail check 11. Four earlier trees of this change ran the case and their results are not kept: check
+11 passed in two of four results on `ba170d99`, four on `d8b52781`, three on `b7a46b78`, and two on `8fe854e2`. Only the
+results of `8fe854e2` pass check 12, which the skill asks for from that tree on.
 
 No result names a defect. The intermediate trees of the previous change, `89cbfb4e` to `1db689e3`, ran this case as
 well and passed checks 1 to 10 by meaning; their results are not kept.

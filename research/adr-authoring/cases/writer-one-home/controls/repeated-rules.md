@@ -19,6 +19,7 @@ Proposed
 
 ### Related ADRs
 
+- [ADR-0006: <title of ADR-0006>](0006-<slug>.md): see also.
 - [ADR-0003: <title of ADR-0003>](0003-<slug>.md): the issuer check of ADR-0003 R4, which **Context** cites for the
   mode `legacy`.
 - [ADR-0004: <title of ADR-0004>](0004-<slug>.md): the `sub` check of ADR-0004 R3 and the namespace check of ADR-0004

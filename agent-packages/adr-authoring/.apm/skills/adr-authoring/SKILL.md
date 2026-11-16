@@ -241,35 +241,28 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
   rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
-  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
-  Every record cited outside **Related ADRs** appears under **Related ADRs** with a link, and a rule of a record in
-  another repository is cited as `owner/repo ADR-NNNN Rn`.
-- **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
-  conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
-  - A rule cites another rule only where the citation changes what the rule requires. That is an exception, a
-    precedence, or something the cited rule defines and this rule uses, as in "gets the response of ADR-0095 R2". The
-    cited rule applies whether or not this rule names it, so a sentence that only tells the reader where else the
-    subject is constrained adds nothing to the rule, even with the number in it. Leave it out, and where an approver
-    needs that link to accept the rule, give it in the Justification.
-  - A citation of a rule of another record, in any section, Context and Justification included, except the short quote
-    that cites a record without numbered rules, names the rule and what the rule is about. It may name that subject by
-    an identifier, such as an error code or a setting: "the `sub` check of ADR-0094 R16", "the import rule of ADR-0012
-    R2". What the cited rule decides stays in that rule, including where a list comes from. So a citation does not
-    read "ADR-0094 R16 refuses a token whose `sub` does not start with `system:serviceaccount:`" or "ADR-0012 R2 keeps
-    `net/http` out of the token packages". A record that replaces part of the cited rule states the old answer where
-    it names the change, in an alternative or a consequence.
-  - A rule that other rules already imply states their requirement a second time: "a token is never accepted without
-    the check of R17" beside R17, or "ADR-0091 R7 applies to a Kubernetes token" where ADR-0091 R7 covers every token.
-    Leave it out.
-  - A case that a rule of another record leaves unclear belongs to that record. While that record is `Proposed`,
-    propose an edit of the rule to the user. Once it is accepted, a record about the same subject replaces the whole
-    rule (**Superseding part of a record**): the new rule states the requirement in full, and no rule narrows a rule
-    that stays in force. A rule of this record that only uses the cited rule, such as the error code this record gives
-    a token that fails it, is not such a case.
+  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`,
+  and a rule of a record in another repository as `owner/repo ADR-NNNN Rn`. Every record the text cites appears under
+  **Related ADRs**, and so does a record that this one replaces or that replaces it; no other record does.
+- **One home**: a requirement is stated once, in one rule. Everywhere else, in this record or another, cite it by
+  number (by section and a short quote where the record has no numbers) and by what it is about, not by what it
+  decides: "the retry limit of ADR-0031 R4", not "ADR-0031 R4 allows three retries". A restatement drifts. A table
+  that summarizes rules holds rule numbers.
+- **A citation changes the outcome**: a rule cites another rule only to make an exception to it, to take precedence
+  over it, or to use something it defines, such as its response. A rule that repeats a requirement, or says that
+  another rule applies, adds a number and no requirement. Leave it out; where an approver needs the link, give it in
+  the Justification.
+- **Cite only what the reader needs**: in any section, a citation earns its place where removing it would change what
+  a checker tests, or would leave an approver without the reason for a rule or the cost of a consequence. Leave out a
+  citation that only shows the writer knows the neighboring records: a "see also", a rule that shares a word or a
+  subject with this one, a rule the change must merely not break, a reminder that a rule still applies. A rule in
+  force applies to every change whether or not it is cited. Where a rule reads unclearly without a citation, fix the
+  rule rather than adding one.
+- **Fix a rule where it lives**: a case that another record's rule leaves unclear is settled in that rule. While its
+  record is `Proposed`, propose the edit to the user; once it is `Accepted`, replace the rule whole (**Superseding part
+  of a record**) instead of narrowing it from another record.
 - **Every requirement is a rule**: nothing outside **Rules** may add a requirement that a change can fail,
-  **Confirmation** and **Implementation notes** included. Where such a section refers to a requirement of another
-  record, it cites the rule by number, as `ADR-0091 R54`, not the record alone; a record without numbered rules is
-  cited by section and a short quote.
+  **Confirmation** and **Implementation notes** included. Such a section cites the rule, not the record.
 - **No position words**: "the addresses above" and "the check below" stop working when the text moves. Cite the rule.
 
 Reasons belong in the Justification. Keep a reason inside a rule only where it limits how the rule reads.

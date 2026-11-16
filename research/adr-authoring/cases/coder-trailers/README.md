@@ -65,13 +65,10 @@ Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Draft
 the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
 paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.
 
-Tree `b7a46b78` changes only "Rules": **Numbers freeze** asks for a link under **Related ADRs** to every cited record;
-**One home** says when a rule cites another rule, that a citation of a rule of another record names what that rule is
-about and none of what it decides, that a rule other rules imply is left out, and that a case a rule of another record
-leaves unclear belongs to that record, and it takes in **No pointer rules**; **Every requirement is a rule** asks for a
-rule number instead of a record. The session of this case does not read `adr-authoring`, and its input does not change,
-so the results above stand for the tree.
-
-Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
-**Related ADRs** of a record that a rule cites. The session of this case does not read `adr-authoring`, and its input
-does not change, so the results above stand for that tree as well.
+Tree `0b92dea7` is the tree of this pull request. It changes "Rules": **Numbers freeze** cites a rule of another
+repository as `owner/repo ADR-NNNN Rn` and keeps under **Related ADRs** the records the text cites, and those that
+replace this record or that it replaces; **One home** cites a rule by what it is about, not by what it decides; **A
+citation changes the outcome**, **Cite only what the reader needs**, and **Fix a rule where it lives** are new, and **No
+pointer rules** is gone. It also adds to the contents of the guide, under "The reading guide", that the agent that
+writes code reads the **Related ADRs** of a record that a rule cites. The session of this case does not read
+`adr-authoring`, and its input does not change, so the results above stand for that tree.

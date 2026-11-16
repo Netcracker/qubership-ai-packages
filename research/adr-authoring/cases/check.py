@@ -568,17 +568,17 @@ def r2_no_401_copied(text):
 
 
 def cited_records_linked(text):
-    """A record that a record 0007 cites outside **Related ADRs** but does not link under it, in either request."""
-    missing = []
+    """A record that a record 0007 cites but does not link under **Related ADRs**, or links there without citing it."""
+    wrong = []
     for request in ('Request 1', 'Request 2'):
         rec = record_of(text, request, '0007')
         related = heading_block(rec, 'Related ADRs')
         linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', related)
                   for n in re.findall(r'ADR-(\d{4})', label)}
         cited = set(re.findall(r'ADR-(\d{4})', rec.replace(related, '') if related else rec)) - {'0007'}
-        missing += [f'{request}: ADR-{n}' for n in sorted(cited - linked)]
-    return result(not missing, f'cited but not linked: {", ".join(missing)}' if missing
-                  else 'every cited record is linked under Related ADRs')
+        wrong += [f'{request}: ADR-{n} not linked' for n in sorted(cited - linked)]
+        wrong += [f'{request}: ADR-{n} linked, not cited' for n in sorted(linked - cited)]
+    return result(not wrong, ', '.join(wrong) if wrong else 'Related ADRs links exactly the cited records')
 
 
 def not_copied(request, pattern, what):

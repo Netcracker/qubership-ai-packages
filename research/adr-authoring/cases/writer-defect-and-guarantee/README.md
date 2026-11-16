@@ -24,8 +24,9 @@ the user to choose between the two entrypoints and wrote the answer as R2. It al
   becomes a proposed issue that the record does not name, and a requirement that only makes the fix work goes into it; a
   dependency's guarantee is a fact in Context), "Open points" (a question about a defect gets no open point), "Drafting
   from the user's input" (a question about a defect gets the issue, not a choice), "Template" (Context), "Rules"
-  (**Form**, the behavior rule; **One home**, a rule that other rules imply, which a dependency's default is not),
-  "Local conventions" (the next free number), "The reading guide" (no guide rewritten where one exists)
+  (**Form**, the behavior rule; **A citation changes the outcome**, a rule that repeats a requirement, which a
+  dependency's default is not), "Local conventions" (the next free number), "The reading guide" (no guide rewritten
+  where one exists)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -89,18 +90,19 @@ only after the Bug is fixed. It fails check 3, and checks 10 and 11 on the marke
 
 ## Results
 
-Runs of 2026-11-12 on tree `b7a46b78`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. The case ran again on this tree because **One home** now leaves out a rule that other
-rules imply, and the TLS rule of Request 3 is met by Go's default, which is no rule, so it has to stay. All four
-results pass all fifteen checks, by the marker and by meaning. Each writes ADR-0007 with rules for the configuration,
-the Compose example, and the CI job, and none on the entrypoint, the certificates, or the chart volumes. Each message
-says that the platform's guide and the base image's README settle the entrypoint, and proposes a Bug for the replaced
-entrypoint; each Context states, from the base image's README, what its entrypoint does with `/tmp/cert`. In Request 2,
-all four refuse `none` and the HMAC algorithms in rules with HTTP 401, and in Request 3 all four write a rule for TLS
-1.2 or later, though Go's default already meets it.
+Runs of 2026-11-16 on tree `0b92dea7`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because **A citation changes the outcome** now leaves out
+a rule that repeats a requirement, and the TLS rule of Request 3 is met by Go's default, which is no rule, so it has to
+stay. All four results pass all fifteen checks by meaning; `check.py` fails Sonnet r1 on checks 5 and 6 because its
+message sits under "Message to user", a heading the marker does not read. Each writes ADR-0007 with rules for the
+configuration, the Compose example, and the CI job, and none on the entrypoint, the certificates, or the chart volumes.
+Each message says that the platform's guide and the base image's README settle the entrypoint, and proposes a Bug for
+the replaced entrypoint; each Context states, from the base image's README, what its entrypoint does with `/tmp/cert`.
+In Request 2, all four refuse `none` and the HMAC algorithms in rules with HTTP 401, and in Request 3 all four write a
+rule for TLS 1.2 or later, though Go's default already meets it.
 
-Two earlier trees of this change ran the case too, and their results are not kept: on `ba170d99` all four passed by
-meaning, and `check.py` failed three checks on the marker; on `d8b52781` all four passed every check.
+Three earlier trees of this change ran the case too, and their results are not kept: on `ba170d99` all four passed by
+meaning, and `check.py` failed three checks on the marker; on `d8b52781` and `b7a46b78` all four passed every check.
 
 On tree `d42618eb`, before this change, all four results passed all fifteen checks by meaning as well; `check.py`
 failed three of them on the marker.
@@ -116,7 +118,3 @@ and fail check 9: Opus says that its rule 4 holds only if token-gate runs behind
 switching to the base entrypoint as an option. By meaning both also fail checks 3 and 7: each states the `/tmp/cert`
 trust as its rule 4 and offers the two entrypoints under an "Open question" heading. Sonnet's rule 5 requires the base
 entrypoint, which fails check 2.
-
-Tree `8fe854e2` adds to the contents of the guide, under "The reading guide", that the agent that writes code reads the
-**Related ADRs** of a record that a rule cites. This case writes no guide, so the results above stand for that tree as
-well.
