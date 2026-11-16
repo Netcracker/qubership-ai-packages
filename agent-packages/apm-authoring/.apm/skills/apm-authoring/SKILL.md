@@ -222,6 +222,8 @@ harness, and how to change one after a failed case or eval run, is
 
 ### 1. Encode platform-specific knowledge, nothing else
 
+This is `agent-instruction-authoring` rule *Write only what changes
+what the agent does*, applied to a library or platform package.
 Include only what the agent cannot reasonably know:
 
 - **Required ordering** of init steps (`configloader.Init` before

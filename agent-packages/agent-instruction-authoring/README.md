@@ -15,7 +15,7 @@ skill of the language the text is written in.
 
 - `.apm/instructions/agent-instruction-authoring.instructions.md`: the trigger merged into `AGENTS.md` / `CLAUDE.md` by
   `apm compile`.
-- `.apm/skills/agent-instruction-authoring/SKILL.md`: the eight rules, each with its reason and its boundary.
+- `.apm/skills/agent-instruction-authoring/SKILL.md`: the nine rules, each with its reason and its boundary.
 
 ## Install
 
