@@ -28,13 +28,16 @@ demands an answer to every item can, and the form is short enough that the items
 4. Names and comments that refer by position or ordinal where a content name exists.
 5. Assertions that hide the operands, messages that repeat the name, case ids that are indexes.
 6. Whether the evidence that the tests can fail is stated.
-7. The siblings of the change: other callers of the helper the fix touched, other builders of the same literal,
-   found with `git grep` (or `sb callers` where that code-search command is installed), each judged for the same defect;
-   every list and count of a set the change adds a member to; every parallel path a fix has to cover.
+7. The siblings of the change: other callers of the helper the fix touched, other builders of the same literal, found
+   with `git grep` (or `sb callers` where that code-search command is installed), each judged for the same defect; every
+   list and count of a set the change adds a member to; every parallel path a fix has to cover; every text outside the
+   diff that still states the old behavior as current. A sibling is fixed in the same change, and named as a follow-up
+   only where it cannot change in this change.
 8. Cases added at one site: a member that three or more commits of the branch changed (`comment-drift.py --history`),
-   or a cross-review family, where two of those commits each handled one more input shape. The review states the
-   property the cases stand in for and tries two inputs beside them; two that fail are a request to compute the
-   property in one place, or to narrow the change and open an issue, not to add a case.
+   or, on a branch too short for that, that the previous report asked to fix more than once, where two of those changes
+   each handled one more input shape. The review states the property the cases stand in for and tries two inputs beside
+   them; two that fail are a request to compute the property in one place, or to narrow the change and open an issue,
+   not to add a case.
 
 A change with no code (a skill, an `AGENTS.md` or `CLAUDE.md`, a docs page, a configuration) is checked through the same
 items read as analogues. For a skill or an instruction file the report adds a table of the instructions the change adds
@@ -55,8 +58,9 @@ report goes out.
   `apm compile`: run the skill in a fresh subagent when a coding task is written and before the commit is final.
 - `.apm/skills/final-review/SKILL.md`: the form.
 - `.apm/skills/final-review/scripts/comment-drift.py`: lists, per changed member, whether its code or its doc comment
-  moved, so that the comments nobody edited above changed code are on the reviewer's list. Java, Kotlin, Groovy, and
-  Scala; line-based and approximate.
+  moved, so that the comments nobody edited above changed code are on the reviewer's list. With `--history`, it lists
+  instead every member outside the test sources that three or more commits of the branch changed. Java, Kotlin, Groovy,
+  and Scala; line-based and approximate.
 
 ## Pairs with
 

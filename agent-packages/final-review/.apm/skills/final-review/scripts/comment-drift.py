@@ -24,7 +24,8 @@ Paths are printed relative to the repository root, whichever directory the scrip
 With --history, prints instead every member whose code HISTORY_MIN or more commits of <base>..<head>
 changed, with the subject of each commit; without <head>, the uncommitted change counts as one more.
 Files of a test source set are left out: a test class gains one method per case by design. A member
-is keyed on its bare name, so one counted under two enclosing-type paths, or two overloads, are one.
+is keyed on its bare name: two overloads, or one member the parse placed under two enclosing types,
+count as one member.
 A member that commit after commit edits is where a branch may be adding one case per fix.
 """
 import difflib
@@ -49,25 +50,31 @@ TYPE_DECL = re.compile(r"^(\s*)(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:public|private|pr
                        r"(?:class|interface|enum|record|object|trait)\s+(\w+)")
 ANNOTATION = re.compile(r"@\w+(?:\([^)]*\))?")
 HISTORY_MIN = 3
+# Characters of deleted-path arguments one `git diff` may carry: Windows caps a whole command line at 32767.
+RENAME_SOURCES_BUDGET = 24000
 
 
-def run(*args, env=None):
+def run(*args, env=None, stdin=None):
     """The stdout of a git command, decoded as UTF-8 whatever the locale says.
 
     Paths on disk are bytes, and a path the locale cannot decode keeps its bytes through
     errors="surrogateescape", so open() and `git show` find the file the diff named. ``env`` adds
-    variables to the inherited environment."""
-    return subprocess.run(["git", *args], capture_output=True, check=True,
+    variables to the inherited environment, and ``stdin`` is written to the command's input."""
+    return subprocess.run(["git", *args], capture_output=True, check=True, input=stdin,
                           encoding="utf-8", errors="surrogateescape",
                           env={**os.environ, **env} if env else None).stdout
 
 
 def uncommitted_listing():
-    """The --name-status listing of the working tree against HEAD, renames followed.
+    """The --name-status listing of the JVM sources in the working tree against HEAD, renames followed.
 
     `git diff HEAD` sees only the deleted side of a rename whose new path is untracked, so the
-    listing comes from a copy of the index with every change added to it; the real index is not
-    touched."""
+    untracked sources are marked intent-to-add in a copy of the index; the real index is not
+    touched. Intent-to-add writes no blob, and the pathspec keeps git from reading, or running the
+    clean filter of, any file that is not a JVM source. The pathspec also names every deleted path,
+    so that a source renamed back from another extension stays one file; git reads a deleted path
+    from HEAD, not from the disk. Where those paths would take more than RENAME_SOURCES_BUDGET
+    characters of the command line, it names none, and such a rename starts a new history."""
     tmp = tempfile.mkdtemp(prefix="comment-drift-")
     try:
         env = {"GIT_INDEX_FILE": os.path.join(tmp, "index")}
@@ -76,8 +83,17 @@ def uncommitted_listing():
             shutil.copyfile(real, env["GIT_INDEX_FILE"])
         else:
             run("read-tree", "HEAD", env=env)
-        run("add", "-A", env=env)
-        return run("diff", "--cached", "-M", "--name-status", "-z", "HEAD", env=env)
+        sources = [f"*{ext}" for ext in EXT]
+        deleted = set(nul_split(run("ls-files", "--deleted", "-z", env=env)))
+        deleted |= set(nul_split(run("diff", "--cached", "--no-renames", "--name-only", "-z", "--diff-filter=D",
+                                     "HEAD", env=env)))
+        renamed_from = [f":(literal){p}" for p in sorted(deleted)]
+        if sum(len(a) + 1 for a in renamed_from) > RENAME_SOURCES_BUDGET:
+            renamed_from = []
+        untracked = run("ls-files", "--others", "--exclude-standard", "-z", "--", *sources)
+        if untracked:
+            run("add", "--intent-to-add", "--pathspec-from-file=-", "--pathspec-file-nul", env=env, stdin=untracked)
+        return run("diff", "-M", "--name-status", "-z", "HEAD", "--", *sources, *renamed_from, env=env)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -323,18 +339,26 @@ def is_test_path(path):
 
 
 def changed_paths(listing):
-    """(path before, path after) pairs of a NUL-delimited --name-status listing, renames followed."""
+    """(status letter, path before, path after) triples of a NUL-delimited --name-status listing, renames followed."""
     fields = nul_split(listing)
     out, i = [], 0
     while i < len(fields):
         status = fields[i]
         if status[0] in "RC":
-            out.append((fields[i + 1], fields[i + 2]))
+            out.append((status[0], fields[i + 1], fields[i + 2]))
             i += 3
         else:
-            out.append((fields[i + 1], fields[i + 1]))
+            out.append((status[0], fields[i + 1], fields[i + 1]))
             i += 2
     return out
+
+
+def head_has(head):
+    """A predicate that tells whether a path exists in <head>, or in the working tree where head is None."""
+    if head is None:
+        return os.path.isfile
+    present = set(nul_split(run("ls-tree", "-r", "--name-only", "-z", head)))
+    return present.__contains__
 
 
 def print_history(base, head):
@@ -342,36 +366,47 @@ def print_history(base, head):
 
     A step is a non-merge commit of <base>..<head>, oldest first, and, where <head> is the working
     tree, the uncommitted change as a last step. A step counts once per member however many of its
-    hunks touch it, and a renamed file keeps its members' counts under its latest path."""
+    hunks touch it. A renamed file keeps its members' counts. A file added at a path starts a
+    history of its own, including at a path that a rename or a deletion freed and at a path that a
+    revert restores. Each file is reported under the last of its paths that exists in <head> and
+    that no later step gave to another file, and a file with none is left out. With merges in the
+    range, "later" is the order of the walk, not the order in which the paths replaced one another."""
     shas = run("rev-list", "--reverse", "--no-merges", f"{base}..{head or 'HEAD'}").split()
     steps = [(sha, f"{sha}^", sha, run("log", "-1", "--format=%h %s", sha).strip()) for sha in shas]
     if head is None:
         steps.append((None, "HEAD", None, "(uncommitted)"))
-    origin = {}  # path -> the path the file had in the first step that named it
-    latest = {}  # that first path -> the file's latest path
-    edits = {}  # (first path, bare name) -> [step label]
-    names = {}  # (first path, bare name) -> {full member names seen}
+    file_of = {}  # path -> the index in paths of the file that holds it
+    paths = []  # for each file, every path it had, in walk order
+    edits = {}  # (file, bare name) -> [step label]
+    names = {}  # (file, bare name) -> {full member names seen}
     for sha, before, after, label in steps:
         listing = run("diff-tree", "--no-commit-id", "-r", "-M", "--name-status", "-z", sha) if sha \
             else uncommitted_listing()
-        for old, new in changed_paths(listing):
-            key_path = origin.setdefault(old, old)
-            origin[new] = key_path
-            latest[key_path] = new
+        for status, old, new in changed_paths(listing):
+            if status == "A" or old not in file_of:
+                file_of[old] = len(paths)
+                paths.append([old])
+            file = file_of[new] = file_of[old]
+            if new not in paths[file]:
+                paths[file].append(new)
             if not new.endswith(EXT):
                 continue
-            members = code_members(lines_of(before, old), lines_of(after, new))
+            members = code_members([] if status == "A" else lines_of(before, old), lines_of(after, new))
             for bare in {bare_name(m) for m in members}:
-                edits.setdefault((key_path, bare), []).append(label)
-                names.setdefault((key_path, bare), set()).update(m for m in members if bare_name(m) == bare)
+                edits.setdefault((file, bare), []).append(label)
+                names.setdefault((file, bare), set()).update(m for m in members if bare_name(m) == bare)
+    exists = head_has(head)
+    surviving = [next((p for p in reversed(ps) if exists(p) and file_of[p] == file), None)
+                 for file, ps in enumerate(paths)]
     current = None
-    for (key_path, bare), labels in sorted(edits.items()):
-        if len(labels) < HISTORY_MIN or not latest[key_path].endswith(EXT) or is_test_path(latest[key_path]):
+    for (file, bare), labels in sorted(edits.items(), key=lambda kv: (surviving[kv[0][0]] or "", kv[0])):
+        path = surviving[file]
+        if len(labels) < HISTORY_MIN or path is None or not path.endswith(EXT) or is_test_path(path):
             continue
-        if key_path != current:
-            print(f"== {latest[key_path]}")
-            current = key_path
-        print(f"  {bare}: {len(labels)} commits ({'; '.join(sorted(names[(key_path, bare)]))})")
+        if file != current:
+            print(f"== {path}")
+            current = file
+        print(f"  {bare}: {len(labels)} commits ({'; '.join(sorted(names[(file, bare)]))})")
         for label in labels:
             print(f"    {label}")
 
