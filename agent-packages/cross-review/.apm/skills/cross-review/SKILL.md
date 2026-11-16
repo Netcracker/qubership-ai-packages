@@ -236,12 +236,35 @@ Classify each item. Your advantage over both reviewers is that you know why the 
   findings and rejected none; **a run that never rejects is not agreeing with its reviewers, it is
   not checking them**.
 
+- **An item at the symbol of an earlier fix may be the same property again.** `merge-apply` prints,
+  under `same_site`, the earlier fixes at each item's symbol, and at its own id where an earlier
+  round fixed it. Decide which of them get wrong the property the new item does (*which requests act
+  for a user*, *which targets have unspecified nullness*), list those in the decision's
+  `same_property` (`[]` where none does; an item's own earlier fix is always listed), and name the
+  property in `family`: one sentence, reused verbatim for every member. `ledger-apply` refuses the
+  round until you do, and the listed fixes join the family, so two properties at one symbol stay
+  apart. A rejected item needs neither field. A follow-up stays on the report's list until a later
+  fix of the same item, or of another member of its family, removes the cause. Where an earlier fix
+  in the family added a case (`fix_shape: adds_case`), the new item is an input that case list
+  missed, and another case is what the next round refiles on the input beside it. A case analysis
+  over a closed set, such as an enum, a sealed hierarchy, or the productions of a grammar, has no
+  input beside it: a fix that makes it exhaustive is `removes_cause`. Otherwise, fix it so the
+  property is computed where it is owned (`removes_cause`), or take out of the change the decisions
+  that depend on it (`narrows`), with a `follow_up` naming the issue or change that will compute it.
+  Where computing it is more work than the change's own purpose, the choice is the user's: ask,
+  listing the inputs that failed.
+
+  Measured on one run: `subject_of` gained one input per round, the query as well as the body, then
+  an empty value read as absent, then the first value as `replay.user_id`, which owns it, reads it.
+  The third fix landed at `max_rounds`, so nothing reviewed it. §5b asks for the invariant of one
+  fix, and the two fixes before it were not in front of the author, so it caught none of them.
+
 - **A comment finding is two different findings.** *This sentence states something the code does not
   do* is a defect like any other: it misleads the next reader, and the next round's reviewer is one
   of them. Fix it in the round that raised it. *This sentence could be clearer*, or *this rule
-  deserves user-facing documentation*, is a preference — record it `deferred` and leave the text
-  alone until the loop stops (§7). The severity rule already keeps most of these out of the blocking
-  set; what costs rounds is fixing them anyway.
+  deserves user-facing documentation*, is a preference — record it `deferred` with `origin: prose`
+  and leave the text alone until the loop stops (§7). The severity rule already keeps most of these
+  out of the blocking set; what costs rounds is fixing them anyway.
 
 Measured over one run: five findings concerned prose, four of them `minor` and non-blocking, and
 every one was fixed inside the loop. Two of the five — a comment crediting a filter that no longer
@@ -301,7 +324,8 @@ Then spawn a **fresh** subagent for the plan review (`subagent_type: general-pur
 > contract.
 >
 > Round `<N>` plan review in `<repo>`. The plan is `<review_dir>/rounds/<N>/fix-plan.md`, and the
-> findings it answers are `<review_dir>/rounds/<N>/merged.json`.
+> findings it answers are `<review_dir>/rounds/<N>/merged.json`. Every earlier round's fixes and
+> follow-ups are under `fix_log` and `families` in `<review_dir>/state.json`.
 > Write your verdicts to `<review_dir>/rounds/<N>/plan-review.md`.
 
 The reviewer subagent from step 3 is the cheaper reader, and it is what this step used first: it
@@ -347,6 +371,11 @@ Both quotes are from one run's round-1 plan, from the single item its second ame
 nobody read. The wider rule asked what *owned* a symbol rather than what the symbol was, and
 silenced every declaration inside a record; the deferred risk was a duplicate diagnostic. They were
 the blocking findings of rounds 2 and 3, in that order.
+
+An item that `merge-apply` listed under `same_site` carries one more line, so the plan reviewer can
+tell which family it is in: `**Family.**` the property sentence and the earlier fixes listed in
+`same_property`, each with its `fix_shape`, or `none` and why each earlier fix is unrelated; and
+this fix's shape.
 
 Skip the step for an item whose fix is one obvious edit with nothing to assume: a typo, a comment, a
 renamed identifier. Write in the plan that you skipped it, and why.
@@ -559,7 +588,7 @@ Fix what you accept. Then write a fix report:
 ```json
 { "round": 2,
   "decisions": [
-    { "id": "F-001", "kind": "fixed",
+    { "id": "F-001", "kind": "fixed", "fix_shape": "removes_cause",
       "rationale": "isCodecOwned now requires a non-null representation",
       "evidence": "PgResultSet.java:2141; test testUpdateRowWithNullCustomBinaryType" },
     { "id": "F-002", "kind": "rejected",
@@ -568,12 +597,19 @@ Fix what you accept. Then write a fix report:
   ] }
 ```
 
-`kind` is `fixed`, `rejected`, or `deferred`. Where the code departed from the reviewed plan, the
-evidence says so and says why. **`evidence` is required and is the point of the
-exercise**: a rejection backed by a mechanism retires a finding for good, while a rejection backed by
-an opinion comes back every round. Name the file and the declaration that settles it. For a `fixed`
-item, the evidence also says which axes the new test covers — that is what makes the section above
-something you did rather than something you read.
+`kind` is `fixed`, `rejected`, or `deferred`. A `fixed` item names its `fix_shape`: `removes_cause`
+where the cause is gone, `adds_case` where one more input is handled, `narrows` where the change no
+longer makes the decision, `moves` where the decision moved to another place. An item `same_site`
+listed carries `same_property` and, where that list is not empty, `family` (§5). A blocking item is
+`deferred` only with an `origin` of `preexisting` or `beyond_task` and a `follow_up`, or as a docs
+or style preference with `origin: prose`, which §7 closes; a defect the change introduced is
+narrowed instead. `origin` is your own claim, and `ledger-apply` checks only that one is there, so
+read what the reviewers said about the cause before you write `preexisting`. Where the code departed
+from the reviewed plan, the evidence says so and says why. **`evidence` is required and is the point
+of the exercise**: a rejection backed by a mechanism retires a finding for good, while a rejection
+backed by an opinion comes back every round. Name the file and the declaration that settles it. For
+a `fixed` item, the evidence also says which axes the new test covers — that is what makes the
+section above something you did rather than something you read.
 
 ```bash
 python3 $S ledger-apply --fix-report <file>
@@ -611,7 +647,8 @@ python3 $S report
 ```
 
 Read `report.md` and summarize it: rounds run, what was fixed, what was rejected and on what
-evidence, and anything still open. State the verdict — `clean`, `items remaining`, or
+evidence, and anything still open. List its follow-ups and offer to file each; file none without
+the user's yes. State the verdict — `clean`, `items remaining`, or
 `incomplete` when the last round did not review the final code (it did not finish, its reviewers
 read a moving tree, or the code changed after its snapshot) — and say explicitly if any round was
 degraded.
@@ -621,14 +658,15 @@ rejected and why, copy its `state.json`.
 
 ## 6a. Final review, once the loop has stopped
 
-After `report` and before the commit is final, run `final-review` in a fresh subagent over the
-whole change: the diff from `base_oid` to the tree, with the task statement handed over verbatim (`task.md` in the
-run directory, when the run has one).
-Name no model in the call; the subagent takes the session's default. The skill is a form, not a
-reviewer: it answers a fixed list of questions the loop's reviewers do not ask (a comment left
-above changed code, a claimed case with no test, the missing negative control, a name by ordinal, a
-boolean assertion around a comparison, the siblings of the fixed site) and labels every finding
-substantive, taste, or churn.
+After `report` and before the commit is final, run `final-review` in a fresh subagent over the whole
+change: the diff from `base_oid` to the tree, with the task statement handed over verbatim
+(`task.md` in the run directory, when the run has one) and the run's `report.md`, whose families
+item 8 reads when the change is one commit. Name no model in the call; the subagent takes the
+session's default. The skill is a form, not a reviewer: it answers a fixed list of questions the
+loop's reviewers do not ask (a comment left above changed code, a claimed case with no test, the
+missing negative control, a name by ordinal, a boolean assertion around a comparison, the siblings
+of the fixed site, a member the change kept adding cases to) and labels every finding substantive,
+taste, or churn.
 
 Act on the substantive findings only. One that changes code or tests re-enters the loop as a round
 (step 2), so the two reviewers see the fix; one that changes prose joins the `deferred` list for

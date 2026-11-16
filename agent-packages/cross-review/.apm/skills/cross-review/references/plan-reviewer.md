@@ -61,7 +61,14 @@ corrupt the digest fence the round depends on.
    `String[][]`, and a tree dumped for a field says nothing about the same syntax in a cast.
 2. **The `Change` against the `Invariant`.** Does the described edit establish the invariant, or
    only the one input the finding reported? An edit that special-cases the reported shape is
-   `underspecified`, however correct it is for that shape.
+   `underspecified`, however correct it is for that shape. Where an item's `Family` line names a
+   family, read the earlier fixes it lists in `state.json` (`families`, and their `fix_log` entries,
+   which keep every round's decision; the ledger keeps only the latest). An item that adds a case to
+   a family whose earlier fix added one is `wrong`: name one input beside the listed ones that it
+   misses (one level deeper, through a wrapper or a generic call, through a subtype), and say
+   whether the item should compute the property or take it out of the change. An item with no
+   `Family` line is `underspecified` where a `fix_log` entry of an earlier round has `kind: fixed`
+   and the item's own id, or its path and symbol.
 3. **Interference with a fix already made.** A plan item that widens a predicate the previous round
    narrowed, or narrows one it widened, is where a loop oscillates. Name the earlier item.
 4. **The `Axes` and `Teeth`.** An axis the invariant ranges over that the plan does not sample is

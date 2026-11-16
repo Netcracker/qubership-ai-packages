@@ -26,6 +26,9 @@ SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schema"
 POINTER_NAME = "cross-review-current"
 SEVERITY_ORDER = {"minor": 0, "major": 1, "blocker": 2}
 LINE_SLACK = 5
+FIX_SHAPES = ("removes_cause", "adds_case", "narrows", "moves")
+DEFER_ORIGINS = ("preexisting", "beyond_task", "prose")
+PROSE_CATEGORIES = ("docs", "style")
 
 # Codex reports P0-P3; the ledger and the blocking rule work in three levels.
 CODEX_PRIORITY_TO_SEVERITY = {0: "blocker", 1: "blocker", 2: "major", 3: "minor"}
@@ -344,6 +347,7 @@ def cmd_init(args: argparse.Namespace) -> None:
         "agents": [],
         "rounds": [],
         "ledger": [],
+        "families": {},
         "stop_reason": None,
     }
     write_state(d, state)
@@ -555,6 +559,16 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
     if deferred:
         out.append("Deferred as out of scope for this change: "
                    + ", ".join("[%s] %s" % (e["id"], e["title"]) for e in deferred))
+        out.append("")
+    case_families = {k: v for k, v in state.get("families", {}).items()
+                     if any(f["shape"] == "adds_case" for f in v["fixes"])}
+    if case_families:
+        out.append("Properties an earlier fix handled by adding a case, with the findings that reported "
+                   "them. The next failure is usually an input next to the ones those fixes handled: "
+                   "one level deeper, through a wrapper or a generic call, through a subtype, or two "
+                   "handled shapes combined. Try those, not the handled inputs.")
+        for name, fam in case_families.items():
+            out.append("- %s (%s)" % (name, ", ".join(sorted({m["id"] for m in fam["members"]}))))
         out.append("")
     task = task_statement(state)
     if task:
@@ -1133,8 +1147,10 @@ def merge_with(d: Path, state: Dict[str, Any], n: int, prep: Dict[str, Any],
         state["stop_reason"] = None
     state["status"] = "awaiting_fixes"
     write_state(d, state)
+    same_site = {i["id"]: ids for i in items if (ids := same_site_fixes(state, i, n))}
     emit({"file": str(out), "items": len(items), "blocking": merged["stats"]["blocking"],
           "degraded": prep["degraded"], "stale": prep["target"]["stale"],
+          "same_site": same_site, "families": family_summary(state),
           "next": "read %s, decide each item, then run ledger-apply" % out})
 
 
@@ -1223,6 +1239,94 @@ def check_decisions(decisions: Any, findings: set, ledger_ids: set, source: Opti
             % (len(errors), listing))
     die("%s fails %d check(s), so merged.json was not written:\n  - %s\n"
         "Fix them in that file and rerun merge-apply with it." % (source, len(errors), listing))
+
+
+def same_site_fixes(state: Dict[str, Any], item: Dict[str, Any], n: int) -> List[str]:
+    """Return the ids fixed in an earlier round at the same path and symbol as ``item``, and its own id
+    where an earlier round fixed it, whatever symbol the new finding names.
+
+    Such an item may get wrong the same property an earlier fix handled, which is how a run that adds
+    one case per round looks from inside a single round; ledger-apply makes the decision say whether it
+    does. The answer comes from ``fix_log``, so a later refile, rejection, or decision of this round
+    does not remove a fix that is still in the code.
+    """
+    anchor = item["anchor"]
+    ids = [f["id"] for f in fix_log(state)
+           if f["kind"] == "fixed" and f["round"] < n
+           and (f["id"] == item["id"]
+                or (anchor["symbol"] and f["path"] == anchor["path"] and same_symbol(f["symbol"], anchor["symbol"])))]
+    return list(dict.fromkeys(ids))
+
+
+def fix_log(state: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return the run's record of fixed decisions and deferrals with a follow-up, one entry per decision.
+
+    The ledger keeps only each item's latest decision; this keeps every one, with the round, shape,
+    family, follow-up, and anchor it had. Entries are only appended, except that redoing a round puts the
+    log back as it was before that round (rewind_round), and the one field written later is ``family``,
+    set when a later decision lists the fix in ``same_property``. A run started before the log existed
+    gets one built from its ledger and its families' fixes."""
+    if "fix_log" not in state:
+        log = [log_entry(e, e["decision"], e["decision"]["round"]) for e in state["ledger"]
+               if e["decision"]["kind"] == "fixed"
+               or (e["decision"]["kind"] == "deferred" and e["decision"].get("follow_up"))]
+        by_id = {e["id"]: e for e in state["ledger"]}
+        for name, fam in state.get("families", {}).items():
+            for f in fam["fixes"]:
+                if f["id"] in by_id and not any(x["id"] == f["id"] and x["round"] == f["round"] for x in log):
+                    log.append(log_entry(by_id[f["id"]], {"kind": "fixed", "fix_shape": f["shape"],
+                                                          "family": name}, f["round"]))
+        state["fix_log"] = log
+    return state["fix_log"]
+
+
+def log_entry(item: Dict[str, Any], dec: Dict[str, Any], n: int) -> Dict[str, Any]:
+    """Return the fix_log record of decision ``dec`` on ``item`` in round ``n``."""
+    return {"id": item["id"], "round": n, "kind": dec["kind"], "fix_shape": dec.get("fix_shape"),
+            "family": dec.get("family"), "follow_up": dec.get("follow_up"),
+            "path": item["anchor"]["path"], "symbol": item["anchor"]["symbol"]}
+
+
+def outstanding_follow_ups(state: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """Return each (id, follow-up) the log records once, leaving out those a later fix resolved by
+    removing the cause: a fix of the same item, or of another member of the follow-up's family."""
+    out: List[Tuple[str, str]] = []
+    for f in fix_log(state):
+        if not f["follow_up"] or (f["id"], f["follow_up"]) in out:
+            continue
+        if any(g["kind"] == "fixed" and g["fix_shape"] == "removes_cause" and g["round"] > f["round"]
+               and (g["id"] == f["id"] or (f["family"] and g["family"] == f["family"]))
+               for g in fix_log(state)):
+            continue
+        out.append((f["id"], f["follow_up"]))
+    return out
+
+
+def same_symbol(a: Optional[str], b: Optional[str]) -> bool:
+    """Tell whether two anchor symbols name one declaration, where one reviewer qualified it and the other
+    did not (``PlaceCfg#subject_of`` and ``subject_of``)."""
+    if not a or not b:
+        return False
+    short, long_ = sorted((a, b), key=len)
+    return a == b or long_.endswith(("#" + short, "." + short))
+
+
+def family_summary(state: Dict[str, Any]) -> Dict[str, Any]:
+    """Return each family's members and fixes, with ``recurring`` set where a case-adding fix was followed
+    by a new member in a later round."""
+    out = {}
+    for name, fam in state.get("families", {}).items():
+        out[name] = dict(fam, recurring=is_recurring(fam))
+    return out
+
+
+def is_recurring(fam: Dict[str, Any]) -> bool:
+    """Tell whether a family produced a member in a round after one of its fixes added a case.
+
+    Once that happens, another case is the fix the next round will refile on a neighboring input.
+    """
+    case_rounds = [f["round"] for f in fam["fixes"] if f["shape"] == "adds_case"]
+    return bool(case_rounds) and max(m["round"] for m in fam["members"]) > min(case_rounds)
 
 
 def assemble_item(fid: str, group: Dict[str, Any], members: List[Dict[str, Any]],
@@ -1317,7 +1421,12 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
         if dec["kind"] not in ("fixed", "rejected", "deferred"):
             die("decision for %s has kind %r; expected fixed, rejected, or deferred"
                 % (fid, dec["kind"]))
+        check_family(state, by_id[fid], dec, n)
         upsert_ledger(state["ledger"], by_id[fid], dec, n)
+
+    # Appended only now, so every decision of the round was checked against the log as it stood before it.
+    fix_log(state).extend(log_entry(by_id[fid], dec, n) for fid, dec in decisions.items()
+                          if dec["kind"] == "fixed" or (dec["kind"] == "deferred" and dec.get("follow_up")))
 
     for item in merged["items"]:
         if item["id"] not in decisions:
@@ -1342,11 +1451,13 @@ def cmd_ledger_apply(args: argparse.Namespace) -> None:
 
     emit({"round": n, "ledger": len(state["ledger"]),
           "open_blocking": entry["blocking_out"], "stop": stop, "stop_reason": reason,
+          "recurring_families": [k for k, v in family_summary(state).items() if v["recurring"]],
           "next": "review_run.py report" if stop else "review_run.py snapshot"})
 
 
 def rewind_round(state: Dict[str, Any], n: int) -> None:
-    """Put the ledger back as it was before round n's decisions, recording it the first time.
+    """Put the ledger, the fix log, and the families back as they were before round n's decisions,
+    recording them the first time.
 
     A redone round is matched and decided against what the round before it left: otherwise its own
     first decisions turn a finding into a regression of itself, and its blocking ids into a repeat.
@@ -1356,12 +1467,113 @@ def rewind_round(state: Dict[str, Any], n: int) -> None:
     if "ledger_before" not in entry:
         entry["ledger_before"] = copy.deepcopy(state["ledger"])
         entry["last_blocking_before"] = state.get("_last_blocking_ids")
+        entry["fix_log_before"] = copy.deepcopy(fix_log(state))
+        entry["families_before"] = copy.deepcopy(state.get("families", {}))
         return
     if n != state["round"]:
         die("round %d is not the last round (round %d is), so it cannot be redone; fix what it missed "
             "in the last round instead." % (n, state["round"]))
     state["ledger"] = copy.deepcopy(entry["ledger_before"])
     state["_last_blocking_ids"] = entry["last_blocking_before"]
+    if "fix_log_before" in entry:
+        state["fix_log"] = copy.deepcopy(entry["fix_log_before"])
+        state["families"] = copy.deepcopy(entry["families_before"])
+    else:
+        # Recorded by a version that kept no fix log: drop what round n added instead.
+        state["fix_log"] = [f for f in fix_log(state) if f["round"] < n]
+        for fam in state.get("families", {}).values():
+            fam["members"] = [m for m in fam["members"] if m["round"] < n]
+            fam["fixes"] = [f for f in fam["fixes"] if f["round"] < n]
+        state["families"] = {k: v for k, v in state.get("families", {}).items() if v["members"]}
+
+
+def check_family(state: Dict[str, Any], item: Dict[str, Any], dec: Dict[str, Any], n: int) -> None:
+    """Validate the fields a decision carries about its fix and family, and record it in its family.
+
+    A rejected item asserts nothing about a property, so only the type of its same_property is checked.
+    A fixed item
+    names the shape of its fix. An item at the site of earlier fixes lists, in
+    ``same_property``, those that get the same property wrong, and names that property as its
+    ``family``; the listed fixes join the family, so the case a round-1 fix added counts against a
+    round-2 one, and the unlisted ones keep their own. An item is never unrelated to its own earlier
+    fix. A family whose earlier fix added a case takes no further case: the decision computes the
+    property, or takes the decisions that depend on it out of the change and names the follow-up that
+    will compute it. A blocking item is deferred only where the
+    change did not introduce it, and then with a follow-up, except a docs or style item deferred as
+    prose, which §7 closes.
+    """
+    fid = item["id"]
+    shape = dec.get("fix_shape")
+    if dec["kind"] == "fixed" and shape not in FIX_SHAPES:
+        die("decision for %s is fixed but its fix_shape is %r; expected one of %s"
+            % (fid, shape, ", ".join(FIX_SHAPES)))
+    shared = dec.get("same_property")
+    if shared is not None and not isinstance(shared, list):
+        die("%s has same_property of type %s; expected a list of ids." % (fid, type(shared).__name__))
+    if dec["kind"] == "rejected":
+        return
+    earlier = same_site_fixes(state, item, n)
+    if earlier and not isinstance(shared, list):
+        die("%s is at the site of %s, fixed in an earlier round. List in same_property those that get "
+            "the same property wrong, and name it in family; [] where none does."
+            % (fid, ", ".join(earlier)))
+    shared = shared or []
+    stray = [i for i in shared if i not in earlier]
+    if stray:
+        die("%s lists %s in same_property, which is not an earlier fix at its site (%s)."
+            % (fid, ", ".join(stray), ", ".join(earlier) or "none"))
+    if fid in earlier and fid not in shared:
+        die("%s was itself fixed in an earlier round, so it gets that fix's property wrong again: list "
+            "%s in same_property and name the property in family." % (fid, fid))
+    if shared and not dec.get("family"):
+        die("%s lists %s in same_property without a family: name the property they share."
+            % (fid, ", ".join(shared)))
+    if dec["kind"] == "deferred" and item["blocking"]:
+        if dec.get("origin") == "prose" and item["category"] not in PROSE_CATEGORIES:
+            die("%s is a %s finding; origin prose is for a docs or style preference."
+                % (fid, item["category"]))
+        if dec.get("origin") not in DEFER_ORIGINS:
+            die("%s is blocking and deferred with origin %r. Defer only a defect the change did not "
+                "introduce (origin: preexisting or beyond_task) or a docs or style preference "
+                "(origin: prose); narrow the change for a defect it introduced, and record that as "
+                "fixed with fix_shape narrows." % (fid, dec.get("origin")))
+        if dec.get("origin") != "prose" and not dec.get("follow_up"):
+            die("%s is blocking and deferred without a follow_up: name the draft issue or the "
+                "change that will fix it." % fid)
+    family = dec.get("family")
+    if not family:
+        return
+    fam = state.setdefault("families", {}).setdefault(family, {"members": [], "fixes": []})
+    listed = [f for f in fix_log(state) if f["id"] in shared and f["kind"] == "fixed" and f["round"] < n]
+    for f in listed:
+        if f["family"] and f["family"] != family:
+            die("%s names family %r, but %s, which it lists in same_property, is in family %r. Reuse "
+                "that sentence." % (fid, family, f["id"], f["family"]))
+    for f in listed:
+        f["family"] = family
+        add_to_family(fam, f["id"], f["round"], f["fix_shape"])
+    add_to_family(fam, fid, n, None)
+    if dec["kind"] != "fixed":
+        return
+    case_fixes = [f for f in fam["fixes"] if f["shape"] == "adds_case" and f["round"] < n]
+    if shape == "adds_case" and case_fixes:
+        die("%s adds a case to family %r, whose fix %s already added one in round %d, and the family "
+            "came back. Compute the property where it is owned (removes_cause), or take the decisions "
+            "that depend on it out of the change (narrows) and name the follow_up that computes it."
+            % (fid, family, case_fixes[0]["id"], case_fixes[0]["round"]))
+    if shape == "narrows" and not dec.get("follow_up"):
+        die("%s narrows the change for family %r without a follow_up: name the draft issue or the "
+            "change that will compute the property." % (fid, family))
+    add_to_family(fam, fid, n, shape)
+
+
+def add_to_family(fam: Dict[str, Any], fid: str, n: int, shape: Optional[str]) -> None:
+    """Record ``fid`` as a member of ``fam`` in round ``n`` and, where ``shape`` is given, its fix; a
+    pair already recorded is left alone."""
+    if not any(m["id"] == fid and m["round"] == n for m in fam["members"]):
+        fam["members"].append({"id": fid, "round": n})
+    if shape and not any(f["id"] == fid and f["round"] == n for f in fam["fixes"]):
+        fam["fixes"].append({"id": fid, "round": n, "shape": shape})
 
 
 def upsert_ledger(ledger: List[Dict[str, Any]], item: Dict[str, Any],
@@ -1388,6 +1600,11 @@ def upsert_ledger(ledger: List[Dict[str, Any]], item: Dict[str, Any],
         existing["status"] = dec["kind"]
         existing["decision"] = {"round": n, "kind": dec["kind"],
                                 "rationale": dec["rationale"], "evidence": dec["evidence"]}
+        for field in ("fix_shape", "family", "origin", "follow_up"):
+            if dec.get(field):
+                existing["decision"][field] = dec[field]
+        if isinstance(dec.get("same_property"), list):
+            existing["decision"]["same_property"] = dec["same_property"]
 
 
 def should_stop(state: Dict[str, Any], merged: Dict[str, Any], n: int) -> Tuple[bool, Optional[str]]:
@@ -1497,6 +1714,22 @@ def cmd_report(args: argparse.Namespace) -> None:
                 lines.append("- Refiled after rejection in round(s): %s"
                              % ", ".join(str(r) for r in e["reraised_rounds"]))
             lines.append("")
+
+    families = family_summary(state)
+    if families:
+        lines += ["## Families", ""]
+        for name, fam in families.items():
+            lines.append("- %s%s: members %s; fixes %s" % (
+                name, " (recurring)" if fam["recurring"] else "",
+                ", ".join("%s (round %d)" % (m["id"], m["round"]) for m in fam["members"]),
+                ", ".join("%s %s" % (f["id"], f["shape"]) for f in fam["fixes"]) or "none"))
+        lines.append("")
+
+    follow_ups = outstanding_follow_ups(state)
+    if follow_ups:
+        lines += ["## Follow-ups to file", ""]
+        lines += ["- %s: %s" % pair for pair in follow_ups]
+        lines.append("")
 
     open_blocking = [e for e in state["ledger"] if e["status"] in ("open", "regressed")]
     # With no open item, the run is clean only if its last round reviewed the code it ends on: that

@@ -113,7 +113,8 @@ class ReviewRunTest(unittest.TestCase):
         self.start_run(max_rounds=3)
         n = self.review([finding("c1", 10, "Missing null check in parse")])
         self.run_script("merge-auto")
-        self.decide(n, [{"id": "F-001", "kind": "deferred", "rationale": "later", "evidence": "app.py:10"}])
+        self.decide(n, [{"id": "F-001", "kind": "deferred", "rationale": "later", "evidence": "app.py:10",
+                            "origin": "preexisting", "follow_up": "issue to fix parse"}])
 
     # ------------------------------------------------------------------ digest
 
@@ -261,7 +262,7 @@ class ReviewRunTest(unittest.TestCase):
             json.dump(merged, f)
         fix_report = self.round_file(n, "fix-report.json")
         with open(fix_report, "w", encoding="utf-8") as f:
-            json.dump({"decisions": [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}]}, f)
+            json.dump({"decisions": [self.fixed("F-001", "removes_cause")]}, f)
         proc = self.run_script("ledger-apply", "--fix-report", fix_report, check=False)
         self.assertNotEqual(0, proc.returncode, "ledger-apply exit code")
         self.assertIn("more than one item the id F-001", proc.stderr)
@@ -396,6 +397,185 @@ class ReviewRunTest(unittest.TestCase):
         self.assertEqual([r for r in self.snapshot_refs() if r.endswith("/r2")], self.snapshot_refs())
         self.assertEqual(1, len(self.snapshot_refs()), "snapshot refs left")
 
+    # ------------------------------------------------------------------ families
+
+    def fixed(self, fid, shape, **fields):
+        return dict({"id": fid, "kind": "fixed", "fix_shape": shape, "rationale": "r", "evidence": "e"}, **fields)
+
+    def second_finding_at_a_case_fix(self):
+        """Round 1 fixes F-001 in parse by adding a case; round 2 files F-002, a new finding in parse."""
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "adds_case", family="which requests act for a user")])
+        n = self.review([finding("c2", 20, "Empty user read as absent", symbol="parse")])
+        proc = self.merge_apply(n, [group("c2", None)])
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        return n
+
+    def ledger_apply_fails(self, n, decisions):
+        path = self.round_file(n, "fix-report.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"decisions": decisions}, f)
+        proc = self.run_script("ledger-apply", "--fix-report", path, check=False)
+        self.assertNotEqual(0, proc.returncode, "ledger-apply exit code")
+        return proc.stderr
+
+    def test_a_fixed_decision_without_a_fix_shape_is_refused(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        stderr = self.ledger_apply_fails(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.assertIn("decision for F-001 is fixed but its fix_shape is None", stderr)
+
+    def test_a_finding_at_an_earlier_fix_must_say_whether_it_shares_its_property(self):
+        n = self.second_finding_at_a_case_fix()
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-002", "removes_cause")])
+        self.assertIn("F-002 is at the site of F-001", stderr)
+
+    def test_a_second_case_in_a_family_is_refused(self):
+        n = self.second_finding_at_a_case_fix()
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-002", "adds_case", same_property=["F-001"],
+                                                        family="which requests act for a user")])
+        self.assertIn("F-002 adds a case to family 'which requests act for a user', whose fix F-001", stderr)
+
+    def test_a_fix_that_removes_the_cause_is_accepted_in_a_family_that_came_back(self):
+        n = self.second_finding_at_a_case_fix()
+        applied = self.decide(n, [self.fixed("F-002", "removes_cause", same_property=["F-001"],
+                                             family="which requests act for a user")])
+        self.assertEqual(["which requests act for a user"], applied["recurring_families"])
+
+    def test_a_blocking_deferral_without_a_follow_up_is_refused(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        stderr = self.ledger_apply_fails(n, [{"id": "F-001", "kind": "deferred", "rationale": "r", "evidence": "e",
+                                              "origin": "preexisting"}])
+        self.assertIn("F-001 is blocking and deferred without a follow_up", stderr)
+
+    def test_the_report_lists_the_follow_up_of_a_narrowed_fix(self):
+        self.start_run(max_rounds=1)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "narrows", family="which requests act for a user",
+                                   follow_up="draft issue: compute the acting user in one place")])
+        with open(self.emitted("report")["file"], encoding="utf-8") as f:
+            self.assertIn("- F-001: draft issue: compute the acting user in one place", f.read())
+
+    def test_redoing_a_round_replaces_its_fix_in_the_family(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "adds_case", family="which requests act for a user")])
+        self.run_script("merge-prep")
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "removes_cause", family="which requests act for a user")])
+        with open(os.path.join(self.run_dir, "state.json"), encoding="utf-8") as f:
+            family = json.load(f)["families"]["which requests act for a user"]
+        self.assertEqual([{"id": "F-001", "round": 1, "shape": "removes_cause"}], family["fixes"])
+
+    def test_the_next_prompt_names_only_the_families_a_case_was_added_to(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse"),
+                         finding("c2", 30, "File left open", symbol="load")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "adds_case", family="which requests act for a user"),
+                        self.fixed("F-002", "removes_cause", family="which files are closed")])
+        n = self.emitted("snapshot")["round"]
+        with open(self.round_file(n, "codex-prompt.txt"), encoding="utf-8") as f:
+            prompt = f.read()
+        self.assertIn("- which requests act for a user (F-001)", prompt)
+        self.assertNotIn("which files are closed", prompt)
+
+    def test_a_rejected_refile_keeps_the_earlier_case_fix_in_force(self):
+        self.start_run(max_rounds=4)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "adds_case", family="which requests act for a user")])
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        proc = self.merge_apply(n, [group("c1", "F-001")])
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        self.decide(n, [{"id": "F-001", "kind": "rejected", "rationale": "r", "evidence": "e"}])
+        n = self.review([finding("c3", 20, "Empty user read as absent", symbol="parse")])
+        proc = self.merge_apply(n, [group("c3", None)])
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-002", "adds_case", same_property=["F-001"],
+                                                        family="which requests act for a user")])
+        self.assertIn("F-002 adds a case to family 'which requests act for a user', whose fix F-001", stderr)
+
+    def test_redoing_a_round_recorded_without_a_fix_log_drops_its_fixes(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "adds_case", family="which requests act for a user")])
+        state_file = os.path.join(self.run_dir, "state.json")
+        with open(state_file, encoding="utf-8") as f:
+            state = json.load(f)
+        for entry in state["rounds"]:
+            del entry["fix_log_before"], entry["families_before"]
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump(state, f)
+        self.run_script("merge-prep")
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "removes_cause", family="which requests act for a user")])
+        with open(state_file, encoding="utf-8") as f:
+            state = json.load(f)
+        self.assertEqual(([("F-001", "removes_cause")], [{"id": "F-001", "round": 1, "shape": "removes_cause"}]),
+                         ([(e["id"], e["fix_shape"]) for e in state["fix_log"]],
+                          state["families"]["which requests act for a user"]["fixes"]),
+                         "(fix_log, the family's fixes) after the redo")
+
+    def test_a_blocking_deferral_without_an_origin_is_refused(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        stderr = self.ledger_apply_fails(n, [{"id": "F-001", "kind": "deferred", "rationale": "r", "evidence": "e",
+                                              "follow_up": "issue"}])
+        self.assertIn("F-001 is blocking and deferred with origin None", stderr)
+
+    def test_a_correctness_finding_is_not_deferred_as_prose(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Missing null check")])
+        self.run_script("merge-auto")
+        stderr = self.ledger_apply_fails(n, [{"id": "F-001", "kind": "deferred", "rationale": "r", "evidence": "e",
+                                              "origin": "prose"}])
+        self.assertIn("F-001 is a correctness finding; origin prose is for a docs or style preference", stderr)
+
+    def test_narrowing_the_change_for_a_family_needs_a_follow_up(self):
+        self.start_run(max_rounds=3)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-001", "narrows", family="which requests act for a user")])
+        self.assertIn("F-001 narrows the change for family 'which requests act for a user' without a follow_up",
+                      stderr)
+
+    def test_same_property_names_only_earlier_fixes_at_the_site(self):
+        n = self.second_finding_at_a_case_fix()
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-002", "removes_cause", same_property=["F-009"],
+                                                        family="which requests act for a user")])
+        self.assertIn("F-002 lists F-009 in same_property, which is not an earlier fix at its site (F-001)", stderr)
+
+    def test_a_listed_fix_keeps_the_family_it_is_in(self):
+        n = self.second_finding_at_a_case_fix()
+        stderr = self.ledger_apply_fails(n, [self.fixed("F-002", "removes_cause", same_property=["F-001"],
+                                                        family="who acts")])
+        self.assertIn("F-002 names family 'who acts', but F-001, which it lists in same_property, is in family "
+                      "'which requests act for a user'", stderr)
+
+    def test_a_later_fix_that_removes_the_cause_takes_the_follow_up_off_the_report(self):
+        self.start_run(max_rounds=2)
+        n = self.review([finding("c1", 10, "Query user ignored", symbol="parse")])
+        self.run_script("merge-auto")
+        self.decide(n, [self.fixed("F-001", "narrows", family="which requests act for a user",
+                                   follow_up="draft issue: compute the acting user in one place")])
+        n = self.review([finding("c2", 20, "Empty user read as absent", symbol="parse")])
+        proc = self.merge_apply(n, [group("c2", None)])
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        self.decide(n, [self.fixed("F-002", "removes_cause", same_property=["F-001"],
+                                   family="which requests act for a user")])
+        with open(self.emitted("report")["file"], encoding="utf-8") as f:
+            self.assertNotIn("draft issue: compute the acting user in one place", f.read())
+
     # ------------------------------------------------------------------ verdict
 
     def test_rebuilding_a_decided_merge_makes_the_run_incomplete_until_its_decisions_are_applied(self):
@@ -409,26 +589,26 @@ class ReviewRunTest(unittest.TestCase):
         verdict, notes = self.report()
         self.assertEqual("incomplete", verdict)
         self.assertIn("round 1 was merged, but its decisions were not applied", notes[0])
-        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.decide(n, [self.fixed("F-001", "removes_cause")])
         self.assertEqual(("clean", []), self.report())
 
     def test_redoing_a_decided_round_matches_against_the_ledger_from_before_it(self):
         self.start_run(max_rounds=3)
         n = self.review([finding("c1", 10, "Missing null check")])
         self.run_script("merge-auto")
-        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.decide(n, [self.fixed("F-001", "removes_cause")])
         self.file_report(n, [finding("c1", 10, "Missing null check")])
         self.run_script("merge-prep")
         self.run_script("merge-auto")
         self.assertEqual([("F-001", "new")], [(i["id"], i["state"]) for i in self.items(n)])
-        applied = self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        applied = self.decide(n, [self.fixed("F-001", "removes_cause")])
         self.assertEqual((False, None), (applied["stop"], applied["stop_reason"]))
 
     def test_merging_a_decided_round_again_keeps_its_ids(self):
         self.start_run(max_rounds=3)
         n = self.review([finding("c1", 10, "Missing null check")])
         self.run_script("merge-auto")
-        self.decide(n, [{"id": "F-001", "kind": "fixed", "rationale": "r", "evidence": "e"}])
+        self.decide(n, [self.fixed("F-001", "removes_cause")])
         self.run_script("merge-auto")
         self.assertEqual([("F-001", "new")], [(i["id"], i["state"]) for i in self.items(n)])
 
@@ -554,11 +734,11 @@ class ReviewRunTest(unittest.TestCase):
         self.assertEqual(("clean", []), self.report())
 
 
-def finding(local_id, line, title, prior_id=None):
+def finding(local_id, line, title, prior_id=None, symbol=None):
     return {"local_id": local_id, "prior_id": prior_id, "severity": "major", "confidence": 0.9,
             "category": "correctness", "title": title, "why": "why", "evidence": "app.py:%d" % line,
             "depends_on_premise": None, "suggestion": "fix it",
-            "anchor": {"path": "app.py", "symbol": None, "start_line": line, "end_line": line},
+            "anchor": {"path": "app.py", "symbol": symbol, "start_line": line, "end_line": line},
             "introduced_by_diff": True}
 
 
