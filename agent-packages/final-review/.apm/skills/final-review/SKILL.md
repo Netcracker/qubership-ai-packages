@@ -241,28 +241,33 @@ path.
 
 ### Item 8: cases added at one site
 
-For each member the `--history` output lists, read the commit subjects and their hunks in it, and decide whether two or
-more of them each made the member handle one more input shape for the same decision (`Preserve annotated targets for
-conditional method references`, `Preserve unmarked target exemptions through generic lambda returns`). A member edited
-for unrelated reasons is not a finding, and neither is a case analysis over a closed set, such as an enum, a sealed
-hierarchy, or the productions of a grammar, which has no inputs beside the listed ones. Where the branch has fewer than
-three commits, read the previous report of this form, or the `report.md` of the cross-review run the change went
-through, instead (§1): each fix the report requested at one member, and each fix in one cross-review family, counts as a
-commit. `--history` parses the JVM languages only; for another language, read the subjects of the commits that changed
-each file of the diff (`git log --format='%h %s' <base>.. -- <file>`) and their hunks. The parse is line-based: a listed
-name the file does not declare is a call it took for a declaration, and is skipped.
+A member to which commit after commit added handling for one more input computes a property by listing its instances,
+and the next instance nobody listed is the next defect. Each case has its own test, so items 2 and 3 find nothing missing, and
+item 7 asks for one more case; this item asks whether the list should exist.
 
-Where they did, state in one sentence the property the cases stand in for (*which targets have unspecified nullness*),
-and try two inputs beside the listed ones: the same shape one level deeper, and the shape passed through a wrapper or a
-generic call. Read the code for each, or run it where the test harness makes that cheap, and say which. Two inputs
-that get a different answer than the property gives are a finding. The request is to compute the property in the one
-place that owns it, or to narrow the change to its stated purpose and open an issue for the property that names the
-failing inputs; adding them as further cases is not a remedy.
+1. **Find the pattern.** For each member the `--history` output lists, read the hunks of the commits that changed it.
+   The pattern is two or more commits that each added a case to the same decision: a branch of a condition, an entry
+   in a set of kinds or names the member checks, an early return before the shared path. Their subjects usually name
+   the input and the decision (`Handle X in Y`, `Keep Y when X is wrapped`). A member changed for unrelated reasons is
+   `none`, and so is a case analysis over a closed set, such as an enum, a sealed hierarchy, or the productions of a
+   grammar, which has no inputs beside the listed ones.
+2. **Name the property.** State in one sentence, in terms of the input rather than the code, what every listed case
+   has in common: *whether the value can be absent*, *which caller the request acts for*. Where no sentence covers
+   the cases, they are separate decisions and the member is `none`.
+3. **Try two inputs the list does not name.** Take inputs that have the property and match no case: the shape of a
+   listed case one level deeper, and that shape passed through a wrapper, a generic call, or a subtype. Read the code
+   for each, or run it where the test harness makes that cheap, and say which.
+4. **Decide.** Two inputs that get a different answer than the property gives are a finding. It names the property,
+   the two inputs, the answer each gets, and the commits whose cases they bypass. The request is to compute the
+   property in the one place that owns it, or to narrow the change to its stated purpose and open an issue that names
+   the property and the failing inputs; adding them as further cases is not a remedy. Where both inputs get the right
+   answer, the entry is `none` with the property and the two inputs, so the reader sees what was tried.
 
-On uber/NullAway#2080, `getTargetTypeFromParentContext` changed in 14 commits, among them `Preserve method-reference
-targets through switch results`, `Preserve inferred targets through conditional and switch arguments`, and `Preserve
-unmarked target exemptions through generic lambda returns`, and a reviewer of the branch called it a pile of hacks. Each
-case had its own test, so items 2 and 3 had nothing to request beyond more shapes, and item 7 asked for the next path.
+Where the branch has fewer than three commits, read the previous report of this form, or the `report.md` of the
+cross-review run the change went through, instead (§1): each fix the report requested at one member, and each fix in one
+cross-review family, counts as a commit. `--history` parses the JVM languages only; for another language, read the
+commits that changed each file of the diff (`git log --format='%h %s' <base>.. -- <file>`) and their hunks. The parse is
+line-based: a listed name the file does not declare is a call it took for a declaration, and is skipped.
 
 ## 2a. A change with no code
 
