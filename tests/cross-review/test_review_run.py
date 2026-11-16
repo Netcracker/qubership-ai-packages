@@ -38,7 +38,9 @@ class ReviewRunTest(unittest.TestCase):
         self.repo = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.repo)
         # init places the run directory under TMPDIR; keep it inside the throwaway tree.
-        self.env = {**os.environ, "TMPDIR": os.path.join(self.repo, ".git", "tmp")}
+        # The developer's own git config, such as a global core.hooksPath, must not reach the throwaway repo.
+        self.env = {**os.environ, "TMPDIR": os.path.join(self.repo, ".git", "tmp"),
+                    "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
         self.git("init", "-q")
         self.git("config", "user.email", "t")
         self.git("config", "user.name", "t")
@@ -47,7 +49,7 @@ class ReviewRunTest(unittest.TestCase):
         self.git("commit", "-q", "-m", "base")
 
     def git(self, *args):
-        subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True)
+        subprocess.run(["git", *args], cwd=self.repo, env=self.env, check=True, capture_output=True)
 
     def write(self, name, text):
         with open(os.path.join(self.repo, name), "w", encoding="utf-8") as f:
@@ -387,7 +389,7 @@ class ReviewRunTest(unittest.TestCase):
 
     def snapshot_refs(self):
         return subprocess.run(["git", "for-each-ref", "--format=%(refname)", "refs/cross-review/"], cwd=self.repo,
-                              check=True, capture_output=True, encoding="utf-8").stdout.split()
+                              env=self.env, check=True, capture_output=True, encoding="utf-8").stdout.split()
 
     def test_a_clean_report_deletes_every_snapshot_ref_of_the_run(self):
         self.start_run(max_rounds=2)
