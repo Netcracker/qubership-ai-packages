@@ -152,10 +152,16 @@ Follow-up: this fails before this change too, so I filed <follow_up_url> to fix 
   change too. If you would rather keep the change narrow, say so, and it moves to a follow-up issue.` Where
   `follow_up_url` is set, the author already chose the follow-up: render it as `follow_up`.
 
+A `change` finding with `disposition: split_out` is the author's to fix, and is published like any `change` finding.
+Its `proposed_solution` has two lines, `In this change:` and `Separate change:`; render them as two lines under
+`Proposed solution:`, and end the comment with `Follow-up: <follow_up_url>` where an issue tracks the separate change.
+In the chat report its tag ends with `, split out`: `**F4 major, split out**`.
+
 ### Follow-up issues
 
 Before the first email or platform write, and in the chat report when nothing is published, ask once about every
-`preexisting` finding with `disposition: follow_up` and no `follow_up_url`:
+`preexisting` finding with `disposition: follow_up` and no `follow_up_url`, and about every family of `split_out`
+findings with no `follow_up_url` (one issue per family, from its `Separate change:` line, set on every member):
 
 > F7 and F9 are older than this change. File a follow-up issue for each, and link it from the review?
 

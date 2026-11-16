@@ -38,3 +38,24 @@ other `preexisting` finding choose a `disposition`:
 - `follow_up`: everything else, such as a defect in code the axis read for context, or a case whose handling needs a
   design decision, another component, or more code than the change itself. `proposed_solution` states the fix the
   follow-up issue asks for.
+
+A `change` finding has no `disposition`, except `split_out`: the change makes the defect, and the fix that removes its
+cause belongs in a change of its own. Choose it where all of these hold:
+
+- the defect is a wrong answer for a property the change decides, and the finding is in a `recurring` family or is an
+  architecture finding about a case list;
+- computing the property needs a design decision the change has not made, another component, or more code than the
+  change's own purpose;
+- the property is not what the change's description or linked issue sets out to fix, so the change keeps its purpose
+  without it.
+
+`proposed_solution` is then two lines. `In this change:` names what to take out so that the change no longer decides
+the property where it cannot compute it (the checks it adds that depend on it, the cases it lists for it), keeping the
+checks whose context the code already knows. `Separate change:` names the change that computes the property, which a
+follow-up issue tracks once delivery files it. `retest` names the neighbors and accepts for each either the answer at
+`<base>` or the answer the property gives, so that both the narrowing and a full fix pass it. A `split_out` finding
+keeps its severity, so the change does not merge until it is narrowed.
+
+Decide `split_out` for the family, not for one finding: every `change` member whose location the narrowing takes out is
+`split_out` with the same `Separate change:` line, and a `preexisting` member of the family is `follow_up` with the
+same fix in its `proposed_solution`. Delivery files one issue for them all.

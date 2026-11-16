@@ -95,6 +95,13 @@ each as a `previous_findings` entry with its status and reason.
   change makes the same defect reachable another way. A fix that fails it is not accepted, unless the `retest` holds
   only for one implementation; then judge the defect directly and rewrite the `retest`. For a question, check whether
   the thread or the code gives the answer the `retest` names.
+- For a fix the author made since `<previous>` to a finding about what the code does, read its commits and record in
+  `fix_shape` what they did to the code that decides the property the finding is about: `removes_cause` where they
+  change how that property is computed, so that inputs the finding did not name change with it; `adds_case` where they
+  add a branch, an exemption, or a list entry for the inputs the finding named, and leave the computation as it was;
+  `narrows` where they take out of the change the decisions that depend on the property, as `split_out` asks; `moves`
+  where they relocate code without changing what it decides. Leave it `null` for a finding about a comment, the
+  description, or a test. The shape does not decide whether the fix is accepted; it feeds *Track defect families*.
 - A thread for a `preexisting` finding whose `follow_up_url` is set is `scope_deferred`, with that URL. Where the author
   answered an `extend_scope` finding by choosing the follow-up, the finding continues with `disposition: follow_up`.
   Any other remaining thread keeps its finding's `origin` and `disposition`.
@@ -104,6 +111,27 @@ Every thread whose defect remains (`fix_not_accepted`, or a partial fix) is also
 `retest` of the finding it continues, if any. A
 remaining `major` with `origin: change` from an earlier round keeps the change from being approved even when no axis
 finds it again.
+
+## Track defect families
+
+A defect family is the set of findings, across rounds, in which the change computes one property wrongly at one
+place: which targets have unspecified nullness, which callers hold the lock, which inputs the parser accepts. A family
+whose fixes add cases keeps producing members, each round at an input the previous fix did not name; one round sees a
+single defect, and only the family shows the pattern. Only findings about what the code does join a family: a comment,
+the description, or a missing test is not a property the code computes. Only fixes of this review's findings count,
+those between the heads of two rounds; a fix made before the first round has no finding to measure it against.
+
+Families carry from round to round in `review.json`, so a round classifies only the fixes made since `<previous>` and
+reads the older ones from it. Where `<previous>` has no `families`, as in a review that predates them, build them from
+the earlier rounds' `review.json` files, the threads, and the fix commits between those rounds' heads.
+
+Copy `families` from `<previous>`, or start from `[]` in the first round. Add every rechecked finding about what the
+code does to the family of the finding it continues, or start
+one with its `property` (one sentence: what the code computes) and its `sites` (the symbols that compute it), and add
+this round's entry with the members and the `fix_shape` of each fix. Mark a family `recurring` where two of its fixes,
+in different rounds, are `adds_case`, or where one is and a later round finds a new member at the same sites. Write the
+result to `<work>/families.json` and name it in `input.md`: the architecture axis reads it, and the verifier adds this
+round's findings and writes `families` to `review.json`.
 
 ## Choose the axes
 

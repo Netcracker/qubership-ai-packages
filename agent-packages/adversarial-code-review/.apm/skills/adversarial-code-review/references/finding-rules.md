@@ -81,16 +81,30 @@ such as a missing changelog entry.
   a name or a comment.
 - `evidence`: the decisive facts only, each marked `fact` (read or run) or `inference` (derived). Quote code and text
   exactly, with `path:line`.
-- `proposed_solution`: the smallest outcome that resolves the problem, without prescribing a rewrite a local change
-  avoids. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a reworded comment, or a
-  changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to what they do not show
-  (the other call sites of a renamed method), or empty.
+- `proposed_solution`: the smallest outcome that removes the cause, without prescribing a rewrite a local change at the
+  cause avoids. For a finding about what the code does, name the decision that goes wrong, then what it should decide.
+  Where the decision is a list of cases
+  (a branch per kind of input, an exemption list, a walk that stops at listed node kinds) and the only local change is
+  one more case, propose computing the property the list approximates in the place that owns it, or removing the
+  change's dependence on that property; give the extra case only as a stopgap and call it one. Computing it there
+  changes the answer for inputs the finding does not name; moving the same list to another method, or deciding it once
+  by the same walk, does not. Where the finding joins a family in `families.json` that has had an `adds_case` fix, the
+  outcome is never another case, not even as a stopgap. Where the family is `recurring`, its `sites` have absorbed
+  cases twice, so the property belongs somewhere else. Name what the code would have to represent for the property to
+  travel with the value, such as a state on the type or a field the analysis carries, and say whether this change can
+  do without it. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a reworded
+  comment, or a changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to what they
+  do not show (the other call sites of a renamed method), or empty.
 - `suggestion`: the whole lines that replace the lines `location` covers, with their indentation, where applying them
   is the whole fix and `location` is on the new side and in the diff; otherwise `null`. A rename with call sites
   outside the range is not such a fix.
 - `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
   must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
-  `proposed_solution`, and so that it fails at the reviewed head. For a `question`, name the answer that settles it.
+  `proposed_solution`, and so that it fails at the reviewed head. Where the defect is one input of a property the code
+  decides over several inputs, add one neighbor of that input that the reproducer does not show and that fails at the
+  reviewed head (the same input one level deeper, through a generic call or a wrapper, through a subtype), so that a fix
+  for the shown input alone does not pass. Run the neighbor where you can, and otherwise mark in `evidence`, as an
+  `inference`, that it fails by reading. For a `question`, name the answer that settles it.
 - `prior_thread`: the URL of an earlier thread this finding continues.
 - Leave out `origin`, `introduced_by`, `disposition`, and `follow_up_url`: the verifier sets the first three, and
   delivery sets the last once an issue tracks the defect.

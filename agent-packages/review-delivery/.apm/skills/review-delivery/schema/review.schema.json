@@ -157,6 +157,96 @@
         }
       }
     },
+    "families": {
+      "description": "Defect families: findings, across rounds, in which the change computes one property wrongly at one place. Carried from round to round.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "property",
+          "sites",
+          "recurring",
+          "rounds"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "property": {
+            "type": "string",
+            "description": "One sentence: what the code computes."
+          },
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The symbols that compute the property."
+          },
+          "recurring": {
+            "type": "boolean",
+            "description": "Two fixes in different rounds were adds_case, or one was and a later round found a new member at the same sites."
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "head",
+                "members"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "head": {
+                  "type": "string",
+                  "description": "The head SHA the round reviewed."
+                },
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Ids of the round's findings in this family."
+                },
+                "fixes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "finding_id",
+                      "shape"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "finding_id": {
+                        "type": "string"
+                      },
+                      "commits": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "shape": {
+                        "enum": [
+                          "removes_cause",
+                          "adds_case",
+                          "narrows",
+                          "moves"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "Fixes of earlier members made before this round's head."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "previous_findings": {
       "description": "Earlier review threads rechecked in this round.",
       "type": "array",
@@ -195,6 +285,16 @@
               "scope_deferred",
               "unable_to_verify"
             ]
+          },
+          "fix_shape": {
+            "enum": [
+              "removes_cause",
+              "adds_case",
+              "narrows",
+              "moves",
+              null
+            ],
+            "description": "What the fix commits since the previous round did to the code that decides the finding's property: removes_cause changes how the property is computed; adds_case adds a branch, an exemption, or a list entry for the inputs the finding named; narrows takes the decisions that depend on the property out of the change; moves relocates code without changing what it decides. Null where no fix was made, or where the finding is about a comment, the description, or a test."
           },
           "reason": {
             "type": "string"
@@ -299,6 +399,13 @@
             "null"
           ]
         },
+        "family": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The id of the entry in families this finding belongs to, if any."
+        },
         "gate": {
           "enum": [
             "none",
@@ -386,7 +493,7 @@
         },
         "proposed_solution": {
           "type": "string",
-          "description": "The smallest outcome that resolves the problem; only what suggestion does not show, and empty where it shows all of it."
+          "description": "The smallest outcome that removes the cause; never one more case for a family that has had an adds_case fix. Only what suggestion does not show, and empty where it shows all of it."
         },
         "reproducer": {
           "description": "Code that shows the defect, or the case a missing test needs, with the current and the expected result as comments; null where no code shows the claim better than the title.",
@@ -469,9 +576,10 @@
           "enum": [
             "extend_scope",
             "follow_up",
+            "split_out",
             null
           ],
-          "description": "For a preexisting finding: extend_scope asks the author to handle the case in this change; follow_up leaves it to an issue."
+          "description": "For a preexisting finding: extend_scope asks the author to handle the case in this change; follow_up leaves it to an issue. For a change finding, split_out asks to narrow this change so it no longer decides the property, and to fix the property's cause in a change of its own."
         },
         "follow_up_url": {
           "type": [

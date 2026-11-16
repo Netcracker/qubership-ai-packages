@@ -16,7 +16,8 @@ Give this to a fresh subagent after every axis has written its findings.
 >    check, make it a `question` that names the condition.
 > 2. Drop it where the request put it out of scope.
 > 3. Check the severity against the question in `finding-rules.md`, and correct it.
-> 4. Check that `proposed_solution` resolves the problem without a side effect the finding does not mention.
+> 4. Check that `proposed_solution` resolves the problem without a side effect the finding does not mention. Whether
+>    it removes the cause is checked after the families are updated, below.
 > 5. Check the `location` range against *Location* in `finding-rules.md`, and correct it.
 > 6. For a `defect`, check that `retest` fails at the reviewed head and would pass after any fix that resolves the
 >    problem. For a `question`, check that it names the answer that settles the question. Rewrite it where it does not.
@@ -39,13 +40,19 @@ Give this to a fresh subagent after every axis has written its findings.
 > - Merge findings from different axes that ask for the same change; keep the higher severity, both axes' evidence, and
 >   any `prior_thread`.
 > - Set the `origin`, `introduced_by`, and `disposition` of every remaining finding by `origin.md`, so that each defect
->   is traced once; a finding from `axes/previous.json` keeps the ones it carries. To run anything, add your own
->   worktree first
+>   is traced once; a finding from `axes/previous.json` keeps the ones it carries, unless it now meets the rule for
+>   `split_out`, which is decided in the family step below. To run anything, add your own worktree first
 >   (`git -C <workspace> worktree add <work>/verify-wt <sha>`) and run there, never in `<workspace>`.
 > - Group the rest into classes: findings that likely share one root cause, so one fix addresses them together. Give
 >   each class a title and a one-sentence root cause. A finding that shares a cause with no other has `class: null`.
 >   Only `change` findings and `preexisting` findings with `disposition: extend_scope` join a class; the author fixes
 >   neither of the others in this change.
+> - Set each remaining finding's `family` from `families.json` (`[]` in a first round): the family whose property it
+>   gets wrong at the family's sites, a new family where two findings of this round about what the code does share a
+>   property and sites, or `null`. Add this round's members to each family, and mark it `recurring` by the rule in
+>   *Track defect families* in `<skill dir>/SKILL.md`. Then check each `proposed_solution` against *Content* in
+>   `finding-rules.md`, now that the families are known, and rewrite one that adds a case where that rule forbids it;
+>   and decide `split_out` for each family by `origin.md`.
 > - Assign ids `F1`, `F2`, ... in severity order. Where `<previous>` has a finding this one continues (same defect at
 >   the same place, or its `prior_thread`), keep that id, and number new findings after the highest id `<previous>`
 >   used.
@@ -53,5 +60,5 @@ Give this to a fresh subagent after every axis has written its findings.
 >   finding's id; delivery reads the thread's severity from it.
 >
 > Write `<work>/review.json` by `<schema>`: every field of `<work>/review-head.json` as it is, except the
-> `previous_findings` entries changed above, plus `findings` and `classes`. Reply with: findings kept per severity,
-> findings dropped with a one-line reason each, and the classes.
+> `previous_findings` entries changed above, plus `findings`, `classes`, and `families`. Reply with: findings kept per
+> severity, findings dropped with a one-line reason each, the classes, and the recurring families.

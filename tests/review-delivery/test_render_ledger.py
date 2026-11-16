@@ -195,6 +195,19 @@ class RenderLedgerTest(unittest.TestCase):
         self.assertEqual(2, result.returncode)
         self.assertIn("findings[0].disposition", result.stderr)
 
+    def test_a_split_out_finding_shows_both_solution_lines_in_one_item_and_its_follow_up(self):
+        text = self.ledger(review([finding("F1", "major", disposition="split_out",
+                                           proposed_solution="In this change: drop X.\nSeparate change: compute Y.",
+                                           follow_up_url="https://example.test/issues/7")]))
+        self.assertIn("- Proposed solution: In this change: drop X.\n  Separate change: compute Y.\n", text)
+        self.assertIn("- Disposition: split_out\n- Follow-up: https://example.test/issues/7\n", text)
+
+    def test_split_out_on_a_finding_the_change_did_not_make_exits_with_status_2_and_names_it(self):
+        result = self.run_script(review([older("F1", "minor", "follow_up"),
+                                         stacked("F2", "minor", disposition="split_out")]))
+        self.assertEqual(2, result.returncode)
+        self.assertIn("findings[1].disposition", result.stderr)
+
     def test_a_missing_top_level_field_exits_with_status_2_and_names_it(self):
         data = review([])
         del data["revision"]

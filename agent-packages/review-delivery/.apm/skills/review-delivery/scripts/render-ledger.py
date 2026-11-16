@@ -44,6 +44,8 @@ def check(review):
             fail(f"findings[{n}].introduced_by.request: required for a stack finding")
         if origin(f) == "preexisting" and f.get("disposition") not in ("extend_scope", "follow_up"):
             fail(f"findings[{n}].disposition: required for a preexisting finding")
+        if f.get("disposition") == "split_out" and origin(f) != "change":
+            fail(f"findings[{n}].disposition: split_out is only for a change finding")
 
 
 def origin(f):
@@ -104,7 +106,8 @@ def finding(f):
         out += [f"  {line}" if line else "" for line in f["reproducer"]["code"].splitlines()]
         out += ["  ```", ""]
     if f["proposed_solution"]:
-        out.append(f"- Proposed solution: {f['proposed_solution']}")
+        # A split_out solution has two lines; indent the continuation so Markdown keeps it in the item.
+        out.append("- Proposed solution: " + f["proposed_solution"].replace("\n", "\n  "))
     if f.get("suggestion") is not None:
         out += ["- Suggestion:", "", f"  ```{fence_language(f)}"]
         out += [f"  {line}" if line else "" for line in f["suggestion"].splitlines()]
@@ -118,6 +121,9 @@ def finding(f):
         out.append(f"- Introduced by: {', '.join(v for v in (by.get('request'), by.get('commit')) if v)}")
     if origin(f) == "preexisting":
         out.append(f"- Disposition: {f['disposition']}")
+        out.append(f"- Follow-up: {f.get('follow_up_url') or 'not filed'}")
+    elif f.get("disposition") == "split_out":
+        out.append("- Disposition: split_out")
         out.append(f"- Follow-up: {f.get('follow_up_url') or 'not filed'}")
     out.append("")
     return out
