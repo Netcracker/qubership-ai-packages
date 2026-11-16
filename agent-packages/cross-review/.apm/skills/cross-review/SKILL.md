@@ -227,14 +227,13 @@ Classify each item. Your advantage over both reviewers is that you know why the 
   So before you accept, write one clause naming a real input that a slightly-wider version of this
   fix would get wrong, and check it. That input becomes an axis in the plan (§5a) and a test.
 
-  Measured across two runs on the same change: one accepted a reviewer's request to filter
-  annotations targeting `TYPE_PARAMETER`, which is exactly the target set of the Checker Framework's
-  `@Nullable` — the most widely used non-JSpecify nullness annotation — so the check went silent on
-  `<@Nullable T>`. Every round afterwards was clean, and the run converged. The other run rejected
-  the same finding on a mechanism, pinned it with a test, and that test is what caught the first
-  run's silence when the two were cross-tested. The run that shipped the false negative accepted 28
-  findings and rejected none; **a run that never rejects is not agreeing with its reviewers, it is
-  not checking them**.
+  The usual too-wide fix filters out a whole category (an annotation target, a file type, a status
+  code, a kind of declaration) to remove one false report, and the category also holds inputs that
+  must still be reported. Every later round is then clean, because the reviewers read what the code
+  reports, and an input it stopped reporting gives them nothing to read. What catches it is an input
+  from the same category that must still be reported, named before the fix and pinned as a test.
+  **A run that accepts every finding and rejects none is not agreeing with its reviewers, it is not
+  checking them.**
 
 - **An item at the symbol of an earlier fix may be the same property again.** A fix that handles
   one more input of a property removes the finding that reported it, and the next round reports the
