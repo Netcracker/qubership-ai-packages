@@ -50,6 +50,19 @@ exist added to record 0013 and a guide rewritten in Request 2; it fails checks 9
 
 ## Results
 
+Runs of 2026-11-16 on tree `36fdf375`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again because "What belongs in an ADR" now gives a requirement that retells
+the code no rule, "Confirmation and implementation notes" gives no rule to a requirement that only asks for a test of
+another rule and keeps the functions one change edits out of the notes, and the notes of the structural worked example
+no longer name the files one change edits. The JSON log format of the existing record is a decision, so the new passages
+have to stay quiet. All four results pass all ten checks by meaning, and each names `token-no-http` under
+**Confirmation** for the import rule. `check.py` fails two of them on the marker. Opus r1 puts HTTP 401 in the term
+"refuses", which its rule on `TOKEN_ALG_NONE` uses, and Opus r2 lists `docs/`, `docs/adr/` included, as outside the
+layers, in a form the marker does not match.
+
+Runs on trees `ad071c7e` and `eac39b10`, earlier trees of this change, passed all ten checks in all four results; the
+results above replace them.
+
 Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
 requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no

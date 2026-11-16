@@ -50,6 +50,13 @@ settles for this system. Sort each requirement before you write it as a rule:
   and no authority chose it for this system. An example is a base image whose entrypoint adds the certificates in a
   directory to the trust store. The guarantee gets no rule, and code that does not follow the contract falls under
   **Defect**. Where a rule or a reason depends on the guarantee, state it in **Context** as a fact, with its source.
+- **Retelling of the code**: it states what the code happens to do, so a change to the code that leaves the decision
+  alone would make the record wrong. Examples are the largest value that the type of a setting holds and the text of a
+  log message that no alert or log query matches. It gets no rule. The rule behind it states the decision at the level
+  it was made, such as "a number that the type of its setting cannot hold stops the start". A requirement that someone
+  chose, such as a timeout of 5 seconds, or that **Contract, not mechanism** makes part of the contract, is a
+  **Decision**, also where the code already behaves that way. Where you cannot tell whether someone chose it, ask the
+  user; without an answer, write the rule and an open point that asks.
 
 Reach for an ADR when a choice affects structure (for example a pattern such as microservices), a non-functional
 requirement (security, availability, fault tolerance), a dependency, a published interface or API, or a construction
@@ -258,11 +265,16 @@ Reasons belong in the Justification. Keep a reason inside a rule only where it l
 machine runs, and name it so that a reader can find it: the test, the linter rule, or the build task. The cases that a
 passing machine check covers need no judgment from the checker (**Checking a change**, step 3). A record usually comes
 before its code, so the section starts with the checks that exist and gains entries as checks land; an accepted record
-takes those additions (**Immutability**). A rule with no check yet has no entry.
+takes those additions (**Immutability**). A rule with no check yet has no entry. A requirement that only asks for a test
+of another rule of the record is not a rule of its own: that rule is the requirement, and its check joins
+**Confirmation** when it lands. How the system is tested, such as against a real database instead of an in-memory one,
+or which kind of test every endpoint has, is a decision.
 
 **Implementation notes** gives the agent that writes the code the recommended way to meet the rules, an example, and
 the migration of existing code. It opens with "Adds no requirement.", and a checker ignores it. A sentence there that a
-change could fail belongs in **Rules**.
+change could fail belongs in **Rules**. A note stays true after the first change under the record lands: it recommends
+an approach, such as expand, backfill, then contract for a renamed column, and describes a migration by what changes,
+not by the functions, files, or lines that one change edits. Those belong in that change's description.
 
 ## Justification and alternatives
 

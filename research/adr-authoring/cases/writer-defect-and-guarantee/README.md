@@ -89,6 +89,20 @@ only after the Bug is fixed. It fails check 3, and checks 10 and 11 on the marke
 
 ## Results
 
+Runs of 2026-11-16 on tree `ad071c7e`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again because "What belongs in an ADR" now gives a requirement that retells
+the code no rule, and "Confirmation and implementation notes" gives no rule to a requirement that only asks for a test
+of another rule. The CI job that starts the Compose example and calls `GET /ready` is a decision about how the system is
+tested, not a test of another rule, so it has to stay a rule, as do the 401 rules and the TLS 1.2 rule. All four results
+pass all fifteen checks by meaning, and each keeps the CI job as a rule; the entrypoint, the certificates, and the chart
+volumes get no rule. `check.py` fails the TLS check for Opus r1 on the marker: its rule makes the handshake fail where
+the server offers only TLS 1.1 or older, which is the same requirement without the string "1.2". These results also
+stand for tree `36fdf375`, which only rewords the retelling item of "What belongs in an ADR"; the input of this case
+holds no type maximum and no log text.
+
+Runs of 2026-11-16 on tree `eac39b10`, an earlier tree of this change, passed all fifteen checks in all four results;
+the results above replace them.
+
 Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. All four results pass all fifteen checks by meaning. Each writes ADR-0007 with rules for
 the configuration, the CI job, and the Compose example, and none on the entrypoint, the certificates, or the chart

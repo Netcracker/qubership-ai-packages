@@ -60,10 +60,9 @@ server.
 
 ### Implementation notes
 
-Adds no requirement. Replace the two uses of `HttpStatusCode` in `core/billing` with a result type of `core/billing`
-itself, and let `web/api` map that type to a status code. Then remove the dependency on `web/http` from
-`core/billing/build.gradle.kts`, and list the libraries the core projects use today in
-`gradle/core-allowed-libraries.txt`.
+Adds no requirement. Replace the uses of `HttpStatusCode` in `core/billing` with a result type of `core/billing`
+itself, and let `web/api` map that type to a status code. Then remove the dependency of `core/billing` on `web/http`,
+and list the libraries the core projects use today in `gradle/core-allowed-libraries.txt`.
 
 ### Justification
 

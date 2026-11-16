@@ -11,26 +11,26 @@ Proposed
 
 ### Owner
 
-`<GitHub account of the owner>`
+<GitHub account of the owner>
 
 ### Participants and approvers
 
-- `<role>`, `<GitHub account>`: approves R1.
+- <Role>, <GitHub account>: approves R1.
 
 ### Related ADRs
 
-- [ADR-0007: Verify every token in Authorization before policy evaluation](0007-verify-every-token.md): defines
-  **token**, and sets the refusals of R4 and R5 that R1 here takes precedence over.
+- [ADR-0007: Verify every token in Authorization before policy evaluation](0007-verify-every-token.md): adds R1 to the
+  rules of its **Verification** topic. R4 and R5 of ADR-0007 stay as they are.
 
 ## Context
 
-The `alg` parameter in the header of a token names the algorithm that signed it, and the value `none` names no
-algorithm: the token carries no signature. ADR-0007 requires the service to verify every token before policy evaluation,
-and a token with `alg` set to `none` has nothing to verify.
+ADR-0007 requires the service to verify the signature and the lifetime of every token before policy evaluation. The
+`alg` field in the header of a token names the algorithm that signed it. The value `none` names no algorithm, so such a
+token carries no signature to verify.
 
 ## Decision
 
-We will refuse every token whose `alg` is `none`, with a reason code of its own.
+We will refuse every token whose `alg` is `none`.
 
 ### Terms
 
@@ -40,44 +40,34 @@ We will refuse every token whose `alg` is `none`, with a reason code of its own.
 
 #### Verification
 
-- **R1** (`verify`). A token whose header `alg` is `none`, compared without regard to letter case, is refused with HTTP
-  401 and the reason code `TOKEN_ALG_NONE`, also where ADR-0007 R4 or R5 would refuse the same token.
+- **R1** (`verify`). A token whose header `alg` is `none` is refused with HTTP 401 and the reason code
+  `TOKEN_ALG_NONE`.
 
 ### Justification
 
-A caller can send any subject in a token with no signature, so the service refuses it before any other check (R1). A
-reason code of its own lets an operator tell an unsigned token from an expired one (R1).
-
-### Alternatives considered
-
-- **A1. Let the signature check refuse a token whose `alg` is `none`.** Rejected by R1: the refusal would carry the
-  reason code of a failed signature, and an operator could not tell an unsigned token from a forged one.
-
-## Consequences
-
-Negative:
-
-- A caller that sends a token with `alg` set to `none`, such as a local test client, gets `TOKEN_ALG_NONE` (R1).
+A token with `alg` set to `none` has no signature that could bind its subject to a key source, so refusing it keeps a
+caller from naming any subject (R1).
 
 ## Open points
 
-- **O1.** Does R1 apply to `None` and `NONE` as it does to `none`? The rule assumes that it does. The owner decides, and
-  the answer affects R1.
-- **O2.** Which reason code does a token get when `alg` is `none` and `exp` is in the past, or `kid` is missing? The
-  rule assumes `TOKEN_ALG_NONE`. The owner decides, and the answer affects R1 and ADR-0007 R4 and R5.
+- **O1.** Does R1 also cover `alg` values that differ from `none` only in letter case, such as `None` or `NONE`? The
+  answers are "exactly `none`" and "`none` in any letter case". The owner decides. R1 is affected.
+- **O2.** Which reason code does a token receive when it breaks R1 and also ADR-0007 R4 or R5, such as a token with
+  `alg` set to `none` and no `kid`? The answers are `TOKEN_ALG_NONE` first, or the code of the ADR-0007 rule first. The
+  owner decides. R1, ADR-0007 R4, and ADR-0007 R5 are affected.
 ````
 
 ### Message to the user
 
-ADR-0007 is `Accepted`, so it is final and I left it unchanged. The new requirement is in a new record, `docs/adr/0008-refuse-token-with-alg-none.md`, with the status `Proposed`. It links ADR-0007 under **Related ADRs**. When ADR-0008 is accepted, ADR-0007 gains a line under **Related ADRs** that names it and R1, and I can add that line then.
+ADR-0007 is `Accepted` and carries a Date, so it is final. A new requirement goes into a new record, so I wrote ADR-0008 as `Proposed` and left ADR-0007 unchanged. When ADR-0008 is accepted, ADR-0007 gains one line under **Related ADRs** that names ADR-0008 and the rule it adds.
 
 Questions:
 
-1. Who owns ADR-0008, and who approves R1? The owner and the approver are placeholders in the record.
-2. Does R1 also cover `None` and `NONE`? I assumed it does (O1).
-3. Which reason code wins when a token with `alg` set to `none` is also expired or has no `kid`? I assumed `TOKEN_ALG_NONE` (O2).
+- Who is the owner of ADR-0008, and who approves R1? I left placeholders instead of guessing.
+- O1: should R1 also refuse `None` and `NONE`, or only exactly `none`?
+- O2: which reason code wins when a token also breaks ADR-0007 R4 or R5? An example is a token with `alg` set to `none` and no `kid`.
 
-The status stays `Proposed` until O1 and O2 are settled and the team signs off.
+The record stays `Proposed` until both open points are settled and the team signs off. A change that implements R1 can name `ADR-0008 R1` under `Implements` in its trailers.
 
 ## Request 2
 
@@ -148,4 +138,6 @@ Negative:
 
 ### Message to the user
 
-I changed the link target under **Related ADRs** from `0006-key-sources.md` to `0006-trusted-key-sources.md`. The link text, the rules, and the status are unchanged. ADR-0007 is `Accepted`, and a broken-link fix is an editorial edit that an accepted record takes.
+I changed the link target under **Related ADRs** from `0006-key-sources.md` to `0006-trusted-key-sources.md`. A broken link is an editorial fix that changes no rule, so an accepted record takes it. I touched nothing else, and the status and Date stay as they were.
+
+I left the link text, "ADR-0006: Trust only listed key sources", as it was. I can't see the title of ADR-0006, so please check that it matches the heading of that record.

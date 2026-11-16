@@ -548,6 +548,82 @@ def no_rule_trailers(change):
     return check
 
 
+# writer-derived-values
+
+def derived_record(text):
+    recs = records(files(text), '0001')
+    return recs[0][1] if recs else ''
+
+
+def derived_rules(text):
+    """Each rule under the record's Rules heading, wrapped lines joined: from `- **Rn**` to the next list item, heading,
+    or blank line. The section ends at the next heading of the same level or higher, so topic headings stay inside it."""
+    lines, body, level = derived_record(text).split('\n'), [], None
+    for line in lines:
+        h = re.match(r'^(#+)\s', line)
+        if level is None:
+            if h and re.match(r'^#+\s*Rules\b', line):
+                level = len(h.group(1))
+        elif h and len(h.group(1)) <= level:
+            break
+        else:
+            body.append(line)
+    rules = re.findall(r'^\s*[-*]\s*\*\*R\d+\*\*(.*?)(?=^\s*[-*]\s|^#|^\s*$|\Z)', '\n'.join(body), re.S | re.M)
+    return [' '.join(r.split()) for r in rules]
+
+
+def notes(text):
+    m = re.search(r'^#{2,3}\s*Implementation notes\b(.*?)(?=^#{2,3}\s|\Z)', derived_record(text), re.S | re.M)
+    return m.group(1) if m else ''
+
+
+def absent_from_rules(pattern, what):
+    def check(text):
+        found = next((r for r in derived_rules(text) if re.search(pattern, r, re.I)), None)
+        return result(found is None, f'{what} in a rule: {found[:100]}' if found else f'no {what} in a rule')
+    check.__name__ = 'no_' + what.replace(' ', '_')
+    return check
+
+
+def log_text_open(text):
+    """The log text in no rule, or in a rule that an open point of the record asks about, by the text or as the log text."""
+    found = next((r for r in derived_rules(text) if re.search(r'file too large', r, re.I)), None)
+    m = re.search(r'^#{2,3}\s*Open points\b(.*?)(?=^#{1,3}\s|\Z)', derived_record(text), re.S | re.M)
+    log = r'(?:file too large|log (?:text|line|message|entry))'
+    asked = m and re.search(log + r'[^\n]*\?|\?[^\n]*' + log, m.group(1), re.I)
+    if found and asked:
+        return result(True, f'log text in a rule, and an open point asks about it: {found[:80]}')
+    return result(found is None, f'log text in a rule: {found[:100]}' if found else 'no log text in a rule')
+
+
+def no_function_of_the_change(text):
+    found = next((r for r in derived_rules(text) + [notes(text)] if re.search(r'loadSettings|strconv', r)), None)
+    return result(found is None, f'named: {" ".join(found.split())[:100]}' if found else 'no function of the change')
+
+
+def no_test_rule(text):
+    found = next((r for r in derived_rules(text) if re.search(r'\b(?:tests?|CI|checks?|job)\b', r, re.I)
+                  and re.search(r'413|stops?\b|\bstart|abc|one byte', r, re.I)), None)
+    return result(found is None, f'test rule: {found[:110]}' if found else 'no rule asks for a test of another rule')
+
+
+def derived_rule_with(pattern, what):
+    def check(text):
+        found = next((r for r in derived_rules(text) if re.search(pattern, r, re.I)), None)
+        return result(found is not None, found[:110] if found else f'no rule states {what}')
+    check.__name__ = 'rule_states_' + what.replace(' ', '_')
+    return check
+
+
+def minio_kept(text):
+    """MinIO in a rule, or in a record of its own that the message proposes or the result writes."""
+    rule = next((r for r in derived_rules(text) if re.search(r'MinIO|real S3', r, re.I)), None)
+    other = next((p for p, c in records(files(text)) if not re.search(r'/0001-', p) and re.search(r'MinIO', c)), None)
+    offer = re.search(r'[^\n]*MinIO[^\n]*', message(text))
+    ok = rule or other or (offer and re.search(r'\brecord|\bADR', message(text)))
+    return result(bool(ok), (rule or other or offer.group(0).strip())[:110] if ok else 'MinIO neither a rule nor its own record')
+
+
 CASES = {
     'checker-partial-delivery': [verdict_is('Change A', 'ADR-0007 R5', 'violates'),
                                  verdict_is('Change B', 'ADR-0007 R5', 'conforms'),
@@ -594,6 +670,10 @@ CASES = {
                                     rule_with('Request 2', '401', 'TOKEN_ALG_NONE'),
                                     rule_with('Request 2', '401', 'TOKEN_ALG_SYMMETRIC'), no_defect('Request 2'),
                                     rule_with('Request 3', 'TLS', '1.2'), no_defect('Request 3'), no_guide_written],
+    'writer-derived-values': [record_0001, absent_from_rules(r'2147483647|2\^31|2³¹', 'type maximum'),
+                              log_text_open, no_function_of_the_change,
+                              no_test_rule, derived_rule_with(r'\b413\b', 'the 413 refusal'),
+                              derived_rule_with(r'\b25\b', 'the default'), minio_kept],
 }
 
 
