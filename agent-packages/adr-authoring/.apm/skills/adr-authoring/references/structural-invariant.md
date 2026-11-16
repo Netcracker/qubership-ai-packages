@@ -22,8 +22,8 @@ Accepted
 The repository builds one service from Gradle projects under `core/` and `web/`. The `core` projects hold the billing
 rules, and the `web` projects hold the HTTP API, built on Ktor. Two classes in `core/billing` import Ktor's
 `HttpStatusCode`, so `core/billing` declares a dependency on `web/http`. A change to the HTTP stack recompiles and
-retests the billing rules, and the nightly batch job, which runs without an HTTP server, cannot use `core/billing`
-without pulling Ktor in.
+retests the billing rules, and the nightly batch job, which another repository builds and which runs without an HTTP
+server, cannot use `core/billing` without pulling Ktor in.
 
 ## Decision
 
@@ -91,4 +91,4 @@ Negative:
 
 Follow-ups:
 
-- Map `gradle/core-allowed-libraries.txt` to the `build` layer in the reading guide.
+- Make the nightly batch job use `core/billing`.

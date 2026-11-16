@@ -548,6 +548,80 @@ def no_rule_trailers(change):
     return check
 
 
+# writer-proposed-precedence
+
+def follow_ups(record):
+    """The Follow-ups list of a record, up to the next heading."""
+    m = re.search(r'^[ \t]*(?:#{2,4}[ \t]*)?\**Follow-ups:?\**:?[ \t]*\n(.*?)(?=^#|\Z)', record, re.S | re.M)
+    return m.group(1) if m else ''
+
+
+def rule_body(record, number):
+    return next((body for n, _, body in RULE_LINE.findall(record) if n == number), '')
+
+
+def pp_new_rule(text):
+    """Request 1 writes record 0012 with a rule that answers 503 with `POLICY_STORE_UNAVAILABLE`."""
+    rec = record_of(text, 'Request 1', '0012')
+    found = next((b for _, _, b in RULE_LINE.findall(rec) if '503' in b and 'POLICY_STORE_UNAVAILABLE' in b), None)
+    return result(found is not None, ' '.join(found.split())[:110] if found else 'no 503 rule in record 0012')
+
+
+def pp_named_loser_excepted(text):
+    """Request 1 gives ADR-0010 with an R3 whose exception points at a rule of ADR-0012."""
+    r3 = rule_body(record_of(text, 'Request 1', '0010'), '3')
+    ok = re.search(r'ADR-0012\s+R\d', r3) is not None
+    return result(ok, ' '.join(r3.split())[:110] if r3 else 'ADR-0010 R3 not given in Request 1')
+
+
+def pp_unnamed_loser_found(text):
+    """Request 1 gives ADR-0011, which the request does not name, with an R2 that gives way only where ADR-0012 applies.
+
+    Either the R2 has an exception that points at a rule of ADR-0012 and leaves the new code out of the list, or every
+    sentence that names the code also points at a rule of ADR-0012 within 120 characters of it. A sentence that names
+    the code with no such pointer fails: it is an unconditional member of the list. The README grades the rest.
+    """
+    r2 = ' '.join(rule_body(record_of(text, 'Request 1', '0011'), '2').split())
+    if not r2:
+        return result(False, 'ADR-0011 R2 not given in Request 1')
+    if not re.search(r'ADR-0012\s+R\d', r2):
+        return result(False, f'no pointer at ADR-0012: {r2[:110]}')
+    for sent in re.split(r'(?<=[.;])\s+', r2):
+        for c in re.finditer('POLICY_STORE_UNAVAILABLE', sent):
+            if not any(abs(c.start() - a.start()) <= 120 for a in re.finditer(r'ADR-0012\s+R\d', sent)):
+                return result(False, f'code without a pointer: {sent[:110]}')
+    return result(True, r2[:110])
+
+
+def pp_no_acceptance_follow_up(text):
+    """Record 0012 of Request 1 leaves the edits of ADR-0010 and ADR-0011 out of its Follow-ups."""
+    fu = follow_ups(record_of(text, 'Request 1', '0012'))
+    found = re.search(r'[^\n]*\b(?:ADR-)?00(?:10|11)\b[^\n]*', fu)
+    return result(found is None, f'follow-up: {found.group(0).strip()[:110]}' if found else 'no follow-up on 0010 or 0011')
+
+
+def pp_user_told(text):
+    """Request 1's message names both edited rules, ADR-0010 R3 and ADR-0011 R2; the README grades what it says of them."""
+    msg = ' '.join(message(section(text, 'Request 1')).split())
+    missing = [f'ADR-{n} R{r}' for n, r in (('0010', '3'), ('0011', '2'))
+               if not re.search(rf'\bADR-{n}\W{{0,4}}R{r}\b|\bR{r}\W{{0,4}}of\W{{0,4}}ADR-{n}\b', msg)]
+    return result(not missing, f'the message does not name {", ".join(missing)}' if missing else 'both rules named')
+
+
+def pp_noise_one_record(text):
+    """Request 2 writes record 0012 and no other record."""
+    recs = [p for p, _ in records(files(section(text, 'Request 2')))]
+    ok = len(recs) == 1 and '/0012-' in recs[0]
+    return result(ok, f'records: {recs}')
+
+
+def pp_noise_no_follow_up(text):
+    """Record 0012 of Request 2 has no follow-up on ADR-0010 or ADR-0011."""
+    fu = follow_ups(record_of(text, 'Request 2', '0012'))
+    found = re.search(r'[^\n]*\b(?:ADR-)?00(?:10|11)\b[^\n]*', fu)
+    return result(found is None, f'follow-up: {found.group(0).strip()[:110]}' if found else 'no follow-up on 0010 or 0011')
+
+
 CASES = {
     'checker-partial-delivery': [verdict_is('Change A', 'ADR-0007 R5', 'violates'),
                                  verdict_is('Change B', 'ADR-0007 R5', 'conforms'),
@@ -594,6 +668,9 @@ CASES = {
                                     rule_with('Request 2', '401', 'TOKEN_ALG_NONE'),
                                     rule_with('Request 2', '401', 'TOKEN_ALG_SYMMETRIC'), no_defect('Request 2'),
                                     rule_with('Request 3', 'TLS', '1.2'), no_defect('Request 3'), no_guide_written],
+    'writer-proposed-precedence': [pp_new_rule, pp_named_loser_excepted, pp_unnamed_loser_found,
+                                   pp_no_acceptance_follow_up, pp_user_told, pp_noise_one_record,
+                                   pp_noise_no_follow_up, no_guide_written],
 }
 
 

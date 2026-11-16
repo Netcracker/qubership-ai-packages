@@ -8,7 +8,7 @@ accepted record takes in place. Request 2 is the noise input for the rule that a
 ## Skill parts
 
 - `SKILL.md`: "Local conventions" (immutability and the edits an accepted record takes, superseding part of a record),
-  "Template"
+  "Template", "Rules" (**Precedence**), "Consequences" (**Follow-ups**)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks

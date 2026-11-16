@@ -26,8 +26,7 @@ it; the repository's guide and the instruction that points at the guide carry wh
 One decision per record, with one deciding authority and one reason to change. Two decisions that different people
 settle, or that change for different reasons, mean two records. Several people may approve one decision. Split no
 further: choices that one authority settles for one reason, and that a change would edit together, are one decision and
-stay one record. A part that changes what an earlier record decided goes into a record that supersedes that part, not
-into a record about something else.
+stay one record. A part that changes what an earlier record decided is handled as **Precedence** says.
 
 Every rule follows from the title and the Decision sentence. A rule that does not, such as the removal of an unrelated
 feature or a liveness probe in a record about tokens, belongs in a record of its own, where a reader looking for it will
@@ -161,7 +160,7 @@ Negative:
 
 Follow-ups:
 
-- <Work the record creates outside the code it governs.>
+- <Work the record creates outside the code it governs that this change cannot do.>
 
 ## Open points
 
@@ -232,7 +231,28 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Result**: a constraint on a file or a setting names what happens when it is broken.
 - **Exceptions**: an exception sits inside the rule it limits, or the rule points at it by number. A rule that reads as
   unconditional gets checked as unconditional.
-- **Precedence**: where two rules can apply to one case, one of them says which wins.
+- **Precedence**: where two rules can apply to one case, one of them says which wins. Before numbering a rule, search
+  the records of this repository, and of any other repository that the user or a **Related ADRs** line names, for rules
+  on the same case, by the result, the setting, or the subject they decide. The winning rule stays in the record whose
+  decision it follows from. Where the losing rule belongs to another record and decides that case in another way, such
+  as by requiring another result there or by forbidding the winner's, a checker reading that record alone enforces it.
+  Judge this with every rule that this change replaces, in any record, taken as gone, because an exception that points
+  at one of them stops applying when it stops binding. The losing rule then gives way in that case alone: by an
+  exception that points at the winning rule by number, or by a replacement where its record is accepted. The exception,
+  not the losing rule, holds only while the winning rule binds the change, and the exception's own sentence says so.
+  What this change does depends on where the losing rule is; take the first item that fits:
+  - a rule outside this branch, such as one in another repository or in a record that only another open change adds:
+    tell the user which rule needs which exception, or which replacement where its record is accepted, and that the two
+    rules contradict each other until it gets one; add a follow-up for a rule in another repository;
+  - a rule of a `Proposed` record on this branch: add the exception in this change, correct a title or Decision sentence
+    of that record that the exception makes false, and tell the user which records and rules you edited;
+  - a rule of an accepted record: it is replaced whole (**Superseding part of a record**), because a checker skips a
+    replaced rule. Where the winning rule decides every case the old one decided, the winning rule is the replacement.
+    Otherwise a rule that decides the remaining cases replaces it, and goes into the new record where every case it
+    decides follows from that record's title and Decision sentence, or else into a record of its own that you propose to
+    the user (**What belongs in an ADR**). Where the replacement goes into a record of its own, the new record and that
+    record are accepted together, because until the replacement binds, the old rule binds beside the winning rule; tell
+    the user so.
 - **Layer**: `(<layer>)` names the code the rule constrains, and the checker looks there first, so read the code before
   you tag a rule. For a behavior rule, that is the component whose code produces the result; for a structural rule, it
   is the code the invariant ranges over, build files included. A rule over the whole repository carries the tag of every
@@ -285,8 +305,10 @@ decision accepts.
   existing callers get, name the case and the test that shows it. Where it changes a default, a required setting, or
   what the system trusts, a rule states what an existing installation gets on upgrade, and Negative cites it.
 
-- **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
-  requirement.
+- **Follow-ups** carries work outside the code the record governs that this change cannot do, such as the line an
+  accepted record gains under **Related ADRs** once this one is accepted, or the exception or replacement that a rule in
+  another repository needs (**Precedence**). A follow-up never holds a requirement, and never says what another open
+  change does, because that is delivery state (**Delivery stays out of the record**).
 
 ## Open points
 
@@ -381,9 +403,10 @@ message and the pull request description end with the trailers. It names the gui
    rule without further judgment, and the report names the check. The other cases of the rule are judged as usual, and
    so is every case where the checker cannot see the result.
 4. Read each `Proposed` rule that binds nothing, because its record does not bind the change or because it replaces an
-   accepted rule, where the rule sits in a layer the change touches or the trailers name it, as if it bound the
-   change. For each such rule that the change would fail under every reading and every answer an open point lists, the
-   report adds the line `would violate ADR-NNNN Rn`, and gives the rule no verdict.
+   accepted rule, where the rule sits in a layer the change touches or the trailers name it, as if it bound the change,
+   and read each `Proposed` rule that an exception in it points at as if it bound too, to decide that exception alone.
+   For each such rule that the change would fail under every reading and every answer an open point lists, the report
+   adds the line `would violate ADR-NNNN Rn`, and gives the rule no verdict.
 
 | Verdict | Meaning |
 | --- | --- |
