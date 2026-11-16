@@ -669,7 +669,11 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
                "at the right abstraction layer, or does it patch a symptom where the component that owns the "
                "invariant should change? Does it add quadratic or worse complexity in the size of an input, and "
                "is that size bounded? Does it break a persisted format, a wire protocol, an API shape, or a "
-               "configuration key that existing readers depend on?")
+               "configuration key that existing readers depend on? Where it adds an exception to, narrows, or takes "
+               "precedence over a statement in a file it does not change (a rule of a specification or a decision "
+               "record, a documented default, a doc comment), does that statement, read on its own, still state "
+               "the old behavior? Is text the diff moves or copies from another file still true, and does a claim "
+               "about what another open pull request or branch does hold at its current head?")
     out.append("")
     out.append("Where a hunk repairs a defect by raising a limit or timeout, adding a retry, ignoring an "
                "exception, sleeping, disabling a test, or moving work into another process, check that "
@@ -761,7 +765,8 @@ def document_prompt(state: Dict[str, Any], n: int, doc: Path, fixes_patch: Optio
     out.append("")
     out.append("Answer these for the document as a whole, and file a finding for each that applies:")
     out.append("- Is every claim about existing code true: the method exists, the call returns what the plan "
-               "says, the callers are the ones the plan lists?")
+               "says, the callers are the ones the plan lists? Does a claim about another open pull request or "
+               "branch hold at its current head, and is text copied from another file still true?")
     out.append("- Can each step be implemented as written, without a second design pass? Does it name the file, "
                "the type, or the function it changes?")
     out.append("- Which cases does the plan leave out? Take the set from something enumerable, such as an enum, "
@@ -772,6 +777,9 @@ def document_prompt(state: Dict[str, Any], n: int, doc: Path, fixes_patch: Optio
                "existing readers depend on, without saying how those readers are handled?")
     out.append("- Does each behavior the plan promises get a test, and would that test fail without the change?")
     out.append("- Does a step depend on a later one, or add work the task does not need?")
+    out.append("- Where the document takes precedence over, narrows, or adds an exception to a rule of another "
+               "specification or decision record, does it amend that rule, in the same change where the file can "
+               "change? A follow-up settles it only where the file cannot change in this change.")
     out.append("")
     out.append("Mark problems in existing code that the plan neither causes nor has to change as pre-existing.")
     out.append("")

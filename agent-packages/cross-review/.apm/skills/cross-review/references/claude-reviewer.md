@@ -131,6 +131,12 @@ a finding where it applies, and name in `checked_without_findings`, one clause e
 - **Does it break compatibility?** Persisted formats, wire protocols, API shapes, configuration keys, and database
   schemas have readers that outlive a release. Data an older build wrote must stay readable, and an older client must
   stay connectable, unless the task says otherwise.
+- **Does it leave a text it did not change false?** Where the change adds an exception to a statement in another file,
+  narrows it, or takes precedence over it (a rule of a specification or a decision record, a documented default, a
+  contract in a doc comment), read that statement on its own. Where it still states the old behavior without the
+  exception, file the finding against this change. A follow-up does not settle it where that file can change in the
+  same change. Text the change moves or copies from another file is read as if written now, and a claim about what
+  another open pull request or branch does is checked at its current head.
 - **Is it wrong under restart, a race, or partial failure?** A restart between two writes, a second instance racing
   the first, a truncated file, a cancellation halfway through.
 

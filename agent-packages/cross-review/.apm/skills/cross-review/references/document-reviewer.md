@@ -99,7 +99,13 @@ what you checked where it does not.
   question and say so.
 - **Is every claim about existing code true?** Open the code for each one: the method exists and has that signature,
   the call returns what the plan says, the callers are the ones the plan lists. A plan built on a misread API is wrong
-  in every step that follows it.
+  in every step that follows it. A claim about what another open pull request or branch does is checked at its current
+  head, and a claim the document copied from another file is checked as if written now.
+- **Does it contradict a document it leaves unchanged?** A rule that takes precedence over, narrows, or adds an
+  exception to a rule of another specification or decision record leaves that rule false until it is amended. Read the
+  other rule on its own. Where it still states the old behavior, the document names the amendment, made in the same
+  change wherever that file can change in it. A follow-up settles it only where the file cannot change in this change,
+  such as an accepted record or a file in another repository.
 - **Can each step be implemented as written?** A step that does not name the file, the type, or the function it
   changes, or that says "handle X" without saying how, leaves the design to the implementer.
 - **Which cases does the plan leave out?** Take the set from something enumerable rather than from memory: the

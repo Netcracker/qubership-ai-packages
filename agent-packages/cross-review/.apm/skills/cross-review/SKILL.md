@@ -637,13 +637,15 @@ longer makes the decision, `moves` where the decision moved to another place. An
 listed carries `same_property` and, where that list is not empty, `family` (§5). A blocking item is
 `deferred` only with an `origin` of `preexisting` or `beyond_task` and a `follow_up`, or as a docs
 or style preference with `origin: prose`, which §7 closes; a defect the change introduced is
-narrowed instead. `origin` is your own claim, and `ledger-apply` checks only that one is there, so
-read what the reviewers said about the cause before you write `preexisting`. Where the code departed
-from the reviewed plan, the evidence says so and says why. **`evidence` is required and is the point
-of the exercise**: a rejection backed by a mechanism retires a finding for good, while a rejection
-backed by an opinion comes back every round. Name the file and the declaration that settles it. For
-a `fixed` item, the evidence also says which axes the new test covers — that is what makes the
-section above something you did rather than something you read.
+narrowed instead. A text in the same repository that the change leaves false, such as a rule the
+change takes precedence over, is a defect the change introduced, not `beyond_task`. `origin` is your
+own claim, and `ledger-apply` checks only that one is there, so read what the reviewers said about
+the cause before you write `preexisting`. Where the code departed from the reviewed plan, the
+evidence says so and says why. **`evidence` is required and is the point of the exercise**: a
+rejection backed by a mechanism retires a finding for good, while a rejection backed by an opinion
+comes back every round. Name the file and the declaration that settles it. For a `fixed` item, the
+evidence also says which axes the new test covers — that is what makes the section above something
+you did rather than something you read.
 
 ```bash
 python3 $S ledger-apply --fix-report <file>
