@@ -50,7 +50,8 @@ ECOSYSTEMS = [
     {"name": "cargo", "detect": ["Cargo.toml"], "patterns": ["Cargo.toml"],
      "lfm": ["Cargo.lock"]},
     # Chart.yaml lists the chart dependencies; values.yaml holds the chart
-    # configuration as well as image tags, so it is covered only by path.
+    # configuration as well as image tags, so it is no well-known name: it is
+    # covered by path, or by name where bots update every copy in the tree.
     {"name": "helm", "detect": ["Chart.yaml"], "patterns": ["Chart.yaml"], "lfm": ["Chart.lock"]},
     # The files Renovate's helmfile manager reads by default.
     {"name": "helmfile",
@@ -89,7 +90,8 @@ BLOCK_COMMENT = """\
 # that cover copies added later. Regenerate it with the
 # codeowners-for-bot-updates skill instead of editing it:
 # https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages/codeowners-for-bot-updates
-# The last matching line wins, so the block stays at the end of the file."""
+# The last matching line wins, so a line after the block gives the files it
+# matches their owners back."""
 
 RENOVATE_LOCATIONS = ["renovate.json", ".github/renovate.json", ".gitlab/renovate.json",
                       ".renovaterc", ".renovaterc.json"]
@@ -213,14 +215,17 @@ class Matcher:
         self.cache = {}
 
     def match(self, pattern, paths):
+        if not paths:
+            return set()
         key = (pattern, tuple(paths))
         if key in self.cache:
             return self.cache[key]
         pat_file = os.path.join(self.dir, "pattern")
         with open(pat_file, "w") as f:
             f.write(pattern + "\n")
-        cmd = ["git", "-c", "core.excludesFile=" + pat_file, "check-ignore", "--no-index", "-z",
-               "--stdin"]
+        # GitHub matches case-sensitively; git init on macOS sets ignoreCase.
+        cmd = ["git", "-c", "core.excludesFile=" + pat_file, "-c", "core.ignoreCase=false",
+               "check-ignore", "--no-index", "-z", "--stdin"]
         # One call takes milliseconds; a call once hung for ten minutes, so a
         # stuck one is killed and retried.
         for attempt in range(3):
@@ -235,8 +240,8 @@ class Matcher:
             sys.exit("git check-ignore failed: " + p.stderr)
         hits = {x for x in p.stdout.split("\0") if x}
         if pattern.endswith("/*") and "**" not in pattern:
-            prefix = pattern[:-1].lstrip("/")
-            hits = {h for h in hits if "/" not in h.split(prefix, 1)[-1]}
+            depth = pattern.strip("/").count("/")
+            hits = {h for h in hits if h.count("/") == depth}
         self.cache[key] = hits
         return hits
 
@@ -301,8 +306,8 @@ def pattern_sort_key(pattern):
     return pattern.lstrip("/*").lower()
 
 
-def replace_block(text, lines):
-    """Remove the generated block from text and append a new one with lines."""
+def strip_block(text):
+    """Return the lines of text without the generated block."""
     begin = BLOCK_BEGIN.split(":")[0]
     out, inside = [], False
     for line in text.splitlines():
@@ -315,9 +320,73 @@ def replace_block(text, lines):
     if inside:
         raise ValueError("%s has no %s line after it; restore the line so the lines after "
                          "the block are not lost" % (begin, BLOCK_END))
-    while out and not out[-1].strip():
-        out.pop()
-    return "\n".join(out + ["", BLOCK_BEGIN, BLOCK_COMMENT] + lines + [BLOCK_END]) + "\n"
+    return out
+
+
+def block_position(lines):
+    """Return the number of lines the generated block goes after: those up to
+    the last * line, or all of them when no line is *."""
+    stars = [no for no, pattern, _ in parse_codeowners("\n".join(lines)) if pattern == "*"]
+    return stars[-1] if stars else len(lines)
+
+
+def replace_block(text, lines):
+    """Remove the generated block from text and insert a new one with lines
+    right after the * line, so the lines after it override the block."""
+    out = strip_block(text)
+    at = block_position(out)
+    head, tail = out[:at], out[at:]
+    while head and not head[-1].strip():
+        head.pop()
+    while tail and not tail[0].strip():
+        tail.pop(0)
+    while tail and not tail[-1].strip():
+        tail.pop()
+    block = [BLOCK_BEGIN, BLOCK_COMMENT] + lines + [BLOCK_END]
+    return "\n".join(head + [""] + block + ([""] + tail if tail else [])) + "\n"
+
+
+def override_owners(text, matcher, paths):
+    """Map each of paths to the owners an override line in the block must give
+    it: those of its last matching line up to the * line. A path whose last
+    matching line follows the * line keeps its owners without an override, and
+    one whose last matching line has no owners gets none. The generated block
+    is left out, or a rerun would copy the owners of the previous run's
+    override lines."""
+    lines = strip_block(text)
+    at = block_position(lines)
+    found = last_match(parse_codeowners("\n".join(lines)), matcher, paths)
+    return {p: rule[2] for p, rule in found.items() if rule and rule[2] and rule[0] <= at}
+
+
+def check_verdicts(rows, current, text):
+    """Return the paths whose last matching line in text disagrees with their
+    verdict, and apart from them the ownerless paths that a line after the
+    generated block keeps owned, as the block's placement intends."""
+    ends = [no for no, line in enumerate(text.splitlines(), 1) if line.strip() == BLOCK_END]
+    block_end = ends[-1] if ends else None
+    mismatches, owned_after_block = [], []
+    for path, r in rows.items():
+        rule = current.get(path)
+        owned = bool(rule and rule[2])
+        if r["in_tree"] and r["verdict"] != "ignored" and owned != (r["verdict"] == "keep"):
+            if owned and block_end and rule[0] > block_end:
+                owned_after_block.append(path)
+            else:
+                mismatches.append(path)
+    return mismatches, owned_after_block
+
+
+def write_target(codeowners, repo_dir, co_path):
+    """Return the file --write changes: the one --codeowners names, or the
+    CODEOWNERS file of the clone, which must not be a symbolic link that could
+    lead outside it."""
+    if codeowners:
+        return codeowners
+    target = os.path.join(repo_dir, co_path)
+    if os.path.islink(target):
+        raise ValueError("%s is a symbolic link; pass the file to write with --codeowners" % target)
+    return target
 
 
 def proposed_pattern(path):
@@ -493,7 +562,6 @@ def main():
                 co_path, co_text = loc, text
                 break
     rules = parse_codeowners(co_text or "")
-    owned_rules = [r for r in rules if r[2]]
     matcher = Matcher()
 
     # Verdicts. Every path a bot's own commit changed goes ownerless, however
@@ -529,10 +597,11 @@ def main():
                         | keep)
 
     # Proposed patterns: generalise ownerless paths and add well-known ones. A
-    # path that must keep its owners but matches a proposed pattern gets an
+    # path that must keep its owners but matches a proposed pattern keeps them
+    # through a line after the block, if it has one. Otherwise, it gets an
     # override line after the patterns, so the pattern still covers future
-    # files. A path no owned line matches gets none, and the check below
-    # reports it.
+    # files (override_owners). A path whose last matching line has no owners
+    # gets none, and the check below reports it.
     lfm_manual = [p for p in prs if p["lfm"] and p["kind"] in ("manual", "open-manual")]
     candidates = defaultdict(lambda: {"sources": set(), "paths": []})
     ownerless = {p for p, r in rows.items() if r["verdict"] == "ownerless" and r["in_tree"]}
@@ -562,29 +631,33 @@ def main():
         for pat in eco.get("lfm", []):
             candidates[pat]["sources"].add("ecosystem:" + eco["name"])
 
-    proposals, overrides = [], {}
+    proposals, reached = [], set()
     for pat, c in candidates.items():
         tree_hits = matcher.match(pat, tree)
         # A pattern of a detected ecosystem stays without a match, so a file
         # added later is covered; a lock file stays only where one exists.
         if not c["paths"] and not tree_hits and not c.get("keep_unmatched"):
             continue
-        for k in matcher.match(pat, keep_paths) if keep_paths else ():
-            rule = last_match(owned_rules, matcher, [k])[k]
-            if rule:
-                overrides[k] = rule[2]
+        reached |= matcher.match(pat, keep_paths)
         proposals.append({"pattern": pat, "sources": sorted(c["sources"]),
                           "paths": sorted(c["paths"]),
                           "tree_matches": len(tree_hits),
                           "tree_untouched": sorted(tree_hits - set(rows))[:5]})
     proposals.sort(key=lambda x: pattern_sort_key(x["pattern"]))
+    try:
+        overrides = override_owners(co_text or "", matcher, sorted(reached))
+    except ValueError as e:
+        sys.exit("%s: %s" % (co_path, e))
 
     if a.write:
         if co_path is None:
             sys.exit("%s has no CODEOWNERS file, so no bot PR requests review" % repo)
         if not a.codeowners and not a.repo_dir:
             sys.exit("--write needs --repo-dir or --codeowners")
-        target = a.codeowners or os.path.join(a.repo_dir, co_path)
+        try:
+            target = write_target(a.codeowners, a.repo_dir, co_path)
+        except ValueError as e:
+            sys.exit(str(e))
         with open(target) as f:
             old_text = f.read()
         try:
@@ -598,14 +671,11 @@ def main():
         rules = parse_codeowners(co_text)
 
     current = last_match(rules, matcher, sorted(rows)) if rules else {}
-    mismatches = []
     for path, r in rows.items():
         rule = current.get(path)
-        owned = bool(rule and rule[2])
         r["current"] = None if not rule else {"line": rule[0], "pattern": rule[1],
                                                "owners": rule[2]}
-        if r["in_tree"] and r["verdict"] != "ignored" and owned != (r["verdict"] == "keep"):
-            mismatches.append(path)
+    mismatches, owned_after_block = check_verdicts(rows, current, co_text or "")
 
     # Rulesets and classic branch protection both apply, so either one can
     # require code-owner review.
@@ -670,7 +740,7 @@ def main():
         out = {"summary": summary, "proposals": proposals, "overrides": overrides,
                "paths": [dict(r, auto=slim(r["auto"]), manual=slim(r["manual"]))
                          for r in sorted(rows.values(), key=lambda r: r["path"])],
-               "mismatches": sorted(mismatches)}
+               "mismatches": sorted(mismatches), "owned_after_block": sorted(owned_after_block)}
         json.dump(out, sys.stdout, indent=1)
         print()
         return
@@ -716,6 +786,9 @@ def main():
     print("\n## Paths whose last matching line in %s disagrees with the verdict\n"
           % (co_path or "CODEOWNERS"))
     print("\n".join("- `%s`" % m for m in sorted(mismatches)) or "none")
+    print("\n## Bot-updated paths a line after the block keeps owned\n")
+    print("\n".join("- `%s` (L%d `%s`)" % (m, rows[m]["current"]["line"], rows[m]["current"]["pattern"])
+                    for m in sorted(owned_after_block)) or "none")
 
 
 if __name__ == "__main__":
