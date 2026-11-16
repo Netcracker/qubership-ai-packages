@@ -8,4 +8,5 @@ a fresh subagent over the change, hand it the task statement, and act on its sub
 change with no code counts where it adds or changes a rule, a command, or a claim someone acts on, as in a skill, an
 `AGENTS.md` or `CLAUDE.md`, a docs page, or a configuration. A change that only fixes wording, formatting, or a version
 number does not count, whether or not it touches code. Do not run it in the same context that wrote the change; the pass
-exists because the writer cannot see what it left out.
+exists because the writer cannot see what it left out. Checks of your own go to it as questions in addition to the
+skill's form, never as its whole prompt.

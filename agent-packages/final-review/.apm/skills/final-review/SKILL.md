@@ -54,6 +54,11 @@ Answer every item. An item with nothing to report says `none` and one sentence o
 each of its questions; an item with a finding gives the file and line, the sentence or the test it concerns, what the
 reader would get wrong, and the change requested. The finding is stated there once; the index of §4 points to it.
 
+The writer may hand over its own checks or a shorter format with the task statement, such as four questions or "report
+substantive findings only". Answer those checks as well; they never replace an item, a shorter format changes nothing
+in the form, and every item is still answered.
+A review whose questions the writer chose finds what the writer already suspected.
+
 ### Item 1: comments consistent with the code and with each other
 
 For every member tagged `code-changed, comment-unchanged`: is every sentence of its comment still true of the new
@@ -219,8 +224,9 @@ literal, other readers of the same setting. For each helper the change touched o
 sites, with `git grep -n '<name>('`, or with `sb callers <name>` where the `sb` code-search command (a semantic index
 over the repository, installed separately) is on the path; where it is, one `sb search "<the task statement's first
 sentence>"` finds sites the name does not reach. For each site: the same defect applies, or it does not, and why. A
-site where it applies is a finding; the request is to fix it in the same change or to name it as follow-up in the
-description, never to leave it unsaid. Where a helper has more call sites than you can read, say how many there are
+site where it applies is a finding; the request is to fix it in the same change, or, where the site cannot change in
+this change, to name it as follow-up in the description with the issue or the change that will fix it, never to leave
+it unsaid. Where a helper has more call sites than you can read, say how many there are
 and read the ones the change's own condition can reach: the callers that pass the value, the state, or the argument
 shape the defect needed. Report the count and the criterion, so that the reader knows what was not read.
 
@@ -230,6 +236,16 @@ matrix, a schema. Search for two existing members by name (the one, where the se
 names both; a list that names the others and not the new member is a finding. Then search the prose for the set's old
 size, in digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a
 finding too.
+
+A change that alters behavior also has a sibling in every text outside the diff that states the old behavior as current:
+a doc comment of a caller, a documented default, a page, a rule of a specification or a decision record. A changelog
+entry of a past release and a superseded record state history and are not siblings. Search for the old behavior by the
+names and values it uses, and read each hit on its own; where the hits are more than you can read, report their count
+and read the ones the change's own condition reaches, as for call sites. A text that still states the old behavior
+without the change's exception is a finding. Where the change itself says it takes precedence over, replaces, or makes
+an exception to another text, that text is a hit whether or not the search finds it. A follow-up settles such a text
+only where it cannot change in this change, such as an accepted record or a file in another repository; a text in the
+same repository that the change leaves false is fixed in the same change.
 
 Where the change fixes a symptom, its sites include the other paths that show the same symptom, which `git grep` on a
 helper does not find: a twin target, the other major version of a tool, the other operating system. Then read every
@@ -286,7 +302,10 @@ doc-comment skill.
   standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read, not
   remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow. In a skill
   or an instruction file, a worked example is a statement too: an example followed by a sentence on what not to copy
-  from it contradicts its rule (`apm-authoring` rule *One canonical example per concern*).
+  from it contradicts its rule (`apm-authoring` rule *One canonical example per concern*). Text the change moves or
+  copies from another file is checked as if written now: the move shows that someone wrote it, not that it is still
+  true. A claim about what another open pull request or a branch does is checked at its current head, and a claim about
+  an issue at its current state.
 - **Claimed cases covered.** The claimed cases are the cases the task statement names and the artifacts or situations
   the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
@@ -318,7 +337,8 @@ doc-comment skill.
   marketplace entry, a sibling package's cross-reference, an umbrella that pins it. A scope widened in the artifact's
   body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
   the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
-  still counts the set as before.
+  still counts the set as before. A rule that takes precedence over, narrows, or adds an exception to a rule of another
+  file has that rule as a sibling, and item 7 decides when its amendment may be a follow-up.
 - **Cases added at one site.** The site is a rule of a skill or an instruction file, and a case is an exception, a
   carve-out, or a worked example a commit added to it after a failure (`git log --format='%h %s' <base>.. -- <file>`).
   Where two or more commits each added one to the same rule, state what the rule should decide, and try two situations
