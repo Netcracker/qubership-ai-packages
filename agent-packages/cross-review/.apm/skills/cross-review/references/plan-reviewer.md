@@ -34,13 +34,13 @@ reply text is not read as the review. Keep it under a page: one block per plan i
 Nothing to add.
 
 ## F-012 — wrong
-The plan prefixes the wildcard bound. For an array bound that annotates the component, not the
-array: `@Nullable String[]` is an array of nullable strings and `String @Nullable []` is a nullable
-array. The plan's own Axes list has no array case, which is why this did not surface.
+The plan decodes the whole path before splitting it. An encoded slash then becomes a separator:
+`/files/a%2Fb` reaches the handler as two segments, `a` and `b`. The plan's own Axes list has no
+encoded-slash case, which is why this did not surface.
 
 ## F-015 — underspecified
-"Insert after the component type" does not say which tree the position comes from. For `String[][]`
-the component is itself an array; name the node whose end offset you will take, and check it.
+"Decode after splitting" does not say which value the split starts from. Name the field that holds
+the path, and check that nothing before the router has decoded it already.
 ```
 
 Use exactly one verdict word per item, from: `sound`, `underspecified`, `wrong`, `incomplete-coverage`.
@@ -57,8 +57,8 @@ corrupt the digest fence the round depends on.
    fix that does not compile, and it is the one thing the plan's author can check but a later
    reviewer can only discover a round too late. For every line marked `unverified`, say what would
    settle it and how cheaply. For every line marked verified, ask whether what was run actually
-   covers the case the fix will hit — a position dumped for `String[]` says nothing about
-   `String[][]`, and a tree dumped for a field says nothing about the same syntax in a cast.
+   covers the case the fix will hit — a value printed for one level of nesting says nothing about
+   two, and a parse dumped for one context says nothing about the same syntax in another.
 2. **The `Change` against the `Invariant`.** Does the described edit establish the invariant, or
    only the one input the finding reported? An edit that special-cases the reported shape is
    `underspecified`, however correct it is for that shape. Where an item's `Family` line names a

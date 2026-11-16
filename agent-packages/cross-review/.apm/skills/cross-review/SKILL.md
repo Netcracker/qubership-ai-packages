@@ -286,36 +286,36 @@ Write `rounds/<N>/fix-plan.md`, one section per item you accepted and one per it
 
 ```markdown
 ## F-003 — fix
-**Invariant.** A member select reached after a recognized nesting step is a type argument of the
-qualifier rather than the qualifier itself.
-**Change.** `classifyTypeUsage`: guard the `MemberSelectTree` arm with `!nested`, and let the walk
-continue outward instead of returning.
-**Assumes.** javac nests `Gen<@Nullable String>.Inner` as MEMBER_SELECT over PARAMETERIZED_TYPE over
-ANNOTATED_TYPE — checked by parsing that source and dumping the tree.
-**Axes.** Field, local, and nested type argument; two-level and three-level chains.
-**Teeth.** `typeArgumentOfGenericOuterTypeIsRecognized` fails with the guard removed.
+**Invariant.** A path is split into segments before any segment is percent-decoded, so an encoded
+slash (`%2F`) stays inside its segment.
+**Change.** `Router.match`: split `request.rawPath` on `/`, then decode each segment; drop the
+decode of the whole path in `Request.path`.
+**Assumes.** The server passes `rawPath` to the router undecoded — checked by sending `/files/a%2Fb`
+to a local server and printing the value the handler receives.
+**Axes.** An encoded slash, an encoded percent sign (`%25`), an empty segment; one segment and
+several.
+**Teeth.** `encodedSlashStaysInOneSegment` fails with the whole-path decode restored.
 
 ## F-011 — reject
-**Evidence.** JLS 9.6.4.1 makes TYPE_USE alone sufficient to write the annotation there, so the
-extra target adds no meaning a tool reads separately.
+**Evidence.** RFC 3986 §2.2 makes `/` a delimiter only where it is not percent-encoded, so `%2F`
+is data inside a segment, and splitting on it would route `/files/a%2Fb` to a different resource.
 ```
 
 **Every assumption about the syntax tree, about source positions, or about a library's behaviour is
 a line under `Assumes`, and each says how it was checked — including the ones a fix writes into a
 comment.** This is the half of the step that pays, and it is the half a reviewer cannot supply. A
-reviewer can tell you that prefixing an array bound
-annotates the component rather than the array, because that is a language rule they can reason
-about. No reviewer can tell you from memory that every `ArrayTypeTree` of `String[][]` reports the
-same end offset. Check that kind of thing yourself before the plan goes out — parse a file, dump the
-positions, print what the API returns — and write down what you ran. An assumption you did not check
+reviewer can tell you that decoding a path before splitting it turns `%2F` into a separator,
+because that is a rule of the format they can reason about. No reviewer can tell you from memory
+whether the framework in this repository decodes the path before your code sees it, or which end
+offset its parser reports for a nested node. Check that kind of thing yourself before the plan goes
+out — run the input, dump the parse, print what the API returns — and write down what you ran. An assumption you did not check
 is written `unverified`, which is an instruction to the reviewer to attack it first.
 
 **A sentence the fix writes into a comment is a claim, and it is checked the same way.** If the
-comment will say that javac accepts a construct, that an API returns a shape, or that some position
-is where a node ends, that sentence gets its own `Assumes` line naming what was run to settle it.
-Prose is where this rule gets skipped, and skipping it loops: in one run a comment about what javac
-accepts was rewritten in three consecutive rounds, each rewrite reported by the next round as still
-false, because every version was reasoned out and none was run. A comment that only restates what
+comment will say that a compiler accepts a construct, that an API returns a shape, or that some
+position is where a node ends, that sentence gets its own `Assumes` line naming what was run to
+settle it. Prose is where this rule gets skipped, and skipping it loops: a claim that was reasoned
+out and never run is reported as still false, rewritten, and reported again, round after round. A comment that only restates what
 the code plainly does needs no line — the rule is about checkable claims, not about every sentence.
 
 Then spawn a **fresh** subagent for the plan review (`subagent_type: general-purpose`):
