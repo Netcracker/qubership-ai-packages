@@ -243,7 +243,8 @@ A rule is one requirement that a checker can turn into a test with a definite re
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
   belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`,
   and a rule of a record in another repository as `owner/repo ADR-NNNN Rn`. Every record the text cites appears under
-  **Related ADRs**, and so does a record that this one replaces or that replaces it; no other record does.
+  **Related ADRs**, and so does a record that this one replaces or adds a requirement to, or that replaces this one or
+  adds a requirement to it; no other record does.
 - **One home**: a requirement is stated once, in one rule. Everywhere else, in this record or another, cite it by
   number (by section and a short quote where the record has no numbers) and by what it is about, not by what it
   decides: "the retry limit of ADR-0031 R4", not "ADR-0031 R4 allows three retries". A restatement drifts. A table

@@ -79,6 +79,10 @@ in this commit, all fail check 11. Four earlier trees of this change ran the cas
 11 passed in two of four results on `ba170d99`, four on `d8b52781`, three on `b7a46b78`, and two on `8fe854e2`. Only the
 results of `8fe854e2` pass check 12, which the skill asks for from that tree on.
 
+Tree `ce37d0b5` is the tree of this pull request. It adds to **Numbers freeze** that a record's **Related ADRs** also
+holds a record that adds a requirement to it, or that it adds a requirement to. Record 0013 adds no requirement to
+ADR-0012, and no result links ADR-0012 as an addition, so the results above stand for that tree.
+
 No result names a defect. The intermediate trees of the previous change, `89cbfb4e` to `1db689e3`, ran this case as
 well and passed checks 1 to 10 by meaning; their results are not kept.
 

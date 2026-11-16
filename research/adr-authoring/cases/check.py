@@ -302,6 +302,27 @@ def no_new_record_r2(text):
     return result(not others, 'no new record' if not others else f'new records: {others}')
 
 
+def backlink_planned(text):
+    """ADR-0008 links ADR-0007 under **Related ADRs**, and Request 1 plans ADR-0007's line for ADR-0008.
+
+    The plan is a mention of **Related ADRs** outside ADR-0008's own section that has ADR-0007 and a form of "accept"
+    within 300 characters on either side, as in "when ADR-0008 is accepted, ADR-0007 gains a line under Related ADRs".
+    """
+    req = section(text, 'Request 1')
+    recs = records(files(req), '0008')
+    if not recs:
+        return result(False, 'no record 0008 in Request 1')
+    related = heading_block(recs[0][1], 'Related ADRs')
+    if not re.search(r'\[ADR-0007\b[^\]]*\]\([^)]*\)', related):
+        return result(False, 'ADR-0008 does not link ADR-0007 under Related ADRs')
+    rest = req.replace(related, '') if related else req
+    for m in re.finditer(r'Related ADRs', rest):
+        window = rest[max(0, m.start() - 300):m.end() + 300]
+        if 'ADR-0007' in window and re.search(r'\baccept', window, re.I):
+            return result(True, ' '.join(rest[max(0, m.start() - 80):m.end() + 60].split()))
+    return result(False, 'no line for ADR-0008 planned in ADR-0007')
+
+
 # writer-two-decisions
 
 SPLIT = re.compile(r'[^.\n]*(?:(?:separate|own|second|another|two)\s+(?:records?|ADRs?)|second one)[^.\n]*'
@@ -567,18 +588,27 @@ def r2_no_401_copied(text):
     return result(True, 'no 401 of a cited rule outside the rules')
 
 
+REPLACES_OR_ADDS = re.compile(r'replac|supersed|\badds?\b[^.]*\brequirement|\badds?\s+R\d', re.I)
+
+
 def cited_records_linked(text):
-    """A record that a record 0007 cites but does not link under **Related ADRs**, or links there without citing it."""
+    """A record that a record 0007 cites but does not link under **Related ADRs**, or links there without citing it.
+
+    A link to a record that the text does not cite passes when its line says that record 0007 replaces that record or
+    adds a requirement to it, as **Numbers freeze** allows.
+    """
     wrong = []
     for request in ('Request 1', 'Request 2'):
         rec = record_of(text, request, '0007')
         related = heading_block(rec, 'Related ADRs')
-        linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', related)
+        items = re.split(r'\n(?=[-*]\s)', related.strip()) if related.strip() else []
+        linked = {n: item for item in items for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', item)
                   for n in re.findall(r'ADR-(\d{4})', label)}
         cited = set(re.findall(r'ADR-(\d{4})', rec.replace(related, '') if related else rec)) - {'0007'}
-        wrong += [f'{request}: ADR-{n} not linked' for n in sorted(cited - linked)]
-        wrong += [f'{request}: ADR-{n} linked, not cited' for n in sorted(linked - cited)]
-    return result(not wrong, ', '.join(wrong) if wrong else 'Related ADRs links exactly the cited records')
+        wrong += [f'{request}: ADR-{n} not linked' for n in sorted(cited - set(linked))]
+        wrong += [f'{request}: ADR-{n} linked, not cited' for n in sorted(set(linked) - cited)
+                  if not REPLACES_OR_ADDS.search(' '.join(linked[n].split()))]
+    return result(not wrong, ', '.join(wrong) if wrong else 'Related ADRs links the cited records and no other')
 
 
 def not_copied(request, pattern, what):
@@ -690,7 +720,7 @@ CASES = {
     'coder-trailers': [defers_r5('Change 1', 'Commit message'), defers_r5('Change 1', 'Pull request description'),
                        no_rule_trailers('Change 2')],
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,
-                               no_new_record_r2, no_guide_written],
+                               no_new_record_r2, no_guide_written, backlink_planned],
     'writer-two-decisions': [r1_at_most_one_record, r1_split_proposed, r2_one_record, r2_no_split, no_guide_written],
     'writer-defect-and-guarantee': [r1_record_0007, no_rule_on(r'entrypoint|\bCMD\b', 'the entrypoint'),
                                     no_rule_on(r'/tmp/cert|private CA|CA certificate|trust store', 'the certificates'),

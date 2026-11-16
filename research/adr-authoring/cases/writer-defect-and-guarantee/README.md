@@ -101,6 +101,10 @@ the replaced entrypoint; each Context states, from the base image's README, what
 In Request 2, all four refuse `none` and the HMAC algorithms in rules with HTTP 401, and in Request 3 all four write a
 rule for TLS 1.2 or later, though Go's default already meets it.
 
+Tree `ce37d0b5` is the tree of this pull request. It adds to **Numbers freeze** that a record's **Related ADRs** also
+holds a record that adds a requirement to it, or that it adds a requirement to. No request adds a requirement to one of
+the records 0001 to 0006, and no result links one of them, so the results above stand for that tree.
+
 Three earlier trees of this change ran the case too, and their results are not kept: on `ba170d99` all four passed by
 meaning, and `check.py` failed three checks on the marker; on `d8b52781` and `b7a46b78` all four passed every check.
 
