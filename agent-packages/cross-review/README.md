@@ -5,7 +5,10 @@ A skill that reviews one change with two reviewers that never see each other's w
 agree and where they contradict each other, the session that wrote the code decides what to fix, and
 the next round starts with a record of what was fixed and what was rejected.
 
-The skill is `cross-review`. The user invokes it by name; it does not fire on its own. For a
+The skill is `cross-review`. The user invokes it by name, and
+`.apm/instructions/cross-review.instructions.md`, merged into `AGENTS.md` / `CLAUDE.md` by `apm compile`, has the
+agent run it unasked after a large block of implementation and on a plan written to a file. Each run costs Codex and
+Claude tokens for up to six rounds. For a
 single-reviewer pass, use [`codex-review`](../codex-review/) instead — it costs less and needs no
 subagents.
 

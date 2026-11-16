@@ -1,6 +1,6 @@
 ---
 name: cross-review
-description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use only when the user asks for a cross-review or a two-reviewer review of a branch, the uncommitted changes, a commit, or a document such as a plan. For a cheaper single-reviewer pass, use codex-review instead.
+description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use when the user asks for a cross-review or a two-reviewer review of a branch, the uncommitted changes, a commit, or a document such as a plan. Also run it unasked after a large block of implementation, before final-review, and after writing a plan to a file, before implementing it. For a cheaper single-reviewer pass, use codex-review instead.
 ---
 
 # Cross-review
