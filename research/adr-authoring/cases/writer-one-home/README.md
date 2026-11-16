@@ -60,7 +60,7 @@ python3 research/adr-authoring/cases/check.py research/adr-authoring/cases/write
 
 `check.py` marks every check; a PASS is a marker found, so read the result before recording a grade. For check 15,
 `check.py` passes a link to a record that the text does not cite when the link's line says "replaces", "supersedes",
-"adds R<n>", or "adds" with "requirement".
+`adds R<n>`, or "adds" with "requirement".
 
 `controls/before-opus.md` and `controls/before-sonnet.md` are unedited runs of this prompt on the skill before this
 change, commit `82565c6`, tree `d42618eb`, at the default effort: `research/adr-authoring/cases/run-case.sh <copy of
