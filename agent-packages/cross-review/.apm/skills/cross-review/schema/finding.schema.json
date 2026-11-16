@@ -144,7 +144,7 @@
               },
               "symbol": {
                 "type": ["string", "null"],
-                "description": "Enclosing declaration as Class#method or a bare function name. It survives the line shifts that later rounds introduce, which is why the ledger matches on it."
+                "description": "Enclosing declaration as Class#method or a bare function name; for a Markdown or AsciiDoc document, the text of the nearest heading above the lines, and null in any other format. It survives the line shifts that later rounds introduce, which is why the ledger matches on it."
               },
               "start_line": { "type": ["integer", "null"] },
               "end_line": { "type": ["integer", "null"] }

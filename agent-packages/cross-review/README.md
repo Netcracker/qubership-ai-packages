@@ -11,7 +11,8 @@ subagents.
 
 ## What it does
 
-1. Picks the review target: a branch diff, the uncommitted changes, or a specific commit.
+1. Picks the review target: a branch diff, the uncommitted changes, a specific commit, or a document
+   such as a plan, a design, or an ADR, reviewed before the code it describes exists.
 1. Opens a round: pins the head commit and a snapshot of the working tree, and fences the tree's
    dirty state so a finding written against code that has since moved is marked stale.
 1. Runs both reviewers concurrently. Codex writes to files; the Claude reviewer is a subagent whose

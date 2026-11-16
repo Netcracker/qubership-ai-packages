@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import argparse
 import copy
+import difflib
 import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -311,9 +313,10 @@ def cmd_init(args: argparse.Namespace) -> None:
         die("%s is a run still %s at round %d; every command finds its run through the pointer, so a new "
             "run would take it over. Read it with `status`, end it with `stop`, or pass --force to replace it."
             % active)
-    kind, base, commit = parse_scope(args.scope)
+    kind, base, commit, doc = parse_scope(args.scope)
     # Before the run directory exists: a scope git cannot resolve should leave nothing behind.
     base_oid = scope_base_oid(repo, kind, base, commit)
+    doc_path, doc_label = (None, None) if doc is None else document_scope(repo, doc)
     task_text = None
     if args.task:
         try:
@@ -337,7 +340,8 @@ def cmd_init(args: argparse.Namespace) -> None:
         "run_id": run_id,
         "repo_root": str(repo),
         "review_dir": str(d),
-        "scope": {"kind": kind, "base": base, "commit": commit, "base_oid": base_oid},
+        "scope": {"kind": kind, "base": base, "commit": commit, "base_oid": base_oid,
+                  "file": doc_path, "label": doc_label},
         "task": str(task_path) if task_path else None,
         "legs": [leg.strip() for leg in args.legs.split(",") if leg.strip()],
         "round": 0,
@@ -396,15 +400,104 @@ def scope_base_oid(repo: Path, kind: str, base: Optional[str], commit: Optional[
     return run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
 
 
-def parse_scope(spec: str) -> Tuple[str, Optional[str], Optional[str]]:
+def parse_scope(spec: str) -> Tuple[str, Optional[str], Optional[str], Optional[str]]:
     if spec == "uncommitted":
-        return "uncommitted", None, None
+        return "uncommitted", None, None, None
     if spec.startswith("base:"):
-        return "base", spec[len("base:"):], None
+        return "base", spec[len("base:"):], None, None
     if spec.startswith("commit:"):
-        return "commit", None, spec[len("commit:"):]
-    die("scope must be uncommitted, base:<branch>, or commit:<sha>; got %r" % spec)
+        return "commit", None, spec[len("commit:"):], None
+    if spec.startswith("file:"):
+        return "file", None, None, spec[len("file:"):]
+    die("scope must be uncommitted, base:<branch>, commit:<sha>, or file:<path>; got %r" % spec)
 
+
+def document_scope(repo: Path, spec: str) -> Tuple[str, str]:
+    """Resolve the document a `file:` run reviews, and the path its findings are anchored at.
+
+    The document may live outside the repository, as a plan written in plan mode does. Its
+    findings are then anchored at the bare file name, since the schema takes no absolute path.
+    """
+    path = Path(spec).expanduser().resolve()
+    if not path.is_file():
+        die("no such file: %s" % spec)
+    try:
+        label = str(path.relative_to(repo.resolve()))
+    except ValueError:
+        label = path.name
+    return str(path), label
+
+
+def is_document(state: Dict[str, Any]) -> bool:
+    return state["scope"]["kind"] == "file"
+
+
+def snapshot_document(state: Dict[str, Any], rd: Path) -> Path:
+    """Copy the document into the round, so that both reviewers read the same text and its line numbers."""
+    src = Path(state["scope"]["file"])
+    try:
+        text = src.read_text("utf-8")
+    except OSError as exc:
+        die("cannot read the document %s: %s" % (src, exc))
+    if not text.strip():
+        die("the document %s is empty" % src)
+    dst = rd / "document" / src.name
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(src, dst)
+    return dst
+
+
+def document_diff(label: str, old: Path, new: Path) -> str:
+    return "".join(difflib.unified_diff(
+        old.read_text("utf-8").splitlines(keepends=True),
+        new.read_text("utf-8").splitlines(keepends=True),
+        "a/" + label, "b/" + label))
+
+
+# Each format's headings, and the delimiters of the blocks whose lines are code rather than headings. A Markdown
+# fence closes on a run of its own character at least as long; an AsciiDoc block closes on the line that opened it.
+MARKDOWN_HEADING = re.compile(r"^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$")
+MARKDOWN_FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+ASCIIDOC_HEADING = re.compile(r"^={1,6}\s+(\S.*?)\s*$")
+ASCIIDOC_BLOCK = re.compile(r"^(-{4,}|\.{4,}|\+{4,}|/{4,}|`{3,})\s*$")
+
+
+def document_heading(doc: Path, line: Optional[int]) -> Optional[str]:
+    """Name the heading above a line: the document's analogue of an enclosing declaration.
+
+    Markdown `#` headings and AsciiDoc `=` headings count, except inside a fenced code block, a
+    listing, a literal, a passthrough, or a comment block, where such a line is code. Other formats,
+    reStructuredText and plain text among them, get None.
+    """
+    if not line or line < 1:
+        return None
+    suffix = doc.suffix.lower()
+    asciidoc = suffix in (".adoc", ".asciidoc")
+    if asciidoc:
+        heading_re, block_re = ASCIIDOC_HEADING, ASCIIDOC_BLOCK
+    elif suffix in (".md", ".markdown"):
+        heading_re, block_re = MARKDOWN_HEADING, MARKDOWN_FENCE
+    else:
+        return None
+    try:
+        lines = doc.read_text("utf-8", "replace").splitlines()
+    except OSError:
+        return None
+    heading, block = None, None
+    for text in lines[:line]:
+        m = block_re.match(text)
+        if m:
+            opener = m.group(1)
+            if block is None:
+                block = opener
+            elif opener == block if asciidoc else opener[0] == block[0] and len(opener) >= len(block):
+                block = None
+            continue
+        if block is None:
+            m = heading_re.match(text)
+            if m:
+                heading = m.group(1)
+    return heading
 
 def cmd_snapshot(args: argparse.Namespace) -> None:
     d = resolve_dir(args.dir, args.repo)
@@ -421,6 +514,10 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
               "snapshot_tree": run(["git", "rev-parse", "%s^{tree}" % snap], cwd=repo).strip(),
               "dirty_digest": dirty_digest(repo),
               "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+    doc = snapshot_document(state, rd) if is_document(state) else None
+    if doc:
+        target["document"] = str(doc)
+        target["document_label"] = state["scope"]["label"]
     (rd / "target.json").write_text(json.dumps(target, indent=2) + "\n", "utf-8")
     (rd / "scope.txt").write_text(scope_flags(state) + "\n", "utf-8")
 
@@ -428,10 +525,15 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
     if n > 1:
         prev = json.loads((round_dir(d, n - 1) / "target.json").read_text("utf-8"))
         prev_snap = prev["snapshot_oid"]
-        patch = run(["git", "diff", "%s..%s" % (prev_snap, snap)], cwd=repo)
+        if doc:
+            patch = document_diff(state["scope"]["label"], Path(prev["document"]), doc)
+        else:
+            patch = run(["git", "diff", "%s..%s" % (prev_snap, snap)], cwd=repo)
         (rd / "fixes.patch").write_text(patch, "utf-8")
 
-    (rd / "codex-prompt.txt").write_text(codex_prompt(state, n, snap, prev_snap), "utf-8")
+    prompt = (document_prompt(state, n, doc, rd / "fixes.patch" if n > 1 else None) if doc
+              else codex_prompt(state, n, snap, prev_snap))
+    (rd / "codex-prompt.txt").write_text(prompt, "utf-8")
 
     state["round"] = n
     state["status"] = "reviewing"
@@ -450,6 +552,8 @@ def scope_flags(state: Dict[str, Any]) -> str:
         return "--uncommitted"
     if s["kind"] == "base":
         return "--base %s" % s["base"]
+    if s["kind"] == "file":
+        return "file:%s" % s["label"]
     return "--commit %s" % s["commit"]
 
 
@@ -528,10 +632,6 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
     What the prompt names is the range ending at this round's snapshot, never the original scope
     argument: see scope_sentence().
     """
-    fixed = [e for e in state["ledger"] if e["status"] == "fixed"]
-    rejected = [e for e in state["ledger"] if e["status"] == "rejected"]
-    deferred = [e for e in state["ledger"] if e["status"] == "deferred"]
-
     if n == 1:
         out = ["Review this change. Report prioritized, actionable findings.", ""]
         base_oid = state["scope"].get("base_oid")
@@ -544,32 +644,7 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
         out = ["Re-review round %d of this change. Report prioritized, actionable findings." % n, ""]
         out += scope_sentence(state, n, snap, prev_snap)
     out.append("")
-    if fixed:
-        out.append("Addressed since your last pass. These are claims, not verified facts: check each "
-                   "against the code, and watch for defects the fix itself introduced.")
-        for e in fixed:
-            out.append("- [%s] %s - %s" % (e["id"], e["title"], e["decision"]["rationale"]))
-        out.append("")
-    if rejected:
-        out.append("Rejected with evidence. Do not refile these unless you can refute the evidence.")
-        for e in rejected:
-            out.append("- [%s] %s - rejected because %s Evidence: %s"
-                       % (e["id"], e["title"], e["decision"]["rationale"], e["decision"]["evidence"]))
-        out.append("")
-    if deferred:
-        out.append("Deferred as out of scope for this change: "
-                   + ", ".join("[%s] %s" % (e["id"], e["title"]) for e in deferred))
-        out.append("")
-    case_families = {k: v for k, v in state.get("families", {}).items()
-                     if any(f["shape"] == "adds_case" for f in v["fixes"])}
-    if case_families:
-        out.append("Properties an earlier fix handled by adding a case, with the findings that reported "
-                   "them. The next failure is usually an input next to the ones those fixes handled: "
-                   "one level deeper, through a wrapper or a generic call, through a subtype, or two "
-                   "handled shapes combined. Try those, not the handled inputs.")
-        for name, fam in case_families.items():
-            out.append("- %s (%s)" % (name, ", ".join(sorted({m["id"] for m in fam["members"]}))))
-        out.append("")
+    out += ledger_lines(state, "code")
     task = task_statement(state)
     if task:
         out.append("The change is meant to do what this task statement asks. Check that it solves this problem, "
@@ -599,6 +674,115 @@ def codex_prompt(state: Dict[str, Any], n: int, snap: Optional[str] = None,
     out.append("Where a hunk repairs a defect by raising a limit or timeout, adding a retry, ignoring an "
                "exception, sleeping, disabling a test, or moving work into another process, check that "
                "something in the diff or its tests shows the cause is gone rather than the symptom rarer.")
+    return "\n".join(out) + "\n"
+
+
+def ledger_lines(state: Dict[str, Any], subject: str) -> List[str]:
+    """Tell a reviewer what the earlier rounds decided, so it checks the fixes and does not refile the rejections."""
+    fixed = [e for e in state["ledger"] if e["status"] == "fixed"]
+    rejected = [e for e in state["ledger"] if e["status"] == "rejected"]
+    deferred = [e for e in state["ledger"] if e["status"] == "deferred"]
+    out: List[str] = []
+    if fixed:
+        out.append("Addressed since your last pass. These are claims, not verified facts: check each "
+                   "against the %s, and watch for defects the fix itself introduced." % subject)
+        for e in fixed:
+            out.append("- [%s] %s - %s" % (e["id"], e["title"], e["decision"]["rationale"]))
+        out.append("")
+    if rejected:
+        out.append("Rejected with evidence. Do not refile these unless you can refute the evidence.")
+        for e in rejected:
+            out.append("- [%s] %s - rejected because %s Evidence: %s"
+                       % (e["id"], e["title"], e["decision"]["rationale"], e["decision"]["evidence"]))
+        out.append("")
+    if deferred:
+        out.append("Deferred as out of scope for this change: "
+                   + ", ".join("[%s] %s" % (e["id"], e["title"]) for e in deferred))
+        out.append("")
+    case_families = {k: v for k, v in state.get("families", {}).items()
+                     if any(f["shape"] == "adds_case" for f in v["fixes"])}
+    if case_families:
+        out.append("Properties an earlier fix handled by adding a case, with the findings that reported "
+                   "them. The next failure is usually an input next to the ones those fixes handled: "
+                   "one level deeper, through a wrapper or a generic call, through a subtype, or two "
+                   "handled shapes combined. Try those, not the handled inputs.")
+        for name, fam in case_families.items():
+            out.append("- %s (%s)" % (name, ", ".join(sorted({m["id"] for m in fam["members"]}))))
+        out.append("")
+    return out
+
+
+DOCUMENT_PROMPT_LIMIT = 60000
+
+
+def document_prompt(state: Dict[str, Any], n: int, doc: Path, fixes_patch: Optional[Path]) -> str:
+    """Build the Codex prompt for a `file:` run, which reviews a document rather than a diff.
+
+    The prompt carries the document with line numbers, so that Codex anchors its findings on the
+    same lines the Claude reviewer reads in the round's copy.
+    """
+    label = state["scope"]["label"]
+    if n == 1:
+        out = ["Review this document. Report prioritized, actionable findings.", ""]
+    else:
+        out = ["Re-review round %d of this document. Report prioritized, actionable findings." % n, ""]
+    out.append("The document is `%s`, a plan or a design written before the code it describes. Anchor every "
+               "finding at the file `%s` and at the line numbers below, and quote the lines it is about."
+               % (label, label))
+    out.append("")
+    out.append("The working directory is the repository the document is about. Read the code there to check "
+               "every claim the document makes about it: a plan built on a misread API is wrong in every step "
+               "that follows.")
+    out.append("")
+    if fixes_patch:
+        out.append("The edits made since round %d are the diff below. Check them first: an edit that introduces "
+                   "a defect, or that does not do what its rationale claims, is what this round exists to catch. "
+                   "Then re-check the rest of the document." % (n - 1))
+        out.append("")
+        out.append("--- edits since round %d ---" % (n - 1))
+        out.append(fixes_patch.read_text("utf-8").rstrip("\n"))
+        out.append("--- end edits ---")
+        out.append("")
+    out += ledger_lines(state, "document and the code")
+    task = task_statement(state)
+    if task:
+        out.append("The document plans the change this task statement asks for. Check that following the plan "
+                   "solves this problem, all of it, and not an adjacent one. For a bug fix, check that the plan "
+                   "names the cause and removes it, rather than making the symptom rarer.")
+        out.append("")
+        out.append("--- task statement ---")
+        out.append(task)
+        out.append("--- end task statement ---")
+        out.append("")
+    out.append("Review adversarially. For each step, look for the input or the state that makes it fail once it "
+               "is implemented as written, rather than reading the step for plausibility. Then attack your own "
+               "finding: name the code, the check, or the later step that already handles the case, and drop "
+               "the finding if you find one. Report what survives, with the assumption it rests on.")
+    out.append("")
+    out.append("Answer these for the document as a whole, and file a finding for each that applies:")
+    out.append("- Is every claim about existing code true: the method exists, the call returns what the plan "
+               "says, the callers are the ones the plan lists?")
+    out.append("- Can each step be implemented as written, without a second design pass? Does it name the file, "
+               "the type, or the function it changes?")
+    out.append("- Which cases does the plan leave out? Take the set from something enumerable, such as an enum, "
+               "a switch, the options of a configuration, or a list in a specification, and name the members "
+               "the plan skips.")
+    out.append("- Does the plan change the component that owns the invariant, or patch a symptom in one caller?")
+    out.append("- Does it break a persisted format, a wire protocol, an API shape, or a configuration key that "
+               "existing readers depend on, without saying how those readers are handled?")
+    out.append("- Does each behavior the plan promises get a test, and would that test fail without the change?")
+    out.append("- Does a step depend on a later one, or add work the task does not need?")
+    out.append("")
+    out.append("Mark problems in existing code that the plan neither causes nor has to change as pre-existing.")
+    out.append("")
+    text = doc.read_text("utf-8")
+    if len(text) > DOCUMENT_PROMPT_LIMIT:
+        out.append("The document is too long to reproduce here. Read it at `%s`; its line numbers are the ones "
+                   "to anchor at." % doc)
+    else:
+        out.append("--- document %s ---" % label)
+        out += ["%5d  %s" % (i, line) for i, line in enumerate(text.splitlines(), start=1)]
+        out.append("--- end document ---")
     return "\n".join(out) + "\n"
 
 
@@ -691,7 +875,9 @@ def cmd_codex_extract(args: argparse.Namespace) -> None:
             if stderr_text.strip():
                 note += "; %s ends with: %s" % (rd / "codex.stderr", stderr_text.strip()[-400:])
 
-    report = build_codex_report(review_output, repo, n, target, dirty_digest(repo), status)
+    document = ((target["document_label"], Path(target["document"]), Path(state["scope"]["file"]))
+                if target.get("document") else None)
+    report = build_codex_report(review_output, repo, n, target, dirty_digest(repo), status, document)
     out = rd / "codex.findings.json"
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", "utf-8")
 
@@ -755,7 +941,12 @@ def find_rollout(session_id: str) -> Optional[Path]:
 
 
 def build_codex_report(review_output: Optional[Dict[str, Any]], repo: Path, n: int,
-                       target: Dict[str, Any], digest_end: str, status: str) -> Dict[str, Any]:
+                       target: Dict[str, Any], digest_end: str, status: str,
+                       document: Optional[Tuple[str, Path, Path]] = None) -> Dict[str, Any]:
+    """Turn Codex's review payload into a reviewer report.
+
+    For a `file:` run, ``document`` holds the document's label, the round's copy, and the original.
+    """
     findings = []
     verdict = "inconclusive"
     explanation = ""
@@ -768,6 +959,13 @@ def build_codex_report(review_output: Optional[Dict[str, Any]], repo: Path, n: i
             abs_path = loc.get("absolute_file_path") or ""
             rel = relativize(abs_path, repo)
             start = rng.get("start")
+            # Codex may anchor at the label the prompt gave, at the round's copy, or at the original.
+            on_document = document is not None and bool(rel) and (
+                rel == document[0] or Path(abs_path).resolve() in (document[1].resolve(), document[2].resolve()))
+            if on_document:
+                rel = document[0]
+            symbol = (document_heading(document[1], start) if on_document
+                      else guess_symbol(repo, rel, start) if rel else None)
             findings.append({
                 "local_id": "codex-r%d-%d" % (n, i),
                 "prior_id": None,
@@ -781,7 +979,7 @@ def build_codex_report(review_output: Optional[Dict[str, Any]], repo: Path, n: i
                 "suggestion": f.get("body") or "",
                 "anchor": {
                     "path": rel,
-                    "symbol": guess_symbol(repo, rel, start) if rel else None,
+                    "symbol": symbol,
                     "start_line": start,
                     "end_line": rng.get("end"),
                 },
@@ -889,7 +1087,7 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
         for f in report["findings"]:
             raw.append({**f, "reviewer": leg})
 
-    groups, dropped = pair_findings(raw)
+    groups, dropped = pair_findings(raw, state["scope"]["label"] if is_document(state) else None)
     ledger_hits = assign_ledger_matches(groups, state["ledger"])
 
     payload = {
@@ -923,8 +1121,12 @@ def cmd_merge_prep(args: argparse.Namespace) -> None:
           "next": "spawn the merger with %s" % out})
 
 
-def pair_findings(raw: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def pair_findings(raw: List[Dict[str, Any]],
+                  document: Optional[str] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Group findings of different reviewers that mechanically refer to the same place.
+
+    ``document`` is the label of the document a `file:` run reviews, whose findings same_place pairs
+    by a stricter rule.
 
     Same path plus either the same symbol or overlapping line ranges. Two findings of one reviewer
     never share a group: a reviewer that filed two findings made two claims, and a group yields one
@@ -943,7 +1145,7 @@ def pair_findings(raw: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List
             continue
         home = next((g for g in groups
                      if all(m["reviewer"] != f["reviewer"] for m in g["members"])
-                     and any(same_place(f, m) for m in g["members"])), None)
+                     and any(same_place(f, m, document) for m in g["members"])), None)
         if home:
             home["members"].append(f)
             home["reason"] = "same anchor"
@@ -959,30 +1161,39 @@ def same_claim(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
     return claim(a) == claim(b)
 
 
-def same_place(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
+def same_place(a: Dict[str, Any], b: Dict[str, Any], document: Optional[str] = None) -> bool:
     """Decide whether two findings certainly point at the same code.
 
     Line overlap decides whenever both sides carry lines. A shared symbol is not enough on its
     own: two unrelated defects twenty lines apart in one long method share a symbol, and merging
     them here would hide one of them from the merger, which cannot split what it never saw as
     separate. The symbol only breaks the tie when one side has no lines to compare.
+
+    Findings on ``document``, the document a `file:` run reviews, pair only when their line ranges
+    overlap with no slack, and, where both name a heading, the headings are equal. A line of prose is
+    a whole paragraph, so five lines apart is usually another claim or another section. A side with no
+    heading, such as a Codex finding on a format document_heading cannot read, is paired on its lines.
     """
     aa, ba = a["anchor"], b["anchor"]
     if not aa["path"] or aa["path"] != ba["path"]:
         return False
+    if document is not None and aa["path"] == document:
+        if aa["symbol"] and ba["symbol"] and aa["symbol"] != ba["symbol"]:
+            return False
+        return overlaps(aa, ba, slack=0)
     if aa.get("start_line") is not None and ba.get("start_line") is not None:
         return overlaps(aa, ba)
     return bool(aa["symbol"] and ba["symbol"] and aa["symbol"] == ba["symbol"])
 
 
-def overlaps(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
+def overlaps(a: Dict[str, Any], b: Dict[str, Any], slack: int = LINE_SLACK) -> bool:
     a1, a2 = a.get("start_line"), a.get("end_line")
     b1, b2 = b.get("start_line"), b.get("end_line")
     if a1 is None or b1 is None:
         return False
     a2 = a2 if a2 is not None else a1
     b2 = b2 if b2 is not None else b1
-    return a1 - LINE_SLACK <= b2 and b1 - LINE_SLACK <= a2
+    return a1 - slack <= b2 and b1 - slack <= a2
 
 
 def normalized(f: Dict[str, Any]) -> str:
@@ -1685,7 +1896,10 @@ def cmd_report(args: argparse.Namespace) -> None:
              "Rounds: %d of %d" % (state["round"], state["max_rounds"])]
 
     base_oid = state["scope"].get("base_oid")
-    if base_oid and state.get("target"):
+    if is_document(state) and state.get("target"):
+        lines.append("Document reviewed in the last round: `%s`, a copy of `%s`."
+                     % (state["target"]["document"], state["scope"]["file"]))
+    elif base_oid and state.get("target"):
         lines.append("Range reviewed in the last round: `git diff %s %s` - the scope plus every fix "
                      "applied during the run." % (base_oid, state["target"]["snapshot_oid"]))
     lines.append("")
@@ -1802,6 +2016,12 @@ def last_round_gap(d: Path, state: Dict[str, Any]) -> Optional[str]:
             return "%s is not the file %s read in round %d. %s" % (path, step, n, redo)
     if stale:
         return "the tree changed while round %d was being reviewed. %s" % (n, another)
+    # A document outside the repository is invisible to the tree comparison below.
+    if is_document(state):
+        original = Path(state["scope"]["file"])
+        if file_digest(original) != file_digest(Path(last["target"]["document"])):
+            return ("%s changed after round %d copied it, and no round reviewed the edit. %s"
+                    % (original, n, another))
     # Compared by content, so committing the reviewed changes keeps the run clean, and any edit
     # after the snapshot, a fix included, does not.
     snap = last["target"]["snapshot_oid"]
@@ -1837,7 +2057,7 @@ def main() -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("init", help="create the run directory and claim it in the git dir")
-    s.add_argument("--scope", required=True, help="uncommitted, base:<branch>, or commit:<sha>")
+    s.add_argument("--scope", required=True, help="uncommitted, base:<branch>, commit:<sha>, or file:<path>")
     s.add_argument("--max-rounds", type=int, default=6)
     s.add_argument("--task", help="file holding the task statement: the issue, the request, or the prompt the change "
                                   "answers; both reviewers are told what the change is for")

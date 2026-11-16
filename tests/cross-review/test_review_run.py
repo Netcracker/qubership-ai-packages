@@ -17,6 +17,21 @@ FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
 SOURCE = "".join("line %d\n" % i for i in range(1, 41))
 
+PLAN = """# Plan
+
+## Parse the header
+Read the length prefix.
+
+```bash
+# not a heading
+make check
+```
+Then validate it.
+
+## Cache the result
+Store it per connection.
+"""
+
 
 class ReviewRunTest(unittest.TestCase):
     def setUp(self):
@@ -733,12 +748,212 @@ class ReviewRunTest(unittest.TestCase):
             json.dump(state, f)
         self.assertEqual(("clean", []), self.report())
 
+    # ------------------------------------------------------------------ documents
 
-def finding(local_id, line, title, prior_id=None, symbol=None):
+    def plan_in_repo(self, name="plan.md", text=PLAN):
+        """Write text to docs/<name> in the repository and return its path."""
+        os.makedirs(os.path.join(self.repo, "docs"), exist_ok=True)
+        self.write("docs/" + name, text)
+        return os.path.join(self.repo, "docs", name)
+
+    def group_lines(self, n):
+        """Return round n's candidate groups from merge-input.json as (reviewer, start line) lists."""
+        with open(self.round_file(n, "merge-input.json"), encoding="utf-8") as f:
+            groups = json.load(f)["candidate_groups"]
+        return [[(m["reviewer"], m["anchor"]["start_line"]) for m in g["members"]] for g in groups]
+
+    def plan_outside_repo(self):
+        """Write PLAN to plan.md in a directory outside the repository and return its path."""
+        outside = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, outside)
+        path = os.path.join(outside, "plan.md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(PLAN)
+        return path
+
+    def start_document_run(self, path, max_rounds=2, legs="claude"):
+        self.run_dir = self.emitted("init", "--scope", "file:" + path, "--legs", legs,
+                                    "--max-rounds", str(max_rounds))["review_dir"]
+
+    def target(self, n):
+        with open(self.round_file(n, "target.json"), encoding="utf-8") as f:
+            return json.load(f)
+
+    def codex_stream(self, n, locations):
+        """Write round n's codex stream with one finding per (absolute path, line, title) in locations."""
+        findings = [{"title": "[P1] " + title, "body": "body", "confidence_score": 0.9, "priority": 1,
+                     "code_location": {"absolute_file_path": path, "line_range": {"start": line, "end": line}}}
+                    for path, line, title in locations]
+        records = [{"type": "session_meta", "payload": {"session_id": "s-1"}},
+                   {"type": "event_msg", "payload": {"type": "item_completed", "item": {
+                       "type": "ExitedReviewMode", "review_output": {
+                           "findings": findings, "overall_correctness": "patch is incorrect",
+                           "overall_explanation": "e"}}}}]
+        with open(self.round_file(n, "codex.jsonl"), "w", encoding="utf-8") as f:
+            f.write("".join(json.dumps(r) + "\n" for r in records))
+
+    def codex_anchors(self, n):
+        with open(self.round_file(n, "codex.findings.json"), encoding="utf-8") as f:
+            return [(x["anchor"]["path"], x["anchor"]["start_line"], x["anchor"]["symbol"])
+                    for x in json.load(f)["findings"]]
+
+    def plan_edited_after_round_one(self):
+        """Round 1 fixes F-001 at line 10 of docs/plan.md, the plan's line 10 is rewritten, and round 2 opens."""
+        self.start_document_run(self.plan_in_repo())
+        n = self.review([finding("c1", 10, "Validation names no limit", symbol="Parse the header",
+                                 path="docs/plan.md")])
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "fixed", "fix_shape": "removes_cause",
+                         "rationale": "the step names the limit", "evidence": "docs/plan.md:10"}])
+        self.write("docs/plan.md", PLAN.replace("Then validate it.", "Then check the length against the limit."))
+        return self.emitted("snapshot")["round"]
+
+    def test_init_refuses_a_file_scope_that_names_no_file(self):
+        proc = self.run_script("init", "--scope", "file:" + os.path.join(self.repo, "missing.md"), check=False)
+        self.assertNotEqual(0, proc.returncode, "init exit code")
+        self.assertIn("no such file", proc.stderr)
+
+    def test_snapshot_copies_a_document_inside_the_repository_into_the_round_under_its_repository_path(self):
+        self.start_document_run(self.plan_in_repo())
+        target = self.target(self.emitted("snapshot")["round"])
+        with open(target["document"], encoding="utf-8") as f:
+            copy = f.read()
+        self.assertEqual(("docs/plan.md", os.path.join(self.run_dir, "rounds", "1", "document", "plan.md"), PLAN),
+                         (target["document_label"], target["document"], copy))
+
+    def test_a_document_outside_the_repository_is_labeled_by_its_file_name(self):
+        self.start_document_run(self.plan_outside_repo())
+        self.assertEqual("plan.md", self.target(self.emitted("snapshot")["round"])["document_label"])
+
+    def test_a_codex_finding_on_the_document_is_anchored_at_its_label_under_the_nearest_heading(self):
+        self.start_document_run(self.plan_in_repo(), legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        # Line 10 sits below a fenced "# not a heading" comment; line 13 is in the next section.
+        original = os.path.join(os.path.realpath(self.repo), "docs", "plan.md")
+        self.codex_stream(n, [(self.target(n)["document"], 10, "Validation names no limit"),
+                              (original, 13, "Cache never expires")])
+        self.run_script("codex-extract")
+        self.assertEqual([("docs/plan.md", 10, "Parse the header"), ("docs/plan.md", 13, "Cache the result")],
+                         self.codex_anchors(n))
+
+    def test_findings_on_a_document_pair_only_when_their_lines_overlap(self):
+        self.start_document_run(self.plan_in_repo(), legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        plan = os.path.join(os.path.realpath(self.repo), "docs", "plan.md")
+        self.codex_stream(n, [(plan, 4, "Prefix width unstated"), (plan, 10, "Validation names no limit")])
+        self.run_script("codex-extract")
+        # Lines 8 and 10 are in one section and two lines apart, which pairs two findings in code.
+        self.file_report(n, [finding("c1", 4, "Prefix width unstated", symbol="Parse the header", path="docs/plan.md"),
+                             finding("c2", 8, "Check target unnamed", symbol="Parse the header", path="docs/plan.md")])
+        self.run_script("merge-prep")
+        self.assertEqual([[("codex", 4), ("claude", 4)], [("codex", 10)], [("claude", 8)]], self.group_lines(n))
+
+    def test_a_codex_finding_in_the_section_of_an_earlier_fix_is_listed_at_its_site(self):
+        self.start_document_run(self.plan_in_repo(), legs="codex")
+        plan = os.path.join(os.path.realpath(self.repo), "docs", "plan.md")
+        n = self.emitted("snapshot")["round"]
+        self.codex_stream(n, [(plan, 10, "Validation names no limit")])
+        self.run_script("codex-extract")
+        self.run_script("merge-prep")
+        self.run_script("merge-auto")
+        self.decide(n, [{"id": "F-001", "kind": "fixed", "fix_shape": "adds_case", "rationale": "r",
+                         "evidence": "docs/plan.md:10", "family": "which inputs the header check covers"}])
+        n = self.emitted("snapshot")["round"]
+        self.codex_stream(n, [(plan, 4, "Prefix width unstated"), (plan, 13, "Cache never expires")])
+        self.run_script("codex-extract")
+        self.run_script("merge-prep")
+        self.assertEqual({"F-002": ["F-001"]}, self.emitted("merge-auto")["same_site"])
+
+    def test_a_codex_finding_on_an_asciidoc_document_is_anchored_under_the_nearest_heading(self):
+        adoc = ("= Plan\n\n== Parse the header\nRead the length prefix.\n\n----\n== not a heading\n----\n"
+                "Then validate it.\n\n== Cache the result\nStore it per connection.\n")
+        self.start_document_run(self.plan_in_repo("plan.adoc", adoc), legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        # Line 9 sits below a "== not a heading" line inside a listing block; line 12 is in the next section.
+        self.codex_stream(n, [(self.target(n)["document"], 9, "Validation names no limit"),
+                              (self.target(n)["document"], 12, "Cache never expires")])
+        self.run_script("codex-extract")
+        self.assertEqual([("docs/plan.adoc", 9, "Parse the header"), ("docs/plan.adoc", 12, "Cache the result")],
+                         self.codex_anchors(n))
+
+    def test_findings_on_a_document_with_no_heading_symbol_pair_on_exact_line_overlap(self):
+        rst = "Plan\n====\n\nRead the length prefix.\n\nThen validate it.\n\nStore it per connection.\n"
+        self.start_document_run(self.plan_in_repo("plan.rst", rst), legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        self.codex_stream(n, [(self.target(n)["document"], 4, "Prefix width unstated"),
+                              (self.target(n)["document"], 8, "Cache never expires")])
+        self.run_script("codex-extract")
+        self.file_report(n, [finding("c1", 4, "Prefix width unstated", symbol="Plan", path="docs/plan.rst"),
+                             finding("c2", 6, "Check target unnamed", symbol="Plan", path="docs/plan.rst")])
+        self.run_script("merge-prep")
+        self.assertEqual([[("codex", 4), ("claude", 4)], [("codex", 8)], [("claude", 6)]], self.group_lines(n))
+
+    def test_markdown_findings_in_a_diff_scope_run_pair_on_nearby_lines_whatever_their_symbols(self):
+        notes = self.plan_in_repo("notes.md")
+        self.start_run(max_rounds=1, legs="codex,claude")
+        n = self.emitted("snapshot")["round"]
+        self.codex_stream(n, [(os.path.realpath(notes), 10, "Validation names no limit")])
+        self.run_script("codex-extract")
+        self.file_report(n, [finding("c1", 12, "Validation names no limit", symbol="Parse the header",
+                                     path="docs/notes.md")])
+        self.run_script("merge-prep")
+        self.assertEqual([[("codex", 10), ("claude", 12)]], self.group_lines(n))
+
+    def test_a_document_over_the_prompt_limit_is_named_in_the_prompt_rather_than_copied(self):
+        self.start_document_run(self.plan_in_repo(text="# Plan\n" + "x" * 60001 + "\n"))
+        n = self.emitted("snapshot")["round"]
+        with open(self.round_file(n, "codex-prompt.txt"), encoding="utf-8") as f:
+            prompt = f.read()
+        self.assertEqual((True, False), ("Read it at `%s`" % self.target(n)["document"] in prompt, "x" * 100 in prompt),
+                         "(prompt names the round's copy, prompt holds the text)")
+
+    def test_snapshot_refuses_an_empty_document(self):
+        self.start_document_run(self.plan_in_repo(text="\n"))
+        proc = self.run_script("snapshot", check=False)
+        self.assertNotEqual(0, proc.returncode, "snapshot exit code")
+        self.assertIn("is empty", proc.stderr)
+
+    def test_round_two_writes_the_edits_to_the_document_as_its_fixes_patch(self):
+        n = self.plan_edited_after_round_one()
+        with open(self.round_file(n, "fixes.patch"), encoding="utf-8") as f:
+            changed = [line for line in f.read().splitlines()
+                       if line[:1] in "+-" and not line.startswith(("+++", "---"))]
+        self.assertEqual(["-Then validate it.", "+Then check the length against the limit."], changed)
+
+    def test_the_round_two_codex_prompt_carries_the_edits_the_ledger_and_the_numbered_document(self):
+        n = self.plan_edited_after_round_one()
+        with open(self.round_file(n, "codex-prompt.txt"), encoding="utf-8") as f:
+            prompt = f.read().splitlines()
+        expected = ["--- edits since round 1 ---", "+Then check the length against the limit.",
+                    "- [F-001] Validation names no limit - the step names the limit",
+                    "   10  Then check the length against the limit."]
+        self.assertEqual([], [line for line in expected if line not in prompt], "lines missing from the prompt")
+
+    def test_a_document_edited_outside_the_repository_after_the_last_round_makes_the_run_incomplete(self):
+        plan = self.plan_outside_repo()
+        self.start_document_run(plan, max_rounds=1)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        with open(plan, "a", encoding="utf-8") as f:
+            f.write("An edit no round reviewed.\n")
+        verdict, notes = self.report()
+        self.assertEqual("incomplete", verdict)
+        self.assertIn("plan.md changed after round 1 copied it", notes[0])
+
+    def test_a_document_run_whose_document_is_unchanged_since_the_last_round_is_clean(self):
+        self.start_document_run(self.plan_outside_repo(), max_rounds=1)
+        n = self.review([])
+        self.run_script("merge-auto")
+        self.decide(n, [])
+        self.assertEqual(("clean", []), self.report())
+
+
+def finding(local_id, line, title, prior_id=None, symbol=None, path="app.py"):
     return {"local_id": local_id, "prior_id": prior_id, "severity": "major", "confidence": 0.9,
-            "category": "correctness", "title": title, "why": "why", "evidence": "app.py:%d" % line,
+            "category": "correctness", "title": title, "why": "why", "evidence": "%s:%d" % (path, line),
             "depends_on_premise": None, "suggestion": "fix it",
-            "anchor": {"path": "app.py", "symbol": symbol, "start_line": line, "end_line": line},
+            "anchor": {"path": path, "symbol": symbol, "start_line": line, "end_line": line},
             "introduced_by_diff": True}
 
 

@@ -1,6 +1,6 @@
 ---
 name: cross-review
-description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use only when the user asks for a cross-review or a two-reviewer review of a branch, the uncommitted changes, or a commit. For a cheaper single-reviewer pass, use codex-review instead.
+description: Review a change with two independent reviewers at once — the Codex CLI and a Claude subagent — then plan each fix, have the plan reviewed before writing any code, check the diff against that plan, and re-review until it converges. Use only when the user asks for a cross-review or a two-reviewer review of a branch, the uncommitted changes, a commit, or a document such as a plan. For a cheaper single-reviewer pass, use codex-review instead.
 ---
 
 # Cross-review
@@ -46,6 +46,10 @@ Pick the scope from what the user asked for. If it is not clear, ask with AskUse
 | Changes against a base branch | `--scope base:main` |
 | Staged, unstaged, and untracked changes | `--scope uncommitted` |
 | One commit | `--scope commit:<sha>` |
+| A document: a plan, a design, an ADR | `--scope file:<path>` |
+
+A `file:` run reviews the document, not a diff, and several steps below change for it. Read
+[Reviewing a document](#reviewing-a-document) before you start one.
 
 ```bash
 python3 $S init --scope base:main --max-rounds 6 --task <file>
@@ -519,6 +523,35 @@ ways it passes while checking nothing. Rule out all three, and say in the eviden
 The second rule also covers a test that never reaches its assertion: check that the case you added
 actually executes — a fixture too small to trip the branch is a green test over an unexecuted path.
 
+### Mutation testing on the changed lines, where the build has it
+
+Where the build reports diff coverage and diff mutation testing (a plugin the build applies, or a
+tool the repository's agent rules name), run it once per round, after the fixes, on the modules the
+round changed, against the branch's base. Run the full suite of those modules before the mutation
+run: a filtered run reports the lines other tests execute as unexecuted. Where part of the suite
+needs a service this machine lacks, run the rest and say which tests did not run.
+
+- **The reports go to the next round's reviewers, beside the diff.** An unexecuted changed line,
+  an untaken branch, or a live mutant then enters the ledger the way any finding does, through the
+  merge and the plan review, and is fixed by the rules of 5b: name the invariant, not the line. Two
+  kinds are not findings, and the reviewer says which applies: an equivalent mutant (the mutated
+  code behaves the same on every input; say why), and a line that only a test the tool did not run
+  executes or would kill (another module, another test task, a test the tool dropped).
+- **The run replaces hand-made mutants.** A `sed` that flips a predicate and reruns one test is a
+  mutation run with fewer operators, and it costs a call per mutant.
+- **It does not replace the revert.** A killed mutant shows that some test fails on a single
+  mutation; the revert shows that the test the fix report names fails on the defect it was written
+  for. Cut a tooth for every fix the mutation tool cannot express: a changed argument, an added call
+  whose result is used, a reordered call, a fix across several lines, a fix outside the sources the
+  tool mutates (another language, a script, a resource). For a fix the tool can undo with one
+  mutation (a removed guard), a mutation run narrowed to the named test (the tool's option that
+  limits the run to the tests you name) that kills the mutant on the fix's line is the tooth: cite
+  the mutant in the fix report's `evidence`. Where that narrowed run leaves the mutant alive, the
+  named test is mis-aimed, as `PARTIAL` says for a revert.
+- **The freshness rules above apply.** Read the exit status, check that the report was rewritten by
+  this run, and read the tool's log for dropped tests: a mutation tool may drop a test that fails on
+  its first run, and then reports the lines that test covered as unexecuted or surviving.
+
 ### Run the project's formatter before the round closes
 
 A repository that formats on commit does not format for you, because this loop does not commit
@@ -717,6 +750,62 @@ and the sweep is limited to what the fixes touched.
 code the run rewrote — `git diff --stat <base_oid>` is the whole input — and let them pick the pass
 or the sweep. A run whose fixes touched no commented declaration needs neither, and saying so is a
 complete answer.
+
+## Reviewing a document
+
+`--scope file:<path>` reviews a plan, a design, or an ADR before the code it describes exists. A defect found here
+costs a paragraph; the same defect found in the code costs a round of fixes. The file may live outside the repository,
+as a plan written in plan mode does, but run `init` from the repository the plan is about: both reviewers read that
+code to check what the plan claims about it.
+
+```bash
+python3 $S init --scope file:<path> --max-rounds 4 --task <file>
+```
+
+Pass `--task` here even more than for code. Without the task statement a reviewer can check the plan only against
+itself and the code, and the defect a plan review exists to catch is a plan that solves the wrong problem.
+
+What changes against the steps above:
+
+- **Step 2.** `snapshot` copies the document into `rounds/<N>/document/` and records the copy as `document` in
+  `target.json`. Both reviewers read that copy, so their line numbers agree. Do not edit the document until step 5.
+- **Step 3.** The Codex prompt carries the document itself, with line numbers, and from round 2 the diff of your edits.
+  The Claude reviewer takes a different role file:
+
+  > Read `$CR/references/document-reviewer.md` first (`cat $CR/references/document-reviewer.md`). That file is your
+  > role definition: follow it as your operating instructions, including its response contract.
+  >
+  > Review round `<N>` of the document `<label>` for the repository `<repo>`.
+  > The task statement is `<review_dir>/task.md`.
+  > The round's target is `<review_dir>/rounds/<N>/target.json`; the document to read is its `document`.
+  > Write your report to `<review_dir>/rounds/<N>/claude.findings.json`.
+
+  From round 2 on, add: `The edits since the last round are <review_dir>/rounds/<N>/fixes.patch, and what was decided
+  and why is <review_dir>/rounds/<N-1>/fix-report.json.`
+- **Steps 4 and 5** run unchanged. Findings anchor at the document's path inside the repository, or at its bare file
+  name when it lives outside. Two findings on the document pair only where their lines overlap. In a Markdown or
+  AsciiDoc document their `symbol` is the nearest heading above the lines, so the ledger and the `same_site` check of
+  §5 match them by section, and findings under different headings never pair. Any other format, such as
+  reStructuredText or plain text, gets no symbol: the ledger then matches on titles and lines alone, and `same_site`
+  never lists an earlier fix, so check yourself whether a new finding is a section an earlier round already fixed.
+- **Skip 5a, 5b, and 5c.** A fix to a plan is an edit of the plan, and the next round reviews that edit; a plan of the
+  edit would cost as much as the edit itself. Edit the original file, not the round's copy, and write
+  `rounds/<N>/fix-report.json` with the decisions `ledger-apply` reads:
+
+  ```json
+  { "round": 1,
+    "decisions": [
+      { "id": "F-001", "kind": "fixed", "fix_shape": "removes_cause",
+        "rationale": "...", "evidence": "section and lines edited" } ] }
+  ```
+
+  A plan edit takes the `fix_shape` of what it does to the plan: `removes_cause` where it corrects a statement,
+  `adds_case` where it adds a case to a list in the plan, and `narrows` where it takes a decision out of the plan.
+- **Step 6** runs unchanged. `report` also calls the run `incomplete` when the document was edited after the last
+  round copied it. **Skip 6a and 7**: `final-review` and the prose pass read code, and there is none yet.
+
+Once the plan has converged, implement it. The code then gets its own run with a diff scope; give that run the task
+statement and the converged plan together as `--task`.
 
 ## Adjudicating a rejection with Codex
 
