@@ -44,8 +44,9 @@ Give this to a fresh subagent after every axis has written its findings.
 >   any `prior_thread`.
 > - Set the `origin`, `introduced_by`, and `disposition` of every remaining finding by `origin.md`, so that each defect
 >   is traced once; a finding from `axes/previous.json` keeps the ones it carries, unless it now meets the rule for
->   `split_out`, which is decided in the family step below. To run anything, add your own worktree first
->   (`git -C <workspace> worktree add <work>/verify-wt <sha>`) and run there, never in `<workspace>`.
+>   `split_out`, which is decided in the family step below. Rewrite the `proposed_solution` and `retest` of a claimed
+>   case by `origin.md`. To run anything, add your own worktree first (`git -C <workspace> worktree add
+>   <work>/verify-wt <sha>`) and run there, never in `<workspace>`.
 > - Group the rest into classes: findings that likely share one root cause, so one fix addresses them together. Give
 >   each class a title and a one-sentence root cause. A finding that shares a cause with no other has `class: null`.
 >   Only `change` findings and `preexisting` findings with `disposition: extend_scope` join a class; the author fixes

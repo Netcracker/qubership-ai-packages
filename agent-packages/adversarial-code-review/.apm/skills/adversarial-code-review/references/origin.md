@@ -10,7 +10,8 @@ the one before it.
 
 1. **The diff decides.** Where the defect lies in lines the diff adds, and not in older code those lines reach, the
    origin is `change`. So is a case the change claims to handle, in its description, a commit message, or the issue it
-   closes, however old the code that breaks it: the claim is new. Most findings stop here.
+   closes, however old the code that breaks it: the claim is new. For such a case, still read `<base>` as in step 2,
+   to choose its remedy below. Most findings stop here.
 2. **Reading the base decides.** Read the code the defect lies in at `<base>` (`git -C <workspace> show <base>:<path>`).
    Where the defect is absent there, `git blame <head> -- <path>` over the defective lines names the commit that made
    it; go to step 4. Where it is present, go to step 4 as well, with the defect older than `<base>`.
@@ -38,6 +39,14 @@ other `preexisting` finding choose a `disposition`:
 - `follow_up`: everything else, such as a defect in code the axis read for context, or a case whose handling needs a
   design decision, another component, or more code than the change itself. `proposed_solution` states the fix the
   follow-up issue asks for.
+
+A case the change claims to handle beyond the problem it sets out to fix, which fails at `<base>` too, leaves the
+author two ways out: handle the case, or withdraw the claim. `proposed_solution` asks for the handling where the
+handling meets the conditions of `extend_scope` above. Otherwise it asks to narrow the description or commit message to
+the cases the change handles, or to replace a link that closes an issue with one that leaves the issue open, and names
+where the other cases go: the open issue, the follow-up of a `preexisting` finding with the same cause, or a new issue
+the author files. `retest` accepts either outcome. Where the narrowed claim would leave the change without its purpose,
+as when the closed issue's own reproducer still fails, `proposed_solution` asks for the handling.
 
 A `change` finding has no `disposition`, except `split_out`: the change makes the defect, and the fix that removes its
 cause belongs in a change of its own. Choose it where all of these hold:
