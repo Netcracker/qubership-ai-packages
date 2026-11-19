@@ -45,6 +45,18 @@ same tree, with `3` in place of `<retry count>`; it fails check 3, and checks 2 
 
 ## Results
 
+Runs of 2026-11-16 on tree `eac39b10`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again because "What belongs in an ADR" now gives a requirement that retells
+the code no rule, and "Confirmation and implementation notes" gives no rule to a requirement that only asks for a test
+of another rule and keeps the functions one change edits out of the notes. The 5-second timeout is a chosen value, and
+the retry count is still left open, so the new passages have to stay quiet. All four results pass all eight checks by
+meaning. `check.py` fails check 3 for Opus r2 on "`<retry count>` + 1 attempts", which counts the placeholder rather
+than inventing a number, and check 7 for both Sonnet results, whose question "Do you want me to add it?" comes after the
+sentence that names the trailers. These results also stand for trees `ad071c7e` and `36fdf375`. The first changes after
+them only the sentence about a requirement that asks for a test of another rule and the notes of the structural worked
+example, and the second only rewords the retelling item of "What belongs in an ADR". The input of this case asks for no
+such test and holds no structural rule, no type maximum, and no log text.
+
 Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
 requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no

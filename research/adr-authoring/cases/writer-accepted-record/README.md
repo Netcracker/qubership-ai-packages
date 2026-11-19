@@ -40,6 +40,16 @@ Request 1, another line of ADR-0007 changed in Request 2, and a record 0009 adde
 
 ## Results
 
+Runs of 2026-11-16 on tree `eac39b10`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again because "What belongs in an ADR" now gives a requirement that retells
+the code no rule, and "Confirmation and implementation notes" gives no rule to a requirement that only asks for a test
+of another rule and keeps the functions one change edits out of the notes. The requirement added to ADR-0007 is a
+decision, so the new passages have to stay quiet. All four results pass all six checks. These results also stand for
+trees `ad071c7e` and `36fdf375`. The first changes after them only the sentence about a requirement that asks for a test
+of another rule and the notes of the structural worked example, and the second only rewords the retelling item of "What
+belongs in an ADR". The input of this case asks for no such test and holds no structural rule, no type maximum, and no
+log text.
+
 Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
 requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
