@@ -430,8 +430,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-nifi",
         "path": "agent-packages/adapt-nifi-flows-to-2-x",
-        "ref": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
-        "sha": "f74bea00b3ef950425d2f4a0e69d2f5209c05f9b",
+        "ref": "429771267adc90fa8c3983d9fe35eeb93c507f0e",
+        "sha": "429771267adc90fa8c3983d9fe35eeb93c507f0e",
         "tag_pattern": "v{version}"
       }
     },
@@ -495,7 +495,7 @@
     {
       "name": "dbaas-mounted-secret-migration",
       "description": "Migrate Go, Spring, and Quarkus DBaaS services from runtime REST provisioning to mounted database Secrets.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -506,15 +506,15 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/dbaas-mounted-secret-migration",
-        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
-        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "ref": "2861e61479c612b08f9fa147a98ce01dd08555fb",
+        "sha": "2861e61479c612b08f9fa147a98ce01dd08555fb",
         "tag_pattern": "v{version}"
       }
     },
     {
       "name": "migrate-core-operator-dbaas-declarations",
       "description": "Convert legacy Core Operator DBaaS DatabaseDeclaration and DbPolicy manifests to dbaas-operator InternalDatabase and DatabaseAccessPolicy CRDs.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "topic:database",
         "stack:kubernetes",
@@ -525,8 +525,8 @@
         "source": "git-subdir",
         "url": "Netcracker/qubership-dbaas",
         "path": "dbaas-operator/agent-packages/migrate-core-operator-dbaas-declarations",
-        "ref": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
-        "sha": "7b8e8be8c72eb842bd502bf7355a8da90a93df08",
+        "ref": "2861e61479c612b08f9fa147a98ce01dd08555fb",
+        "sha": "2861e61479c612b08f9fa147a98ce01dd08555fb",
         "tag_pattern": "v{version}"
       }
     },
