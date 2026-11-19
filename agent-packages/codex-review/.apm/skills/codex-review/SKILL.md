@@ -1,6 +1,6 @@
 ---
 name: codex-review
-description: Run a code review through the Codex CLI and apply the fixes — Codex reports findings, you classify each one (real issue vs false positive), fix the real ones, and re-review until the review is clean. Use only when the user asks for a Codex review (cross-review or second opinion) of a branch diff, the uncommitted changes, or a specific commit.
+description: Run a code review through the Codex CLI and apply the fixes — Codex reports findings, you classify each one (real issue vs false positive), fix the real ones, and re-review until the review is clean. Use only when the user asks for a Codex review (or a Codex second opinion) of a branch diff, the uncommitted changes, or a specific commit.
 ---
 
 # Codex code review

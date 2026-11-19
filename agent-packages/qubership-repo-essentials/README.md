@@ -5,7 +5,7 @@ package and the agent picks up the shared conventions through the package's comm
 APM dependencies.
 
 The deprecated [`qubership-essentials`](../qubership-essentials/) package
-remains available with its original dependency set for existing consumers.
+remains available for existing consumers.
 This package states the repository installation scope explicitly and excludes
 `codex-review`; depend on [`codex-review`](../codex-review/) directly if your
 repository wants agent-run Codex reviews.

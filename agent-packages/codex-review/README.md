@@ -33,7 +33,7 @@ Or add it to your `apm.yml` by hand:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/codex-review@v1.0.0
+    - Netcracker/qubership-ai-packages/agent-packages/codex-review#<sha>
 ```
 
 Then run `apm install` and `apm compile`. The skill deploys to the location your agent reads
