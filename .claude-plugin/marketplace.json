@@ -206,6 +206,19 @@
       "source": "./agent-packages/enable-renovate-automerge"
     },
     {
+      "name": "codeowners-for-bot-updates",
+      "description": "Edit CODEOWNERS so automerged Renovate and Dependabot PRs stop requesting review from code owners.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:devops",
+        "topic:dependencies",
+        "stack:github-actions",
+        "activity:maintenance",
+        "audience:public"
+      ],
+      "source": "./agent-packages/codeowners-for-bot-updates"
+    },
+    {
       "name": "adr-authoring",
       "description": "Author Architecture Decision Records that follow the ADR contract used across Qubership repositories.",
       "version": "2.1.0",
