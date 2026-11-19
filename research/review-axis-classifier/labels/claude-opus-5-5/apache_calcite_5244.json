@@ -1,0 +1,112 @@
+{
+ "key": "apache_calcite_5244",
+ "summary": "Re-enables three long-disabled tests in JdbcTest and RelMetadataTest, updating the expected plan and selectivity to current optimizer output.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "The whole change is test expectations; reviewer utafrali asked to un-split the plan string literals (done in the final diff), and mihaibudiu noted the plan is very hard for a human to verify and would be better as a quidem test with data."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Title and description explain each re-enabled test and why; test-only change owes no changelog entry."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code changes, but the expected plan now pins a cartesian-product join; worth a glance whether the test should assert a better plan rather than whatever the planner emits."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "RelMetadataTest expectation 1.0 / DEPT_SIZE matches the fixed 4-row dept table; nothing wrong found, only the plan expectation needs a glance."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "The description calls the new plan 'more optimized', yet the locked-in expected plan contains EnumerableNestedLoopJoin(condition=[true]) (a cross product of time/sales with product_class) under a semi-join, so the test freezes a plan that contradicts the claim and may hide an optimizer regression."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "contradictions"
+   ]
+  ],
+  "why": "Small test-only change; one reviewer can judge the expectations and the description claim together."
+ }
+}

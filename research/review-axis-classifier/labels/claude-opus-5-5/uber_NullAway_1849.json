@@ -1,0 +1,116 @@
+{
+ "key": "uber_NullAway_1849",
+ "summary": "Stops NullAway from reading javac's mutable WildcardType.bound by computing effective upper bounds for type arguments via fresh capture conversion, and preserves inferred nullness on captures through generic method inference.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix owes regressions: adds TypeInspectionChecker-based BytecodeGenericsTests, dependent-bound and inferred-capture WildcardTests, and updates a Spring-derived expectation; reviewers asked for a regression with an already-captured RHS."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-obvious GenericsUtils logic; lazaroclapp approved but said he could not follow what the method arguments refer to from the Javadoc, and the author later deleted the case and added 'clarify javadoc'/'improve comment' commits."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description explains cause, approach, gating and leftover work (#1850)."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "visitClassType now runs capture conversion for both sides on every generic compatibility check when HandleWildcardGenerics is on; flag-gated, but a hot path worth a glance."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Changes diagnostics under HandleWildcardGenerics only (removes false positives, a Spring-derived test now errors earlier)."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "CodeRabbit found (and msridhar confirmed 'This issue is valid') that an existing CapturedType RHS still went through wildcardUpperBound on the mutable backing wildcard, reintroducing the stale-bound false positive; lazaroclapp also found redundant formalTypeVariable null checks."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "GenericMethodTests expectation moved to a different diagnostic location; flag-gated."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Javadoc of visitClassType/wildcardContains rewritten with the new parameters; a glance that they match the new bound flow."
+  },
+  "build_ci": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds a fixture class to test-java-lib for separately compiled generics; no build script change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by the change."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Rewrites JLS 4.5.1 wildcard containment and relies on capture conversion (JLS 5.1.10) and JSpecify implicit-bound nullness."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "spec_conformance",
+    "tests"
+   ],
+   [
+    "doc_comments"
+   ]
+  ],
+  "why": "A large type-system change: one reviewer traces capture and containment logic against the JLS with the tests, a second reads the Javadoc cold to check it explains the terminology."
+ }
+}

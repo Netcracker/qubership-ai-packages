@@ -1,0 +1,111 @@
+{
+ "key": "pgjdbc_pgjdbc_4238",
+ "summary": "Adds 436 Hugo `aliases:` front-matter entries so legacy DocBook-era /documentation/head/*.html and /documentation/NN/*.html URLs redirect to the consolidated Hugo pages.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Docs front-matter only; no code behavior to test (the description reports a hugo build and link check)."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "The whole change is to the user-facing docs site: each legacy slug must map to the page that now holds its content (e.g. arrays/replication/parameterstatus.html -> server-prepare, java8-date-time.html -> query); no reviewer comments and the diff was merged unchanged."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code comments touched."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description gives why, what, verification steps and Fixes #2608; docs-site fix needs no driver changelog entry."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Static redirect stubs; no runtime path."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Meta-refresh aliases to fixed internal paths; no untrusted input or open redirect."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Restores previously indexed URLs; only adds aliases, existing six aliases kept (e.g. head/ds-ds.html, head/connect.html)."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Mapping table is data rather than logic; base tree has no static/documentation files that would collide with the alias stubs, and the author reports no duplicate alias paths."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes 404s for indexed links; value is obvious and was agreed in #2608."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Redirects to topical equivalents are the expected behavior."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No prose changed alongside the aliases."
+  },
+  "build_ci": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Increases Hugo alias output (Aliases | 437); no build config changed."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not applicable."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "user_docs"
+   ]
+  ],
+  "why": "Docs-only data change; one reviewer checks the slug-to-page mapping."
+ }
+}

@@ -1,0 +1,111 @@
+{
+ "key": "uber_NullAway_1687",
+ "summary": "Stores library-model nullable type-variable upper bounds in a SetMultimap instead of a Map so a class with several such type variables (e.g. BiConsumer) keeps all of them, with a regression test.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix owes a regression test; JSpecifyJDKModelsTest.biConsumerNullableUpperBound makes both BiConsumer type arguments @Nullable, which fails when the Map overwrote one index. Adequate."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "CodeRabbit asked for Javadoc on typeVariablesWithNullableUpperBounds(); a nit on an interface-implementing method, not acted on."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description states the bug and fix; user-visible bug fix (fewer false positives) goes into NullAway's release changelog, written at release time."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Return type of StubxCacheUtil.getUpperBoundCache() changes, but it is an internal handlers class used only by LibraryModelsHandler."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Map<String,Integer> -> SetMultimap in StubxCacheUtil/LibraryModelsHandler; the only writer is upperBoundCache.put(className, paramIndex) (StubxCacheUtil.java:258), so the fix is mechanical."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Removes false positives for models with several nullable-bounded type variables; no new surprising behavior."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched by this change."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "JSpecify-mode JDK models; the change restores what the models already declare rather than reinterpreting the spec."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests"
+   ]
+  ],
+  "why": "Small, cohesive bug fix; one reviewer suffices."
+ }
+}

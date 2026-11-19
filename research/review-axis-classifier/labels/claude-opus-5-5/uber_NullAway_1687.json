@@ -1,0 +1,111 @@
+{
+ "key": "uber_NullAway_1687",
+ "summary": "Fixes library-model storage of type variables with nullable upper bounds by replacing a Map<String,Integer> (which kept only one index per class) with a SetMultimap, fixing e.g. BiConsumer.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix mandates a regression test; biConsumerNullableUpperBound in JSpecifyJDKModelsTest exercises two nullable-bounded type variables on one class."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No option or documented behavior changes."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "CodeRabbit asked for Javadoc on typeVariablesWithNullableUpperBounds() (repo guideline); not added and the change is a small type swap."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Title and body state the bug and fix; CHANGELOG is written at release time."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Map to HashMultimap at load time; no hot path change."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No security surface."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Return type of public StubxCacheUtil.getUpperBoundCache() changes from Map to SetMultimap; the class is internal to handlers and its only caller is updated."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No shared-state or lifecycle change."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No error path touched."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Straightforward fix; put() and entries() semantics carry over; a glance suffices."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix, not a new feature."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Removes false positives on classes with several nullable-bounded type variables; the change users see is expected."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No docs or comments contradicting the code."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging involved."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Affects how JSpecify JDK models' @Nullable upper bounds are honored; the fix just stops dropping entries."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests"
+   ]
+  ],
+  "why": "Tiny, cohesive bug fix; one reviewer confirming the regression test is enough."
+ }
+}
