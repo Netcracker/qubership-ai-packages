@@ -23,6 +23,10 @@ Grade each by reading `result.md`.
 
 - `adversarial-code-review`: `SKILL.md` §Review areas, area *Intent and scope*; §Result
 
+The `medium` and `low` profiles of 2.2.0 do not reach this case: its prompt names no profile, so it runs at
+`high`, where the reworded wave, rerun, and failure rules of §Run the axes run one subagent per axis as before. Its
+results stand for the skill at 71027cea.
+
 ## Files
 
 | File | What it is |

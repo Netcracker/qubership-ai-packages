@@ -14,6 +14,8 @@
 #   head        the full sha of the last commit of the change
 #   prompt.md   the task; <skills> is replaced by the directory of the skill
 #               copy, <base> by the base sha, and <head> by the head sha
+#   skills      optional: the names of the skills to copy, one per line;
+#               adversarial-code-review when the file is absent
 #
 # Run from the repository root:
 #   research/adversarial-code-review/cases/run-review-case.sh <case directory> <model> <label> [<rev>]
@@ -28,7 +30,7 @@
 #                 path outside the clone and the skill copy. It is a pointer
 #                 into tools.txt, not a verdict: a path is resolved against
 #                 the clone, so an empty file does not show a clean run
-#   skill-tree    the tree id of the skill that ran, see scripts/skill-tree.sh
+#   skill-tree    the tree id of each skill that ran, see scripts/skill-tree.sh
 set -eu
 
 usage='usage: run-review-case.sh <case directory> <model> <label> [<rev>]'
@@ -41,19 +43,22 @@ head=$(cat "$case_dir/head")
 
 work=$(mktemp -d)
 mkdir "$work/skills" "$work/out"
-name=adversarial-code-review
-skill=agent-packages/$name/.apm/skills/$name
-if [ $# -ge 4 ]; then
-  git archive "$4" "$skill" | tar -x -C "$work/skills" --strip-components=4
-  printf '%s %s\n' "$(scripts/skill-tree.sh "$skill" "$4")" "$name" > "$work/out/skill-tree"
-else
-  git ls-files -z --cached --others --exclude-standard -- "$skill" | xargs -0 tar -c |
-    tar -x -C "$work/skills" --strip-components=4
-  printf '%s %s\n' "$(scripts/skill-tree.sh "$skill")" "$name" > "$work/out/skill-tree"
-fi
-# A pipeline's status is its last command's, so a failed git archive shows
-# only as a missing copy.
-[ -f "$work/skills/$name/SKILL.md" ] || { echo "no $skill at ${4:-the working copy}" >&2; exit 1; }
+names=adversarial-code-review
+[ -f "$case_dir/skills" ] && names=$(cat "$case_dir/skills")
+for name in $names; do
+  skill=agent-packages/$name/.apm/skills/$name
+  if [ $# -ge 4 ]; then
+    git archive "$4" "$skill" | tar -x -C "$work/skills" --strip-components=4
+    printf '%s %s\n' "$(scripts/skill-tree.sh "$skill" "$4")" "$name" >> "$work/out/skill-tree"
+  else
+    git ls-files -z --cached --others --exclude-standard -- "$skill" | xargs -0 tar -c |
+      tar -x -C "$work/skills" --strip-components=4
+    printf '%s %s\n' "$(scripts/skill-tree.sh "$skill")" "$name" >> "$work/out/skill-tree"
+  fi
+  # A pipeline's status is its last command's, so a failed git archive shows
+  # only as a missing copy.
+  [ -f "$work/skills/$name/SKILL.md" ] || { echo "no $skill at ${4:-the working copy}" >&2; exit 1; }
+done
 
 repo=$work/repo
 git init -q "$repo"

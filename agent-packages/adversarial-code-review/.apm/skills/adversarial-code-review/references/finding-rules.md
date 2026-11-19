@@ -1,0 +1,125 @@
+# Finding rules
+
+## What a finding is
+
+A finding is a defect in the change, or a question whose answer decides whether there is one, that the author can act
+on. It is about the change: a defect the change introduces, a path the change should have reached and did not, or a
+claim the change makes that the code does not keep. Record a defect where the changed code reaches it or your axis's
+checks name it, without deciding whether the change made it: the verifier decides that, once for every finding, and a
+defect older than the change neither decides the result nor asks the author for a fix the change does not owe. A
+defect in code you read only for context is not recorded.
+
+Not a finding:
+
+- missing evidence (a context gap goes to `open_questions`, not to `findings`);
+- the size of a change on its own;
+- a preference with no reader or user cost;
+- something an earlier thread already settled, unless new evidence reopens it;
+- something that contradicts an agreement the author and a reviewer reached in the discussion, unless the finding quotes
+  the agreement and shows a consequence it did not consider;
+- something an open thread on the request already raises, whoever opened it: the verifier attaches it to that thread
+  instead (`prior_thread`) only where this review adds evidence;
+- anything the request put out of scope.
+
+## Severity
+
+Ask: **if the author does not fix this, what does the reviewer do?**
+
+| Severity | If the author does not fix it |
+| --- | --- |
+| `major` | the change does not merge |
+| `minor` | the reviewer fixes it, before or after the merge |
+| `nit` | it stays |
+
+A wrong result, a broken caller, a data loss, a security hole, a claim the code does not keep, or a test that cannot
+fail is `major`. A comment that misleads, a missing example a reader needs, a missing test for a secondary path, or a
+name a reader will misread is usually `minor`. A `nit` is a small change the reviewer would still accept gladly.
+
+Grade every finding as if this change introduced it, whatever the verifier later decides about its origin: the severity
+tells the reader of a follow-up issue, or of another request, how much the defect matters.
+
+## Confidence and kind
+
+`high` when the evidence establishes the problem directly, `medium` when one small inference remains. A finding whose
+truth depends on context you could not get is a `question` (`kind: question`), not a `low` finding: ask what decides it.
+Drop a finding you cannot raise to `medium` and cannot phrase as a question the author can answer.
+
+## Gate
+
+`gate: code_settled` marks a request about the branch rather than the code: squash or reorder commits, rebase, reword a
+commit message. Everything else is `gate: none`.
+
+## Location
+
+The lines a reader has to see beside the comment to judge the claim, in the new file (`side: new`), or the removed
+lines (`side: old`). Delivery publishes `start_line` to `end_line` as the comment's range, and the platform shows the
+range next to the comment. A comment anchored to the first line of a Javadoc shows only that line, so the reader cannot
+compare the text with the proposed solution.
+
+- A claim about a comment covers the comment and the declaration it describes; a claim about a condition covers the
+  condition and the branch it guards; a claim about one line is that line, with `end_line` equal to `start_line`.
+- Keep the range within one hunk and to at most 25 lines as the diff shows them: the lines of the range and the removed
+  lines between them, since the platform shows both above the comment. Where the subject is longer, such as a whole
+  method or test, narrow the range to the lines the claim is about: the signature, the one branch, the one assertion.
+
+Where the finding carries a `suggestion`, the range is exactly the lines the suggestion replaces, on the new side.
+
+Set `in_diff: false` when no line of the range is inside a hunk. Use `location: null` only for a finding with no line,
+such as a missing changelog entry.
+
+## Content
+
+- `title`: the claim, one sentence that states the defect (not the topic) or asks the question. It is the first line of
+  the published comment, and often the only line a reader sees, so it stands alone.
+- `problem`: what the author needs beyond `title` to accept the claim: the condition it holds under and the impact,
+  where `title` does not already state them. It ends at the impact; the facts behind it go to `evidence`. Leave it empty
+  where an author who reads `title` would accept the claim and see what it costs without being told: most findings about
+  a name or a comment, and a breach of a standard idiom of the language or a rule the repository states, such as a
+  resource left open or an error left unchecked. Where the fix is standard and the reason it is needed is not, `problem`
+  states the reason. How the defect came about, such as the code it copied, is neither condition nor impact.
+- `reproducer`: the code a reader runs to see the defect, such as a test case, a source file the checker reports on,
+  or a command, with the current and the expected result as comments; for a missing test, the case the test needs.
+  `language` is its code-block tag. Cut it to the lines that show the defect, without the imports and scaffolding the
+  project's test harness adds. `null` where no code shows the claim better than the title, as for most findings about
+  a name or a comment.
+- `evidence`: the decisive facts only, each marked `fact` (read or run) or `inference` (derived). Quote code and text
+  exactly, with `path:line`.
+- `proposed_solution`: the smallest outcome that removes the cause, without prescribing a rewrite a local change at the
+  cause avoids. Leave it empty where `title` names the fix, or where the fix is the standard idiom of the language or
+  the rule of the repository for that defect and the author would write it unasked; `title` may then end in that fix as
+  a short clause (`…leaves the stream open on the error path; wrap it in using`). A fix that adds one more case to a
+  list is not such a fix: the rule below decides it.
+  For a finding about what the code does, name the decision that goes wrong, then what it should decide.
+  Where the decision is a list of cases
+  (a branch per kind of input, an exemption list, a walk that stops at listed node kinds) and the only local change is
+  one more case, propose computing the property the list approximates in the place that owns it, or removing the
+  change's dependence on that property; give the extra case only as a stopgap and call it one. Computing it there
+  changes the answer for inputs the finding does not name; moving the same list to another method, or deciding it once
+  by the same walk, does not. Where the finding joins a family in `families.json` that has had an `adds_case` fix, the
+  outcome is never another case, not even as a stopgap. Where the family is `recurring`, its `sites` have absorbed
+  cases twice, so the property belongs somewhere else. Name what the code would have to represent for the property to
+  travel with the value, such as a state on the type or a field the analysis carries, and say whether this change can
+  do without it. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a comment whose
+  meaning is wrong, or a changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to
+  what they do not show (the other call sites of a renamed method), or empty.
+- `suggestion`: the whole lines that replace the lines `location` covers, with their indentation, where applying them
+  is the whole fix and `location` is on the new side and in the diff; otherwise `null`. A rename with call sites
+  outside the range is not such a fix. It changes only what the finding asks for: the range starts and ends at a line
+  that changes, or at the one unchanged line an added line attaches to, and a line between two changed lines is copied
+  as it is. In prose (a changelog, a docs page, a comment), it replaces a line whose meaning is wrong or adds a line
+  that is missing; a line that is right and lacks a detail, such as a link, a default, or a unit, stays as the author
+  wrote it, and `proposed_solution` names what is missing for the author to word. In code, it may rewrite the lines it
+  covers, such as the assertions of a test that cannot fail, but changes nothing in them, such as a local's name, that
+  the finding does not ask for.
+- `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
+  must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
+  `proposed_solution`, and so that it fails at the reviewed head. Where the defect is one input of a property the code
+  decides over several inputs, add one neighbor of that input that the reproducer does not show and that fails at the
+  reviewed head (the same input one level deeper, through a generic call or a wrapper, through a subtype), so that a fix
+  for the shown input alone does not pass. Run the neighbor where you can, and otherwise mark in `evidence`, as an
+  `inference`, that it fails by reading. For a `question`, name the answer that settles it.
+- `prior_thread`: the URL of an earlier thread this finding continues.
+- Leave out `origin`, `introduced_by`, `disposition`, and `follow_up_url`: the verifier sets the first three, and
+  delivery sets the last once an issue tracks the defect.
+
+Write in English, whatever the language of the request: `review-delivery` translates when it renders.
