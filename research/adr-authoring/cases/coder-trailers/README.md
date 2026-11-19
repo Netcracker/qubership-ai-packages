@@ -64,3 +64,12 @@ Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 
 Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Drafting from the user's input", which govern
 the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
 paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.
+
+Tree `ce37d0b5` is the tree of this pull request. It changes "Rules": **Numbers freeze** cites a rule of another
+repository as `owner/repo ADR-NNNN Rn` and keeps under **Related ADRs** the records the text cites, and those that
+replace this record or add a requirement to it, or that it replaces or adds a requirement to; **One home** cites a rule
+by what it is about, not by what it decides; **A citation changes the outcome**, **Cite only what the reader needs**,
+and **Fix a rule where it lives** are new, and **No pointer rules** is gone. It also adds to the contents of the guide,
+under "The reading guide", that the agent that writes code reads the **Related ADRs** of a record that a rule cites. The
+session of this case does not read `adr-authoring`, and its input does not change, so the results above stand for that
+tree.

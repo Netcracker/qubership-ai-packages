@@ -51,3 +51,12 @@ The previous rounds, on trees `3b230c74` and `bf6c2035`, passed the same way. Th
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
 records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.
+
+Tree `ce37d0b5` is the tree of this pull request. It changes "Rules": **Numbers freeze** cites a rule of another
+repository as `owner/repo ADR-NNNN Rn` and keeps under **Related ADRs** the records the text cites, and those that
+replace this record or add a requirement to it, or that it replaces or adds a requirement to; **One home** cites a rule
+by what it is about, not by what it decides; **A citation changes the outcome**, **Cite only what the reader needs**,
+and **Fix a rule where it lives** are new, and **No pointer rules** is gone. It also adds to the contents of the guide,
+under "The reading guide", that the agent that writes code reads the **Related ADRs** of a record that a rule cites.
+This case writes records but no guide, its skill parts list no part of "Rules", and its inputs hold no rule of another
+record, so the results above stand for that tree.
