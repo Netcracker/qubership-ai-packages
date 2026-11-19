@@ -5,9 +5,10 @@ so your agent uses the same baseline across repositories.
 
 Use this package for new user-workspace installations. The deprecated
 [`qubership-global-essentials`](../qubership-global-essentials/) package remains available with its original dependency
-set for existing consumers. This package nests [`qubership-repo-essentials`](../qubership-repo-essentials/) and adds
-the packages that only make sense user-wide. Through the repository baseline it also carries
-`qubership-workflow-hub-usage`.
+set for existing consumers. This package nests [`qubership-common-essentials`](../qubership-common-essentials/), the
+base it shares with [`qubership-repo-essentials`](../qubership-repo-essentials/), and adds the packages that only make
+sense user-wide. The backward-compatibility rule of `qubership-repo-essentials` is left out, because it does not hold in
+every repository a developer opens.
 
 ## Install
 
@@ -32,8 +33,9 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 
 ## What it pulls in
 
-- [`qubership-repo-essentials`](../qubership-repo-essentials/) — the per-repository baseline: `apm-authoring`,
-  `english-us-developer-style`, `markdown-line-length-120`, and `qubership-workflow-hub-usage`.
+- [`qubership-common-essentials`](../qubership-common-essentials/) — the shared baseline: commit-message conventions,
+  `apm-authoring`, `english-us-developer-style`, `markdown-line-length-120`, `change-description-authoring`,
+  `docs-page-authoring`, and `qubership-workflow-hub-usage`.
 - [`qubership-agent-support-pr`](../qubership-agent-support-pr/) — create a PR that adds Qubership baseline agent
   support to a repository.
 - [`triage-dependency-prs`](../triage-dependency-prs/) — triage failing checks on Renovate and Dependabot PRs.
@@ -58,4 +60,5 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 
 ## Adding a package to the bundle
 
-Add the dependency to `apm.yml` and bump the version. Consumers pick up the new member on their next `apm update`.
+A package that belongs in repositories too goes to `qubership-common-essentials`. A package for developer machines only
+goes here: add the dependency to `apm.yml` and bump the version. Consumers pick up the new member on their next `apm update`.
