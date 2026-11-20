@@ -187,9 +187,9 @@ marketplace:
       tags: ["topic:testing", "activity:authoring", "activity:code-review", "audience:public"]
 
     - name: final-review
-      description: "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands."
+      description: "A checklist pass over a finished change, run in a fresh subagent before the commit is final: comments consistent with the code and with each other, every claimed case covered by a test, boundaries and the negative control present, names by content rather than position, assertions that print the operands, a member the branch kept adding cases to."
       source: ./agent-packages/final-review
-      version: 1.3.0
+      version: 1.4.0
       tags: ["topic:testing", "topic:code-review", "activity:code-review", "audience:public"]
 
     - name: problem-report-authoring
