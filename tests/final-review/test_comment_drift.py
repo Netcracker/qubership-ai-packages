@@ -1,7 +1,8 @@
 """comment-drift.py against a throwaway git repository: every tag it prints, overloads and same-named members of two
 types kept apart, each of the five extensions it accepts, a local that belongs to its function, untracked files, a non-ASCII
 path, and a run from a subdirectory. With --history: the three-commit threshold, the test source sets left out, renames
-followed through commits, merges, and the uncommitted step, and a path a rename freed starting a history of its own."""
+followed through commits, merges, and the uncommitted step, a path a rename freed starting a history of its own, and an
+untracked path that looks like pathspec magic."""
 import os
 import shutil
 import subprocess
@@ -408,17 +409,35 @@ class CommentDriftTest(unittest.TestCase):
                          "    %s\n    %s\n    %s\n" % tuple(labels),
                          self.history("HEAD~4", "HEAD"))
 
-    def test_an_uncommitted_rename_to_an_untracked_path_counts_as_one_more_step(self):
+    def rename_uncommitted(self, new):
+        """Commit two edits of read, then rename Reader.java to new and edit read once more without committing;
+        return the two commit labels."""
         labels = [self.commit_edit("Reader.java", "return count;", "return count + 1;", "Handle a header"),
                   self.commit_edit("Reader.java", "return count + 1;", "return count + 2;", "Handle a trailer")]
-        os.rename(os.path.join(self.repo, "Reader.java"), os.path.join(self.repo, "Renamed.java"))
-        self.write("Renamed.java", BASE.replace("return count;", "return count + 3;"))
+        os.rename(os.path.join(self.repo, "Reader.java"), os.path.join(self.repo, new))
+        self.write(new, BASE.replace("return count;", "return count + 3;"))
+        return labels
+
+    def test_an_uncommitted_rename_to_an_untracked_path_counts_as_one_more_step(self):
+        labels = self.rename_uncommitted("Renamed.java")
         output = self.history("HEAD~2")
         staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=self.repo, check=True,
                                 capture_output=True, encoding="utf-8").stdout
         self.assertEqual(("== Renamed.java\n  read: 3 commits (Reader.read(int))\n"
                           "    %s\n    %s\n    (uncommitted)\n" % tuple(labels), ""),
                          (output, staged), "(--history output, files staged in the real index)")
+
+    @unittest.skipIf(os.name == "nt", "Windows forbids a colon in a file name")
+    def test_an_untracked_path_that_looks_like_pathspec_magic_is_read_as_a_path(self):
+        labels = self.rename_uncommitted("Renamed.java")
+        current = "Renamed.java"
+        for name in (":(exclude)*.java", ":(top)Renamed.java"):
+            with self.subTest(name):
+                os.rename(os.path.join(self.repo, current), os.path.join(self.repo, name))
+                current = name
+                self.assertEqual("== %s\n  read: 3 commits (Reader.read(int))\n"
+                                 "    %s\n    %s\n    (uncommitted)\n" % (name, *labels),
+                                 self.history("HEAD~2"))
 
 
 if __name__ == "__main__":

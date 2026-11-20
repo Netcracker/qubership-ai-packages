@@ -74,7 +74,8 @@ def uncommitted_listing():
     clean filter of, any file that is not a JVM source. The pathspec also names every deleted path,
     so that a source renamed back from another extension stays one file; git reads a deleted path
     from HEAD, not from the disk. Where those paths would take more than RENAME_SOURCES_BUDGET
-    characters of the command line, it names none, and such a rename starts a new history."""
+    characters of the command line, it names none, and such a rename starts a new history. Every
+    path from a git listing passes as a literal pathspec, so a file named ":(exclude)Reader.java" is that file."""
     tmp = tempfile.mkdtemp(prefix="comment-drift-")
     try:
         env = {"GIT_INDEX_FILE": os.path.join(tmp, "index")}
@@ -90,9 +91,10 @@ def uncommitted_listing():
         renamed_from = [f":(literal){p}" for p in sorted(deleted)]
         if sum(len(a) + 1 for a in renamed_from) > RENAME_SOURCES_BUDGET:
             renamed_from = []
-        untracked = run("ls-files", "--others", "--exclude-standard", "-z", "--", *sources)
+        untracked = nul_split(run("ls-files", "--others", "--exclude-standard", "-z", "--", *sources))
         if untracked:
-            run("add", "--intent-to-add", "--pathspec-from-file=-", "--pathspec-file-nul", env=env, stdin=untracked)
+            run("add", "--intent-to-add", "--pathspec-from-file=-", "--pathspec-file-nul", env=env,
+                stdin="".join(f":(literal){p}\0" for p in untracked))
         return run("diff", "-M", "--name-status", "-z", "HEAD", "--", *sources, *renamed_from, env=env)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
