@@ -232,7 +232,11 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Result**: a constraint on a file or a setting names what happens when it is broken.
 - **Exceptions**: an exception sits inside the rule it limits, or the rule points at it by number. A rule that reads as
   unconditional gets checked as unconditional.
-- **Precedence**: where two rules can apply to one case, one of them says which wins.
+- **Precedence**: where two rules can apply to one case, one of them says which wins. Before numbering a rule, search
+  the other records for rules on the same case, by the status, the setting, or the subject they decide. Where the rule
+  that loses belongs to another record and reads as unconditional, it names the exception too, because a checker reads
+  it alone: a `Proposed` record in the same repository gains the exception in the same change, an accepted one is
+  handled as **Superseding part of a record** says, and one in another repository gets a follow-up.
 - **Layer**: `(<layer>)` names the code the rule constrains, and the checker looks there first, so read the code before
   you tag a rule. For a behavior rule, that is the component whose code produces the result; for a structural rule, it
   is the code the invariant ranges over, build files included. A rule over the whole repository carries the tag of every
@@ -285,8 +289,12 @@ decision accepts.
   existing callers get, name the case and the test that shows it. Where it changes a default, a required setting, or
   what the system trusts, a rule states what an existing installation gets on upgrade, and Negative cites it.
 
-- **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
-  requirement.
+- **Follow-ups** carries work outside the code the record governs that this change cannot do, such as an update to an
+  accepted record or to a record in another repository. A `Proposed` record in the same repository that the decision
+  changes is edited in the same change: a follow-up such as "when this rule is accepted" leaves the two records
+  contradicting each other on the main branch until then. A follow-up never
+  holds a requirement, and never says what another open change does, because that is delivery state (**Delivery stays
+  out of the record**).
 
 ## Open points
 
