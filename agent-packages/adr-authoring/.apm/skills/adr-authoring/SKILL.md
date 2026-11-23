@@ -83,9 +83,11 @@ recording.
   editorial fix that changes no rule, such as a broken link.
 - **Superseding a whole record**: when the new record is accepted, set the old record's status to `Superseded`, and
   name the reason in the new record's **Consequences**.
-- **Superseding part of a record**: the old record stays `Accepted`. The new record names what it replaces under
-  **Related ADRs**, by rule number, or by section and a short quote where the old record has no numbers. When the new
-  record is accepted, the old record gains a line under **Related ADRs** that names the same statements.
+- **Superseding part of a record**: the old record stays `Accepted`. Under **Related ADRs**, the new record names each
+  statement of the old record that it replaces, by rule number, or by section and a short quote where the old record
+  has no numbers, and each requirement it adds, by its own rule number. When the new record is accepted, the old record
+  gains a line under **Related ADRs** that names the same. A `Proposed` record in the same repository is not superseded
+  in part: the change edits it in place (**Follow-ups**), and the new record names nothing of it as replaced or added.
 
 ## Template
 
@@ -112,7 +114,9 @@ Fill this structure. `references/structural-invariant.md` is a whole record writ
 
 ### Related ADRs
 
-- [ADR-NNNN: <title>](<link>): <what this link gives, by rule number where the target has them>.
+- [ADR-NNNN: <title>](<link>): <"replaces it whole" or "replaced whole by it". Otherwise, what this record replaces
+  in the linked one or adds to it, or what the linked one replaces in this record or adds to it, named as
+  **Superseding part of a record** says. Any other record gets the link alone.>
 
 ## Context
 
@@ -308,9 +312,8 @@ decision accepts.
 - **Follow-ups** carries work outside the code the record governs that this change cannot do, such as an update to an
   accepted record or to a record in another repository. A `Proposed` record in the same repository that the decision
   changes is edited in the same change: a follow-up such as "when this rule is accepted" leaves the two records
-  contradicting each other on the main branch until then. A follow-up never
-  holds a requirement, and never says what another open change does, because that is delivery state (**Delivery stays
-  out of the record**).
+  contradicting each other on the main branch until then. Another open change that edits the same record is no reason
+  to defer the edit. A follow-up never holds a requirement.
 
 ## Open points
 
@@ -328,11 +331,11 @@ rule nor the open point: propose its issue (**What belongs in an ADR**).
 
 ## Delivery stays out of the record
 
-A record states what the code must do, not when it arrives. Delivery state goes stale, and an accepted record takes only
-the edits that **Immutability** lists. So in a repository whose guide asks for the trailers (**The reading guide**), a
-change to code that a binding record governs declares delivery itself. Two trailers at the end of its commit message and
-of its pull request description name the rules it brings and, under `Defers`, the change that will bring each rule it
-leaves out:
+A record states what the code must do, not when it arrives. No section of it tracks delivery, such as which open change
+brings, moves, or removes a rule. Delivery state goes stale, and an accepted record takes only the edits that
+**Immutability** lists. So in a repository whose guide asks for the trailers (**The reading guide**), a change to code
+that a binding record governs declares delivery itself. Two trailers at the end of its commit message and of its pull
+request description name the rules it brings and, under `Defers`, the change that will bring each rule it leaves out:
 
 ```text
 Implements: ADR-0092 R6, R8; ADR-0091 R54
