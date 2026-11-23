@@ -8,16 +8,17 @@ description: >-
   changelog entry at all. Governs what each artifact says and for whom: the reviewer, the future
   git blame reader, the on-call engineer holding a stack trace, the upgrading user, the backporter;
   the slots of a commit body and a description; the merge model and what survives it; trailers;
-  house style gated on the workflow; identifiers that are never invented. Wording is
-  english-developer-style's; load both.
+  house style gated on the workflow; identifiers that are never invented. Wording belongs to the
+  developer-style skill of the text's language (english-developer-style for English); load both.
 ---
 
 # Authoring a change description
 
 This skill governs **what a change description says, in what order, and for whom**. Wording, tense,
-mood, sentence length, punctuation, and dialect belong to `english-developer-style`; load it too,
-and let it own the sentences. Subject length limits, prefix grammar, and trailer syntax belong to
-commitlint or the platform, not to a prompt.
+mood, sentence length, punctuation, and dialect belong to the developer-style skill of the language
+the text is written in (`english-developer-style` for English); load it too, and let it own the
+sentences. The one exception is the tense of the problem statement, which §2 sets. Subject length
+limits, prefix grammar, and trailer syntax belong to commitlint or the platform, not to a prompt.
 
 A report of a problem nobody has fixed yet is a different artifact with a different reader, and it is
 `problem-report-authoring`'s: an issue, a feature request, a question, a support ticket, or a message
@@ -78,7 +79,7 @@ Five slots, in this order; the fourth is conditional. Verification is not one of
 
 | # | Slot | Reader | Answers | Skip when |
 | --- | --- | --- | --- | --- |
-| 1 | **Problem** | R2, R1, R3 | What was wrong or missing, before any word about the fix? | Never |
+| 1 | **Problem** | R2, R1, R3 | What is wrong or missing without the change, before any word about the fix? | Never |
 | 2 | **Impact and trigger** | R3, R5, R1 | What does a user or operator observe, under which condition? The diagnostic, quoted as a literal | The change is not a fix, or the defect has no symptom by construction, and the body says so in one clause; for a defect nobody has observed, the slot is the trigger condition alone |
 | 3 | **Change and approach** | R2, R1 | What was done; the constraint that forced it; the alternative a reader would propose and why not; the measured trade-off | The problem statement makes the approach obvious |
 | 4 | **Outcome** | R3, R4 | For each outcome the change adds or alters that a caller can observe (a test's own assertion message is not one): what the caller observes and the condition, plus the exact text and its error code or exception class where the outcome emits them, one line each under the lead-in `**User-visible changes.**`; a deliberate non-change a reader would expect, one line under `**Not changed.**` | The change alters nothing a caller observes and keeps nothing a reader would expect it to change |
@@ -87,7 +88,13 @@ Five slots, in this order; the fourth is conditional. Verification is not one of
 Slot 1 opens the body. A description that §4 rule 5 copies into the body and that leads with its
 breaks (§2, pull request description) puts the problem right after them. Convince the reader that
 there is a problem worth fixing before saying what you did about it. The cheapest shape is "When X,
-the caller got Y", and where a few lines of code show it, those lines (§2, show it).
+the caller gets Y", and where a few lines of code show it, those lines (§2, show it).
+
+The problem describes the code without the change as it stands, in the present tense and with no
+word that dates it, such as "currently", as git's `SubmittingPatches` prescribes: "The code does X
+when it is given input Y". An event keeps its own tense: the commit that introduced the defect, or
+a report of it, is in the past. Where the repository's own instructions or contribution guide set
+another tense for the problem statement, follow them instead.
 
 Slot 2 carries what a person outside the code observes: the exception, the log line, the wrong
 result, the hang, the regression in latency, and the circumstances that provoke it. Where nobody has
@@ -155,8 +162,8 @@ Fix checkpointer restartpoint assertion failure
 
 When recovery starts from a backup without a signal file, pg_subtrans is
 not started and stays unstarted throughout recovery. A restartpoint run
-by the checkpointer during recovery nevertheless tried to truncate it,
-which failed the assertion:
+by the checkpointer during recovery nevertheless tries to truncate it,
+which fails the assertion:
 
     TRAP: failed Assert("TransactionIdIsValid(initial)")
 
@@ -298,11 +305,11 @@ The shape of most small fixes, three short paragraphs and no headings, with the 
 than told and the outcome stated once:
 
 ````text
-`Pool.acquire()` after `close()` handed out a connection instead of failing:
+`Pool.acquire()` after `close()` hands out a connection instead of failing:
 
 ```java
 pool.close();
-pool.acquire();   // returned a live connection
+pool.acquire();   // returns a live connection
 ```
 
 `acquire()` on a closed pool now throws `IllegalStateException: Pool is closed`. A connection
@@ -349,8 +356,8 @@ evidence, *each replica got its own port* is a claim. The literal error text is 
 holding the exception searches for, so it is quoted whole: a message cut short with `...` no longer
 matches it.
 
-**A reviewer decides, and does not re-investigate.** Carry what changes that decision: what was
-wrong, why this behavior is the right one, what changed that the diff does not show, how it was
+**A reviewer decides, and does not re-investigate.** Carry what changes that decision: what is
+wrong without the change, why this behavior is the right one, what changed that the diff does not show, how it was
 checked, and what scope or risk is left. The reader should be able to tell whether to engage and
 where to look.
 
@@ -871,8 +878,9 @@ better for it, and a fact that vanished leaves no trace in the text that replace
 
 - Reader: for every sentence, which of R1 to R5 asks the question it answers (§1)?
 - Subject: does it name the change, and would it identify the commit in `git log --oneline` (§2)?
-- Problem: does the body open with what was wrong, before the fix, or right after the breaks where
-  §4 rule 5 copies a description that leads with them (§2)?
+- Problem: does the body open with what is wrong without the change, before the fix or right after
+  the breaks where §4 rule 5 copies a description that leads with them (§2)? Is it in the tense §2
+  gives it?
 - Symptom: is the diagnostic quoted as a literal, with the trigger condition (§2, §3)? Is every
   symptom quoted from an observation, or traced in the code and marked as derived? For a defect
   nobody has observed, does the slot end at the condition, with no word on what found it? For a

@@ -3,7 +3,9 @@
 # would: the skill and english-developer-style are copied out of this checkout
 # into a temporary directory, and claude runs there in safe mode with only the
 # Read tool, so no installed copy of either skill, no user CLAUDE.md or rule,
-# and none of this repository's AGENTS.md files reach the session.
+# and none of this repository's AGENTS.md files reach the session. With the
+# model codex, codex exec runs instead, in a read-only sandbox with a fresh
+# CODEX_HOME and HOME, and <out name>.run.txt records the model, duration, and effort.
 #
 # The session reads the copied skill files, then answers the case's prompt.md.
 # With --baseline it reads english-developer-style alone, which shows what a
@@ -11,7 +13,8 @@
 #
 # Run from the repository root:
 #   research/change-description-authoring/cases/run-case.sh [--baseline] <case directory> <model> <out name> [<rev>]
-# <model> is a claude --model alias (haiku, opus). With <rev>, the skills are
+# <model> is a claude --model alias (haiku, opus), or codex to run codex exec
+# instead (CODEX_MODEL picks its model, default gpt-6.2-sol). With <rev>, the skills are
 # taken from that commit; without it, from the working copy. The output goes to
 # <case directory>/<model>/ (<case directory>/<model>/baseline/ with
 # --baseline), only after the session succeeds:
@@ -66,6 +69,37 @@ fi
   echo
   cat "$case_dir/prompt.md"
 } > "$work/prompt.txt"
+
+if [ "$model" = codex ]; then
+  # A fresh CODEX_HOME holding only the credentials keeps the user's AGENTS.md,
+  # skills, hooks, and config out of the session, as safe mode does for claude;
+  # a fresh HOME keeps out ~/.agents/skills, which codex reads whatever
+  # CODEX_HOME says. CODEX_MODEL and EFFORT pick the model and the reasoning effort.
+  codex_home=$work/codex-home
+  mkdir "$codex_home" "$work/home"
+  # The copy of the credentials goes with $work on exit, a failed or interrupted
+  # run included; dash runs no EXIT trap on a signal, hence the second trap.
+  trap 'rm -rf "$work"' EXIT
+  trap 'exit 130' INT TERM HUP
+  auth=${CODEX_HOME:-$HOME/.codex}/auth.json
+  if [ -f "$auth" ]; then cp "$auth" "$codex_home/"; fi
+  # codex has no Read tool; it reads the files through its shell.
+  sed 's/ with the Read tool//' "$work/prompt.txt" > "$work/prompt-codex.txt"
+  codex_model=${CODEX_MODEL:-gpt-6.2-sol}
+  start=$(date +%s)
+  HOME=$work/home CODEX_HOME=$codex_home codex exec --ephemeral --skip-git-repo-check --sandbox read-only \
+    -C "$work/session" -m "$codex_model" -c "model_reasoning_effort=\"${EFFORT:-high}\"" \
+    -o "$work/out/$name.md" - < "$work/prompt-codex.txt" > "$work/codex.log" 2>&1 ||
+    { tail -20 "$work/codex.log" >&2; exit 1; }
+  printf 'model: %s\nduration_s: %s\neffort: %s\n' "$codex_model" "$(($(date +%s) - start))" \
+    "${EFFORT:-high}" > "$work/out/$name.run.txt"
+  dest=$case_dir/codex
+  if [ -n "$baseline" ]; then dest=$dest/baseline; fi
+  mkdir -p "$dest"
+  cp "$work/out/"* "$dest/"
+  echo "$dest/$name.md"
+  exit 0
+fi
 
 effort=
 if [ -n "${EFFORT:-}" ]; then effort="--effort $EFFORT"; fi
