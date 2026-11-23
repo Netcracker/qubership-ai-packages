@@ -8,6 +8,6 @@ dependencies:
     - Netcracker/qubership-core-lib-go/context-propagation/agent-packages/context-propagation-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
     - Netcracker/qubership-core-lib-go/security/agent-packages/security-go-usage#660ddbe85c8fbe51ce9948175f770b96e4e1b8b3  # feat/agent-packages
     - Netcracker/qubership-core-lib-go-fiber-server-utils/agent-packages/fiber-server-utils-go-usage#ed9ccea9ca4cc0adf309e4876e9dfa81c7c77316  # feat/agent-packages
-    - Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage#4594b3b9d09c066ec549f4b6cee2eb1266c7f948  # feat/agent-packages
+    - Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage#f277d1e450b4efce0238b58af7a846d56797ba6f  # v2.5.15
     # Sibling package in this repository, resolved from the same commit as this one.
     - ../godoc-authoring
