@@ -245,14 +245,30 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
   rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
-  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
-- **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
-  conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
+  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`,
+  and a rule of a record in another repository as `owner/repo ADR-NNNN Rn`. Every record the text cites appears under
+  **Related ADRs**, and so does a record that this one replaces or adds a requirement to, or that replaces this one or
+  adds a requirement to it; no other record does.
+- **One home**: a requirement is stated once, in one rule. Everywhere else, in this record or another, cite it by
+  number (by section and a short quote where the record has no numbers) and by what it is about, not by what it
+  decides: "the retry limit of ADR-0031 R4", not "ADR-0031 R4 allows three retries". A restatement drifts. A table
+  that summarizes rules holds rule numbers.
+- **A citation changes the outcome**: a rule cites another rule only to make an exception to it, to take precedence
+  over it, or to use something it defines, such as its response. A rule that repeats a requirement, or says that
+  another rule applies, adds a number and no requirement. Leave it out; where an approver needs the link, give it in
+  the Justification.
+- **Cite only what the reader needs**: in any section, a citation earns its place where removing it would change what
+  a checker tests, or would leave an approver without the reason for a rule or the cost of a consequence. Leave out a
+  citation that only shows the writer knows the neighboring records: a "see also", a rule that shares a word or a
+  subject with this one, a rule the change must merely not break, a reminder that a rule still applies. A rule in
+  force applies to every change whether or not it is cited. Where a rule reads unclearly without a citation, fix the
+  rule rather than adding one.
+- **Fix a rule where it lives**: a case that another record's rule leaves unclear is settled in that rule. While its
+  record is `Proposed`, propose the edit to the user; once it is `Accepted`, replace the rule whole (**Superseding part
+  of a record**) instead of narrowing it from another record.
 - **Every requirement is a rule**: nothing outside **Rules** may add a requirement that a change can fail,
-  **Confirmation** and **Implementation notes** included. A reference such as "as ADR-0091 states" points at a rule that
-  says it.
+  **Confirmation** and **Implementation notes** included. Such a section cites the rule, not the record.
 - **No position words**: "the addresses above" and "the check below" stop working when the text moves. Cite the rule.
-- **No pointer rules**: a rule that only says that another rule applies adds a number and no requirement.
 
 Reasons belong in the Justification. Keep a reason inside a rule only where it limits how the rule reads.
 
@@ -355,7 +371,9 @@ The guide holds the following, and no copy of this skill's procedure:
   rule that replaces an accepted rule still binds nothing until its record is accepted, and the accepted rule governs
   until then;
 - what the agent that writes code reads in the records that govern it, **Terms**, **Rules**, **Confirmation**, and
-  **Implementation notes**, and that anything no rule states is its choice;
+  **Implementation notes**, and that anything no rule states is its choice. Where a rule cites a rule of another
+  record, the agent also reads that record's **Related ADRs**, where a line names any later record that replaces the
+  cited rule;
 - the two trailers;
 - a link to **Checking a change** in this skill: to a copy that `apm install` deploys into the repository, such as
   `.agents/skills/adr-authoring/SKILL.md`, or, where the repository does not commit deployed files, to the skill on
