@@ -29,6 +29,22 @@ lines, and revision tuple to the main skill.
 Use the published-note commands for an immediate-publication operation or the Draft Notes flow below for a draft
 operation.
 
+## Approve the merge request
+
+A GitLab approval outlives later notes, so an immediate-publication operation sets it from `result` after the notes
+are published. Read the approvals first: where `result` is `approve` and `approved_by` does not list the publishing
+account, approve; where `result` is `request_changes` and it does, revoke the approval from an earlier round. Pass the
+reviewed head when approving, so that GitLab refuses the approval if a commit was pushed after the review:
+
+```text
+Approvals glab api projects/<id>/merge_requests/<iid>/approvals
+Approve   glab mr approve <iid> --repo <namespace/project> --sha <head>
+Revoke    glab mr revoke <iid> --repo <namespace/project>
+```
+
+Read the approvals again to confirm the change. A draft operation changes no approval; the user approves when
+publishing the draft.
+
 ## Reply to and resolve discussions
 
 Use the main skill's ownership and authorization rules. Collect all discussion pages with the commands
