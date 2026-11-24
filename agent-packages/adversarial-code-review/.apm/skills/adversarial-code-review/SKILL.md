@@ -149,6 +149,7 @@ Each axis is a file under `references/axes/`.
 | Architecture | `architecture.md` | code |
 | Simplicity | `simplicity.md` | code |
 | Least surprise | `least-surprise.md` | behavior a user or caller sees |
+| Formats | `formats.md` | a format a person writes by hand or through a chart: a configuration file, its schema, chart values |
 | Change reach | `change-reach.md` | a member of a set, a documented command, a remedy |
 | Tests | `tests.md` | code or tests |
 | Comments | `comments.md` | added or changed doc comments or inline comments |
@@ -180,8 +181,8 @@ For `medium` and `low`, order the axes that run before grouping them:
    description makes, a path the change alters, a contract it touches.
 2. Then the other axes in this order, which ranks them by the verified findings of earlier reviews: tests, change
    description and branch, comments, correctness, naive reader, change reach, reliability, architecture,
-   documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, performance,
-   simplicity.
+   documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, formats,
+   performance, simplicity.
 
 Where fewer axes run than the groups take, the last groups get fewer axes, and a group with none is not run. Within a
 group, naive reader goes first, because it reads the comments before the code. Name the groups `group-1`, `group-2`,

@@ -14,8 +14,8 @@ How a review runs:
 2. Recheck every earlier review thread against the current code.
 3. Run one subagent per review axis that applies to the change. The axes are files under
    [`references/axes/`](.apm/skills/adversarial-code-review/references/axes/): intent and scope, correctness,
-   compatibility, security, reliability, telemetry, performance, architecture, simplicity, least surprise, change
-   reach, tests, comments, vocabulary, naive reader, documentation pages, and change description and branch. The
+   compatibility, security, reliability, telemetry, performance, architecture, simplicity, least surprise, formats,
+   change reach, tests, comments, vocabulary, naive reader, documentation pages, and change description and branch. The
    request can add axes, narrow to some, and put surfaces out of scope. Where the build reports diff coverage and
    mutation testing (cribro, for example), one more subagent runs the changed modules' tests and the mutation tool
    alongside the first axes, and the tests and correctness axes start once it reports. This runs the request's code.
