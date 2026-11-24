@@ -266,9 +266,10 @@ Sending is the user's step.
 
 ### Authorization and attribution
 
-Select the mode once. "Publish", "post", or "submit" authorizes immediate publication; "draft" or "prepare comments"
-authorizes an unpublished draft. Other replies authorize no write. If no mode was selected, ask after a completed
-`APPROVE` or `REQUEST_CHANGES` result:
+Select the mode once. A reply that agrees to publish, in any words ("publish", "post it", "go ahead"), authorizes
+immediate publication; "draft" or "prepare comments" authorizes an unpublished draft. Publication gives the request the
+state the result calls for, an approval included, with no separate consent. Other replies authorize no write. If no
+mode was selected, ask after a completed `APPROVE` or `REQUEST_CHANGES` result:
 
 > Publish now or prepare a draft? To include `Assessed by`, explicitly confirm that you personally reviewed the report
 > and agree with its findings.
@@ -308,7 +309,7 @@ Publish each finding once, inline at its `location`. A finding with no location,
 general comment.
 
 On GitLab, start the general comment with the result line. On GitHub, leave it out for `APPROVE` and `REQUEST_CHANGES`:
-the state of the submitted review (changes requested, or commented) shows the decision. Keep it for
+the state of the submitted review (approved, or changes requested) shows the decision. Keep it for
 `REVIEW_INCOMPLETE`, which no review state shows. The rest of the general comment is only these parts, in this order:
 
 ```markdown

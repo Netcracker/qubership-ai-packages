@@ -38,8 +38,8 @@ the file's language instead.
   submits it in the web UI. GitHub allows one pending review per account per pull request: list the reviews first
   (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`), and if a `PENDING` one exists, stop and report it rather than
   adding to it or deleting it.
-- **Publish:** set `event` to `REQUEST_CHANGES` for `request_changes`, and to `COMMENT` otherwise. Use `APPROVE` only when
-  the user asked to approve: an approval is the user's merge decision, not the review's.
+- **Publish:** set `event` from `result`: `APPROVE` for `approve`, `REQUEST_CHANGES` for `request_changes`, and
+  `COMMENT` for `review_incomplete`.
 
 A comment on a line outside every hunk fails the whole request with HTTP 422 (`pull_request_review_thread.line`). Such a
 finding belongs in the body (`in_diff: false`); if the request still fails, move the finding the error names into the
