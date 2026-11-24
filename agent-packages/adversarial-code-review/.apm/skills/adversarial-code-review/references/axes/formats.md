@@ -4,9 +4,18 @@ Can the people who write a configuration or data format the change adds or resha
 mistake in it fail loudly? The readers are the users who write the format by hand or through a chart, the operators who
 run it in production and need its effect to be predictable, and the agents asked to edit it. Breaks of a format that a
 release already shipped, and how readers of two releases meet one file, belong to compatibility; the wording of an error
-belongs to telemetry. This axis judges the shape of the format itself.
+belongs to telemetry. This axis judges the shape of the format itself, and only the members, values, and structure the
+change adds or changes.
 
-## Check
+## Pass 1: names only
+
+A reader who has read what a member does no longer sees what its name promises, so read the names first. Before the
+description in the review input, the prose the change adds, or the code, list the member names and enum values the
+change adds or renames, reading only the schema, the example files, or the default values in the diff, and for each
+write to `<work>/axes/formats-names.md` what you expect it to do and what you are unsure about. Do not edit that file
+after Pass 2 starts.
+
+## Pass 2: check
 
 Write each finding as the entry a reader writes, what they expect from it, and what happens.
 
@@ -22,10 +31,10 @@ Write each finding as the entry a reader writes, what they expect from it, and w
   casing of enum values, the type of a URL or a duration, a list or a map for the same kind of collection. Different
   concepts do not share a name. Compare with the format's siblings in the repository too, such as the chart values that
   write it.
-- **Names predict the effect.** Read each name and enum value as a reader who has not seen the code would: a name whose
-  plain reading promises more or less than the code does (a `dryRun` that still sends notifications, a `retries: 0`
-  that means no limit) is a finding. Where an established tool names the same concept, the format uses that name, or
-  the departure has a reason. *Vocabulary* covers words in comments and code members.
+- **Names predict the effect.** A name whose expected effect in `formats-names.md` is more or less than the code does (a
+  `dryRun` that still sends notifications, a `retries: 0` that means no limit) is a finding. Where an established tool
+  names the same concept, the format uses that name, or the departure has a reason. *Vocabulary* covers words in
+  comments and code members.
 - **Collections keyed by identity.** A list whose items carry a unique name is a map in disguise: a map makes uniqueness
   structural, addresses an item by name in an error or a patch, and merges key by key in Helm values and JSON Merge
   Patch, where a list is replaced whole. A list stays where the order matters or an item has no identity.
@@ -60,8 +69,9 @@ mistakes above, and quote what it reports.
 ## Not a finding
 
 A shape that a standard or the tool consuming the file fixes, such as a Kubernetes resource or an OpenID Connect
-discovery document. A format that only a program writes and reads. A code change that leaves the serialized form
-unchanged, such as a renamed field whose tag keeps its name.
+discovery document. A format that only a program writes and reads. A change that leaves the members, values, and
+structure as they were: a renamed field whose tag keeps its name, or a page that documents an existing option, whose
+gaps belong to documentation pages.
 
 ## Severity
 
