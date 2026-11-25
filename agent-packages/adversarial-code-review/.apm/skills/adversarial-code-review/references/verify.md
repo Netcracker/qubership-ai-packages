@@ -49,6 +49,11 @@ Give this to a fresh subagent after every axis has written its findings.
 >   <work>/verify-wt <sha>`) and run there, never in `<workspace>`.
 > - Group the rest into classes: findings that likely share one root cause, so one fix addresses them together. Give
 >   each class a title and a one-sentence root cause. A finding that shares a cause with no other has `class: null`.
+>   Where one finding of a class carries the fix of the root cause, the `proposed_solution` of each other member whose
+>   fix needs that cause names that finding and offers no fix of its own at the place the member was reported: an
+>   author who defers the root cause would take that local fix, and it handles only the inputs the member names. It
+>   says instead what becomes of the member if the root-cause fix is deferred: the member is deferred with it, or the
+>   change takes out the decisions that depend on the cause.
 >   Only `change` findings and `preexisting` findings with `disposition: extend_scope` join a class; the author fixes
 >   neither of the others in this change.
 > - Set each remaining finding's `family` from `families.json` (`[]` in a first round): the family whose property it
