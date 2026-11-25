@@ -71,6 +71,9 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   and the new test marked, and the one word limit, in `pgjdbc-4370-verbose`, was left failing; the descriptions grew
   until maintainers called them too long). How to fix the rule: `apm-authoring` rule *Fix a bad output where the rule
   stops*.
+- **Every instruction a change adds to a skill, or changes in what it asks, needs an input on which the verdict of a
+  check depends.** On that input, a result of the skill before the change fails the check and a result after it passes.
+  Where no such input exists, the pull request description names the instruction as untested.
 - **Grade every check by reading the result, not by the snippet's count,** and say in the commit message which checks
   each result fails, which cases improved or got worse, and what you ran.
 - **Commit results and draw conclusions from the target models (Opus, Sonnet), at least two runs per cell.** Haiku is
