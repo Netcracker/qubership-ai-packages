@@ -21,11 +21,12 @@ the user to choose between the two entrypoints and wrote the answer as R2. It al
 ## Skill parts
 
 - `SKILL.md`: "What belongs in an ADR" (a rule records a decision, also one a dependency already provides; a defect
-  becomes a proposed issue that the record does not name, and a requirement that only makes the fix work goes into it; a
-  dependency's guarantee is a fact in Context), "Open points" (a question about a defect gets no open point), "Drafting
-  from the user's input" (a question about a defect gets the issue, not a choice), "Template" (Context), "Rules"
-  (**Form**, the behavior rule), "Local conventions" (the next free number), "The reading guide" (no guide rewritten
-  where one exists)
+  becomes a proposed issue that the record does not name, and a requirement that only makes the fix work goes into it;
+  a dependency's guarantee whose source is a README is a fact in Context), "Open points" (a question about a defect gets
+  no open point), "Drafting from the user's input" (a question about a defect gets the issue, not a choice), "Template"
+  (Context), "Rules" (**Form**, the behavior rule; **No pointer rules**, a rule that only repeats a requirement of
+  another rule, which a dependency's default is not), "Local conventions" (the next free number), "The reading guide"
+  (no guide rewritten where one exists)
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks
@@ -89,28 +90,32 @@ only after the Bug is fixed. It fails check 3, and checks 10 and 11 on the marke
 
 ## Results
 
-Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. All four results pass all fifteen checks by meaning. Each writes ADR-0007 with rules for
-the configuration, the CI job, and the Compose example, and none on the entrypoint, the certificates, or the chart
-volumes; none has a follow-up or an implementation note that names the issue or the fix. Each message says that the
-platform's guide and the base image's README already settle the entrypoint, so the question gets no rule and no open
-point, and proposes a Bug for the replaced entrypoint, with the `CMD` fix and the two `emptyDir` volumes in it. Opus r1,
-Opus r2, and Sonnet r2 call it a defect in those words and offer to write a rule if the `ENTRYPOINT` line turns out to
-be deliberate. Each Context states, from the base image's README, what its entrypoint does with `/tmp/cert`; none says
-that the token-gate image does not run it today. The messages say it instead: the Opus ones in a sentence on when a
-private CA works, and the Sonnet ones in the title of the Bug.
+Runs of 2026-11-25 on tree `88a72faf`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because **No pointer rules** now leaves out a rule that
+only repeats a requirement of another rule, and the TLS rule of Request 3 is met by Go's default, which is no rule, so
+it has to stay; and because a guarantee of a dependency is stated in Context with its source only where that source has
+no rules, as the base image's README here. All four results pass all fifteen checks. Each writes ADR-0007 with no rule
+on the entrypoint, the certificates, or the chart volumes, and proposes a Bug for the replaced entrypoint. In Request 2
+all four refuse `none` and the HMAC algorithms in rules with HTTP 401, and in Request 3 all four write a rule for TLS
+1.2 or later, though Go's default already meets it. On `ad64edef` and `3b37f1b0`, trees of the same day whose results
+this commit replaces, all four passed all fifteen checks by meaning as well.
 
-In Request 2, all four refuse `none` and the HMAC algorithms in rules and name no defect. Opus r2 carries the HTTP 401
-in its term "refuses" rather than in the rules, so `check.py` fails its checks 10 and 11 on the marker. In Request 3,
-all four write a rule for TLS 1.2 or later, and each message says why it is a rule although Go's default already meets
-it: the security architect chose it for the service. Sonnet r1 states the rule as a refusal of TLS 1.1 and older and a
-`MinVersion` no lower than `tls.VersionTLS12`, which check 13 misses on the marker; it also lists relying on the default
-with no rule as a rejected alternative.
+Tree `dc50203b` differs from `88a72faf` only in the guarantee clause, which it keys on whether the source is a decision
+record rather than on whether the source has rules. The guarantee in the input of this case comes from a base image's
+README, which both trees state as a fact in Context, so the results above stand for that tree.
 
-Earlier trees of this change ran the case too. On `89cbfb4e`, before Request 3, check 9, and the clause that keeps the
-issue and the fix out of the record, two of four results named the pending fix in the record: Opus r2 under Follow-ups
-and Sonnet r2 in its implementation notes. On `3b2184a9`, all four passed by meaning. On `1db689e3`, the exception that
-`controls/fix-exception-opus.md` shows brought the certificate rule back in one of four results.
+On `0b92dea7`, an earlier tree of this change, the four results passed all fifteen checks by meaning as well, and
+`check.py` failed Sonnet r1 on checks 5 and 6 because its message sat under a heading the marker does not read. Three
+earlier trees of this change ran the case too, and their results are not kept: on `ba170d99` all four passed by meaning,
+and `check.py` failed three checks on the marker; on `d8b52781` and `b7a46b78` all four passed every check.
+
+On tree `d42618eb`, before this change, all four results passed all fifteen checks by meaning as well; `check.py`
+failed three of them on the marker.
+
+Earlier trees of the change that added this case ran it too. On `89cbfb4e`, before Request 3, check 9, and the clause
+that keeps the issue and the fix out of the record, two of four results named the pending fix in the record: Opus r2
+under Follow-ups and Sonnet r2 in its implementation notes. On `3b2184a9`, all four passed by meaning. On `1db689e3`,
+the exception that `controls/fix-exception-opus.md` shows brought the certificate rule back in one of four results.
 
 The baselines ran on 2026-11-11 with `english-developer-style` alone. Neither record writes its rules as `R1`, so both
 fail checks 10, 11, and 13, and neither proposes an issue, which fails checks 5 and 6. Both name the fix in the record

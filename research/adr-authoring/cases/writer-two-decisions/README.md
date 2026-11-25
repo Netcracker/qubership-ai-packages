@@ -51,3 +51,8 @@ The previous rounds, on trees `3b230c74` and `bf6c2035`, passed the same way. Th
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since. Both write two
 records for Request 1 without asking ("I split the notes into two ADRs"), which fails check 1 and, by meaning, check 2.
+
+Tree `dc50203b` changes the Context placeholder of "Template", "Rules", the guarantee of a dependency under "What
+belongs in an ADR", and the read before a record is published; this case writes records, but its inputs hold no
+guarantee of a dependency and no rule of another record, and no check of it reads a sentence that cites a rule, so the
+results above stand for that tree.

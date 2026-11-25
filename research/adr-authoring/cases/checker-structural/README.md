@@ -73,3 +73,7 @@ Tree `d42618eb` adds three passages for the writer of a record: under "What belo
 requirement into a decision, a defect, or a guarantee of a dependency; under "Open points", that a question about a
 defect gets no open point; and under "Drafting from the user's input", how such a question is answered. This case checks
 changes against records that exist and writes no record, so the results above stand for the tree.
+
+Tree `dc50203b` changes the Context placeholder of "Template", "Rules", the guarantee of a dependency under "What
+belongs in an ADR", and the read before a record is published; this case checks changes against records and a guide that
+exist, and writes neither, so the results above stand for that tree.

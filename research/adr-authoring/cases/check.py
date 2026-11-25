@@ -178,6 +178,15 @@ def heading_block(content, name):
     return m.group(1) if m else ''
 
 
+def section_block(content, name):
+    """The section headed `name`, its heading line included, up to the next heading of the same or a higher level."""
+    m = re.search(r'^(#{1,6})\s*' + re.escape(name) + r'\s*$', content, re.M)
+    if not m:
+        return ''
+    end = re.search(r'^#{1,' + str(len(m.group(1))) + r'}\s', content[m.end():], re.M)
+    return content[m.start():m.end() + end.start()] if end else content[m.start():]
+
+
 # writer-vague-notes
 
 RULE_LINE = re.compile(r'^\s*[-*]\s*\*\*R(\d+)\*\*\s*\(([^)]*)\)\.?\s*(.*(?:\n(?![ \t]*(?:[-*]|\d+\.)\s)[ \t]+\S.*)*)', re.M)
@@ -370,7 +379,7 @@ def r1_structural_tag(text):
     rec = record_of(text, 'Request 1', '0012')
     _, guide = request_file(text, 'Request 1', r'docs/adr/README\.md$')
     rules = [(n, re.findall(r'`([^`]+)`', tag) or [tag.strip()], body) for n, tag, body in RULE_LINE.findall(rec)
-             if re.search(r'internal/http|net/http|HTTP package', body)]
+             if re.search(r'internal/http|net/http|HTTP (?:package|import)', body)]
     if not rules:
         return result(False, 'no rule about importing internal/http or net/http')
     for n, tags, _ in rules:
@@ -407,6 +416,20 @@ def r2_guide_untouched(text):
     return result(not found, f'rewritten in Request 2: {found}' if found else 'guide and AGENTS.md left alone')
 
 
+def r2_citation_without_condition(text):
+    """A sentence of record 0013, outside a link, that says what ADR-0012 requires of the HTTP packages. Finding one fails.
+
+    The subject is the one `r1_structural_tag` reads: `internal/http`, `net/http`, or an HTTP package or import.
+    """
+    rec = re.sub(r'\[[^\]]*\]\([^)]*\)', '', record_of(text, 'Request 2', '0013'))
+    for sentence in re.split(r'(?<=[.;:])\s+', ' '.join(rec.split())):
+        if re.search(r'internal/http|net/http|HTTP (?:package|import)', sentence) and re.search(
+                r"\b(?:out of|free of|cannot|can't|can not|must not|may not|not import|never import|forbid\w*"
+                r"|bars?|no token package)\b", sentence, re.I):
+            return result(False, f'condition of ADR-0012 copied: {sentence[:100]}')
+    return result(True, 'no condition of ADR-0012 copied')
+
+
 def r2_behavior_rule(text):
     rec = record_of(text, 'Request 2', '0013')
     found = next((body for _, _, body in RULE_LINE.findall(rec) if '401' in body and 'TOKEN_ALG_NONE' in body), None)
@@ -433,11 +456,6 @@ def no_rule_on(pattern, what):
         return result(found is None, f'rule on {what}: {found[:100]}' if found else f'no rule on {what}')
     check.__name__ = f'r1_no_rule_on_{what.replace(" ", "_")}'
     return check
-
-
-def r1_record_0007(text):
-    recs = records(files(section(text, 'Request 1')), '0007')
-    return result(bool(recs), recs[0][0] if recs else 'no record 0007 in Request 1')
 
 
 def r1_bug_proposed(text):
@@ -510,6 +528,128 @@ def no_defect(request):
     return check
 
 
+# writer-one-home
+
+def record_0007_in(request):
+    def check(text):
+        recs = records(files(section(text, request)), '0007')
+        return result(bool(recs), recs[0][0] if recs else f'no record 0007 in {request}')
+    check.__name__ = f'{request.lower().replace("request ", "r")}_record_0007'
+    return check
+
+
+def service_account_rule(text):
+    """The first rule of Request 1's record that makes a service account token an M2M token, or None."""
+    return next((ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
+                 if re.search(r'service account', ln, re.I) and 'M2M' in ln and not re.search(r'\bnot (?:an )?M2M', ln)),
+                None)
+
+
+def r1_service_account_m2m(text):
+    """A rule of Request 1's record that makes a service account token an M2M token. Finding one passes."""
+    found = service_account_rule(text)
+    return result(found is not None, found[:110] if found else 'no rule that makes a service account token an M2M token')
+
+
+def r1_service_account_rule_alone(text):
+    """The service account rule of Request 1's record, read for a citation of ADR-0004. Finding one fails."""
+    found = service_account_rule(text)
+    if found is None:
+        return result(False, 'no rule that makes a service account token an M2M token')
+    return result('ADR-0004' not in found, f'the rule cites ADR-0004: {found[:100]}' if 'ADR-0004' in found
+                  else 'the rule cites no rule of ADR-0004')
+
+
+def r2_no_401_copied(text):
+    """A sentence of Request 2's record, outside its rules, that gives ADR-0003 R4 or ADR-0004 R3 their HTTP 401.
+
+    Finding one fails. The Rules section is dropped whole, its topic headings included.
+    """
+    rec = record_of(text, 'Request 2', '0007')
+    rules = section_block(rec, 'Rules')
+    rec = rec.replace(rules, '') if rules else rec
+    for sentence in re.split(r'(?<=[.;])\s+', ' '.join(rec.split())):
+        if re.search(r'ADR-0003 R4|ADR-0004 R3', sentence) and re.search(r'\b401\b', sentence):
+            return result(False, f'401 of a cited rule copied: {sentence[:100]}')
+    return result(True, 'no 401 of a cited rule outside the rules')
+
+
+def cited_records_linked(text):
+    """A record that a record 0007 cites but does not link under **Related ADRs**. Finding one fails."""
+    missing = []
+    for request in ('Request 1', 'Request 2'):
+        rec = record_of(text, request, '0007')
+        related = section_block(rec, 'Related ADRs')
+        linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', related)
+                  for n in re.findall(r'ADR-(\d{4})', label)}
+        cited = set(re.findall(r'ADR-(\d{4})', rec.replace(related, '') if related else rec)) - {'0007'}
+        missing += [f'{request}: ADR-{n} not linked' for n in sorted(cited - linked)]
+    return result(not missing, ', '.join(missing) if missing else 'Related ADRs links every cited record')
+
+
+def not_copied(request, pattern, what):
+    """A line of the request's record that copies what a rule of another record decides. Finding one fails."""
+    def check(text):
+        found = re.search(rf'[^\n]*(?:{pattern})[^\n]*', record_of(text, request, '0007'), re.I)
+        return result(found is None, f'{what} copied: {found.group(0).strip()[:100]}' if found
+                      else f'no {what} in the record')
+    check.__name__ = f'{request.lower().replace("request ", "r")}_no_{what.replace(" ", "_")}'
+    return check
+
+
+def r1_one_tenant_rule(text):
+    """The rules of Request 1's record that limit a token that is not M2M to its tenant; one is expected."""
+    found = [ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
+             if re.search(r'\bnot (?:an )?M2M', ln) and re.search(r'tenant', ln, re.I)]
+    return result(len(found) == 1, f'{len(found)} rules' + ''.join(f' | {ln[:60]}' for ln in found))
+
+
+def r1_no_legacy_rule(text):
+    found = next((ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
+                  if re.search(r'TOKEN_ISSUER_UNKNOWN|\blegacy\b', ln)), None)
+    return result(found is None, f'rule on the mode legacy: {found[:100]}' if found else 'no rule on the mode legacy')
+
+
+def r1_other_records_untouched(text):
+    others = [p for p, _ in records(files(section(text, 'Request 1'))) if not re.search(r'/0007-', p)]
+    return result(not others, f'other records written: {others}' if others else 'only record 0007 written')
+
+
+def r2_exception_kept(text):
+    """A rule of Request 2's record that gives HTTP 401 and excepts `TOKEN_KEYS_UNAVAILABLE`. Finding one passes.
+
+    The exception may cite ADR-0005 R2 for the response or name the code alone: the record that holds the response
+    states it either way.
+    """
+    found = next((ln for ln in rule_lines(record_of(text, 'Request 2', '0007'))
+                  if 'TOKEN_KEYS_UNAVAILABLE' in ln and '401' in ln), None)
+    return result(found is not None, found[:110] if found else 'no rule that gives HTTP 401 and excepts TOKEN_KEYS_UNAVAILABLE')
+
+
+def foreign_record_form(text):
+    """A mention of ADR-0012 in a record 0007 that does not carry `example/platform`. Finding one fails.
+
+    A mention in the link of a line under **Related ADRs** passes when the link's label or URL names `example/platform`;
+    any other mention, a link in the text included, needs `example/platform` right before it.
+    """
+    cited = False
+    for request in ('Request 1', 'Request 2'):
+        rec = record_of(text, request, '0007')
+        related = section_block(rec, 'Related ADRs')
+        start = rec.find(related) if related else -1
+        links = [(start + lk.start(), start + lk.end(), lk.group(0))
+                 for lk in re.finditer(r'\[[^\]]*\]\([^)]*\)', related)] if related else []
+        for m in re.finditer(r'ADR-0012', rec):
+            cited = True
+            link = next((t for a, b, t in links if a <= m.start() < b), None)
+            if link is not None:
+                if 'example/platform' not in link:
+                    return result(False, f'{request}: link without example/platform: {link[:80]}')
+            elif not re.search(r'example/platform\W{0,3}$', rec[max(0, m.start() - 20):m.start()]):
+                return result(False, f'{request}: ' + ' '.join(rec[max(0, m.start() - 40):m.end() + 20].split()))
+    return result(True, 'every ADR-0012 carries example/platform' if cited else 'ADR-0012 not cited')
+
+
 # coder-trailers
 
 def fenced_after(text, heading):
@@ -580,13 +720,13 @@ CASES = {
                            owner_not_invented, guide_asked, status_proposed],
     'writer-structural': [r1_record_0012, r1_metadata_from_repository, r1_rules_from_template, r1_structural_tag,
                           r1_confirmation_names_check, r1_guide_added, r1_agents_paragraph, r2_behavior_rule,
-                          r2_no_confirmation_entry, r2_guide_untouched],
+                          r2_no_confirmation_entry, r2_guide_untouched, r2_citation_without_condition],
     'coder-trailers': [defers_r5('Change 1', 'Commit message'), defers_r5('Change 1', 'Pull request description'),
                        no_rule_trailers('Change 2')],
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,
                                no_new_record_r2, no_guide_written],
     'writer-two-decisions': [r1_at_most_one_record, r1_split_proposed, r2_one_record, r2_no_split, no_guide_written],
-    'writer-defect-and-guarantee': [r1_record_0007, no_rule_on(r'entrypoint|\bCMD\b', 'the entrypoint'),
+    'writer-defect-and-guarantee': [record_0007_in('Request 1'), no_rule_on(r'entrypoint|\bCMD\b', 'the entrypoint'),
                                     no_rule_on(r'/tmp/cert|private CA|CA certificate|trust store', 'the certificates'),
                                     no_rule_on(r'emptyDir|/etc/ssl/certs|ca-certificates', 'the chart volumes'),
                                     r1_bug_proposed, r1_volumes_with_the_fix, r1_no_entrypoint_choice,
@@ -594,6 +734,15 @@ CASES = {
                                     rule_with('Request 2', '401', 'TOKEN_ALG_NONE'),
                                     rule_with('Request 2', '401', 'TOKEN_ALG_SYMMETRIC'), no_defect('Request 2'),
                                     rule_with('Request 3', 'TLS', '1.2'), no_defect('Request 3'), no_guide_written],
+    'writer-one-home': [record_0007_in('Request 1'), r1_service_account_m2m, r1_service_account_rule_alone,
+                        not_copied('Request 1', r'system:serviceaccount', 'sub prefix'),
+                        not_copied('Request 1', r'topology', 'namespace list'),
+                        not_copied('Request 1', r'providers file|(?:no|without a) provider', 'provider rule'), r1_one_tenant_rule,
+                        r1_no_legacy_rule, r1_other_records_untouched, record_0007_in('Request 2'),
+                        rule_with('Request 2', '401'), r2_exception_kept,
+                        not_copied('Request 2', r'\b503\b|Retry-After', '503 response'), r2_no_401_copied,
+                        cited_records_linked, no_guide_written, foreign_record_form,
+                        not_copied('Request 1', r'\bnetcracker\b', 'audience')],
 }
 
 

@@ -49,7 +49,9 @@ settles for this system. Sort each requirement before you write it as a rule:
 - **Guarantee of a dependency**: a library, a base image, or a platform promises it to code that follows its contract,
   and no authority chose it for this system. An example is a base image whose entrypoint adds the certificates in a
   directory to the trust store. The guarantee gets no rule, and code that does not follow the contract falls under
-  **Defect**. Where a rule or a reason depends on the guarantee, state it in **Context** as a fact, with its source.
+  **Defect**. Where a rule or a reason depends on the guarantee and its source is not a decision record, such as a base
+  image's README, state the guarantee in **Context** as a fact, with its source. Where its source is a decision record,
+  cite its rule by what it is about instead (**One home**).
 
 Reach for an ADR when a choice affects structure (for example a pattern such as microservices), a non-functional
 requirement (security, availability, fault tolerance), a dependency, a published interface or API, or a construction
@@ -116,7 +118,8 @@ Fill this structure. `references/structural-invariant.md` is a whole record writ
 
 ## Context
 
-<The problem and the forces at play, as facts. No requirement belongs here.>
+<The problem and the forces at play, as facts. No requirement belongs here, and no rule of this record or another is
+restated (**One home**).>
 
 ## Decision
 
@@ -241,14 +244,29 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
   rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
-  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
-- **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
-  conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
+  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`,
+  and a rule of a record in another repository as `owner/repo ADR-NNNN Rn`. Every record the text cites appears under
+  **Related ADRs**, except a retired number that Context maps to its replacement (**Record numbers**), which has no
+  file to link.
+- **One home**: a requirement is stated once, in one rule. Everywhere else, cite it by number (by section and a short
+  quote where the record has no numbers). Where you cite a rule of another record, in any section, name what the rule
+  is about, not what it decides: "the retry limit of ADR-0031 R4", not "ADR-0031 R4 allows three retries". A
+  restatement drifts. In the rule's own record, a section other than **Rules** and Context may say what the rule
+  decides, with its number, as **Negative**, **Open points**, and **Confirmation** do. A table that summarizes rules
+  holds rule numbers.
+- **Cite only what the reader needs**: in any section, a citation earns its place where removing it would change what
+  a checker tests, or would leave an approver without the reason for a rule or the cost of a consequence. Leave out a
+  citation that only shows the writer knows the neighboring records: a "see also", a rule that shares a word or a
+  subject with this one, a rule the change must merely not break, a reminder that a rule still applies. A rule in
+  force applies to every change whether or not it is cited. Where a rule reads unclearly without a citation, rewrite
+  the citing rule rather than adding a citation.
 - **Every requirement is a rule**: nothing outside **Rules** may add a requirement that a change can fail,
-  **Confirmation** and **Implementation notes** included. A reference such as "as ADR-0091 states" points at a rule that
-  says it.
+  **Confirmation** and **Implementation notes** included. Where such a section refers to a requirement, it cites the
+  rule that states it (**One home**), not the record.
 - **No position words**: "the addresses above" and "the check below" stop working when the text moves. Cite the rule.
-- **No pointer rules**: a rule that only says that another rule applies adds a number and no requirement.
+- **No pointer rules**: a rule that only repeats a requirement of another rule, or only says that another rule
+  applies, adds a number and no requirement. Leave it out; where an approver needs the link, give it in the
+  Justification.
 
 Reasons belong in the Justification. Keep a reason inside a rule only where it limits how the rule reads.
 
@@ -449,8 +467,10 @@ the departure. Where the user says that the departure is deliberate, or asks for
 it is a decision, and it gets a rule.
 
 Before you publish a record, read each rule as a checker would, against **What belongs in an ADR**, **Form**, **One
-number, one check**, **Precedence**, **One home**, and **Every requirement is a rule**, across the whole set of related
-records. Two checks have no rule of their own:
+number, one check**, **Precedence**, **One home**, **No pointer rules**, **Cite only what the reader needs**, and
+**Every requirement is a rule**, across the whole set of related records. Then read every sentence outside **Rules**
+that cites a rule, in Context, the Justification, and the Consequences too, against **One home** and **Cite only what
+the reader needs**. Two checks have no rule of their own:
 
 1. Test each defined word on its least convenient member.
 2. Read each cited rule, and confirm that it says what the citation claims.
