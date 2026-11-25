@@ -178,13 +178,81 @@ def heading_block(content, name):
     return m.group(1) if m else ''
 
 
+def section_span(content, name):
+    """The offsets of the section headed `name`, its heading line included, up to the next heading of the same or a
+    higher level, or None. A heading inside a fenced block neither starts nor ends the section."""
+    start = level = None
+    pos = 0
+    for line, outside in outside_fences(content):
+        if outside and level is None:
+            m = re.match(r'^(#{1,6})\s*' + re.escape(name) + r'\s*$', line)
+            if m:
+                start, level = pos, len(m.group(1))
+        elif outside:
+            m = re.match(r'^(#{1,6})\s', line)
+            if m and len(m.group(1)) <= level:
+                return start, pos
+        pos += len(line) + 1
+    return (start, len(content)) if level is not None else None
+
+
 def section_block(content, name):
-    """The section headed `name`, its heading line included, up to the next heading of the same or a higher level."""
-    m = re.search(r'^(#{1,6})\s*' + re.escape(name) + r'\s*$', content, re.M)
-    if not m:
-        return ''
-    end = re.search(r'^#{1,' + str(len(m.group(1))) + r'}\s', content[m.end():], re.M)
-    return content[m.start():m.end() + end.start()] if end else content[m.start():]
+    """The section headed `name`, as `section_span` finds it, or '' where the content has no such heading."""
+    span = section_span(content, name)
+    return content[span[0]:span[1]] if span else ''
+
+
+def without_section(content, name):
+    """The content with the section headed `name` taken out."""
+    span = section_span(content, name)
+    return content[:span[0]] + content[span[1]:] if span else content
+
+
+BLOCK_START = re.compile(r'^\s{0,3}#{1,6}\s|^\s*[-*+]\s|^\s*\|')
+ORDERED_START = re.compile(r'^(\s*)(\d+)[.)]\s')
+
+
+def blocks(text):
+    """The Markdown blocks of the text, each with its lines joined: a paragraph, a heading, a list item, a table row,
+    or a line of a fenced block.
+
+    A line that starts with a number and a period continues the open block unless the number is 1, which CommonMark
+    lets interrupt a paragraph, or the open block began with such a marker at the same indentation, as the next item
+    of an ordered list. Other indentation rules of CommonMark are not modeled.
+    """
+    out, lines = [], []
+    for line, outside in outside_fences(text):
+        ordered = ORDERED_START.match(line)
+        first = ORDERED_START.match(lines[0]) if lines else None
+        item = ordered and (int(ordered.group(2)) == 1 or (first and first.group(1) == ordered.group(1)))
+        if lines and (not outside or not line.strip() or BLOCK_START.match(line) or item):
+            out.append(' '.join(' '.join(lines).split()))
+            lines = []
+        if not outside:
+            out += [' '.join(line.split())] if line.strip() else []
+        elif line.strip():
+            lines.append(line)
+            if re.match(r'^\s{0,3}#{1,6}\s', line):
+                out.append(' '.join(line.split()))
+                lines = []
+    if lines:
+        out.append(' '.join(' '.join(lines).split()))
+    return out
+
+
+def sentences(text, ends='.;'):
+    """The sentences of the text, split after a character of `ends` inside each Markdown block, so that no sentence
+    runs from one block into the next."""
+    return [s for b in blocks(text) for s in re.split(r'(?<=[' + re.escape(ends) + r'])\s+', b) if s]
+
+
+def excerpt(text, start, end, width=100):
+    """The text from `start` to `end` whole, in a window of about `width` characters, or the match alone where it is
+    longer, with whitespace collapsed and "..." where the window cuts the text."""
+    span = max(width, end - start)
+    a = max(0, min(start - (span - (end - start)) // 2, len(text) - span))
+    b = max(end, min(len(text), a + span))
+    return ('...' if a else '') + ' '.join(text[a:b].split()) + ('...' if b < len(text) else '')
 
 
 # writer-vague-notes
@@ -417,17 +485,47 @@ def r2_guide_untouched(text):
 
 
 def r2_citation_without_condition(text):
-    """A sentence of record 0013, outside a link, that says what ADR-0012 requires of the HTTP packages. Finding one fails.
+    """A sentence of record 0013, outside a link, that says what ADR-0012 requires of the HTTP packages.
 
-    The subject is the one `r1_structural_tag` reads: `internal/http`, `net/http`, or an HTTP package or import.
+    Finding one fails. The subject is the one `r1_structural_tag` reads: `internal/http`, `net/http`, or an HTTP
+    package or import. The marker pairs it with any word of prohibition in the sentence, so a sentence that says
+    something else about an HTTP package fails as well: a FAIL is a possible copy, graded by reading.
     """
     rec = re.sub(r'\[[^\]]*\]\([^)]*\)', '', record_of(text, 'Request 2', '0013'))
-    for sentence in re.split(r'(?<=[.;:])\s+', ' '.join(rec.split())):
-        if re.search(r'internal/http|net/http|HTTP (?:package|import)', sentence) and re.search(
-                r"\b(?:out of|free of|cannot|can't|can not|must not|may not|not import|never import|forbid\w*"
-                r"|bars?|no token package)\b", sentence, re.I):
-            return result(False, f'condition of ADR-0012 copied: {sentence[:100]}')
+    for sentence in sentences(rec, '.;:'):
+        subject = re.search(r'internal/http|net/http|HTTP (?:package|import)', sentence)
+        condition = subject and re.search(
+            r"\b(?:out of|free of|cannot|can't|can not|must not|may not|not import|never import|forbid\w*"
+            r"|bars?|no token package)\b", sentence, re.I)
+        if condition:
+            return result(False, 'possible copy of the condition of ADR-0012, grade by reading: ' + excerpt(
+                sentence, min(subject.start(), condition.start()), max(subject.end(), condition.end())))
     return result(True, 'no condition of ADR-0012 copied')
+
+
+SUBJECT_BEFORE = re.compile(r'(?<![\w`])(?!(?:the|a|an|this|that|its|their)\b)[\w`/.-]+\s+'
+                            r'(?:rule|restriction|requirement|invariant|check|ban|limit)s?'
+                            r'(?:\s+(?:of|in)\s+|\s*\(|,\s*)$', re.I)
+
+
+def r2_citation_names_subject(text):
+    """A citation of a rule of ADR-0012 in record 0013 with no subject right before it. Finding one fails.
+
+    The marker reads a noun phrase right before the number: a noun such as rule, restriction, or check with another
+    word before it that is not an article or a pronoun, and after it "of", "in", an opening parenthesis, or a comma, as
+    in "the import rule of ADR-0012 R1" or "the import rule (ADR-0012 R1)". A subject written after the number passes
+    only by reading, so a FAIL is a possible citation without a subject. A link counts by its text, and a record that
+    cites no rule of ADR-0012 passes.
+    """
+    rec = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', record_of(text, 'Request 2', '0013'))
+    cited = False
+    for sentence in sentences(rec, '.;:'):
+        for m in re.finditer(r'ADR-0012 R\d+', sentence):
+            cited = True
+            if not SUBJECT_BEFORE.search(sentence[:m.start()]):
+                return result(False, 'possible citation without its subject, grade by reading: '
+                              + excerpt(sentence, m.start(), m.end()))
+    return result(True, 'each citation of ADR-0012 names its subject' if cited else 'no rule of ADR-0012 cited')
 
 
 def r2_behavior_rule(text):
@@ -541,14 +639,16 @@ def record_0007_in(request):
 def service_account_rule(text):
     """The first rule of Request 1's record that makes a service account token an M2M token, or None."""
     return next((ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
-                 if re.search(r'service account', ln, re.I) and 'M2M' in ln and not re.search(r'\bnot (?:an )?M2M', ln)),
+                 if re.search(r'service account', ln, re.I) and 'M2M' in ln
+                 and not re.search(r'\bnot (?:an )?M2M', ln)),
                 None)
 
 
 def r1_service_account_m2m(text):
     """A rule of Request 1's record that makes a service account token an M2M token. Finding one passes."""
     found = service_account_rule(text)
-    return result(found is not None, found[:110] if found else 'no rule that makes a service account token an M2M token')
+    return result(found is not None,
+                  found[:110] if found else 'no rule that makes a service account token an M2M token')
 
 
 def r1_service_account_rule_alone(text):
@@ -556,7 +656,8 @@ def r1_service_account_rule_alone(text):
     found = service_account_rule(text)
     if found is None:
         return result(False, 'no rule that makes a service account token an M2M token')
-    return result('ADR-0004' not in found, f'the rule cites ADR-0004: {found[:100]}' if 'ADR-0004' in found
+    at = found.find('ADR-0004')
+    return result(at < 0, 'the rule cites ADR-0004: ' + excerpt(found, at, at + len('ADR-0004')) if at >= 0
                   else 'the rule cites no rule of ADR-0004')
 
 
@@ -565,12 +666,11 @@ def r2_no_401_copied(text):
 
     Finding one fails. The Rules section is dropped whole, its topic headings included.
     """
-    rec = record_of(text, 'Request 2', '0007')
-    rules = section_block(rec, 'Rules')
-    rec = rec.replace(rules, '') if rules else rec
-    for sentence in re.split(r'(?<=[.;])\s+', ' '.join(rec.split())):
-        if re.search(r'ADR-0003 R4|ADR-0004 R3', sentence) and re.search(r'\b401\b', sentence):
-            return result(False, f'401 of a cited rule copied: {sentence[:100]}')
+    for sentence in sentences(without_section(record_of(text, 'Request 2', '0007'), 'Rules')):
+        cited, status = re.search(r'ADR-0003 R4|ADR-0004 R3', sentence), re.search(r'\b401\b', sentence)
+        if cited and status:
+            return result(False, 'possible copy of the 401 of a cited rule, grade by reading: ' + excerpt(
+                sentence, min(cited.start(), status.start()), max(cited.end(), status.end())))
     return result(True, 'no 401 of a cited rule outside the rules')
 
 
@@ -579,10 +679,9 @@ def cited_records_linked(text):
     missing = []
     for request in ('Request 1', 'Request 2'):
         rec = record_of(text, request, '0007')
-        related = section_block(rec, 'Related ADRs')
-        linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', related)
+        linked = {n for label, _ in re.findall(r'\[([^\]]*)\]\(([^)]*)\)', section_block(rec, 'Related ADRs'))
                   for n in re.findall(r'ADR-(\d{4})', label)}
-        cited = set(re.findall(r'ADR-(\d{4})', rec.replace(related, '') if related else rec)) - {'0007'}
+        cited = set(re.findall(r'ADR-(\d{4})', without_section(rec, 'Related ADRs'))) - {'0007'}
         missing += [f'{request}: ADR-{n} not linked' for n in sorted(cited - linked)]
     return result(not missing, ', '.join(missing) if missing else 'Related ADRs links every cited record')
 
@@ -590,24 +689,32 @@ def cited_records_linked(text):
 def not_copied(request, pattern, what):
     """A line of the request's record that copies what a rule of another record decides. Finding one fails."""
     def check(text):
-        found = re.search(rf'[^\n]*(?:{pattern})[^\n]*', record_of(text, request, '0007'), re.I)
-        return result(found is None, f'{what} copied: {found.group(0).strip()[:100]}' if found
-                      else f'no {what} in the record')
+        for line in record_of(text, request, '0007').split('\n'):
+            found = re.search(pattern, line, re.I)
+            if found:
+                return result(False, f'possible copy of the {what}, grade by reading: '
+                              + excerpt(line, found.start(), found.end()))
+        return result(True, f'no {what} in the record')
     check.__name__ = f'{request.lower().replace("request ", "r")}_no_{what.replace(" ", "_")}'
     return check
 
 
 def r1_one_tenant_rule(text):
     """The rules of Request 1's record that limit a token that is not M2M to its tenant; one is expected."""
-    found = [ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
-             if re.search(r'\bnot (?:an )?M2M', ln) and re.search(r'tenant', ln, re.I)]
-    return result(len(found) == 1, f'{len(found)} rules' + ''.join(f' | {ln[:60]}' for ln in found))
+    found = []
+    for ln in rule_lines(record_of(text, 'Request 1', '0007')):
+        not_m2m, tenant = re.search(r'\bnot (?:an )?M2M', ln), re.search(r'tenant', ln, re.I)
+        if not_m2m and tenant:
+            found.append(excerpt(ln, min(not_m2m.start(), tenant.start()), max(not_m2m.end(), tenant.end()), 60))
+    return result(len(found) == 1, f'{len(found)} rules' + ''.join(f' | {ln}' for ln in found))
 
 
 def r1_no_legacy_rule(text):
-    found = next((ln for ln in rule_lines(record_of(text, 'Request 1', '0007'))
-                  if re.search(r'TOKEN_ISSUER_UNKNOWN|\blegacy\b', ln)), None)
-    return result(found is None, f'rule on the mode legacy: {found[:100]}' if found else 'no rule on the mode legacy')
+    for ln in rule_lines(record_of(text, 'Request 1', '0007')):
+        found = re.search(r'TOKEN_ISSUER_UNKNOWN|\blegacy\b', ln)
+        if found:
+            return result(False, 'rule on the mode legacy: ' + excerpt(ln, found.start(), found.end()))
+    return result(True, 'no rule on the mode legacy')
 
 
 def r1_other_records_untouched(text):
@@ -615,39 +722,98 @@ def r1_other_records_untouched(text):
     return result(not others, f'other records written: {others}' if others else 'only record 0007 written')
 
 
+EXCEPTION = re.compile(r'\b(?:except\w*|other than|instead of|rather than|unless|apart from|but not'
+                       r'|does not (?:cover|apply))\b', re.I)
+
+
 def r2_exception_kept(text):
     """A rule of Request 2's record that gives HTTP 401 and excepts `TOKEN_KEYS_UNAVAILABLE`. Finding one passes.
 
     The exception may cite ADR-0005 R2 for the response or name the code alone: the record that holds the response
-    states it either way.
+    states it either way. The marker reads HTTP 401 and the code in one rule, and not whether or which way the rule
+    excepts the code: the evidence names the first such rule that also holds a word that excepts, with the word, or the
+    first such rule and "no word that excepts", for the reader to grade.
     """
-    found = next((ln for ln in rule_lines(record_of(text, 'Request 2', '0007'))
-                  if 'TOKEN_KEYS_UNAVAILABLE' in ln and '401' in ln), None)
-    return result(found is not None, found[:110] if found else 'no rule that gives HTTP 401 and excepts TOKEN_KEYS_UNAVAILABLE')
+    found = [(n, ' '.join(body.split())) for n, _, body in RULE_LINE.findall(record_of(text, 'Request 2', '0007'))]
+    found = [(n, body, EXCEPTION.search(body)) for n, body in found
+             if 'TOKEN_KEYS_UNAVAILABLE' in body and re.search(r'\b401\b', body)]
+    if not found:
+        return result(False, 'no rule with HTTP 401 and TOKEN_KEYS_UNAVAILABLE')
+    n, _, word = next((f for f in found if f[2]), found[0])
+    return result(True, f'R{n} has HTTP 401, TOKEN_KEYS_UNAVAILABLE, and ' + (f'"{word.group(0)}"' if word else
+                  'no word that excepts') + '; grade by reading whether and which way it excepts')
+
+
+GITLAB_ROUTES = {'-', 'badges', 'blame', 'blob', 'builds', 'commits', 'create', 'create_dir', 'edit', 'files',
+                 'find_file', 'new', 'preview', 'raw', 'refs', 'tree', 'update', 'wikis'}
+
+
+def link_repository(destination):
+    """The repository that a link destination leads to, as a lowercased path, or None where the marker cannot tell.
+
+    On github.com it is the first two segments of the path. On gitlab.com the marker takes the leading segment to name
+    a group or a user, and the repository runs up to the next segment that GitLab reserves as a one-segment route for
+    projects and subgroups, such as `-`, `blob`, or `tree`, or to the end of the path. Any other host, GitHub Pages
+    included, names no repository the marker reads. The angle brackets around a destination and a title after it are
+    dropped first.
+    """
+    url = re.match(r'\s*<?([^\s<>]*)', destination).group(1)
+    m = re.match(r'https?://(?:www\.)?(github|gitlab)\.com/([^#?]+)', url, re.I)
+    if not m:
+        return None
+    segments = [seg for seg in m.group(2).split('/') if seg]
+    if m.group(1).lower() == 'github':
+        segments = segments[:2]
+    else:
+        segments = segments[:next((i for i, seg in enumerate(segments) if i > 0 and seg in GITLAB_ROUTES),
+                                  len(segments))]
+    return '/'.join(segments).removesuffix('.git').lower() or None
 
 
 def foreign_record_form(text):
     """A mention of ADR-0012 in a record 0007 that does not carry `example/platform`. Finding one fails.
 
-    A mention in the link of a line under **Related ADRs** passes when the link's label or URL names `example/platform`;
-    any other mention, a link in the text included, needs `example/platform` right before it.
+    A mention in the link of a line under **Related ADRs** passes when the link's URL leads to the repository
+    example/platform, or names no repository and the link's label names `example/platform`, as `link_repository`
+    reads the URL. Any other mention, a link in the text included, needs `example/platform` right before it.
     """
     cited = False
     for request in ('Request 1', 'Request 2'):
         rec = record_of(text, request, '0007')
-        related = section_block(rec, 'Related ADRs')
-        start = rec.find(related) if related else -1
-        links = [(start + lk.start(), start + lk.end(), lk.group(0))
-                 for lk in re.finditer(r'\[[^\]]*\]\([^)]*\)', related)] if related else []
+        span = section_span(rec, 'Related ADRs')
+        links = [(span[0] + lk.start(), span[0] + lk.end(), lk)
+                 for lk in re.finditer(r'\[([^\]]*)\]\(([^)]*)\)', rec[span[0]:span[1]])] if span else []
         for m in re.finditer(r'ADR-0012', rec):
             cited = True
-            link = next((t for a, b, t in links if a <= m.start() < b), None)
+            link = next((lk for a, b, lk in links if a <= m.start() < b), None)
             if link is not None:
-                if 'example/platform' not in link:
-                    return result(False, f'{request}: link without example/platform: {link[:80]}')
+                repo, shown = link_repository(link.group(2)), ' '.join(link.group(0).split())
+                if repo is not None and repo != 'example/platform':
+                    return result(False, f'{request}: link to {repo}, not example/platform: {shown}')
+                if repo is None and 'example/platform' not in link.group(1):
+                    return result(False, f'{request}: link whose URL names no repository that the marker reads and '
+                                         f'whose text does not name example/platform: {shown}')
             elif not re.search(r'example/platform\W{0,3}$', rec[max(0, m.start() - 20):m.start()]):
-                return result(False, f'{request}: ' + ' '.join(rec[max(0, m.start() - 40):m.end() + 20].split()))
+                return result(False, f'{request}: expected "example/platform ADR-0012", the repository before the '
+                                     f'number, in: ' + excerpt(rec, m.start(), m.end(), 80))
     return result(True, 'every ADR-0012 carries example/platform' if cited else 'ADR-0012 not cited')
+
+
+def no_see_also(text):
+    """A citation in a record 0007, outside **Related ADRs**, that `see`, `see also`, `cf.`, or `compare` introduces.
+
+    Finding one fails. Such a citation points at a rule and gives no reason the reader needs; a citation that points
+    in other words passes the marker and is graded by reading. A link counts by its text.
+    """
+    for request in ('Request 1', 'Request 2'):
+        rec = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', without_section(record_of(text, request, '0007'), 'Related ADRs'))
+        for block in blocks(rec):
+            m = re.search(r'\b(?:see(?:\s+also)?|cf\.|compare)\s+(?:[^.;]{0,60}?\s)?(?:\S+/\S+\s+)?ADR-\d{4}(?: R\d+)?',
+                          block, re.I)
+            if m:
+                return result(False, f'{request}: possible citation that only points, grade by reading: '
+                              + excerpt(block, m.start(), m.end()))
+    return result(True, 'no citation introduced by see, see also, cf., or compare')
 
 
 # coder-trailers
@@ -720,7 +886,8 @@ CASES = {
                            owner_not_invented, guide_asked, status_proposed],
     'writer-structural': [r1_record_0012, r1_metadata_from_repository, r1_rules_from_template, r1_structural_tag,
                           r1_confirmation_names_check, r1_guide_added, r1_agents_paragraph, r2_behavior_rule,
-                          r2_no_confirmation_entry, r2_guide_untouched, r2_citation_without_condition],
+                          r2_no_confirmation_entry, r2_guide_untouched, r2_citation_without_condition,
+                          r2_citation_names_subject],
     'coder-trailers': [defers_r5('Change 1', 'Commit message'), defers_r5('Change 1', 'Pull request description'),
                        no_rule_trailers('Change 2')],
     'writer-accepted-record': [new_record_0008, accepted_untouched, user_told_unchanged, only_link_fixed,
@@ -737,12 +904,13 @@ CASES = {
     'writer-one-home': [record_0007_in('Request 1'), r1_service_account_m2m, r1_service_account_rule_alone,
                         not_copied('Request 1', r'system:serviceaccount', 'sub prefix'),
                         not_copied('Request 1', r'topology', 'namespace list'),
-                        not_copied('Request 1', r'providers file|(?:no|without a) provider', 'provider rule'), r1_one_tenant_rule,
+                        not_copied('Request 1', r'providers file|(?:no|without a) provider', 'provider rule'),
+                        r1_one_tenant_rule,
                         r1_no_legacy_rule, r1_other_records_untouched, record_0007_in('Request 2'),
                         rule_with('Request 2', '401'), r2_exception_kept,
                         not_copied('Request 2', r'\b503\b|Retry-After', '503 response'), r2_no_401_copied,
                         cited_records_linked, no_guide_written, foreign_record_form,
-                        not_copied('Request 1', r'\bnetcracker\b', 'audience')],
+                        not_copied('Request 1', r'\bnetcracker\b', 'audience'), no_see_also],
 }
 
 

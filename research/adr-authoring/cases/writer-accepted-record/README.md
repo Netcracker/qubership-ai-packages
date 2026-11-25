@@ -59,8 +59,9 @@ this case reads it. On `3b37f1b0`, a tree of the same day whose results this com
 six checks, and all four let `TOKEN_ALG_NONE` win.
 
 Trees `88a72faf` and `dc50203b` differ from `ad64edef` only in the guarantee of a dependency under "What belongs in an
-ADR", which they state as a fact only where its source is not a decision record; the inputs of this case hold no
-guarantee of a dependency, so the results above stand for those trees.
+ADR": `88a72faf` states it in Context as a fact only where its source has no rules, and `dc50203b` only where its source
+is not a decision record. The inputs of this case hold no guarantee of a dependency, so the results above stand for
+both trees.
 
 On tree `d42618eb`, before this change, the case ran because "What belongs in an ADR" began to sort each requirement
 into a decision, a defect, or a guarantee of a dependency, and the requirement added to ADR-0007 is a decision. All four

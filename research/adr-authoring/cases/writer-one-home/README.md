@@ -47,19 +47,32 @@ to be read and fixed, though ADR-0092 R7 needs only its first sentence.
 10. **Record 0007 in Request 2.** Request 2 writes `docs/adr/0007-<slug>.md`.
 11. **Rule for the 401.** Request 2's record has a rule with HTTP 401.
 12. **Exception kept.** A rule of Request 2's record gives HTTP 401 and excepts `TOKEN_KEYS_UNAVAILABLE`, citing
-    ADR-0005 R2 for that response or not.
+    ADR-0005 R2 for that response or not. The marker reads HTTP 401 and the code in one rule, and not whether or which
+    way the rule excepts the code: its evidence names the rule with a word that excepts, such as "except", "instead of",
+    or "does not cover", or says that it found none, and the exception is graded by reading. Both controls that reverse
+    the exception pass the marker.
 13. **No copied response.** No line of Request 2's record names `503` or `Retry-After`.
 14. **No copied status.** No sentence of Request 2's record outside its rules says what ADR-0003 R4 or ADR-0004 R3
-    decides, the HTTP 401 or the code it gives. The marker reads a sentence that names one of those rules with `401`.
+    decides, the HTTP 401 or the code it gives. The marker reads a sentence that names one of those rules with `401`,
+    inside one paragraph, list item, or heading, so its FAIL is a possible copy, graded by reading.
 15. **Cited records listed.** **Related ADRs** of a record 0007 lists every record that the rest of the record cites, in
     both requests, linked where the writer knows the file. The marker reads only links, so a list without links passes
     by reading where it names every cited record.
 16. **No guide written.** No request writes a `README.md`: the repository has its guide.
 17. **Another repository named.** Every mention of ADR-0012 in a record 0007 has the form `example/platform ADR-0012`,
-    or is the link of a line under **Related ADRs** to example/platform; a record that cites ADR-0012 nowhere passes.
+    or is the link of a line under **Related ADRs** to example/platform: a URL that leads to that repository, or one
+    that names no repository under a link text that names it. The marker reads the repository of a URL on github.com
+    or gitlab.com; any other URL, a GitHub Pages site included, names none. A record that cites ADR-0012 nowhere
+    passes.
 18. **No audience.** No line of Request 1's record says that example/platform ADR-0012 R3 gives the audience
     `netcracker`. An open point whose answers name `netcracker` as a requirement this record might add passes by
     reading; the marker reads any line that names `netcracker`.
+19. **No citation that only points.** No sentence of a record 0007 cites a rule of another record only to point at it or
+    to say that it still applies, such as "See also the issuer check of ADR-0003 R4." or "The statuses of ADR-0003 R4
+    and ADR-0004 R3 stay the same." A citation that is part of a reason, gives an example of a check, names the subject
+    of an open point, or names the rule a follow-up changes passes. The marker reads a citation that "see", "see also",
+    "cf.", or "compare" introduces outside **Related ADRs**, so its FAIL is a possible pointer, graded by reading, and a
+    pointer in other words, such as a reminder, passes the marker and fails by reading.
 
 ## Running it
 
@@ -75,51 +88,70 @@ python3 research/adr-authoring/cases/check.py research/adr-authoring/cases/write
 `controls/before-opus.md`, `before-opus-2.md`, `before-sonnet.md`, and `before-sonnet-2.md` are unedited runs of this
 prompt on 2026-11-25 on the skill before this change, commit `8d5f4c3`, tree `d42618eb`, at the default effort:
 `research/adr-authoring/cases/run-case.sh <copy of this case> <model> result 8d5f4c3`. Graded by reading, each fails
-checks 4, 5, 6, 13, 14, 17, and 18, and Opus r2 also check 15. Each Context or Justification of Request 1 restates the
-`sub` prefix of ADR-0004 R3, the topology file of ADR-0004 R5, what ADR-0004 R1 leaves in the mode `legacy`, and the
-audience `netcracker` of example/platform ADR-0012 R3, which each writes as `ADR-0012 R3 of example/platform`; each
-Context of Request 2 gives the HTTP 401 of ADR-0003 R4 and ADR-0004 R3 and the HTTP 503 and `Retry-After: 5` of
-ADR-0005 R2. Opus r2 leaves example/platform ADR-0012 out of **Related ADRs**. `check.py` also fails Opus r1 on check 7,
-whose marker does not read its tenant rule, Sonnet r2 on check 12, whose marker does not read an exception that a
-second rule makes, and Sonnet r1 and r2 on check 15, whose lines under **Related ADRs** have no links but name every
-cited record.
+checks 4, 5, 6, 13, 14, 17, and 18, Opus r2 also check 15, and Sonnet r1 also check 19, for the Negative consequence
+"Their results do not change." about ADR-0003 R4 and ADR-0004 R3, a reminder that `check.py` does not read. Each Context
+or Justification of Request 1 restates the `sub` prefix of ADR-0004 R3, the topology file of ADR-0004 R5, what ADR-0004
+R1 leaves in the mode `legacy`, and the audience `netcracker` of example/platform ADR-0012 R3, which each writes as
+`ADR-0012 R3 of example/platform`; each Context of Request 2 gives the HTTP 401 of ADR-0003 R4 and ADR-0004 R3 and the
+HTTP 503 and `Retry-After: 5` of ADR-0005 R2. Opus r2 leaves example/platform ADR-0012 out of **Related ADRs**.
+`check.py` also fails Opus r1 on check 7, whose marker does not read its tenant rule, Sonnet r2 on check 12, whose
+marker does not read an exception that a second rule makes, and Sonnet r1 and r2 on check 15, whose lines under
+**Related ADRs** have no links but name every cited record.
 
-The other controls are the Opus r1 of tree `ba170d99`, an earlier tree of this change, with edits; they answer the
-prompt before the audience of example/platform ADR-0012 R3 was added, so checks 17 and 18 find nothing to read in them.
-That result already fails check 14: its Context of Request 2 says that the issuer check of ADR-0003 R4 and the `sub`
-check of ADR-0004 R3 "state HTTP 401 and an error code". `controls/repeated-rules.md` adds to R2 the sentence "ADR-0004
-R3 and ADR-0004 R5 limit which service account tokens pass verification", a rule that a token that is not M2M never
-reaches another tenant, and a rule for the mode `legacy`; it fails checks 3, 6, 7, 8, and 14.
-`controls/restated-citations.md` gives R2 of Request 1 the second sentence of ADR-0092 R7, with the prefix of ADR-0004
-R3, and replaces `the response of ADR-0005 R2` in Request 2 with HTTP 503 and `Retry-After: 5`; it fails checks 3, 4, 6,
-13, and 14. `controls/wrong-files.md` numbers both records 0008, adds a changed ADR-0004 to Request 1, and writes a
-guide in Request 2; it fails checks 1, 2, 3, 7, 9, 10, 11, 12, and 16. Each Context of these controls states the outcome
-in the mode `legacy` "through the providers rule of ADR-0004 R1 and the issuer check of ADR-0003 R4", which check 6
-grades and its marker does not read, so `check.py` passes the first two on check 6; the third has no record 0007.
+`controls/repeated-rules.md`, `controls/restated-citations.md`, and `controls/wrong-files.md` are the Opus r1 of tree
+`ba170d99`, an earlier tree of this change, with edits; they answer the prompt before the audience of example/platform
+ADR-0012 R3 was added, so checks 17 and 18 find nothing to read in them. That result already fails check 14: its Context
+of Request 2 says that the issuer check of ADR-0003 R4 and the `sub` check of ADR-0004 R3 "state HTTP 401 and an error
+code". `controls/repeated-rules.md` adds to R2 the sentence "ADR-0004 R3 and ADR-0004 R5 limit which service account
+tokens pass verification", a rule that a token that is not M2M never reaches another tenant, and a rule for the mode
+`legacy`; it fails checks 3, 6, 7, 8, and 14. `controls/restated-citations.md` gives R2 of Request 1 the second sentence
+of ADR-0092 R7, with the prefix of ADR-0004 R3, and replaces `the response of ADR-0005 R2` in Request 2 with HTTP 503
+and `Retry-After: 5`; it fails checks 3, 4, 6, 13, and 14. `controls/wrong-files.md` numbers both records 0008, adds a
+changed ADR-0004 to Request 1, and writes a guide in Request 2; it fails checks 1, 2, 3, 7, 9, 10, 11, 12, and 16. Each
+Context of these controls states the outcome in the mode `legacy` "through the providers rule of ADR-0004 R1 and the
+issuer check of ADR-0003 R4", which check 6 grades and its marker does not read, so `check.py` passes the first two on
+check 6; the third has no record 0007.
+
+`controls/see-also.md`, `controls/needed-citation.md`, `controls/reversed-exception.md`, and
+`controls/reversed-exception-worded.md` are the Opus r1 of tree `88a72faf`, which fails check 5, with one edit each.
+`see-also.md` adds "See also the issuer check of ADR-0003 R4." to the Justification of Request 2 and fails check 19 as
+well. `needed-citation.md` adds there instead "R2 names no response for unavailable keys and leaves it to the
+unavailable-keys rule of ADR-0005 R2, so that a change of that response changes one record.", which tells the approver
+why R2 cites that rule, and passes check 19. `reversed-exception.md` replaces the exception of R2 with "A token that
+gets `TOKEN_KEYS_UNAVAILABLE` gets HTTP 401 as well.", and `reversed-exception-worded.md` with "A token that gets
+`TOKEN_KEYS_UNAVAILABLE` gets HTTP 401 instead of the response of ADR-0005 R2."; both fail check 12 by reading.
+`check.py` passes both, with "no word that excepts" in the evidence of the first and "instead of" in that of the second.
+`check.py` also fails all four on check 18, as it fails that result (see Results). No other control cites a rule only to
+point at it, so each passes check 19.
 
 ## Results
 
 Runs of 2026-11-25 on tree `88a72faf`, graded by reading; both models at the default effort. "r1" and "r2" are
 `result.md` and `result-2.md`. The case ran again on this tree because **One home** now asks for a citation of a rule of
 another record by what the rule is about, in every section, the read before publishing covers every sentence that cites
-a rule, **No pointer rules** leaves out a rule that only repeats a requirement of another rule, and a guarantee is
-stated in Context only where its source is not a decision record; the prompt gained the audience of example/platform
-ADR-0012 R3, with checks 17 and 18.
+a rule, **No pointer rules** leaves out a rule that only repeats a requirement of another rule, and the guarantee clause
+of this tree states a guarantee in Context only where its source has no rules (the final tree, `dc50203b`, asks instead
+whether the source is a decision record; see below); the prompt gained the audience of example/platform ADR-0012 R3,
+with checks 17 and 18. Check 19 was added after these runs and graded on the same results; the results of the earlier
+trees below were not graded on it.
 
 Opus r1 and Opus r2 fail check 5, Sonnet r1 check 6, and Sonnet r2 checks 4, 5, 6, and 18: 7 failures in four runs,
-against 29 for the same prompt on the skill before this change. Each Request 1 writes the service account rule as one
+against 30 for the same prompt on the skill before this change. Each Request 1 writes the service account rule as one
 sentence with no citation, one tenant rule, and no rule for `legacy`, names the other repository's record with its
 repository, and links every cited record under **Related ADRs**. The copies that remain: Opus r1 and Opus r2 name the
 topology file of ADR-0004 R5 in a Negative consequence or the Justification; Sonnet r1 says in a Negative consequence
 that the mode `legacy` has no provider of service account tokens (ADR-0004 R1); and Sonnet r2's Justification restates
 the `sub` prefix of ADR-0004 R3, the topology file, and the audience `netcracker`, and its Implementation notes the
-outcome in the mode `legacy`. All four write Request 2 and keep the exception for `TOKEN_KEYS_UNAVAILABLE`, and none
-copies the HTTP 401 of the cited checks or the response of ADR-0005 R2. Opus r2 also leaves the checks of ADR-0003 R4
-and ADR-0004 R3 out of its rule for every failed check, "because those rules set their own response": it reads **One
-home** as forbidding a general rule to state a status that another record's rule already gives, which leaves a token
-that fails one of those checks and another check without a rule that says which code it gets. No check reads it; check
-12 passes, since the rule still gives HTTP 401 and excepts `TOKEN_KEYS_UNAVAILABLE`. How a general rule relates to the
-rules of other records that already decide part of its outcome is one of the shapes
+outcome in the mode `legacy`. No result cites a rule only to point at it: each citation outside the rules gives part of
+a reason, an example of a check, or the subject of an open point, so all four pass check 19. All four write Request 2
+and keep the exception for a token that gets only `TOKEN_KEYS_UNAVAILABLE`, and none copies the HTTP 401 of the cited
+checks or the response of ADR-0005 R2. No run settles a token that also fails another check: Opus r1 gives it HTTP 401
+in R3 and Opus r2 the response of the first check that fails in R4, each with the alternative or the order left to the
+architect in O2, and Sonnet r1 (O1) and Sonnet r2 (O2) leave open which code such a token gets. Opus r2 also leaves the
+checks of ADR-0003 R4 and ADR-0004 R3 out of its rule for every failed check, "because those rules set their own
+response": it reads **One home** as forbidding a general rule to state a status that another record's rule already
+gives. No check reads it; check 12 passes, since the rule still gives HTTP 401 and excepts `TOKEN_KEYS_UNAVAILABLE`. How
+a general rule relates to the rules of other records that already decide part of its outcome is one of the shapes
 Netcracker/qubership-ai-packages#284 takes. Opus r1 and Opus r2 also write a rule that gives the refusal of the
 namespace check of ADR-0004 R5 a code of its own, a placeholder; how a record changes what an accepted rule of another
 record leaves open is the question of
@@ -167,4 +199,6 @@ The baselines ran on 2026-11-12 with `english-developer-style` alone, on the pro
 and Sonnet writes no numbered rules, so both fail checks 2, 3, 7, 11, and 12 on the marker. Both restate ADR-0004 R1,
 R3, and R5, ADR-0003 R4, and ADR-0005 R2, which fails checks 4, 5, 6, 13, and 14, and neither links the records it cites
 under **Related ADRs**, which fails check 15. Opus restates ADR-0005 R2 inside the exception rule of Request 2 as well:
-"gets the response that ADR-0005 R2 sets, HTTP 503 with `Retry-After: 5`".
+"gets the response that ADR-0005 R2 sets, HTTP 503 with `Retry-After: 5`". Opus also fails check 19 by reading, with the
+Negative consequence "The statuses of ADR-0003 R4, ADR-0004 R3, and ADR-0005 R2 stay the same.", which the marker does
+not read; Sonnet passes it.

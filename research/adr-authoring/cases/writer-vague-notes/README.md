@@ -54,8 +54,9 @@ leaves the owner as a placeholder and asks for one, and sets `Proposed`. None ad
 each asks whether to add `docs/adr/README.md`. No result cites another record, names a defect, or proposes an issue.
 
 Trees `88a72faf` and `dc50203b` differ from `ad64edef` only in the guarantee of a dependency under "What belongs in an
-ADR", which they state as a fact only where its source is not a decision record; the inputs of this case hold no
-guarantee of a dependency, so the results above stand for those trees.
+ADR": `88a72faf` states it in Context as a fact only where its source has no rules, and `dc50203b` only where its source
+is not a decision record. The inputs of this case hold no guarantee of a dependency, so the results above stand for
+both trees.
 
 On tree `d42618eb`, the round before this change, all four passed all eight checks by meaning; `check.py` failed check
 7 for Sonnet r1 because its question came two sentences after the trailers.
