@@ -83,7 +83,10 @@ For each class write, before any code:
   right only where the cause is local to it. It is never local for a finding in a `recurring` family, or in a family
   that has had an `adds_case` fix: there the fix changes how the family's property is computed, or takes out of the
   change the decisions that depend on it, and adds no branch, exemption, or list entry for the inputs the finding
-  names. A `split_out` finding's `In this change:` line is that narrowing;
+  names. A `split_out` finding's `In this change:` line is that narrowing. That fix replaces what the earlier fixes of
+  the family added at its sites, the commits its `rounds[].fixes` name, and does not run beside it: every branch,
+  exemption, or helper they added for particular inputs is removed. A test of theirs stays where the new computation
+  gives its input the same result, and otherwise states the new result, or, after a narrowing, the known gap;
 - the findings it resolves, by id;
 - the combinations the fix must cover and the boundary where the rule must not apply, each with the test or the run
   that shows it.
