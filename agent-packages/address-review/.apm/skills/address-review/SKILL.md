@@ -19,7 +19,10 @@ Take them from the first source that exists:
 
 1. A `review.json` from a review skill: its path, or, for an `adversarial-code-review` version that writes one, the
    newest round under `${XDG_CACHE_HOME:-$HOME/.cache}/adversarial-code-review/<platform>-<owner>-<repo>-<number>/`.
-   Its findings already carry ids, severities, and classes.
+   Its findings already carry ids, severities, and classes. A `review.json` from `adversarial-code-review` also
+   carries families: a finding's `family` names an entry of `families`, which states the property the code computes
+   wrongly, the `sites` that compute it, and whether it is `recurring`, that is, whether earlier fixes already added
+   cases for the inputs earlier findings named.
 2. A ledger or a review report the user names or pastes.
 3. The open review threads on the request, from every reviewer: `gh` for GitHub (review threads with `isResolved:
    false`, including outdated ones), `glab` for GitLab (resolvable discussions not yet resolved). Treat each thread as
@@ -52,6 +55,12 @@ Read the code each finding cites at the current head, and decide one of:
 - **out of scope**: a real defect the change did not introduce and need not fix. It is deferred only with the user's
   consent and a tracked follow-up (an issue, a ticket); without both it is valid.
 
+Deferring a finding whose fix is the root cause of a class (step 3) defers the cause, not one symptom. Every other
+member of that class whose fix needs that cause is deferred with it, or resolved by taking out of the change the
+decisions that depend on the deferred cause; it is not fixed on its own at the place it was reported. A member fixed
+alone is the deferred defect with one more input handled, and the next review finds the input it did not handle. A
+member whose fix does not need the cause, such as a wrong comment beside it, is assessed on its own.
+
 A finding from a person outweighs a finding from a review skill where they conflict; say so rather than silently
 choosing. Do not dispute a finding to avoid work: a dispute needs evidence a reviewer can check.
 
@@ -71,7 +80,10 @@ For each class write, before any code:
   space, and the other points the request's code reaches are the finding's cousins;
 - the layer where the fix belongs: the module that owns the concept, the shared helper every caller goes through, the
   contract or type that would make the wrong state unrepresentable. A fix at the place each finding was reported is
-  right only where the cause is local to it;
+  right only where the cause is local to it. It is never local for a finding in a `recurring` family, or in a family
+  that has had an `adds_case` fix: there the fix changes how the family's property is computed, or takes out of the
+  change the decisions that depend on it, and adds no branch, exemption, or list entry for the inputs the finding
+  names. A `split_out` finding's `In this change:` line is that narrowing;
 - the findings it resolves, by id;
 - the combinations the fix must cover and the boundary where the rule must not apply, each with the test or the run
   that shows it.
@@ -122,7 +134,13 @@ the diff resolves the cause or only the place the finding was reported.
 
 With `cross-review`, one run with its round limit set to five is the whole step. With the fresh reviewer, run up to
 five rounds, each over the code the previous round's fixes produced, and stop at the first round with no finding you
-accept. Fix what the rounds find by the same rules as step 4: by cause, at the right layer.
+accept. A finding of these rounds is assessed and grouped by steps 2 and 3 before it is fixed. One that shows a fix
+of this session decides the same property wrongly for another input joins that fix's class and family, and the family
+then counts as having had an `adds_case` fix. Fix the rest by the same rules as step 4: by cause, at the right layer.
+
+Where the rounds end with blocking findings that recur, or each round's fix brings a finding on a new input of the
+same decision, do not go on to step 6 with those fixes unreviewed. Stop and put the choice to the user: compute the
+property where it belongs, take out of the change the decisions that depend on it, or defer it with its class (step 2).
 
 ## 6. Final review
 
