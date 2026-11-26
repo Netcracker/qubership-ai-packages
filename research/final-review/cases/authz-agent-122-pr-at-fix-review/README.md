@@ -163,3 +163,11 @@ the form only under the comments item, as a sentence a reader has to parse twice
 therefore stand for the tree they name, not for `ca8233fb`. The new rules could reach this input only by adding comment
 findings to the report. `authz-agent-122-review`, run on the same pull request with the new tree, shows what they add to
 the comments of this repository, and `textkit-page-count-review` is the case where they would be noise.
+
+## The `prtext` arm, 2026-11-26: not run
+
+Final-review tree `2a8a0411` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
+the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
+paragraph applies only where the branch has an open pull request. This case's prompt names none, quotes no pull request
+text, and forbids gh, so the input never reaches the paragraph. The change leaves the results above standing for the
+tree they name.

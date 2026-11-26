@@ -13,7 +13,14 @@
 #   base        the full sha of the commit the change starts from
 #   head        the full sha of the last commit of the change
 #   prompt.md   the task; <skills> is replaced by the directory of the skill
-#               copies and <base> by the base sha
+#               copies, <base> by the base sha, and <gh> by the directory of
+#               the copy of gh/
+# and, for a change whose branch has an open pull request:
+#   gh/         what gh printed for the branch, one file per command, such as
+#               pr-view.json for `gh pr view --json state,title,body,baseRefName,baseRefOid`;
+#               the session gets a copy outside the case directory
+#   pr-target   the branch the pull request merges into and its sha, as
+#               `main <sha>`; the script points refs/remotes/origin/<branch> at it
 #
 # Run from the repository root:
 #   research/final-review/cases/run-review-case.sh <case directory> <model> <label> [<rev>]
@@ -60,13 +67,19 @@ src=$(cat "$case_dir/repo")
 git -C "$repo" fetch -q --depth 10 "$src" "$head"
 git -C "$repo" checkout -q FETCH_HEAD
 git -C "$repo" cat-file -e "$base^{commit}"
+if [ -f "$case_dir/pr-target" ]; then
+  read -r target_name target_sha < "$case_dir/pr-target"
+  git -C "$repo" update-ref "refs/remotes/origin/$target_name" "$target_sha"
+fi
+if [ -d "$case_dir/gh" ]; then cp -R "$case_dir/gh" "$work/gh"; fi
 
 : > "$work/instructions.md"
 for f in CLAUDE.md AGENTS.md; do
   if [ -f "$repo/$f" ]; then cat "$repo/$f" >> "$work/instructions.md"; break; fi
 done
 
-sed -e "s|<skills>|$work/skills|g" -e "s|<base>|$base|g" "$case_dir/prompt.md" > "$work/prompt.txt"
+sed -e "s|<skills>|$work/skills|g" -e "s|<base>|$base|g" -e "s|<gh>|$work/gh|g" \
+  "$case_dir/prompt.md" > "$work/prompt.txt"
 (cd "$repo" &&
   claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
     --append-system-prompt-file "$work/instructions.md" --output-format json \

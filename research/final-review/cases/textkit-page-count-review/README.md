@@ -118,3 +118,10 @@ item 3 asked for the same (`result.md:37`). `vocab-1` ends on "and I did not run
 `cond-2` did. Sonnet `vocab-2`, at 810 words, is the shortest Sonnet report of the case; `vocab-1` is longer than both
 `cond` runs. The typo is no finding in any run; Opus `vocab-2` and both Sonnet runs still mention it in one clause,
 "needs no claim" (Opus `vocab-2`, `result.md:17`).
+
+## The `prtext` arm, 2026-11-26: not run
+
+Final-review tree `2a8a0411` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
+the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
+paragraph applies only where the branch has an open pull request. This case's prompt names none, quotes no pull request
+text, and forbids gh, so the input never reaches the paragraph. The results above stand for `2a8a0411` as well.

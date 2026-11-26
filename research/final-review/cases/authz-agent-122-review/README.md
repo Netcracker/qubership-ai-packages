@@ -425,3 +425,10 @@ findings are:
 Both Sonnet runs check the one term they find, "default route", and report it as defined once in the package comment
 (`vocab-1` `result.md:24`, `vocab-2` `:26`). No run dumps the doc-comment checklist; Sonnet `vocab-2` answers it in
 one sentence per member (`result.md:11`).
+
+## The `prtext` arm, 2026-11-26: not run
+
+Final-review tree `2a8a0411` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
+the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
+paragraph applies only where the branch has an open pull request. This case's prompt names none, quotes no pull request
+text, and forbids gh, so the input never reaches the paragraph. The results above stand for `2a8a0411` as well.

@@ -174,3 +174,30 @@ the form only under the comments item, as a sentence a reader has to parse twice
 therefore stand for the tree they name, not for `ca8233fb`. The change edits a Helm chart and its values comments; the
 new rules could reach it only by adding comment findings, and `textkit-page-count-review` is the case where those would
 be noise. Not measured here.
+
+## Results of the `prtext` arm, 2026-11-26
+
+Final-review tree `63a559df` (version 1.4.0) adds the paragraph *The pull request* to item *Claimed cases covered*. The
+committed tree `2a8a0411` differs from it in which commit the pull request's diff starts from (the fetched tip of the
+base branch rather than `baseRefOid`), in the wording of two sentences, and in the wrapping of one bullet in §1; none of
+that reaches this input, whose prompt gives no gh output and whose pull request is the change under review. The prompt
+quotes the pull request description as the task statement, so the paragraph applies: the reviewer reads that description
+against the diff. Opus and Sonnet, two runs each, graded by reading `result.md`.
+
+| Model | Run | Check 1 | Check 2 (false pair) | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `prtext-1` | strong | filed | 1580 | 0.87 |
+| Opus | `prtext-2` | strong | none | 1314 | 0.57 |
+| Sonnet | `prtext-1` | fail | none | 1049 | 0.14 |
+| Sonnet | `prtext-2` | fail | none | 938 | 0.15 |
+
+- **Check 1** is as on `cond`: strong in both Opus runs, which name the server's own SIGTERM handling and ask for a run
+  or the line in velero (`prtext-2`, `result.md:47`), and failed in both Sonnet runs. Sonnet `prtext-1` names velero's
+  shutdown among the limits but asks only for a sentence in the values comment; `prtext-2` lists it under "Not
+  findings".
+- **Check 2.** Opus `prtext-1` lists `resticTimeout` among the limits on the same termination, as both `cond` runs did.
+- **This input cannot show the paragraph.** The pull request is the two commits under review, so its diff is the
+  change's diff, and its description was the task statement before. All four runs file that the default moves from 30 to
+  3600 seconds for every install while the description claims only "the ability to specify" it (Opus `prtext-1`,
+  `result.md:30`), as all four `cond` runs did; three of four file the restic DaemonSet hunk, which commit `98041d0`
+  alone claims, as Sonnet `cond-1` and `series-2` did. No run asks for the rounds of review.

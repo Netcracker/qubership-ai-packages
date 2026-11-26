@@ -36,6 +36,10 @@ twice, and a word the change coins as a term. A pass over the prose for style al
   cases come from. Ask for it if it was not handed over; a subagent that cannot ask answers item 2 from the commit
   message alone and says so in the report.
 - The commit message and the class comments of the tests, which claim cases too.
+- The title and the description of the branch's open pull request, where it has one, as the platform shows them when the
+  review runs: `gh pr view --json state,title,body,baseRefName,baseRefOid`, or the equivalent on another platform; a
+  state other than `OPEN` means there is none. A new title or description that the writer hands over takes the place of
+  the platform's text of the same part. Item *Claimed cases covered* reads them against the whole pull request.
 - The previous report of this form over the same change, where one exists. A change reviewed more than once,
   as in a review loop, is re-read against that report first (§4).
 - The output of `scripts/comment-drift.py <base> [<head>]`, run from anywhere in the repository. It lists, per changed
@@ -134,6 +138,19 @@ version bump carried over from another branch, a dependency moved in a file the 
 tests of a claimed change, and the generated or lock output it produces, are claimed with it. The request is a sentence
 that claims the hunk, with the run that checks it, or the hunk moved to a change of its own. A hunk outside that scope,
 such as a typo fixed in a comment or a page, needs no claim, and the report does not mention it.
+
+**The pull request.** Where the branch has an open pull request, its title and description describe the diff that the
+pull request will show once this change is pushed, not this change alone. That diff is `git diff $(git merge-base
+<target> HEAD)` and the untracked files the change adds (`git ls-files --others --exclude-standard :/`). `<target>` is
+the tip of the branch the pull request merges into, fetched now from the repository the pull request targets. Where the
+fetch cannot run, use the newer of the remote-tracking copy of that branch and `baseRefOid`, the base the platform
+recorded at the last push, and say so in the report. A title, or a sentence of the description, that says the pull
+request makes a change this diff does not make is a finding, and its request is the new title or the new sentence. Read
+the claims the other way over this diff too, with the title and the description in place of the commit message. Each
+hunk that this reading files is a finding even where a commit message claims it, and its request is the one that reading
+makes. A branch with no open pull request has nothing to read here. Text that this change leaves true is not a finding,
+as after a merge of the base branch or a rebase that changes no behavior, and the description is not asked to record the
+rounds of review.
 
 ### Item 3: boundaries, partitions, and the negative control
 
@@ -255,7 +272,8 @@ doc-comment skill.
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
   README's claim about the repository is covered by the file that makes it true. A command the artifact tells a reader
   to run is a claimed case, listed and covered as in *Item 2: claimed cases covered*. A hunk that changes a rule, a
-  version, or a dependency is claimed as in the same item.
+  version, or a dependency is claimed as in the same item. The title and the description of an open pull request are
+  read as in that item too.
 - **Boundaries, partitions, and the negative control.** The partitions are the genres, modes, and situations the change
   claims; the negative control is the statement of what does not apply, and the control arm of any trial the change
   carries. A trial that exercised one of three claimed genres leaves two partitions with no evidence, and the finding

@@ -152,3 +152,10 @@ run created after the trigger event" as false, because the endpoint lists the ne
 Sonnet `vocab-1` writes one line for the terms, "Coined terms: none." (`result.md:15`), and Opus `vocab-1` one sentence
 (`result.md:11`). No run lists terms that have a source, files a dense sentence, or dumps a checklist; the change has
 only YAML comments.
+
+## The `prtext` arm, 2026-11-26: not run
+
+Final-review tree `2a8a0411` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
+the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
+paragraph applies only where the branch has an open pull request. This case's prompt names none, quotes no pull request
+text, and forbids gh, so the input never reaches the paragraph. The results above stand for `2a8a0411` as well.
