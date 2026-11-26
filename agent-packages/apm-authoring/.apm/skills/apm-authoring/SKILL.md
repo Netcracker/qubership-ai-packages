@@ -256,19 +256,17 @@ Leave out everything else. In particular, don't include:
 
 ### 2. One canonical example per concern
 
-State the rule, then show one concrete example. Do not show two examples
-that vary in trivial ways — a reviewer rightly asks "is this any
-different from the previous example?". If a real variant exists (Quarkus
-fast-jar vs Spring Boot uber-jar; net/http vs Fiber middleware), show it
-once and label what makes it different.
+This is `agent-instruction-authoring` rule *Write for a class of
+situations*, applied to the examples of a library or platform package:
+where a real variant exists (Quarkus fast-jar vs Spring Boot uber-jar;
+net/http vs Fiber middleware), show it once and label what makes it
+different.
 
 An example that needs a caveat after it teaches what the caveat forbids,
-because the agent copies the example. At commit `51b35c9`,
-`change-description-authoring` showed its pull request description under
-four headings and then said "The *After* above carries headings only to
-label its slots"; the description of pgjdbc/pgjdbc#4388, a 17-line fix,
-came out under three headings. Show the shape you want in the common
-case instead.
+because the agent copies the example. A skill that shows a pull request
+description under four headings, and then says the headings only label
+its slots, gets descriptions with headings even for a 17-line fix. Show
+the shape you want in the common case instead.
 
 When listing pitfalls, prefer **rule + brief reason** over a wall of
 `// WRONG: …` snippets. Negative examples without the matching positive

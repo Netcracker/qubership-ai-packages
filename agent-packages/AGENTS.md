@@ -1,7 +1,9 @@
 # Editing the packages in this directory
 
 Before writing, editing, fixing, or reviewing a skill, an instruction, or this file, and above all before changing a
-skill after a failed case or eval run, load `agent-instruction-authoring`.
+skill after a failed case or eval run, load `agent-instruction-authoring`. It and `final-review`, which this file also
+names, come from the package every contributor installs globally,
+[`qubership-user-essentials`](../README.md#qubership-user-essentials).
 
 A package that hands wording to another skill names the rule, not one language's skill: "wording, tense, sentence
 length, and dialect belong to the developer-style skill of the language the text is written in
@@ -70,13 +72,8 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   file matches `git rev-parse HEAD:<skill directory>` is current and needs no new run.
 - **A failed check goes through `agent-instruction-authoring` rule *Name the class before fixing a failed case* before
   the skill text changes,** and the change through its rules *Check a change where it should not fire* and *Review a
-  change without the case* before it is committed.
-- **A case for a rule added after a bad output also checks an input where the rule's item is noise:** a word limit, or a
-  check that the item is absent there, beside the check that it now appears. A case that checks presence alone passes a
-  skill that writes the item into every output (the change-description-authoring cases checked that the audit was named
-  and the new test marked, and the one word limit, in `pgjdbc-4370-verbose`, was left failing; the descriptions grew
-  until maintainers called them too long). How to fix the rule: `apm-authoring` rule *Fix a bad output where the rule
-  stops*.
+  change without the case* before it is committed. The case checks the quiet input that the first of these rules adds
+  with a word limit, or with a check that the item is absent, beside the check that the item now appears.
 - **Grade every check by reading the result, not by the snippet's count,** and say in the commit message which checks
   each result fails, which cases improved or got worse, and what you ran.
 - **Commit results and draw conclusions from the target models (Opus, Sonnet), at least two runs per cell.** Haiku is
