@@ -1,65 +1,107 @@
 ## Change 1
 
-1. **Guarantee of a dependency, split by source.** The class is where a dependency's guarantee gets recorded. Input A is a base image README that promises certificate loading, which goes into Context as a fact with its source. Input B is a rule from another ADR that this record's rule depends on, which gets cited by topic. General.
-2. **Template Context comment ("no rule of this record or another is restated").** The class is Context restating a requirement. Input A is Context repeating the timeout of its own R2. Input B is Context quoting the retry limit of another record's rule. General, and it cites One home without restating it.
-3. **Numbers freeze: cross-repository form and "every cited record appears under Related ADRs", with the retired-number exception.** The class is citation traceability. Input A is a Justification that cites a rule of a record in another repository. Input B is a Consequences entry that cites a record missing from Related ADRs. The retired-number exception is a first exception tied to Record numbers. General.
-4. **One home, rewritten.** The class is where a requirement may reappear. Input A is a Justification citing R4. Input B is Context naming another record's rule by what it is about. The own-record clause (Negative, Open points, Confirmation) gives a boundary, not a third exception. General.
-5. **Cite only what the reader needs.** The class is decorative citations. Input A is a "see also ADR-0031" in the Justification. Input B is a Confirmation line saying "ADR-0044 R2 still applies". General.
-6. **Every requirement is a rule ("cites the rule that states it, not the record").** The class is how Confirmation and Implementation notes refer to requirements. Input A is an Implementation note saying "as ADR-0091 states". Input B is a Confirmation entry for a rule of another record. General.
-7. **No pointer rules ("or only repeats a requirement", "give it in the Justification").** The class is a rule that adds a number and no requirement. Input A is a rule reading "R5 also applies to the batch endpoint". Input B is a rule copying R2's limit under another layer tag. General.
-8. **Pre-publication read, extended to No pointer rules, Cite only what the reader needs, and sentences outside Rules.** The class is the final review of a record. Input A is a record whose Consequences cite a rule. Input B is a record whose Context cites a retired record. General.
+Each added or changed sentence, with its class and two inputs from the skill's scope:
+
+1. **Guarantee whose source is not a decision record goes in Context with its source.**
+   - Class: where a dependency guarantee that a rule relies on is recorded.
+   - Inputs: a base image README that promises trust-store handling, and a library's documented default timeout that a reason depends on.
+2. **Guarantee whose source is a decision record is cited by what its rule is about.**
+   - Class: the same guarantee, when another record's rule is the source.
+   - Inputs: a platform record's retry limit that a rule relies on, and a logging-format record that a reason relies on.
+3. **Template Context: no rule of this record or another is restated.**
+   - Class: what Context may contain.
+   - Inputs: Context of a token-expiry record that mentions an earlier record's limit, and Context of a rewrite that carries the old record's facts.
+4. **A rule of a record in another repository is cited as `owner/repo ADR-NNNN Rn`.**
+   - Class: cross-repository citation form.
+   - Inputs: a Justification that cites an org-wide record, and a Related ADRs line that links one.
+5. **Every cited record appears under Related ADRs, except a retired number mapped in Context.**
+   - Class: completeness of the Related ADRs list.
+   - Inputs: Rules that cite `ADR-0091 R7`, and Context that maps a retired number to its successor.
+6. **One home: stated once, cited by number, or by section and quote where there are no numbers.**
+   - Class: how a requirement is referred to outside its rule.
+   - Inputs: a Confirmation entry for a rule of the same record, and a new record that cites an old record with no numbered rules.
+7. **A rule of another record is cited by what it is about, not what it decides.**
+   - Class: cross-record citation wording.
+   - Inputs: a Consequences line about another record's retry limit, and an Alternatives entry about another record's storage rule.
+8. **In its own record, sections other than Rules and Context may say what a rule decides, with its number.**
+   - Class: where a decision may be restated.
+   - Inputs: a Negative entry that names an accepted cost, and an open point that lists the rules it affects.
+9. **Cite only what the reader needs.** This is the new rule, and each of its four sentences has the same class: pruning citations.
+   - Inputs: a Justification "see also" for a neighboring record, and a rule that adds "R4 still applies".
+   - The sentence "A rule in force applies to every change whether or not it is cited" has the same two inputs.
+   - So does the sentence that says to rewrite the citing rule instead of adding a citation.
+10. **Every requirement is a rule: a referring section cites the rule, not the record.**
+    - Class: how Confirmation and Implementation notes point at requirements.
+    - Inputs: a Confirmation entry for a limit set by another record, and an Implementation note about a migration order.
+11. **No pointer rules: also a rule that only repeats a requirement.**
+    - Class: rules that add a number and no requirement.
+    - Inputs: an R6 that copies R2's timeout, and an R5 that says "R3 applies to uploads".
+    - The sentence that sends the link to the Justification has the same two inputs.
+12. **Drafting: the pre-publication read adds No pointer rules and Cite only what the reader needs, plus a second pass over every citing sentence.**
+    - Class: the review before publishing a record.
+    - Inputs: a new record on a dependency choice, and a rewrite of an accepted record.
+
+No sentence is a patch. Sentences 6, 10 and 11 sharpen rules that already exist (rule 3 of the authoring skill), and 1, 2, 3 and 8 give a rule its boundary (rule 4).
 
 Verdict: general change
 
 ## Change 2
 
-1. **"when the part is absent, and, where it is owed, what to state and where to stop".** The class is a bad output that fills or leaves empty a part of an output. Input A is a pull request description whose "Testing" section is filled for a docs-only change. Input B is a review skill whose "Findings" section is padded with "none found because…". General. It sharpens the existing rule 4 and adds no rule.
-2. **"A clause on where to stop bounds the part … only the condition on when it is absent keeps it off the inputs where it is noise".** The class is why the absence condition comes first. Input A is an `AGENTS.md` rule "summarize risks" that fires on a typo fix. Input B is a skill step "list assumptions" that fires on a task with none. General.
+Each changed sentence:
 
-The other changed lines only rewrap and need no class.
+1. **The fix order is now: when the part is absent first, then, where it is owed, what to state and where to stop.**
+   - Class: how to fix a bad output in a part of an instruction.
+   - Inputs: a commit body that guesses at a cause, and a PR description whose Testing section is padded on a docs-only change.
+2. **"A clause on where to stop bounds the part on the inputs that need it; only the condition on when it is absent keeps it off the inputs where it is noise."**
+   - Class: why the absence condition comes first.
+   - Inputs: a review with "none found because…" on a clean diff, and a changelog "Breaking" section on a patch release.
+
+The remaining lines are re-wrapped with no change of meaning.
 
 Verdict: general change
 
 ## Change 3
 
-### General sentences
+**Sentences that pass.** Each is a boundary (rule 4) or a sharpening of an existing rule, with a class and two inputs.
 
-- **Goal bullet (§3), with its test and the §11 Goal item's "where a reader could know another way".** The class is a missing boundary for "state the goal". Input A is a forum question asking how to do something. Input B is a request whose workaround step is the blocker. A crash or a red build is the quiet input. This is a fix under rule 4. The Goal item's clause restates this condition, so it is a patch (see below).
-- **Isolation bullet (§4), "where more than one could … no isolation is owed".** The class is a defect that sits in the target project's own files. Input A is a dead link in a docs page. Input B is a crash whose trace stops in the project's code. Fix.
-- **Nearest hit definition.** The class is what to cite when the search finds no exact duplicate. Input A is a tracker hit with another symptom. Input B is a list-archive thread. General.
-- **Search that found nothing goes in a search slot or the hand-over note.** The class is where a null result goes. Input A is a GitHub form with no search field. Input B is a request form with a required "searched" field. Fix.
-- **Count: dependencies only where several reports or a known relative exist.** Input A is a split across two repositories. Input B is a single report. Fix.
-- **Question 4: "the observation is the grounding".** Input A is a crash. Input B is a link that returns 404. Fix. The example swap in the weak-grounding sentence changes no requirement.
-- **§6 source labels needed only where one kind could be mistaken for another.** Input A is a report that mixes the reporter's log with your own run. Input B is a solo report. Fix.
-- **§6 redaction sentence: say nothing where nothing changed.** Input A is a vendor ticket with substituted hostnames. Input B is a report about public code with no substitutions. Fix.
-- **§6 version bullet, "whose behavior the symptom could depend on".** Input A is a library defect that surfaces through a build tool. Input B is a documentation defect. Fix.
-- **§8 default layout, each part tied to a condition.** Input A is a library defect with a reproducer. Input B is a one-line documentation defect. Fix.
-- **§11 intro (item applies only where its rule applies).** Input A is a question owing no Expected behavior item. Input B is a colleague message. General.
-- **Request genre: opening paragraph (the search result goes to the prior-proposals slot).** Input A is a request with prior art. Input B is one with none. General.
-- **Request genre: slot conditions for who is blocked, out of scope, prior proposals, and alternatives.** Input A is a request that adds a dependency. Input B is a request that changes a default. Fix.
-- **Request genre: grounding sentence ("with who else has it where you know").** The class is a boundary for "who else has it". Input A is a new need with known co-sufferers. Input B is a new need with none. General.
-- **Colleague message: Failing output row ("paste the lines that carry the claim and say nothing about the trim").** Input A is a failing test with a CI run link. Input B is a deploy log with a build-scan link. General. The colleague table is the right place for the override of §7.
-- **Project conventions (acceptance criterion only; ownership, duplicates, and disclosure "need no line in it").** Input A is a bug filed in your own repository to fix yourself. Input B is a small request in a team backlog. General.
-- **Worked cases header and Case 7.** The class is a report that is only its core. Input A is a misspelled name in a document. Input B is a dead link or stale claim in a document. General as a worked case. Case 7 has two flaws:
-  - It says "every part past the core failed its condition in §8", but the commit and the search have no §8 condition. They fail §7 and §4.
-  - The misspelled-name input recurs in rules 4, 6, and 8 and in Case 7, which leans toward rule 6.
+| Sentence | Class | Two inputs |
+| --- | --- | --- |
+| §3 Goal: stated where another route may exist; "a crash, a red build, a typo, or a broken page is its own goal" | when the goal needs its own sentence | a "how do I export X" question with other routes, and a crash report |
+| §4 Isolate: "where more than one could"; no isolation owed where the place the report names is the evidence | when ownership isolation is owed | a dead link in a project's docs, and a crash whose trace stays in the project |
+| §4 Duplicates: the nearest hit is the closest item returned, even with another symptom | which hit gets cited | a closed issue with a similar symptom, and a rejected proposal for a request |
+| §4 Duplicates: a null search is reported only in a slot made for it, otherwise the query goes to the note | where a null result goes | a form with "searched existing issues", and a mailing list |
+| §4 Count: dependencies are stated where there are several reports or a known relative | when a dependency statement is owed | a client/server pair, and a single typo report |
+| §5 Q4: the observation is the grounding where it shows the expectation | when a grounding sentence is owed | a 404 link, and a crash |
+| §5 Q4: the example "nothing in the documentation promises this; it rests on our own setup" | example of plain wording for a weak grounding | a preference-grounded request, and reliance on undocumented behavior |
+| §6 Source: labels where a reader could confuse kinds; none for all-own output | when attribution labels are owed | a report with only your own transcript, and one that mixes in a reporter's log |
+| §6 Redaction: one sentence only where something changed | when the redaction note is owed | a log with a token removed, and a reproducer with nothing private |
+| §6 Version: layers "whose behavior the symptom could depend on", with the README example, and the changed test | which layers need a version | a doc typo, and a hosted-service failure |
+| §8 Defect order: core first, then parts "each only where its condition holds" | which parts a form-less report carries | a doc typo, and a build-tool crash |
+| §11 intro: items apply only where their rule applies; answers go in the review or the note; own-backlog wording | checklist use | a redaction item with nothing to redact, and a request |
+| `colleague-message.md` Failing output: where a run link holds the rest, paste the lines that carry the claim and say nothing about the trim | the trim note in a chat message | a red CI link, and a build-pipeline link |
+| `project-conventions.md`: the acceptance criterion is the slot a backlog item most often lacks | which slot a backlog request lacks | a backlog feature request, and a backlog refactoring request |
+| `request-genre.md`: "Every request carries the first two"; the conditions on Who else, Out of scope, Proposed before and Alternatives; the grounding paragraph; the opening rewording | which request slots are owed | a two-paragraph request, and a costly API addition |
+| `worked-cases.md`: the intro rewording and Case 7 | an example of a report that is only its core | a misspelled name, and a dead link in a docs page |
 
-### Patches
+**Patches:**
 
-- **Request genre: "and each fact appears once, so a setting that does not serve you is stated beside the problem and not again under alternatives."** Rule 7 makes it a patch. §7 and §9 already say each section adds a fact, and the Alternatives slot and §3 already carry the negative-result setting, in the next bullet. The sentence is also a single instance of a class that already has a rule, so it fails rule 9's two-input test.
-- **§8: "a slot whose condition does not hold is left out, and one that fits in a few paragraphs carries no headings."** Rule 7 makes it a patch. The request-genre intro states the same condition and no-headings rule ("a request that fits in a few paragraphs carries no headings"). The text should cite one home and not carry two copies.
-- **§11 items that restate the condition of their rule, now that the intro says each rule states when it applies.** Rule 7 makes each a patch, because a checklist item cites a rule and does not repeat its condition. The clauses are:
-  - "where a reader could know another way to what you were doing"
-  - "where more than one project could own the defect"
-  - "where the search found something"
-  - "where there are several reports or a related one is known"
-  - "where the core does not show the expectation"
-  - "where a reader could take one kind of evidence for another"
-  - "whose version could change the outcome"
-  - "where anything was changed"
-  - "carry only the parts of §8 whose condition holds"
-  - "each other slot of `references/request-genre.md` where that slot's condition holds"
-- **Colleague table, Goal row: "Holds where you ask how to do something and the step may not be the only way; a red build, a failing test, or a broken service needs none."** Rule 7 makes it a patch. It copies the §3 boundary, and the table could say "Holds".
-- **Colleague table, Reproducer row: "The versions of your tools only where the failure could depend on them; a failure CI shows too does not."** The first half restates §6 (rule 7). The second half names a single input kind and has no second input (rule 9).
+1. `request-genre.md`: "each fact appears once, so a setting that does not serve you is stated beside the problem and not again under alternatives."
+   - Rule 7 makes this a patch. The negative-result rule in §3 and the Alternatives bullet right below this sentence already say it. The same-fact repetition is also covered by §7 and by §9, "The same fact in four sections".
+
+2. The no-headings condition, stated in three places:
+   - `request-genre.md`: "A slot is what the request says, not a heading: a request that fits in a few paragraphs carries no headings".
+   - §8: "A request and a question take the slots their references name, in that order, under the same rule: a slot whose condition does not hold is left out, and one that fits in a few paragraphs carries no headings."
+   - §8, defect case: "A report whose parts fit in a few sentences carries no headings".
+   - Rule 7 makes these patches. The condition has three copies and no single home. The §8 sentence also restates the slot conditions that the request reference owns. Keep the condition in §8 and let the request reference cite it.
+
+3. `colleague-message.md`, two table rows:
+   - The Goal row: "Holds where you ask how to do something and the step may not be the only way; a red build, a failing test, or a broken service needs none".
+   - The Reproducer row: "The versions of your tools only where the failure could depend on them; a failure CI shows too does not".
+   - Rule 7 makes these patches. Both copy the boundaries that §3 and §6 now carry. The old "Holds" cited the rule, and the table's own text says a rule it lists as holding holds whole.
+
+4. §11, restated conditions:
+   - The condition clauses added to the Goal, Ownership, Duplicates, Count, Grounding, Attribution, Reproducer, Redaction, Form and Request items.
+   - The sentence "its Ownership, Duplicates, and Disclosure answers go in the hand-over note where they name anything, not in the issue".
+   - Rule 7 makes these patches. The new intro says "each rule above says when that is", so these items only copy each rule's boundary a second time. The self-filed-issue sentence also repeats the paragraph in `project-conventions.md`. Make the items cite their rules and keep one home for each condition.
 
 Verdict: contains patches

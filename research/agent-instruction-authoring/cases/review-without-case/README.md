@@ -40,8 +40,8 @@ The grep shows the three verdicts in order; read the quoted sentences to grade c
 
 ## Results
 
-At skill tree `6c8d990a`, two runs per model. Opus passes all three checks in both runs. Sonnet passes checks 2 and 3
+At skill tree `6a9fa575`, two runs per model. Opus passes all three checks in both runs. Sonnet passes checks 2 and 3
 and fails check 1 in both: it reads the sentences of Change 1 that end in a citation, such as "no rule of this record
 or another is restated (**One home**)", as citations of **One home**, though they restate its condition beside the
 citation. Opus marks those sentences, or the clause of **No pointer rules** that repeats **One home**, as patches under
-rule 7.
+rule 7. The Sonnet failure is tracked in #289.
