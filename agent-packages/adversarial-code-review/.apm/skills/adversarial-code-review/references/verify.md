@@ -40,8 +40,9 @@ Give this to a fresh subagent after every axis has written its findings.
 >   or shows a consequence the thread did not consider. Keep such a finding as a continuation of the thread: set its
 >   `prior_thread` to the entry's `thread_url`, and the entry's `status` to `fix_not_accepted`, with a `reason` that
 >   says what the evidence adds.
-> - Merge findings from different axes that ask for the same change; keep the higher severity, both axes' evidence, and
->   any `prior_thread`.
+> - Merge findings from different axes, or from the shards, retries, and seam reviewer of one axis
+>   (`<axis>--<shard>.json`, `<axis>--retry-<n>.json`, `seams.json`), that ask for the same change; keep the higher
+>   severity, the evidence of both, and any `prior_thread`.
 > - Set the `origin`, `introduced_by`, and `disposition` of every remaining finding by `origin.md`, so that each defect
 >   is traced once; a finding from `axes/previous.json` keeps the ones it carries, unless it now meets the rule for
 >   `split_out`, which is decided in the family step below. Rewrite the `proposed_solution` and `retest` of a claimed

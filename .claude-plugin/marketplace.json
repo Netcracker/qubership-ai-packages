@@ -384,8 +384,8 @@
     },
     {
       "name": "adversarial-code-review",
-      "description": "Review GitHub pull requests and GitLab merge requests with one subagent per review axis and a separate verification pass, and hand the findings to review-delivery.",
-      "version": "2.5.0",
+      "description": "Review GitHub pull requests and GitLab merge requests with subagents per review axis, split across parts of a large change, and a separate verification pass, and hand the findings to review-delivery.",
+      "version": "2.6.0",
       "tags": [
         "topic:code-review",
         "activity:code-review",

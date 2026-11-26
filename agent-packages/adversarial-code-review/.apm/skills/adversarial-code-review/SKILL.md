@@ -1,6 +1,6 @@
 ---
 name: adversarial-code-review
-description: Use when a user explicitly asks to review a GitHub pull request or GitLab merge request. Runs one focused subagent per review axis (scope, correctness, compatibility, tests, comments, vocabulary, and others), verifies every finding in a fresh pass, groups them by root cause, and hands the result to review-delivery to report, draft, or publish.
+description: Use when a user explicitly asks to review a GitHub pull request or GitLab merge request. Runs focused subagents per review axis (scope, correctness, compatibility, tests, comments, vocabulary, and others), splitting the most important axes across parts of a large change with a reviewer for the seams between them, verifies every finding in a fresh pass, groups them by root cause, and hands the result to review-delivery to report, draft, or publish.
 ---
 
 # Review a pull or merge request
@@ -21,7 +21,7 @@ Record from the request:
 - **scope exclusions**, as the user said them ("the wiki is out of scope");
 - **axes** the user added ("also check vocabulary") or narrowed to ("only compatibility");
 - the **profile**, `high`, `medium`, or `low`, where the user named one ("a cheap review" is `low`). With none, the
-  profile is `high`;
+  profile is `medium`;
 - the **delivery** asked for (a draft, a publication, a ledger, an email). With none, the result is the chat report and
   the ledger;
 - the language of the request, for the chat report.
@@ -161,21 +161,34 @@ Each axis is a file under `references/axes/`.
 Run every axis that applies, plus the ones the user added, minus the ones the user excluded. Record every axis in `axes`
 with `ran`, or `skipped` and the reason ("no comments changed", "excluded by the request").
 
-## Group the axes by profile
+## Plan the subagents
 
-The profile decides how many axes one subagent holds. A subagent that holds several axes costs less than one subagent
-per axis and checks each of its axes less deeply.
+An axis runs in one of three ways: **sharded**, one subagent per part of the code and a seam reviewer for the contracts
+between the parts (see [sharding](references/sharding.md)); **single**, one subagent of its own; or **grouped**, with
+other axes in one subagent. A subagent reads only so much code line by line, so on a large change a single subagent
+leaves most of the code unread, and sharding gives every part a reader. A grouped subagent costs less than single ones
+and checks each of its axes less deeply.
 
 | Profile | Subagents |
 | --- | --- |
-| `high` | one per axis |
-| `medium` | one for each of the first three axes; one for the next five; one for the rest |
+| `high` | the first two shardable axes sharded, where the change is large; one for each other axis |
+| `medium` | the first two shardable axes sharded, where the change is large; of the other axes, one for each of the first three, one for the next five, one for the rest |
 | `low` | one for the first four axes; one for the rest |
+
+Before the first wave, map the change: `mkdir -p <work>/shards && <skill dir>/scripts/code-map.py --diff-base <base>
+--repo <workspace> [--exclude <pathspec>]... > <work>/shards/map.md`, with one `--exclude` per path the request put out
+of scope. The map lists the added lines per directory by kind, and per changed code file its added line ranges, its
+top-level declarations, and the changed files that use them. A change is large where the map's Code column totals more
+than 4000 lines. Map every change, large or not: *Check what the axes read* compares the axes' coverage with the map.
+
+An axis is shardable where it reads the code a function body at a time: correctness, tests, security, reliability,
+performance, telemetry, and simplicity. The other axes read the comments, which `extract-comments.py` already lists, or
+judge the change as a whole, and are never sharded. All sharded axes share one plan of the shards and one seam reviewer.
 
 Where the change has more than 1000 changed lines, generated and lock files not counted, run `medium` in place of `low`,
 and say so in the chat. On a change of 4700 lines, `low` found none of the three `major` findings that `high` found.
 
-For `medium` and `low`, order the axes that run before grouping them:
+Order the axes that run before choosing which to shard and which to group:
 
 1. First, the two axes most likely to find a `major` finding, judged from the description and the diff: a claim the
    description makes, a path the change alters, a contract it touches.
@@ -184,25 +197,31 @@ For `medium` and `low`, order the axes that run before grouping them:
    documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, formats,
    performance, simplicity.
 
+The shardable axes to shard are the first two in this order. The other axes keep their order and fill the remaining
+slots of the profile.
+
 Where fewer axes run than the groups take, the last groups get fewer axes, and a group with none is not run. Within a
 group, naive reader goes first, because it reads the comments before the code. Name the groups `group-1`, `group-2`,
-and so on, in that order. In `axes`, give each axis that ran a `reason` that names its group and the profile:
-"group-2, profile medium". A group of one axis is run with the one-axis brief and writes `<axis>.json`.
+and so on, in that order. In `axes`, give each axis that ran a `reason` that names how it ran and the profile:
+"group-2, profile medium", "single, profile medium", "sharded into 6 shards and seams, profile medium". A group of one
+axis is run with the one-axis brief and writes `<axis>.json`.
 
 ## Run the axes
 
-Fill in every placeholder of the briefs (here, in `references/measure.md`, and in `references/verify.md`) before sending
-one: `<work>` and `<previous>` from *Collect the review input*, `<workspace>` from the isolated workspace, `<base>` and
-`<head>` from `revision`, `<exclusions>` from the request, `<skill dir>` as the directory this file is in, and
-`<schema>` as `schema/review.schema.json` in the installed `review-delivery` skill's directory (installed skills sit
-side by side, so look next to `<skill dir>`, following symbolic links by name rather than by target). Paths are
-absolute.
+Fill in every placeholder of the briefs (here, in `references/measure.md`, `references/sharding.md`, and
+`references/verify.md`) before sending one: `<work>` and `<previous>` from *Collect the review input*, `<workspace>`
+from the isolated workspace, `<base>` and `<head>` from `revision`, `<exclusions>` from the request, `<skill dir>` as
+the directory this file is in, and `<schema>` as `schema/review.schema.json` in the installed `review-delivery` skill's
+directory (installed skills sit side by side, so look next to `<skill dir>`, following symbolic links by name rather
+than by target). Paths are absolute.
 
 Run one subagent per axis or per group, in two waves:
 
-1. In one message, the measurement subagent and every subagent that holds neither tests nor correctness.
-2. When the measurement subagent replies, fails, or was not started, the subagents that hold tests or correctness, in
-   one message.
+1. In one message, the measurement subagent, the two shard planners where an axis is sharded, and every subagent that
+   holds neither tests nor correctness and no sharded axis.
+2. When the measurement subagent and the planners reply, fail, or were not started, spawn in one message the subagents
+   that hold tests or correctness. Where an axis is sharded, write `<work>/shards/PLAN.md` first, and spawn in the same
+   message every shard of every sharded axis and the seam reviewer, with the briefs in the sharding reference.
 
 Under `low`, and for most axes under `medium`, a group holds tests or correctness, so its other axes wait for the
 measurement subagent too: a cheaper profile is not a faster one.
@@ -216,9 +235,10 @@ Give a subagent that holds one axis this brief:
 > where the reviewed head does not build. Out of scope: `<exclusions or "nothing">`. To run anything, add your own
 > worktree first (`git -C <workspace> worktree add <work>/axes/<axis>-wt <sha>`) and run there, never in `<workspace>`:
 > other reviewers read it at the same time. Write your findings as a JSON array of finding records (the `finding`
-> definition in `<schema>`, without `id` and `class`) to `<work>/axes/<axis>.json`, and `[]` if there are none. Do not
-> edit the workspace, run nothing that writes outside `<work>`, and post nothing. Reply with the number of findings per
-> severity and the skills you loaded.
+> definition in `<schema>`, without `id` and `class`) to `<work>/axes/<axis>.json`, and `[]` if there are none, and
+> what you read to `<work>/axes/<axis>-coverage.md`, in the coverage format of
+> `<skill dir>/references/sharding.md`. Do not edit the workspace, run nothing that writes outside `<work>`, and post
+> nothing. Reply with the number of findings per severity and the skills you loaded.
 
 Give a subagent that holds a group this brief, with the group's axes in their order:
 
@@ -232,9 +252,10 @@ Give a subagent that holds a group this brief, with the group's axes in their or
 > anything, add your own worktree first (`git -C <workspace> worktree add <work>/axes/<group>-wt <sha>`) and run there,
 > never in `<workspace>`: other reviewers read it at the same time. Write the findings of all your axes as one JSON
 > array of finding records (the `finding` definition in `<schema>`, without `id` and `class`), each with `axis` set to
-> the axis that found it, to `<work>/axes/<group>.json`, and `[]` if there are none. Do not edit the workspace, run
-> nothing that writes outside `<work>`, and post nothing. Reply with the number of findings per axis and severity, and
-> the skills you loaded.
+> the axis that found it, to `<work>/axes/<group>.json`, and `[]` if there are none, and what you read for each axis
+> to `<work>/axes/<group>-coverage.md`, in the coverage format of `<skill dir>/references/sharding.md`. Do not edit the
+> workspace, run nothing that writes outside `<work>`, and post nothing. Reply with the number of findings per axis and
+> severity, and the skills you loaded.
 
 Never write an axis file yourself (`axes/previous.json` is the one exception), even where your own probes and test runs
 already hold the evidence: write that evidence to `<work>/` and name it in `input.md`, and let the axis read it. An axis
@@ -245,8 +266,22 @@ that axis's records from the group's file; where the second reply does not name 
 not fail an axis: the reply names it as missing.
 
 Where a subagent fails, returns invalid JSON, or could not be spawned, every axis it held is recorded as `failed`, and
-its file is removed. A failed axis that applies to a risk-bearing part of the change makes the result
-`review_incomplete`.
+its file and coverage file are removed, so the code it held counts as unread. A failed axis that applies to a
+risk-bearing part of the change makes the result `review_incomplete`. A sharded axis whose every shard failed is
+`failed`; one with some shards left is `ran`, and the ranges of its failed shards go through *Check what the axes read*
+like any other unread code. A failed seam reviewer leaves every sharded axis `ran`, with the seams of `PLAN.md` named in
+`reason` as not reviewed. A failed retry leaves its axis as the first pass recorded it, with the ranges the retry held
+named as unread in `reason`.
+
+## Check what the axes read
+
+After the second wave, for each shardable axis (correctness, tests, security, reliability, performance, telemetry,
+simplicity), compute what it left unread: the added ranges of `<work>/shards/map.md` minus the ranges its coverage files
+report, over the code files, and the test files too for the tests axis. Where more than a quarter of those lines are
+unread, at profile `high` or `medium`, run the axis once more over the unread ranges only, by *Retry the unread ranges*
+in the sharding reference. Retry at most the first two such axes in the order of *Plan the subagents*, and each once per
+review. Name what stays unread in the axis's `reason`, such as "not read: internal/render/sql.go 400-900"; at profile
+`low`, only name it.
 
 ## Verify and group
 

@@ -12,7 +12,7 @@ How a review runs:
 1. Collect the request, its revision, its discussions, and the repository's agent rules (`AGENTS.md`, `CLAUDE.md`)
    into a work directory.
 2. Recheck every earlier review thread against the current code.
-3. Run one subagent per review axis that applies to the change. The axes are files under
+3. Run the review axes that apply to the change in subagents, as the profile below decides. The axes are files under
    [`references/axes/`](.apm/skills/adversarial-code-review/references/axes/): intent and scope, correctness,
    compatibility, security, reliability, telemetry, performance, architecture, simplicity, least surprise, formats,
    change reach, tests, comments, vocabulary, naive reader, documentation pages, and change description and branch. The
@@ -20,14 +20,27 @@ How a review runs:
    mutation testing (cribro, for example), one more subagent runs the changed modules' tests and the mutation tool
    alongside the first axes, and the tests and correctness axes start once it reports. This runs the request's code.
 
-   The request can name a cheaper profile. Both cheaper profiles order the axes first: the two the reviewer judges most
-   likely to find a `major` finding in this change, then a fixed order ranked by the findings of earlier reviews.
-   `medium` runs the first three axes one per subagent, the next five in one subagent, and the rest in one more; `low`
-   runs two subagents, the first four axes and the rest. A subagent that holds several axes checks each less deeply. On
-   two pull requests reviewed at all three profiles, the axis subagents of `medium` cost 39–45% less than one subagent
-   per axis and found 3 of the 6 `major` findings; those of `low` cost 64–77% less and found 1 of 6. A rerun of single
-   axes missed some of the same findings, so part of the loss is run-to-run variance. A change of more than 1000 lines,
-   not counting generated and lock files, runs `medium` where the request asked for `low`.
+   Every profile orders the axes first: the two the reviewer judges most likely to find a `major` finding in this
+   change, then a fixed order ranked by the findings of earlier reviews. The default profile, `medium`, runs the first
+   three axes one per subagent, the next five in one subagent, and the rest in one more; `high` runs one subagent per
+   axis; `low` runs two subagents, the first four axes and the rest. A subagent that holds several axes checks each
+   less deeply. On two pull requests reviewed at all three profiles, the axis subagents of `medium` cost 39–45% less
+   than one subagent per axis and found 3 of the 6 `major` findings; those of `low` cost 64–77% less and found 1 of 6.
+   A rerun of single axes missed some of the same findings, so part of the loss is run-to-run variance. A change of
+   more than 1000 lines, not counting generated and lock files, runs `medium` where the request asked for `low`.
+
+   One subagent reads only so much code line by line. Where a change adds more than 4000 lines of code, not counting
+   tests, documentation, data, configuration, and generated or lock files, `medium` and `high` shard the first two axes
+   that read code a function at a time, such as correctness and tests: a script maps the changed files and the
+   declarations they share, two planners on the cheapest model split the code into parts of 1500–3500 lines, one
+   subagent per part holds the axis, and a seam reviewer checks the contracts between the parts, with differential tests
+   where it can. Every axis reports the line ranges it read; at `medium` and `high`, the first two axes that read
+   function bodies and left more than a quarter of their added code unread run once more over the unread ranges. On a
+   pull request that added 19000 lines to one package, the single correctness subagent read about 2% of it; the same
+   axis in six parts with a seam reviewer found seven `major` defects the review had missed, for about 1.8 million
+   tokens with the verifier. The script outlines declarations with `sb` from
+   [ast-bro](https://github.com/aeroxy/ast-bro) where it is on `PATH`; without it, the map has no declarations, and the
+   planners split by directory and file size.
 4. A fresh subagent verifies every finding against the code, merges duplicates, and groups the rest into root-cause
    classes.
 5. The result, `review.json`, goes to `review-delivery`: a chat report and a ledger by default, or an email, a GitHub
