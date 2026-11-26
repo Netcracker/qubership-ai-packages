@@ -265,7 +265,7 @@ different.
 An example that needs a caveat after it teaches what the caveat forbids,
 because the agent copies the example. A skill that shows a pull request
 description under four headings, and then says the headings only label
-its slots, gets descriptions with headings even for a 17-line fix. Show
+its slots, gets descriptions with headings even for a small fix. Show
 the shape you want in the common case instead.
 
 When listing pitfalls, prefer **rule + brief reason** over a wall of

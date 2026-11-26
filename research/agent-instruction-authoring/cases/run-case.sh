@@ -9,12 +9,6 @@
 # With --baseline it reads english-developer-style alone, which shows what a
 # check catches when the skill under test is absent.
 #
-# A case whose session reads other skills instead of agent-instruction-authoring
-# lists their directories in a file <case directory>/skills, one per line.
-# Such a case may also hold prompt-baseline.md: --baseline then answers that
-# prompt with the same skills, so the baseline differs from the run only in the
-# input the skill under test produces.
-#
 # Run from the repository root:
 #   research/agent-instruction-authoring/cases/run-case.sh [--baseline] <case directory> <model> <out name> [<rev>]
 # <model> is a claude --model alias (haiku, opus). With <rev>, the skills are
@@ -44,26 +38,19 @@ copy() {
   if [ -n "${rev:-}" ]; then
     git archive "$rev" "$1" | tar -x -C "$work/skills" --strip-components=4
   else
-    git ls-files -z --cached --others --exclude-standard -- "$1" | xargs -0 tar -c | tar -x -C "$work/skills" --strip-components=4
+    git ls-files -z --cached --others --exclude-standard -- "$1" | tar -c --null -T - | tar -x -C "$work/skills" --strip-components=4
   fi
 }
 rev=${4:-}
 copy "$style"
 prompt=$case_dir/prompt.md
-if [ -f "$case_dir/skills" ]; then
-  read_skills=$(grep -v '^[[:space:]]*$' "$case_dir/skills")
-  if [ -n "$baseline" ] && [ -f "$case_dir/prompt-baseline.md" ]; then prompt=$case_dir/prompt-baseline.md; baseline=; fi
-else
-  read_skills=$skill
-fi
+read_skills=$skill
 if [ -z "$baseline" ]; then
-  for s in $read_skills; do copy "$s"; done
-  if [ "$prompt" = "$case_dir/prompt.md" ]; then
-    if [ -n "$rev" ]; then
-      scripts/skill-tree.sh "$skill" "$rev" > "$work/out/skill-tree"
-    else
-      scripts/skill-tree.sh "$skill" > "$work/out/skill-tree"
-    fi
+  copy "$skill"
+  if [ -n "$rev" ]; then
+    scripts/skill-tree.sh "$skill" "$rev" > "$work/out/skill-tree"
+  else
+    scripts/skill-tree.sh "$skill" > "$work/out/skill-tree"
   fi
 fi
 
@@ -112,7 +99,7 @@ open(f'{out}/{name}.run.txt', 'w').write(
 EOF
 
 dest=$case_dir/$model
-if [ -n "$baseline" ] || [ "$prompt" != "$case_dir/prompt.md" ]; then dest=$dest/baseline; fi
+if [ -n "$baseline" ]; then dest=$dest/baseline; fi
 mkdir -p "$dest"
 cp "$work/out/"* "$dest/"
 rm -rf "$work"

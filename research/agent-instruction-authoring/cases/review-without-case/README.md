@@ -9,17 +9,16 @@ session plays the fresh reviewer.
   other rules, and adds a rule, **Cite only what the reader needs**.
 - Change 2 is the `apm-authoring` hunk of `b247f44c`. It sharpens the existing rule on fixing a bad output, with no new
   rule beside it. This is the input where the review has to stay quiet.
-- Change 3 is the `problem-report-authoring` hunk of `091cd34b` (`SKILL.md` and references). Among its sentences is
-  "`references/worked-cases.md`, case 7", a case number in the text.
+- Change 3 is the `problem-report-authoring` hunk of `091cd34b` (`SKILL.md` and references).
 
-The run was first made by hand on Sonnet at `80aa2828`, where the rule was numbered 8, with the same verdicts as the
-checks below. That prompt was not kept; this one rebuilds it from the same three changes.
+The rule was first tried by hand on Sonnet at `80aa2828`, where it was numbered 8, with the hunks alone as input. That
+prompt was not kept. This one rebuilds it from the same three changes and adds the skill files after each change, as
+the rule now asks.
 
 ## Skill parts
 
 - `SKILL.md`: "9. Review a change without the case", and the rules it names as patches and fixes: "4. Give every rule
-  its boundary", "5. Redraw a rule that needs a third exception", "6. Keep the case out of the text", "7. State each
-  rule once"
+  its boundary", "5. Redraw a rule that needs a third exception", "7. State each rule once"
 - `english-developer-style`: runs with the case; no check tests its rules
 
 ## Checks

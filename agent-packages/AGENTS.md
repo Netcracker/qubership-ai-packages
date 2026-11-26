@@ -73,8 +73,8 @@ the case), and a `README.md` with the checks the output has to pass and the way 
 - **A failed check goes through `agent-instruction-authoring` rule *Name the class before fixing a failed case* before
   the skill text changes,** and the change through its rules *Check a change where it should not fire* and *Review a
   change without the case* before it is committed. A case that gets the quiet input of *Check a change where it should
-  not fire* checks it with a word limit, or with a check that the item is absent, beside the check that the item now
-  appears.
+  not fire* checks it with a word limit, or with a check that the item the rule adds is absent, beside the check that
+  the item now appears.
 - **Grade every check by reading the result, not by the snippet's count,** and say in the commit message which checks
   each result fails, which cases improved or got worse, and what you ran.
 - **Commit results and draw conclusions from the target models (Opus, Sonnet), at least two runs per cell.** Haiku is
