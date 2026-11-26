@@ -26,12 +26,12 @@ Every sentence of an instruction enters the agent's context whenever the instruc
 `CLAUDE.md` on every task, a scoped instruction file on every task it applies to, a skill on every task that loads it, a
 brief on every call, whether or not that task needs the sentence. A sentence earns that place only where an agent
 without it would act differently: a convention of the project, an order of steps the agent cannot infer, a failure that
-looks fine in the output. The agent already knows what its field has published: the vocabulary, such as "an idempotent
-request gives the same result when sent twice", and the standard procedures of the field's tools, such as adding a
-dependency with the build tool. A sentence that states them changes nothing the agent does and stays out, unless the
-project uses the term or the procedure in another way, because there the agent's prior is wrong. Any other sentence goes
-through the check of rule 8: a clause that gives the same output with and without it, on the inputs where its condition
-holds, is noise. Leave it out, and delete one already there.
+looks fine in the output. The agent already knows what any practitioner of its field knows: the vocabulary, such as "an
+idempotent request gives the same result when sent twice", and the standard procedures of the field's common tools, such
+as adding a dependency with the build tool. A sentence that states them changes nothing the agent does and stays out,
+unless the project uses the term or the procedure in another way, because there the agent's prior is wrong. Any other
+sentence goes through the check of rule 8: a clause that gives the same output with and without it, on the inputs where
+its condition holds, is noise. Leave it out, and delete one already there.
 
 ## 2. Write for a class of situations
 
@@ -102,16 +102,16 @@ input. A change that rewords a rule without changing what it asks needs no check
 
 ## 9. Review a change without the case
 
-A change prompted by a bad output goes to a fresh reviewer, an agent or a person, who gets the changed instruction text
-alone: not the case, and nothing that names it, such as the case's records and results, the commit message, or the
-description of the change. For each added or changed sentence, the reviewer names the class of situations it addresses
-and two inputs of the skill that it applies to. The two inputs differ from each other, and both lie inside the skill's
-scope, because any sentence fits some domain. The reviewer does not know which input failed, so it may name that input
-again; the author, who knows, discards such an input and asks for another. A sentence left without its class, or without
-two such inputs, is a patch: take it back to rule 3. So is a sentence that restates a rule the skill already has (rule
-7) or gives one its third exception (rule 5); a sentence that gives a rule its missing boundary (rule 4) is a fix. The
-reviewer does not see the case, because with the case in view every patch looks justified. A reviewer's own suggestion
-is a new sentence too: before the author takes it as written, it goes through the same test, put to a reviewer who has
-seen neither the case nor the reason for the suggestion. After several rounds of review, re-read the whole section:
-fixes that each look reasonable can add up to one sentence per failed case. A deleted sentence, or one that only moves,
-needs no class.
+A change prompted by a bad output goes to a fresh reviewer, an agent or a person, who gets the instruction and the
+change to it: not the case, and nothing that names it, such as the case's records and results, the commit message, or
+the description of the change. For each added or changed sentence, the reviewer names the class of situations it
+addresses and two inputs of the skill that it applies to. The two inputs differ from each other, and both lie inside the
+skill's scope, because any sentence fits some domain. The reviewer does not know which input failed, so it may name that
+input again; the author, who knows, discards such an input and asks for another. A sentence left without its class, or
+without two such inputs, is a patch: take it back to rule 3. So is a sentence that restates a rule the skill already has
+(rule 7) or gives one its third exception (rule 5); a sentence that gives a rule its missing boundary (rule 4) is a fix.
+The reviewer does not see the case, because with the case in view every patch looks justified. A reviewer's own
+suggestion is a new sentence too: before the author takes it as written, it goes through the same test, put to a
+reviewer who has seen neither the case nor the reason for the suggestion. After several rounds of review, re-read the
+whole section: fixes that each look reasonable can add up to one sentence per failed case. A deleted sentence, or one
+that only moves, needs no class.
