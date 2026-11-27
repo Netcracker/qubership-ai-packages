@@ -1,6 +1,6 @@
 ---
 name: address-review
-description: Use when the user asks to address, fix, or work through the review findings of a pull or merge request they own — a review.json or ledger from a review skill, a pasted review report, or the open review threads on the request. Assesses each finding, groups them by root cause, fixes each group at the right layer, then runs an independent review (cross-review where installed) and a final-review that checks every finding against the ledger.
+description: Use when the user asks to address, fix, or work through the review findings of a pull or merge request they own — a review.json or ledger from a review skill, a pasted review report, or the open review threads on the request. Assesses each finding, groups them by root cause, builds a check that finds a recurring class whole, fixes each group at the right layer, then runs an independent review (cross-review where installed) and a final-review that checks every finding against the ledger.
 ---
 
 # Address the findings of a review
@@ -94,26 +94,93 @@ For each class write, before any code:
 A class that changes no behavior, such as a typo or a stale comment, needs the rule and the places it covers, and no
 axes or tests: "every comment that describes the changed method states the behavior after the fix".
 
-The search for cousins covers the code and behavior the request changes, not the whole repository. A cousin inside it
-belongs to the class and is fixed with it. A cousin in older code the request does not reach is out of scope, and goes
-to step 2's deferral: the user's consent and a tracked follow-up.
+Search each class's axes for cousins before going on: the other callers, the sibling overload, the other kind of
+expression in the same position, the twin build target, the other copy of the text. Reviewers report where they
+looked; the cause is wherever it is. The search covers the code and behavior the request changes, not the whole
+repository. A cousin inside it belongs to the class and is fixed with it. A cousin in older code the request does not
+reach is out of scope, and goes to step 2's deferral: the user's consent and a tracked follow-up.
 
-Show the user this plan when there is more than one class or any finding is disputed or deferred, and wait for an answer
-only if a finding is deferred, since a deferral needs the user's consent, or a class changes behavior a user sees or
-reverses something the change was for. Otherwise continue and report the plan with the result.
+A class whose defect the code has already produced more than once is considered for a check: a program that finds its
+members, so that the next one is caught before a review has to find it. That is a class with two or more members, at
+different places or on different inputs at one place (the findings and the cousins the search found; two reports of the
+same input at the same place are one member), or one whose family is `recurring` or has had an `adds_case` fix. Any
+other class goes to step 4 as it is: its test there is the regression net.
+
+Such a class gets no check where no program decides its rule, such as whether a comment, a name, or a description says
+the right thing, or whether a behavior is the one users want; and none where the check would cost more than the
+members it could still find, as when the fix deletes the code the members were in, or a comparison would need a second
+implementation kept only for it. The plan gives the reason in a line, and step 4 fixes the class as usual. Otherwise,
+take the first of these that applies:
+
+1. **By construction.** Where the layer the class names can make the wrong state unrepresentable (a type the wrong
+   value cannot be built in, a schema or contract the compiler or loader enforces, one function that owns the
+   computation), that fix is the answer. The check is then whatever keeps code from going around it, such as a lint
+   rule or an architecture test that rejects computing the owned value outside its owner. Every place that computes
+   that value elsewhere is a member of the class, whether or not it computes it right today; a use of the same
+   primitive for another value is not, and serves as the check's control. Where the language already forbids the
+   bypass, no check is needed. For example, three findings that each round a price at a different call site are one
+   class. The fix is one owner of price rounding, and a lint rule that rejects rounding a price anywhere else also
+   finds a fourth site the review missed.
+2. **Mechanically.** Otherwise, a check over the class's axes: a linter or static-analysis rule where the rule shows in
+   the source (a call, a pattern, a missing argument); a property-based test that generates inputs along the axes; a
+   metamorphic test, where a known change of the input relates the results in a known way, equality included; a
+   differential or parity test, where two paths, an old and a new implementation, or the code and an executable
+   specification or model must agree. Inputs added to that specification or its golden corpus count as a check only
+   where they cover the axes beyond the reported points; the reported inputs alone are the tests of step 4.
+   `blackbox-test-design`, where installed, governs metamorphic relations and the comparison with a reference, and
+   `test-authoring` the test.
+
+Then look across the classes: one check often finds several. A comparison of two paths that must agree finds every
+class in which they disagree. Prefer one check that covers several classes to one per class, and name for each check
+the classes it covers.
+
+Show the user this plan when there is more than one class, a finding is disputed or deferred, or a class was considered
+for a check. Wait for an answer only if a finding is deferred, since a deferral needs the user's consent; if a class
+changes behavior a user sees or reverses something the change was for; or if a check changes the repository's tooling
+(a linter or its configuration, a dependency, a build or CI step). Otherwise continue and report the plan with the
+result. A class that starts later, in step 4 or 5, goes through this step, its plan and these conditions included,
+before it is fixed.
 
 ## 4. Fix
 
-Fix one class at a time, in the order of the highest severity in each. For each:
+Fix one class at a time, in the order of the highest severity in each.
+
+Build a class's check (step 3) before any of its fixes, or, for a check that covers several classes, before the first of
+them. Run it on the unfixed code: it must fail on every member within its reach, the findings and the cousins step 3
+found, and show each failure: a diagnostic per member for a source check, and for a test that stops at its first
+failure, each member's input run as a case of its own. For a guard against going around an owner, the members are the
+places that go around it, and the place that becomes the owner is checked by the test of its result below. A member is
+out of reach only where no check of that kind can see it, as a call made through reflection is invisible to a source
+pattern; such a member is named in the plan and gets its own test below. A check that misses a member within its reach
+does not decide the rule yet, and is corrected before going on.
+
+Each other failure is decided by the class's rule. A place the rule does not make a member (for a guard, a use of the
+primitive for another value) is the check's error: narrow the check, or drop it by the rule at the end of this step. A
+failure on a member step 3 did not list is a cousin it missed, and joins the class. A failure that shows another real
+defect is assessed by step 2 and joins or starts the class it belongs to. A member or defect in code the request does
+not reach goes to step 2's deferral; put those to the user before fixing the class, since a deferral needs their
+consent. Where they outnumber the class's members, scope the check to the request's code and defer them as one
+follow-up. Otherwise the check skips each deferred failure through a list of known exceptions, one entry per failing
+input or diagnostic, not per place, and fails on an entry that no longer applies.
+
+After the fix, the check no longer fails on the class's members and fails on nothing new; a check that covers several
+classes passes whole after the last of them is fixed. It stays in the repository, run by a command the repository's
+build or CI runs, such as the test suite or the lint target, one it already has or one the plan adds with the user's
+answer (step 3); the plan names that command, and the check is confirmed to run through it. Where it checks the class's
+rule itself, it is the test that fails before the fix for every member it finds; a check that only rejects going around
+the owner does not test the owner's result, which still gets its tests below. A check that cannot be made to decide the
+rule, because it flags places outside the class that no narrowing excludes, is dropped: say so in the plan, and fix the
+class by the rest of this step.
+
+For each class:
 
 - Change the code at the layer the plan names. If the fix turns out to belong elsewhere, update the plan rather than
   patching around it.
-- Check every combination of the axes that the request's code reaches, not only the reproducer: the other callers,
-  the sibling overload, the other kind of expression in the same position, the twin build target, the other copy of
-  the text. Reviewers report where they looked; the cause is wherever it is. Check the boundary as well: a fix that
-  now applies the rule where it must not apply is a new defect.
+- Check the fix on every cousin step 3 found, not only the reproducer, and at the boundary: a fix that now applies the
+  rule where it must not apply is a new defect.
 - Add or change the tests the class owes (by `test-authoring`, where installed): a test that fails before the fix for
-  each combination the class changes, and a control case at the boundary that passes before and after.
+  each combination the class changes that its check does not cover, and a control case at the boundary that passes
+  before and after.
 - Update comments and documentation the fix makes wrong. A stale comment is a class too: check every comment that
   describes the changed behavior, not only the one the reviewer flagged.
 - Add each cousin you find to the ledger as a row of its own (step 7).
@@ -135,11 +202,12 @@ the plan of step 3, not the reasoning behind a fix. A reviewer that has read why
 rather than the code. Ask it for findings with a file and line each, and for every ledger row marked `fixed`, whether
 the diff resolves the cause or only the place the finding was reported.
 
-With `cross-review`, one run with its round limit set to five is the whole step. With the fresh reviewer, run up to
-five rounds, each over the code the previous round's fixes produced, and stop at the first round with no finding you
-accept. A finding of these rounds is assessed and grouped by steps 2 and 3 before it is fixed. One that shows a fix
-of this session decides the same property wrongly for another input joins that fix's class and family, and the family
-then counts as having had an `adds_case` fix. Fix the rest by the same rules as step 4: by cause, at the right layer.
+With `cross-review`, one run with its round limit set to five is the whole step. With the fresh reviewer, run up to five
+rounds, each over the code the previous round's fixes produced, and stop at the first round with no finding you accept.
+A finding of these rounds is assessed and grouped by steps 2 and 3 before it is fixed. One that shows a fix of this
+session decides the same property wrongly for another input joins that fix's class and family, and the family then
+counts as having had an `adds_case` fix. Where that class has a check, the finding is a member the check missed: correct
+the check by step 4 before fixing the member. Fix the rest by the same rules as step 4: by cause, at the right layer.
 
 Where the rounds end with blocking findings that recur, or each round's fix brings a finding on a new input of the
 same decision, do not go on to step 6 with those fixes unreviewed. Stop and put the choice to the user: compute the
@@ -178,5 +246,5 @@ changed and where, or the evidence for a dispute). Where `review-delivery` is in
 authorization rules govern posting; otherwise show the drafts and post the ones the user approves. A reply never
 resolves a thread someone else opened.
 
-End with the plan as carried out, the ledger, the independent-review rounds it took and which reviewer ran them, and
-final-review's verdict.
+End with the plan as carried out, any checks it added with the cousins each found, the ledger, the independent-review
+rounds it took and which reviewer ran them, and final-review's verdict.

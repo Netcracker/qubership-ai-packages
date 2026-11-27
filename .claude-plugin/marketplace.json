@@ -395,8 +395,8 @@
     },
     {
       "name": "address-review",
-      "description": "Work through the findings of a pull or merge request review by root cause, fix each group at the right layer, and check the result with an independent review and a final-review against the ledger.",
-      "version": "0.1.0",
+      "description": "Work through the findings of a pull or merge request review by root cause, build a check that finds a recurring class whole, fix each group at the right layer, and check the result with an independent review and a final-review against the ledger.",
+      "version": "0.2.0",
       "tags": [
         "topic:code-review",
         "activity:code-review",
