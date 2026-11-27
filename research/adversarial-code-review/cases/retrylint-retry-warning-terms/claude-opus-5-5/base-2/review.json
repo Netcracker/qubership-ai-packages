@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "target": {
+    "platform": "local",
+    "url": "local:retrylint 8587e48..7463fb4",
+    "repository": "retrylint",
+    "title": "Shorten the retry warning"
+  },
+  "revision": {
+    "base": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+    "start": null,
+    "head": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+  },
+  "scope_exclusions": [],
+  "axes": [
+    {
+      "axis": "measurements",
+      "status": "skipped",
+      "reason": "no coverage or mutation tool for this Python project"
+    },
+    {
+      "axis": "correctness",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "vocabulary",
+      "status": "ran",
+      "reason": "single, profile medium; applied to the rewritten warning text; english-developer-style read from disk"
+    },
+    {
+      "axis": "tests",
+      "status": "ran",
+      "reason": "single, profile medium; test-authoring read from disk"
+    },
+    {
+      "axis": "change-description",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "architecture",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "docs-pages",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "intent-scope",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "telemetry",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "least-surprise",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "compatibility",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "simplicity",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "security",
+      "status": "skipped",
+      "reason": "no trust boundary, input handling, secrets, or dependency changed"
+    },
+    {
+      "axis": "reliability",
+      "status": "skipped",
+      "reason": "no timeout, retry mechanism, limit, or replaced mechanism changed"
+    },
+    {
+      "axis": "performance",
+      "status": "skipped",
+      "reason": "only a message string changed"
+    },
+    {
+      "axis": "formats",
+      "status": "skipped",
+      "reason": "no hand-written format changed"
+    },
+    {
+      "axis": "change-reach",
+      "status": "skipped",
+      "reason": "no member of a set, documented command, or remedy changed"
+    },
+    {
+      "axis": "comments",
+      "status": "skipped",
+      "reason": "no comments changed"
+    },
+    {
+      "axis": "naive-reader",
+      "status": "skipped",
+      "reason": "no doc comments changed"
+    }
+  ],
+  "open_questions": [],
+  "previous_findings": [],
+  "reviewer": {
+    "model": "claude-opus-5-5"
+  },
+  "result": "request_changes",
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "defect",
+      "severity": "major",
+      "confidence": "high",
+      "axis": "correctness",
+      "gate": "none",
+      "title": "The warning gives \"unsafe method\" as the reason, but retrylint flags non-idempotent methods, and PUT and DELETE, which RFC 9110 calls unsafe, are retried without a warning.",
+      "problem": "Safe (RFC 9110, section 9.2.1) and idempotent (section 9.2.2) are different sets. A reader of \"unsafe\" applies the wrong rule: they expect PUT and DELETE retries in the same file to be flagged, or remove them too. The golden files pin the wrong reason, so the suite now contradicts itself: put_delete_retry expects silence for two unsafe methods.",
+      "reproducer": {
+        "language": "bash",
+        "code": "printf 'PUT /orders/42 5\\nDELETE /orders/42 2\\nPOST /orders 3\\n' > c.conf\npython3 -m retrylint c.conf\n# current:  c.conf:3: POST /orders => retry x3 on an unsafe method; ...   (PUT and DELETE, also unsafe, not reported)\n# expected: the POST warning names the property the check tests: POST is not idempotent"
+      },
+      "evidence": [
+        {
+          "text": "retrylint/messages.py:6: `f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} => retry x{endpoint.retries} on an unsafe method; \"`",
+          "basis": "fact"
+        },
+        {
+          "text": "retrylint/__main__.py:7-9 and :16: \"RFC 9110, section 9.2.2 defines GET, HEAD, OPTIONS, TRACE, PUT, and DELETE as idempotent\", `IDEMPOTENT = {\"GET\", \"HEAD\", \"OPTIONS\", \"TRACE\", \"PUT\", \"DELETE\"}`, `if endpoint.retries > 0 and endpoint.method not in IDEMPOTENT`.",
+          "basis": "fact"
+        },
+        {
+          "text": "README.md:19-20: \"it is only harmless for a method that RFC 9110 defines as idempotent (section 9.2.2) ... POST and PATCH are not idempotent.\" The function is named `non_idempotent_retry` (messages.py:4).",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/golden/put_delete_retry.conf:1-3: \"# PUT and DELETE are idempotent, so retrying them is fine.\", PUT 5, DELETE 2; put_delete_retry.txt is empty. patch_retry.txt:1 and post_retry.txt:1 expect \"on an unsafe method\".",
+          "basis": "fact"
+        },
+        {
+          "text": "Run at 7463fb4 on PUT 5, DELETE 2, PURGE 1, POST 3: only PURGE and POST are reported, both \"on an unsafe method\"; exit 1.",
+          "basis": "fact"
+        },
+        {
+          "text": "The base text said \"but {endpoint.method} is not idempotent (RFC 9110, section 9.2.2)\" (messages.py:7 at 8587e48); the commit message gives brevity and ordering as the aim, not a change of the stated rule.",
+          "basis": "fact"
+        }
+      ],
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 6,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "proposed_solution": "Update tests/golden/patch_retry.txt:1 and tests/golden/post_retry.txt:1 to match.",
+      "suggestion": "        f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} => retry x{endpoint.retries} on a non-idempotent method; \"",
+      "retest": "The warnings in tests/golden/post_retry.txt and patch_retry.txt say the method is not idempotent and do not contain \"unsafe\"; a method the RFCs do not list, such as `PURGE /cache 1`, gets the same wording, and put_delete_retry.conf still gives no warning.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37",
+        "request": null
+      },
+      "disposition": null,
+      "class": null,
+      "family": null
+    },
+    {
+      "id": "F2",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "vocabulary",
+      "gate": "none",
+      "title": "\"Drop the retry policy.\" tells the user to remove the whole policy file, where the warning is about one endpoint's retries.",
+      "problem": "In this repository the retry policy is the whole file, including the GET and PUT retries the tool accepts. The change also drops the base text's Idempotency-Key alternative for a client that needs the retry, which the commit message does not mention.",
+      "reproducer": null,
+      "evidence": [
+        {
+          "text": "retrylint/messages.py:7: `f\"a retry may apply its effect twice. Drop the retry policy.\"`",
+          "basis": "fact"
+        },
+        {
+          "text": "README.md:3: \"`retrylint` checks the retry policy of an HTTP client before it ships. A policy file lists one endpoint per line\"; retrylint/policy.py:1: \"Reads a retry policy file.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "Base text (messages.py:8-9 at 8587e48): \"Remove the retry, or send an Idempotency-Key header that the server deduplicates.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/golden/patch_retry.conf:2 `POST /payments 0` passes, so setting the endpoint's retries to 0 is the per-endpoint fix the tool accepts (__main__.py:16 `endpoint.retries > 0`).",
+          "basis": "fact"
+        },
+        {
+          "text": "retrylint does not read headers, so an endpoint that sends an Idempotency-Key is still reported; restoring that alternative needs a note that the warning stays.",
+          "basis": "inference"
+        }
+      ],
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 7,
+        "end_line": 7,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "proposed_solution": "Update both golden files to match. Whether to keep the Idempotency-Key alternative is the author's call; if it stays, say that retrylint still reports the endpoint.",
+      "suggestion": "        f\"a retry may apply its effect twice. Set this endpoint's retries to 0.\"",
+      "retest": "The remedy in the warnings for post_retry.conf and patch_retry.conf names the reported endpoint's retries (the `retries` column), not the retry policy or the policy file.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37",
+        "request": null
+      },
+      "disposition": null,
+      "class": null,
+      "family": null
+    },
+    {
+      "id": "F3",
+      "kind": "question",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "intent-scope",
+      "gate": "none",
+      "title": "Is one 80-column line the target? The shortened warning is still 136 and 141 characters, so it still wraps in the 80-column terminal the commit message names.",
+      "problem": "The change trades the stated reason and a remedy for length; if the goal is a line that does not wrap, the trade does not reach it, and the printed file path, given as typed, adds to every line.",
+      "reproducer": null,
+      "evidence": [
+        {
+          "text": "Commit 7463fb4 body: \"The warning wrapped over three lines in an 80-column terminal ... keep the message short enough to scan in a CI log.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "Measured at 7463fb4: the warning line of patch_retry.conf renders 141 characters, post_retry.conf 136; at 8587e48 post_retry rendered 303.",
+          "basis": "fact"
+        },
+        {
+          "text": "retrylint/__main__.py:21-23 passes argv[1] as `file` into the message; tests/test_golden.py compares whole output text only, and no test bounds a line's length.",
+          "basis": "fact"
+        }
+      ],
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 7,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "proposed_solution": "",
+      "suggestion": null,
+      "retest": "The author names the target. If it is one 80-column line, the golden warning lines fit in 80 characters; if two lines are enough, the question is settled with no change.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37",
+        "request": null
+      },
+      "disposition": null,
+      "class": null,
+      "family": null
+    },
+    {
+      "id": "F4",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "vocabulary",
+      "gate": "none",
+      "title": "\"=> retry x3\" replaces the policy's word \"retries\" with notation that can be read as three attempts in total.",
+      "problem": "The policy column counts retries after the first attempt, and HTTP clients count this setting both ways; the base text (\"is retried up to 3 times\") said which, \"x3\" does not, so a reader may set the value one off.",
+      "reproducer": null,
+      "evidence": [
+        {
+          "text": "README.md:4: \"how many times the client retries a failed request\"; README.md:7 and tests/golden/post_retry.conf:1: \"# method path retries\"; retrylint/policy.py:11 `retries: int`.",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/golden/post_retry.txt:1 renders \"POST /orders => retry x3\"; neither `=>` nor `x<n>` appears elsewhere in the repository at 8587e48.",
+          "basis": "fact"
+        }
+      ],
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 6,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "proposed_solution": "Update both golden files to match.",
+      "suggestion": "        f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} retried up to {endpoint.retries} times on an unsafe method; \"",
+      "retest": "The warnings for post_retry.conf (count 3) and patch_retry.conf (count 2) state the count with the word \"retries\" or \"retried\" in a form that counts retries, not attempts, and contain no \"x3\" or \"x2\".",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37",
+        "request": null
+      },
+      "disposition": null,
+      "class": null,
+      "family": null
+    },
+    {
+      "id": "F5",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "docs-pages",
+      "gate": "none",
+      "title": "The README describes the warning but never shows it, so a user holding the warning from a CI log cannot match it to the page.",
+      "problem": "",
+      "reproducer": null,
+      "evidence": [
+        {
+          "text": "README.md:18: \"It prints one warning per endpoint whose retries can repeat a side effect, and exits with status 1 when it printed any.\" No example output follows; the change does not touch README.md.",
+          "basis": "fact"
+        },
+        {
+          "text": "git show 8587e48:README.md has the same text, so the page lacked the example before the change.",
+          "basis": "fact"
+        }
+      ],
+      "location": {
+        "path": "README.md",
+        "side": "new",
+        "start_line": 18,
+        "end_line": 18,
+        "symbol": null,
+        "in_diff": false
+      },
+      "proposed_solution": "Show the output for the example policy at README.md:6-10 after the command at line 15, with the exit status, once the warning text is settled.",
+      "suggestion": null,
+      "retest": "README.md shows the warning exactly as `python3 -m retrylint` prints it for the README's own example file.",
+      "prior_thread": null,
+      "origin": "preexisting",
+      "introduced_by": {
+        "commit": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+        "request": null
+      },
+      "disposition": "follow_up",
+      "class": null,
+      "family": null
+    },
+    {
+      "id": "F6",
+      "kind": "defect",
+      "severity": "nit",
+      "confidence": "medium",
+      "axis": "change-description",
+      "gate": "code_settled",
+      "title": "The commit message does not say what the new warning reads or that it drops the RFC reference and the Idempotency-Key remedy, which CI logs and scripts that grep the old text will see.",
+      "problem": "",
+      "reproducer": null,
+      "evidence": [
+        {
+          "text": "Commit 7463fb4 body: \"The warning wrapped over three lines in an 80-column terminal, and the endpoint and the retry count sat in the middle of it. Put them first and keep the message short enough to scan in a CI log.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "The diff removes \"(RFC 9110, section 9.2.2)\" and \"send an Idempotency-Key header that the server deduplicates\" from retrylint/messages.py.",
+          "basis": "fact"
+        }
+      ],
+      "location": null,
+      "proposed_solution": "Once the text is settled, quote the new warning for one endpoint in the body and name what it no longer carries.",
+      "suggestion": null,
+      "retest": "The commit body quotes the warning as the final code emits it and names any content the old text had and the new one drops.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37",
+        "request": null
+      },
+      "disposition": null,
+      "class": null,
+      "family": null
+    }
+  ],
+  "classes": [],
+  "families": []
+}

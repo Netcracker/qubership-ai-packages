@@ -1,0 +1,354 @@
+{
+  "schema_version": "unavailable (review-delivery schema not installed)",
+  "target": {
+    "platform": "local",
+    "repository": "retrylint (local disposable clone)",
+    "number": null,
+    "title": "Shorten the retry warning"
+  },
+  "revision": {
+    "base": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+    "head": "4578588101d4a5af2876d0940d0bdad9252d621b",
+    "changed_files": 3
+  },
+  "scope_exclusions": [],
+  "axes": [
+    {
+      "axis": "measurements",
+      "status": "ran",
+      "reason": "coverage via stdlib trace: 2/2 executable changed lines covered; mutation not run (no tool installed)"
+    },
+    {
+      "axis": "intent-scope",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "change-description",
+      "status": "ran",
+      "reason": "single, profile medium; skills change-description-authoring and english-developer-style not loaded (not offered by the Skill tool in this session)"
+    },
+    {
+      "axis": "tests",
+      "status": "ran",
+      "reason": "single, profile medium; skill test-authoring not loaded (not offered by the Skill tool in this session)"
+    },
+    {
+      "axis": "naive-reader",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "correctness",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "change-reach",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "architecture",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "docs-pages",
+      "status": "ran",
+      "reason": "group-1, profile medium; skills docs-page-authoring and english-developer-style not loaded"
+    },
+    {
+      "axis": "vocabulary",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "telemetry",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "least-surprise",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "compatibility",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "simplicity",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "comments",
+      "status": "skipped",
+      "reason": "no comments added or changed"
+    },
+    {
+      "axis": "security",
+      "status": "skipped",
+      "reason": "no trust boundary, input handling, secrets, or dependencies touched"
+    },
+    {
+      "axis": "reliability",
+      "status": "skipped",
+      "reason": "only message text changes; no retry, timeout, or limit mechanism touched"
+    },
+    {
+      "axis": "performance",
+      "status": "skipped",
+      "reason": "no hot path changed"
+    },
+    {
+      "axis": "formats",
+      "status": "skipped",
+      "reason": "no hand-written format changed"
+    }
+  ],
+  "open_questions": [],
+  "previous_findings": [],
+  "reviewer": "Claude (adversarial-code-review)",
+  "result": "request_changes",
+  "findings": [
+    {
+      "id": "F1",
+      "axis": [
+        "intent-scope",
+        "telemetry",
+        "change-description"
+      ],
+      "kind": "defect",
+      "severity": "major",
+      "confidence": "high",
+      "gate": "none",
+      "title": "The shortened warning still wraps onto four rows at 80 columns, as many as at base, so the change does not keep the claim it is made for.",
+      "problem": "The commit message gives wrapping at 80 columns as the reason for the change, and miscounts the base (four rows, not three). A reader of the log concludes the wrapping is fixed when it is not.",
+      "reproducer": {
+        "language": "bash",
+        "code": "for r in 8587e48 4578588; do git show \"${r}:tests/golden/post_retry.txt\" | head -1 | fold -w 80 | wc -l; done\n# current: 4 at base, 4 at head (patch_retry.txt: 4 and 4)\n# expected by the commit message: fewer rows at head than at base"
+      },
+      "evidence": [
+        {
+          "type": "fact",
+          "text": "Commit 4578588 body: \"The warning wrapped over three lines in an 80-column terminal, and the endpoint and the retry count sat in the middle of it. Put them first and keep the message short enough to scan in a CI log.\""
+        },
+        {
+          "type": "fact",
+          "text": "First line of tests/golden/post_retry.txt: 303 characters at base, 245 at head; tests/golden/patch_retry.txt: 309 and 251. `fold -w 80` gives 4 rows for each at both revisions (verified)."
+        },
+        {
+          "type": "fact",
+          "text": "Rendering retrylint/messages.py:6-8 for file \"tests/golden/x.conf\", line 1, `POST /v1/customers/orders 3` gives 249 characters (4 rows); for file \"a\", `POST / 1` it gives 212 characters (3 rows), so the fixed wording alone exceeds two rows."
+        },
+        {
+          "type": "inference",
+          "text": "Three rows hold at most 240 characters and the `tests/golden/post_retry.conf:3: ` prefix takes 32, so the warning reaches three rows only if a clause goes, not words inside one; the Idempotency-Key remedy is the candidate, since retrylint cannot see the header (F4)."
+        }
+      ],
+      "proposed_solution": "Either cut the fixed text until both goldens fold to fewer rows than at base, and state the real counts in the commit message, or reword the commit message to claim what the diff does (about 58 characters shorter, still four rows at 80 columns). Dropping the Idempotency-Key remedy (F4) and taking the wording of F3 gives, for tests/golden/post_retry.conf, 195 characters in 3 rows:\n\ntests/golden/post_retry.conf:3: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retried request may take effect more than once. Remove the retry.\n\nand for tests/golden/patch_retry.conf, 201 characters in 3 rows:\n\ntests/golden/patch_retry.conf:1: PATCH /orders/42 is retried up to 2 times, but PATCH is not idempotent (RFC 9110, section 9.2.2), so a retried request may take effect more than once. Remove the retry.\n\nUpdate both goldens to match.",
+      "suggestion": null,
+      "retest": "Either the first output line for tests/golden/post_retry.conf and tests/golden/patch_retry.conf, and for the neighbor tests/golden/x.conf with line `POST /v1/customers/orders 3`, each folds (fold -w 80) to fewer than 4 rows and the commit message states the row counts fold gives at base and head; or the commit message no longer claims fewer wrapped rows and states the base count as 4. Both fail at 4578588.",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 8,
+        "in_diff": true
+      },
+      "prior_thread": null,
+      "class": "C1",
+      "family": null,
+      "origin": "change",
+      "introduced_by": "4578588101d4a5af2876d0940d0bdad9252d621b",
+      "disposition": null
+    },
+    {
+      "id": "F2",
+      "axis": "change-description",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "gate": "none",
+      "title": "The commit message says the endpoint and the retry count sat in the middle and now come first, but both were already on the first row, and the count still follows \"is retried up to\".",
+      "problem": "",
+      "reproducer": null,
+      "evidence": [
+        {
+          "type": "fact",
+          "text": "Commit 4578588 body: \"the endpoint and the retry count sat in the middle of it. Put them first\"."
+        },
+        {
+          "type": "fact",
+          "text": "Base retrylint/messages.py:6: f'{file}:{endpoint.line}: endpoint \"{endpoint.method} {endpoint.path}\" is retried up to {endpoint.retries} '; head retrylint/messages.py:6: f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} is retried up to {endpoint.retries} times, but \"."
+        },
+        {
+          "type": "fact",
+          "text": "In tests/golden/post_retry.txt the retry count is at column 64 at base and column 54 at head; both are in the first 80-column row."
+        },
+        {
+          "type": "inference",
+          "text": "The order of the parts is unchanged; the diff drops the word \"endpoint\" and the quotes, so the endpoint follows the location directly, and drops \", such as creating a second resource\"."
+        }
+      ],
+      "proposed_solution": "Describe what changed: the endpoint is no longer quoted or prefixed with \"endpoint\", and the second sentence drops the example of a second resource. Drop the claim that the endpoint and the count sat in the middle, unless the format string is changed to lead with the count (as F1's fix may do).",
+      "suggestion": null,
+      "retest": "Every statement the commit message makes about the position of the endpoint and the retry count matches the base and head goldens (both on the first row at base; the count after \"is retried up to\" unless the wording changes).",
+      "location": null,
+      "prior_thread": null,
+      "class": null,
+      "family": null,
+      "origin": "change",
+      "introduced_by": "4578588101d4a5af2876d0940d0bdad9252d621b",
+      "disposition": null
+    },
+    {
+      "id": "F3",
+      "axis": [
+        "naive-reader",
+        "vocabulary"
+      ],
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "gate": "none",
+      "title": "\"so a retry may apply its effect twice\" makes one retry the thing whose effect applies twice; it is the request that takes effect again, up to retries + 1 times.",
+      "problem": "\"its\" resolves to the retry, so the clause reads as one retry applying an effect twice, and next to \"retried up to 3 times\" a user asks why twice and not up to four times.",
+      "reproducer": null,
+      "evidence": [
+        {
+          "type": "fact",
+          "text": "retrylint/messages.py:7: f\"{endpoint.method} is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. \""
+        },
+        {
+          "type": "fact",
+          "text": "Base retrylint/messages.py:7-8: \"and a retried request may apply its effect twice, such as creating a second resource.\""
+        },
+        {
+          "type": "fact",
+          "text": "README.md:19: \"A retry repeats the request\"; RFC 9110 section 9.2.2 defines idempotence by \"the intended effect on the server of multiple identical requests\"."
+        },
+        {
+          "type": "inference",
+          "text": "With retries = N the request is sent up to N + 1 times; \"twice\" matches only N = 1, and the goldens have N = 3 and N = 2. \"twice\" was in the base text too; the clause the change rewrote is where it is fixed."
+        }
+      ],
+      "proposed_solution": "Regenerate both goldens. Rendered for tests/golden/post_retry.conf (259 characters; F1 removes the remedy sentence's second half):\n\ntests/golden/post_retry.conf:3: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retried request may take effect more than once. Remove the retry, or send an Idempotency-Key header that the server deduplicates.",
+      "suggestion": "        f\"{endpoint.method} is not idempotent (RFC 9110, section 9.2.2), so a retried request may take effect more \"\n        f\"than once. Remove the retry, or send an Idempotency-Key header that the server deduplicates.\"",
+      "retest": "The first line of tests/golden/post_retry.txt and tests/golden/patch_retry.txt (retries 3 and 2) names the request, not a retry, as what takes effect again, and states no number of applications other than one bounded by retries + 1.",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 7,
+        "end_line": 8,
+        "in_diff": true
+      },
+      "prior_thread": null,
+      "class": null,
+      "family": null,
+      "origin": "change",
+      "introduced_by": "4578588101d4a5af2876d0940d0bdad9252d621b",
+      "disposition": null
+    },
+    {
+      "id": "F4",
+      "axis": "telemetry",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "gate": "none",
+      "title": "The remedy \"send an Idempotency-Key header that the server deduplicates\" cannot pass the check: the policy file has no way to record the header, so retrylint keeps warning and exiting 1.",
+      "problem": "A user who follows this remedy reruns the CI check and gets the same warning.",
+      "reproducer": {
+        "language": "bash",
+        "code": "# after adding an Idempotency-Key header to POST /orders in the client; the policy file cannot say so:\npython3 -m retrylint tests/golden/post_retry.conf; echo $?\n# current: the same warning, exit 1\n# expected: every remedy the warning prints can make the check pass"
+      },
+      "evidence": [
+        {
+          "type": "fact",
+          "text": "retrylint/policy.py:21: `method, path, retries = line.split()`; nothing records a header."
+        },
+        {
+          "type": "fact",
+          "text": "retrylint/__main__.py:16 warns whenever `endpoint.retries > 0 and endpoint.method not in IDEMPOTENT`."
+        },
+        {
+          "type": "fact",
+          "text": "retrylint/messages.py:8: \"Remove the retry, or send an Idempotency-Key header that the server deduplicates.\"; the base text (8587e48 retrylint/messages.py:8-9) gives the same remedy."
+        }
+      ],
+      "proposed_solution": "In this change, which rewrites this message to shorten it, drop the header remedy so the sentence reads \"Remove the retry.\" (rendered whole in F1). Accepting a declared Idempotency-Key in the policy file, which would let the remedy stay, needs a policy format change and belongs in a follow-up.",
+      "suggestion": null,
+      "retest": "Either the warning for tests/golden/post_retry.conf and tests/golden/patch_retry.conf no longer names the Idempotency-Key remedy, or a policy file can declare the header for `POST /orders 3` and then retrylint prints no warning and exits 0.",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 8,
+        "end_line": 8,
+        "in_diff": true
+      },
+      "prior_thread": null,
+      "class": null,
+      "family": null,
+      "origin": "preexisting",
+      "introduced_by": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+      "disposition": "extend_scope"
+    },
+    {
+      "id": "F5",
+      "axis": "tests",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "gate": "none",
+      "title": "No test checks the row budget at 80 columns the commit claims for the warning; the goldens pin only the exact text and were regenerated with it.",
+      "problem": "",
+      "reproducer": {
+        "language": "python",
+        "code": "# tests/test_golden.py, beside test_golden\ndef test_warning_fits_80_columns(self):\n    for conf in sorted(GOLDEN.glob(\"*.conf\")):\n        with self.subTest(conf.name):\n            for line in conf.with_suffix(\".txt\").read_text(encoding=\"utf-8\").splitlines():\n                # current: post_retry 245 chars (4 rows), patch_retry 251 chars (4 rows)\n                # expected: within the budget the change sets, e.g. 240 chars (3 rows)\n                self.assertLessEqual(len(line), 240, line)"
+      },
+      "evidence": [
+        {
+          "type": "fact",
+          "text": "tests/test_golden.py:20 `self.assertEqual(conf.with_suffix(\".txt\").read_text(encoding=\"utf-8\"), out.getvalue())` is the only assertion; no test reads the length of a warning."
+        },
+        {
+          "type": "fact",
+          "text": "python3 -m unittest passes at 4578588 while both goldens fold to 4 rows."
+        }
+      ],
+      "proposed_solution": "Needs F1's fix: once the warning meets the row budget, add a test asserting that budget per policy file. If F1 is resolved by rewording the commit message to drop the 80-column claim, this test is no longer owed.",
+      "suggestion": null,
+      "retest": "Either a test exists that fails when a warning rendered for tests/golden/post_retry.conf, tests/golden/patch_retry.conf, or a policy with `POST /v1/customers/orders 3` exceeds the stated row budget at 80 columns (it fails at 4578588), or the commit message no longer claims a row budget.",
+      "location": {
+        "path": "tests/golden/post_retry.txt",
+        "side": "new",
+        "start_line": 1,
+        "end_line": 1,
+        "in_diff": true
+      },
+      "prior_thread": null,
+      "class": "C1",
+      "family": null,
+      "origin": "change",
+      "introduced_by": "4578588101d4a5af2876d0940d0bdad9252d621b",
+      "disposition": null
+    }
+  ],
+  "classes": [
+    {
+      "id": "C1",
+      "title": "Row budget at 80 columns neither met nor checked",
+      "root_cause": "The commit sets an 80-column row budget for the warning that the new text does not meet and no test enforces.",
+      "members": [
+        "F1",
+        "F5"
+      ],
+      "root_fix": "F1"
+    }
+  ],
+  "families": []
+}

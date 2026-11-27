@@ -8,8 +8,10 @@
 # its AGENTS.md where it has no CLAUDE.md, to the system prompt.
 #
 # A case directory holds:
-#   repo        the URL to fetch from, or the path of a git bundle relative to
-#               the case directory
+#   repo        the URL to fetch from, or the path, relative to the case
+#               directory, of a git bundle or of a git fast-export stream
+#               (*.fast-export), which is plain text and imports with the
+#               same shas
 #   base        the full sha of the commit the change starts from
 #   head        the full sha of the last commit of the change
 #   prompt.md   the task; <skills> is replaced by the directory of the skill
@@ -22,7 +24,8 @@
 # With <rev>, the skill is taken from that commit; without it, from the
 # working copy. The output goes to <case directory>/<model>/<label>/, and only
 # after the session succeeds:
-#   result.md     the session's final message, the report
+#   result.md     the report: the last final message of a turn that has a
+#                 Result line, or the last final message when no turn has one
 #   run.txt       the session's cost, turns, duration, and tokens per model
 #   tools.txt     every tool call the session made, one per line
 #   access.txt    the tool calls to read first: a web tool, gh, curl, wget,
@@ -64,6 +67,13 @@ repo=$work/repo
 git init -q "$repo"
 src=$(cat "$case_dir/repo")
 [ -f "$case_dir/$src" ] && src=$case_dir/$src
+case $src in
+*.fast-export)
+  git init -q --bare "$work/src.git"
+  git -C "$work/src.git" fast-import --quiet < "$src"
+  src=$work/src.git
+  ;;
+esac
 # Fetch deeper until base..HEAD is the whole change: base is reachable, and
 # no commit of the range sits on the shallow boundary, which a merge from the
 # main branch can leave on the first-parent chain after the other parent has
@@ -107,11 +117,11 @@ def outside(path):
     real = os.path.realpath(os.path.join(inside[0], os.path.expanduser(path)))
     return not any(real == p or real.startswith(p + os.sep) for p in inside) and not real.startswith('/dev/')
 
-calls, access, d = [], [], None
+calls, access, results = [], [], []
 for line in open(session):
     e = json.loads(line)
     if e['type'] == 'result':
-        d = e
+        results.append(e)
     elif e['type'] == 'assistant':
         for c in e['message']['content']:
             if c['type'] != 'tool_use':
@@ -132,13 +142,19 @@ open(f'{out}/tools.txt', 'w').write(''.join(c + '\n' for c in calls))
 open(f'{out}/access.txt', 'w').write(''.join(c + '\n' for c in access))
 if access:
     print(f"{len(access)} tool calls to check first; see access.txt", file=sys.stderr)
-if d is None:
+if not results:
     sys.exit("session ended without a result")
+# A session that waits on background subagents ends one result per turn, and
+# may end one more after the report, when a wake-up it scheduled fires. The
+# report is the last result with a Result line; the cost is cumulative.
+d = results[-1]
 if d['is_error']:
     sys.exit(f"session failed: {d['result']}")
-open(f'{out}/result.md', 'w').write(d['result'].rstrip('\n') + '\n')
-lines = [f"cost_usd: {d['total_cost_usd']:.2f}", f"turns: {d['num_turns']}",
-         f"duration_s: {d['duration_ms'] // 1000}"]
+RESULT = re.compile(r"^\W*result\W*:", re.I | re.M)
+report = next((r for r in reversed(results) if RESULT.search(r['result'])), d)
+open(f'{out}/result.md', 'w').write(report['result'].rstrip('\n') + '\n')
+lines = [f"cost_usd: {d['total_cost_usd']:.2f}", f"turns: {sum(r['num_turns'] for r in results)}",
+         f"duration_s: {sum(r['duration_ms'] for r in results) // 1000}"]
 for m, u in d['modelUsage'].items():
     lines.append(f"{m}: cost_usd {u['costUSD']:.2f}, input {u['inputTokens']}, output {u['outputTokens']}, "
                  f"cache_read {u['cacheReadInputTokens']}, cache_write {u['cacheCreationInputTokens']}")

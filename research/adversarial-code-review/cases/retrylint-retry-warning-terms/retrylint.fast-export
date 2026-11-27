@@ -1,0 +1,289 @@
+blob
+mark :1
+data 13
+__pycache__/
+
+blob
+mark :2
+data 705
+# retrylint
+
+`retrylint` checks the retry policy of an HTTP client before it ships. A policy file lists one endpoint per line: the
+request method, the path, and how many times the client retries a failed request.
+
+```text
+# method path retries
+GET /orders 3
+POST /orders 3
+```
+
+Run it on the file:
+
+```bash
+python3 -m retrylint client.conf
+```
+
+It prints one warning per endpoint whose retries can repeat a side effect, and exits with status 1 when it printed any.
+A retry repeats the request, so it is only harmless for a method that RFC 9110 defines as idempotent (section 9.2.2):
+GET, HEAD, OPTIONS, TRACE, PUT, and DELETE. POST and PATCH are not idempotent.
+
+Run the tests with `python3 -m unittest`.
+
+blob
+mark :3
+data 88
+"""Checks the retry policy of an HTTP client against the idempotency of each method."""
+
+blob
+mark :4
+data 908
+"""Command-line entry point: python3 -m retrylint <policy file>."""
+
+import sys
+
+from . import messages, policy
+
+# RFC 9110, section 9.2.2 defines GET, HEAD, OPTIONS, TRACE, PUT, and DELETE as idempotent. RFC 5789 leaves PATCH
+# non-idempotent. A method the RFCs do not list is treated as non-idempotent.
+IDEMPOTENT = {"GET", "HEAD", "OPTIONS", "TRACE", "PUT", "DELETE"}
+
+
+def lint(file, text):
+    return [
+        messages.non_idempotent_retry(file, endpoint)
+        for endpoint in policy.parse(text)
+        if endpoint.retries > 0 and endpoint.method not in IDEMPOTENT
+    ]
+
+
+def main(argv):
+    file = argv[1]
+    with open(file, encoding="utf-8") as f:
+        warnings = lint(file, f.read())
+    for warning in warnings:
+        print(warning)
+    if warnings:
+        print(messages.summary(len(warnings)))
+    return 1 if warnings else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+
+blob
+mark :5
+data 551
+"""The text retrylint prints."""
+
+
+def non_idempotent_retry(file, endpoint):
+    return (
+        f'{file}:{endpoint.line}: endpoint "{endpoint.method} {endpoint.path}" is retried up to {endpoint.retries} '
+        f"times, but {endpoint.method} is not idempotent (RFC 9110, section 9.2.2), and a retried request may apply "
+        f"its effect twice, such as creating a second resource. Remove the retry, or send an Idempotency-Key header "
+        f"that the server deduplicates."
+    )
+
+
+def summary(warnings):
+    return f"{warnings} warning(s)"
+
+blob
+mark :6
+data 611
+"""Reads a retry policy file."""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Endpoint:
+    line: int
+    method: str
+    path: str
+    retries: int
+
+
+def parse(text):
+    """Returns the endpoints of a policy file, skipping blank lines and lines that start with '#'."""
+    endpoints = []
+    for number, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        method, path, retries = line.split()
+        endpoints.append(Endpoint(number, method.upper(), path, int(retries)))
+    return endpoints
+
+blob
+mark :7
+data 0
+
+blob
+mark :8
+data 36
+PATCH /orders/42 2
+POST /payments 0
+
+blob
+mark :9
+data 323
+tests/golden/patch_retry.conf:1: endpoint "PATCH /orders/42" is retried up to 2 times, but PATCH is not idempotent (RFC 9110, section 9.2.2), and a retried request may apply its effect twice, such as creating a second resource. Remove the retry, or send an Idempotency-Key header that the server deduplicates.
+1 warning(s)
+
+blob
+mark :10
+data 51
+# method path retries
+GET /orders 3
+POST /orders 3
+
+blob
+mark :11
+data 317
+tests/golden/post_retry.conf:3: endpoint "POST /orders" is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), and a retried request may apply its effect twice, such as creating a second resource. Remove the retry, or send an Idempotency-Key header that the server deduplicates.
+1 warning(s)
+
+blob
+mark :12
+data 96
+# PUT and DELETE are idempotent, so retrying them is fine.
+PUT /orders/42 5
+DELETE /orders/42 2
+
+blob
+mark :13
+data 695
+"""Compares the output of retrylint on each policy file under golden/ with the .txt file of the same name."""
+
+import contextlib
+import io
+import pathlib
+import unittest
+
+from retrylint.__main__ import main
+
+GOLDEN = pathlib.Path(__file__).parent / "golden"
+
+
+class GoldenTest(unittest.TestCase):
+    def test_golden(self):
+        for conf in sorted(GOLDEN.glob("*.conf")):
+            with self.subTest(conf.name):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    main(["retrylint", str(conf.relative_to(GOLDEN.parent.parent))])
+                self.assertEqual(conf.with_suffix(".txt").read_text(encoding="utf-8"), out.getvalue())
+
+reset refs/heads/main
+commit refs/heads/main
+mark :14
+author Retrylint Dev <dev@example.com> 1795168800 +0000
+committer Retrylint Dev <dev@example.com> 1795168800 +0000
+data 53
+Add retrylint, a check of HTTP client retry policies
+M 100644 :1 .gitignore
+M 100644 :2 README.md
+M 100644 :3 retrylint/__init__.py
+M 100644 :4 retrylint/__main__.py
+M 100644 :5 retrylint/messages.py
+M 100644 :6 retrylint/policy.py
+M 100644 :7 tests/__init__.py
+M 100644 :8 tests/golden/patch_retry.conf
+M 100644 :9 tests/golden/patch_retry.txt
+M 100644 :10 tests/golden/post_retry.conf
+M 100644 :11 tests/golden/post_retry.txt
+M 100644 :12 tests/golden/put_delete_retry.conf
+M 100644 :7 tests/golden/put_delete_retry.txt
+M 100644 :13 tests/test_golden.py
+
+blob
+mark :15
+data 481
+"""The text retrylint prints."""
+
+
+def non_idempotent_retry(file, endpoint):
+    return (
+        f"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} is retried up to {endpoint.retries} times, but "
+        f"{endpoint.method} is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. "
+        f"Remove the retry, or send an Idempotency-Key header that the server deduplicates."
+    )
+
+
+def summary(warnings):
+    return f"{warnings} warning(s)"
+
+blob
+mark :16
+data 265
+tests/golden/patch_retry.conf:1: PATCH /orders/42 is retried up to 2 times, but PATCH is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. Remove the retry, or send an Idempotency-Key header that the server deduplicates.
+1 warning(s)
+
+blob
+mark :17
+data 259
+tests/golden/post_retry.conf:3: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. Remove the retry, or send an Idempotency-Key header that the server deduplicates.
+1 warning(s)
+
+commit refs/tags/control
+mark :18
+author Retrylint Dev <dev@example.com> 1795255200 +0000
+committer Retrylint Dev <dev@example.com> 1795255200 +0000
+data 222
+Shorten the retry warning
+
+The warning wrapped over three lines in an 80-column terminal, and the
+endpoint and the retry count sat in the middle of it. Put them first
+and keep the message short enough to scan in a CI log.
+from :14
+M 100644 :15 retrylint/messages.py
+M 100644 :16 tests/golden/patch_retry.txt
+M 100644 :17 tests/golden/post_retry.txt
+
+blob
+mark :19
+data 347
+"""The text retrylint prints."""
+
+
+def non_idempotent_retry(file, endpoint):
+    return (
+        f"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} => retry x{endpoint.retries} on an unsafe method; "
+        f"a retry may apply its effect twice. Drop the retry policy."
+    )
+
+
+def summary(warnings):
+    return f"{warnings} warning(s)"
+
+blob
+mark :20
+data 155
+tests/golden/patch_retry.conf:1: PATCH /orders/42 => retry x2 on an unsafe method; a retry may apply its effect twice. Drop the retry policy.
+1 warning(s)
+
+blob
+mark :21
+data 150
+tests/golden/post_retry.conf:3: POST /orders => retry x3 on an unsafe method; a retry may apply its effect twice. Drop the retry policy.
+1 warning(s)
+
+commit refs/tags/bad
+mark :22
+author Retrylint Dev <dev@example.com> 1795255200 +0000
+committer Retrylint Dev <dev@example.com> 1795255200 +0000
+data 222
+Shorten the retry warning
+
+The warning wrapped over three lines in an 80-column terminal, and the
+endpoint and the retry count sat in the middle of it. Put them first
+and keep the message short enough to scan in a CI log.
+from :14
+M 100644 :19 retrylint/messages.py
+M 100644 :20 tests/golden/patch_retry.txt
+M 100644 :21 tests/golden/post_retry.txt
+
+reset refs/tags/base
+from :14
+

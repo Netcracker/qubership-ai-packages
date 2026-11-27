@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "target": {
+    "platform": "local",
+    "url": "local:8587e4889ee71695aa734e9355ead5e8d75b64a0..4578588101d4a5af2876d0940d0bdad9252d621b",
+    "repository": "retrylint",
+    "title": "Shorten the retry warning"
+  },
+  "revision": {
+    "base": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+    "start": null,
+    "head": "4578588101d4a5af2876d0940d0bdad9252d621b"
+  },
+  "scope_exclusions": [],
+  "axes": [
+    {
+      "axis": "change-description",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "naive-reader",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "tests",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "correctness",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "change-reach",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "architecture",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "docs-pages",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "intent-scope",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "vocabulary",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "telemetry",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "least-surprise",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "compatibility",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "simplicity",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "comments",
+      "status": "skipped",
+      "reason": "no doc comments or inline comments added or changed"
+    },
+    {
+      "axis": "security",
+      "status": "skipped",
+      "reason": "no trust boundary, input handling, secrets, or dependencies touched"
+    },
+    {
+      "axis": "reliability",
+      "status": "skipped",
+      "reason": "no timeouts, retries, limits, or replaced mechanism in the code changed (only message text)"
+    },
+    {
+      "axis": "performance",
+      "status": "skipped",
+      "reason": "no code on a hot path changed; only a format string"
+    },
+    {
+      "axis": "formats",
+      "status": "skipped",
+      "reason": "no hand-written format, schema, or chart values changed"
+    },
+    {
+      "axis": "measurements",
+      "status": "skipped",
+      "reason": "no diff coverage or mutation tool for this Python repository"
+    }
+  ],
+  "open_questions": [],
+  "previous_findings": [],
+  "reviewer": {
+    "model": "claude-opus-5-5"
+  },
+  "result": "request_changes",
+  "findings": [
+    {
+      "id": "F1",
+      "title": "The commit body says the change moves the endpoint and the retry count to the front and fixes a three-line wrap, but the order is unchanged and the new warning still wraps over three or four 80-column rows.",
+      "kind": "defect",
+      "severity": "major",
+      "confidence": "high",
+      "axis": "change-description",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 8,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "The body is the only statement of what the change is for, and it describes a reordering and a wrap fix that the diff does not make. A reader of `git log` believes the warning was restructured and now fits the terminal; it only lost words. The body also does not quote the new text, which a log search for `endpoint \"POST /orders\"` no longer matches.",
+      "evidence": [
+        {
+          "text": "Commit body of 4578588: \"The warning wrapped over three lines in an 80-column terminal, and the endpoint and the retry count sat in the middle of it. Put them first and keep the message short enough to scan in a CI log.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "Base retrylint/messages.py:6: `f'{file}:{endpoint.line}: endpoint \"{endpoint.method} {endpoint.path}\" is retried up to {endpoint.retries} '`; head retrylint/messages.py:6: `f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} is retried up to {endpoint.retries} times, but \"`. Both put location, endpoint, retry count, then the reason; the diff drops the word `endpoint` and the quotes, and nothing moves.",
+          "basis": "fact"
+        },
+        {
+          "text": "Ran `python3 -m retrylint client.conf` on `POST /orders 3` in a worktree: the warning is 286 characters at 8587e48 (4 rows at 80 columns) and 228 at 4578588 (3 rows). The golden warnings are 303 -> 245 (post_retry) and 309 -> 251 (patch_retry) characters, 4 rows at both revisions.",
+          "basis": "fact"
+        },
+        {
+          "text": "The other text the diff removes, \"such as creating a second resource\", and the move from \"a retried request\" to \"a retry\", are not mentioned in the body.",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/test_golden.py:20 compares the whole output with tests/golden/*.txt; no test bounds the length of a warning, so no test can show whether the wrap goal is met.",
+          "basis": "fact"
+        },
+        {
+          "text": "A one-line warning that keeps the location, endpoint, count, citation, consequence, and remedy cannot fit in 160 columns, so fitting the stated terminal needs a line break in the message (a format change for CI greps) or a body that claims less.",
+          "basis": "inference"
+        }
+      ],
+      "proposed_solution": "Make the body claim only what the diff does, or make the warning fit the width the body names. For the first, a body such as:\n\n```text\nShorten the retry warning\n\nDrop the word \"endpoint\", the quotes around the method and path, and the\nexample \"such as creating a second resource\" from the warning for a\nretried non-idempotent method. For POST /orders in client.conf the\nwarning goes from 286 to 228 characters, four rows to three in an\n80-column terminal.\n\nUser-visible: the warning now reads\n\n  client.conf:1: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. Remove the retry, or send an Idempotency-Key header that the server deduplicates.\n\nwhere it began `client.conf:1: endpoint \"POST /orders\" is retried`.\n```\n\nQuote the text as it stands after the other findings are fixed. For the second, split the warning into a first row that carries the location, endpoint, count, and verdict and indented rows for the reason and the remedy, then state the width in the body and add a test that asserts it.",
+      "reproducer": {
+        "language": "bash",
+        "code": "printf 'POST /orders 3\\n' > client.conf\npython3 -m retrylint client.conf | head -1 | awk '{print length($0)}'\n# base 8587e48: 286 (4 rows of 80); head 4578588: 228 (3 rows of 80)\n# both print the endpoint and the count right after \"client.conf:1: \""
+      },
+      "suggestion": null,
+      "retest": "Every claim in the commit body matches the diff: it claims no reordering unless the format string changes the order of endpoint, count, and reason; every row count it states matches `python3 -m retrylint client.conf` on `POST /orders 3` at 80 columns at base and head; and it quotes the warning as the head prints it. Or, if it keeps the 80-column claim, every row of that warning, and of the one for tests/golden/patch_retry.conf (`PATCH /orders/42 2`), is at most 80 characters, and a test asserts the bound. At the head the body says \"Put them first\" and the warning is one 228-character row.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "4578588101d4a5af2876d0940d0bdad9252d621b",
+        "request": null
+      },
+      "disposition": null
+    },
+    {
+      "id": "F2",
+      "title": "The warning offers sending an Idempotency-Key header as a remedy, but the policy file cannot record it, so retrylint still warns and exits 1 after the user does it.",
+      "kind": "defect",
+      "severity": "major",
+      "confidence": "high",
+      "axis": "telemetry",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 8,
+        "end_line": 8,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "A user, or a CI agent, who applies the remedy gets the same warning and the same failed step, and neither the warning nor the README says how to make the check accept the endpoint.",
+      "evidence": [
+        {
+          "text": "retrylint/__main__.py:16: `if endpoint.retries > 0 and endpoint.method not in IDEMPOTENT`: the check reads only the method and the count.",
+          "basis": "fact"
+        },
+        {
+          "text": "retrylint/policy.py:21: `method, path, retries = line.split()`; ran on `POST /orders 3 Idempotency-Key`: `ValueError: too many values to unpack (expected 3)`.",
+          "basis": "fact"
+        },
+        {
+          "text": "README.md:7 documents only `# method path retries`, with no annotation or suppression.",
+          "basis": "fact"
+        },
+        {
+          "text": "The same remedy is in the base message (8587e48 retrylint/messages.py:9: `Remove the retry, or send an Idempotency-Key header `), so the change carried it over unchanged.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "The follow-up makes every printed remedy pass the check. Either give the policy file a way to declare that an endpoint sends an Idempotency-Key header, skip such endpoints in `lint`, and document it in README.md, with the warning naming that declaration; or print only the remedy the check accepts. For the second, the warning for `POST /orders 3` on line 1 of client.conf reads:\n\n```text\nclient.conf:1: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may repeat the request's effect. Set its retry count to 0.\n```",
+      "reproducer": {
+        "language": "bash",
+        "code": "printf 'POST /orders 3\\n' > client.conf\npython3 -m retrylint client.conf; echo $?\n# prints: ... or send an Idempotency-Key header that the server deduplicates.\n# exits 1, and no edit to client.conf records that the header is sent:\nprintf 'POST /orders 3 Idempotency-Key\\n' > client.conf\npython3 -m retrylint client.conf\n# current: ValueError: too many values to unpack (expected 3)\n# expected: each remedy the warning prints has an edit that makes the run exit 0"
+      },
+      "suggestion": null,
+      "retest": "For each remedy the warning prints for `POST /orders 3`, there is a documented edit of the policy file after which `python3 -m retrylint client.conf` exits 0; the same holds for `PATCH /orders/42 2`.",
+      "prior_thread": null,
+      "origin": "preexisting",
+      "introduced_by": {
+        "commit": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+        "request": null
+      },
+      "disposition": "follow_up"
+    },
+    {
+      "id": "F3",
+      "title": "\"so a retry may apply its effect twice\" makes the retry the owner of the effect, and says twice where the warning has just said the request is retried up to 3 times.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "naive-reader",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 7,
+        "end_line": 7,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "The only antecedent of \"its\" is now \"a retry\", so the user reads that one retry takes effect twice. RFC 9110 defines idempotency by the effect of several identical requests, and with 3 retries the server can apply the request 4 times.",
+      "evidence": [
+        {
+          "text": "Head retrylint/messages.py:7: `so a retry may apply its effect twice. `; base: `and a retried request may apply its effect twice`. The rewrite changed the subject; \"twice\" was in the base text too.",
+          "basis": "fact"
+        },
+        {
+          "text": "Rendered, tests/golden/post_retry.txt:1: \"POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "README.md:3-4: the third column is \"how many times the client retries a failed request\", so 3 retries are up to 4 requests.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "Rendered for tests/golden/post_retry.conf:\n\n```text\ntests/golden/post_retry.conf:3: POST /orders is retried up to 3 times, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may repeat the request's effect. Remove the retry, or send an Idempotency-Key header that the server deduplicates.\n```\n\nThe warning grows by 5 characters (228 -> 233 for client.conf). Update the two golden files to match.",
+      "reproducer": null,
+      "suggestion": "        f\"{endpoint.method} is not idempotent (RFC 9110, section 9.2.2), so a retry may repeat the request's effect. \"",
+      "retest": "The warning for `POST /orders 3` names the request, not the retry, as what has the effect, and makes no count claim that is false for 3 retries; the warning for `PATCH /orders/42 2` does not claim \"twice\" either, since the request can apply 3 times.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "4578588101d4a5af2876d0940d0bdad9252d621b",
+        "request": null
+      },
+      "disposition": null
+    },
+    {
+      "id": "F4",
+      "title": "The warning reads \"is retried up to 1 times\" for one retry, and no golden case has one retry, the smallest count that warns.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "correctness",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 6,
+        "end_line": 6,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "One retry is a common policy value, and it is on the line the change rewrote to make the warning easier to scan.",
+      "evidence": [
+        {
+          "text": "Ran on `POST /orders 1` at the head: `x.conf:1: POST /orders is retried up to 1 times, but POST is not idempotent ...`; the base prints `retried up to 1 times` too.",
+          "basis": "fact"
+        },
+        {
+          "text": "retrylint/__main__.py:16 warns when `endpoint.retries > 0`; the golden files use 2 (patch_retry.conf), 3 (post_retry.conf), and 0 (silent).",
+          "basis": "fact"
+        },
+        {
+          "text": "With the suggestion applied in a worktree, `POST /orders 1` renders `retried up to 1 time, but` and `PATCH /orders/42 2` still renders `up to 2 times, but`.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "Add a golden case, tests/golden/one_retry.conf with `POST /orders 1`, whose expected first line is:\n\n```text\ntests/golden/one_retry.conf:1: POST /orders is retried up to 1 time, but POST is not idempotent (RFC 9110, section 9.2.2), so a retry may apply its effect twice. Remove the retry, or send an Idempotency-Key header that the server deduplicates.\n```",
+      "reproducer": {
+        "language": "text",
+        "code": "# tests/golden/one_retry.conf\nPOST /orders 1\n# current:  tests/golden/one_retry.conf:1: POST /orders is retried up to 1 times, but ...\n# expected: tests/golden/one_retry.conf:1: POST /orders is retried up to 1 time, but ..."
+      },
+      "suggestion": "        f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} is retried up to {endpoint.retries} \"\n        f\"{'time' if endpoint.retries == 1 else 'times'}, but \"",
+      "retest": "A golden case with one retry on POST expects `is retried up to 1 time, but` (or \"once\"), and fails without the fix; `PATCH /orders/42 1` renders the same wording, and `patch_retry` (2 retries) still expects `up to 2 times`.",
+      "prior_thread": null,
+      "origin": "preexisting",
+      "introduced_by": {
+        "commit": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+        "request": null
+      },
+      "disposition": "extend_scope"
+    },
+    {
+      "id": "F5",
+      "title": "The warning cites RFC 9110, section 9.2.2 as the source of \"X is not idempotent\" for every method, but that section neither defines PATCH nor says anything about methods retrylint does not know, such as PROPFIND.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "correctness",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 7,
+        "end_line": 7,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "A user who looks up the citation to judge the warning does not find the method in it. For a method the tool only assumes to be non-idempotent, the warning presents the assumption as a statement of the RFC.",
+      "evidence": [
+        {
+          "text": "retrylint/__main__.py:7-8: \"RFC 9110, section 9.2.2 defines GET, HEAD, OPTIONS, TRACE, PUT, and DELETE as idempotent. RFC 5789 leaves PATCH non-idempotent. A method the RFCs do not list is treated as non-idempotent.\"",
+          "basis": "fact"
+        },
+        {
+          "text": "Ran on `PATCH /orders/42 2` and `propfind /x 2` at the head: both warnings say `is not idempotent (RFC 9110, section 9.2.2)`; the base message has the same citation.",
+          "basis": "fact"
+        },
+        {
+          "text": "From general knowledge (the RFCs are not available offline): RFC 9110 section 9.2.2 lists PUT, DELETE, and the safe methods as idempotent and does not define PATCH; RFC 5789 section 2 states PATCH is neither safe nor idempotent; RFC 4918 defines PROPFIND as safe and idempotent, so the PROPFIND warning is also a false positive of `IDEMPOTENT`.",
+          "basis": "inference"
+        }
+      ],
+      "proposed_solution": "The follow-up states the reason the way the code decides it, one wording for every method rather than a citation per method. Rendered for `PATCH /orders/42 2` on line 2 of client.conf:\n\n```text\nclient.conf:2: PATCH /orders/42 is retried up to 2 times, but RFC 9110 (section 9.2.2) does not list PATCH as idempotent, so a retry may repeat the request's effect. Remove the retry, or send an Idempotency-Key header that the server deduplicates.\n```\n\nThe same issue can decide whether `IDEMPOTENT` should know methods from other RFCs, such as PROPFIND.",
+      "reproducer": {
+        "language": "text",
+        "code": "# client.conf\nPATCH /orders/42 2\npropfind /x 2\n# current: both warnings say \"... is not idempotent (RFC 9110, section 9.2.2)\"\n# expected: the cited source says what the warning attributes to it"
+      },
+      "suggestion": null,
+      "retest": "For `PATCH /orders/42 2` and for `PROPFIND /x 2`, the warning no longer attributes \"X is not idempotent\" to RFC 9110, section 9.2.2; the warning for `POST /orders 3` may keep citing it.",
+      "prior_thread": null,
+      "origin": "preexisting",
+      "introduced_by": {
+        "commit": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+        "request": null
+      },
+      "disposition": "follow_up"
+    },
+    {
+      "id": "F6",
+      "title": "When a golden warning differs, the failure report hides the difference, since GoldenTest keeps unittest's default maxDiff and the diff of a warning is longer; set `maxDiff = None`.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "tests",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "tests/test_golden.py",
+        "side": "new",
+        "start_line": 20,
+        "end_line": 20,
+        "symbol": "GoldenTest.test_golden",
+        "in_diff": false
+      },
+      "problem": "A red-build reader sees `[184 chars]` in place of the words that changed and has to rerun locally to find them.",
+      "evidence": [
+        {
+          "text": "Ran the head goldens against the base code in a worktree: `AssertionError: 'test[23 chars]f:3: POST /orders is retried up to 3 times, bu[184 chars]s)\\n' != 'test[23 chars]f:3: endpoint \"POST /orders\" is retried up to [242 chars]s)\\n'` then `Diff is 960 characters long. Set self.maxDiff to None to see it.`",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/test_golden.py does not set `maxDiff`; the file is unchanged since 8587e48.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "",
+      "reproducer": null,
+      "suggestion": null,
+      "retest": "With one word of tests/golden/post_retry.txt changed, the failure of the `post_retry.conf` subtest prints the line diff that shows the word, and not \"Set self.maxDiff to None\".",
+      "prior_thread": null,
+      "origin": "preexisting",
+      "introduced_by": {
+        "commit": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+        "request": null
+      },
+      "disposition": "follow_up"
+    },
+    {
+      "id": "F7",
+      "title": "The last literal of the message has an f prefix but no placeholder; drop the prefix.",
+      "kind": "defect",
+      "severity": "nit",
+      "confidence": "high",
+      "axis": "simplicity",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "retrylint/messages.py",
+        "side": "new",
+        "start_line": 8,
+        "end_line": 8,
+        "symbol": "non_idempotent_retry",
+        "in_diff": true
+      },
+      "problem": "",
+      "evidence": [
+        {
+          "text": "retrylint/messages.py:8: `f\"Remove the retry, or send an Idempotency-Key header that the server deduplicates.\"` has no `{}` (Ruff F541).",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "",
+      "reproducer": null,
+      "suggestion": "        \"Remove the retry, or send an Idempotency-Key header that the server deduplicates.\"",
+      "retest": "retrylint/messages.py has no f-string without a placeholder (`ruff check --select F541 retrylint/messages.py` reports nothing).",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "4578588101d4a5af2876d0940d0bdad9252d621b",
+        "request": null
+      },
+      "disposition": null
+    }
+  ],
+  "classes": [],
+  "families": []
+}

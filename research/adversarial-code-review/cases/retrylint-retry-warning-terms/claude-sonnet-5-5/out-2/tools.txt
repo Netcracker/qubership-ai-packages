@@ -1,0 +1,4 @@
+Read: /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.AYxh5i9p3f/skills/adversarial-code-review/SKILL.md
+Bash: git log --stat 8587e48..HEAD | head -30; git diff 8587e48..HEAD | wc -l; ls /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.AYxh5i9p3f/skills
+Bash: git diff 8587e48..HEAD; ls; ls tests tests/golden; cat retrylint/messages.py; grep -rn "messages\|warning" --include=*.py --include=*.md . | head -30
+Bash: cat README.md; ls retrylint; cat retrylint/*.py | grep -v '^$' | head -120; cat tests/golden/put_delete_retry.*; python3 -m unittest discover 2>&1 | tail -5
