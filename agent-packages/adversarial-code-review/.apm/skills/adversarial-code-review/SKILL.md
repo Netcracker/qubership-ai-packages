@@ -198,22 +198,21 @@ Where the change has more than 1000 changed lines, generated and lock files not 
 and say so in the chat. On a change of 4700 lines, `low` found none of the three `major` findings that `high` found.
 
 Order the axes that run before choosing which to shard and which to group. Where `<previous>` exists, write
-`<work>/plan.md` first, by *Plan from the earlier round* at the end of this section.
+`<work>/plan.md` first, by *Plan from the earlier round* at the end of this section; the order below does not read it.
 
-1. First, the two axes most likely to find a `major` finding. Where `<previous>` exists, these are the two whose yield
-   (*Plan from the earlier round*) holds the most `major` findings, and the description and the diff break a tie.
-   Otherwise, judge them from the description and the diff: a claim the description makes, a path the change alters, a
-   contract it touches.
-2. Then, where `<previous>` exists, the other axes whose yield holds a finding, by their number of `major`, then of
-   `minor` findings. Then the rest in this order, which ranks them by the verified findings of earlier reviews: tests,
-   change description and branch, comments, correctness, naive reader, change reach, reliability, architecture,
-   documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, formats,
-   performance, simplicity.
+1. First, the two axes most likely to find a `major` finding, judged from the description and the diff: a claim the
+   description makes, a path the change alters, a contract it touches.
+2. Then the other axes in this order, which ranks them by the verified findings of earlier reviews: tests, change
+   description and branch, comments, correctness, naive reader, change reach, reliability, architecture, documentation
+   pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, formats, performance,
+   simplicity.
 
 The shardable axes to shard are the first two in this order. The other axes keep their order and fill the remaining
-slots of the profile. At `high` and `medium`, an axis whose yield holds a `major` finding runs sharded or single, never
-in a group: where such axes outnumber the single subagents of the profile, run one more single subagent for each, and
-let the groups take the axes after them.
+slots of the profile. Where `<previous>` exists, at `high` and `medium`, an axis with a `major` finding in its yield
+(*Plan from the earlier round*) that this order puts in a group runs single instead, as one more single subagent, and
+the groups keep the other axes in their order. Every other axis, one with only `minor` findings included, runs as this
+order places it: a single or grouped subagent on a large change reads only part of the code, and what it found there
+says little of the rest.
 
 Where fewer axes run than the groups take, the last groups get fewer axes, and a group with none is not run. Within a
 group, naive reader goes first, because it reads the comments before the code. Name the groups `group-1`, `group-2`,
@@ -225,29 +224,18 @@ axis is run with the one-axis brief and writes `<axis>.json`.
 
 The earlier round of the same request shows where this change hides its defects: across earlier reviews, an axis that
 found a `major` finding in one round found one in the next round about six times as often as an axis that had found none
-(14 of 61 against 23 of 592), and an axis with any finding found one in the next round in 64% of rounds, against 21% for
-an axis with none. Write `<work>/plan.md` from `<previous>`, this round's `previous_findings`, and the commits since the
-earlier round's head:
+(14 of 61 against 23 of 592). Write `<work>/plan.md` from `<previous>`, this round's `previous_findings`, and the
+commits since the earlier round's head:
 
-- the **yield** of each axis: the findings of `<previous>` whose `axis` names it, by severity, and how the axis ran (its
-  `reason`). A finding that names several axes counts for each. A finding of `axis: previous`, which the recheck
-  carries, and a `stack` or `preexisting` finding count for none;
-- the **hot files**, in this order: the code files that the branch's own commits since the earlier head changed, the
-  file changed by the most of those commits first, then the files of the findings in `<work>/axes/previous.json`. The
-  commits are `git log --no-merges --cherry-pick --right-only --name-only <previous head>...<head> ^<base>`, which
-  leaves out what the target branch brought by a merge or a rebase and the commits a rebase only rewrote. Fetch
-  `<previous head>` into the workspace; where the platform no longer has it, the hot files are those of `previous.json`
-  alone;
-- the pairs of code paths below, each with its contract;
-- the order, the axes that run single because of their yield, and the subagents this adds. The `reason` of such an axis
-  in `axes` names the yield too: "single, profile medium, 2 `major` in the previous round".
+- the **yield** of each axis: the number of `major` findings of `<previous>` whose `axis` names it. A finding that names
+  several axes counts for each. A finding of `axis: previous`, which the recheck carries, and a `stack` or `preexisting`
+  finding count for none;
 
-The yield moves subagents between axes, and every axis that applies still runs (*Choose the axes*). It decides where
-reviewers look, never what they look for. No brief, and nothing this step adds to `input.md` or `PLAN.md`, names an
-earlier finding, its class, or why a file is hot: a reviewer handed the earlier defects confirms them and stops looking
-for new ones. The threads stay in `input.md` as *Collect the review input* gathers them, and the families reach the
-architecture axis by *Track defect families*; the earlier defects themselves are checked by *Reassess previous findings*
-and the verifier.
+The yield adds subagents, and every axis that applies still runs (*Choose the axes*). It decides where reviewers look,
+never what they look for. No brief, and nothing this step adds to `input.md` or `PLAN.md`, names an earlier finding, its
+class, or why a file is hot: a reviewer handed the earlier defects confirms them and stops looking for new ones. The
+threads stay in `input.md` as *Collect the review input* gathers them, and the families reach the architecture axis by
+*Track defect families*; the earlier defects themselves are checked by *Reassess previous findings* and the verifier.
 
 For each class of `<previous>`, and each finding in no class, whose root cause is that two code paths disagree on what
 they must agree on, such as a check and the filter that must admit no more than it, or a writer and the reader of its

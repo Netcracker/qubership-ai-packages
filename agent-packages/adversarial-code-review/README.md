@@ -44,15 +44,16 @@ How a review runs:
    [ast-bro](https://github.com/aeroxy/ast-bro) where it is on `PATH`; without it, the map has no declarations, and the
    planners split by directory and file size.
 
-   Where the same request was reviewed before, the earlier round plans this one. The axes with the most `major` findings
-   in it go first, and at `medium` and `high` an axis that found a `major` finding gets a subagent of its own, even
-   where that adds subagents to the profile. The risk planner ranks first the shards that hold the files the fixes since
-   the earlier round changed most, and the files of the defects still open. Where an earlier defect came from two code
-   paths that have to agree and that fall in different shards, such as a check and the filter that must admit no more
-   than it, the seam reviewer gets that contract as a seam. Every axis that applies still runs, and nothing the planning
-   derives from the earlier findings reaches a reviewer's brief: the recheck in step 2 and the verifier handle those
-   findings. Over 23 reviews with more than one round, an axis that found a `major` finding in one round found one in
-   the next in 14 of 61 cases; an axis that had found none did so in 23 of 592.
+   Where the same request was reviewed before, the earlier round plans this one. At `medium` and `high` an axis that
+   found a `major` finding in it gets a subagent of its own, even where that adds subagents to the profile; every other
+   axis keeps its shards, slot, or group, because what a subagent found in part of a large change says little about the
+   rest. The risk planner ranks first the shards that hold the files the fixes since the earlier round changed most, and
+   the files of the defects still open. Where an earlier defect came from two code paths that have to agree and that
+   fall in different shards, such as a check and the filter that must admit no more than it, the seam reviewer gets that
+   contract as a seam. Every axis that applies still runs, and nothing the planning derives from the earlier findings
+   reaches a reviewer's brief: the recheck in step 2 and the verifier handle those findings. Over 23 reviews with more
+   than one round, an axis that found a `major` finding in one round found one in the next in 14 of 61 cases; an axis
+   that had found none did so in 23 of 592.
 4. A fresh subagent verifies every finding against the code, merges duplicates, and groups the rest into root-cause
    classes.
 5. The result, `review.json`, goes to `review-delivery`: a chat report and a ledger by default, or an email, a GitHub

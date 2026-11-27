@@ -1,0 +1,1443 @@
+[
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725012",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F1: f0f8c96b replaces the four re-substitution passes with one left-to-right pass: internal/regogen/filtersub.go:130-134 \"It reads tmpl once, left to right, and never scans what value returns for placeholders\", and every text written from a template goes through fillTemplate (the predicate at filtersub.go:114, the RSQL negation at filtertext.go:444, the MongoDB negation at filtertext.go:497), so a value from a header, a token, or a GENERAL PIP cannot reach a placeholder by any route. TestAPlaceholderValueIsWrittenAsTheSourceReturnedIt (filtersub_test.go:490) covers the header of 300 copies of ${subject.h}, a header ${resourceType} (kept as written), and a GENERAL answer [\"${subject.id}\"] (renders c=in=(\"${subject.id}\", \"q\")); TestAnEscapedPlaceholderIsItsTextInThePredicateAndItsNegation covers $${x} in the predicate, its negation, and QueryDSL. Ran in a worktree at 1872c610: `go test ./internal/regogen/ -run 'TestFillTemplate|TestAPlaceholderValue|TestAnEscaped|TestFromResolved|TestAPlaceholderDenies' -count=1` -> 80 passed. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ao"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725028",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F2: 5523f9fc decodes the resource of a request once and shares it across the operations of an item, and c134f83f builds the PIP requests of an item once per resource. components/authz-agent/internal/server/cost_test.go:72 TestBulkOperations_TheCostOfAnItemDoesNotGrowWithItsOperations asserts, for v1 and v2 bulk/operations, operations \"read\" and \"\", and conditions over a member, a jsonPath filter, a deep scan, and a PIP whose request reads the resource, that 100 operations allocate at most 3 times one. Ran `go test ./internal/server/ -run 'TestBulkOperations_|TestCheckResource_TheAdmission' -count=1 -v` at 1872c610: all PASS. Extra neighbor (100 distinct operations op0..op99 with the 256 KiB resource, v1): allocation ratio 1.2 (member), 1.1 (deep scan), 1.1 (jsonPath filter) against one operation. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3a2"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725041",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F3: 58963162 reuses a snapshot only when the tree is deeply equal (internal/policyir/key.go), not when Tree.Dump() hashes the same. TestAReloadFromAbsentToEmptyRequestAttributesCallsAsAFreshLoad (components/authz-agent/internal/snapshot/treekey_test.go) passes. Ran an extra test at 1872c610 that reloads and compares the body the PIP receives with a fresh load, for absent->{}, {}->absent, {\"k\": null}->{\"k\": \"null\"}, the reverse, and {\"k\": null}->{}: every reload sends the body a fresh load sends (e.g. {} -> absent gives {\"requestAttributes\":null}). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3a_"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F4: raw/body.md (published for 1872c610), breaking changes: \"The public `GET /health` answers `{\\\"status\\\":\\\"healthy\\\",\\\"tenants\\\":N,\\\"served\\\":N,\\\"rejected\\\":N,\\\"failing\\\":N}` on 200 ... On `main` it answered the body of the internal `/health`, with `{\\\"message\\\":\u2026,\\\"details\\\":\u2026}` on 503. ... The internal `GET /health` on port 8181 carries `snapshots`\". The public body, the changed 503 shape, and the attribution of `snapshots` to the internal /health are all there. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F5: raw/body.md: \"`/ready` answers 503 with `no snapshot accepted yet for tenants <tenants>` while a tenant whose candidate was refused on its first load has no snapshot, and the pull logs at WARN `policies: pulled from <url>; tenants refused: <n>; the service is not ready until these tenants have a snapshot: <tenants>`. A freshly started Pod with one bad tenant export stays out of the Service until that export is fixed.\" The texts match the code: components/authz-agent/internal/server/server.go:208 `reason = \"no snapshot accepted yet for tenants \" + ...` and components/authz-agent/internal/pull/pull.go:234. No sentence says one refused tenant does not hold readiness. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F6: raw/body.md: \"A check, bulk, bulk/operations, or filter request whose `Authorization` token is not an M2M token under ADR-0092 gets 403 with an empty body when the tenant of the request differs from the token's `tenant-id` claim, or when the token has no `tenant-id` claim and the request names a tenant other than the default one.\" Condition, empty body, and routes are named; the M2M test is referred to by the ADR, not by a claim. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_not_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F7: Half holds. The break list now names the wait and the edit (raw/body.md: \"a namespace without tenant-manager never becomes ready until the operator sets `AUTHZ_TENANT_MANAGER_URL` to empty\"). The chart text the retest also names is unchanged at 1872c610: helm-templates/authz-agent/values.yaml:172-173 still says \"An unreachable or unhelpful tenant-manager changes nothing: the provider fails exactly as it would have.\", and neither values.yaml:163-178 nor values.schema.json:384 (\"Address of tenant-manager, used to resolve a realm named by its tenant display name once discovery for that name has failed. Empty disables the lookup\") mentions the default tenant or readiness. The disposition (B21) covered the description only. Partial fix. Retest: failed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725050",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F8: raw/body.md: \"With `AUTHZ_ENTITLEMENTS_URL` empty, which is the chart default, a condition over `subject.entitledResources` reads a failed source: check/resource and bulk deny the item with `PIP resolution failed: subject.entitledResources`, where `main` read an empty set, so `subject.entitledResources IS EMPTY` allowed everyone and a DENY rule over `CONTAINS` never fired. Set `AUTHZ_ENTITLEMENTS_URL` wherever a policy reads `subject.entitledResources`.\" Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3bE"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725061",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F9: raw/body.md: breaking change \"A jsonPath that Jayway does not compile, such as `.l[:]`, an index or a slice bound beyond the `int` range, ... compiles and selects nothing ... On `main` the policy holding such a path was refused at load. ... This amends ADR-0082; it also reaches `regobuiltins.CompilePath`.\" and the rule line \"Amends: ADR-0082 (a path Jayway does not compile selects nothing instead of being refused).\" Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3bN"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F10: f0f8c96b makes every state that holds no readable value fail the filter in one place: internal/regogen/filtersub.go:217-235 fromResolved returns errDenyAll for any state other than VALUE, NULL, ABSENT, EMPTY_COLL, PIP_EMPTY, PIP_NULL, ERROR included. TestAPlaceholderDeniesExactlyWhenItsSourceIsUnread (filtersub_test.go:381) walks every source of substituter.source and every state of its domain, under ALLOW and DENY, with placeholderKnown empty. Ran at 1872c610 a DENY rule (condition true) with templates `${subject.roles}` in all four dialects and claims realm_access.roles = \"R\": the answer is DENY with every dialect null. Neighbors: roles = 5 or realm_access = \"R\" render as an empty list (a=out=()), but subject.go:104-106 states the model reads them as ABSENT (\"an empty list, any other value, or no such member is ABSENT\"), not ERROR; scope = 5 is PIP_NULL by the same model, and no token value puts subject.scopes in ERROR, so the scopes half is covered by the state walk. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725081",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F11: 23b613bd reads every source's answer through one classifier: internal/regobuiltins/httpsend.go:145 ReadAnswer, whose doc at :128-132 says Failed is set for \"a body that is not empty and does not decode as one JSON value: a page of a proxy, truncated JSON, whitespace alone, or bytes in a content coding the agent does not decode\". Ran at 1872c610 a GENERAL PIP subject.g with a DENY `subject.g == 'x'` beside an ALLOW (PERMIT_OVERRIDES and DENY_OVERRIDES), with and without jsonPath `$.k`: bodies `<html>`, `{`, `x`, whitespace only, and `\"x` give check/resource {Allowed:false Reason:PIP resolution failed: subject.g} and check/filter DENY; a body in Content-Encoding br, deflate, x-gzip, or compress that is not JSON fails the same way; 204 and a 200 of zero bytes are allowed (PIP_NULL). The entitlements service with a 200 `<html>` reads ERROR (internal/regogen/entitlements_test.go:73), and the permission scope with a 200 non-JSON body denies with `PIP resolution failed: subject.permissionScope` (TestAFailedPermissionScopeDeniesThroughAnIterate, passes). A body labeled br that is itself valid JSON is read as that JSON (httpsend.go:474 \"A body in any other encoding stays as sent\"), which no caller can now trigger since the agent sends its own Accept-Encoding. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3bW"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725095",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": "adds_case",
+  "reason": "Round-1 F12: The comparison half holds: components/authz-agent/internal/snapshot/registry_test.go:1636 TestAComparisonWithSubjectIsM2MIsNeverTrueAndTheLoadWarnsOfIt cites dm-is-m2m-declared and dm-is-m2m-undeclared, asserts an ALLOW over `subject.isM2M == 'yes'` denies, a DENY over `subject.isM2M == true` allows, and the load warns once naming the rule; it passes at 1872c610. The tests of m2mToken and SubjectOf are unchanged apart from a helper rename (internal/regogen/subject_test.go: jsonText -> jsonvalue.Encode). The fix is a load warning for the comparison form (adds_case); the comparison still reads ABSENT. The bare-reading half (a bare `subject.isM2M` uses another test than the tenant check) is deferred by the owner to the token-library changes; there is no issue to link. Partial fix. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3be"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725112",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F13: 4375fa0c puts a failed scope on the failed rail of the iterate for every rule inside it: internal/regogen/iterate.go `case \"loD\", \"hiP\", \"loE\":` adds scopeFailed to the lo/E bound. components/authz-agent/internal/snapshot/failedrail_test.go TestAFailedPermissionScopeDeniesThroughAnIterate covers 500, non-JSON 200, 404, and 302 under PERMIT_UNLESS_DENY and DENY_OVERRIDES, an ALLOW inside the iterate, a condition `true`, and a condition over the resource alone, with check/resource `PIP resolution failed: subject.permissionScope` and check/filter DENY. Ran at 1872c610: PASS. Copied the file to a worktree at c8315157 (with a filterOfClaims shim for the old FilterRequest): 9 of its 11 cases FAIL there, the two controls pass. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3bo"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725130",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F14: 5d3e1eba removes the veto text built from a condition or target: internal/regogen/filterrows.go lost the derived negation (153 lines to fewer), and the snapshot tests now expect DENY: TestAFailedConditionDeniesEveryRowUnlessAKnownOperandSettlesIt (a failed PIP AND/OR a leaf over the resource, a leaf over a number, a literal with a star, an undeclared PIP, a target over the resource -> deny) with controls where a known operand settles the condition (`operation == 'write' AND subject.g == 'v' AND resource.a == 'y'` -> the open predicate), TestAFailedSourceBelowATargetOverTheResourceDeniesEveryRow, TestAComparisonUnknownOnEveryRowDeniesEveryRow. Ran at 1872c610: ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3bx"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725157",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F15: 4375fa0c makes every ERR cell a failed leaf, whether decided at generation or by the value: internal/regogen/leaf.go `if !tp.u.isFalse() { ... rails.failed = union(rails.failed, prod(...tp.u...)) }` and the odd-list branch adds the has-null case to rails.failed. failedrail_test.go TestADenyOverAComparisonThePIPValueLeavesWithoutAnOutcomeDenies covers CONTAINS, NOT CONTAINS, IN, CONTAINS ANY over [null] and lists holding null, under PERMIT_OVERRIDES and DENY_OVERRIDES, with check/resource `PIP resolution failed` and filter DENY; TestADenyOverAComparisonOfTwoPIPListsWithANullElement covers two PIP lists. Ran at 1872c610: PASS; at c8315157 (file copied) 8 cases FAIL. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cB"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725174",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F16: 23b613bd stops forwarding the caller's Accept-Encoding and TE, so the transport asks for gzip and decodes it, and ReadAnswer fails any other coding's non-JSON bytes. Ran at 1872c610 a PIP declaring `\"headers\": [\"Accept-Encoding\"]`, the caller sending Accept-Encoding br/deflate/x-gzip/gzip/compress, the service answering that Content-Encoding with bytes that are not JSON: the PIP received `Accept-Encoding: gzip` every time, and check/resource gave {Allowed:false Reason:PIP resolution failed: subject.g} and check/filter DENY for each. The description states the agent's own Accept-Encoding is sent. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cM"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725189",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F17: 208356a6 gives the structure text one owner (legacyvalue.StructureText) used by comparisons, value-record keys, and MAPPING keys. Ran at 1872c610: `resource.b == '[5.0]'` holds for b = [5.0] and not for [5]; `resource.b == '[1]'` does not hold for [1.0]; `resource.b == '[1.0]'` holds for [1.0]; `'[1]' IS SUBSET resource.b` does not hold for b = [[1.0]] and `'[1.0]' IS SUBSET` does; [[5.0]], {\"x\": 5.0} against '{x=5.0}', [1e-7] against '[1.0E-7]', and [1e3] against '[1000.0]' hold. Side note for the description: it says a number prints \"as `BigDecimal.toString` when that has a positive scale\", but the code prints [5.10] as [5.1] (Double.toString, as the commit message says), so `'[5.10]'` does not equal b = [5.10] though BigDecimal(\"5.10\") prints 5.10. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cW"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725203",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F18: 3364a62f puts an author's SQL text in parentheses under an AND whenever sqlMayBeOr cannot rule out a top-level OR (internal/regogen/filtertext.go), and the known-violation entries for F18 were removed from filtertextmeaning_test.go. Ran at 1872c610 DENY_OVERRIDES pairs: ALLOW `a = 'y' OR b = 'y'` minus DENY `c = 'q'` -> \"(a = 'y' OR b = 'y') AND NOT (c = 'q')\"; ALLOW `c = 'q'` minus DENY `x = 1 OR y = 1` -> \"(c = 'q') AND NOT (x = 1 OR y = 1)\"; `(a = 1) OR (b = 2)` is kept grouped. sqlMayBeOr also returns true for `(a = 1) OR (b = 2)`, `(a = 1)OR(b = 2)`, `a='x'OR b=1`, an OR after a newline, and a comment holding a parenthesis. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cf"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725210",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F19: a0487937 collects vetoes by a walk of their own and reads a leaf the filter cannot evaluate row by row (subject allowed over a decision that read a failed source) as unknown on every row, so an ALLOW rule whose condition is unknown that way allows none of its rows. internal/regogen/filterveto_test.go TestALeafUnknownOnEveryRowKeepsTheFilterWithinTheCheck case \"a predicate under subject allowed over a failed decision, sources failed\" (ALLOW with condition `subject allowed 'write' on resource` and a predicate, the write decision over a failed subject.g) expects DENY, with the answered control FilterCondition; the simplified-policy and OR/AND neighbors are there too. Ran at 1872c610: ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cl"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F20: 23b613bd routes every value placed in the path of a url through one check, pathSegment (internal/regogen/pipcall.go:276). Ran at 1872c610 a GENERAL PIP whose url reads `/users/${subject.id}/roles`: sub \"\" and sub \" \" make no call and the decision is `PIP resolution failed: subject.g`; a TOKEN PIP in the path with its claim \"\", absent, [], null, or a dotted claim that selects nothing makes no call and fails; an empty HEADER PIP value in the path does the same; sub u1 calls /users/u1/roles. A value in the query part with \"\" (`/users?id=${subject.id}`) still calls `/users?id=`, which stays on the declared resource; the description scopes the rule to path segments (\"`.` or `..` as a path segment\"). Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F21: 364bfdc7 keys the load's warnings by element identity rather than position. components/authz-agent/internal/snapshot/registry_test.go TestALoadWarnsOfWhatItLeavesOutOnce (a set inserted first warns only itself), TestALoadWarnsOfARuleWithNoEffect (one warning naming the rule, PERMIT_UNLESS_DENY), and TestALoadWarnsOfATreeWarningByItsNodeNotItsPosition pass at 1872c610. Ran extra cases: a set inserted ahead of a set with an isolated policy and an inactive set gives no warning; a rule with `\"effect\": null`, `\"effect\": \"\"`, or `\"effect\": \"  \"` gives one warning `... rule \"r-none\": names no effect, so the rule counts as NOT_APPLICABLE and neither permits nor denies`. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F22: 8be9da50 decides in one place what a subject.<name> operand reads, and isolates a policy with an operand that names nothing on the subject. Ran at 1872c610 with a resource holding subject.roles = [\"admin\"] and the like: `subject.roles[0]`, `subject.x-y`, `subject.1x`, `subject.a.`, `subject.id[0]`, `subject.g[0]` (g a declared PIP), `subject.permissionScope[0]`, `subject.roles['x']` each give one Failures and one Dropped entry, two warnings (\"operand subject.roles[0] names no subject attribute, subject.permissionScope.<key>, or PIP; write resource.subject.roles[0] ...\"), and a denial; `resource.subject.l[0] == 'admin'` still loads and allows. The retest item `resource.v MATCH subject.l[0]` does not apply: the right of MATCH is pattern text, not an operand (internal/policyir/parse.go:53-54 \"except on the right of MATCH and NOT MATCH, where the path is pattern text\"), unchanged since c8315157, and it denied the resource whose subject.l[0] is the value, so it reads nothing from the resource. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725318",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "unable_to_verify",
+  "fix_shape": null,
+  "reason": "Round-1 F23: Left as an owner question; no commit addresses it and no golden is cited. At 1872c610 internal/policyir/export.go:593-598 enumText still cuts the characters up to U+0020 from a target or condition, and a run shows a rule with condition \"   \" loads and allows, and a set with target \"  \" applies to doc (both {Allowed:true}). The open question: does legacy read a blank condition, target, or combiningAlgorithm as `true`/absent, or refuse it? Retest: not run: no golden for a blank condition or target exists yet; the owner has not answered.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dg"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725322",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_not_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F24: 23b613bd names a PIP that failed without a call: a service account now gets `PIP resolution failed: subject.g` (registry_test.go:1036-1037, case \"a service account\"). The second half does not hold. A probe test at 1872c610 with subject.g's url `.../u/${subject.b}` and subject.b answering 500 gives `{Allowed:false Reason:PIP resolution failed: subject.g}`: the reason names only g, whose server is healthy, and never b, the source that failed. components/authz-agent/internal/snapshot/decide.go:183 `names = append(names, regobuiltins.FailedPIPs(ctx)...)` and internal/regobuiltins/httpsend.go:185-187 record only answers ReadAnswer reads and NoteFailed names; a placeholder read of b is neither. The new test case \"a url that reads another GENERAL PIP\" (registry_test.go:1041-1044) has b answer 200, so it checks that g is named, not b. The description's deferral to #275 covers only a source read in a target and a comparison legacy cannot apply. Partial fix. Retest: failed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dk"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Round-1 F25: Owner decision: deferred. The published description (raw/body.md:19) reads `Defers: ... ADR-0099 R12 to #384`, which is the retest's second alternative. Not checked whether #384 covers both the nesting bound and the 1 MiB text bound; the open question is the bounds themselves, tracked there. Retest: passed.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/384"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725332",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F26: Owner decision 400 (27bbeda3), with a mapped value over the limit read as a failed source (1872c610). README.md:195-215 (`The agent answers such a check/resource or check/filter request with 400, as it answers a malformed body, and logs it at debug`), ADR-0083 at 1872c610 lines 209-214 (`The agent refuses a request with 400, as it refuses a body nested too deep`), and api/openapi.yaml:84, :154, :221 (`a value a condition compares that is too big to look up`) agree. TestDecide_AValueTooBigToLookUpIsRefusedAsABadRequest (server/decide_test.go:381) covers v1 and v2 check/resource, bulk (second item), bulk/operations, a token claim, and check/filter, each 400 with no error line; TestDecide_AMappedPermissionTooBigToLookUpFailsItsSource (:471) covers the source case. `go test ./components/authz-agent/internal/server/` passes at 1872c610. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dq"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725341",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F27: 0c667085 compares duplicate declarations by decoded value with object members in document order (internal/policyir/export.go:450-465 sameJSON over jsonvalue.Decode), so the two orders are not the same declaration. TestFromRegularReadsThePIPsOfANameOnceOnlyWhenTheyAreEqual (export_test.go:409) reads each pair in both orders and expects `isolated` for `{\"a\": \"1\", \"b\": \"2\"}` against `{\"b\": \"2\", \"a\": \"1\"}`, and for the nested neighbor `[{\"o\": {\"a\": 1, \"b\": 2}}]`; it passes. Replacing sameJSON's decoder with encoding/json into `any` fails the member-order rows in both orders. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3du"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725352",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F28: At c8315157 pipPath on `$['a b']` returned `jsonpath: unsupported path: \".a b\"` (probe test in a worktree at c8315157). At 1872c610 internal/regogen/pipcall.go:75-84 passes a leading bracket to jsonpath.CompileRootKey; the probe gives `['a b']` with no error, and `$['a b'].c`, `$.x['a b']`, `$['x']['a b']` also compile. TestAPIPJSONPathWithARootBracketSelectsTheKeyItNames (rootkey_test.go:84) selects the member for `a b` and 30 random keys; passes. A double-quoted `$[\"a b\"]` still refuses the tenant (`unsupported path`), which is the published jsonPath-subset refusal, not this defect. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dz"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725366",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "resolved_by_clarification",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F29: adae111e binds predicates.mongodbPredicate as a text field, as the PAP binds it (components/authz-policy-admin/validate.go predicatesFieldKinds `{\"mongodbPredicate\": text}`): a number or boolean is exported as its text (convert_test.go:164-165 `\"5\"`, `\"true\"`), so the predicate is no longer lost; a list or object is refused with 400 (totality_test.go:204-205 refusedSpellings). A top-level mongodbPredicate stays accepted and left out of the export, documented at README.md:97-100 as what access-control does with it. The retest's 400 for both inputs is superseded by the PAP's reading; no upload now loses a predicate the PAP would keep. `go test ./components/authz-policy-admin/` passes. Retest: not run as written: the 400 it asks for contradicts the PAP's reading the fix adopts; a number is exported as \"5\" and an object or list answers 400.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3d6"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_not_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F30: 882a82ca uploads a valid TOKEN PIP and asserts 200 (store_test.go:203, :254, :305 `do(t, ..., tenantPIP, http.StatusOK)`), so each test fails when the upload is refused: retest passes. TestFailedPIPPersistKeepsPreviousContent still cannot fail on the property it names: it compares hashOf (store_test.go:840-845, the policySets hash) before and after the failed PIP write (:314). Removing the rollback in SetDomainPIPs (store.go:235-239) leaves `go test ./components/authz-policy-admin/` green, so a failed PIP persist that keeps the new PIPs in memory passes the test. Partial fix. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725369",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F31: adae111e moves the global-resource-type rule to one place both the check and the export call: internal/policyir/export.go:977-978 `return rt == \"ALL\"` and :987-991 SimplifiedSetTarget writes `resourceType == '<rt>'` for any other value, so all, All, and * are resource types and the agent no longer refuses the tenant (convert_test.go:88-89 `resourceType == 'All'`, `resourceType == '*'`; validate_test.go:381 accepts `*` in one component). The retest's 400 is superseded: the defect was the disagreement, and TestEveryUploadTheAdminAcceptsLoadsInTheAgent, which crosses resourceType All and * with component, passes with an empty knownTotalityViolations. Retest: not run as written: the admin now accepts these and the agent loads them, which removes the disagreement the 400 was for.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3d9"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725374",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F32: TestDecide_ARefusedAdmissionAnswersWithItsAuthError (server/decide_test.go:208-221) and TestDecide_ACallerOutsideItsTenantIsRefusedOnEveryRoute (:226-249) have check/filter rows. With `return answered()` in Server.filter (decide.go:88) replaced by `return nil`: `POST /access/v1/check/filter?... without a subject = 200 , want 403` and `... as PARITY_A = 200 \"\", want 403 \"\"`. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3d_"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725380",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F33: efd08447 lets a test replace generate, generateFilter, and prepareQuery (registry.go:122-127). With the guard after r.compile (registry.go:465-466) set to `if false`, TestACandidateRefusedAfterTheExportKeepsThePreviousSnapshot fails and the package panics on a nil pointer; with the guard after r.generateFilter (:455-456) set to `if false`, the package panics. Both fail. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eD"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725388",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F34: 12e5d4a5 adds rows to TestParseConditionRefuses (internal/policyir/parse_test.go:204-208) for a double-quoted pattern, `/api/a+b`, a non-ASCII letter, bare `resource`, and bare `subject`. Removing each clause of readPattern (parse.go:494, :500) one at a time fails the matching row. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eI"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725404",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F35: canonicalJSON is replaced by sameJSON over jsonvalue.Decode (internal/policyir/export.go:450-465), which keeps a number's text. Rows `default values 1 and 1.0`, `nested default values 1 and 1.0` (export_test.go:452, :456) and `parameters 1 and 1.0` (:499) expect `isolated`; replacing the decoder with encoding/json into `any` (numbers as float64) fails all three. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eP"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725416",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F36: snapshot/subject.go:64 sets `RequestID: legacy.Header(headers, \"X-Request-Id\")`, subject.go:144 puts it in the context (`regobuiltins.WithRequestID`), and server/public.go:59-65 sets a generated id on the request and the response when the caller sent none. TestACallOfAPIPCarriesTheRequestID (snapshot/registry_test.go) decides a two-item request and a filter with RequestID `abc` and a caller header `x-request-id: from-the-caller` on a PIP that declares `X-Request-Id`; both calls receive `abc`. Passes. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eW"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F37: pull.go:261 now warns `policies: no m2m token after %s; each pull fails until the token source publishes one`, and the doc comment (:251-252) no longer gives the 401 reason. TestRun_WithoutATokenSendsNothing (pull_test.go:581-616) expects exactly that warning, then `pull failed ... no token to present`, and 0 requests to the source; passes. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725422",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F38: tenant.go:89-142 warns once per lookupState (`warned[state]`), logs a repeat at debug, and on resolution logs info with the attempt count and duration; the warning names `AUTHZ_DEFAULT_TENANT` and `AUTHZ_TENANT_MANAGER_URL`. lookupState (:160-196) names a failure from a closed set, so a varying error text keeps one state. TestDefaultTenant_WarnsOnceWhileTheLookupFailsTheSameWay, _WarnsAgainOnlyWhenTheLookupFailsDifferently, _WarnsOnceForEachWayTheLookupFails and TestLookupState_NamesOneFailureOnceHoweverItsTextVaries pass. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ec"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725433",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F39: Registry.warnNew (snapshot/registry.go:538-563) warns per tenant only when `prev.refused[t]` differs (`tenant %s: candidate snapshot refused, ...`); PullNow (pull/pull.go:206-244) reports only the refused count and the unserved tenants, and only when they change (`case now == previous:`). TestALoadWarnsOfEachTenantWhoseRefusalIsNew (registry_test.go:607) passes. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eh"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725444",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F40: Server.recoverPanic (server/server.go:252-272) counts every panic in a counter labeled surface and route, logs the stack at error on the first panic per site (`panicSites.LoadOrStore(p.Site, true)`) and later ones at debug without a stack. A bulk worker keeps the panic as *panics.Recovered (snapshot/decide.go:116-123) and panics.Catch returns it unchanged (panics.go:44-49), so one stack is logged. TestRegister_APanicIsCountedAndItsStackLoggedOncePerSite (server_test.go:339) and TestCatchKeepsAPanicRaisedAgain pass. Site \"\" always logs at error, but only when the stack shows no frame outside the runtime. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3en"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725459",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F41: Parsing api/openapi.yaml at 1872c610: all nine routes under /access and /preview whose responses include CallerTenantMismatch list `#/components/parameters/TenantIdQuery` and `#/components/parameters/TenantHeader`, the four bulk/operations routes (v1, v2, preview v1, preview v2) included. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3eu"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725474",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F42: `grep -n -i -E 'tenant invariance|ignored in decisioning|does not change the decision' policies/TESTS.md test/readme.md` finds nothing at 1872c610 (exit 1). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3e8"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725503",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F43: components/authz-agent/README.md:134-151 `## The tenant of a request` names `tenant_id`, `Tenant`, the `tenant-id` claim rule with `answered 403 with an empty body`, links ADR-0092 for the M2M test without listing its claims, and quotes `no policies are published for tenant <id>`. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3fM"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F44: AGENTS.md:5 now reads `The Rego in policies/ holds the checks of the caller and of the subject's token that admit every check request.`; no sentence describes it as interpreting simplified policies or exempts it from review or the cost rule. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725519",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F45: aa1a1c71 deletes every ols-* and rls-* profiler scenario and bench-report. test/svt/profiler holds identity-verify-token and identity-validate-jwt, the only scenarios test/svt/profiler/README.md and test/svt/README.md:61-62, :160-164 list. With OPA 1.22.4 (the mise.toml pin), `OPA_BIN=... bash test/svt/profiler/identity-verify-token/bench.sh` and identity-validate-jwt/bench.sh (TOKEN_KIND user and service) exit 0. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3fZ"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725543",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F46: components/authz-agent/README.md:9-10 says internal/engine evaluates the embedded policies that `hold the checks of the caller and of the subject's token that admit every check request`, and :17-19 lists `internal/snapshot: the decisions of the check routes`. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3fq"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725559",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F47: components/authz-agent/internal/m2m/m2m.go:15-17 now reads \"the token the policy pull presents to the policy source and the PIP calls present, both through [Source.Bearer]\". `git grep -n 'data\\.m2m' 1872c610 -- . ':!*.md'` finds nothing, so no comment names a reader of data.m2m. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3f2"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725573",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F48: snapshotRequest is gone (a8bca3b7); the server builds the subject through snapshot.NewSubject (components/authz-agent/internal/server/decide.go:289-290). Its comment, components/authz-agent/internal/snapshot/subject.go:52-55, says \"Headers are those of [legacy.RequestHeaders], so they leave out Authorization and Incoming-Token; the Incoming-Token header is kept apart in IncomingToken\", and Subject.IncomingToken (subject.go:42-43) says \"which a PIP receives when its declaration names it\". No comment claims no PIP receives a caller token. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3f_"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F49: components/authz-agent/internal/legacy/legacy.go:186-188: \"an operation that is null contributes none, an empty string is decided like any other operation\". expand (legacy.go:344) skips only empty raw bytes and `null`, so `\"\"` is decided; the comment matches the code. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725600",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F50: components/authz-agent/main_test.go:55 \"// refusingLoader refuses tenant a, which has no previous snapshot, on every\" sits above `type refusingLoader struct{}`, and main_test.go:80-84 puts \"// The report is healthy but not loaded while the policies have not loaded, ...\" directly above `func TestReport`. `go test ./components/authz-agent/ -run 'TestLoadConfig|TestReport'` in a worktree at 1872c610: 51 passed. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3gT"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725616",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F51: `git grep -n 'nc\\.jsonpath'` at 1872c610 returns nothing. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ga"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725643",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F52: The prose now says resolved: components/authz-agent/internal/server/decide.go:130-131 \"While tenant-manager has not resolved the name of the default tenant\", decide.go:176-177 \"refuses a request that needs the ID of the default tenant before tenant-manager resolved its name\", and the flag is `unresolved` (decide.go:147). `git grep -n -i translated components/authz-agent/internal/server` still finds `defaultTenantNotTranslated` (decide.go:134, 157, 176-178; server.go:83), but that identifier names the reason code DEFAULT_TENANT_NOT_TRANSLATED that ADR-0093 R22 and ADR-0095 R4 define (docs/decisions/20261029-authz-agent-adr-0095-refuse-before-policy-evaluation.md:62), not prose about the name; the ambiguity the finding named is gone from the comments. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3gn"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725656",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F53: `git grep -n -i 'measure\\|the plan\\|prototype' -- 'internal/regogen/*.go' ':!*_test.go'` at 1872c610 returns nothing; DefaultOptions (internal/regogen/gen.go:75-78) now states the values without citing a document. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3gx"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725672",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F54: components/authz-agent/config.go:105 `PIPTimeout: s.seconds(\"authz.pip.timeout\", regobuiltins.DefaultTimeout, 1)`, and seconds (config.go:174-182) refuses `n < minimum` with \"a whole number of seconds from %d to %d\", for every key that passes a minimum. config_test.go:116-117 lists `{\"authz.pip.timeout\", \"0\"}` and `{\"authz.pip.timeout\", \"00\"}` among refused values, config_test.go:192-195 expects `AUTHZ_PIP_TIMEOUT is \"0\"` in the error; README.md:50 says \"1 or more\". The chart refuses it too: `helm template ... --set AUTHZ_PIP_TIMEOUT=0` fails with \"at '/AUTHZ_PIP_TIMEOUT': minimum: got 0, want 1\". `go test ./components/authz-agent/ -run 'TestLoadConfig|TestReport'`: 51 passed. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3g9"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725683",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F55: components/authz-agent/config.go:104 `DefaultTenant: s.nonEmpty(\"authz.default.tenant\", \"default\", \"a tenant display name\")`; nonEmpty trims and refuses \"\" with the variable name (config.go:136-141). config_test.go:129-130 lists `\"\"` and `\"  \"` as refused, config_test.go:195 expects `AUTHZ_DEFAULT_TENANT is \"\"`; README.md:49 \"It may not be empty\". The chart schema refuses it as well: `--set-string AUTHZ_DEFAULT_TENANT=` fails with \"'' does not match pattern '\\\\S'\". Tests pass (51 passed). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3hD"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725695",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F56: adae111e: requestScope (components/authz-policy-admin/handlers.go:243-258) uses the tenant a request names as given, \"default\" included, and only a request naming none falls back to s.st.defaultTenant; the store is keyed by that ID. TestATenantAnUploadNamesIsThatTenantID (components/authz-policy-admin/store_test.go, with default ID T1: upload without tenant, Tenant: T1, tenant_id=default) expects `{T1: [Ticket], default: [Order]}`. At 1872c610 `go test ./components/authz-policy-admin/ -run 'TestATenantAnUploadNamesIsThatTenantID|TestTheDefaultTenant|TestAnUploadOfTheDefaultTenant'`: 10 passed. The same test ported to c8315157 (helpers adapted to the old signatures) fails: \"policy set targets by tenantId = map[T1:[resourceType == 'Ticket' resourceType == 'Order']], want map[T1:[resourceType == 'Ticket'] default:[resourceType == 'Order']]\". The Tenant header goes through the same branch, so `Tenant: default` is also the tenant ID default. README (components/authz-policy-admin/README.md:69-73) states it. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3hL"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725717",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F57: helm-templates/authz-agent/templates/deployment.yaml:174-175 `- name: AUTHZ_PIP_TIMEOUT` / `value: '{{ .Values.AUTHZ_PIP_TIMEOUT | int64 }}'`, values.yaml:285 `AUTHZ_PIP_TIMEOUT: 2`. In a worktree at 1872c610, `helm template t helm-templates/authz-agent --set CPU_REQUEST=100m --set CPU_LIMIT=1 --set MEMORY_REQUEST=64Mi --set MEMORY_LIMIT=128Mi --set AUTHZ_PIP_TIMEOUT=5` renders `value: '5'`; without the value it renders `value: '2'`. Inputs of the same class: 0 is refused by the schema (minimum 1), 2.5 and a string 7 are refused (\"got string, want integer\"), so no value is silently truncated. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3hd"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725737",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Round-1 F58: Deferred by the owner to a request-level deadline in #372. The README now states the worst case: components/authz-agent/README.md:111-127 \"A decision request has no deadline of its own: `AUTHZ_PIP_TIMEOUT` bounds each call ... (ceil(items / 4) \u00d7 per-item calls + shared calls) \u00d7 AUTHZ_PIP_TIMEOUT\", and the description's Scope says \"about 26 s at the default for a bulk request of 50 items ... A deadline for the whole request is #372\". That is the written acceptance the retest allows for now; the open part (no deadline, calls not cancelled when the caller gives up) is tracked in #372. Retest: not run: deferred to #372; the README note was read.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/372",
+  "thread_id": "PRRT_kwDOT7oiHs68W3hq"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725748",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F59: 5523f9fc: admission input is built from headers only, components/authz-agent/internal/legacy/legacy.go:499 `func Input(headers map[string][]string) map[string]any`, holding authorizationToken, subject, authorizationType, requestHeaders, requestId; Server.admit calls `legacy.Input(c.GetReqHeaders())` (components/authz-agent/internal/server/decide.go:139). No resource reaches the admission query on any route, so the conversion the reproducer measured no longer happens; `git grep 'input\\.resource' -- policies` finds nothing the admission would lose. The resource is decoded once per item into a jsonvalue shared by the item's operations. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3hw"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725768",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F60: components/authz-agent/internal/server/decide.go:252 `func (s *Server) log(c *fiber.Ctx, input map[string]any)` takes no result, and Server.filter (decide.go:85-109) marshals the answer once and sends it with no json.Unmarshal. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3h9"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725781",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F61: snapshot.Subject (components/authz-agent/internal/snapshot/subject.go:31-48) declares the subject fields once; Request (decide.go:35-38) and FilterRequest (filter.go:27-31) embed it. SubjectOf/ResolveSubject/WithCalls appear only in Registry.prepare (subject.go:136-155), which Decide (decide.go:76) and Filter (filter.go:52) both call; the server builds the subject in one function, subject (server/decide.go:289). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3iJ"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725795",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F62: The server (components/authz-agent/internal/server/decide.go:290 `snapshot.NewSubject(tenant, c.GetReqHeaders(), admission[\"tokenPayload\"])`) and both corpus tools (components/authz-agent/cmd/snapshot-corpus/main.go:141-146 and cmd/filter-corpus/main.go:265-275, through corpus.Subject, components/authz-agent/internal/corpus/subject.go:51 `snapshot.NewSubject(tenant, h, payload)`) build the subject with the same exported function, which drops Authorization and Incoming-Token from Headers (legacy.RequestHeaders) and sets IncomingToken. The corpus wrapper only converts the recorded header map and decodes the claims. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3iS"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725808",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F63: components/authz-agent/internal/pull/pull.go:71-74 `type PartialLoad interface { Refused() []string; Unserved() []string }`, no Partial method. `go test ./components/authz-agent/internal/pull/ -run TestPull_APartialLoadMarksThePoliciesLoaded -count=1`: ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3id"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725820",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F64: components/authz-agent/internal/snapshot/registry.go:556-557 now logs \"policies: tenant %s: a part fails permanently and is listed under failures in /health; a decision that depends on it denies with a reason that starts with %q: %s\" with ReasonUnknown = \"PIP resolution failed\" (decide.go:56). README.md:81-82 \"A check request whose decision depends on a part listed under `failures` is denied with a reason that starts with `PIP resolution failed`\". `git grep -i 'answers as a\\|answer as failed'` finds only test comments; the remaining \"failed source\" hits are Go comments (registry.go:58 on Config.HTTP, regogen), not a log string, the README, or a JSON field. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ij"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F65: The published description (raw/body.md) has a line for each outcome the title named: line 34 (3xx: \"the agent follows no redirect, so a 3xx is the answer\"; \"a body over 8 MiB\"), line 50 (500 on a panicking handler), lines 60-61 (load warnings), line 64 (`authz_agent_policy_tenants`). I extracted the 224 `User-visible:` lines of e2c7029e..1872c610 and checked the 89 from commits after c8315157 for their quoted text or keywords in the description; all but a few are there or superseded. One outcome is missing: a0487937 \"An ALLOW rule whose condition reads `subject allowed` over a decision that check/filter cannot evaluate row by row allows no rows; check/resource may allow some of them\" (no `subject allowed` or \"row by row\" in the description). The other unmatched lines describe test-PAP-stub validation (adae111e, the mongodbPredicate 400) or intermediate states of the branch. Partial fix. Retest: passed (except one line).",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F66: raw/body.md:17 now reads \"Implements: ... ADR-0103 R1, R2.\" with no R3. Checked every rule in the Implements line against the ADR text: ADR-0083, 0093, 0095 at 1872c610 (docs/decisions/), and ADR-0098, 0099, 0100, 0102, 0103 from #226 at 8519dc09 (fetched read-only with gh api). Every listed rule id occurs in its ADR; ADR-0103 has no R3. Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725915",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F67: components/authz-agent/internal/snapshot/registry.go:77-78 \"Hash identifies the module text, the decision text, and the filter text; tenants with equal texts share the compiled queries.\" The hash at registry.go:459 is `sha256.Sum256([]byte(m.Text + \"\\x00\" + m.DecisionText + \"\\x00\" + f.Text))`: the comment names all three. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3jb"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725932",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F68: components/authz-agent/internal/snapshot/decide.go:152-154 \"evalItem evaluates the rule allow for one input and, for a denial, the rule maybe, which tells ... maybe is a rule of the decision module.\"; registry.go:480-481 \"compile prepares the queries of the rules allow and maybe of m\". Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ji"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725954",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F69: internal/regogen/scope.go:50-53 now gives the reason: \"The profile still reads a 404 as an empty scope (scope_404_is_empty=true), and the agent fails it: the scope service answers a subject without assignments with 200 and an empty list, so a 404 comes from a url that does not reach it.\" Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ju"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725963",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F70: test/integration/testify/check_resource_test.go:185-187 now reads \"(Direct header-leak inspection is TestNewSubject_ThePIPsGetNoTokenOfTheCaller in components/authz-agent/internal/snapshot.)\"; that test exists at components/authz-agent/internal/snapshot/subject_test.go:26 and checks that Incoming-Token and Authorization are left out of sub.Headers. The deleted policies/pip_resolution_test.rego is no longer named. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3j2"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725979",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F71: The refusal error was reshaped: components/authz-agent/internal/snapshot/registry.go:197-199 `msg := fmt.Sprintf(\"tenants with a refused candidate snapshot: %d\", len(e.Tenants))` / `msg += \"; not served: \" + strings.Join(u, \", \")`, and per-tenant reasons go to separate WARN lines. A two-tenant load is pinned verbatim at registry_test.go:857 `if want := \"tenants with a refused candidate snapshot: 2; not served: a, b\"; first.Error() != want {`, so dropping or doubling either separator fails it. The test cannot pass at c8315157, whose Error() wrote `tenant %s: candidate snapshot refused, ...` joined by `; `. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3j6"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725988",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F72: components/authz-agent/internal/snapshot/registry.go:493 `p, err := r.prepareQuery(ctx, c.query, c.file, c.text)` in a loop over the three queries; registry.go:505-506 `func prepareQuery(...)` / `return rego.New(append(...` is the only rego.New in the package's non-test code (grep 'rego.New' *.go). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3kA"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707726009",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F73: registry.go:541 `policies: an element names no tenant and is listed under orphans in /health: %s` and registry.go:546 `policies: tenant %s: the tree leaves out an element, listed under dropped in /health: %s`; the texts differ and name the /health members, whose JSON tags are health.go:33 `json:\"orphans,omitempty\"` and health.go:55 `json:\"dropped,omitempty\"`. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3kL"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#pullrequestreview-6073365080",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F74: The published description (raw/body.md) has no generated rule prefix (grep for `rail_`, `and_<` finds nothing) and no paragraph listing removed packages (grep for `internal/acconfig`, `old path` finds nothing; the only `removed` hit, line 14, is about AUTHZ_ND_BUILTIN_CACHE). Retest: passed.",
+  "follow_up_url": null
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707726027",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "moves",
+  "reason": "Round-1 F75: Owner decision: regogen-corpus and regogen-locality left the PR (5498d5ea). raw/files.txt lists no `internal/regogen/cmd/` path (only components/authz-agent/cmd/filter-corpus and snapshot-corpus), and `internal/regogen/cmd/` does not exist at 1872c610. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3kX"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725218",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F76: Vetoes are now collected by a walk of their own before any node's answer: internal/regogen/filteralg.go:263-265 `for _, n := range plan.tops { e.collectVetoes(n, -1) }` and filteralg.go:280-281 `if e.vetoAll { return none, nil }`, so the early `return pair{a: allRows}` in simplified (filteralg.go:357-358) no longer decides which vetoes apply. The retest is components/authz-agent/internal/snapshot/filter_test.go:985 TestASimplifiedPolicyOverAFailedSourceDeniesEveryRow (both orders, subject-only and with a resource operand); `go test ./internal/snapshot/ -run TestASimplifiedPolicyOverAFailedSourceDeniesEveryRow` ok. One more input of the class in a scratch test: allow-all, allow on `operation == 'read'`, then `subject.g == 'x'` over a 500 PIP; and `subject.roles CONTAINS 'R'` then `resource.a == 'y' AND subject.g == 'x'`: both DENY. (Since 5d3e1eba the filter writes no veto text, so the retest's `a!=\"y\"` variant answers DENY, which is within the check.) Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cp"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725230",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F77: Same order-free veto walk as F76 (filteralg.go:263-281), and a leaf unknown on every row now vetoes. internal/regogen/filterveto_test.go:51 TestALeafUnknownOnEveryRowKeepsTheFilterWithinTheCheck holds the round-1 reproducer (`an ALLOW rule over subject allowed beside a failed comparison, sources failed` -> FilterDeny) and the neighbour r4 with target true over s1 and s2 only; `go test ./internal/regogen -run TestALeafUnknownOnEveryRowKeepsTheFilterWithinTheCheck` ok. Extra inputs in a scratch test, sources failed: `subject denied 'write' on resource AND resource.a == subject.h`, `subject allowed 'write' on resource AND resource.a != subject.h`, and a three-atom conjunction: all DENY. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3cx"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725246",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F78: 95cbc05e moves the class-check decision onto the rows the cell emits: internal/regogen/leaf.go:804 `func (g *gen) cellTemplate(...)` builds the template with right_list_scalar_ops and the null-element guard, and byValue compares that result. gen_test.go:2999 TestAPassOfSeveralValuesOnTheRightOfContainsAnswersWithItsKnob covers pass [\"x\",\"d\"] against [\"d\"] and \"d\" (false) and [\"d\"] (true), flat and with groups; ok. Extra input: pass [\"d\",\"x\",\"y\"] against [\"d\",\"x\",\"y\"] and \"dxy\" gives false at 1872c610 and true at c8315157 (scratch test run in both worktrees). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3c5"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725265",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F79: 8be9da50 makes a bare subject.permissionScope a PIP reference (internal/policyir/operand.go:90 `subject.permissionScope without a key is a [PIPRef]`), read as a failed PIP (internal/regogen/operand.go:325-328 `a PERMISSION_SCOPE PIP gives its grants to an iterate and no value to a reference, which reads it as a failed PIP`), or as an undeclared PIP where none is declared. Scratch test under PERMIT_UNLESS_DENY and DENY_UNLESS_PERMIT, ALLOW over `IS EMPTY`, `== 'x'`, `IS NOT EMPTY`, `resource.a == subject.permissionScope`, `CONTAINS 'x'`, `'x' IN ...`, after ResolveSubject: allow=false for all at 1872c610; the PERMIT_UNLESS_DENY cases give true at c8315157. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dE"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725281",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F80: 699ff83f/d10cd440 compile the path with jsonpath.CompileRootKey: internal/regogen/local.go:183-197 tokenSelect (`p, err := jsonpath.CompileRootKey(path)`) and pipcall.go:70-85 pipPath. Scratch test: tokenPIP over {\"a.b\",\"a\":{\"b\"},\"a/b\",\"https://idp/roles\",\"a b\",\"\",\"x.y\":{\"z\"}} gives VALUE dotted, slash, r, sp, empty, and deep for `$['x.y'].z` and `$['x.y']['z']`; pipPath accepts `$['a b']`, `$['https://idp/roles']`, `$['']`. At c8315157 the same test gives nested, ERROR, ERROR, ERROR, ERROR, PIP_EMPTY and pipPath refuses the three. rootkey_test.go:66 and :84 cover the retest's TOKEN and GENERAL cases; ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dM"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725293",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F81: 3e0b26e5 replaces the linear scan by a canonical key (internal/regogen/jsonkey.go:32 `func pyKey(v jsonvalue.Value) string`). Scratch test: entResolve over 40000 distinct ids (about 0.9 MB) took 64 ms at 1872c610 and 6.0 s at c8315157; ids 1, 1.0, true collapse to one id. entitlements_test.go:89 TestEntResolve_TimeGrowsLinearlyWithTheIDsOfTheAnswer checks both shapes of the retest (one reference with many ids, many entitlements with one id each) by the ratio 40000/10000 <= 8; ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dS"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725300",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F82: internal/regogen/rsql.go:194-200 `if p.depth == jsonvalue.MaxDepth { return nil, errRSQL }` bounds the recursion. Scratch test: negateRSQL over 3,000,000 nested groups and over the alternating form returns false without crashing; rsql_test.go:36 negates at jsonvalue.MaxDepth; snapshot TestATextNestedDeepFailsItsLoadOrRequest (the filter request with a deep DENY rsqlPredicate) passes with knownDeepCrashes now empty (deep_test.go:42). Time is linear in the text (about 0.8 \u00b5s per byte, from the tokenizer that runs before the parser), which the repository rules allow for policy text. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3dW"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725308",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F83: Owner decision: GET with no body (0807ce3c). internal/regogen/pipcall.go:331-346 subjectCall builds `\"method\": \"GET\"` with url, headers, raise_error, pip and no body; entitlements.go:67-69 entCall uses `/api/v3/user-entitlements/user/` and scope.go:59 `/api/v1/permission-scope/user/` + `/policies`. This matches the executable specification's model, which calls both services with GET and an empty body at those paths and names the subject's own id under the agent profile. entitlements_test.go:139-141 pins `\"method\": \"GET\"`; the test stubs answer 405 to any other method (entitlements_test.go:176, scope_test.go:119) and still yield the granted ids, and pipstub answers 405 to another method on a route with a method (TestHandlePIP_ARouteWithAMethodAnswersOnlyThatMethod). `go test ./internal/regogen -run 'TestEntCall|Scope|Ent'` and `go test ./pipstub` ok. No golden records the method of these calls, so the check rests on the model, not a recording. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3da"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725830",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F84: internal/regogen/local.go:207-215 tokenDefault applies the default only when `truthy(v)` holds. Scratch test: missing claim with defaultValue false, 0, [], {}, 0.0, \"\" gives PIP_EMPTY; \"x\" gives VALUE x. At c8315157 the first five give VALUE False, 0, [], {}, 0.0. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ip"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725839",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F85: The dotted-name half is fixed: internal/regogen/mapping.go:147 switches on `policyir.SubjectOperand(key)`, so subject.name.dept reads the declared PIP; mapping_test.go:74-81 (`a TOKEN PIP key named under a built-in attribute`, `a HEADER PIP key named under a built-in attribute`) and :82-85 (built-in subject.id still reads the token) pass. The subject.isM2M half is deferred to the token PRs by an owner scope decision: mapping.go:152-153 `case o.Attr == policyir.SubjectIsM2M:` / `v = Resolved{State: spectables.StateValue, Value: req.M2M}` still grants an M2M key, pinned by mapping_test.go:86-88. No follow-up issue is named for it. Partial fix. Retest: passed for the dotted-name half; not run for subject.isM2M: deferred.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3it"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725850",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F86: internal/regogen/failures.go:79-96 now separates the two outcomes: \"Three kinds of part are an unknown decision, [deny, permit] under its target ... a set the legacy service never evaluates ... a set that a damaged export leaves unusable ... and a set or a policy with a MATCH pattern or an operand the agent refuses\" and \"A PIP a condition reads that the tenant does not declare, an isolated PIP declaration ..., or a PERMISSION_SCOPE PIP a condition reads by its name ... is a failed value: a rule whose condition it leaves unknown denies the resource whole\". Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3i2"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725866",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F87: constCompare is replaced by internal/regogen/leaf.go:881 `func (g *gen) literalCell(...)`, which builds the cell's rows and evaluates their tests over the literal's record, so every operator with a template is decided. gen_test.go:1912 TestAComparisonOfTheOperationWithLiteralsIsDecidedAtGeneration covers `operation CONTAINS 'write'` and `operation NOT CONTAINS ANY 'x', 'y'`; ok. Extra inputs: `operation CONTAINS ANY 'write', 'x'` (true), `operation NOT CONTAINS 'write'` (false), `operation NOT CONTAINS 'x'` (true), `operation CONTAINS ANY 'x', 'y'` (false) all generate and answer as expected at 1872c610; at c8315157 the tenant is rejected. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3i9"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725874",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F88: 95cbc05e makes the MATCH segment guards read the pass record (commit message: \"MATCH rows carry match and nomatch tests\"). gen_test.go:3036 TestMatchOverAPassValueReadsThePass covers `a/*` with a/b and x/b and `**/b` with a/c/b; ok. Extra inputs, flat and with groups: `NOT MATCH a/*` with x/b (true) and a/b (false), `MATCH a/**/c` with a/b/c (true) pass at 1872c610; the MATCH cases give false at c8315157. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3jD"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725885",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F89: internal/regogen/pipcall.go:667 dedupe keys by a canonical key (jsonkey.go). jsonkey_test.go:79 TestDedupe_KeepsOneOfEqualObjectsWhateverTheOrderOfTheirMembers; ok. Scratch test: the retest pair, the one-level-deeper pair, a pair of lists holding reordered objects, and a two-level reorder inside a list each dedupe to one element; at c8315157 the first pair gives 2. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3jH"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725892",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Round-1 F90: f0f8c96b fills a template in one pass (internal/regogen/filtersub.go:139 fillTemplate) and the negations work on the filled text. filtersub_test.go:555 TestAnEscapedPlaceholderIsItsTextInThePredicateAndItsNegation pins RSQL `a!=${subject.name},b!=bob` and MongoDB `${subject.name}` for the reproducer, and the escaped-only neighbour `a!=${subject.name}`; filtersub_test.go:465 also covers `$$${y}` and a value that holds placeholders. ok. Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3jL"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707725903",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "resolved_by_clarification",
+  "fix_shape": "narrows",
+  "reason": "Round-1 F91: The question is moot at 1872c610: the filter writes no text derived from a condition or target (ADR-0099 R14, 5d3e1eba). A veto sets e.vetoAll (internal/regogen/filteralg.go:255-257) and the answer is then DENY (filteralg.go:280-281 `if e.vetoAll { return none, nil }`), so no `a==\"y*\"` veto text is rendered. Retest: not run: the retest is settled by the answer; the veto text no longer exists.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3jT"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4707726040",
+  "thread_author": "vlsi",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Round-1 F92: internal/regogen/gen.go:231-239 now says \"With a [*RejectedError] the module carries only the statistics gathered up to it; with any other error it may be nil.\" The RejectedError returns (gen.go:242-247, from newGen and tops) carry `&Module{Stats: g.stats}`; the nil returns after them come from decisions() and flag(), whose errors are not RejectedError (the only RejectedError constructions are gen.go:324, operand.go:335 and gen.go:747, all reached in newGen or tops). Retest: passed.",
+  "follow_up_url": null,
+  "thread_id": "PRRT_kwDOT7oiHs68W3ki"
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999537",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YqE",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The exponent is bounded: plainStripped returns the text as written when it needs more than plainZeroLimit (64) zeros (internal/regogen/project.go:1027 `const plainZeroLimit = 64`, :1054 `if exp > plainZeroLimit || -(len(coef)+exp) > plainZeroLimit {`), and structureNumberText sends an int64 overflow to ParseFloat instead of Repeat (project.go:1015-1021). A panic now costs one request: recoverPanic answers 500 (components/authz-agent/internal/server/server.go:228-237).",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6689796729"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999552",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YqM",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): Probe at c8315157 with leafOutcome and opt.Groups: `'x' IS SUBSET subject.roles` -> T, `'x' IS NOT SUBSET subject.roles` -> F, `5 IS SUBSET subject.roles` -> F, `true IS SUBSET subject.roles` -> F, no panic. No `t.ri` index remains in internal/regogen.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6689796729"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999561",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YqQ",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The token of a nested list is now a shape built once per level (internal/regogen/deep.go:112 `func textShape(s string) string { return \"t:\" + strconv.Quote(legacyvalue.Fold(s)) }`); TestAShapeGrowsByAFixedLengthPerLevelOfNesting (internal/regogen/project_test.go:102) pins 38 bytes at 16 levels and passes at c8315157.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4479758138"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999569",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YqY",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): A type or operation that is a list or an object is refused as bad request (components/authz-agent/internal/legacy/legacy.go:268-296), and a resource path that can stop as too large keeps ERROR in its domain (internal/regogen/operand.go:570-578). The reviewer reproduced both fixed on 2026-11-09.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4496429674",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999581",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yqd",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The request term is read with ast.JSON (internal/regobuiltins/httpsend.go:178 `doc, err := ast.JSON(a.Value)`), a failure comes back as status_code 0 with an error member (httpsend.go:165-170), and pipResolve reads it as ERROR (internal/regogen/pipcall.go:498-504). StrictBuiltinErrors is not set, but the call no longer raises a builtin error for these inputs. Reviewer confirmed six failure modes against 18 DENY conditions on 2026-11-09.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4496430123",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999589",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yqk",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The cases of the thread (failed PIP under a DENY target, DENY target over the resource) deny in the filter after a056e36d/e8a3ea50/1112ce89; the filter's veto is documented at internal/regogen/filteralg.go:40-44. Related cases that still admit rows the check denies are tracked as separate items (veto text, SQL parentheses, ADR-0099 R3 last row, null attribute).",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4496430571",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4501186581",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999597",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yqo",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): A refused call is a stateCall with ERROR (internal/regogen/pipcall.go:154-156 `if st, refused := remoteRefused(req); refused {` / `return stateCall(st)`; remoteRefused gives ERROR for a service account or level m2m/external at :288-300), so the filter denies; the reviewer reproduced service account, m2m/external, url with a space or ${resource.a}, and entitlements without sub as DENY on 2026-11-10.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999606",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yqu",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): RSQL parts under an AND are parenthesized when the text may be a top-level OR: internal/regogen/filtertext.go:260-262 `d == policyir.DialectRSQL && x.kind == \"and\" && rsqlMayBeOr(p.text) {`. The SQL analogue is a separate open item.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4496430988",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999612",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yq1",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The public /health has its own body without snapshots (components/authz-agent/internal/server/public.go:81-103); the internal one keeps them (server.go:164-172). TestPublic_HealthLeavesOutTheTenants passes at c8315157.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514878759",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999623",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yq8",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F20; at 1872c610: 23b613bd routes every value placed in the path of a url through one check, pathSegment (internal/regogen/pipcall.go:276). Ran at 1872c610 a GENERAL PIP whose url reads `/users/${subject.id}/roles`: sub \"\" and sub \" \" make no call and the decision is `PIP resolution failed: subject.g`; a TOKEN PIP in the path with its claim \"\", absent, [], null, or a dotted claim that selects nothing makes no call and fails; an empty HEADER PIP value in the path does the same; sub u1 calls /users/u1/roles. A value in the query part with \"\" (`/users?id=${subject.id}`) still calls `/users?id=`, which stays on the declared resource; the description scopes the rule to path segments (\"`.` or `..` as a path segment\").",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514879186",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999632",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YrD",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): PIP headers come from legacy.RequestHeaders, so skipHeaders applies (TestDecide_ThePIPsGetNoTokenOfTheCaller passes); Authorization and Tenant are never forwarded (internal/regogen/pipcall.go:229-231). Incoming-Token is forwarded only to a PIP that names it (pipcall.go:232-235), which commit 2798ed58 records as legacy behaviour kept by owner decision; the reviewer did not reopen the thread.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514879676",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999637",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YrG",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): No redirect is followed (internal/regobuiltins/httpsend.go:360 `hc.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }`), the body is capped after decompression (httpsend.go:381-382, :408), and a 3xx fails the source (httpsend.go:110 StatusRead).",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514880099",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999647",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YrP",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): TestCustomDenyPredicatesOfOneRuleIdAreKeptApart (components/authz-agent/internal/snapshot/filter_test.go:378) passes at c8315157; reviewer confirmed on 2026-11-10.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514880593",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999657",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YrU",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F10; at 1872c610: f0f8c96b makes every state that holds no readable value fail the filter in one place: internal/regogen/filtersub.go:217-235 fromResolved returns errDenyAll for any state other than VALUE, NULL, ABSENT, EMPTY_COLL, PIP_EMPTY, PIP_NULL, ERROR included. TestAPlaceholderDeniesExactlyWhenItsSourceIsUnread (filtersub_test.go:381) walks every source of substituter.source and every state of its domain, under ALLOW and DENY, with placeholderKnown empty. Ran at 1872c610 a DENY rule (condition true) with templates `${subject.roles}` in all four dialects and claims realm_access.roles = \"R\": the answer is DENY with every dialect null. Neighbors: roles = 5 or realm_access = \"R\" render as an empty list (a=out=()), but subject.go:104-106 states the model reads them as ABSENT (\"an empty list, any other value, or no such member is ABSENT\"), not ERROR; scope = 5 is PIP_NULL by the same model, and no token value puts subject.scopes in ERROR, so the scopes half is covered by the state walk.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999662",
+  "thread_id": "PRRT_kwDOT7oiHs6z-YrZ",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): TestALiteralOnTheLeftEqualsAsAReferenceDoes (internal/regogen/gen_test.go:590) passes at c8315157; reviewer checked 180 cells and 1260 fuzzed trees on 2026-11-10. The corpus count of refused tenants was a question, not a defect.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514881057",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999670",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yre",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F21; at 1872c610: 364bfdc7 keys the load's warnings by element identity rather than position. components/authz-agent/internal/snapshot/registry_test.go TestALoadWarnsOfWhatItLeavesOutOnce (a set inserted first warns only itself), TestALoadWarnsOfARuleWithNoEffect (one warning naming the rule, PERMIT_UNLESS_DENY), and TestALoadWarnsOfATreeWarningByItsNodeNotItsPosition pass at 1872c610. Ran extra cases: a set inserted ahead of a set with an isolated policy and an inactive set gives no warning; a rule with `\"effect\": null`, `\"effect\": \"\"`, or `\"effect\": \"  \"` gives one warning `... rule \"r-none\": names no effect, so the rule counts as NOT_APPLICABLE and neither permits nor denies`.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514881456",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999680",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yrl",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): authz_agent_policy_tenants{snapshot=current|stale|none} exists (components/authz-agent/internal/snapshot/metrics.go); TestTheCollectorCountsTenantsBySnapshot passes at c8315157.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4514881815",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#discussion_r4477999691",
+  "thread_id": "PRRT_kwDOT7oiHs6z-Yrs",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F22; at 1872c610: 8be9da50 decides in one place what a subject.<name> operand reads, and isolates a policy with an operand that names nothing on the subject. Ran at 1872c610 with a resource holding subject.roles = [\"admin\"] and the like: `subject.roles[0]`, `subject.x-y`, `subject.1x`, `subject.a.`, `subject.id[0]`, `subject.g[0]` (g a declared PIP), `subject.permissionScope[0]`, `subject.roles['x']` each give one Failures and one Dropped entry, two warnings (\"operand subject.roles[0] names no subject attribute, subject.permissionScope.<key>, or PIP; write resource.subject.roles[0] ...\"), and a denial; `resource.subject.l[0] == 'admin'` still loads and allows. The retest item `resource.v MATCH subject.l[0]` does not apply: the right of MATCH is pattern text, not an operand (internal/policyir/parse.go:53-54 \"except on the right of MATCH and NOT MATCH, where the path is pattern text\"), unchanged since c8315157, and it denied the resource whose subject.l[0] is the value, so it reads nothing from the resource.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107 (PIP body that is not JSON)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F11; at 1872c610: 23b613bd reads every source's answer through one classifier: internal/regobuiltins/httpsend.go:145 ReadAnswer, whose doc at :128-132 says Failed is set for \"a body that is not empty and does not decode as one JSON value: a page of a proxy, truncated JSON, whitespace alone, or bytes in a content coding the agent does not decode\". Ran at 1872c610 a GENERAL PIP subject.g with a DENY `subject.g == 'x'` beside an ALLOW (PERMIT_OVERRIDES and DENY_OVERRIDES), with and without jsonPath `$.k`: bodies `<html>`, `{`, `x`, whitespace only, and `\"x` give check/resource {Allowed:false Reason:PIP resolution failed: subject.g} and check/filter DENY; a body in Content-Encoding br, deflate, x-gzip, or compress that is not JSON fails the same way; 204 and a 200 of zero bytes are allowed (PIP_NULL). The entitlements service with a 200 `<html>` reads ERROR (internal/regogen/entitlements_test.go:73), and the permission scope with a 200 non-JSON body denies with `PIP resolution failed: subject.permissionScope` (TestAFailedPermissionScopeDeniesThroughAnIterate, passes). A body labeled br that is itself valid JSON is read as that JSON (httpsend.go:474 \"A body in any other encoding stays as sent\"), which no caller can now trigger since the agent sends its own Accept-Encoding.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6689796729 (subject.isM2M in a comparison)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": "adds_case",
+  "reason": "Continued by round-1 F12; at 1872c610: The comparison half holds: components/authz-agent/internal/snapshot/registry_test.go:1636 TestAComparisonWithSubjectIsM2MIsNeverTrueAndTheLoadWarnsOfIt cites dm-is-m2m-declared and dm-is-m2m-undeclared, asserts an ALLOW over `subject.isM2M == 'yes'` denies, a DENY over `subject.isM2M == true` allows, and the load warns once naming the rule; it passes at 1872c610. The tests of m2mToken and SubjectOf are unchanged apart from a helper rename (internal/regogen/subject_test.go: jsonText -> jsonvalue.Encode). The fix is a load warning for the comparison form (adds_case); the comparison still reads ABSENT. The bare-reading half (a bare `subject.isM2M` uses another test than the tenant check) is deferred by the owner to the token-library changes; there is no issue to link.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6692978221",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6735702107",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 1: a 3xx answer of a PIP reads as a value)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): Only 200 and 204 are read (internal/regobuiltins/httpsend.go:107-110 StatusRead); GENERAL PIPs (internal/regogen/pipcall.go:502), entitlements (entitlements.go:130), and the permission scope (scope.go:121) fail any other status. Reviewer confirmed at c8315157.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 2: a blank condition or target reads as true)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "unable_to_verify",
+  "fix_shape": null,
+  "reason": "Continued by round-1 F23; at 1872c610: Left as an owner question; no commit addresses it and no golden is cited. At 1872c610 internal/policyir/export.go:593-598 enumText still cuts the characters up to U+0020 from a target or condition, and a run shows a rule with condition \"   \" loads and allows, and a set with target \"  \" applies to doc (both {Allowed:true}). The open question: does legacy read a blank condition, target, or combiningAlgorithm as `true`/absent, or refuse it?",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 3: a failed permission scope does not deny through an iterate)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F13; at 1872c610: 4375fa0c puts a failed scope on the failed rail of the iterate for every rule inside it: internal/regogen/iterate.go `case \"loD\", \"hiP\", \"loE\":` adds scopeFailed to the lo/E bound. components/authz-agent/internal/snapshot/failedrail_test.go TestAFailedPermissionScopeDeniesThroughAnIterate covers 500, non-JSON 200, 404, and 302 under PERMIT_UNLESS_DENY and DENY_OVERRIDES, an ALLOW inside the iterate, a condition `true`, and a condition over the resource alone, with check/resource `PIP resolution failed: subject.permissionScope` and check/filter DENY. Ran at 1872c610: PASS. Copied the file to a worktree at c8315157 (with a filterOfClaims shim for the old FilterRequest): 9 of its 11 cases FAIL there, the two controls pass.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 4: the filter's own veto text compares differently from ==)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F14; at 1872c610: 5d3e1eba removes the veto text built from a condition or target: internal/regogen/filterrows.go lost the derived negation (153 lines to fewer), and the snapshot tests now expect DENY: TestAFailedConditionDeniesEveryRowUnlessAKnownOperandSettlesIt (a failed PIP AND/OR a leaf over the resource, a leaf over a number, a literal with a star, an undeclared PIP, a target over the resource -> deny) with controls where a known operand settles the condition (`operation == 'write' AND subject.g == 'v' AND resource.a == 'y'` -> the open predicate), TestAFailedSourceBelowATargetOverTheResourceDeniesEveryRow, TestAComparisonUnknownOnEveryRowDeniesEveryRow. Ran at 1872c610: ok.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 5: item 8 of the unknown values of ADR-0098)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F15; at 1872c610: 4375fa0c makes every ERR cell a failed leaf, whether decided at generation or by the value: internal/regogen/leaf.go `if !tp.u.isFalse() { ... rails.failed = union(rails.failed, prod(...tp.u...)) }` and the odd-list branch adds the has-null case to rails.failed. failedrail_test.go TestADenyOverAComparisonThePIPValueLeavesWithoutAnOutcomeDenies covers CONTAINS, NOT CONTAINS, IN, CONTAINS ANY over [null] and lists holding null, under PERMIT_OVERRIDES and DENY_OVERRIDES, with check/resource `PIP resolution failed` and filter DENY; TestADenyOverAComparisonOfTwoPIPListsWithANullElement covers two PIP lists. Ran at 1872c610: PASS; at c8315157 (file copied) 8 cases FAIL.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6761901724 (item 6: some denial reasons name no source)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_not_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F24; at 1872c610: 23b613bd names a PIP that failed without a call: a service account now gets `PIP resolution failed: subject.g` (registry_test.go:1036-1037, case \"a service account\"). The second half does not hold. A probe test at 1872c610 with subject.g's url `.../u/${subject.b}` and subject.b answering 500 gives `{Allowed:false Reason:PIP resolution failed: subject.g}`: the reason names only g, whose server is healthy, and never b, the source that failed. components/authz-agent/internal/snapshot/decide.go:183 `names = append(names, regobuiltins.FailedPIPs(ctx)...)` and internal/regobuiltins/httpsend.go:185-187 record only answers ReadAnswer reads and NoteFailed names; a placeholder read of b is neither. The new test case \"a url that reads another GENERAL PIP\" (registry_test.go:1041-1044) has b answer 200, so it checks that g is named, not b. The description's deferral to #275 covers only a source read in a target and a comparison legacy cannot apply.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840",
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 1: a caller's Accept-Encoding makes a PIP answer unreadable)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F16; at 1872c610: 23b613bd stops forwarding the caller's Accept-Encoding and TE, so the transport asks for gzip and decodes it, and ReadAnswer fails any other coding's non-JSON bytes. Ran at 1872c610 a PIP declaring `\"headers\": [\"Accept-Encoding\"]`, the caller sending Accept-Encoding br/deflate/x-gzip/gzip/compress, the service answering that Content-Encoding with bytes that are not JSON: the PIP received `Accept-Encoding: gzip` every time, and check/resource gave {Allowed:false Reason:PIP resolution failed: subject.g} and check/filter DENY for each. The description states the agent's own Accept-Encoding is sent.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 2: the filter admits a row whose attribute is null where check/resource denies it)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): Unchanged (internal/regogen/leaf.go:166-207 vetoes only where the comparison is unknown on every row), and the description defers ADR-0098 R11 item 2, comparisons unknown for some row values, to #272.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/272",
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 3: a fractional number inside a list prints without its fraction)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F17; at 1872c610: 208356a6 gives the structure text one owner (legacyvalue.StructureText) used by comparisons, value-record keys, and MAPPING keys. Ran at 1872c610: `resource.b == '[5.0]'` holds for b = [5.0] and not for [5]; `resource.b == '[1]'` does not hold for [1.0]; `resource.b == '[1.0]'` holds for [1.0]; `'[1]' IS SUBSET resource.b` does not hold for b = [[1.0]] and `'[1.0]' IS SUBSET` does; [[5.0]], {\"x\": 5.0} against '{x=5.0}', [1e-7] against '[1.0E-7]', and [1e3] against '[1000.0]' hold. Side note for the description: it says a number prints \"as `BigDecimal.toString` when that has a positive scale\", but the code prints [5.10] as [5.1] (Double.toString, as the commit message says), so `'[5.10]'` does not equal b = [5.10] though BigDecimal(\"5.10\") prints 5.10.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 4: SQL drops the parentheses of an OR template inside an AND)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F18; at 1872c610: 3364a62f puts an author's SQL text in parentheses under an AND whenever sqlMayBeOr cannot rule out a top-level OR (internal/regogen/filtertext.go), and the known-violation entries for F18 were removed from filtertextmeaning_test.go. Ran at 1872c610 DENY_OVERRIDES pairs: ALLOW `a = 'y' OR b = 'y'` minus DENY `c = 'q'` -> \"(a = 'y' OR b = 'y') AND NOT (c = 'q')\"; ALLOW `c = 'q'` minus DENY `x = 1 OR y = 1` -> \"(c = 'q') AND NOT (x = 1 OR y = 1)\"; `(a = 1) OR (b = 2)` is kept grouped. sqlMayBeOr also returns true for `(a = 1) OR (b = 2)`, `(a = 1)OR(b = 2)`, `a='x'OR b=1`, an OR after a newline, and a comment holding a parenthesis.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 5: the last row of ADR-0099 R3 is not implemented)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F19; at 1872c610: a0487937 collects vetoes by a walk of their own and reads a leaf the filter cannot evaluate row by row (subject allowed over a decision that read a failed source) as unknown on every row, so an ALLOW rule whose condition is unknown that way allows none of its rows. internal/regogen/filterveto_test.go TestALeafUnknownOnEveryRowKeepsTheFilterWithinTheCheck case \"a predicate under subject allowed over a failed decision, sources failed\" (ALLOW with condition `subject allowed 'write' on resource` and a predicate, the write decision over a failed subject.g) expects DENY, with the answered control FilterCondition; the simplified-policy and OR/AND neighbors are there too. Ran at 1872c610: ok.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 6: ADR-0099 R12 is not implemented)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Continued by round-1 F25; at 1872c610: Owner decision: deferred. The published description (raw/body.md:19) reads `Defers: ... ADR-0099 R12 to #384`, which is the retest's second alternative. Not checked whether #384 covers both the nesting bound and the 1 MiB text bound; the open question is the bounds themselves, tracked there.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/384",
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 7: a value over the lookup bound answers 500)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F26; at 1872c610: Owner decision 400 (27bbeda3), with a mapped value over the limit read as a failed source (1872c610). README.md:195-215 (`The agent answers such a check/resource or check/filter request with 400, as it answers a malformed body, and logs it at debug`), ADR-0083 at 1872c610 lines 209-214 (`The agent refuses a request with 400, as it refuses a body nested too deep`), and api/openapi.yaml:84, :154, :221 (`a value a condition compares that is too big to look up`) agree. TestDecide_AValueTooBigToLookUpIsRefusedAsABadRequest (server/decide_test.go:381) covers v1 and v2 check/resource, bulk (second item), bulk/operations, a token claim, and check/filter, each 400 with no error line; TestDecide_AMappedPermissionTooBigToLookUpFailsItsSource (:471) covers the source case. `go test ./components/authz-agent/internal/server/` passes at 1872c610.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 9: ADR-0083 does not name its departures that allow more in its rules)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): R2 and R3 (adr-0083:97-101) still do not say they allow more; the description defers ADR-0097 R5, R8, R9 to #266, which asks that each departure get a rule that names it.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/266",
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (new 10: samePIP ignores member order of defaultValue that the rendered default keeps)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F27; at 1872c610: 0c667085 compares duplicate declarations by decoded value with object members in document order (internal/policyir/export.go:450-465 sameJSON over jsonvalue.Decode), so the two orders are not the same declaration. TestFromRegularReadsThePIPsOfANameOnceOnlyWhenTheyAreEqual (export_test.go:409) reads each pair in both orders and expects `isolated` for `{\"a\": \"1\", \"b\": \"2\"}` against `{\"b\": \"2\", \"a\": \"1\"}`, and for the nested neighbor `[{\"o\": {\"a\": 1, \"b\": 2}}]`; it passes. Replacing sameJSON's decoder with encoding/json into `any` fails the member-order rows in both orders.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (smaller: a jsonPath of $['a b'] refuses the whole tenant)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F28; at 1872c610: At c8315157 pipPath on `$['a b']` returned `jsonpath: unsupported path: \".a b\"` (probe test in a worktree at c8315157). At 1872c610 internal/regogen/pipcall.go:75-84 passes a leading bracket to jsonpath.CompileRootKey; the probe gives `['a b']` with no error, and `$['a b'].c`, `$.x['a b']`, `$['x']['a b']` also compile. TestAPIPJSONPathWithARootBracketSelectsTheKeyItNames (rootkey_test.go:84) selects the member for `a b` and 30 random keys; passes. A double-quoted `$[\"a b\"]` still refuses the tenant (`unsupported path`), which is the published jsonPath-subset refusal, not this defect.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6822780840 (smaller: the admin accepts a mongodbPredicate it then drops)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "resolved_by_clarification",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F29; at 1872c610: adae111e binds predicates.mongodbPredicate as a text field, as the PAP binds it (components/authz-policy-admin/validate.go predicatesFieldKinds `{\"mongodbPredicate\": text}`): a number or boolean is exported as its text (convert_test.go:164-165 `\"5\"`, `\"true\"`), so the predicate is no longer lost; a list or object is refused with 400 (totality_test.go:204-205 refusedSpellings). A top-level mongodbPredicate stays accepted and left out of the export, documented at README.md:97-100 as what access-control does with it. The retest's 400 for both inputs is superseded by the PAP's reading; no upload now loses a predicate the PAP would keep. `go test ./components/authz-policy-admin/` passes.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6915207681 (store tests upload a PIP named tenant and pass with no PIP stored)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_not_accepted",
+  "fix_shape": null,
+  "reason": "Continued by round-1 F30; at 1872c610: 882a82ca uploads a valid TOKEN PIP and asserts 200 (store_test.go:203, :254, :305 `do(t, ..., tenantPIP, http.StatusOK)`), so each test fails when the upload is refused: retest passes. TestFailedPIPPersistKeepsPreviousContent still cannot fail on the property it names: it compares hashOf (store_test.go:840-845, the policySets hash) before and after the failed PIP write (:314). Removing the rollback in SetDomainPIPs (store.go:235-239) leaves `go test ./components/authz-policy-admin/` green, so a failed PIP persist that keeps the new PIPs in memory passes the test.",
+  "follow_up_url": null,
+  "reply_urls": [
+   "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129"
+  ]
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129 (new since dc94bc88: the admin accepts resourceType all or * that the agent refuses with its tenant)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": "removes_cause",
+  "reason": "Continued by round-1 F31; at 1872c610: adae111e moves the global-resource-type rule to one place both the check and the export call: internal/policyir/export.go:977-978 `return rt == \"ALL\"` and :987-991 SimplifiedSetTarget writes `resourceType == '<rt>'` for any other value, so all, All, and * are resource types and the agent no longer refuses the tenant (convert_test.go:88-89 `resourceType == 'All'`, `resourceType == '*'`; validate_test.go:381 accepts `*` in one component). The retest's 400 is superseded: the defect was the disagreement, and TestEveryUploadTheAdminAcceptsLoadsInTheAgent, which crosses resourceType All and * with component, passes with an empty knownTotalityViolations.",
+  "follow_up_url": null,
+  "reply_urls": []
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129 (new since dc94bc88: a request without a tenant while the default tenant is not translated answers 200 or 403, not 503)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "scope_deferred",
+  "fix_shape": null,
+  "reason": "Unchanged since round 1 (c8315157): The 503 of ADR-0093 R22 and the swap to tenant.Default are listed in #232, which the description names for ADR-0093 R1 and the wiring.",
+  "follow_up_url": "https://github.com/Netcracker/qubership-authz-agent/issues/232",
+  "reply_urls": []
+ },
+ {
+  "thread_url": "https://github.com/Netcracker/qubership-authz-agent/pull/205#issuecomment-6977890129 (new since dc94bc88: the description implements ADR-0103 R3, which #226 removed)",
+  "thread_author": "kichasov",
+  "finding_id": null,
+  "status": "fix_accepted",
+  "fix_shape": null,
+  "reason": "Continued by round-1 F66; at 1872c610: raw/body.md:17 now reads \"Implements: ... ADR-0103 R1, R2.\" with no R3. Checked every rule in the Implements line against the ADR text: ADR-0083, 0093, 0095 at 1872c610 (docs/decisions/), and ADR-0098, 0099, 0100, 0102, 0103 from #226 at 8519dc09 (fetched read-only with gh api). Every listed rule id occurs in its ADR; ADR-0103 has no R3.",
+  "follow_up_url": null,
+  "reply_urls": []
+ }
+]
