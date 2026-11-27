@@ -56,8 +56,16 @@ lines (`side: old`). Delivery publishes `start_line` to `end_line` as the commen
 range next to the comment. A comment anchored to the first line of a Javadoc shows only that line, so the reader cannot
 compare the text with the proposed solution.
 
-- A claim about a comment covers the comment and the declaration it describes; a claim about a condition covers the
-  condition and the branch it guards; a claim about one line is that line, with `end_line` equal to `start_line`.
+- A claim about a comment covers the comment and, where it documents a declaration, the first line of that
+  declaration, the one that names the method, function, field, variable, or type. After a doc comment (Javadoc, KDoc,
+  JSDoc, rustdoc, godoc, a comment block above a declaration), that line follows the comment directly or after
+  annotation, attribute, or decorator lines, which the range then covers too. Above a Python docstring, it is the
+  `def` or `class` line and the rest of its signature. The range stays on the comment where the comment documents no
+  declaration (a module docstring, a section comment, a comment separated from the code by a blank line), where that
+  line lies outside the comment's hunk, or where adding it would break the 25-line limit below even with the range
+  starting at the sentence the claim is about.
+- A claim about a condition covers the condition and the branch it guards; a claim about one line is that line, with
+  `end_line` equal to `start_line`.
 - Keep the range within one hunk and to at most 25 lines as the diff shows them: the lines of the range and the removed
   lines between them, since the platform shows both above the comment. Where the subject is longer, such as a whole
   method or test, narrow the range to the lines the claim is about: the signature, the one branch, the one assertion.
@@ -106,11 +114,12 @@ such as a missing changelog entry.
   is the whole fix and `location` is on the new side and in the diff; otherwise `null`. A rename with call sites
   outside the range is not such a fix. It changes only what the finding asks for: the range starts and ends at a line
   that changes, or at the one unchanged line an added line attaches to, and a line between two changed lines is copied
-  as it is. In prose (a changelog, a docs page, a comment), it replaces a line whose meaning is wrong or adds a line
-  that is missing; a line that is right and lacks a detail, such as a link, a default, or a unit, stays as the author
-  wrote it, and `proposed_solution` names what is missing for the author to word. In code, it may rewrite the lines it
-  covers, such as the assertions of a test that cannot fail, but changes nothing in them, such as a local's name, that
-  the finding does not ask for.
+  as it is. Where *Location* adds a declaration to a comment's range, the suggestion copies the declaration lines, and
+  every line between them and the comment, as they are. In prose (a changelog, a docs page, a comment), it replaces a
+  line whose meaning is wrong or adds a line that is missing; a line that is right and lacks a detail, such as a link,
+  a default, or a unit, stays as the author wrote it, and `proposed_solution` names what is missing for the author to
+  word. In code, it may rewrite the lines it covers, such as the assertions of a test that cannot fail, but changes
+  nothing in them, such as a local's name, that the finding does not ask for.
 - `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
   must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
   `proposed_solution`, and so that it fails at the reviewed head. Where the defect is one input of a property the code
