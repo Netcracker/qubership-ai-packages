@@ -22,9 +22,10 @@ demands an answer to every item can, and the form is short enough that the items
    change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one
    fires first. Where an existing setting reaches a new consumer, what each value users already pass does there. Where
    the change replaces a mechanism, how long the old and the new take to fail on the common fault and, for a loop, on
-   the fault where one attempt waits longest, and what each prints. Then the level: a test that runs in every job,
-   beside the existing tests of the unit, that skips with a reason where the test policy treats a prerequisite as
-   optional and fails where CI promises it.
+   the fault where one attempt waits longest, and what each prints. For a bug fix, the rule the bug broke, tested along
+   each of its axes rather than on the reported input alone. Then the level: a test that runs in every job, beside the
+   existing tests of the unit, that skips with a reason where the test policy treats a prerequisite as optional and
+   fails where CI promises it.
 4. Names and comments that refer by position or ordinal where a content name exists.
 5. Assertions that hide the operands, messages that repeat the name, case ids that are indexes.
 6. Whether the evidence that the tests can fail is stated.

@@ -173,6 +173,13 @@ finding. So is an inner limit that does not fire first at the defaults. The requ
 other. Where the other limit is in a program the repository does not contain, the request is the line that sets it or a
 run that reaches it.
 
+Where the change fixes a bug in code, a script, or a configuration, name the rule the bug broke and the axes its outcome
+depends on, as `test-authoring` §4 defines them under *A bug fix is tested over the rule the bug broke*. Read the tests,
+existing ones included, against them. A test set that holds only the reported input, or leaves untested a partition of
+any of those axes, is a finding. The request names the rule, each untested partition, and an input for it. It is not a
+finding where that paragraph of `test-authoring` lets the explicit case alone be the test. A path that applies the same
+rule and is still broken after the fix is a sibling, under *Item 7: siblings of the change*.
+
 ### Item 3a: level, placement, and the environment
 
 Is there a test at the smallest level that can observe the changed behavior through the unit's interface? Where the
