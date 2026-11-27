@@ -9,9 +9,11 @@ repository writes in.
 
 How a review runs:
 
-1. Collect the request, its revision, its discussions, and the repository's agent rules (`AGENTS.md`, `CLAUDE.md`)
-   into a work directory.
-2. Recheck every earlier review thread against the current code.
+1. Collect the request, its revision, its discussions, the repository's agent rules (`AGENTS.md`, `CLAUDE.md`), and
+   what the change must agree with beyond its own tests, such as a specification, a golden suite, or the
+   implementation it replaces, into a work directory.
+2. Recheck every earlier review thread against the current code: the `major` findings first, then the findings that
+   share a root cause, one cause at a time.
 3. Run the review axes that apply to the change in subagents, as the profile below decides. The axes are files under
    [`references/axes/`](.apm/skills/adversarial-code-review/references/axes/): intent and scope, correctness,
    compatibility, security, reliability, telemetry, performance, architecture, simplicity, least surprise, formats,
@@ -41,6 +43,16 @@ How a review runs:
    tokens with the verifier. The script outlines declarations with `sb` from
    [ast-bro](https://github.com/aeroxy/ast-bro) where it is on `PATH`; without it, the map has no declarations, and the
    planners split by directory and file size.
+
+   Where the same request was reviewed before, the earlier round plans this one. The axes with the most `major` findings
+   in it go first, and at `medium` and `high` an axis that found a `major` finding gets a subagent of its own, even
+   where that adds subagents to the profile. The risk planner ranks first the shards that hold the files the fixes since
+   the earlier round changed most, and the files of the defects still open. Where an earlier defect came from two code
+   paths that have to agree and that fall in different shards, such as a check and the filter that must admit no more
+   than it, the seam reviewer gets that contract as a seam. Every axis that applies still runs, and nothing the planning
+   derives from the earlier findings reaches a reviewer's brief: the recheck in step 2 and the verifier handle those
+   findings. Over 23 reviews with more than one round, an axis that found a `major` finding in one round found one in
+   the next in 14 of 61 cases; an axis that had found none did so in 23 of 592.
 4. A fresh subagent verifies every finding against the code, merges duplicates, and groups the rest into root-cause
    classes.
 5. The result, `review.json`, goes to `review-delivery`: a chat report and a ledger by default, or an email, a GitHub

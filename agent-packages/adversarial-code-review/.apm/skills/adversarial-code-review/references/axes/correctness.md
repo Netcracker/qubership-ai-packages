@@ -4,7 +4,10 @@ Does the code do what its contract and its tests say, on every path?
 
 ## Check
 
-Trace every path the change reaches, failure and concurrent ones included, against the contract.
+Trace every path the change reaches, failure and concurrent ones included, against the contract. The contract
+includes the references `input.md` lists: where one runs, such as a golden suite or the implementation the change
+replaces, compare the change's answers with the reference's answers on the paths you read. A difference the description
+states as intended is not a finding.
 
 Where the change fixes a symptom, check the other paths that show the same symptom, which a search for the changed
 helper does not find: a twin build target, the other major version of a tool, the other operating system, the sibling

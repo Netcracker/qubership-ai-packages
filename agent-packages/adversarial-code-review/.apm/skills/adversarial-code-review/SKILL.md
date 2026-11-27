@@ -53,6 +53,11 @@ Each round gets a subdirectory, `round-<n>-<head:8>/`, numbered after the highes
    base branch is another request's, follow its base the same way until a branch that no open request has as its head:
    that branch is the one the stack merges into. Record its SHA too, and fetch every SHA recorded here into the
    workspace, so that the verifier can read any of them.
+6. Under a *References* heading, what the change must agree with beyond its own tests: a specification, an executable
+   specification or golden suite, the implementation the change replaces. Take them from the description, the linked
+   work, the repository's agent rules, and the documents the verified findings of `<previous>` were judged against.
+   Record where each lives and, for one that runs, the command, and nothing of what the findings said. A change that
+   names none and implements nothing outside the repository has none.
 
 Record any material metadata, discussion, or content the platform cannot supply. When the platform marks content as
 collapsed, too large, unavailable, stale, or unpositioned, record the exact material and path; preserve any thread body,
@@ -89,6 +94,10 @@ each as a `previous_findings` entry with its status and reason.
 - Distinguish an existing contract from a new restriction, which needs a compatibility check. A promised fix leaves the
   finding open; an accepted scope deferral needs a tracked follow-up and is not a fix.
 - Keep a partial fix with the original finding; assess an independent defect separately.
+- Recheck first the threads whose finding in `<previous>` is `major`, then the members of each class or family that has
+  more than one, a class at a time, then the rest, and list `previous_findings` in that order. A fix of one member tends
+  to miss inputs the others name, and the members read together show it; a round cut short has rechecked the threads
+  most likely to remain.
 - Where the finding in `<previous>` has a `retest`, decide by it first. For a defect, run it where it names a test or a
   command, and otherwise read the code at the current head against it; where it asks for a test that fails without the
   fix, check that the test exists and fails at the earlier round's head. A fix that passes it is accepted unless the
@@ -188,23 +197,64 @@ judge the change as a whole, and are never sharded. All sharded axes share one p
 Where the change has more than 1000 changed lines, generated and lock files not counted, run `medium` in place of `low`,
 and say so in the chat. On a change of 4700 lines, `low` found none of the three `major` findings that `high` found.
 
-Order the axes that run before choosing which to shard and which to group:
+Order the axes that run before choosing which to shard and which to group. Where `<previous>` exists, write
+`<work>/plan.md` first, by *Plan from the earlier round* at the end of this section.
 
-1. First, the two axes most likely to find a `major` finding, judged from the description and the diff: a claim the
-   description makes, a path the change alters, a contract it touches.
-2. Then the other axes in this order, which ranks them by the verified findings of earlier reviews: tests, change
-   description and branch, comments, correctness, naive reader, change reach, reliability, architecture,
+1. First, the two axes most likely to find a `major` finding. Where `<previous>` exists, these are the two whose yield
+   (*Plan from the earlier round*) holds the most `major` findings, and the description and the diff break a tie.
+   Otherwise, judge them from the description and the diff: a claim the description makes, a path the change alters, a
+   contract it touches.
+2. Then, where `<previous>` exists, the other axes whose yield holds a finding, by their number of `major`, then of
+   `minor` findings. Then the rest in this order, which ranks them by the verified findings of earlier reviews: tests,
+   change description and branch, comments, correctness, naive reader, change reach, reliability, architecture,
    documentation pages, intent and scope, vocabulary, telemetry, security, least surprise, compatibility, formats,
    performance, simplicity.
 
 The shardable axes to shard are the first two in this order. The other axes keep their order and fill the remaining
-slots of the profile.
+slots of the profile. At `high` and `medium`, an axis whose yield holds a `major` finding runs sharded or single, never
+in a group: where such axes outnumber the single subagents of the profile, run one more single subagent for each, and
+let the groups take the axes after them.
 
 Where fewer axes run than the groups take, the last groups get fewer axes, and a group with none is not run. Within a
 group, naive reader goes first, because it reads the comments before the code. Name the groups `group-1`, `group-2`,
 and so on, in that order. In `axes`, give each axis that ran a `reason` that names how it ran and the profile:
 "group-2, profile medium", "single, profile medium", "sharded into 6 shards and seams, profile medium". A group of one
 axis is run with the one-axis brief and writes `<axis>.json`.
+
+### Plan from the earlier round
+
+The earlier round of the same request shows where this change hides its defects: across earlier reviews, an axis that
+found a `major` finding in one round found one in the next round about six times as often as an axis that had found none
+(14 of 61 against 23 of 592), and an axis with any finding found one in the next round in 64% of rounds, against 21% for
+an axis with none. Write `<work>/plan.md` from `<previous>`, this round's `previous_findings`, and the commits since the
+earlier round's head:
+
+- the **yield** of each axis: the findings of `<previous>` whose `axis` names it, by severity, and how the axis ran (its
+  `reason`). A finding that names several axes counts for each. A finding of `axis: previous`, which the recheck
+  carries, and a `stack` or `preexisting` finding count for none;
+- the **hot files**, in this order: the code files that the branch's own commits since the earlier head changed, the
+  file changed by the most of those commits first, then the files of the findings in `<work>/axes/previous.json`. The
+  commits are `git log --no-merges --cherry-pick --right-only --name-only <previous head>...<head> ^<base>`, which
+  leaves out what the target branch brought by a merge or a rebase and the commits a rebase only rewrote. Fetch
+  `<previous head>` into the workspace; where the platform no longer has it, the hot files are those of `previous.json`
+  alone;
+- the pairs of code paths below, each with its contract;
+- the order, the axes that run single because of their yield, and the subagents this adds. The `reason` of such an axis
+  in `axes` names the yield too: "single, profile medium, 2 `major` in the previous round".
+
+The yield moves subagents between axes, and every axis that applies still runs (*Choose the axes*). It decides where
+reviewers look, never what they look for. No brief, and nothing this step adds to `input.md` or `PLAN.md`, names an
+earlier finding, its class, or why a file is hot: a reviewer handed the earlier defects confirms them and stops looking
+for new ones. The threads stay in `input.md` as *Collect the review input* gathers them, and the families reach the
+architecture axis by *Track defect families*; the earlier defects themselves are checked by *Reassess previous findings*
+and the verifier.
+
+For each class of `<previous>`, and each finding in no class, whose root cause is that two code paths disagree on what
+they must agree on, such as a check and the filter that must admit no more than it, or a writer and the reader of its
+output, find both paths, whether or not the findings sit on both sides. Record in `plan.md` the declarations on each
+side and the contract as a property of the code, not as the earlier defect. Where an axis runs sharded, the risk
+planner's brief lists the hot files, and each pair whose sides fall in different shards becomes a seam (see *Plan the
+shards* in the sharding reference).
 
 ## Run the axes
 

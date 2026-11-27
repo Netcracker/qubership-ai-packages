@@ -24,14 +24,16 @@ gets a second reader.
      product, such as a command-line tool for developers or a benchmark, may form a shard of its own, last in the risk
      order. Only the request's exclusions leave code out.
    - Take the union of the seams both planners name, and drop one that names no declaration or line range, or does not
-     cross two shards of the final partition. Add a seam for every file split by line range. Then, for every pair of
-     final shards whose files use each other's declarations in `map.md`, and that no seam crosses yet, add a seam. It
-     names up to five declarations: those used by the most files of the other shard. A seam crosses every pair of shards
-     it touches. The references in `map.md` are a lower bound: they leave out a type named only in a signature or a
-     field, the files a reference list counts as "and N more", and the calls a declaration lists as not attributed.
-     Before deciding a pair has none, search the other shard's files in the diff for the names of the first shard's
-     declarations. Where `map.md` has no declarations, add one seam for every pair of shards whose files share a parent
-     directory, naming the files on each side. List the seams in the risk order of the first shard each touches.
+     cross two shards of the final partition. Add a seam for every file split by line range, and one for every pair of
+     code paths in `plan.md` (*Plan from the earlier round* in `SKILL.md`) whose sides fall in different shards, with
+     its contract. Then, for every pair of final shards whose files use each other's declarations in `map.md`, and that
+     no seam crosses yet, add a seam. It names up to five declarations: those used by the most files of the other shard.
+     A seam crosses every pair of shards it touches. The references in `map.md` are a lower bound: they leave out a type
+     named only in a signature or a field, the files a reference list counts as "and N more", and the calls a
+     declaration lists as not attributed. Before deciding a pair has none, search the other shard's files in the diff
+     for the names of the first shard's declarations. Where `map.md` has no declarations, add one seam for every pair of
+     shards whose files share a parent directory, naming the files on each side. List the seams in the risk order of the
+     first shard each touches.
 
 ## Plan format
 
@@ -65,6 +67,9 @@ The two questions:
   named only in a signature or a field, and a call it did not attribute, are not there, so check the diff for them."
 - **risk:** "Start from what the change can break: read the description and the discussion, find in `map.md` and the
   diff the code that decides security, data, or every request, and keep each such part whole in one shard."
+
+Where *Plan from the earlier round* in `SKILL.md` lists hot files, append to the risk question: "Rank first the shards
+that hold these files: `<hot files>`." Give the list only, with no reason for it.
 
 ## Coverage format
 
