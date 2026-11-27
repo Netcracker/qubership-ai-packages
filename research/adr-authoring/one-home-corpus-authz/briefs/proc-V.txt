@@ -1,0 +1,5 @@
+Apply the rule across the whole set of related records with this check:
+
+> List the constraints this record takes from other records: a set, a count, a limit, a default. For each, suppose its owning record changes it, and write down every line of this record that would then need an edit, the title and the Decision sentence included. Each such line restates the constraint (**One home**): cite the owning rule, or keep only what this record decides. A clause in this record's layer is no exception unless the Justification gives it a reason of its own, and a citation does not save a word such as "both" or "the two" from going stale.
+
+Also apply the rule to text that is copied between records in the same words.
