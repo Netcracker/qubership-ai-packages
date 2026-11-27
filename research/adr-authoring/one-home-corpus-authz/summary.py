@@ -12,7 +12,8 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = 'https://github.com/Netcracker/qubership-authz-agent'
+# The fork holds a tag on every commit the corpus read, so these links survive a force-push or a deleted branch.
+REPO = 'https://github.com/vlsi/qubership-authz-agent'
 
 
 def link(row):

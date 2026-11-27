@@ -12,15 +12,22 @@ Nothing here is a regression case: there is no `prompt.md` and `check.py` does n
 
 Records under check, each read at one commit:
 
-| Records | Source | Commit |
-| --- | --- | --- |
-| ADR-0097, 0098, 0099, 0100, 0102, 0103 | PR [#226](https://github.com/Netcracker/qubership-authz-agent/pull/226) | `8519dc09` |
-| ADR-0101 | PR [#235](https://github.com/Netcracker/qubership-authz-agent/pull/235) | `a165cb32` |
-| ADR-0104 | PR [#329](https://github.com/Netcracker/qubership-authz-agent/pull/329) | `65e78e2a` |
-| ADR-0105 | PR [#332](https://github.com/Netcracker/qubership-authz-agent/pull/332) | `29f6b396` |
-| ADR-0106 | PR [#330](https://github.com/Netcracker/qubership-authz-agent/pull/330) | `ae609500` |
-| ADR-0107 | PR [#359](https://github.com/Netcracker/qubership-authz-agent/pull/359) | `fb564ae8` |
-| ADR-0082, 0083, 0090, 0091, 0092, 0093, 0094, 0095, 0096 | `main` | `7f557794` |
+| Records | Source | Commit | Tag in [vlsi/qubership-authz-agent](https://github.com/vlsi/qubership-authz-agent) |
+| --- | --- | --- | --- |
+| ADR-0097, 0098, 0099, 0100, 0102, 0103 | PR [#226](https://github.com/Netcracker/qubership-authz-agent/pull/226) | `8519dc09` | `one-home-corpus/pr-226` |
+| ADR-0101 | PR [#235](https://github.com/Netcracker/qubership-authz-agent/pull/235) | `a165cb32` | `one-home-corpus/pr-235` |
+| ADR-0104 | PR [#329](https://github.com/Netcracker/qubership-authz-agent/pull/329) | `65e78e2a` | `one-home-corpus/pr-329` |
+| ADR-0105 | PR [#332](https://github.com/Netcracker/qubership-authz-agent/pull/332) | `29f6b396` | `one-home-corpus/pr-332` |
+| ADR-0106 | PR [#330](https://github.com/Netcracker/qubership-authz-agent/pull/330) | `ae609500` | `one-home-corpus/pr-330` |
+| ADR-0107 | PR [#359](https://github.com/Netcracker/qubership-authz-agent/pull/359) | `fb564ae8` | `one-home-corpus/pr-359` |
+| ADR-0082, 0083, 0090, 0091, 0092, 0093, 0094, 0095, 0096 | `main` | `7f557794` | `one-home-corpus/main` |
+
+The pull requests keep changing, and a force-push or a squash merge drops the commits they had. The tags keep each
+commit reachable, and `summary.py` links to the fork. To fetch them into a clone of qubership-authz-agent:
+
+```bash
+git fetch https://github.com/vlsi/qubership-authz-agent 'refs/tags/one-home-corpus/*:refs/tags/one-home-corpus/*'
+```
 
 Each record got one run of each arm, with Opus, from `briefs/brief.md`. The arms differ only in the procedure the brief
 inserts:
@@ -42,7 +49,7 @@ from `briefs/judge-brief.md`.
 | `id` | Judge item id, `J<batch>-<n>` |
 | `record` | The record under check in the run that produced the finding; the lines may be in another record |
 | `arm` | `B` or `V` |
-| `pr`, `commit` | The checkout the run read; `pr` is null for `main` |
+| `pr`, `commit`, `tag` | The checkout the run read, and the tag that keeps it; `pr` is null for `main` |
 | `lines`, `quote` | Where the restatement is, relative to `docs/decisions/`, and its text |
 | `owner`, `owner_quote`, `why` | The rule the reviewer named as the owner, its text, and the reviewer's reason |
 | `verdict` | `TP`, `FP_CITATION` (only names the topic), `FP_OWN` (a decision of this record), `FP_WRONG`, or `UNSURE` |
