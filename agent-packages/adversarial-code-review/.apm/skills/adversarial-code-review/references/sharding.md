@@ -82,6 +82,27 @@ holds; the seam reviewer writes one section per seam:
 List every changed file the axis is responsible for. `all` means every added range of the file; ranges are line
 numbers at the reviewed head.
 
+An axis whose file has you run a skill's review checklist also writes a section `## <axis> checklist`, a list with
+one entry for every item of that checklist, in the skill's order: the item in a few words and its section, the answer,
+and the evidence (a `file:line`, a run, or a report). An item with nothing found gets its own entry too, even where the
+checklist itself has such items reported together. An item that applies to nothing the axis covers is `n/a`, with the
+reason. An answer that differs between the things checked, such as two tests, names each; an answer that went into a
+finding names the finding. Where the axis covers nothing the checklist runs over, such as a tests axis on a change that
+adds or changes no test, the section holds one entry that says so.
+
+```markdown
+## tests checklist
+
+- ...
+- State an earlier version left behind (§3, §4): n/a, the change reads no stored data.
+- ...
+- Expected value computed by the code under test (§5): no; literals from the RFC, test_csv.py:41-58.
+- ...
+- Name states the scenario and the outcome (§7): no for test_quote_1 and test_quote_2; finding "Test names give a
+  number, not the outcome".
+- ...
+```
+
 ## Shard brief
 
 Give a subagent that holds one axis over one shard this brief:
@@ -118,8 +139,9 @@ One seam reviewer runs per review, for all the sharded axes, in the same wave as
 > (`git -C <workspace> worktree add <work>/axes/seams-wt <sha>`) and run there, never in `<workspace>`. Write your
 > findings as a JSON array of finding records (the `finding` definition in `<schema>`, without `id` and `class`) to
 > `<work>/axes/seams.json`, and `[]` if there are none, and what you read to `<work>/axes/seams-coverage.md`, in the
-> coverage format above, one section per seam. Do not edit the workspace, run nothing that writes outside `<work>`, and
-> post nothing. Reply with the number of findings per seam and severity, and the skills you loaded.
+> coverage format above, one section per seam and no checklist section. Do not edit the workspace, run nothing that
+> writes outside `<work>`, and post nothing. Reply with the number of findings per seam and severity, and the skills you
+> loaded.
 
 ## Retry the unread ranges
 

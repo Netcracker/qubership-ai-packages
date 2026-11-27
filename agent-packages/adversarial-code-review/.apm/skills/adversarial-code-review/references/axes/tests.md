@@ -16,7 +16,8 @@ repository's own test rules from `input.md` (for example, how cases are grouped 
   expected values are produced, what its assertions print, whether each case fails on its own under its own name, and
   its shape beside its neighbors. Where the neighbors' shape breaks the skill's rule on separate cases (independent
   cases chained in one act that stops at the first mismatch), the skill wins for the new test, and the neighbors are not
-  a finding. A shape the repository's rules name wins over both.
+  a finding. A shape the repository's rules name wins over both. Record every item in the coverage file, by the
+  coverage format in `references/sharding.md`.
 - CI status is supporting evidence, not the review result.
 
 ## Measurements

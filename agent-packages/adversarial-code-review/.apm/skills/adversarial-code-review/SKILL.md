@@ -259,11 +259,21 @@ Give a subagent that holds a group this brief, with the group's axes in their or
 
 Never write an axis file yourself (`axes/previous.json` is the one exception), even where your own probes and test runs
 already hold the evidence: write that evidence to `<work>/` and name it in `input.md`, and let the axis read it. An axis
-written in this context loads none of the skills its file names. Where the axis file requires a skill for this change
-and the reply does not name it, run that axis once more, in a subagent of its own with the one-axis brief, and remove
-that axis's records from the group's file; where the second reply does not name it either, record the axis as
-`failed`. A developer-style skill that is not installed does
-not fail an axis: the reply names it as missing.
+written in this context loads none of the skills its file names. Run a subagent once more when it did not do what an
+axis file requires:
+
+- The reply does not name a skill that the axis file requires for this change. A developer-style skill that is not
+  installed does not count: the reply names it as missing.
+- The axis file has the subagent run a skill's review checklist, and the coverage file has no `## <axis> checklist`
+  section, or the section has fewer list entries than the checklist has items and does not say that the axis covered
+  nothing the checklist runs over. The seam reviewer writes no such section.
+
+Give the new run its own brief: the one-axis brief for an axis that ran alone or in a group, the shard or
+retry brief with the same `<name>` for a shard or a retry, and the seam reviewer's brief for the seam reviewer. The new
+run's files replace the old ones; for an axis that ran in a group, remove its findings and its coverage sections from
+the group's files. Where the second run again leaves out a required skill, treat that subagent as failed, by the
+paragraph below. Where it leaves out only the checklist record, keep its findings, and write in the axis's `reason`
+that its checklist record is incomplete.
 
 Where a subagent fails, returns invalid JSON, or could not be spawned, every axis it held is recorded as `failed`, and
 its file and coverage file are removed, so the code it held counts as unread. A failed axis that applies to a

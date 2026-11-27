@@ -7,7 +7,8 @@ developer-style skill of the language the message is written in (`english-develo
 
 ## Check
 
-Run the skill's *Review checklist* over the diff. Beyond the calls the diff touches, it reaches these:
+Run the skill's *Review checklist* over the diff, and record every item in the coverage file, by the coverage format in
+`references/sharding.md`. Beyond the calls the diff touches, the check reaches these:
 
 - Every branch the change adds that ends in a failure, a retry, a fallback, a clamped value, or a state a reader may
   wait on: name the signal it owes and does not emit. A branch that emits nothing is a finding only where the skill says
