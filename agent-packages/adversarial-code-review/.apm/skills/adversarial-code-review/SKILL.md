@@ -162,10 +162,13 @@ Each axis is a file under `references/axes/`.
 | Change reach | `change-reach.md` | a member of a set, a documented command, a remedy |
 | Tests | `tests.md` | code or tests |
 | Comments | `comments.md` | added or changed doc comments or inline comments |
-| Vocabulary | `vocabulary.md` | added or changed comments, or new member names |
-| Naive reader | `naive-reader.md` | added or changed doc comments |
+| Vocabulary | `vocabulary.md` | added or changed comments, new member names, or output text |
+| Naive reader | `naive-reader.md` | added or changed doc comments, or output text |
 | Documentation pages | `docs-pages.md` | user-visible behavior, options, errors, or the pages themselves |
 | Change description and branch | `change-description.md` | always |
+
+Output text is the text the program shows its users, as *Output text* in `references/finding-rules.md` defines it: a
+change that only updates the program's text that tests or golden files expect touches output text.
 
 Run every axis that applies, plus the ones the user added, minus the ones the user excluded. Record every axis in `axes`
 with `ran`, or `skipped` and the reason ("no comments changed", "excluded by the request").

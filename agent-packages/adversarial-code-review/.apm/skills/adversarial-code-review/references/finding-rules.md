@@ -21,6 +21,28 @@ Not a finding:
   instead (`prior_thread`) only where this review adds evidence;
 - anything the request put out of scope.
 
+## Output text
+
+Output text is what the program shows the people who use it: a diagnostic, an exception or error message, CLI output
+and help, a UI string, an API error body, a generated report. A message that only the repository's own tests print when
+they fail is not output text, and belongs to the tests axis; the failure messages a test library or runner prints for
+its users are.
+
+Read output text where it is rendered, as well as in the literals and format strings that build it: the expected
+strings of tests, golden files, snapshots, and samples in the documentation. A literal shows a fragment; the order, the
+separators, and the substituted values show only in the rendered text, and that is what a user reads. Read one sample
+per distinct piece of wording, not every combination of pieces: each template, each optional or alternative part, and
+each substitution that changes the words, the notation, or the advice; samples that differ only in a substituted name,
+number, or path count once. Add a combination only where the order or the joining of the parts changes what they say.
+Read each piece in at least one whole message, since the separators and the order show only there. Where no sample
+shows a whole message, such as tests that check only that it contains a code or each part on its own, run the program
+or render the message from the literals and format strings, and say in the coverage file which samples you rendered.
+A change after which every rendered text reads as before has no output text to read; one that only deletes part of a
+message has.
+
+Where output text is what the change is for, as in a change that rewrites a message or a report, a defect in that text
+is a claim the change does not keep, and may be `major` by *Severity* below.
+
 ## Severity
 
 Ask: **if the author does not fix this, what does the reviewer do?**
@@ -110,6 +132,10 @@ such as a missing changelog entry.
   do without it. Where the fix is new text for a few adjacent lines of the new side, such as a rename, a comment whose
   meaning is wrong, or a changed condition, put the replacement lines in `suggestion`, and keep `proposed_solution` to
   what they do not show (the other call sites of a renamed method), or empty.
+  Where the fix changes output text (*Output text* above), quote in `proposed_solution` the whole message a user would
+  see after it, rendered for the input the finding names, or for a long report the changed lines and the lines around
+  them; `suggestion` stays the source lines, such as the changed format string. A description such as "name the
+  position in the first line" leaves the author to write text no one has checked.
 - `suggestion`: the whole lines that replace the lines `location` covers, with their indentation, where applying them
   is the whole fix and `location` is on the new side and in the diff; otherwise `null`. A rename with call sites
   outside the range is not such a fix. It changes only what the finding asks for: the range starts and ends at a line
@@ -118,8 +144,9 @@ such as a missing changelog entry.
   every line between them and the comment, as they are. In prose (a changelog, a docs page, a comment), it replaces a
   line whose meaning is wrong or adds a line that is missing; a line that is right and lacks a detail, such as a link,
   a default, or a unit, stays as the author wrote it, and `proposed_solution` names what is missing for the author to
-  word. In code, it may rewrite the lines it covers, such as the assertions of a test that cannot fail, but changes
-  nothing in them, such as a local's name, that the finding does not ask for.
+  word, unless the line is output text, which *Content* above has quoted whole. In code, it may rewrite the lines it
+  covers, such as the assertions of a test that cannot fail, but changes nothing in them, such as a local's name, that
+  the finding does not ask for.
 - `retest`: what a later round checks to accept a fix, such as an input and the result it must give, or a test that
   must exist and fail without the fix. Write it so that it holds for any fix that resolves the problem, not only for
   `proposed_solution`, and so that it fails at the reviewed head. Where the defect is one input of a property the code

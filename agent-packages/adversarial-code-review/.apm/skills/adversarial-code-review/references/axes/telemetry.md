@@ -13,9 +13,12 @@ Run the skill's *Review checklist* over the diff, and record every item in the c
 - Every branch the change adds that ends in a failure, a retry, a fallback, a clamped value, or a state a reader may
   wait on: name the signal it owes and does not emit. A branch that emits nothing is a finding only where the skill says
   the fact owes a signal.
-- The text of every exception, error response, or failed build, CLI, or CI check the change adds or rewords, outside
-  tests: whether a reader who holds only that text can tell what failed and what to do. The failure message of a test
-  belongs to the tests axis.
+- The text of every exception, error response, or failed build, CLI, or CI check that the change adds or rewords and
+  that is output text, read in its rendered samples as well as in the code (*Output text* in
+  `references/finding-rules.md`): whether a reader who holds only that text can tell what failed and what to do. Where
+  the axis runs sharded, the shard that holds the code building a message reads its samples wherever they are, and the
+  shard listed first in `<work>/shards/PLAN.md` reads a changed message that no shard's code builds, such as one in a
+  message catalog.
 - Every thread, task, or goroutine the change starts, and every outbound call that takes a context: whether the
   caller's context crosses it.
 - A published signal the change removes or renames, in a service a metric or a record the default configuration emits:
