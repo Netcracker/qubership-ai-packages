@@ -16,10 +16,13 @@ demands an answer to every item can, and the form is short enough that the items
    including the test that separates the chosen design from its alternative, and every command the change adds or edits,
    or whose outcome depends on a configuration it creates, matched to a script or CI job that runs that exact form. In
    the other direction, every hunk that changes behavior, a version, or a dependency belongs to a sentence of the commit
-   message or the description. Where the branch has an open pull request, its title and description are read against
-   the diff the pull request will show once the change is pushed: a title or a sentence that says the pull request
-   makes a change that diff does not make is a finding, and so is a hunk that changes behavior, a version, or a
-   dependency beyond what the title and the description claim, even where a commit message claims it.
+   message or the description. Where the change has an open pull request, its title and description are read against the
+   diff the pull request will show once the change is pushed: a title or a sentence that says the pull request makes a
+   change that diff does not make is a finding, and so is a hunk that changes behavior, a version, or a dependency
+   beyond what the title and the description claim, even where a commit message claims it. The reviewer reads the pull
+   request with `gh`, so it needs access to the repository; where the lookup fails for any reason but an absent pull
+   request, the report says that the pull request could not be read, and where no base or merge base can be had, that
+   the comparison could not be made.
 3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and, where
    the change reads or replaces state an earlier version left behind, a test or run that starts from it. Where the
    change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one

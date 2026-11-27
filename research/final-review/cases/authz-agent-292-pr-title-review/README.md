@@ -42,20 +42,25 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 
 ## How to run
 
-From the repository root, once per model, arm, and run:
+From the repository root. The first command runs final-review as it was before the paragraph (`origin/main` at
+`64435a9`), the second the working copy. Use a label that no committed run has: the script replaces the results of a
+label it is given again.
 
 ```bash
-research/final-review/cases/run-review-case.sh research/final-review/cases/authz-agent-292-pr-title-review <model> <label> [<rev>]
+research/final-review/cases/run-review-case.sh research/final-review/cases/authz-agent-292-pr-title-review claude-opus-5-5 base-9 64435a981367155a6fc95a55f9901224323fad87
+research/final-review/cases/run-review-case.sh research/final-review/cases/authz-agent-292-pr-title-review claude-opus-5-5 pr-9
 ```
 
 ## Results, 2026-11-26
 
 `pr-<n>` ran final-review tree `63a559df` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0). The committed
-tree `2a8a0411` differs from `63a559df` in which commit the pull request's diff starts from (the fetched tip of the base
-branch, or offline the newer of the remote-tracking copy and `baseRefOid`, rather than `baseRefOid` alone), in the
-wording of two sentences, and in the wrapping of one bullet in §1. Here `origin/main` and `baseRefOid` are the same
-commit, so the diff is the same, and the results stand for `2a8a0411`. Opus and Sonnet, two runs each, graded by reading
-`result.md`.
+tree `ac12adbd` differs from `63a559df` in how the diff of the pull request is bounded: which commit it starts from (a
+new tip the writer names, else the tip fetched now, else the remote-tracking ref), where it ends, and a comparison that
+cannot be made. It also differs in §1, which reads a named pull request, treats its text as claims, and rewords the
+fallback for a missing task statement so that it keeps the pull request check, which all four `pr` runs made anyway. In
+this input the change is committed, no merge is in progress, the fetch fails, and the remote-tracking ref is `cd2f261`,
+the commit `baseRefOid` names, so the diff is the one the runs read; the results stand for `ac12adbd`. Opus and Sonnet,
+two runs each, graded by reading `result.md`.
 
 | Model | Run | 1 title | 2 description | Words | Cost, USD |
 | --- | --- | --- | --- | --- | --- |

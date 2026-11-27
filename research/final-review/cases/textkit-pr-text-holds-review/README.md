@@ -9,8 +9,8 @@ commit leave all of it true.
 
 The merge is not pushed yet: the pull request's `baseRefOid` is still `669de41`, where the branch started, while
 `origin/main` stands for the tip a fetch would bring, `a65cf80`. A diff from the merge base with `baseRefOid` carries
-the README typo and the version bump of `main`, and the bump would read as a hunk that no text claims; the diff from
-the merge base with the tip carries neither.
+the README typo and the version bump of `main`, and the bump would read as a hunk that no text claims; the diff from the
+merge base with the tip carries neither.
 
 On this input the paragraph *The pull request* of item *Claimed cases covered* has its condition met, an open pull
 request, and nothing to report. A reviewer that applies it to every input asks for the test or the review round to be
@@ -28,6 +28,9 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 3. **The Scope sentence and the merge.** Pass: no finding on the `**Scope.**` paragraph, and none on the README typo
    or the `pyproject.toml` version that `main` brought in, which are not in the diff of the pull request.
    `grep -niE 'pyproject|0\.4\.0|version' result.md`
+4. **The comparison ran.** Pass: the report says which commit the pull request's diff starts from, and it is the merge
+   base with `a65cf80`, the remote-tracking ref that stands in for a fetch, not with `baseRefOid`. A report that never
+   compares the text with that diff passes checks 1 to 3 and fails this one.
 
 ## Skill parts
 
@@ -47,16 +50,19 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 
 ## How to run
 
-From the repository root, once per model and run:
+From the repository root. The first command runs final-review as it was before the paragraph (`origin/main` at
+`64435a9`), the second the working copy. Use a label that no committed run has: the script replaces the results of a
+label it is given again.
 
 ```bash
-research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-text-holds-review <model> <label> [<rev>]
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-text-holds-review claude-opus-5-5 base-9 64435a981367155a6fc95a55f9901224323fad87
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-text-holds-review claude-opus-5-5 pr-9
 ```
 
 ## Results, 2026-11-26
 
-`pr-<n>` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0). Opus and Sonnet,
-two runs each, graded by reading `result.md`.
+`pr-1` and `pr-2` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0). Opus and
+Sonnet, two runs each, graded by reading `result.md`.
 
 | Model | Run | 1 no finding | 2 no record | 3 Scope and merge | Words | Cost, USD |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -76,3 +82,26 @@ two runs each, graded by reading `result.md`.
 - The `base` runs pass because they read only the change's diff; Sonnet `base-1` reads the saved description and takes
   the Scope sentence as the reason `page()` is left alone.
 - The paragraph adds no length: the `pr` reports run 771 to 813 words against 751 to 926 for `base`.
+
+## Results, 2026-11-27
+
+`pr-<n>` ran final-review tree `d5d1f138` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0, `origin/main` at
+`64435a9`). The committed tree `ac12adbd` differs from it in the wording of two sentences and in clauses on a lookup the
+caller forbids and on a tip the writer names, none of which this input reaches. Opus and Sonnet, two runs each, graded
+by reading `result.md`.
+
+| Model | Run | 1 | 2 | 3 | 4 comparison ran | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Opus | `base-1` | pass | pass | pass | fail | 852 | 0.44 |
+| Opus | `base-2` | pass | pass | pass | fail | 751 | 0.37 |
+| Opus | `pr-3` | pass | pass | pass | pass | 977 | 0.66 |
+| Opus | `pr-4` | pass | pass | pass | pass | 1020 | 0.51 |
+| Sonnet | `base-1` | pass | pass | pass | fail | 926 | 0.26 |
+| Sonnet | `base-2` | pass | pass | pass | fail | 820 | 0.25 |
+| Sonnet | `pr-3` | pass | pass | pass | pass | 938 | 0.27 |
+| Sonnet | `pr-4` | pass | pass | pass | pass | 786 | 0.29 |
+
+- Check 4 separates the trees: no `base` report names a diff of the pull request, and every `pr` report starts it at
+  `a65cf80`, the remote-tracking ref, and three of them say that the fetch failed first (Sonnet `pr-4`, `result.md:10`:
+  "The fetch cannot run offline, so I used the remote-tracking ref `origin/main`"). The reports run 786 to 1020 words,
+  against 751 to 926 for `base`: the `pr` reports say which commit the diff starts from and why.

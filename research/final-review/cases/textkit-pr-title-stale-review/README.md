@@ -35,7 +35,7 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 
 | File | What it is |
 | --- | --- |
-| `textkit-pr.bundle` | The repository: a git bundle of `main` (`a65cf808`: a README typo fix and the 0.4.0 release on top of `669de41a`) and the branches `fix/page-count-stale`, which starts from `669de41a`, `fix/page-count-holds`, and `fix/page-count-earlier`. `textkit-pr-text-holds-review` and `textkit-pr-title-earlier-review` read it too. |
+| `textkit-pr.bundle` | The repository: a git bundle of `main` (`a65cf808`: a README typo fix and the 0.4.0 release on top of `669de41a`) and the branches `fix/page-count-stale`, which starts from `669de41a`, `fix/page-count-holds`, and `fix/page-count-earlier`. `textkit-pr-text-holds-review`, `textkit-pr-text-fetched-review`, `textkit-pr-text-omitted-review`, `textkit-pr-title-earlier-review`, `textkit-pr-title-discovery-review`, `textkit-pr-title-draft-review`, and `textkit-pr-title-merged-review` read it too. |
 | `repo`, `base`, `head` | The bundle's path, `58d2c74752dcaf0d65f0367c94a777f630812768` (the commit that adds the check to `page()`), and `7f2560c36bbcc985a5b3b230a0dfa0e5ede55051` (the commit that drops it). |
 | `pr-target`, `gh/pr-view.json` | `main` at `669de41a`, where the branch starts, which `run-review-case.sh` sets as `origin/main`, and the title and description the pull request carried for the first two commits, as `gh pr view --json state,title,body,baseRefName,baseRefOid` prints them. |
 | `prompt.md` | The task, with `<skills>`, `<base>`, and `<gh>` replaced by `run-review-case.sh`. It does not say that the branch has a pull request: it says that gh cannot reach GitHub, and that where a skill asks for a gh command, its saved output is under `<gh>`. |
@@ -43,16 +43,19 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 
 ## How to run
 
-From the repository root, once per model, arm, and run:
+From the repository root. The first command runs final-review as it was before the paragraph (`origin/main` at
+`64435a9`), the second the working copy. Use a label that no committed run has: the script replaces the results of a
+label it is given again.
 
 ```bash
-research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-stale-review <model> <label> [<rev>]
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-stale-review claude-opus-5-5 base-9 64435a981367155a6fc95a55f9901224323fad87
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-stale-review claude-opus-5-5 pr-9
 ```
 
 ## Results, 2026-11-26
 
-`pr-<n>` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0, `origin/main` at
-`64435a9`). Opus and Sonnet, two runs each, graded by reading `result.md`.
+`pr-1` and `pr-2` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0,
+`origin/main` at `64435a9`). Opus and Sonnet, two runs each, graded by reading `result.md`.
 
 | Model | Run | 1 title | 2 description | 3 holds | Words | Cost, USD |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -72,16 +75,34 @@ research/final-review/cases/run-review-case.sh research/final-review/cases/textk
   request, and `listed-base-1`, `listed-base-2`, `listed-pr-1`, and `listed-pr-2`, whose prompt said that `<gh>` held
   what gh printed for the branch. Once the text is within reach, Opus and Sonnet compare it with the branch with or
   without the paragraph.
-- **The input where the old tree fails is not in this harness.** It is a reviewer whose brief names no pull request and
-  whose gh answers when called, so that only the §1 input makes it call `gh pr view`. A stub `gh` on the case session's
-  `PATH` was refused by the permission classifier of the agent session that ran the cases, not by `run-review-case.sh`.
-  `textkit-pr-title-earlier-review` tried the other input that could tell the trees apart, a text made false by an
-  earlier commit, and the old tree passes it as well.
+- **The input where the old tree fails** is a reviewer whose brief names no pull request and whose gh answers when
+  called. `textkit-pr-title-discovery-review` gives it with a stub `gh` on the session's `PATH`, and there the old tree
+  fails every check.
 - **What the checks catch.** An edit of the paragraph that stops the finding, such as a reading of the change's diff
   alone. They do not fail if the paragraph is removed, since the `base` runs pass.
 - **What the paragraph changes.** Every `pr` run names the diff it compared the text with, from the merge base with
   `669de41` (Opus `pr-2`: "The PR diff `669de41..HEAD` only touches `page_count()`"), and every one gives the new title,
   "Count a partial last page in page_count()". The `base` runs compare the text with the branch and ask to drop the
   second half of the title.
-- **Not run.** No case gives the reviewer a title or a description that the writer drafted, or a pull request whose
-  state is not `OPEN`; the §1 sentences on both are read, not measured.
+
+## Results, 2026-11-27
+
+`pr-<n>` ran final-review tree `4888ebd7` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0, `origin/main` at
+`64435a9`). The committed tree `ac12adbd` differs from it in one clause of the fallback, the remote-tracking ref rather
+than `baseRefOid`, which this input cannot reach since the two are one commit here; in the wording of two sentences; and
+in clauses on a lookup the caller forbids and on a tip the writer names, which these prompts do not reach. Opus and
+Sonnet, two runs each, graded by reading `result.md`.
+
+| Model | Run | 1 title | 2 description | 3 holds | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus | `pr-3` | pass | pass | pass | 1245 | 0.62 |
+| Opus | `pr-4` | pass | pass | pass | 1223 | 0.48 |
+| Sonnet | `pr-3` | pass | pass | pass | 1177 | 0.34 |
+| Sonnet | `pr-4` | pass | pass | pass | 1337 | 0.35 |
+
+- On the tree that adds the rules on the diff's ends and on a comparison that cannot be made, every run passes, and
+  every one names the diff from `669de41`.
+- **Not run.** No case gives the reviewer a new tip of the target that the writer names, a pull request named by number
+  or URL, a lookup that fails for want of access, a lookup the caller forbids, a staged change reviewed alone, or a
+  merge in progress; the three-argument merge base was checked with git in a scratch repository, not in a run.
+  `textkit-pr-text-fetched-review` runs the fetched tip.

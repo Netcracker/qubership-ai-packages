@@ -39,16 +39,19 @@ Grade each by reading `result.md`; the grep only finds the candidates.
 
 ## How to run
 
-From the repository root, once per model, arm, and run:
+From the repository root. The first command runs final-review as it was before the paragraph (`origin/main` at
+`64435a9`), the second the working copy. Use a label that no committed run has: the script replaces the results of a
+label it is given again.
 
 ```bash
-research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-earlier-review <model> <label> [<rev>]
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-earlier-review claude-opus-5-5 base-9 64435a981367155a6fc95a55f9901224323fad87
+research/final-review/cases/run-review-case.sh research/final-review/cases/textkit-pr-title-earlier-review claude-opus-5-5 pr-9
 ```
 
 ## Results, 2026-11-26
 
-`pr-<n>` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0, `origin/main` at
-`64435a9`). Opus and Sonnet, two runs each, graded by reading `result.md`.
+`pr-1` and `pr-2` ran final-review tree `2a8a0411` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0,
+`origin/main` at `64435a9`). Opus and Sonnet, two runs each, graded by reading `result.md`.
 
 | Model | Run | 1 title | 2 description | Words | Cost, USD |
 | --- | --- | --- | --- | --- | --- |
@@ -68,3 +71,20 @@ research/final-review/cases/run-review-case.sh research/final-review/cases/textk
 - **What the paragraph changes.** Every `pr` run names the pull request's diff, `git diff 669de41 HEAD`, and three of
   four give the new title. Sonnet `pr-1` takes `baseRefOid` as the base and says that it "did not compare it with
   `origin/main`", which the paragraph asks for offline; here both are `669de41`, so its diff is the same.
+
+## Results, 2026-11-27
+
+`pr-<n>` ran final-review tree `4888ebd7` (version 1.4.0), `base-<n>` tree `ca8233fb` (version 1.3.0, `origin/main` at
+`64435a9`). The committed tree `ac12adbd` differs from it in one clause of the fallback, the remote-tracking ref rather
+than `baseRefOid`, which this input cannot reach since the two are one commit here; in the wording of two sentences; and
+in clauses on a lookup the caller forbids and on a tip the writer names, which these prompts do not reach. Opus and
+Sonnet, two runs each, graded by reading `result.md`.
+
+| Model | Run | 1 title | 2 description | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Opus | `pr-3` | pass | pass | 890 | 0.39 |
+| Opus | `pr-4` | pass | pass | 771 | 0.38 |
+| Sonnet | `pr-3` | pass | pass | 975 | 0.32 |
+| Sonnet | `pr-4` | pass | pass | 1094 | 0.37 |
+
+- On the newer tree, every run passes.

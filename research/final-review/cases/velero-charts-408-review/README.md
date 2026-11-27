@@ -178,11 +178,13 @@ be noise. Not measured here.
 ## Results of the `prtext` arm, 2026-11-26
 
 Final-review tree `63a559df` (version 1.4.0) adds the paragraph *The pull request* to item *Claimed cases covered*. The
-committed tree `2a8a0411` differs from it in which commit the pull request's diff starts from (the fetched tip of the
-base branch rather than `baseRefOid`), in the wording of two sentences, and in the wrapping of one bullet in §1; none of
-that reaches this input, whose prompt gives no gh output and whose pull request is the change under review. The prompt
-quotes the pull request description as the task statement, so the paragraph applies: the reviewer reads that description
-against the diff. Opus and Sonnet, two runs each, graded by reading `result.md`.
+prompt quotes the pull request description as the task statement and gives no state, no target, and no gh output. Three
+of four runs write that the live pull request could not be read and use the quoted text in item 2 (Opus `prtext-2`,
+`result.md:5`: "I could not read the live pull request (no `gh`), so item 2 uses the quoted text"). The committed tree
+`ac12adbd` differs from `63a559df` in parts that need a pull request with a state and a target, in the fallback for a
+missing task statement, which this prompt does not use since it gives one, and in §1's sentence on a lookup the caller
+forbids: here the caller hands over the platform's description, so the sentence leaves the quoted text to be read, as
+these runs did. Opus and Sonnet, two runs each, graded by reading `result.md`.
 
 | Model | Run | Check 1 | Check 2 (false pair) | Words | Cost, USD |
 | --- | --- | --- | --- | --- | --- |
@@ -196,8 +198,8 @@ against the diff. Opus and Sonnet, two runs each, graded by reading `result.md`.
   shutdown among the limits but asks only for a sentence in the values comment; `prtext-2` lists it under "Not
   findings".
 - **Check 2.** Opus `prtext-1` lists `resticTimeout` among the limits on the same termination, as both `cond` runs did.
-- **This input cannot show the paragraph.** The pull request is the two commits under review, so its diff is the
-  change's diff, and its description was the task statement before. All four runs file that the default moves from 30 to
-  3600 seconds for every install while the description claims only "the ability to specify" it (Opus `prtext-1`,
-  `result.md:30`), as all four `cond` runs did; three of four file the restic DaemonSet hunk, which commit `98041d0`
-  alone claims, as Sonnet `cond-1` and `series-2` did. No run asks for the rounds of review.
+- **The quoted description.** All four runs file that the default moves from 30 to 3600 seconds for every install while
+  the description claims only "the ability to specify" it (Opus `prtext-1`, `result.md:30`), as all four `cond` runs
+  did; three of four file the restic DaemonSet hunk, which commit `98041d0` alone claims, as Sonnet `cond-1` and
+  `series-2` did. Both come from reading the task statement, not from the paragraph. No run asks for the rounds of
+  review.

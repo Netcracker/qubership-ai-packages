@@ -121,7 +121,10 @@ item 3 asked for the same (`result.md:37`). `vocab-1` ends on "and I did not run
 
 ## The `prtext` arm, 2026-11-26: not run
 
-Final-review tree `2a8a0411` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
+Final-review tree `ac12adbd` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
 the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
-paragraph applies only where the branch has an open pull request. This case's prompt names none, quotes no pull request
-text, and forbids gh, so the input never reaches the paragraph. The results above stand for `2a8a0411` as well.
+paragraph applies only where there is an open pull request to read. This case's prompt names none, quotes no pull
+request text, and forbids gh, and §1 makes a lookup the caller forbids mean that there is none unless the caller hands
+over the platform's text, so the input never reaches the paragraph. §1 also rewords the fallback for a missing task
+statement so that it no longer switches off the pull request check; with no pull request, it asks for what it asked
+before. The results above stand for `ac12adbd` as well.

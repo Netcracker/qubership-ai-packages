@@ -1,0 +1,7 @@
+{
+  "baseRefName": "main",
+  "baseRefOid": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
+  "body": "`page_count(11, 5)` returned 2, so the eleventh item was on no page: the integer division dropped the remainder. It now rounds the quotient up and returns 3.\n\n`page(items, 1, 0)` returned an empty list for every page number, so a caller that passed 0 by mistake rendered an empty report with no error. It now raises `ValueError: per_page must be at least 1, got 0`, as `page_count()` already does.\n",
+  "state": "OPEN",
+  "title": "Count a partial last page in page_count() and reject a per_page below 1 in page()"
+}
