@@ -104,7 +104,7 @@ A class whose defect the code has already produced more than once is considered 
 members, so that the next one is caught before a review has to find it. That is a class with two or more members, at
 different places or on different inputs at one place (the findings and the cousins the search found; two reports of the
 same input at the same place are one member), or one whose family is `recurring` or has had an `adds_case` fix. Any
-other class goes to step 4 as it is: its test there is the regression net.
+other class goes to step 4 as it is: its tests there are the regression net.
 
 Such a class gets no check where no program decides its rule, such as whether a comment, a name, or a description says
 the right thing, or whether a behavior is the one users want; and none where the check would cost more than the
@@ -126,7 +126,7 @@ take the first of these that applies:
    metamorphic test, where a known change of the input relates the results in a known way, equality included; a
    differential or parity test, where two paths, an old and a new implementation, or the code and an executable
    specification or model must agree. Inputs added to that specification or its golden corpus count as a check only
-   where they cover the axes beyond the reported points; the reported inputs alone are the tests of step 4.
+   where they cover the axes beyond the reported points; the reported inputs alone are cases of the tests of step 4.
    `blackbox-test-design`, where installed, governs metamorphic relations and the comparison with a reference, and
    `test-authoring` the test.
 
@@ -180,7 +180,8 @@ For each class:
   rule where it must not apply is a new defect.
 - Add or change the tests the class owes (by `test-authoring`, where installed): a test that fails before the fix for
   each combination the class changes that its check does not cover, and a control case at the boundary that passes
-  before and after.
+  before and after. Their cases are the combinations step 3 lists for the class's rule, and the reviewer's reproducer
+  is one of them, not the whole test.
 - Update comments and documentation the fix makes wrong. A stale comment is a class too: check every comment that
   describes the changed behavior, not only the one the reviewer flagged.
 - Add each cousin you find to the ledger as a row of its own (step 7).
