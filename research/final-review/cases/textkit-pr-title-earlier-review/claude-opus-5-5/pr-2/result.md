@@ -1,57 +1,71 @@
-# Final review: `7f2560c..HEAD` (one commit, `96189d4`)
+The one commit under review, the docstring line, is correct, and I have no findings against it. The pull request text has one problem: its title and second paragraph describe a `page()` change that this branch no longer contains.
 
-I had no task statement, so I took the claimed cases from the commit message alone. The branch has an open pull request (`gh/pr-view.json`, state `OPEN`). With no network I couldn't fetch the target, so I used `origin/main` (`669de41`). It is the same commit as the recorded `baseRefOid`. There is no previous report.
+There was no task statement, so the claimed cases below come from the commit messages alone. The pull request title and description were read against the full pull request diff, `669de41..HEAD`. I did not run the drift script's results through the form: the script reads only `.java`, `.kt`, `.kts`, `.groovy` and `.scala` files (`comment-drift.py:29`), so it printed nothing for this Python change. I went through each changed docstring by hand instead.
 
-Skills loaded: `final-review`, `test-authoring` (§7, `references/python/pytest.md`) and `english-developer-style` (§4, §4a, §7). There is no Python doc-comment skill (`pythondoc-authoring`) among the provided copies.
+# Final review: `7f2560c..HEAD` (96189d4)
 
-The drift script printed nothing and exited 0. It only parses `.java`, `.kt`, `.kts`, `.groovy` and `.scala` files (`comment-drift.py:29`), so I found the changed members by hand. The only one is `page_count`, `src/textkit/paginate.py:4`, tagged `comment-added`.
+## Item 1: comments consistent with the code and with each other
 
-### Item 1: comments consistent with the code and with each other
-None. The added sentence at `paginate.py:7` ("A partial last page counts as a page, so `page_count(11, 5)` is 3.") matches the body at `:15`: `(11 + 5 - 1) // 5 == 3`. It reads correctly the first time and narrates nothing. Two other comments touch the same fact, and neither contradicts it: `page()`'s docstring at `:19–21` and the README line `page_count(11, 5)  # number of pages for 11 items, 5 per page`. The change coins no term: "partial last page" appears in the existing test name `test_page_count_counts_partial_last_page`.
+None. The added sentence at `src/textkit/paginate.py:7` reads: "A partial last page counts as a page, so ``page_count(11, 5)`` is 3."
+- **Matches the code:** it is true of `(total + per_page - 1) // per_page` (line 15), and the example works out to 15 // 5 = 3.
+- **Rest of the docstring:** the first sentence (line 5) and the `Raises` sentence (line 9) are unchanged and still true.
+- **Agrees with `page()`:** its docstring says it "Returns an empty list for a page past the last one" (line 21), which is consistent.
+- **Wording:** the sentence does not narrate the change (no "now" or "used to") and is not over-compressed (`english-developer-style` §4).
+- **Terms:** "partial last page" is not a new term. "Last page" already appears in `page()`'s docstring and "partial_last_page" in `test_page_count_counts_partial_last_page`.
+- **Inline comments:** none were added.
 
-### Item 2: claimed cases covered
-- **Claimed case:** "a partial page counts", with the example `page_count(11, 5)` is 3. Test: `test_page_count_counts_partial_last_page` (`tests/test_paginate.py:10`). It would fail on the old `total // per_page`, which returns 2.
-- **Commands:** none added or edited.
-- **Reverse reading:** the commit's only hunk is the docstring, and the commit message claims it.
-- **Pull request:** the PR diff (`git diff 669de41 HEAD`) changes only `page_count()`, its docstring, and one test. `page()` is untouched, because `7f2560c` removed the `per_page` check. Two parts of the PR text are therefore false:
-  - The title says "…and reject a per_page below 1 in page()".
-  - The second paragraph of the description says that `page(items, 1, 0)` "now raises `ValueError: per_page must be at least 1, got 0`".
+## Item 2: claimed cases covered
 
-  On this diff, `page(items, 1, 0)` still returns `[]`: `items[0:0]` at `paginate.py:26`. A reviewer reading the PR would expect a check that isn't there.
+**The commit's own claim.** The docstring should name the rounding with an example. Line 7 does that, and its example is the case that `test_page_count_counts_partial_last_page` (`tests/test_paginate.py:10`) asserts. A docstring change owes no test (`test-authoring` §3). The commit tells nobody to run a command, and it has no hunk that its message doesn't claim.
 
-  **Substantive.** Requested changes:
-  - Retitle the PR to "Count a partial last page in page_count()".
-  - Replace the second paragraph with: "The per_page check in page() moves to a separate change, which first updates the report renderer that calls `page(rows, 1, 0)` for an empty report."
+**The pull request.** Read against `669de41..HEAD`, the diff contains:
+- the rounding fix in `page_count()`;
+- its test;
+- this docstring.
 
-### Item 3: boundaries, partitions, and the negative control
-None. The `page_count` tests cover:
-- an exact multiple as the control: `(10, 5)` gives 2;
-- one past the multiple: `(11, 5)` gives 3;
-- the empty value: `(0, 5)`;
-- each invalid input on its own: `per_page=0` and `total=-1`.
+It does not touch `page()`. Commit 58d2c74 added a `per_page` check to `page()`, and 7f2560c removed it again, because the report renderer calls `page(rows, 1, 0)` and expects `[]`. At HEAD, lines 18–26 show `page()` as it was at the base, so `page(items, 1, 0)` still returns `[]`.
 
-The change replaces no stored state and no mechanism, and adds no limit.
+- **Finding 2a, substantive.** The title says "…and reject a per_page below 1 in page()". This diff doesn't do that. **Request:** retitle to `Count a partial last page in page_count()`.
+- **Finding 2b, substantive.** The second paragraph of the description says `page(items, 1, 0)` "now raises `ValueError: per_page must be at least 1, got 0`". That is false at HEAD. A reviewer who trusted it would expect empty reports to fail, when in fact the branch deliberately keeps them working. **Request:** delete the paragraph. If the reviewer should know why `page()` is left alone, replace it with: "`page()` is unchanged: the report renderer calls `page(rows, 1, 0)` for an empty report, so rejecting `per_page` 0 belongs to a change that updates that caller first."
 
-### Item 3a: level, placement, and the environment
-None. The tests run in-process with pytest, in the existing `tests/test_paginate.py`, next to the other `page_count` tests.
+The first paragraph is true of the diff: `page_count(11, 5)` returns 3 (line 15, test at line 10). Read the other way, every hunk in the diff is claimed by the title or the first paragraph, or is the docstring that supports them.
 
-### Item 4: names by content, not by position
-None. No name, comment or message in the diff refers to anything by position or ordinal. "Last page" names content.
+## Item 3: boundaries, partitions, and the negative control
 
-### Item 5: the failure report
-None. The test is a bare pytest `assert ==`, which pytest rewrites so that the failure prints both operands (`pytest.md:15`).
+None. This commit changes no behavior, so it varies no input. For the `page_count()` fix it documents, the suite has:
+- the exact multiple, `(10, 5) == 2`, as the control that passes on the base commit;
+- the value just past it, `(11, 5) == 3`;
+- the empty input, `(0, 5) == 0`;
+- each invalid partition tested alone: `per_page` 0 and `total` -1.
 
-### Item 6: what the writer says it verified
-The writer states "Docstring only; the suite passes on HEAD." That gives neither a red run on the base commit nor a mutation verdict. The commit adds no test, so its claim rests on `test_page_count_counts_partial_last_page` from `5c64077`. From the diff alone, that test would fail on `669de41`, but nobody has stated a red run for it.
+No earlier state is read or replaced.
 
-### Item 7: siblings of the change
-None. In the repository, `page_count` is used only in `README.md:22` and in the tests, and the README line is consistent with the new sentence. One taste point: the README comment could give the value, `# 3`. The other sibling is the PR description, which item 2 files.
+## Item 3a: level, placement, and the environment
 
-### Index
+None. No test is owed for a docstring. The existing `page_count` tests are small and run in one process, they sit together in `tests/test_paginate.py`, and none needs an optional prerequisite.
+
+## Item 4: names by content, not by position
+
+None. "Partial last page" in the docstring and the test name describe what the page contains. They don't refer to its position in a list of cases.
+
+## Item 5: the failure report
+
+None. The `page_count` tests put the comparison inside a bare `assert`, so pytest prints the operands, and the error tests use `pytest.raises(..., match=...)` on the message.
+
+## Item 6: what the writer says it verified
+
+The writer reports "Docstring only; the suite passes on HEAD." That is no evidence that the tests can fail. It isn't owed for this commit, which can't change behavior. Neither a red run on the base commit nor a mutation verdict is stated anywhere, including for the `page_count()` fix (5c64077) that the pull request carries.
+
+## Item 7: siblings of the change
+
+None.
+- **`page_count`:** besides the tests, the only other caller is `README.md:22`. Its comment ("number of pages for 11 items, 5 per page") gives no number, so it doesn't contradict the docstring.
+- **`page()`:** its docstring is the only other comment on the same fact, the end of the item sequence, and it agrees (Item 1).
+- **The report renderer:** 7f2560c names it, but it isn't in this repository, so I could not read its calls.
+
+## Index
 
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| The PR title and description say `page()` rejects a `per_page` below 1; the diff no longer does | Substantive | PR #(open) title and description, second paragraph; `src/textkit/paginate.py:18–26` | 2 |
-| The README example could give the result `# 3` | Taste | `README.md:22` | 7 |
-
-Two checks could not be done as the form asks. The drift script does not parse Python. And with no network the PR target could not be fetched, so `origin/main` (equal to `baseRefOid`) stood in for it.
+| The pull request title claims `page()` rejects a `per_page` below 1, which the diff no longer does | Substantive | PR title | 2 |
+| The description's second paragraph says `page(items, 1, 0)` raises `ValueError`; at HEAD it returns `[]` | Substantive | PR description, second paragraph | 2 |

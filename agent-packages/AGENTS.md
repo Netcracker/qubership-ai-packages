@@ -50,7 +50,8 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   session outside the checkout too. A session that reads the skill inside the checkout also loads the `CLAUDE.md` and
   `AGENTS.md` files on the way, and a drafting agent should not see instructions for editing the skill.
 - **A change to a skill re-runs the cases whose `## Skill parts` it touches.** A change to a skill is a change under
-  `agent-packages/<package>/.apm/skills/<skill>/`. The frontmatter and the text above the first numbered section count
+  `agent-packages/<package>/.apm/skills/<skill>/`; a change to the package's trigger under `.apm/instructions/` re-runs
+  the cases whose `## Skill parts` name the trigger. The frontmatter and the text above the first numbered section count
   for every case; a checklist item, a table row, or a worked example counts as the section whose rule it restates. A
   case whose input never reaches the changed rule needs no run either, such as a case whose change adds no instruction
   when the rule governs the table of added instructions: write in its `README.md` the tree its results now stand for and
@@ -64,7 +65,8 @@ the case), and a `README.md` with the checks the output has to pass and the way 
   section number the check cites. Update the declarations in the same commit that adds a check, renumbers the
   sections, or finds a check testing a part the list omits.
 - **Write `scripts/skill-tree.sh <skill directory> [<rev>]` to `<model>/skill-tree` beside each result.** A result whose
-  file matches `git rev-parse HEAD:<skill directory>` is current and needs no new run.
+  file matches `git rev-parse HEAD:<skill directory>` is current and needs no new run. A case that runs the trigger
+  records its blob too, and its result is current only where that line also matches `git rev-parse HEAD:<trigger file>`.
 - **A case for a rule added after a bad output also checks an input where the rule's item is noise:** a word limit, or a
   check that the item is absent there, beside the check that it now appears. A case that checks presence alone passes a
   skill that writes the item into every output (the change-description-authoring cases checked that the audit was named

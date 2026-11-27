@@ -277,12 +277,10 @@ therefore stand for the tree they name, not for `ca8233fb`. The change is a skil
 own analogue of the comments item, unchanged in `ca8233fb`. Whether a reviewer now carries the term and dense-sentence
 checks of item 1 over to a skill text is not measured: no case with a skill edit ran with the new tree.
 
-## The `prtext` arm, 2026-11-26: not run
+## The `handover` arm, 2026-11-27: not run
 
-Final-review tree `ac12adbd` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
-the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
-paragraph applies only where there is an open pull request to read. This case's prompt names none, quotes no pull
-request text, and forbids gh, and §1 makes a lookup the caller forbids mean that there is none unless the caller hands
-over the platform's text, so the input never reaches the paragraph. §1 also rewords the fallback for a missing task
-statement so that it no longer switches off the pull request check; with no pull request, it asks for what it asked
-before. The change leaves the results above standing for the tree they name.
+Final-review tree `f99ddfd4` (version 1.4.0) adds to §1 the title, the description, and the start commit of a pull
+request, as the caller hands them over, the paragraph *The pull request* to item *Claimed cases covered*, and a sentence
+to that item's analogue in §2a. The paragraph reads only text the caller hands over, and this case's prompt hands over
+none, so the input never reaches it. §1 also rewords the fallback for a missing task statement; with no pull request
+text, it asks for what it asked before. The change leaves the results above standing for the tree they name.

@@ -1,141 +1,163 @@
 # Final review of `08d388e..HEAD` (b6b79c5)
 
-**Inputs.**
-- The change touches two ADR pages and no code. I filled the form through the §2a analogues.
-- The drift script was run and printed nothing, because it does not parse Markdown. It does not apply here.
-- I loaded `english-developer-style`. `apm-authoring` is for skills and instruction files, so it does not apply. `docs-page-authoring` is not among the four skills I was given.
-- There is no task statement. The claimed cases come from the commit message alone.
-- The open PR text is in `gh/pr-view.json`. Its `baseRefOid` is `cd2f261`, which I used as the target.
-- There is no previous report.
-- `make mutation-diff` does not apply: no Go code changed.
+**Inputs.** The change has one commit and edits two ADR pages: ADR-0091 and ADR-0095. No code is involved, so I used the §2a analogues under every item. I did not run the drift script (`comment-drift.py`) because there are no members or doc comments to parse. I loaded `english-developer-style` and read `apm-authoring` only as far as its package rules, which do not apply to ADR pages. No task statement was handed over, so the claimed cases come from the commit message alone. The pull request title and description were handed over, with `cd2f261` as the start of the diff. There is no previous report.
 
-## Item 1: comments consistent with the code and with each other
+**The commit message and the pull request text disagree.** The commit message and the diff remove `TOKEN_REALM_UNKNOWN` and refuse nothing in R79. The pull request text says the opposite. This is the first finding below.
 
-Analogue used: statements one page makes about its own rules, about the other ADRs, and about the RFC.
+## Item 1: Comments consistent with the code and with each other
 
-**Finding 1 (substantive).** ADR-0091 R79 (`:148-150`) says an entry with an `alg` verifies only a token with that `alg`.
-- R79 does not say which code a token gets when it matches no entry. That covers a PS256 token whose only entry under its `kid` says RS256.
-- R41 (`:199`) gives `TOKEN_ALG_NOT_ALLOWED` only for non-asymmetric algorithms, and R43 gives `TOKEN_SIGNATURE_INVALID` for a signature that does not verify.
-- The new Negative bullet (`:400-402`) and the kept bullet (`:405-408`) both say the token gets `TOKEN_SIGNATURE_INVALID` or `TOKEN_ALG_NOT_ALLOWED`, with no rule that picks between them.
-- ADR-0095's table maps `TOKEN_ALG_NOT_ALLOWED` to R41 only.
-- Request: add to R79 the code a token gets when no key under its `kid` accepts its `alg`, and make the two Negative bullets and the ADR-0095 row agree with it.
+Analogue used: every statement the changed pages make about another rule, another page, or a cited standard.
 
-**Finding 2 (taste).**
-- The new bullet (`:400-402`) and the rewritten last bullet (`:403-411`) both describe a key added under a held `kid`. Merge them. Expect this to be declined.
-- "the server of the keys" (`:381`) is a new phrase beside the glossary's "Keycloak" and "source". "A 404 that something other than Keycloak or a provider sends" would use the glossary's words. Expect this to be declined.
+**1a. The pull request title and description claim a design the diff does not contain.** *Substantive.*
+- The diff from `cd2f261..HEAD` adds no `TOKEN_REALM_UNKNOWN`, no "missing realm" result, and no refusal of a JWKS under R79. Each of these is stated as present in the title or the description:
+  - The title says the change adds `TOKEN_REALM_UNKNOWN`.
+  - The description says R39 yields a "missing realm" when the source is a realm with no keys loaded.
+  - It says R23 has a 401 `TOKEN_REALM_UNKNOWN` row.
+  - It says R79 "refuses the response for any other pair" of entries.
+  - It says A13 rejects loading the rest of such a JWKS.
+  - It says A14 rejects counting a required realm's 404 as a failure, "as on `main`", while R14, R17, and R19 keep the agent not ready.
+  - It says ADR-0095 R16 lists three codes under R23.
+  - It says the same for "ADR-0095 A2".
+  - It says "Alternative A12 is not used."
+  - Its user-visible bullets and costs describe 401 `TOKEN_REALM_UNKNOWN` and refused JWKS responses.
+  - It says #208 "gives `TOKEN_REALM_UNKNOWN`".
+  - It says ADR-0104 cites "these rules as this change leaves them".
+- Actual state at HEAD:
+  - R39 has three results: an answer, a 404, and a failure.
+  - R23 maps a 404 to `TOKEN_KID_UNKNOWN`.
+  - R79 loads every usable entry under one `kid` as a list. An entry with an `alg` verifies only a token with that `alg`.
+  - `ADR-0091:363` has an alternative A17 that rejects a reason code of its own for a 404 (A16 rejects refusing a JWKS whose entries share a `kid`). A13 is gone.
+  - A14 and A15 are reworded for the 404 result.
+  - ADR-0095's table has no `TOKEN_REALM_UNKNOWN` row.
+  - A2 of ADR-0095 is reworded.
+  - ADR-0093 R3 is reworded.
+- Request: rewrite the title and the description from the diff. The title should be along the lines of `docs(adr): define which responses ADR-0091 R39 counts as an answer, and give a 404 the code of an answer`.
+- Request: the description must cover the 404 result, the list of keys under one `kid` (R79), A14 to A17, the new costs, and the ADR-0095 and ADR-0093 edits.
+- Request: decide whether it still claims anything about #208 and ADR-0104. The description says #208 gives `TOKEN_REALM_UNKNOWN`. If so, #208 contradicts this ADR and needs a follow-up named. I cannot check ADR-0104 or #329 here.
 
-**Other checks, none.**
-- Every sentence about R23, R28, R38, R39, R81 and R61 was re-read against the new R39. They still hold.
-- R20, R28, R61 and the new R39 agree about a 404 keeping the keys.
-- No narration (`now`, `no longer`, `used to`) was added to the pages.
-- No dense sentence was found that needs two parses.
-- No coined term was found, apart from the taste item above.
-- ADR-0095's new Justification sentence and its reworded A2 match R23.
+**1b. R79 leaves the code of an `alg` mismatch undefined.** *Substantive.* `ADR-0091:148`, with R41 at `:199` and R43 at `:202`.
+- R79 says a key from an entry with an `alg` verifies only a token with that `alg`. The Negatives (`:402`, `:405`) say such a token gets `TOKEN_ALG_NOT_ALLOWED` or `TOKEN_SIGNATURE_INVALID`.
+- No rule says which. R41 refuses "any other `alg`", but that reads as the algorithms outside the allowed set, not a mismatch with the key's `alg`. R43 covers "a signature that does not verify".
+- Cases left open:
+  - every key under the `kid` is listed for another `alg`;
+  - one key matches the `alg` and its signature fails, while another key is listed for another `alg`.
+- Request: one sentence in R79 or R41 that names the code for each case, for example "`TOKEN_ALG_NOT_ALLOWED` when no key under the `kid` has the token's `alg` or no `alg`, otherwise `TOKEN_SIGNATURE_INVALID`". Then `:402` and `:405` can cite it.
 
-## Item 2: claimed cases covered
+**1c. The Justification sentence on R38 reads as two reasons spliced into one.** *Substantive.* `ADR-0091:287-289`.
+- The sentence reads: "…because a 503 after an answer would report an outage that did not happen, and R23 gives a 404 the code of an answer".
+- The clause after "and" is not part of the "because". The "because" clause also names only an answer, though the stored result can now be a 404 as well.
+- Request: "…because a 503 after an answer or a 404 would report an outage that did not happen."
 
-The claims come from the commit message. The task statement was not handed over, so this item rests on the commit message alone.
+**1d. A source for the "list of keys" claim is mismatched with its cited standard.** *Substantive.* `ADR-0091:303-310`, and A16 at `:360`.
+- The page cites RFC 7517 §4.5 as allowing several keys under one `kid`. That section says keys in one set SHOULD use distinct `kid` values, and gives different `kty` as an example of an exception.
+- R79 loads any number of entries under one `kid`, whatever their `kty`. The cited section covers only the different-`kty` case.
+- Request: say the decision goes beyond the RFC for the same `kty`, and give the reason that applies: the source lists the key, and refusing the response keeps withdrawn keys and drops added ones. A16 already carries that reason. As it stands, "as RFC 7517, section 4.5, allows" is read as the RFC covering R79.
+- I checked RFC 7517 §4.4 (`alg`) from memory. It matches the page's use.
 
-| Claim | Section that makes it true |
+**1e. Terms the change introduces.** *Substantive.* One coinage: "the server of the keys" at `ADR-0091:383`.
+- Other terms:
+  - **Result, Last result, Source, Required source** are defined in the page's term list.
+  - **404** as a result name: the field names the response by that status. Item 4 covers that point separately.
+  - **List of keys** has no definition. It is an ordinary-sense use for R79, and the page uses "list" for the realms (R34) as well.
+  - **Key material** and **usable entry**: "usable" is used at the base (R28, R42), and "key material" is the field's term.
+- "The server of the keys" has no source. The page defines **Keycloak** and **Provider** and says "source" elsewhere. The sentence means "something other than the source", so the request is "A 404 that something other than Keycloak or the provider sends".
+
+No sentence narrates the change ("now", "no longer") outside a place that allows it. The wording shapes from `english-developer-style` §4 occur only in the one sentence in 1c.
+
+## Item 2: Claimed cases covered
+
+Analogue used: each claim of the commit message, covered by the section that carries it.
+
+| Claimed case | Section that handles it |
 | --- | --- |
-| R23 drops `TOKEN_REALM_UNKNOWN`. | R23 table (`:141-146`) |
-| ADR-0095 R16 drops the code. | `0095:98-101` |
-| A 404 for any source keeps its keys and gives `TOKEN_KID_UNKNOWN`. | R39, R28 |
-| ADR-0095 Justification says a 404 is not an outage. | `0095:119-121` |
-| A14, A15 and A17 are rejected. | `0091:349-365` |
-| R79 loads all usable entries under a `kid` as a list. | R79 |
-| A16 rejects refusing such a JWKS, and A13 goes. | A16 added, A13 removed |
-| R80 stays. | R80 unchanged |
-| Negative: a deleted realm gets the code of an invented `kid`. | `:388-390` |
-| Negative: a 404 for a provider or a realm with keys gives 401 rather than 503. | `:381-387` |
-| Negative: no warning after a required source has keys. | `:394-399` |
-| Negative: a key added under a held `kid` starts no load. | `:400-402` |
+| A load ends in an answer, a 404, or a failure | Term list, R39 |
+| A 404 for any source, with or without keys loaded, keeps the keys held | R28 and the Justification (`:293-295`) |
+| A token whose `kid` matches no key then gets `TOKEN_KID_UNKNOWN` | R23 table |
+| R23 and the ADR-0095 table drop `TOKEN_REALM_UNKNOWN` | R23; ADR-0095 table at `:100`. ADR-0095 A2 and its Justification are also edited for the 404 case. |
+| ADR-0095 Justification says a 404 is not an outage | ADR-0095 `:119-121` |
+| A14: a 404 for a required source is not a failure | A14 |
+| A15: still rejects counting only a 404 of the discovery document | A15 |
+| A17: no code of its own for a 404 | A17 |
+| R79: the usable entries of a JWKS under one `kid` load as a list, and an entry with an `alg` verifies only a token with that `alg` | R79 |
+| A16: rejects refusing such a JWKS; A13 goes | A16; A13 absent |
+| R80 stays | R80 unchanged |
+| Negatives: deleted realm's tokens get the invented-`kid` code | Negatives (`:388-390`) |
+| Negatives: a 404 for a provider or for a realm with keys gives 401 rather than 503 | Negatives (`:381-387`) |
+| Negatives: a 404 that starts after a required source has keys logs no warning | Negatives (`:394-399`) |
+| Negatives: a key added under a `kid` the agent holds starts no load | Negatives (`:400-402`) |
+| User-visible: a source's 404 gives 401 `TOKEN_KID_UNKNOWN` | R23, R39 |
+| User-visible: all keys under one `kid` load and any key that verifies passes | R79; gap in 1b |
 
-All are covered. The ADR-0092, ADR-0093 and ADR-0095 A2 citations of R23 still point to a code that exists. The page claims "an alg-mismatched token is refused" without a code, which is Finding 1.
+- No command or runnable form is added, so there are no `none` rows to list.
+- No test could fail the claims, because the change is a doc change. The detection is that each rule is stated so a reader can tell whether code obeys it. R79 fails that for the `alg` code (1b).
+- **Claims read the other way.** Two hunks are not claimed by the commit message and are not covered by the pull request description (which claims something else).
+  - ADR-0092 R2 and ADR-0093 R3 move their citation from R38 to R23. The ADR-0095 table and A2 are also edited. All three belong to the same code move, but the description lists only A2 and R16.
+  - A new Negative on the key a source adds under a `kid` the agent already holds is stated in the commit message ("The Negatives add four costs") but not in the pull request text.
+- The pull request-level findings are in 1a.
 
-No commands are told to run.
+## Item 3: Boundaries, partitions, and the negative control
 
-Hunks the commit does not claim:
-- The ADR-0095 A2 rewording is needed for consistency, so I did not file it.
-- The Negative wording "required sources" for "required realms" follows from the claimed 404 rule.
+Analogue used: the partitions and the negative control are the cases of R38, R39, and R79 and what the page says does not apply. No instruction-file table applies: this is not a skill or an instruction file.
 
-**Finding 3 (substantive): the pull request title and description describe a different design from this diff.**
-- PR diff means `git diff cd2f261..HEAD`, which I read from the `HEAD` of the repository.
-- The title says "and add `TOKEN_REALM_UNKNOWN`". The diff adds no such code, and ADR-0095 does not list it.
-- The description defines **Result** as "an answer, a missing realm, or a failure". The page now says "a 404".
-- The description says R39 gives a "missing realm" only for a realm with no keys loaded. It says a 404 for a provider or for a realm with keys loaded is a failure.
-- R39 now counts every 404 as a 404.
-- The description says R79 loads entries as one key only when they share key material and `alg`, and that a differing pair fails the load. R79 now loads them all as a list.
-- The same description line says A13 rejects loading the rest of such a JWKS. A13 is gone and A16 rejects refusing it.
-- The description says a 404 for a required realm "counts like a 404 for any other realm with no keys loaded". Under R39 it does, but the description then says A14 rejects counting that 404 as a failure. A14's wording changed.
-- Every item under the description's user-visible changes that names `TOKEN_REALM_UNKNOWN` or a refused JWKS is false.
-- The user-visible bullets and the Negative-cost sentence on proxies are stale in the same way.
-- Request: a new title (for example "define which responses ADR-0091 R39 counts as a 404 and load several keys under one `kid`") and a rewritten description to match the diff. It should say that a 404 keeps the keys and gives `TOKEN_KID_UNKNOWN`, that R79 loads a list, and that A16 and A17 are added.
+- **Partitions covered.** R39 covers a 404 for a provider, a realm with keys loaded, a realm without keys, and a required source (A14). A15 covers the discovery document's 404 against the `jwks_uri` 404. R79 covers entries with and without an `alg` and with different key material.
+- **Negative control.** R38 states what counts as a result for a token that waited and for one whose load R33 refused.
+- **Partition without evidence: the cost per token of a list (substantive).** `ADR-0091:307-310` and R80.
+  - R79 loads any number of entries under one `kid`, and the page states R80 bounds the memory "and with it the length of a list". R80 allows up to 1 MiB for a response, so a list can hold well over a thousand RSA entries.
+  - A token's check tries every key in the list when any key may verify it. Cost per request therefore grows with the length of the list, against a budget of 5 ms a request.
+  - The Justification and the Negatives claim only a memory bound. This is a count that a source controls, so it needs a bound at any size.
+  - Request: either a limit on the number of keys under one `kid` (a response that exceeds it is refused under R80, as for the size), or a statement that the check cost is bounded and why. This is not a cost beyond the stated production numbers.
+- **State left by an earlier version.** The change replaces a design that R79 had refused. After a deploy no persisted data differs, because the agent holds keys in memory only. None.
+- **Limits on the same work.** R80's 1 MiB is a limit on a response. The only other limit on the same work is R71's 3-second wait, which bounds a single request. None conflicts.
 
-The rest of the description (R38 for a canceled wait, R81, R80, the ADR-0104 scope note, `Closes #289`) still matches.
+## Item 3a: Level, placement, and the environment
 
-## Item 3: boundaries, partitions, and the negative control
+Analogue used: file placement and registration.
 
-Analogue used: the partitions the change claims and the statement of what does not apply.
+None. The edits sit in the ADRs that own the rules. `docs/decisions/README.md` needs no change (its only mention of these ADRs is "Defers: ADR-0091 R38 to #208"). I did not run a docs gate because the repository's own gate was not named, and I found no script for it in the diff.
 
-- **404 partitions:**
-  - 404 for a realm with no keys, 404 for a realm with keys, and 404 for a provider are collapsed into one rule. Each has its Negative or Justification sentence.
-  - A 404 on discovery versus on `jwks_uri` is A15.
-  - A 404 after keys exist keeps the keys, and the Negative covers the lack of a warning.
-- **R79 partitions:**
-  - Several keys under one `kid` is covered.
-  - A single key per `kid` keeps R28 and R61 unchanged.
-  - An `alg` entry versus an entry with no `alg`: R79 gives no code, which is Finding 1.
-  - A list with different `kty` is covered by the RFC sentence. Several usable entries of the same `kty` and key material are covered too.
-- **Limit:** R80's 1 MiB bound ties to list length in the Justification. Good.
-- **State from an earlier version:** none. These are design records.
-- No mode or setting is added, so no control arm is owed.
+## Item 4: Names by content, not by position
 
-None.
+Analogue used: headings, cross-references, and case names.
 
-## Item 3a: level, placement, and the environment
+None. A14 to A17 are ordinals by the page's convention. The alternatives skip A12 and A13 (A12 was never used, and A13 is removed here), so a reader may think they are missing. The description's "Alternative A12 is not used" does not explain A13. Taste: add one line to the page that the numbers A12 and A13 are unused, or renumber. I do not request it.
 
-Analogue used: file placement and registration entries.
+"A 404" as a result name is ordinary here: the code takes it from the status line, and the page says the agent does not read the body.
 
-- The edits stay in the two ADRs that already own the rules.
-- The `Index` entry in ADR-0095 (`:22-24`) still names R23 and R38, which still exist.
-- The repository's own gate for ADR pages was not found in `Makefile` (`git grep` for `adr` and `decisions` there found nothing), so none was run.
+## Item 5: The failure report
 
-None.
+Analogue used: whether each rule can be checked by a reader of a failing text.
 
-## Item 4: names by content, not by position
+- Each changed rule tells the reader what to look at: R23's table maps result to code, R39 names the three outcomes, and R81 names what the warning must carry.
+- R23's table has two rows with the same code (`An answer` and `A 404`). The table reads fine. Taste only: merge them into "An answer or a 404", which would also remove the need to say in 1c that the two are treated alike. I do not request it.
+- R79 does not detect the rule it is attached to: the code of an `alg` mismatch is not stated (1b).
 
-New headings and cross-references use rule numbers and content words. "A16" and "A17" are labels in the page's established scheme. The gap after A13 is the page's own convention (the PR notes A12 as unused).
+## Item 6: What the writer says it verified
 
-None.
+Analogue used: a passing exemplar and a failing case, named.
 
-## Item 5: the failure report
+The commit message states no check, no exemplar, and no counter-example. For a doc change the evidence would be a read of each rule against the cases in the Negatives. For example, a deleted realm's token with and without keys held, a 404 for a provider, and a JWKS with two keys under one `kid` and an `alg` on one of them. R79's case with an `alg` on one entry gives no code in the rules (1b), and that case is not carried through.
 
-Analogue used: a rule's detection. ADR rules have none in these pages. R79 says what passes but not what the reader should expect on failure, which is Finding 1. R39's three outcomes are each stated with a condition.
+## Item 7: Siblings of the change
 
-None beyond Finding 1.
+Analogue used: places that enumerate or route to the artifact.
 
-## Item 6: what the writer says it verified
-
-Neither the commit message nor anything in the change names a check that the rules can fail: no exemplar that passes and no bad case that fails. The commit message says the architect decided it on 2026-11-25. That is a decision, not a verification. Say so.
-
-## Item 7: siblings of the change
-
-- I searched `docs/` for `TOKEN_REALM_UNKNOWN`, `missing realm`, `A13`, `R79`, and `ADR-0091 R23/R39`.
-  - No leftover mention of the dropped code or of "missing realm" remains outside the PR description (Finding 3).
-  - ADR-0092 R2 (`:65`), ADR-0093 R3 (`:66`), and ADR-0095 `:23`, `:100`, `:108`, `:130` are the only citations. All still match.
-- A set count check: ADR-0091 still says "three codes" nowhere in the page. ADR-0095's table now has two 401 codes for a key (`TOKEN_KID_MISSING`, `TOKEN_KID_UNKNOWN`) and one 503 code, and the text does not count them.
-- Repository references outside `docs/` (code, tests) were not searched for R79 or `TOKEN_REALM_UNKNOWN`. A `git grep -n REALM_UNKNOWN` over Go sources found nothing in the earlier search.
-
-None.
+- Searched for `TOKEN_REALM_UNKNOWN`, "missing realm", `R38`, `R39`, `R79`, `R80`, and `R81` across `docs`. The only remaining mention of `TOKEN_REALM_UNKNOWN` is the new A17. No page still counts three codes under R23.
+- The ADR-0095 table cites R23 and R39 for `TOKEN_KID_UNKNOWN`, and R23, R37, R38 for `TOKEN_KEYS_UNAVAILABLE`. Both match.
+- The ADR-0095 introduction cites R23 and R38. Both are still true.
+- ADR-0092 R2 and ADR-0093 R3 cite R23 for the 503 code, which matches the table.
+- **Outside the repository (not checked).** #208 and ADR-0104 in #329 are named in the description as citing these rules. I could not read them. If #208 gives `TOKEN_REALM_UNKNOWN`, it now disagrees with R23 (1a).
 
 ## Index of findings
 
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| R79 and the two Negatives give no single code for a token whose `alg` no key under its `kid` accepts | Substantive | `docs/decisions/20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md:148-150`, `:400-408` | 1 |
-| Two Negative bullets describe a key added under a held `kid`; "the server of the keys" is a new phrase | Taste | same file, `:381`, `:400-411` | 1 |
-| PR title and description describe `TOKEN_REALM_UNKNOWN`, a "missing realm" result, and the old R79 and A13 | Substantive | PR title and body | 2 |
-| No check that the rules can fail is named | Substantive | commit message | 6 |
+| Pull request title and description describe the removed `TOKEN_REALM_UNKNOWN` design, not the diff | Substantive | PR text; diff `ADR-0091` R23, R39, R79, A13 to A17 | 1a |
+| R79 does not state the code for a token whose `alg` matches no key, or fails on one that matches | Substantive | `ADR-0091:148`, `:199`, `:202`, `:402`, `:405` | 1b |
+| The R38 Justification splices a second reason into a "because" clause and names only an answer | Substantive | `ADR-0091:287-289` | 1c |
+| RFC 7517 §4.5 cited for a list under one `kid`, but R79 goes beyond different `kty` | Substantive | `ADR-0091:303`, `:360` | 1d |
+| "The server of the keys" is a coinage | Substantive | `ADR-0091:383` | 1e |
+| Per-token cost of the list of keys is not bounded under the 5 ms budget; R80 bounds memory only | Substantive | `ADR-0091:148`, `:307-310` | 3 |
+| Alternatives skip A12 and A13 | Taste | `ADR-0091:345-349` | 4 |
+| R23 table has two rows with one code | Taste | `ADR-0091:141-146` | 5 |
 
-Checks I could not do: the offline gate for ADR pages was not found, and the repository's code and tests were not searched for uses of the dropped code beyond the one `git grep`.
+The checks I could not do: #208, ADR-0104, and the #329 text are outside this repository, so 1a and Item 7 rest on the description's own account of them.

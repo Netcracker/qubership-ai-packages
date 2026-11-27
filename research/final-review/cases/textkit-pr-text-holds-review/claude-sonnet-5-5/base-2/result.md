@@ -1,57 +1,64 @@
-## Final review: `38d3d04..HEAD` (cb32362, "Test page_count() with a single item")
+The review is done and the report is below. The only change is one added pytest test, and I changed no file and made no commit.
 
-**Inputs.** The change is one added test in `tests/test_paginate.py`. There is no separate task statement, so the claimed cases come from the commit message alone: "the smallest partial page: one item, which the old division counted as no page at all". The skill files read were `final-review` and `test-authoring`. `english-developer-style` was not loaded: the change has no comment or doc comment to word-check.
+# Final review: `38d3d04..HEAD` (`cb32362`)
 
-**Drift script.** It ran and printed nothing, which is correct here. It parses only Java, Kotlin, Groovy and Scala (`comment-drift.py:29`), and this change is Python. No source file changed either. Items 1 and 7 below were done by reading.
+**Inputs.** There was no separate task statement, so the claimed cases come from the commit message of `cb32362` and, for the pull request's context, the title and description handed over. The change is one hunk in `tests/test_paginate.py`. The pull request's own diff, `a65cf80..HEAD`, also carries the fix in `src/textkit/paginate.py:13` and the first test. I read both.
 
-**The writer's claim.** The test passes on HEAD and on `38d3d04`, which already contains the fix from 5c64077 (`(total + per_page - 1) // per_page`). The claim is accurate, but it is not evidence that the test can fail.
+**Drift script.** It ran for `38d3d04..HEAD` and for `a65cf80..HEAD` and printed nothing for either. The second range does contain a code change, `page_count()` at `paginate.py:13`, so I take the script not to parse Python. I read the members by hand.
 
-### Item 1: comments consistent with the code and with each other
-`none`. No source or doc comment was added or changed. The test has no comment. The commit message's "old division" matches 669de41, where `page_count` was `total // per_page`. The README line `page_count(11, 5)  # number of pages for 11 items, 5 per page` is still true. No term is introduced.
+**Skills loaded.** `test-authoring` and its `python/pytest.md` reference. `english-developer-style` was not loaded: the change adds no comment or docstring, and the commit message and the description were not under review for wording.
 
-### Item 2: claimed cases covered
-| Claimed case | Test |
+## Item 1: Comments consistent with the code and with each other
+None. The test commit adds no comment. For the pull request range, I re-read the `page_count()` docstring (`paginate.py:5-8`) against the new body. Its first sentence and its `Raises` sentence are both still true.
+
+The README line `page_count(11, 5)  # number of pages for 11 items, 5 per page` is consistent. No added sentence narrates the change. The change coins no term.
+
+## Item 2: Claimed cases covered
+| Claim (source) | Test |
 | --- | --- |
-| One item with `per_page` 5 gives one page. This is the smallest partial page, where the old division gave 0. | `test_page_count_single_item` |
+| `page_count(11, 5)` returns 3 (description) | `test_page_count_counts_partial_last_page` |
+| One item, the smallest partial page (`cb32362` message) | `test_page_count_single_item`, which asserts `page_count(1, 5) == 1` |
+| The old division counted one item as no page (`cb32362` message) | The same test. On `a65cf80`, `1 // 5` is 0, so it would fail there. |
+| Scope: `page()` is not changed for `per_page < 1` (description) | Nothing is owed. `page()` has no such check, which matches the description. |
 
-This is covered. By arithmetic, the test fails on 669de41: `1 // 5 == 0`, not 1.
+No command is told to anyone to run. No hunk goes beyond the claims. The test is claimed with the change.
 
-No command is told to run. No hunk changes behavior beyond the claim.
+## Item 3: Boundaries, partitions, and the negative control
+None. Together the tests cover:
+- an exact multiple, `(10, 5)`;
+- a partial page above one full page, `(11, 5)`;
+- a total below one page, `(1, 5)`;
+- an empty total, `(0, 5)`;
+- `per_page = 0`;
+- a negative total.
 
-### Item 3: boundaries, partitions, and the negative control
-**Control (fine).** The other partitions the fix touches are already in the file: exact multiple (`10, 5`), partial page with several full pages (`11, 5`), empty (`0, 5`), and both invalid partitions, each alone (`per_page` 0, `total` -1).
+The new test is the only one on the partition where `total < per_page`. A wrong implementation such as `total // per_page + (total > per_page)` passes `(11, 5)` and fails only `(1, 5)`.
 
-**Gaps.** None of these is a claimed case, so I file them as taste and none is a request:
-- The neighbors of the single-item boundary are not pinned: `total == per_page - 1` and `total == per_page`, which is where a `>=`/`>` slip in the rounding would show.
-- `per_page == 1`, the lowest valid value, is not tested. Only the invalid value 0 is.
+Controls that hold on the base commit are present: the exact multiple and the empty total. No earlier-version state, setting, or limit is involved.
 
-State left behind by an earlier version: not applicable.
+## Item 3a: Level, placement, and the environment
+None. The test is small, in-process, and sits in the existing test file for the unit, between its neighbours. It uses the same bare-`assert` form.
 
-### Item 3a: level, placement, and the environment
-`none`. It is a small in-process test, placed beside the other `page_count` tests in the same file. It takes their shape (one assert per function) and needs no fixture or optional service.
+## Item 4: Names by content, not by position
+None. `test_page_count_single_item` names its input by content. No ordinal or position word appears in a name or a message.
 
-### Item 4: names by content, not by position
-`none`. The name `test_page_count_single_item` says what the input is. No ordinal or positional reference was added.
+## Item 5: The failure report
+None. The test uses `assert page_count(1, 5) == 1`, and pytest prints both operands for that form (`pytest.md`, "Which assertion prints the operands"). There is no message to repeat the name, and no parameterized id.
 
-### Item 5: the failure report
-`none`. The assertion is `assert page_count(1, 5) == 1`, a comparison that pytest rewrites to print both operands. It has no message, which is right: the name states the scenario, and the operands are the input and the result.
+## Item 6: What the writer says it verified
+The writer's evidence does not show the test failing.
+- **The runs cannot show red.** Both are on fixed code: `38d3d04` already contains the fix, so a pass on it says nothing about whether the test can fail. The commit and the report state no red run on the pull request's base, `a65cf80`.
+- **What a hand derivation gives.** On `a65cf80`, `1 // 5` is 0, not 1, so the test would fail there. That is my derivation, not a run, and I did not run the suite.
+- **Finding 1.** It asks the writer to state the red run on `a65cf80`.
 
-### Item 6: what the writer says it verified
-**Substantive.** The report states passing runs only (HEAD and `38d3d04`), and a run on the fixed code cannot show that the test fails. No red run or mutation verdict is stated.
+## Item 7: Siblings of the change
+- **Callers of `page_count()`.** `git grep` finds only the tests and the README. There are no other callers in the source.
+- **Other floor divisions.** `git grep` over `src` and the README finds no other `//` and no other `per_page` use outside `paginate.py`.
+- **`page()`.** It has the same `per_page < 1` gap, which the description names as deferred. `page(items, 1, 0)` returns `[]` today and is not touched by this change. This is not a finding.
 
-The red run is derivable by reading: on 669de41, `1 // 5` is 0, not 1. I was not allowed to run the suite, so this is reading, not a run.
-
-Request: put the actual failing output on 669de41, or on 5c64077's parent, in the report or description. A test-first commit would also do.
-
-### Item 7: siblings of the change
-- **Callers of `page_count`.** `git grep page_count` outside the tests finds only the README example. There are no other call sites, so there is no sibling with the same defect.
-- **`page()`.** It does not share this defect. The PR body (`gh/pr-view.json`) explicitly leaves rejecting `per_page` below 1 in `page()` to a later change, because the renderer calls `page(rows, 1, 0)`. That is a stated follow-up and is not part of this change.
-- **No set was extended.** There is no list or count in the docs to update.
-
-### Index of findings
+## Findings index
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| The report shows only passing runs, on the fixed code. The red run on the pre-fix code is not stated, though reading shows `1 // 5 == 0` there. | Substantive | `tests/test_paginate.py:14` | 6 |
-| `total == per_page - 1`, `total == per_page`, and `per_page == 1` are not pinned. | Taste | `tests/test_paginate.py:14` | 3 |
+| No red run on the pull request's base commit. The writer's two runs are on code that already has the fix, so they cannot show the test failing. Request: state the failing run of `test_page_count_single_item` on `a65cf80`, with its output (`assert 0 == 1`). | Substantive | `tests/test_paginate.py:14` | 6 |
 
-One check could not be done: the drift script does not parse Python. I did not run the red run on 669de41 because running tests was out of bounds.
+Not reported: the test name states the scenario and not the outcome, in the same style as its neighbours. That is taste matching the file, so I dropped it.

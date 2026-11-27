@@ -25,11 +25,15 @@ reviewer can find it only by asking which limit inside velero bounds the same sh
    `grep -niE 'SIGTERM|shutdown|controller-runtime|graceful' result.md`
 2. **No false pair.** Note any finding that pairs the grace period with a limit on another stretch of work, such as
    `resticTimeout`, which bounds one restic operation, and claims one caps the other. It counts against the run.
+3. **The description read as the task statement.** Pass: a finding that the default moves from 30 to 3600 seconds for
+   every install while the description claims only "the ability to specify" it. Fail: none, as from a reviewer that
+   leaves the quoted description unread because no start came with it.
 
 ## Skill parts
 
 - `final-review`: `SKILL.md` §2 item *Boundaries, partitions, and the negative control*, §2a; item *Claimed cases
-  covered* also reaches check 1
+  covered* also reaches check 1; §1 (the task statement, and the pull request's text and start) and the paragraph *The
+  pull request* reach check 3
 - `test-authoring`: `SKILL.md` §4, §11
 - `english-developer-style`: loaded, not checked
 
@@ -175,31 +179,28 @@ therefore stand for the tree they name, not for `ca8233fb`. The change edits a H
 new rules could reach it only by adding comment findings, and `textkit-page-count-review` is the case where those would
 be noise. Not measured here.
 
-## Results of the `prtext` arm, 2026-11-26
+## Results of the `handover` arm, 2026-11-27
 
-Final-review tree `63a559df` (version 1.4.0) adds the paragraph *The pull request* to item *Claimed cases covered*. The
-prompt quotes the pull request description as the task statement and gives no state, no target, and no gh output. Three
-of four runs write that the live pull request could not be read and use the quoted text in item 2 (Opus `prtext-2`,
-`result.md:5`: "I could not read the live pull request (no `gh`), so item 2 uses the quoted text"). The committed tree
-`ac12adbd` differs from `63a559df` in parts that need a pull request with a state and a target, in the fallback for a
-missing task statement, which this prompt does not use since it gives one, and in §1's sentence on a lookup the caller
-forbids: here the caller hands over the platform's description, so the sentence leaves the quoted text to be read, as
-these runs did. Opus and Sonnet, two runs each, graded by reading `result.md`.
+`handover-<n>` ran final-review tree `0994d670` (version 1.4.0). The prompt quotes the pull request description as the
+task statement and hands over no start. The committed tree `f99ddfd4` differs from `0994d670` only in wording: it calls
+the commit the diff starts from the merge base throughout and restores two relative pronouns, so the results stand for
+it. Graded by reading `result.md`; check 3 was added with this arm.
 
-| Model | Run | Check 1 | Check 2 (false pair) | Words | Cost, USD |
-| --- | --- | --- | --- | --- | --- |
-| Opus | `prtext-1` | strong | filed | 1580 | 0.87 |
-| Opus | `prtext-2` | strong | none | 1314 | 0.57 |
-| Sonnet | `prtext-1` | fail | none | 1049 | 0.14 |
-| Sonnet | `prtext-2` | fail | none | 938 | 0.15 |
+| Model | Run | Check 1 | Check 2 (false pair) | Check 3 | Words | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus | `handover-1` | strong | none | pass | 1560 | 0.64 |
+| Opus | `handover-2` | strong | filed | pass | 1813 | 0.80 |
+| Sonnet | `handover-1` | pass | none | pass | 1363 | 0.27 |
+| Sonnet | `handover-2` | pass | none | pass | 1328 | 0.16 |
 
+- **The description as the task statement.** Every run reads the description as the task statement and the diff from the
+  review's base `bd5bf86`, and files that the default moves from 30 to 3600 seconds for every install while the
+  description claims only "the ability to specify" it, as all four `cond` runs did. Opus `handover-2` also files the
+  restic DaemonSet hunk as one the description does not claim, "conditional on the missing start" (`result.md:94`),
+  although commit `98041d0` claims it.
 - **Check 1** is as on `cond`: strong in both Opus runs, which name the server's own SIGTERM handling and ask for a run
-  or the line in velero (`prtext-2`, `result.md:47`), and failed in both Sonnet runs. Sonnet `prtext-1` names velero's
-  shutdown among the limits but asks only for a sentence in the values comment; `prtext-2` lists it under "Not
-  findings".
-- **Check 2.** Opus `prtext-1` lists `resticTimeout` among the limits on the same termination, as both `cond` runs did.
-- **The quoted description.** All four runs file that the default moves from 30 to 3600 seconds for every install while
-  the description claims only "the ability to specify" it (Opus `prtext-1`, `result.md:30`), as all four `cond` runs
-  did; three of four file the restic DaemonSet hunk, which commit `98041d0` alone claims, as Sonnet `cond-1` and
-  `series-2` did. Both come from reading the task statement, not from the paragraph. No run asks for the rounds of
-  review.
+  (Opus `handover-1`, `result.md:90`). Both Sonnet runs pass with a substantive finding that nothing shows Velero
+  waiting on a running backup (Sonnet `handover-2`, `result.md:71`). Sonnet failed check 1 in all four earlier runs of
+  `cond` and `draft`; two passes in two runs are not enough to credit the change with it.
+- **Check 2.** Opus `handover-2` puts `resticTimeout` among the limits that cap the value (`result.md:98`), as both
+  `cond` runs did.

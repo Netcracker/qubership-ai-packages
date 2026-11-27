@@ -1,7 +1,0 @@
-{
-  "baseRefName": "main",
-  "baseRefOid": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
-  "body": "`page_count(11, 5)` returned 2, so the eleventh item was on no page: the integer division dropped the remainder. It now rounds the quotient up and returns 3.\n\n**Scope.** Rejecting a `per_page` below 1 in `page()` is left to a later change: the report renderer calls `page(rows, 1, 0)` for a report with no rows.\n",
-  "state": "OPEN",
-  "title": "Count a partial last page in page_count()"
-}

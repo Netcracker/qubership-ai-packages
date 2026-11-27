@@ -1,82 +1,96 @@
-# Final review of `58d2c74..7f2560c` ("Drop the per_page check from page()")
+I'm finishing the final-review form: I've read the diff and both skills and checked the callers, and the report follows.
 
-**Inputs.** The diff is one commit that touches `src/textkit/paginate.py` and `tests/test_paginate.py`. There is no separate task statement, so the claimed cases come from the commit message alone. I also read the writer's drafted PR description and the saved `gh/pr-view.json`, which holds the PR's current title and body.
+# Final review: `58d2c74..HEAD` (commit `7f2560c`, "Drop the per_page check from page()")
 
-**Writer's claims.** "`test_page_rejects_zero_per_page` is gone with the check it tested" holds: both are removed in this commit. "The suite passes on HEAD" is not checked, because I did not run the tests. It is a consistency check, not evidence that the tests can fail (item 6).
+**Inputs and limits**
+- **Task statement.** None was handed over, so the claimed cases come from the commit message of `7f2560c`. It claims:
+  - `page(rows, 1, 0)` returns an empty list for a report with no rows.
+  - Raising `ValueError` there would break empty reports.
+  - The branch keeps only the `page_count()` fix.
+- **Pull request.** I also read the PR's title and drafted description against `669de41..HEAD` (net diff: the `page_count` fix and its test).
+- **Drift script.** It ran with rc 0 and printed nothing because it parses only Java, Kotlin, Groovy, and Scala, not `.py`. I read the one changed member by hand, `page()`.
+- **Suite not run.** The suite was not run, as instructed, so "the suite passes on HEAD" is unverified by me.
+- **Writer's second claim.** It holds. The diff removes `test_page_rejects_zero_per_page` together with the check, and `import pytest` is still used by the `page_count` tests.
+- **Skills loaded.** `test-authoring` and `english-developer-style`, from the given directory. No `pythondoc-authoring` copy was provided, so the docstring was checked against `english-developer-style` §4 and §7 only.
 
-**Drift script.** `comment-drift.py 58d2c74… HEAD` ran with exit code 0 and printed nothing, although `page()`'s code and docstring both changed. I treated its output as unreliable and read the hunks by hand.
+## Item 1: comments consistent with the code and with each other
 
-## Item 1: Comments consistent with the code and with each other
+**Finding 1 (substantive), `src/textkit/paginate.py:17-20`.**
+- **What the docstring says.** The commit edited the `Raises` sentence of `page()` out of the docstring, so the docstring now lists no exception.
+- **What the code does.** `page()` still raises `ValueError` for `number < 1` (line 22), and it does not validate `per_page`.
+- **Sibling comparison.** The sibling `page_count()` documents `ValueError` for `per_page < 1`.
+- **What a reader gets wrong.**
+  - A caller reading the two docstrings together concludes that `page()` returns a list for any `number` and rejects `per_page < 1` like its sibling.
+  - Both conclusions are wrong. `page(items, 0, 5)` raises.
+  - `page(items, 1, 0)` returns `[]`, and `page(items, 1, -1)` returns all but the last item.
+- **Request.** Add to the docstring: `Raises ValueError if number is less than 1.` Then add a second sentence saying that `per_page` is not validated, so `0` returns an empty list. Do not narrate the removal (`now`, `no longer`).
 
-**Finding (substantive), `src/textkit/paginate.py:17-20`.** The commit edited `page()`'s docstring, and it now lists no exception. The code still raises `ValueError` for `number < 1` (line 22). That raise was already undocumented, but the commit rewrote the sentence that held the exception list, so the list should now be right.
+For the rest of the item:
+- The first sentence of `page()` is still true.
+- Terms coined by the change: none.
+- Inline comments: none added.
+- README: unchanged and still accurate.
 
-The docstring also says nothing about `per_page < 1`, and the commit exists because a caller relies on that case. The second case below is not in the docstring:
-- `page(rows, 1, 0)` returns `[]` for every page, and so does any `number`.
-- A negative `per_page`, such as `page(items, 1, -1)`, slices `items[0:-1]` and silently drops the last item.
+## Item 2: claimed cases covered
 
-The first sentence "Returns an empty list for a page past the last one" reads as the only empty case.
-
-Request: add "Raises `ValueError` if `number` is less than 1." and one sentence on `per_page`, for example "`per_page` is not validated; a `per_page` of 0 returns an empty list." That gives the reader the actual behavior (`english-developer-style` §4, "State what happens", and the list rule in this skill's Item 1).
-
-- **`page_count()` docstring:** none. The first sentence and the `Raises` line match the body, and the code change did not move them.
-- **Narration:** none. No `now`, `no longer`, or `used to` appears in the added text.
-- **Dense sentences:** none.
-- **Coined terms:** none. The change adds no new words.
-
-## Item 2: Claimed cases covered
-
-Claims taken from the commit message only:
-
-| Claim | Test |
+| Claimed case (source) | Test |
 | --- | --- |
-| `page(rows, 1, 0)` returns an empty list for a report with no rows | **None** |
-| No `ValueError` for `per_page` 0 in `page()` | **None** (the removed test asserted the opposite) |
-| The `page_count()` fix stays | `test_page_count_counts_partial_last_page` (`page_count(11, 5) == 3`), `test_page_count_exact_multiple`, `test_page_count_empty` |
+| `page(rows, 1, 0)` returns an empty list for no rows (commit message) | **none** |
+| `page_count(11, 5)` returns 3 (description) | `test_page_count_counts_partial_last_page` |
+| `page_count` still rejects `per_page` below 1 and a negative `total` (kept behavior) | `test_page_count_rejects_zero_per_page`, `test_page_count_rejects_negative_total` |
+| `page()` no longer raises for `per_page` 0 (commit message) | **none** |
+| Title: "reject a per_page below 1 in page()" (PR title) | no code, no test, and it contradicts the commit and the description |
 
-**Finding (substantive), `tests/test_paginate.py`.** The commit's reason for dropping the check is that the renderer expects `[]` from `page(rows, 1, 0)`. No test pins that, and the only per-page test of `page()` was deleted. Nothing now fails if `page()` starts raising on `per_page == 0` before the renderer is updated, which is the failure the commit exists to avoid.
+**Finding 2 (substantive), `tests/test_paginate.py`.**
+- **Gap.** The only case the commit message names as the reason for the change, `page(rows, 1, 0)` returning `[]`, has no test.
+- **Why it matters.** The commit removed the one test that touched `per_page` 0 in `page()`. The suite now stays green if the check is restored, which is the change the message says comes later. The renderer's contract is therefore pinned by nothing in this repository.
+- **Request.** Add a test such as `test_page_of_no_items_with_zero_per_page_is_empty`, asserting `page([], 1, 0) == []`. Optionally add one for a non-empty list.
 
-Request: add a test such as `test_page_with_zero_per_page_is_empty` asserting `page([], 1, 0) == []`. Add a non-empty list too, because the item the renderer passes is `rows`, which may not be empty.
+**Finding 3 (substantive), PR title.**
+- **Mismatch.** The title still reads "Count a partial last page in page_count() and reject a per_page below 1 in page()". HEAD does not reject it, and the description's Scope paragraph says the rejection is left to a later change.
+- **Request.** Retitle to `Count a partial last page in page_count()`.
 
-**Finding (substantive), PR title.** `gh/pr-view.json` has the title "Count a partial last page in page_count() and reject a per_page below 1 in page()". The writer drafted a new body but no new title, so the title will contradict the body and the net diff. Against base `669de41` the net diff is only `total // per_page` to `(total + per_page - 1) // per_page`, plus one test.
+**Claims read the other way.** The net PR diff `669de41..HEAD` is `page_count`'s formula plus its test, and the description claims exactly that. No unclaimed hunk.
 
-Request: a title like "Count a partial last page in page_count()".
+## Item 3: boundaries, partitions, and the negative control
 
-**Claims read the other way.** Compared with the PR base `669de41`, the net diff has no unclaimed hunk. The commit history will still carry the "page() now raises ValueError" message of `58d2c74` unless the PR is squashed.
+- **`page_count` partition.** There is a multiple (10, 5), a remainder (11, 5), and zero (0, 5). Each invalid partition is tested alone: `per_page` 0 and `total` -1. The exact-multiple test is the control that stays green on the base. This is fine.
+- **`per_page` in `page()`.** The valid partition is covered by the slice test. The case this change moved, 0, is untested (finding 2). A negative `per_page` is neither tested nor documented. The writer defers validation, which is a scope decision and not a request, but finding 1 asks the docstring to say so.
+- **`number` below 1 in `page()`.** Not tested. This is pre-existing and unchanged by this commit, so it is not owed here.
+- **Earlier state.** None involved.
 
-**Commands.** The change adds or edits no command. `pytest` in the README is untouched.
+## Item 3a: level, placement, and the environment
 
-## Item 3: Boundaries, partitions, and the negative control
+None. The tests are small, in-process, and in the existing file beside the unit's tests with no new fixture.
 
-- **`page_count`:** the exact multiple, the remainder-1 case, and empty are covered, along with `per_page` 0 and `total` -1 as separate invalid cases. Taste only: `per_page == 1`, the lower valid boundary, is untested, so a `<= 1` mutant of the guard survives. That guard was not touched by this commit.
-- **`page`, `per_page`:** the one input this commit changed has no test at all (see item 2). A `per_page` below 0 returns a wrong slice (see item 1). The description defers it ("a per_page below 1"), but its stated reason, the renderer's call with 0, covers only 0.
-- **Stale state:** none. The change reads nothing that an earlier version left behind.
-- **Limits and replaced mechanisms:** none apply.
+## Item 4: names by content, not by position
 
-## Item 3a: Level, placement, and the environment
+None. The test names state their scenario and carry no ordinals.
 
-None. The tests run in one process and sit in `tests/test_paginate.py` beside the other tests of the unit. `pytest` is still used by the remaining `raises` tests, so the import stays needed.
+## Item 5: the failure report
 
-## Item 4: Names by content, not by position
+None. The tests use plain `assert a == b`, which pytest prints with operands, and `pytest.raises(match=...)` on named messages. No boolean-wrapped comparisons.
 
-None. The test names describe content, and nothing is referred to by ordinal.
+## Item 6: what the writer says it verified
 
-## Item 5: The failure report
+- **Stated.** Only "the suite passes on HEAD". No red run on `669de41` and no mutation verdict is stated for `test_page_count_counts_partial_last_page`, the test that guards the claimed fix.
+- **Request.** The writer states that red run, or the `page_count` claim stays unevidenced. I did not run it.
+- **Not stated either.** Nothing shows `page()` with `per_page` 0 holds, since no test covers it (finding 2).
 
-None. The equality asserts use pytest's introspection, which prints both operands. The `raises(..., match=...)` tests were already there and are not part of this change.
+## Item 7: siblings of the change
 
-## Item 6: What the writer says it verified
+- **`page_count(` call sites.** `git grep` finds only the README example, which still reads correctly. There are no callers in `src/`, and `wrap.py` does not use it.
+- **`page(` call sites.** The README only.
+- **Out of reach.** The report renderer that calls `page(rows, 1, 0)` is not in this repository, so I could not read it.
+- **Possible asymmetry.** If the renderer also calls `page_count(0, 0)` for an empty report, `page_count` still raises there on `per_page < 1`. That is the base behavior and not this change's defect. The description names the `page()` follow-up but not `page_count()`, so the writer should confirm the renderer does not hit it.
 
-The only stated evidence is "the suite passes on HEAD". There is no red run of `test_page_count_counts_partial_last_page` on the base, and no mutation verdict. Both are the writer's to state, and I did not run them.
-
-## Item 7: Siblings of the change
-
-`git grep -n 'page(\|page_count('` finds no caller of `page` or `page_count` outside the tests and README. The renderer is not in this repository, so I could not confirm the `page(rows, 1, 0)` claim. That is the premise of the whole commit, and the description should cite where the renderer calls it. The README example needs no change.
-
-## Findings index
+## Index
 
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| `page()` docstring lists no exception, though `number < 1` raises, and omits the `per_page` behavior callers rely on | Substantive | `src/textkit/paginate.py:17-20` | 1 |
-| No test pins `page(rows, 1, 0) == []`, the contract the commit protects | Substantive | `tests/test_paginate.py` | 2 |
-| The PR title still claims the removed `page()` rejection, and no new title was drafted | Substantive | PR title (`gh/pr-view.json`) | 2 |
-| `per_page == 1` boundary untested | Taste | `tests/test_paginate.py` | 3 |
+| `page()` docstring lists no `ValueError` though `number < 1` raises, and says nothing about `per_page` | Substantive | `src/textkit/paginate.py:17` | 1 |
+| No test for `page(rows, 1, 0)` returning `[]`, the case the commit exists for | Substantive | `tests/test_paginate.py` | 2 |
+| PR title still claims the `per_page` rejection that HEAD drops | Substantive | PR title | 2 |
+| No red run or mutation verdict stated for the `page_count` test | Substantive | PR / `tests/test_paginate.py:10` | 6 |
+
+The drift script could not parse Python, so the single changed member, `page()`, was checked by hand.

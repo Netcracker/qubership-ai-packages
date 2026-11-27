@@ -1,103 +1,143 @@
-## Final review: `page_range()` and the `textkit-pages` command
+# Final review: `page_range()` and the `textkit-pages` command
 
-**Inputs.**
-- **Diff:** I read the working tree against `HEAD` (5c64077), plus the untracked `src/textkit/cli.py`. The only edit is `src/textkit/paginate.py`, +11 lines.
-- **Task statement:** none was given, so I took the claimed cases from the commit message alone.
-- **Skills loaded:** `test-authoring` and `english-developer-style`. No doc-comment skill for Python (`pythondoc-authoring`) is among the three provided, so Item 1 checks the docstrings against the form's questions directly.
-- **Drift script:** I ran it and it printed nothing, because it parses only Java, Kotlin, Groovy and Scala. I did the member comparison by hand. The members that moved are the new `page_range` and `main`. `page_count` and `page` are unchanged.
-- **Pull request:** `gh/pr-view.json` shows state OPEN, title "Count a partial last page in page_count()", base `main` at `669de41`. `git merge-base 669de41 HEAD` is `669de41`, so the PR diff will be the `page_count` fix commit plus this change. That base comes from the saved file, not a fetch.
-- **Previous report:** none.
+**Inputs**
+- I read the diff of the working tree plus `src/textkit/cli.py` against `669de41`.
+- I read the commit message and the pull request title and description as handed over.
+- I loaded `test-authoring` and `english-developer-style` from the given skills directory. The repository is Python, but `pythondoc-authoring` is not in that directory, so I checked the docstrings against `english-developer-style` §4 and the doc-comment rules of item 1 directly.
+- There is no separate task statement, so the claimed cases come from the commit message alone.
+- No previous report exists.
+- `comment-drift.py 669de41… ` printed nothing and exited 0, although `page_range` is new and `page_count` changed. It evidently does not parse Python, so I read the changed members by hand.
+- `HEAD` (`5c64077`) already holds the `page_count` fix and its test. The uncommitted part is `page_range` and `cli.py`.
 
-### Item 1: comments consistent with the code and with each other
+## Item 1: comments consistent with the code and with each other
 
-**Finding 1 (substantive), `paginate.py:28`.** The first sentence is "Return the indexes of the first and the last item on page ``number``". The function receives no item count, so it cannot return the last item's index on a partial last page.
-- On 11 items at 5 per page, `page_range(3, 5)` returns `(10, 14)`, but the last item is index 10.
-- Two other facts are missing from the docstring: the result is a `(first, last)` tuple, and both ends are zero-based and inclusive.
-- A caller who writes `items[first:last]` drops one item, and a caller who trusts `last` on the final page is wrong.
-- Request: first sentence along the lines of "Return a tuple of the zero-based indexes of the first and the last position on page ``number``, counting pages from 1. The last index is inclusive and ignores how many items exist, so on a partial last page it is past the final item."
-- This also reads wrongly beside the sibling `page()` (`paginate.py:16`), which uses the same 0-based start in a slice and so treats the end as exclusive.
+**Finding 1 (substantive), `paginate.py:27`.**
+- The `page_range` docstring says "the indexes of the first and the last item on page `number`".
+- A reader cannot tell from it that the indexes are zero-based, that they are inclusive, or that the result is a `(first, last)` tuple.
+- Nor can they tell that `last` is computed without a `total`. For the final partial page it can point past the end of the items.
+- `page_range(3, 5)` returns `(10, 14)` even for 12 items. `page(items, 3, 5)` returns only the existing items.
+- A caller who uses `last` as an index into `items` will go out of range.
+- **Request:** state that the indexes count from 0 and that both ends are included. State that the pair is returned as `(first, last)` and that `last` ignores the number of items, so it can exceed the last real index.
 
-**Finding 2 (substantive), `paginate.py:28-30`.** The "Raises" line covers `number` only. `page_range(2, 0)` returns `(0, -1)` and `page_range(1, -5)` returns `(0, -6)`. The sibling `page_count` rejects `per_page < 1`, and `page_range` neither checks it nor documents it.
-- Request: either reject `per_page < 1` with the same message as `page_count`, or state that the value is not validated.
-- `page()` has the same gap, so the finding is for this member only.
+**Finding 2 (substantive), `paginate.py:27-35`.**
+- The docstring lists only `number < 1` under `Raises`.
+- `per_page` is never validated. `page_range(1, 0)` returns `(0, -1)`, and `page_range(2, -3)` returns `(-3, -7)`.
+- The sibling `page_count` documents and raises `ValueError` for `per_page < 1`, so a reader would expect `page_range` to do the same.
+- **Request:** validate `per_page` as `page_count` does and list it under `Raises`. `page()` has the same gap, which is item 7.
 
-**Finding 3 (taste), `cli.py:7`.** The docstring says "the two integers on the command line" but says nothing about what happens on a wrong count, a non-integer, or a rejected value. In each case the unpack or `page_count` raises `ValueError` and the command prints a traceback. The preferred form is a "Raises" sentence, or an argument check with a usage message.
+**Other checks**
+- The `page_count` docstring is still true of its new body.
+- No comment narrates the change.
+- The `cli.py` docstrings are accurate.
+- I found no coined terms.
+- I found no dense sentences.
 
-No comment narrates the change. No inline comment restates a callee. No term is coined: "indexes", "first" and "last" are ordinary words, and "number" and "per_page" match the siblings.
+## Item 2: claimed cases covered
 
-### Item 2: claimed cases covered
+The commit message claims three cases:
 
 | Claimed case | Test |
 | --- | --- |
-| `page_range(number, per_page)` returns the first and last index of a page | **None.** `tests/test_paginate.py` is unchanged, and the import line still lists only `page` and `page_count`. |
-| `ValueError` for `number < 1` (the docstring's claim) | **None.** |
-| `textkit-pages` prints `page_count()` for two integers | **None.** |
-| Command lines | `textkit-pages <total> <per_page>` appears only in the commit message. Nothing runs it. |
+| `page_range(number, per_page)` returns the first and last indexes of a page | **none** |
+| the `textkit-pages` command exists and prints `page_count()` for two integers | **none** |
+| the command prints `page_count()` | **none** |
 
-**Finding 4 (substantive), `cli.py` and `pyproject.toml`.** The `textkit-pages` command does not exist after installation. `pyproject.toml` has no `[project.scripts]` entry, and `cli.py` has no `__main__` guard. The commit message promises a command that cannot be invoked.
-- Request: add `textkit-pages = "textkit.cli:main"` under `[project.scripts]`, and make `main` return its status through `sys.exit` or a script wrapper. Also add a run of the real command to a test, or document the form that does run.
-- Because `main` returns 0 and the console-script wrapper turns the return value into the exit status, a failure path should return nonzero rather than a traceback.
+**Finding 3 (substantive), `tests/test_paginate.py`.**
+- `git diff` shows no test added for `page_range`, so none of its claimed outcomes is exercised.
+- The request is at least one case for a middle page, for example `page_range(2, 5) == (5, 9)`.
+- `page_range(1, 5) == (0, 4)` is the first-page case.
+- `number=0` raising `ValueError` is the invalid case.
 
-**Finding 5 (substantive), `tests/test_paginate.py`.** The change adds no tests, so each claimed case above has no named test. The request is the tests listed under Items 3 and 3a.
+**Finding 4 (substantive), `cli.py`, `pyproject.toml`.**
+- The command `textkit-pages` does not exist. `pyproject.toml` has no `[project.scripts]` entry, and `cli.py` has no `if __name__ == "__main__"` block.
+- `main()` returns 0 and does not call `sys.exit`, so a console-script wrapper that calls `sys.exit(main())` is the only way it works.
+- Nothing in the repository runs the command, so the claimed command line has outcome `none`: no script, target, or CI job runs it.
+- What the outcome depends on is that the entry point is registered in `pyproject.toml` and that the package is installed.
+- **Request:** add `textkit-pages = "textkit.cli:main"` under `[project.scripts]`.
+- **Request:** add an in-process test that calls `main(["11", "5"])` and reads stdout with `capsys`. It should expect `3\n` and a return value of 0.
+- **Request:** run `textkit-pages 11 5` once after install and report the output.
 
-**Finding 6 (substantive), PR title and description.** They say only "Count a partial last page in page_count()" and that `page_count(11, 5)` now returns 3. Once this change is pushed, the PR diff also adds `page_range` and `cli.py`, which neither text claims.
-- Request: update the title and add a sentence naming `page_range` and the `textkit-pages` command.
-- Alternatively, move them to a PR of their own.
-- The `page_count` fix hunk itself is claimed and has tests.
+**Finding 5 (substantive), pull request title and description.**
+- The pull request diff from `669de41` to this tree adds `page_range`, `cli.py`, and the command.
+- The title and description speak only of `page_count()`. Three hunks are claimed by no sentence: `page_range`, `cli.py`, and the command.
+- The commit message claims them, but the pull request text does not.
+- **Request:** a new title and a description that cover all three. For example, retitle it "Count a partial last page in page_count(); add page_range() and a textkit-pages command". Add one sentence each for `page_range` and the command. Alternatively, move them to a pull request of their own.
+- The `page_count` sentences still hold.
 
-### Item 3: boundaries, partitions, and the negative control
+## Item 3: boundaries, partitions, and the negative control
 
-**Finding 7 (substantive).** Nothing is tested, so every partition is missing.
+**Finding 6 (substantive), `page_range` and `cli.py`.** Neither has any test, so none of the following is covered:
+- Boundaries:
+  - `number=1`
+  - `number=0`, just outside the lower bound
+  - `per_page=1`
+- Invalid partitions, each alone:
+  - `per_page=0`
+  - negative `per_page`
+  - negative `number`
+- For the command:
+  - the wrong number of arguments (zero, one, three)
+  - a non-integer argument
+  - input that `page_count` rejects, `0` for `per_page` or a negative total
+- All of these currently end in an uncaught `ValueError` traceback. The unpacking `total, per_page = (int(a) for a in args)` raises `ValueError: not enough values to unpack` or `too many values to unpack` for a wrong argument count. A non-integer raises `invalid literal for int()`.
+- The command has no usage message and no non-zero exit code on bad input.
+- **Request:** decide the behavior (a usage line and a non-zero exit, or documented tracebacks) and test one case per partition.
 
-- **`page_range`**
-  - `number` = 1 (first page), 2 (a middle page), and `per_page` = 1, where first equals last.
-  - Boundary and invalid `number`: 0 (just outside) and −1, each tested alone.
-  - Invalid `per_page` (0 and negative), tested alone, once its behavior is decided per Finding 2.
-- **`main`**
-  - Valid input, for example `["11", "5"]` printing `3`.
-  - Control: an exact multiple, for example `["10", "5"]` printing `2`.
-  - The wrong argument count, empty argv and three arguments.
-  - A non-integer argument.
-  - `per_page` 0 and a negative `total`, each tested alone.
-  - The current behavior on each failure is a traceback, and no test pins the intended one.
+**Other checks**
+- The `page_count` tests have the control `(10, 5) == 2` beside `(11, 5) == 3`, and the empty case `(0, 5)`.
+- The smallest partial page, `(1, 5) == 1`, is not tested. `total < per_page` is a distinct partition for the new formula, but I count it as taste. A mutant that returns `max(1, …)` would not be caught.
+- No state from an earlier version is read or replaced, so the inherited-state question does not apply.
+- No limits or mechanisms are replaced.
 
-There is no inherited state, no replaced mechanism and no limit in this change.
+## Item 3a: level, placement, and the environment
 
-### Item 3a: level, placement, and the environment
+- The new tests belong in `tests/test_paginate.py`, which already shares the module's imports.
+- The CLI test is in-process through `main(argv)`, so no subprocess is owed.
+- No finding beyond findings 3, 4, and 6.
 
-`page_range` and `main(argv)` are both observable in-process. That makes them small tests, with `capsys` for the output. They belong in `tests/test_paginate.py` for `page_range`. A `tests/test_cli.py` is acceptable for `cli.py`, since it is a new unit. Test through `main(["11", "5"])`, not by spawning a subprocess. A medium test that runs the installed `textkit-pages` is owed once Finding 4 is fixed, because the entry-point wiring is what the in-process test cannot see.
+## Item 4: names by content, not by position
 
-### Item 4: names by content, not by position
+none. I found no ordinals or positional references in the added names or comments.
 
-None. The new names and comments carry no ordinals or positions.
+## Item 5: the failure report
 
-### Item 5: the failure report
+none. The added test uses `assert page_count(11, 5) == 3`, an equality assertion whose operands pytest prints. Its name states the scenario.
 
-None. No assertions were added, so there is nothing to check. The existing tests are outside this change.
+## Item 6: what the writer says it verified
 
-### Item 6: what the writer says it verified
+- Neither the change nor any statement I was handed carries a red run on the base commit or a mutation verdict.
+- `page_count(11, 5)` is the regression case. A red run of `test_page_count_counts_partial_last_page` on `669de41` would show `assert 2 == 3`.
+- The `page_range` and command code has no test, so there is no test to see red.
 
-**Finding 8 (substantive).** There is no red run, no mutation verdict, and no tests that could fail. The change states no evidence. I did not run the suite.
+## Item 7: siblings of the change
 
-### Item 7: siblings of the change
+**Finding 7 (substantive), `README.md:20-23`.**
+- The usage block lists `page_count` and `page` and shows neither `page_range` nor the new command.
+- A member added to a set that the README enumerates should be listed there.
+- **Request:** add `page_range` and the `textkit-pages` command to the Usage section, or name the README as a follow-up in the description.
 
-- **README.** `README.md:20-23` lists `page_count` and `page` in its usage block and does not list `page_range` or the command. The other members of the set are listed there, so the new ones are missing. Finding 9 (substantive): add a usage line and an install note for `textkit-pages`.
-- **`number < 1` check.** `page_range` repeats it from `page` (`paginate.py:21`). The two stay consistent, and extracting a helper is optional, so I file it as taste only if you want one.
-- **`per_page` validation.** `page` has the same hole as `page_range`, and the call sites of `page_count` are only the new `cli.py`, the tests and the README. Decide the `per_page` behavior in Finding 2 together for `page` and `page_range`, or name `page` as a follow-up in the description.
-- **Set size.** No prose counts the members, so there is nothing stale.
+**Finding 8 (substantive), `paginate.py:16-24`.**
+- `page()` has the same defect as finding 2: `per_page` is not validated.
+- `page(items, 1, 0)` returns `[]`, and `page(items, 1, -1)` returns `items[0:-1]`, nearly the whole list.
+- The only caller of `page_count`, other than the CLI and its tests, is none. Every other caller of `page` was read: the README snippet and two tests.
+- **Request:** fix it in this change, or name it as a follow-up in the description.
 
-### Index of findings
+Both `page_count` call sites (`cli.py` and the tests) use valid or rejected input as intended.
+
+## Index of findings
 
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| 1. `page_range` docstring says "last item" but returns the last slot, and omits tuple form and zero-based, inclusive ends | Substantive | `src/textkit/paginate.py:28` | 1 |
-| 2. `per_page` is neither validated nor documented, so `(0, -1)` and `(0, -6)` are returned | Substantive | `src/textkit/paginate.py:28-35` | 1 |
-| 3. `main` docstring omits the traceback on bad input | Taste | `src/textkit/cli.py:7` | 1 |
-| 4. `textkit-pages` has no `[project.scripts]` entry, so the command does not exist | Substantive | `pyproject.toml`, `src/textkit/cli.py` | 2 |
-| 5. No test for any case the commit message claims | Substantive | `tests/test_paginate.py` | 2 |
-| 6. PR title and description do not claim `page_range` or the CLI | Substantive | PR title and body | 2 |
-| 7. No boundary, invalid-partition or control cases for either unit | Substantive | `tests/test_paginate.py` | 3 |
-| 8. No stated red run or mutation evidence | Substantive | change as a whole | 6 |
-| 9. README usage lacks `page_range` and the command | Substantive | `README.md:20-23` | 7 |
+| 1. `page_range` docstring omits zero-based, inclusive, tuple result, and that `last` can exceed the items | Substantive | `src/textkit/paginate.py:27` | 1 |
+| 2. `page_range` does not validate `per_page`; docstring lists only `number` | Substantive | `src/textkit/paginate.py:27-35` | 1 |
+| 3. No test of `page_range`, claimed by the commit message | Substantive | `tests/test_paginate.py` | 2 |
+| 4. `textkit-pages` is not registered or run anywhere; no `[project.scripts]`, no test | Substantive | `src/textkit/cli.py`, `pyproject.toml` | 2 |
+| 5. Pull request title and description do not claim `page_range`, `cli.py`, or the command | Substantive | pull request title and description | 2 |
+| 6. No boundary or invalid-partition cases for `page_range` and the command; bad CLI input ends in a traceback | Substantive | `src/textkit/paginate.py:27`, `src/textkit/cli.py:9-12` | 3 |
+| 7. README usage does not list `page_range` or the command | Substantive | `README.md:20-23` | 7 |
+| 8. `page()` shares the unvalidated `per_page` defect | Substantive | `src/textkit/paginate.py:16-24` | 7 |
+| 9. The smallest partial page `(1, 5)` is untested | Taste | `tests/test_paginate.py:10` | 3 |
 
-I could not run the drift script on Python. I did that comparison by hand.
+Item 6 has no red-run or mutation evidence. It is reported under its item but is not a separate finding.
+
+The drift script could not be used on this Python change. The checks that it would have listed were done by hand in item 1.

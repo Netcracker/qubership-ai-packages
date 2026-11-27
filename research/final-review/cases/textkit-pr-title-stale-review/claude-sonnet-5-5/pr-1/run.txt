@@ -1,4 +1,4 @@
-cost_usd: 0.15
-turns: 5
-duration_s: 36
-claude-sonnet-5-5: cost_usd 0.15, input 8, output 4470, cache_read 145598, cache_write 21612
+cost_usd: 0.29
+turns: 6
+duration_s: 55
+claude-sonnet-5-5: cost_usd 0.29, input 10, output 6193, cache_read 244441, cache_write 50281

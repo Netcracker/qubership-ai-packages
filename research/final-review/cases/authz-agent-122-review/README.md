@@ -426,12 +426,10 @@ Both Sonnet runs check the one term they find, "default route", and report it as
 (`vocab-1` `result.md:24`, `vocab-2` `:26`). No run dumps the doc-comment checklist; Sonnet `vocab-2` answers it in
 one sentence per member (`result.md:11`).
 
-## The `prtext` arm, 2026-11-26: not run
+## The `handover` arm, 2026-11-27: not run
 
-Final-review tree `ac12adbd` (version 1.4.0) adds the title and the description of the branch's open pull request to §1,
-the paragraph *The pull request* to item *Claimed cases covered*, and a sentence to that item's analogue in §2a. The
-paragraph applies only where there is an open pull request to read. This case's prompt names none, quotes no pull
-request text, and forbids gh, and §1 makes a lookup the caller forbids mean that there is none unless the caller hands
-over the platform's text, so the input never reaches the paragraph. §1 also rewords the fallback for a missing task
-statement so that it no longer switches off the pull request check; with no pull request, it asks for what it asked
-before. The results above stand for `ac12adbd` as well.
+Final-review tree `f99ddfd4` (version 1.4.0) adds to §1 the title, the description, and the start commit of a pull
+request, as the caller hands them over, the paragraph *The pull request* to item *Claimed cases covered*, and a sentence
+to that item's analogue in §2a. The paragraph reads only text the caller hands over, and this case's prompt hands over
+none, so the input never reaches it. §1 also rewords the fallback for a missing task statement; with no pull request
+text, it asks for what it asked before. The results above stand for `f99ddfd4` as well.

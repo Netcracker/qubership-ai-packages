@@ -1,88 +1,69 @@
-# Final review of `7f2560c..HEAD` (96189d4)
+## Final review: `7f2560c..HEAD`, one commit (96189d4)
 
-**Inputs.** There is no separate task statement. The claimed cases come from the commit message: "Say in page_count()'s docstring that a partial page counts… Name the rounding with an example." I also read the pull request title and description from `gh/pr-view.json`. Its state is `OPEN`, and its `baseRefOid` is 669de41. I could not fetch `main` offline, so the pull request diff is `git diff 669de41 HEAD`, using the recorded base. That diff covers `page_count`'s rounding fix, the new test, and the docstring line. It does not touch `page()`.
+**Inputs.** There was no separate task statement, so the claimed cases come from the commit message of 96189d4 alone ("Say in page_count()'s docstring that a partial page counts", with the rounding named by an example). The pull request title and description were handed over, and its diff starts at `669de41`. I read the pull request text against `669de41..HEAD`. I loaded `english-developer-style` and `test-authoring` from the given skills directory. There is no doc-comment skill for Python in that directory, so I judged the docstrings on `english-developer-style` §4 and on the rules in the form.
 
-**Drift script.** It exited 0 with no output, although the change adds a docstring sentence to `page_count`. It evidently does not parse Python docstrings, so I read the changed member by hand. No other member changed.
+**Drift script.** I ran it for `7f2560c..HEAD` and for `669de41..HEAD`. Both runs printed nothing and exited 0, although a docstring line was added and `page_count()`'s body changed in the second range. The parse missed both, so I read the changed members by hand.
 
-The writer's "docstring only" is true: the commit adds two docstring lines and nothing else.
+### Item 1: comments consistent with the code and with each other
+None. Checked: the added sentence "A partial last page counts as a page, so `page_count(11, 5)` is 3." is true of `(total + per_page - 1) // per_page`.
+- The first sentence of the docstring still stands alone.
+- The `Raises` line matches both checks in the body.
+- `page()`'s docstring is unchanged and still true of its body.
+- The README line `page_count(11, 5)` agrees.
+- No comment narrates the change.
+- The added sentence has none of §4's compressed shapes.
+- It introduces no new term: "partial last page" is ordinary language, and `page` and `per_page` are the code's own words.
 
-## Item 1: Comments consistent with the code and with each other
-
-`page_count`'s docstring (`paginate.py:5-10`) has one finding: none.
-
-- **First sentence.** "Return the number of pages needed to show `total` items, `per_page` to a page" is still true of `(total + per_page - 1) // per_page`.
-- **Added sentence.** "A partial last page counts as a page, so `page_count(11, 5)` is 3" holds: (11+4)//5 is 3.
-- **Raises line.** It matches the two `ValueError` checks.
-- **Neighbors.** `page()`'s docstring says nothing about `per_page`, so it does not contradict this one. The README comment "number of pages for 11 items, 5 per page" agrees.
-- **Narration.** The docstring has no `now`, `no longer`, or `used to`.
-- **Terms.** None coined. "Partial" and "last page" are ordinary words in the sense used.
-- **Dense sentences.** None.
-- **Inline comments.** None added.
-
-## Item 2: Claimed cases covered
+### Item 2: claimed cases covered
+Cases claimed by the commit message:
 
 | Claimed case | Test |
 | --- | --- |
 | A partial last page counts, `page_count(11, 5)` is 3 | `test_page_count_counts_partial_last_page` |
-| Exact multiple, not rounded up (a boundary of the rounding) | `test_page_count_exact_multiple` |
-| Zero items gives zero pages, consistent with "a partial last page counts" | `test_page_count_empty` |
-| `ValueError` for `per_page < 1` and negative `total` (the docstring's Raises line, unchanged) | `test_page_count_rejects_zero_per_page`, `test_page_count_rejects_negative_total` |
 
-I found no claimed case without a test.
+Cases claimed by the pull request title and description:
 
-**Finding (substantive): the pull request description claims a change this diff does not make.**
+| Claimed case | Test |
+| --- | --- |
+| `page_count(11, 5)` returns 3 | `test_page_count_counts_partial_last_page` |
+| `page(items, 1, 0)` raises `ValueError: per_page must be at least 1, got 0` | none |
 
-- **Where:** pull request title and body.
-- **Title:** "…and reject a per_page below 1 in page()".
-- **Body:** "`page(items, 1, 0)` returned an empty list for every page number… It now raises `ValueError: per_page must be at least 1, got 0`, as `page_count()` already does."
-- **Why it is false:** commits 58d2c74 and 7f2560c added and then removed that check. At HEAD, `page()` (`paginate.py:18-25`) validates only `number`. `page(items, 1, 0)` still returns `[]`, and the test for the `page()` rejection is gone too.
-- **What a reader gets wrong:** a merge on the strength of the description ships no `page()` fix, and a caller who passes 0 by mistake still gets a silent empty report.
-- **Request:** one of these two.
-  - Rewrite the title and body to the `page_count` rounding fix alone, and drop the second paragraph.
-  - Restore the `per_page` check and its test in `page()`.
+**Finding (substantive): the pull request claims a change this diff does not make.**
+- **Where:** the title ("... and reject a per_page below 1 in page()") and the second paragraph of the description.
+- **The diff:** `669de41..HEAD` touches only `page_count()`, its docstring, and one new test. `src/textkit/paginate.py:18-26` has no `per_page` check in `page()`, and `page(items, 1, 0)` still returns `[]`.
+- **Why:** commit 7f2560c removed the check and its test on purpose. The report renderer calls `page(rows, 1, 0)` for a report with no rows and expects an empty list. Its message says the check moves to a later change.
+- **What a reader gets wrong:** the title and the second paragraph say the opposite of the code. A reviewer or release reader would conclude that a `per_page` of 0 now raises.
+- **Request:** change the title to "Count a partial last page in `page_count()`" and delete the second paragraph. If the follow-up should be recorded, replace it with one sentence saying that `page()` still accepts a `per_page` below 1 because the report renderer calls `page(rows, 1, 0)`, and that the check moves to a later change.
 
-  The history shows the check was deliberately dropped, so I expect the first option.
+Reading the claims the other way: the diff has no hunk that the title or description leaves unclaimed. The writer's "Docstring only" holds for 96189d4 but not for the pull request. That diff includes the rounding change in `page_count()`, which the first paragraph claims.
 
-**Hunks beyond the claim.** I found none. The docstring line is claimed by the commit message.
+### Item 3: boundaries, partitions, and the negative control
+- Present: an exact multiple (10, 5 is 2), an empty total (0, 5 is 0), a remainder of one (11, 5 is 3), the `per_page` of 0 rejection, and the negative total rejection. The exact-multiple and empty cases stay green on the base, so they are the controls.
+- Taste: there is no case with `total` smaller than `per_page` (for example `page_count(1, 5)` is 1) and none at the `per_page` of 1 boundary, which would be the accepted value just inside the rejected 0. The existing tests would catch the plausible wrong rounding formulas, so I do not request them.
+- No state left by an earlier version, no limits, and no replaced mechanism are involved.
 
-## Item 3: Boundaries, partitions, and the negative control
+### Item 3a: level, placement, and the environment
+None. The new test is in-process, sits beside `test_page_count_exact_multiple` in `tests/test_paginate.py`, and needs no fixture or optional service.
 
-None. Nothing in this commit moves behavior, and the existing tests cover the rounding's boundaries:
+### Item 4: names by content, not by position
+None. Checked: the test names (`counts_partial_last_page`, `exact_multiple`, `empty`) all name content.
 
-- 10/5 is an exact multiple.
-- 11/5 is a remainder of 1.
-- 0 items is the empty value.
-- `per_page` 0 and `total` -1 are each rejected on their own.
+### Item 5: the failure report
+None. Checked: the new assertion is a plain equality, so pytest prints both operands. It has no message, and the call is in the test body, so none is needed.
 
-Untested but not owed to a docstring change: `per_page` 1, and a remainder of `per_page - 1` (for example 14/5). There is no inherited state.
+### Item 6: what the writer says it verified
+The writer states only "the suite passes on HEAD". That is not evidence that the new test can fail: there is no red run on the base commit and no mutation verdict. I did not run the suite. From the diff, `return total // per_page` gives 2 for `page_count(11, 5)`, so the test should fail on the old body. That is my reading, not a run.
 
-**Item 3a** (level, placement, environment): none. The tests are small, in-process, and sit in `tests/test_paginate.py` beside the others.
+### Item 7: siblings of the change
+- `page_count(`: `git grep` finds only the README example, which is consistent. There are no other callers in the repository.
+- `page()` is the sibling that shares the `per_page` argument. It still accepts 0 and negative values (a negative `per_page` slices unexpectedly). That is deliberate per 7f2560c, so the fix is to record it as a follow-up in the description, as in the Item 2 finding.
+- The README line "Paginaton" is a typo outside this change's scope, so I did not file it.
 
-## Item 4: Names by content, not by position
-
-None. The test names describe their content, and no ordinals appear.
-
-## Item 5: The failure report
-
-None. All assertions are `==` comparisons that print the operands, and the `raises` checks match on message text. No parameterized case ids are present.
-
-## Item 6: What the writer says it verified
-
-The writer states only "the suite passes on HEAD". No red run or mutation verdict is stated. For a docstring-only commit that is acceptable. The pull request's own change, `page_count`'s rounding, comes from 5c64077, where `test_page_count_counts_partial_last_page` is its test. I did not run the suite.
-
-## Item 7: Siblings of the change
-
-- **`page_count` callers:** `git grep` finds no callers beyond the tests and the README.
-- **`page()`:** it is the sibling the description names, and it has the defect the description says was fixed.
-  - `per_page=0` returns `[]` for every page.
-  - A negative `per_page` slices with a negative length.
-  - This is filed under item 2 as the pull request finding. If the check stays out, the request there also covers naming it as follow-up in the description.
-- **README:** it names neither check, so no sibling is stale.
-
-## Index
+### Findings index
 
 | Finding | Label | File and line | Item |
 | --- | --- | --- | --- |
-| The pull request title and body claim `page()` rejects `per_page < 1`, but HEAD has no such check | Substantive | pull request description; `paginate.py:18-25` | 2 |
+| The title and second paragraph of the description claim `page()` rejects a `per_page` below 1; `page()` has no such check, and 7f2560c dropped it on purpose | Substantive | pull request title and description; `src/textkit/paginate.py:18` | 2 |
+| No `total < per_page` case and no `per_page` of 1 case in the tests | Taste | `tests/test_paginate.py` | 3 |
 
-**Not done:** the drift script's silence for a Python docstring is a limit of the script, not a clean result. I covered that by reading the docstring by hand.
+No evidence was supplied for Item 6 (red run or mutation verdict), and I did not run the suite. The drift script printed nothing for either range, so its parse did not cover this change.

@@ -13,7 +13,13 @@ it with this message, which claims its cases:
 
 Its drift script is at `<skills>/final-review/scripts/comment-drift.py`.
 
+The change goes into an open pull request. The caller hands over the commit its diff starts from, `669de41a8a448f4c8ad18155519c5c1782c3d9b5`, its title as it stands:
+
+> Count a partial last page in page_count()
+
+and its description as it stands:
+
+> `page_count(11, 5)` returned 2, so the eleventh item was on no page: the integer division dropped the remainder. It now rounds the quotient up and returns 3.
+
 Do not change any file and do not commit. You may run `git` and read any file; do not build the project or run its
-tests. There is no network, so gh, a browser, and curl cannot reach GitHub. Where a skill asks you to run a gh
-command, read the output saved for it under `<gh>` instead. End with the report the skill describes, as your final
-message.
+tests, and you may not use gh, a browser, or curl. End with the report the skill describes, as your final message.
