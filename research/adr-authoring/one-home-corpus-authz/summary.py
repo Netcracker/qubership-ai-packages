@@ -17,7 +17,7 @@ REPO = 'https://github.com/Netcracker/qubership-authz-agent'
 
 def link(row):
     """Links the first file and line range of a finding; `lines` may list more ranges after it."""
-    path, start, end = re.match(r'(?:docs/decisions/)?([^:]+):(\d+)(?:-(\d+))?', row['lines']).groups()
+    path, start, end = re.search(r'([^/:\s]+\.md):(\d+)(?:-(\d+))?', row['lines']).groups()
     return f"{REPO}/blob/{row['commit']}/docs/decisions/{path}?plain=1#L{start}-L{end or start}"
 
 

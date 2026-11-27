@@ -72,9 +72,9 @@ What the counts show:
   kinds"). In ADR-0105 it flagged lines 1, 27–28, 37–38, and 55; B flagged none of them.
 - V's extra findings cost precision: `FP_CITATION` rose from 3 to 14, mostly short labels beside a correct citation.
 - 20 of the 25 high-severity groups quote text that cites the owning rule and paraphrases it beside the citation, and
-  the paraphrase has dropped or changed a condition of the rule: "accepted" is missing from ADR-0091 R14 item 1, and
-  "at its first pull after the start" from ADR-0095 R5. The other 5 restate the rule with no citation. Only 12 of the
-  25 contain a literal such as a status code, a path, or a duration.
+  the paraphrase has dropped or changed a condition of the rule: ADR-0095 R5 drops "at its first pull after the start"
+  from ADR-0093 R18, and the Related ADRs entry of ADR-0106 drops the condition of ADR-0104 R28. The other 5 restate
+  the rule with no citation. Only 12 of the 25 contain a literal such as a status code, a path, or a duration.
 
 ## Caveats
 
