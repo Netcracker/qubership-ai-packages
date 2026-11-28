@@ -8,4 +8,4 @@ apm-cli==0.36.1
 doccmd==2026.9.16.1
 # Read by scripts/check-skill-descriptions.py. apm-cli pulls PyYAML in anyway,
 # but a script that imports it declares it.
-pyyaml==6.0.3
+pyyaml==6.0.4
