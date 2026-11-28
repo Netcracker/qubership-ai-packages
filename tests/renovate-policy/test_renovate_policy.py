@@ -13,16 +13,14 @@ ROOT = Path(__file__).parents[2]
 RELEASE_PIN = re.compile(r"[^\s#@]+#[0-9a-f]{40}\s+#\s*(?:\S+[-_]v|v?)\d+\.\d+\.\d+")
 
 # Packages with no release yet, each still on an unmerged feat/agent-packages branch
-# (Netcracker/qubership-core-lib-go#109, Netcracker/qubership-core-lib-go-fiber-server-utils#86,
-# Netcracker/qubership-core-base-images#184). Once a repository releases its package, pin the commit of the release tag
-# with the tag in a comment, and remove the entry.
+# (Netcracker/qubership-core-lib-go#109 and Netcracker/qubership-core-lib-go-fiber-server-utils#86).
+# Once a repository releases its package, pin the commit of the release tag with the tag in a comment, and remove the entry.
 UNRELEASED_DEPENDENCIES = {
     "Netcracker/qubership-core-lib-go/logging/agent-packages/logging-go-usage",
     "Netcracker/qubership-core-lib-go/memlimit/agent-packages/memlimit-go-usage",
     "Netcracker/qubership-core-lib-go/context-propagation/agent-packages/context-propagation-go-usage",
     "Netcracker/qubership-core-lib-go/security/agent-packages/security-go-usage",
     "Netcracker/qubership-core-lib-go-fiber-server-utils/agent-packages/fiber-server-utils-go-usage",
-    "Netcracker/qubership-core-base-images/agent-packages/qubership-dockerfile-usage",
 }
 
 
