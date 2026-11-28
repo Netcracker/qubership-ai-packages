@@ -1,0 +1,111 @@
+{
+ "key": "pgjdbc_pgjdbc_4334",
+ "summary": "Adds a DatabaseMetaDataTest case checking the COLUMN_DEF value getColumns() reports for columns with and without defaults (issue #4333).",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "sehrope: the table is created in the test and dropped in finally, so a crash leaves it behind and later runs fail; the final version moves create/drop into createTables/dropTables (commit d1beb82d04)."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Test-only change."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "A short comment above the test describes what COLUMN_DEF reports; it matches the assertions."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "PR body is empty; for a test-only PR the title naming the issue is barely enough."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No production code changed."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Test-DB fixture lifecycle: table creation per test versus the class-level setup, relevant to the suite's parallelization noted by the reviewer."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Expected strings such as \"'hello'::text\" and \"now()\" depend on pg_get_expr rendering; plausible across supported server versions but worth a glance."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not user-facing."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not user-facing."
+  },
+  "contradictions": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No docs or description alongside."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "COLUMN_DEF semantics are defined by the JDBC DatabaseMetaData.getColumns contract; the test asserts pg_get_expr output, consistent with it."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests"
+   ]
+  ],
+  "why": "Test-only change with one required axis."
+ }
+}

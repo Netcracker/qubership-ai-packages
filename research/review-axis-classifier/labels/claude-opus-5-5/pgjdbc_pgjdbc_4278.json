@@ -1,0 +1,115 @@
+{
+ "key": "pgjdbc_pgjdbc_4278",
+ "summary": "Makes TimestampUtils.toTimestamp(Calendar, byte[]) reject empty text with a PSQLException (SQLState 22007) instead of ArrayIndexOutOfBoundsException, with two unit tests.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Bug fix mandates tests; the two added tests cover only toTimestamp, while the description claims a rejectsEmptyInput test over every entry point (toDate, toLocalDate, toLocalDateTime, toOffsetDateTime, toOffsetTime, toTime, toLocalTime) that does not exist in the diff."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal parsing bug fix; no option, property, or documented behavior changes."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Private guard inside an existing method; no public contract or comment changed."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "The PR body describes a shared checkNotEmpty helper applied to six methods and a rejectsEmptyInput test, but the commit adds an inline check only in toTimestamp; the commit message itself says date and time were already clean, contradicting the body. No changelog entry for a user-visible fix."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "One length check before an existing branch; negligible on the decode path."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not a security surface; values come from the server's text encoding."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Exception type changes from ArrayIndexOutOfBoundsException to PSQLException; the description notes it, and it moves toward the JDBC contract."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Guard sits inside the existing lock; no lifecycle change."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Adds a new error path: reuses 'Bad value for type timestamp/date/time' with SQLState 22007 and an empty {0}; worth checking it matches how other malformed values are reported."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Fix is incomplete: at base 23a1b0dac5 toLocalDateTime(byte[]) (line 587), toOffsetDateTime (652), toDate (762), toLocalDate (809) still read bytes[0] unguarded, and toOffsetTime(byte[]) (550) indexes bytes[0..7] so any input shorter than 8 bytes throws AIOOBE; the PR leaves all of them."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Plain bug fix, no new API."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Same getter now throws different exceptions depending on target type (SQLException for Timestamp, AIOOBE still for LocalDateTime/OffsetDateTime/Date)."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Description claims six methods and a shared helper fixed; code fixes one; the siblings in the same class still disagree on empty input."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build files touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Exception propagates to caller; no logging decision."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "JDBC getters should throw SQLException, which the fix moves toward; no spec section in dispute."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "change_description",
+    "error_model",
+    "correctness",
+    "contradictions"
+   ]
+  ],
+  "why": "A six-line fix in one class; one reviewer comparing the description with the code and sibling methods covers every required axis."
+ }
+}

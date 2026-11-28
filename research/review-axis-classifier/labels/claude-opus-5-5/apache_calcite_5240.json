@@ -1,0 +1,114 @@
+{
+ "key": "apache_calcite_5240",
+ "summary": "Lets ORDER BY refer to an unqualified common column of a NATURAL or USING join by moving expandCommonColumn from Expander to SqlValidatorImpl, calling it for ORDER BY items, and teaching AggChecker to match GROUP BY items through an AS wrapper.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix with validator, SqlToRel, and join.iq tests (validated against PostgreSQL); a focused pass should check cases such as a select alias that shadows the common column and FULL JOIN with aggregates."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix making standard SQL work; no option or documented behavior."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "mihaibudiu found that the comment in expandExprFromJoin ('must be NATURAL or USING here') was wrong since ON joins reach it; the author rewrote it, and the final version adds a comment in checkRollUpInSelectList."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "PR body is only the Jira link; title matches the Jira, and the rationale was given in review comments instead."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Validation-time expansion only."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Queries that failed with an ambiguity error now validate; the moved method was on a package-private nested class, so no public API changes."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The 'Column is ambiguous' error no longer fires for common columns in ORDER BY; ON joins must still report it, which the reviewer discussion confirmed."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Non-trivial name-resolution change; reviewer found a redundant branch and questioned double expansion and the AggChecker equalsDeep/AS handling. validateOrderList expands common columns before regular expansion, which may bypass select-alias precedence in ORDER BY."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Bug fix."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "ORDER BY resolution order changes (common-column expansion runs before alias resolution), which a user might notice when an alias shares the column name."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Inherited comment contradicted the code path; covered by doc_comments."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Implements SQL-standard semantics of NATURAL/USING common columns in ORDER BY (COALESCE for FULL JOIN, which side for LEFT/RIGHT); the author checked against PostgreSQL."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "doc_comments",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "One cohesive validator change where correctness, SQL semantics, tests, and comments all concern the same resolution path."
+ }
+}

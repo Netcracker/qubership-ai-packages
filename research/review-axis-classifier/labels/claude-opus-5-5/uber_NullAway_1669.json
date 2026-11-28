@@ -1,0 +1,114 @@
+{
+ "key": "uber_NullAway_1669",
+ "summary": "Makes TypeSubstitutionUtils restore annotations onto the implicit upper bound of unbounded wildcards, using detached copies of javac TypeVar/CapturedType objects and cycle detection for F-bounded type variables.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Behavior change needs tests; lazaroclapp noted the test checker silently returns NO_MATCH for unexpected field names (test can become a no-op), fixed to throw in the final diff; he also noted the F-bound cycle detection is untested here (deferred to #1668)."
+  },
+  "user_docs": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Internal generics machinery; no option, flag, or documented behavior changes."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Adds a public method and new interface methods on TypeMetadataBuilder with subtle javac-identity invariants (baseType override, delegating wrappers); their Javadoc must match the code. It does in the initial version."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description explains the why (preparatory for #1668, the two subtleties); NullAway writes CHANGELOG at release time."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds an IdentityHashMap bookkeeping per wildcard visit and extra type copies on the restore path; unlikely to matter."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No auth, crypto, or untrusted input."
+  },
+  "backward_compat": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Uses javac internal constructors that differ across supported JDKs; CodeRabbit raised JDK 21 constructor compatibility, which the chosen stable constructors already address; CI covers the JDK matrix."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Core concern is not mutating shared compiler-owned type objects (visible to other checkers); the detached copies handle it, a glance suffices; no threads."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds Verify checks; CodeRabbit flagged the silent fallback `t.wildcard.bound != null ? t.wildcard.bound : t` in visitCapturedType, left unchanged in final."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial type-substitution logic: cycle detection across F-bounded type variables, type identity via baseType(), metadata ordering in copyMetadata; mandated by complexity, no defect confirmed."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Preparatory internal refactor with no user-facing API."
+  },
+  "surprising_behavior": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Changes which annotations are restored onto unbounded wildcards, which can change diagnostics in JSpecify mode; user-visible effect lands with #1668."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Test class Javadoc says the special field names select operations; the NO_MATCH default for other names lets a typo pass silently, which the final version replaces with a throw."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build or dependency change."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Compiler plugin internals; no logging involved."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Implements the JSpecify rule that an unbounded wildcard takes the upper bound of the corresponding formal type variable (Javadoc of replaceUnboundedWildcardUpperBound)."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "tests",
+    "doc_comments",
+    "correctness",
+    "spec_conformance"
+   ]
+  ],
+  "why": "Three files in one cohesive generics change; one reviewer can hold the javac type model for all required axes."
+ }
+}

@@ -1,0 +1,115 @@
+{
+ "key": "apache_calcite_5278",
+ "summary": "Compiles Calcite with a Gradle toolchain JDK (jdkBuildVersion, default 25) and --release 8, adds the foojay resolver, and installs JDK 25 in every CI job.",
+ "axes": {
+  "tests": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Build-only change; verification is CI building and jandex parsing the bytecode, no test code needed."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New jdkBuildVersion property and a new required JDK 25 were undocumented; howto.md still said use JDK 8 for release, develop/index.md asked for JDK 8u220; rubenada asked about the release instructions and commit b2d2b36e22 added the docs."
+  },
+  "doc_comments": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "One comment on jdkBuildVersion in build.gradle.kts matches the code."
+  },
+  "change_description": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Contributor-facing build change; description is thorough and explains why, including the foojay 0.10.0 pin and ErrorProne JDK 11."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No runtime code touched; build time not a concern raised."
+  },
+  "security": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "foojay resolver can download a JDK from the network; CI disables auto-download, which covers the supply-chain angle."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Changes the supported build environment: every developer and the release manager now need JDK 25 installed (Gradle on Java 8 cannot download it), and the ErrorProne/Checker commands fail on JDK 25 as written; release steps had to change."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No threads or resources."
+  },
+  "error_model": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Missing-toolchain error comes from Gradle; the final docs quote it, nothing to design."
+  },
+  "correctness": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Removal of java.version task inputs is fine because the toolchain is a tracked input; --release 8 replaces source/target compatibility cleanly."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "zabetak questioned whether the auto-download resolver is worth it and accepted it."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "The build now silently downloads a JDK 25 when absent (zabetak: people may never realise which JDK they use); discussed and accepted with auto-download=false as the opt-out."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "Code now contradicts site/_docs/howto.md (release: use JDK 8, Error Prone requires Java 11) and site/develop/index.md (JDK 8u220 prerequisite, checker command without -PjdkBuildVersion=11); fixed in b2d2b36e22."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Rewrites every job in .github/workflows/main.yml, adds a settings plugin and a toolchain for JavaCompile."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging or metrics."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No external spec implemented."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "user_docs",
+    "backward_compat",
+    "surprising_behavior",
+    "contradictions",
+    "build_ci"
+   ]
+  ],
+  "why": "One cohesive build change; docs drift and compatibility of the developer/release environment are all visible from the same Gradle and CI diff."
+ }
+}

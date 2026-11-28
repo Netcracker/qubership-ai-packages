@@ -1,0 +1,21 @@
+{"key": "uber_NullAway_1667",
+ "summary": "Extends restoration of explicit nullability annotations onto captured wildcard types so that a captured extends-wildcard whose counterpart is a non-wildcard type gets the annotation on its backing wildcard's upper bound, fixing missed errors for direct and local-variable calls (the submitted diff also carries stacked #1666 changes to CheckIdenticalNullabilityVisitor and AddAnnotationToNestedTypeVisitor).",
+ "axes": {
+  "tests": {"label": 2, "mandated": true, "finding": true, "evidence": "Bug fix owes regression tests (present: testDirect/testWithSelf/testWithVar), but only positive-error cases; lazaroclapp asked for the safe case returning Nested<? extends @Nullable String>, which the final diff adds as testWithVarSafe."},
+  "user_docs": {"label": 0, "mandated": false, "finding": false, "evidence": "Internal checker precision fix; no option or documented behavior changes."},
+  "doc_comments": {"label": 1, "mandated": false, "finding": false, "evidence": "visitCapturedType Javadoc is extended to explain the new non-wildcard-counterpart case and matches the code; CodeRabbit's requests for test-method Javadoc are contradicted by the AGENTS.md rule the PR adds."},
+  "change_description": {"label": 1, "mandated": false, "finding": false, "evidence": "Description names the missed case and the new test; NullAway writes CHANGELOG at release, so no entry owed in the PR."},
+  "performance": {"label": 0, "mandated": false, "finding": false, "evidence": "Adds a clone of a captured type only when an annotation actually changes; not a hot path concern."},
+  "security": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "backward_compat": {"label": 1, "mandated": false, "finding": false, "evidence": "Users in JSpecify mode may see new 'incompatible types' errors on previously accepted code, which is the intended bug fix."},
+  "concurrency": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched; the copy in replaceCapturedTypeWildcard avoids mutating shared javac capture types, which is aliasing, not threading."},
+  "error_model": {"label": 0, "mandated": false, "finding": false, "evidence": "No new diagnostic kind or message; existing 'incompatible types' error reported in more places."},
+  "correctness": {"label": 2, "mandated": true, "finding": false, "evidence": "Non-trivial type-visitor logic in TypeSubstitutionUtils.visitCapturedType (EXTENDS-bound branch, identity checks, cloning a shared CapturedType) plus the wildcard-flag branching in CheckIdenticalNullabilityVisitor; mandated careful review of the edge cases (super/unbounded wildcards, no-op updates)."},
+  "user_value": {"label": 0, "mandated": false, "finding": false, "evidence": "Bug fix, no new feature or API."},
+  "surprising_behavior": {"label": 1, "mandated": false, "finding": false, "evidence": "New errors appear for code shapes (direct call vs self() chain) that previously behaved inconsistently; the change removes an inconsistency rather than adding one."},
+  "contradictions": {"label": 1, "mandated": false, "finding": false, "evidence": "The PR makes testDirect/testWithVar agree with testWithSelf; the library-model test and the JSpecify test mirror each other; nothing contradictory found."},
+  "build_ci": {"label": 0, "mandated": false, "finding": false, "evidence": "Test fixture additions in test-java-lib and test-library-models only."},
+  "observability": {"label": 0, "mandated": false, "finding": false, "evidence": "Not touched."},
+  "spec_conformance": {"label": 2, "mandated": true, "finding": false, "evidence": "Interprets JSpecify nullness for captured wildcards and their upper bounds (Nested<? extends @Nullable T> vs Nested<? extends String>); whether the reported incompatibility matches JSpecify subtyping is the core question."}
+ },
+ "plan": {"mode": "single", "groups": [["tests", "correctness", "spec_conformance"]], "why": "A cohesive type-visitor fix with its tests; one reviewer versed in javac capture types and JSpecify covers all three."}}

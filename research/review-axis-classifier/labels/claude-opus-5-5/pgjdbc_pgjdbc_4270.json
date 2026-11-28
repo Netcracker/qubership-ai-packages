@@ -1,0 +1,112 @@
+{
+ "key": "pgjdbc_pgjdbc_4270",
+ "summary": "Rewrite CHANGELOG.md and add website release notes for the 42.7.12 security release and the 42.7.13 feature release, including per-author commit lists.",
+ "axes": {
+  "tests": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Documentation-only change."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Adds release-notes pages under docs/content/changelogs; the substance is reviewed under change_description."
+  },
+  "doc_comments": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code comments touched."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "The PR is the release notes; the website 'Commits by author' credits the same commits twice (#4063 under Vladimir Sitnikov and Davide Angelocola, #3848 under Vladimir Sitnikov and 'Devs', 'restore pre-describe' under Vladimir Sitnikov and bshehata), lists 'Devs' as an author, and the 104-commit count does not match the listed items; the PR body says only 'Update the docs and changelogs'."
+  },
+  "performance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  },
+  "security": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Restates the CVE-2026-54291 advisory text for 42.7.12; wording only, matches the advisory scope."
+  },
+  "backward_compat": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code; flushCacheOnDdl default-true behavior change is listed under Added rather than Changed, a release-notes point counted under change_description."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  },
+  "error_model": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  },
+  "correctness": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  },
+  "user_value": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No feature."
+  },
+  "surprising_behavior": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No behavior change."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Root CHANGELOG.md and the website 42.7.13 page list different items (e.g. BlobInputStream reset fix #4204 and build/i18n entries only on the website) and the same commit appears under two authors; docs touched in two places that should agree."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build files; Hugo front matter only."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  },
+  "spec_conformance": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No code."
+  }
+ },
+ "plan": {
+  "mode": "single",
+  "groups": [
+   [
+    "change_description",
+    "contradictions"
+   ]
+  ],
+  "why": "Docs-only release-notes PR; one reviewer cross-checks the two changelogs against git history."
+ }
+}

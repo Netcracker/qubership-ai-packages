@@ -1,0 +1,122 @@
+{
+ "key": "pgjdbc_pgjdbc_4204",
+ "summary": "Makes BlobInputStream mark/reset and limit relative to the LargeObject's initial position (lazy lo_tell/lo_tell64) and overrides skip() to seek, adding Fastpath#getServerVersionNum and LargeObject#supports64BitOffsets.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Bug fix plus new skip behavior; BlobTest gains many cases, but codecov reports 11 uncovered lines (pre-9.3 lo_tell path and mark() failure path)."
+  },
+  "user_docs": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No docs page covers BlobInputStream; the behavior is documented in Javadoc."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New public Fastpath#getServerVersionNum and skip() Javadoc added; the existing mark() Javadoc still says marking a closed stream has no effect, while mark() now logs SEVERE on a closed stream."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "User-visible fix closing #3144/#3149 owes a changelog entry; description explains why and what, but its 'no extra round-trip' claim is relative to #3148 only."
+  },
+  "performance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Claims skip speed-up (no measurement, though obvious); every stream now pays a new lo_tell round-trip on first use even when the caller (PgBlob.getBinaryStream) just seeked to a known position."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "skip() guards overflow of absolutePosition + n; no untrusted input."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Adds public Fastpath#getServerVersionNum; skip() now returns n past end of object instead of the actual count read, and the first read issues an extra lo_tell."
+  },
+  "concurrency": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "New state mutation stays under the existing ResourceLock; assert lock.isLocked() added in getLo()."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New IOException paths (initialisation failure, skip seek failure, 'BlobInputStream is closed' message fix) and mark() swallowing the IOException."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Non-trivial position/limit/buffer arithmetic in skip() and lazy init; checked against PgBlob.getBinaryStream(pos,length) which passes a length, so relative limit keeps prior semantics."
+  },
+  "user_value": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Fixes two long-standing issues; the API is the standard InputStream one."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "skip() past the end returns the requested count rather than the bytes available, and mark() on a closed stream now logs at SEVERE instead of doing nothing."
+  },
+  "contradictions": {
+   "label": 2,
+   "mandated": false,
+   "finding": true,
+   "evidence": "mark() Javadoc ('Marking a closed stream should not have any effect') contradicts the new SEVERE log; description says older servers pay no extra round-trip while all servers now pay a lo_tell per stream."
+  },
+  "build_ci": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No build changes."
+  },
+  "observability": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New LOGGER.log(Level.SEVERE, 'Failed to set mark position') in mark(): SEVERE is too loud for a closed-stream mark that the contract says is a no-op."
+  },
+  "spec_conformance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "InputStream.skip/mark/reset contracts are followed; skip past EOF is permitted by the JDK contract."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "tests",
+    "performance",
+    "backward_compat",
+    "surprising_behavior"
+   ],
+   [
+    "error_model",
+    "observability",
+    "doc_comments",
+    "contradictions",
+    "change_description"
+   ]
+  ],
+  "why": "Stream-position logic and its behavioral compatibility need a focused pass separate from the error/logging and documentation consistency checks."
+ }
+}

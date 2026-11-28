@@ -1,0 +1,127 @@
+{
+ "key": "uber_NullAway_1787",
+ "summary": "Adds a new Error Prone check, JSpecifyUnrecognizedAnnotationLocation, that reports nullness annotations in locations JSpecify does not recognize, with suggested fixes, and runs it over NullAway's own sources and test inputs.",
+ "axes": {
+  "tests": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New 943-line checker; CodeRabbit found duplicated fixtures (outerTypeThroughArrayDimensions vs qualifiedInnerTypeInArrayIsReported, and a second pair); the initial tests pinned the wide annotation set (nonJSpecifyTypeUseAnnotationsAreReported) that review then removed."
+  },
+  "user_docs": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "New user-facing check and severity/flag semantics with no docs in the initial version; NullAway documents checks such as RequireExplicitNullMarking in its wiki."
+  },
+  "doc_comments": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "msridhar could not follow classifyTypeUsage comments ('a type parameter keeps its fix', 'reachable through two TreePaths', 'recognized nesting step', undefined 'root type'); fixed in c81527be, bbc12cd9, ea737870, 887b9398."
+  },
+  "change_description": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "No CHANGELOG entry in the initial version (final adds an Unreleased entry); unrelated renames in AndroidTest/GrpcTest drew 'Why are there changes in this file?' from the reviewer."
+  },
+  "performance": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "The checker matches every annotated type, class, method, variable and new-array tree in every compilation; work is cheap per tree and gated by annotation presence, so a glance suffices."
+  },
+  "security": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Not touched."
+  },
+  "backward_compat": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Initial ships at SeverityLevel.WARNING, so every NullAway user gets new warnings on upgrade and -Werror builds break (the Caffeine snapshot job went red); final ships at SUGGESTION and reports nothing by default."
+  },
+  "concurrency": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Stateless checker; not touched."
+  },
+  "error_model": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "The check's product is 19 diagnostic phrases plus suggested fixes; message wording and fix shapes need a focused look."
+  },
+  "correctness": {
+   "label": 2,
+   "mandated": true,
+   "finding": false,
+   "evidence": "Large tree-walking classification (two TreePaths reaching one AnnotatedTypeTree, covered nested types, qualifier anchors, fix placement) is non-trivial logic."
+  },
+  "user_value": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "New feature; reviewer challenged scope (reporting all NullAway-recognized annotations rather than JSpecify's) and it was narrowed; CheckLocalVariableRootType added for JetBrains migrants."
+  },
+  "surprising_behavior": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Initial matched any TYPE_USE annotation named Nullable/NonNull/NotNull/Nonnull, telling Checker Framework and JetBrains users an annotation is meaningless where their own tool reads it (msridhar 2026-09-02); plus on-by-default warnings."
+  },
+  "contradictions": {
+   "label": 1,
+   "mandated": false,
+   "finding": false,
+   "evidence": "Description and code were revised together; unrelated identifier renames were explained in commit messages."
+  },
+  "build_ci": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Changes nullaway/build.gradle (buildWithNullAway runs the check at ERROR), sample/build.gradle, and the shared test harness so every test runs the check; Caffeine-with-snapshot integration job is red on this branch."
+  },
+  "observability": {
+   "label": 0,
+   "mandated": false,
+   "finding": false,
+   "evidence": "No logging or metrics involved."
+  },
+  "spec_conformance": {
+   "label": 2,
+   "mandated": true,
+   "finding": true,
+   "evidence": "Implements the JSpecify recognized-locations section; initial applied it to non-JSpecify annotations, which the spec does not cover (narrowed in 1d2c86b2)."
+  }
+ },
+ "plan": {
+  "mode": "split",
+  "groups": [
+   [
+    "correctness",
+    "spec_conformance",
+    "tests"
+   ],
+   [
+    "user_value",
+    "surprising_behavior",
+    "backward_compat",
+    "user_docs",
+    "change_description"
+   ],
+   [
+    "doc_comments",
+    "error_model"
+   ],
+   [
+    "build_ci"
+   ]
+  ],
+  "why": "A large new checker whose logic, default/scope policy, comments and diagnostics, and build/harness wiring are independent concerns."
+ }
+}
