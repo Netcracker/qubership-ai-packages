@@ -45,20 +45,24 @@ same tree, with `3` in place of `<retry count>`; it fails check 3, and checks 2 
 
 ## Results
 
-Runs of 2026-11-11 on tree `d42618eb`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. The case ran again on this tree because "What belongs in an ADR" now sorts each
-requirement into a decision, a defect, or a guarantee of a dependency, "Open points" gives a question about a defect no
-open point, and "Drafting from the user's input" says how such a question is answered. Every requirement of the notes is
-a decision, so the new passages have to stay quiet. All four results pass all eight checks by meaning. Each writes
-`docs/adr/0001-<slug>.md` with a `<retry count>` placeholder in the retry rules and an open point that asks for it,
-keeps the 5-second timeout, leaves the owner as a placeholder and asks for one, and sets `Proposed`. None adds a guide
-or changes `AGENTS.md`, and each asks whether to add `docs/adr/README.md`, naming the `Implements:` and `Defers:`
-trailers it would commit the team to. No result names a defect or proposes an issue. `check.py` fails check 7 for Sonnet
-r1 on the marker: its question, "Do you want me to add it, with that commitment?", comes two sentences after the
-trailers, past the window the check reads.
+Runs of 2026-11-25 on tree `ad64edef`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again on this tree because the Context placeholder of "Template" now says
+that no rule is restated, and the read before publishing covers every sentence that cites a rule. The notes cite no
+other record, so both have to stay quiet. All four results pass all eight checks. Each writes `docs/adr/0001-<slug>.md`
+with a `<retry count>` placeholder in the retry rules and an open point that asks for it, keeps the 5-second timeout,
+leaves the owner as a placeholder and asks for one, and sets `Proposed`. None adds a guide or changes `AGENTS.md`, and
+each asks whether to add `docs/adr/README.md`. No result cites another record, names a defect, or proposes an issue.
 
-The previous round, on tree `bf6c2035`, passed all eight checks too. The intermediate trees of this change, `89cbfb4e`
-to `1db689e3`, ran this case as well and passed by meaning; their results are not kept.
+Trees `88a72faf` and `dc50203b` differ from `ad64edef` only in the guarantee of a dependency under "What belongs in an
+ADR": `88a72faf` states it in Context as a fact only where its source has no rules, and `dc50203b` only where its source
+is not a decision record. The inputs of this case hold no guarantee of a dependency, so the results above stand for
+both trees.
+
+On tree `d42618eb`, the round before this change, all four passed all eight checks by meaning; `check.py` failed check
+7 for Sonnet r1 because its question came two sentences after the trailers.
+
+On tree `bf6c2035` the case passed all eight checks too. The intermediate trees of an earlier change, `89cbfb4e` to
+`1db689e3`, ran this case as well and passed by meaning; their results are not kept.
 
 The baselines ran on 2026-11-09 with `english-developer-style` alone; the prompt has not changed since, and the current
 checks grade them. Both keep the retry count as "TBD" with no rule, keep the owner as "TBD", and ask for both: by

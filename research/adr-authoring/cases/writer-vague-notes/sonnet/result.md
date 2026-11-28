@@ -1,7 +1,7 @@
 ### File: docs/adr/0001-retry-policy-service-calls-and-refuse-with-503.md
 
 ````markdown
-# Retry a failed policy service call, then refuse the request with 503 and `POLICY_UNAVAILABLE`
+# Retry failed calls to the policy service, and refuse the request with 503 when every retry fails
 
 ## Status
 
@@ -9,83 +9,96 @@ Proposed
 
 ### Owner
 
-`<GitHub account of the owner>`
+`<owner GitHub account>`
 
 ### Participants and approvers
 
-- Platform team, `<GitHub account or team of the platform team>`: approves R1 to R3.
+- Platform team, `<platform team account>`: approves R1 to R4.
 
 ## Context
 
 token-gate checks the token of each request before policy evaluation. Policy evaluation is a call over HTTP to the
 policy service, made by `internal/policyclient`. `internal/handler` turns the errors of `internal/policyclient` into
-responses. The policy service can fail to answer, and until now the repository has recorded no decision on how long a
-call waits, how often it is repeated, or what the caller of token-gate receives when the policy service stays down.
+responses. The policy service can be slow or unreachable, and a request cannot be evaluated without it.
 
 ## Decision
 
-We will retry a failed call to the policy service up to `<retry count>` times, with each call timing out after 5 seconds,
-and we will refuse the request with HTTP 503 and the reason code `POLICY_UNAVAILABLE` when every call has failed.
+We will time out each call to the policy service after 5 seconds, retry a failed call a fixed number of times, and refuse
+the request with HTTP 503 and the reason code `POLICY_UNAVAILABLE` when every retry has failed.
 
 ### Terms
 
-- **policy call**: one HTTP call that `internal/policyclient` makes to the policy service for one request. The first
-  call and each retry of it are separate policy calls.
-- **failed policy call**: a policy call that ends without a usable answer from the policy service, as O2 defines.
-- **retry**: a policy call that `internal/policyclient` makes for a request after a failed policy call for that request.
+- **policy service**: the service that `internal/policyclient` calls over HTTP for policy evaluation.
+- **call**: one HTTP request that `internal/policyclient` sends to the policy service, whether it is the first attempt
+  for a request or a retry.
+- **failed call**: a call that times out under R1, ends with a connection error, or receives an HTTP response with a
+  status from 500 to 599.
+- **retry**: a call that `internal/policyclient` sends for the same request after a failed call.
 
 ### Rules
 
-#### Calling the policy service
+#### Calls to the policy service
 
-- **R1** (`policyclient`). `internal/policyclient` ends a policy call that has not completed 5 seconds after it started,
-  and counts it as a failed policy call.
-- **R2** (`policyclient`). After a failed policy call, `internal/policyclient` makes a retry, until a policy call
-  succeeds or `<retry count>` retries have failed. Each retry is subject to R1.
+- **R1** (`internal/policyclient`). Each call times out 5 seconds after it starts, and a call that times out is a failed
+  call.
+- **R2** (`internal/policyclient`). After a failed call, `internal/policyclient` sends a retry, up to `<retry count>`
+  retries for one request.
+- **R3** (`internal/policyclient`). Where the first call and every retry for one request have failed, `internal/policyclient`
+  returns an error to its caller.
 
 #### Refusing the request
 
-- **R3** (`policyclient`, `handler`). When the first policy call for a request and all `<retry count>` retries have
-  failed, `internal/policyclient` returns an error, and `internal/handler` refuses the request with HTTP status 503 and
-  the reason code `POLICY_UNAVAILABLE`.
+- **R4** (`internal/handler`). Where `internal/policyclient` returns the error of R3, `internal/handler` refuses the
+  request with HTTP status 503 and the reason code `POLICY_UNAVAILABLE`.
+
+### Implementation notes
+
+Adds no requirement. Test R2 to R4 with a fake policy service that fails every call, and check the number of calls it
+receives and the response of `internal/handler`. Test R1 with a fake that responds after more than 5 seconds.
 
 ### Justification
 
-A retry absorbs a failure that lasts for one call, such as a dropped connection (R2). The 5 second limit bounds how long
-one call holds the request (R1). A fixed status and reason code let a caller tell an unavailable policy service from a
-refusal by policy (R3).
+The timeout and the retry limit bound how long one request waits for the policy service (R1, R2). A request that cannot
+be evaluated gets a distinct refusal, so that a caller can tell an unavailable policy service from a denied request (R3,
+R4).
 
 ## Consequences
 
 Negative:
 
-- A request can wait for `<retry count>` plus one policy calls of 5 seconds each, before it is refused (R1, R2).
-- While the policy service is down, token-gate refuses every request that needs policy evaluation (R3).
+- While the policy service is down, token-gate refuses every request that needs policy evaluation (R4).
+- A request can wait up to 5 seconds for each call, so up to `<retry count>` + 1 calls take that many times 5 seconds
+  before the refusal (R1, R2).
 
 ## Open points
 
-- **O1.** The number of retries. The meeting notes say "a few times". Who decides: the platform team. Affects R2, R3,
-  and the first Negative item.
-- **O2.** Which outcomes make a policy call fail. Assumption: a policy call fails when it times out (R1), when the
-  connection cannot be made or breaks, or when the policy service returns an HTTP status of 500 or above. A policy
-  service response that denies the request is not a failure, and neither is a 4xx status, so neither is retried. Who
-  decides: the platform team. Affects R2, R3, and the definition of failed policy call.
-- **O3.** Where the reason code `POLICY_UNAVAILABLE` appears in the 503 response, such as a body field or a header. Who
-  decides: the platform team. Affects R3.
-- **O4.** The owner of this record is not settled. Who decides: the platform team. Blocks the `Accepted` status.
+- **O1.** The number of retries is not settled; the meeting notes say "a few times". The platform team decides. It
+  affects R2 and the second Negative item.
+- **O2.** The record assumes that a connection error, a timeout, and an HTTP 5xx response are failed calls, and that an
+  HTTP 4xx response is not. The platform team confirms or corrects this. It affects the definition of failed call and so
+  R2 and R3.
+- **O3.** The notes do not say where `POLICY_UNAVAILABLE` is carried. The record assumes the response body. The platform
+  team decides. It affects R4.
+- **O4.** The notes give no wait between retries. The platform team decides whether there is one, and its length. It
+  would add a rule to R2's topic.
 ````
 
 ### Message to the user
 
-I wrote one record, `docs/adr/0001-retry-policy-service-calls-and-refuse-with-503.md`. The repository has no records, so I used the default location, filename pattern, and the whole template. The status is `Proposed`, and there is no Date heading until the team accepts it.
+I wrote the record as `docs/adr/0001-retry-policy-service-calls-and-refuse-with-503.md`. The repository has no records, so I used the default directory, numbering, and the full template. The status is `Proposed`, and the Date heading is left out until the team accepts it.
 
-Questions I need answered before the record can be accepted:
+**Questions**
+- Who owns the record? The notes leave this open, so `Owner` is the placeholder `<owner GitHub account>`. I also need the platform team's GitHub account for **Participants and approvers**.
+- How many retries? The notes say "a few", and I did not invent a number. R2 carries `<retry count>`, and O1 asks for the value.
+- Do you want a reading guide? A `docs/adr/README.md` would map layers to paths and commit you to ending every commit message and pull request description with the `Implements` and `Defers` trailers for code under those paths. I did not add one. Without it, the layer tags in the rules use the package names `internal/policyclient` and `internal/handler`.
 
-1. **Owner.** Who owns the record? The notes say this is not settled, so the Owner field holds a placeholder. Please also give the GitHub account or team name of the platform team, which approves R1 to R3.
-2. **Retry count.** "A few times" is not a value. I wrote `<retry count>` in R2 and R3 and added open point O1. What number should it be?
-3. **What counts as a failure.** The notes say "the call fails". I assumed a timeout, a connection error, or an HTTP status of 500 or above. A policy denial and a 4xx status are not retried under that assumption. Please confirm this (O2).
-4. **The reason code.** Is `POLICY_UNAVAILABLE` a field in the response body, a header, or something else (O3)?
-5. **Reasons and alternatives.** The notes give no reasons or rejected options, so the Justification is short and I left out **Alternatives considered**. I did not invent any. If you want one recorded, such as allowing the request when the policy service is down, tell me what the team weighed.
-6. **Reading guide.** The repository has no `README.md` that describes records, so I did not add one, and the rules use the component names `policyclient` and `handler` as layers. A guide would commit the team to ending every commit message and pull request description for code in the mapped paths with `Implements:` and `Defers:` trailers. It would also add a short paragraph to the agent instructions. Do you want me to add it, with that commitment?
+**Assumptions to confirm**
+- A failed call is a timeout, a connection error, or an HTTP 5xx response (O2). A 4xx response is not retried.
+- `POLICY_UNAVAILABLE` is carried in the response body (O3).
+- The notes give no wait between retries, so no rule sets one (O4).
 
-I listed no checks under **Confirmation** because I know of no existing test for these rules. Once a test exists, such as one that fakes a failing policy service, it can be added.
+**What the notes left out**
+- The notes give no reasons and no rejected alternatives. The Justification is limited to what the rules imply, and I left out **Alternatives considered**. If the meeting discussed options, such as failing open when the policy service is down, send them and I'll add them.
+- No tests exist yet, so **Confirmation** is absent. Add entries as they land.
+
+The record stays `Proposed` until O1 to O4 are settled and the owner is named.

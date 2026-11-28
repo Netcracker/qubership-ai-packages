@@ -7,7 +7,9 @@ constrain and the check that confirms them, a `Proposed | Accepted | Rejected | 
 status, ISO 8601 dates, and accepted records that a new record supersedes rather than an
 edit, apart from their confirming checks and implementation notes. Only a
 decision becomes a rule: a defect in the code goes to the user as a proposed
-issue, and a dependency's own guarantee is at most a fact in **Context**. A record
+issue, and a dependency's own guarantee is at most a fact in **Context**; where a
+decision record sets the guarantee, a new record cites that record's rule by its
+number and by what it is about. A record
 stays in the repository's existing directory, or in `docs/adr/` with a
 `NNNN-kebab-slug.md` filename where there is none.
 
@@ -33,7 +35,7 @@ Or add it to your `apm.yml`:
 ```yaml
 dependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.1.0
+    - Netcracker/qubership-ai-packages/agent-packages/adr-authoring@v2.2.0
 ```
 
 Then run `apm install` and `apm compile` to merge the trigger into your local

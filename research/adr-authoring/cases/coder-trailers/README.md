@@ -64,3 +64,7 @@ Tree `3b230c74` changes only the bullet on named sets under "Terms" and rule R3 
 Tree `d42618eb` changes only "What belongs in an ADR", "Open points", and "Drafting from the user's input", which govern
 the writer of a record. The session of this case does not read `adr-authoring`, and its input, the guide and the
 paragraph in `AGENTS.md`, does not change, so the results above stand for the tree.
+
+Tree `dc50203b` changes the Context placeholder of "Template", "Rules", the guarantee of a dependency under "What
+belongs in an ADR", and the read before a record is published; the session of this case does not read `adr-authoring`,
+and its input does not change, so the results above stand for that tree.

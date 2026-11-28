@@ -1,7 +1,7 @@
-### File: docs/adr/0001-retry-failed-policy-calls-and-refuse-with-503.md
+### File: docs/adr/0001-policy-service-retries.md
 
 ````markdown
-# Retry failed calls to the policy service, then refuse the request with HTTP 503
+# Retry failed calls to the policy service, and refuse the request with HTTP 503 when every attempt fails
 
 ## Status
 
@@ -9,112 +9,113 @@ Proposed
 
 ### Owner
 
-`<owner>`
+`<GitHub account>`
 
 ### Participants and approvers
 
-- Platform team, `<platform team account>`: approves R1 to R3.
+- Platform team, `<GitHub team or account>`: approves R1 to R3.
 
 ## Context
 
-token-gate checks the token of each request before policy evaluation. The policy service runs policy evaluation, and
-`internal/policyclient` calls it over HTTP. `internal/handler` turns the errors of `internal/policyclient` into
-responses.
+token-gate checks the token of each request before policy evaluation. `internal/policyclient` calls the policy service
+over HTTP, and `internal/handler` turns the errors of `internal/policyclient` into responses.
 
-No record settles three questions yet: how long one call to the policy service may take, whether token-gate retries a
-call that fails, and what the client receives when no call succeeds.
+A call to the policy service can end in a connection error, a response that does not arrive, or a server error. When
+that happens, token-gate has no policy decision for the request. A short outage of the policy service, such as a
+restart, ends within seconds.
 
 ## Decision
 
-We will time out each call to the policy service after 5 seconds and retry a failed call up to `<retry count>` times.
-When every call for a request has failed, we will refuse the request with HTTP 503 and the reason code
-`POLICY_UNAVAILABLE`.
+We will retry a failed call to the policy service a fixed number of times, and limit each attempt to 5 seconds. When
+every attempt fails, we will refuse the request with HTTP 503 and the reason code `POLICY_UNAVAILABLE`.
 
 ### Terms
 
-- **policy call**: one HTTP request that `internal/policyclient` sends to the policy service, the first one or a retry.
-- **failed policy call**: a policy call that ends in one of these outcomes: a transport error, such as a refused
-  connection or a reset; the timeout of R1; or a response with an HTTP status from 500 to 599. A response with any
-  other status is not a failed policy call.
-- **retry**: a policy call for a request that follows a failed policy call for the same request.
+- **policy call**: the work `internal/policyclient` does to get the policy decision for one incoming request. A policy
+  call is made of one or more attempts.
+- **attempt**: one HTTP request from `internal/policyclient` to the policy service. It starts when the request starts
+  and ends when the response body has been read or the request has failed.
+- **failed attempt**: an attempt that ends in a connection error, in the cancellation of R2, or in a response with an
+  HTTP status from 500 to 599. A response with any other status, a policy decision that denies the request included,
+  is not a failed attempt.
 
 ### Rules
 
-#### Calls to the policy service
+#### Attempts
 
-- **R1** (`policyclient`). `internal/policyclient` cancels a policy call that has not received a response 5 seconds
-  after it was sent, and the policy call counts as a failed policy call.
-- **R2** (`policyclient`). After a failed policy call, `internal/policyclient` sends a retry, up to `<retry count>`
-  retries for one request. `internal/policyclient` sends no retry after a policy call that is not a failed policy call.
+- **R1** (`policyclient`). After a failed attempt, `internal/policyclient` starts a new attempt for the same policy
+  call, up to `<retry count>` attempts after the first one. An attempt that is not a failed attempt ends the policy
+  call with its response, and `internal/policyclient` starts no further attempt for that policy call.
+- **R2** (`policyclient`). `internal/policyclient` cancels an attempt that has not ended 5 seconds after it started.
 
-#### Response when the policy service is unavailable
+#### Refusal
 
-- **R3** (`policyclient`, `handler`). When the first policy call for a request and all `<retry count>` retries are
-  failed policy calls, token-gate responds to the request with HTTP status 503 and the reason code
-  `POLICY_UNAVAILABLE`.
+- **R3** (`policyclient`, `handler`). When every attempt that R1 allows for a policy call is a failed attempt,
+  token-gate refuses the incoming request with HTTP status 503 and the reason code `POLICY_UNAVAILABLE`, and does not
+  evaluate policy for it. `internal/handler` writes `POLICY_UNAVAILABLE` in the same place as the reason code of every
+  other refusal.
 
 ### Implementation notes
 
-Adds no requirement. Give each policy call its own `context.WithTimeout` of 5 seconds, derived from the request
-context, so that one slow call does not shorten the next. The wait between retries is the implementer's choice; a short
-backoff with jitter keeps the retries of many requests from reaching the policy service at the same moment. Let
-`internal/policyclient` return a sentinel error, such as `ErrPolicyUnavailable`, once the last retry has failed, and
-let `internal/handler` match it with `errors.Is` and write the 503 response. An `httptest.Server` that sleeps longer
-than 5 seconds, returns 503, or closes the connection covers R1 to R3 in tests.
+Adds no requirement. Set `http.Client.Timeout` to 5 seconds, or give each attempt its own `context.WithTimeout`,
+because both cover the whole attempt, including the read of the response body. Create the context of each attempt
+from the context of the incoming request. When the last attempt fails, return an error that wraps an exported
+sentinel, such as `policyclient.ErrUnavailable`, and let `internal/handler` match it with `errors.Is`.
 
 ### Justification
 
-A call that hangs would otherwise hold the request open for as long as the policy service takes; 5 seconds caps the
-wait for one policy call (R1). A short outage or a restart of the policy service often fails only one policy call, and
-a retry lets the request succeed without the client noticing (R2). A response from the policy service that is not a
-failed policy call carries a decision or a client error, and a retry would produce the same response (R2). HTTP 503
-tells the client that the failure is temporary and that it can try again later. The reason code separates this case
-from a refusal for a bad token (R3). Refusing the request keeps token-gate from letting a request through that policy
-evaluation never checked (R3).
+A short outage of the policy service should not refuse every request that arrives during it, so a failed attempt is
+retried (R1). An attempt that ends with a response, a deny decision included, gives token-gate a result, and repeating
+it would not change the result (R1). The per-attempt limit puts an upper bound on how long a request waits for one
+attempt to the policy service (R2). Without a policy decision, token-gate refuses the request instead of letting it
+through (R3). Status 503 marks the refusal as temporary, which a 401 or a 403 would not. The reason code lets a client
+and an operator tell a policy outage apart from a refused token (R3).
 
 ### Alternatives considered
 
-- **A1. Let the request through when the policy service cannot be reached.** Rejected by R3: a request would pass
-  without policy evaluation for as long as the outage lasts.
-- **A2. Respond with HTTP 503 after the first failed policy call, without retries.** Rejected by R2: a single dropped
-  connection would refuse a request that a retry would have served.
-- **A3. One deadline for the first policy call and all retries together, instead of a timeout for each policy call.**
-  A slow first call would leave no time for the retries.
+- **A1. Let the request through when the policy service is unavailable (fail open).** Rejected by R3: a request
+  would pass without policy evaluation for as long as the outage lasts.
+- **A2. Refuse the request after the first failed attempt.** Rejected by R1: a restart of the policy service would
+  refuse every request that arrives during it.
+- **A3. Refuse the request with HTTP 500.** Rejected by R3: 500 reports a fault in token-gate itself, and a client
+  does not know that it can try the request again.
 
 ## Consequences
 
+Positive:
+
+- A client or a load balancer that retries on 503 retries a request that was refused during a policy outage.
+
 Negative:
 
-- A request can wait up to (`<retry count>` + 1) × 5 seconds, plus the wait between retries, before token-gate
-  responds with HTTP 503 (R1, R2, R3).
-- During an outage, each request sends up to `<retry count>` + 1 policy calls, which adds load to a policy service that
-  is already failing (R2).
-- While the policy service is unavailable, token-gate refuses every request that needs policy evaluation (R3).
+- When the policy service accepts connections and does not answer, a request waits up to (1 + `<retry count>`) × 5
+  seconds before token-gate refuses it (R1, R2).
+- During an outage, the policy service receives up to 1 + `<retry count>` attempts for each incoming request (R1).
 
 ## Open points
 
-- **O1.** How many retries does `internal/policyclient` send? The meeting settled "a few" and no number. The platform
-  team decides. Affects R2 and R3.
-- **O2.** Which outcomes count as a failed policy call? The record assumes transport errors, the timeout of R1, and HTTP
-  statuses from 500 to 599. Other answers under consideration are adding HTTP 429, or counting only transport errors
-  and timeouts. The platform team decides. Affects R2 and R3.
-- **O3.** Where does the response carry the reason code `POLICY_UNAVAILABLE`? The record assumes the field that
-  carries the reason code in the error body that `internal/handler` already writes for other refusals. The other answer
-  under consideration is a response header. The platform team decides. Affects R3.
+- **O1.** How many attempts follow the first failed attempt, the `<retry count>` of R1. The notes say "a few". The
+  platform team decides. Affects R1.
+- **O2.** Whether `internal/policyclient` waits between attempts. The answers under consideration: no wait, which leaves
+  the choice to the code; a fixed delay; or exponential backoff with jitter. The platform team decides. A wait would
+  become a rule of its own and would lengthen the worst case under **Negative**. Affects R1.
+- **O3.** This record assumes that a failed attempt covers connection errors, the cancellation of R2, and statuses from
+  500 to 599, and that it does not cover 429 or any other 4xx status. The other answer under consideration counts 429 as
+  a failed attempt too. The platform team decides. Affects R1 and R3.
 ````
 
 ### Message to the user
 
-I drafted ADR-0001 at `docs/adr/0001-retry-failed-policy-calls-and-refuse-with-503.md`. It's the first record in the repository, so it uses the default layout under `docs/adr/`. Its status is `Proposed`, and three open points block acceptance:
+I've written the record as `docs/adr/0001-policy-service-retries.md`. Its status is `Proposed`, because three open points still block acceptance:
 
-- **O1:** the meeting didn't give a retry count, so R2 and R3 use the placeholder `<retry count>`.
-- **O2:** the notes don't say which failures count. I assumed transport errors, the 5-second timeout, and HTTP 5xx responses, and wrote the rules on that basis.
-- **O3:** I assumed `POLICY_UNAVAILABLE` goes in the field that holds the reason code in the error body `internal/handler` already writes. I couldn't check this without the code.
+- **O1:** How many retries does the platform team want? The notes only say "a few", so R1 uses the placeholder `<retry count>`.
+- **O2:** Should `internal/policyclient` wait between attempts? The options are no wait, a fixed delay, or exponential backoff with jitter.
+- **O3:** I assumed that a failed attempt means a connection error, the 5-second timeout, or a 5xx response, and that 4xx responses are not retried. Should 429 be retried too?
 
-The meeting notes give no reasons, so I wrote the Justification and the Alternatives considered myself. Please check them with the platform team.
+I also have some questions that don't belong in the record:
 
-Questions:
+1. **Owner:** Who owns this record? Please give me their GitHub account for the `<GitHub account>` placeholder.
+2. **Approver:** What is the platform team's GitHub team or account? It goes in the `<GitHub team or account>` placeholder.
+3. **Reading guide:** The repository has no guide for its records. Should I add one in `docs/adr/README.md`, plus a paragraph in the agent instructions? The guide would map `policyclient` and `handler` to their paths. It would also commit the team to ending the commit message and pull request description of every change to that code with `Implements:` and `Defers:` trailers that name the rules. Without a guide, the rules still apply once the record is accepted, but no change needs the trailers.
 
-1. Who owns this record? Which GitHub account should replace `<owner>`?
-2. What GitHub account or team handle should replace `<platform team account>` under Participants and approvers?
-3. Do you want a reading guide in `docs/adr/README.md`? With a guide, every change under `internal/policyclient` and `internal/handler` must end its commit message and pull request description with `Implements:` and `Defers:` trailers that name the rules it brings or leaves out. I didn't add one because that commits the team to this process.
+When the open points are settled and the team signs off, the status changes to `Accepted` and a Date heading is added.
