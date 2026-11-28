@@ -5,13 +5,13 @@ description: >-
   written and before the commit is final: "run the final review" or "check the change before I
   commit". Reviews one change against a fixed form: every doc comment added or changed, and every
   comment left above changed code, consistent with the code and with the other comments in the
-  file; every case the task statement, the commit message, and the class comments claim, covered
-  by a named test; boundaries, invalid partitions, and the negative control present; names and
-  comments that refer by content rather than by position or ordinal; assertions that print the
-  operands. Every item gets an answer, "none" included, with evidence. Findings are sorted
-  substantive, taste, or churn, and only the first kind is a request. A change with no code, such
-  as a skill, AGENTS.md, a docs page, or a configuration, fills the same form through the
-  analogues the skill names. Not a general code review; for that use the code-review skills.
+  file; every claimed case covered by a named test; boundaries, invalid partitions, and the
+  negative control present; names by content rather than by position; assertions that print the
+  operands; a member the branch kept adding cases to. Every item gets an answer, "none" included,
+  with evidence. Findings are sorted substantive, taste, or churn, and only the first kind is a
+  request. A change with no code, such as a skill, AGENTS.md, a docs page, or a configuration,
+  fills the same form through the analogues the skill names. Not a general code review; for that
+  use the code-review skills.
 ---
 
 # Final review of a change
@@ -43,12 +43,19 @@ twice, and a word the change coins as a term. A pass over the prose for style al
   followed by its line, tagged `code-changed, comment-unchanged`, `comment-added`, `comment-changed`, or
   `code-changed, no-comment`. The first tag is the list of comments to re-read that nobody edited; the parse is
   approximate, so a member it misses is still yours to find.
+- The output of `scripts/comment-drift.py --history <base> [<head>]`, for *Item 8: cases added at one site*: every
+  member outside the test sources that three or more commits of the branch changed, with the subject of each commit.
 
 ## 2. The form
 
 Answer every item. An item with nothing to report says `none` and one sentence on what was checked, not an answer to
 each of its questions; an item with a finding gives the file and line, the sentence or the test it concerns, what the
 reader would get wrong, and the change requested. The finding is stated there once; the index of §4 points to it.
+
+The writer may hand over its own checks or a shorter format with the task statement, such as four questions or "report
+substantive findings only". Answer those checks as well; they never replace an item, a shorter format changes nothing in
+the form, and every item is still answered. A review whose questions the writer chose finds what the writer already
+suspected.
 
 ### Item 1: comments consistent with the code and with each other
 
@@ -213,11 +220,12 @@ A fix to one site usually has siblings: other callers of the helper it wrapped, 
 literal, other readers of the same setting. For each helper the change touched or now relies on, list its other call
 sites, with `git grep -n '<name>('`, or with `sb callers <name>` where the `sb` code-search command (a semantic index
 over the repository, installed separately) is on the path; where it is, one `sb search "<the task statement's first
-sentence>"` finds sites the name does not reach. For each site: the same defect applies, or it does not, and why. A
-site where it applies is a finding; the request is to fix it in the same change or to name it as follow-up in the
-description, never to leave it unsaid. Where a helper has more call sites than you can read, say how many there are
-and read the ones the change's own condition can reach: the callers that pass the value, the state, or the argument
-shape the defect needed. Report the count and the criterion, so that the reader knows what was not read.
+sentence>"` finds sites the name does not reach. For each site: the same defect applies, or it does not, and why. A site
+where it applies is a finding; the request is to fix it in the same change, or, where the site cannot change in this
+change, to name it as follow-up in the description with the issue or the change that will fix it, never to leave it
+unsaid. Where a helper has more call sites than you can read, say how many there are and read the ones the change's own
+condition can reach: the callers that pass the value, the state, or the argument shape the defect needed. Report the
+count and the criterion, so that the reader knows what was not read.
 
 A change that adds a member to a set (a Makefile variable, an environment variable, a flag, a values key, a component, a
 build target) has a sibling in every place that lists the other members: a page's table of overrides, a help text, a CI
@@ -226,11 +234,54 @@ names both; a list that names the others and not the new member is a finding. Th
 size, in digits and in words (`both`, `two`, `the three`): a sentence that still counts the members as before is a
 finding too.
 
+A change that alters behavior also has a sibling in every text outside the diff that states the old behavior as current:
+a doc comment of a caller, a documented default, a page, a rule of a specification or a decision record. A changelog
+entry of a past release and a superseded record state history and are not siblings. Search for the old behavior by the
+names and values it uses, and read each hit on its own; where the hits are more than you can read, report their count
+and read the ones the change's own condition reaches, as for call sites. A text that still states the old behavior
+without the change's exception is a finding. Where the change itself says it takes precedence over, replaces, or makes
+an exception to another text, that text is a hit whether or not the search finds it. The request for every such text is
+the one for a call site above: an accepted record or a file in another repository is a text that cannot change in this
+change, and a text in the same repository that the change leaves false is not.
+
 Where the change fixes a symptom, its sites include the other paths that show the same symptom, which `git grep` on a
 helper does not find: a twin target, the other major version of a tool, the other operating system. Then read every
 remedy, troubleshooting row, and step the change writes: list the paths its symptom or its cause names, and check that
 its action names a step for each. A row whose symptom names two targets and whose action names one is a finding. A fix
 made in answer to a review comment is where this is missed: the comment names one path, and the fix covers that one.
+
+### Item 8: cases added at one site
+
+A member to which commit after commit added handling for one more input computes a property by listing its instances,
+and the next instance nobody listed is the next defect. Each case has its own test, so *Item 2: claimed cases covered*
+finds nothing missing, and *Item 3: boundaries, partitions, and the negative control* and *Item 7: siblings of the
+change* ask for one more input or one more path. This item asks whether the list should exist. Where it files a finding
+on a member, its request replaces theirs for every further shape of that member.
+
+1. **Find the pattern.** For each member the `--history` output lists, read the hunks of the commits that changed it.
+   The pattern is two or more commits that each added a case to the same decision: a branch of a condition, an entry
+   in a set of kinds or names the member checks, an early return before the shared path. Their subjects usually name
+   the input and the decision (`Handle X in Y`, `Keep Y when X is wrapped`). A member changed for unrelated reasons is
+   `none`, and so is a case analysis over a closed set, such as an enum, a sealed hierarchy, or the productions of a
+   grammar, which has no inputs beside the listed ones.
+2. **Name the property.** State in one sentence, in terms of the input rather than the code, what every listed case
+   has in common: *whether the value can be absent*, *which caller the request acts for*. Where no sentence covers
+   the cases, they are separate decisions and the member is `none`.
+3. **Try two inputs the list does not name.** Take inputs that have the property and match no case: the shape of a
+   listed case one level deeper, and that shape passed through a wrapper, a generic call, or a subtype. Read the code
+   for each, or run it where the test harness makes that cheap, and say which.
+4. **Decide.** Two inputs that get a different answer than the property gives are a finding. It names the property,
+   the two inputs, the answer each gets, and the commits whose cases they bypass. The request is to compute the
+   property in the one place that owns it, or to narrow the change to its stated purpose and open an issue that names
+   the property and the failing inputs; adding them as further cases is not a remedy. Where both inputs get the right
+   answer, the entry is `none` with the property and the two inputs, so the reader sees what was tried.
+
+Where `--history` has fewer than three steps to read (the branch's commits, and the uncommitted change where no head is
+given), read the previous report of this form instead (§1): each fix it requested at one member counts as a commit.
+Where there is no previous report either, the entry is `none`: the branch has too few steps to show the pattern.
+`--history` parses the JVM languages only; for another language, read the commits that changed each file of the diff
+(`git log --format='%h %s' <base>.. -- <file>`) and their hunks. The parse is line-based: a listed name the file does
+not declare is a call it took for a declaration, and is skipped.
 
 ## 2a. A change with no code
 
@@ -249,7 +300,10 @@ doc-comment skill.
   standard says. Check each against the file or the document it describes. A cited exemplar is fetched and read, not
   remembered: in one review the artifact's own rule was refuted by the issue it cited as the model to follow. In a skill
   or an instruction file, a worked example is a statement too: an example followed by a sentence on what not to copy
-  from it contradicts its rule (`apm-authoring` rule *One canonical example per concern*).
+  from it contradicts its rule (`apm-authoring` rule *One canonical example per concern*). Text the change moves or
+  copies into another file or section is checked as if written now: the move shows that someone wrote it, not that it is
+  still true. A file renamed whole with its text unchanged is not such text. A claim about what another open pull
+  request or a branch does is checked at its current head, and a claim about an issue at its current state.
 - **Claimed cases covered.** The claimed cases are the cases the task statement names and the artifacts or situations
   the change says it covers. Against each, the section that handles it. The test that covers a rule is its detection: a
   rule the artifact states with no way for a reader to tell whether a text obeys it is a claimed case with no test. A
@@ -281,7 +335,13 @@ doc-comment skill.
   marketplace entry, a sibling package's cross-reference, an umbrella that pins it. A scope widened in the artifact's
   body and not on the surface that decides whether it loads is the classic miss. A member added to a set (a package to
   the umbrella, a skill to the index, an option to a table) is listed wherever the other members are, and no sentence
-  still counts the set as before.
+  still counts the set as before. A rule that takes precedence over, narrows, or adds an exception to a rule of another
+  file has that rule as a sibling, and *Item 7: siblings of the change* decides when its amendment may be a follow-up.
+- **Cases added at one site.** The site is a rule of a skill or an instruction file, and a case is an exception, a
+  carve-out, or a worked example a commit added to it after a failure (`git log --format='%h %s' <base>.. -- <file>`).
+  Where two or more commits each added one to the same rule, state what the rule should decide, and try two situations
+  beside the listed ones; two that the rule's text decides wrongly are a finding with the request of *Item 8: cases
+  added at one site*. For a docs page or a configuration, `none` with the reason.
 
 For a skill or an instruction file, the report carries one more table, of the instructions the change adds or widens.
 Count them before filling a row: an instruction is one thing the change tells the agent to do. A rule that takes several
@@ -325,8 +385,9 @@ Not findings: `:57`, `:63`.
 Every finding carries one of three labels, and the label is the reader's cue for what to do with it.
 
 - **Substantive**: a reader could read the sentence wrongly, the sentence states something false, a claimed case has no
-  test, a boundary or the control is missing. So are the wording findings that *Comments consistent with the code and
-  with each other* names: a sentence a reader has to parse twice, and a coined term. These are requests.
+  test, a boundary or the control is missing, a list of cases fails on the inputs beside it (*Item 8: cases added at one
+  site*). So are the wording findings that *Comments consistent with the code and with each other* names: a sentence a
+  reader has to parse twice, and a coined term. These are requests.
 - **Taste**: two readings and both are right; the finding names the one the reviewer prefers. Say so, and expect it
   to be declined without discussion.
 - **Churn**: the suggested version has the property it objects to, or changes wording with no fact behind it. Do not
