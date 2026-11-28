@@ -417,6 +417,18 @@
       "source": "./agent-packages/townhall-brief"
     },
     {
+      "name": "openspec",
+      "description": "OpenSpec change workflow for an agent session: propose a spec-driven change with its proposal, specification deltas and task list, explore a problem before committing to one, implement the tasks, keep the artifacts coherent, verify the result against them, sync the deltas and archive the change. Wraps the upstream OpenSpec skills; the openspec CLI must be installed separately.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:planning",
+        "activity:coding",
+        "activity:authoring",
+        "audience:public"
+      ],
+      "source": "./agent-packages/openspec"
+    },
+    {
       "name": "adapt-nifi-flows-to-2-x",
       "description": "Apply NiFi 1.x to 2.x upgrade advisor recommendations to exported flow JSON files.",
       "version": "1.2.0",

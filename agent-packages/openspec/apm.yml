@@ -1,0 +1,16 @@
+name: openspec
+version: 1.0.0
+description: "OpenSpec change workflow for agent sessions: propose, explore, implement, update, verify, sync and archive a spec-driven change. Wraps the upstream OpenSpec skills and requires the openspec CLI on PATH."
+dependencies:
+  apm:
+    # Upstream skills, one package each, pinned to the commit of an OpenSpec release tag.
+    # The trailing comment records the tag the SHA was taken from; Renovate updates the SHA
+    # and the tag together. Bump them all at once: a mixed set of OpenSpec skills describes
+    # two different workflows at the same time.
+    - Fission-AI/OpenSpec/skills/openspec-propose#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-explore#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-apply-change#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-update-change#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-verify-change#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-sync-specs#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
+    - Fission-AI/OpenSpec/skills/openspec-archive-change#f1cd852f4edce22b8df9548a4df889172ca8ff25  # v2.2.0
