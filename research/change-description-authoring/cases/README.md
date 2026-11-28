@@ -16,7 +16,10 @@ The script copies the skill and `english-developer-style` out of the checkout, r
 temporary directory with the Read tool alone, and writes `<model>/<name>.md`, `<model>/<name>.run.txt` (cost, tokens,
 turns), and `<model>/skill-tree`. `--baseline` runs the same prompt with `english-developer-style` alone and writes
 under `<model>/baseline/`. Set `EFFORT=high` for Haiku, as the committed Haiku results ran. A fourth argument takes the
-skill from a commit instead of the working copy.
+skill from a commit instead of the working copy. The model `codex` runs `codex exec` instead of `claude -p`, with a
+fresh `CODEX_HOME` that holds only the credentials, a fresh `HOME` that hides `~/.agents/skills`, and a read-only
+sandbox in place of the Read tool, and writes under `codex/`; its `run.txt` records the model, duration, and effort,
+since `codex exec` reports no cost. `CODEX_MODEL` picks its model.
 
 Then grade the results:
 
