@@ -45,11 +45,16 @@ input, which gives ADR-0012 R2 `Conforms` in Change A; it fails check 2, and che
 
 ## Results
 
-Runs of 2026-11-11 on tree `025f4b62`, graded by reading; both models at the default effort. "r1" and "r2" are
-`result.md` and `result-2.md`. All four results pass all seven checks. Change A gives ADR-0012 R1 `Violates` and R2 `Not
-touched`. Change B leaves both rules out of the walk or `Not touched`, since it changes only the `http` layer. Change C
-gives R1 `Violates` for the new import of `internal/http/admin`, R2 `Not touched`, and names the older import of
-`internal/http/auth` apart ("Failed before this change and left as it was").
+Runs of 2026-11-16 on tree `ad071c7e`, graded by reading; both models at the default effort. "r1" and "r2" are
+`result.md` and `result-2.md`. The case ran again because "Confirmation and implementation notes" gained sentences about
+a requirement that asks for a test of another rule and about what the notes name. All four results pass all seven
+checks. Change A gives ADR-0012 R1 `Violates` and R2 `Not touched`. Change B leaves both rules out of the walk or `Not
+touched`, since it changes only the `http` layer. Change C gives R1 `Violates` for the new import of
+`internal/http/admin`, R2 `Not touched`, and names the older import of `internal/http/auth` apart. These results also
+stand for tree `36fdf375`, which only rewords the retelling item of "What belongs in an ADR", a part this case does not
+list.
+
+Runs of 2026-11-11 on tree `025f4b62` passed the same way; the runs above replace them.
 
 Earlier rounds failed check 2 on Sonnet, before Change C was added. On tree `bf6c2035`, both Sonnet results gave R2
 `Conforms` in Change A ("The new file in the token layer does not import `net/http`"): the skill did not say what a case
@@ -58,7 +63,7 @@ gave `Conforms`. Tree `6c8380e9` added that a file added to a package that meets
 change alters no outcome, and both Sonnet runs then gave `Not touched`. Review of tree `7aeb0ec4` found that a unit-only
 definition gives a new forbidden import in a package that already failed `Not touched`; tree `9fb67955` makes each
 forbidden relation a case of its own, and Change C tests it. Tree `025f4b62` words that sentence more precisely, and the
-results above ran on it. Opus gave `Not touched` for R2 in every round.
+runs of 2026-11-11 ran on it. Opus gave `Not touched` for R2 in every round.
 
 The baselines ran on 2026-11-11 with `english-developer-style` alone, on the input with Change C. Both say "violated"
 for R1 in Changes A and C, which matches in meaning, and judge no rule in Change B. Both fail checks 1 and 5 on the word
