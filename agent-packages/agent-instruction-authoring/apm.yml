@@ -1,0 +1,3 @@
+name: agent-instruction-authoring
+version: 1.0.0
+description: "Content rules for text an AI agent follows (skills, AGENTS.md and CLAUDE.md, rule files, personas, review checklists, reusable briefs): rules that hold for a class of situations, each with the condition under which it does not apply, and a change after a failed case that generalizes instead of patching."

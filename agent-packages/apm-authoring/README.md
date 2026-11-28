@@ -37,6 +37,9 @@ local `AGENTS.md` / `CLAUDE.md`.
   the instruction-vs-skill decision, how to fix a bad output by where
   a rule stops rather than by one more rule, frontmatter rules, version
   policy, common authoring pitfalls.
+- [`agent-instruction-authoring`](../agent-instruction-authoring/), a
+  dependency of this package: what an instruction tells the agent, and
+  how to change it after a failed case.
 
 ## Typical use
 

@@ -216,10 +216,14 @@ Avoid in the trigger:
 
 The skill is what the agent reads **after** it decides to engage. Its job
 is to teach the agent things it cannot infer from imports, types, or
-generic documentation. Four rules:
+generic documentation. What any instruction tells an agent, in any
+harness, and how to change one after a failed case or eval run, is
+`agent-instruction-authoring`. Four rules:
 
 ### 1. Encode platform-specific knowledge, nothing else
 
+This is `agent-instruction-authoring` rule *Write only what changes
+what the agent does*, applied to a library or platform package.
 Include only what the agent cannot reasonably know:
 
 - **Required ordering** of init steps (`configloader.Init` before
@@ -252,19 +256,17 @@ Leave out everything else. In particular, don't include:
 
 ### 2. One canonical example per concern
 
-State the rule, then show one concrete example. Do not show two examples
-that vary in trivial ways — a reviewer rightly asks "is this any
-different from the previous example?". If a real variant exists (Quarkus
-fast-jar vs Spring Boot uber-jar; net/http vs Fiber middleware), show it
-once and label what makes it different.
+This is `agent-instruction-authoring` rule *Write for a class of
+situations*, applied to the examples of a library or platform package:
+where a real variant exists (Quarkus fast-jar vs Spring Boot uber-jar;
+net/http vs Fiber middleware), show it once and label what makes it
+different.
 
 An example that needs a caveat after it teaches what the caveat forbids,
-because the agent copies the example. At commit `51b35c9`,
-`change-description-authoring` showed its pull request description under
-four headings and then said "The *After* above carries headings only to
-label its slots"; the description of pgjdbc/pgjdbc#4388, a 17-line fix,
-came out under three headings. Show the shape you want in the common
-case instead.
+because the agent copies the example. A skill that shows a pull request
+description under four headings, and then says the headings only label
+its slots, gets descriptions with headings even for a small fix. Show
+the shape you want in the common case instead.
 
 When listing pitfalls, prefer **rule + brief reason** over a wall of
 `// WRONG: …` snippets. Negative examples without the matching positive
@@ -282,18 +284,20 @@ once, in active voice, and let them apply to both directions.
 
 ### 4. Fix a bad output where the rule stops, not by adding what to write
 
-This applies to a skill and to any instruction file an agent reads
-(`*.instructions.md`, `AGENTS.md`, `CLAUDE.md`, a rule file). When an
-agent leaves a part of its output empty or fills it with something wrong
-(a commit body that guesses at a cause, a review that pads a section
-with "none found because…"), first give that part a condition that ends
-it: when the part is absent, and, where it is owed, what to state and
-where to stop. A clause on where to stop bounds the part on the inputs
-that need it; only the condition on when it is absent keeps it off the
-inputs where it is noise. A rule that says "write X" fires on every
-input, including those where X is noise, and such rules pile up one per
-bad output until every output carries all of them. Add one only where
-the reader needs X on every input.
+This is `agent-instruction-authoring` rule *Give every rule its
+boundary*, applied to one part of an output. It applies to a skill and
+to any instruction file an agent reads (`*.instructions.md`,
+`AGENTS.md`, `CLAUDE.md`, a rule file). When an agent leaves a part of
+its output empty or fills it with something wrong (a commit body that
+guesses at a cause, a review that pads a section with "none found
+because…"), first give that part a condition that ends it: when the part
+is absent, and, where it is owed, what to state and where to stop. A
+clause on where to stop bounds the part on the inputs that need it; only
+the condition on when it is absent keeps it off the inputs where it is
+noise. A rule that says "write X" fires on every input, including those
+where X is noise, and such rules pile up one per bad output until every
+output carries all of them. Add one only where the reader needs X on
+every input.
 
 Before adding a rule to a section, read the rules that earlier failures
 added there (`git log -S '<phrase>'` finds each one's commit and

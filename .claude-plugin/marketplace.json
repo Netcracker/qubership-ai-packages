@@ -8,7 +8,7 @@
     {
       "name": "apm-authoring",
       "description": "Guidelines for authoring APM packages (instructions, skills, prompts, agents, hooks).",
-      "version": "1.2.1",
+      "version": "1.3.0",
       "tags": [
         "topic:documentation",
         "activity:authoring",
@@ -53,8 +53,8 @@
     },
     {
       "name": "qubership-user-essentials",
-      "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, a final pre-commit review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, test authoring, problem-report authoring, telemetry authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python.",
-      "version": "1.5.0",
+      "description": "Umbrella package with the Qubership agent setup for a global user workspace: the repository baseline plus code review, a final pre-commit review, repository onboarding, dependency PR triage, Renovate automerge, ADR authoring, test authoring, problem-report authoring, agent-instruction authoring, telemetry authoring, and doc-comment authoring for Java, Go, Rust, JavaScript, and Python.",
+      "version": "1.6.0",
       "tags": [
         "topic:meta",
         "activity:setup",
@@ -204,6 +204,18 @@
         "audience:public"
       ],
       "source": "./agent-packages/enable-renovate-automerge"
+    },
+    {
+      "name": "agent-instruction-authoring",
+      "description": "Content rules for text an AI agent follows: rules that hold for a class of situations, each with the condition under which it does not apply, and a change after a failed case that generalizes instead of patching.",
+      "version": "1.0.0",
+      "tags": [
+        "topic:documentation",
+        "activity:authoring",
+        "activity:code-review",
+        "audience:public"
+      ],
+      "source": "./agent-packages/agent-instruction-authoring"
     },
     {
       "name": "adr-authoring",
