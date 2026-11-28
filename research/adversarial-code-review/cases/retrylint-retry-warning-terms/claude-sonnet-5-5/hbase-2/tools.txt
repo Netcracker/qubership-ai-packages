@@ -1,0 +1,4 @@
+Skill: {"skill": "adversarial-code-review"}
+Bash: git log --format='%H%n%B' 8587e48..HEAD && git diff --stat 8587e48..HEAD && ls && cat AGENTS.md CLAUDE.md 2>/dev/null | head -50; ls ../cfg/.claude/skills/
+Bash: git diff 8587e48..HEAD; ls -R retrylint tests | head -40; cat README.md; grep -rn "messages\|retry_warning\|WARNING" --include=*.py . | head -30
+Bash: cat retrylint/*.py tests/test_golden.py; cat tests/golden/*.conf; python3 -m unittest 2>&1 | tail -5; awk '{print length}' tests/golden/post_retry.txt

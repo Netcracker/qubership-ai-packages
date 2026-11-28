@@ -1,0 +1,5 @@
+cost_usd: 5.91
+turns: 32
+duration_s: 529
+claude-opus-5-5: cost_usd 5.90, input 232, output 103173, cache_read 6055558, cache_write 476773
+claude-haiku-5-5: cost_usd 0.01, input 72297, output 2064, cache_read 0, cache_write 0

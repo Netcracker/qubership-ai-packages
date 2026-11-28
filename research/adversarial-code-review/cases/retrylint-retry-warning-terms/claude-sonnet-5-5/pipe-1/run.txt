@@ -1,0 +1,5 @@
+cost_usd: 1.35
+turns: 26
+duration_s: 103
+claude-sonnet-5-5: cost_usd 1.34, input 104, output 33056, cache_read 2208749, cache_write 284723
+claude-haiku-5-5: cost_usd 0.01, input 8, output 2695, cache_read 84957, cache_write 31371

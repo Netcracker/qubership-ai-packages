@@ -1,0 +1,4 @@
+Skill: {"skill": "adversarial-code-review"}
+Bash: git log --format='%H%n%B' 8587e48..HEAD && git diff --stat 8587e48..HEAD && git diff 8587e48..HEAD | head -400
+Bash: git ls-files && cat retrylint/*.py | head -150; cat README* docs/* 2>/dev/null | grep -n -i -E "idempot|unsafe|warning|retry" | head -30; ls tests; grep -rn "Idempotency\|not idempotent" . --include=* -I | grep -v '^./.git/' | head
+Bash: cat README.md tests/test_golden.py; wc -c tests/golden/*.txt; python3 -m unittest 2>&1 | tail -3

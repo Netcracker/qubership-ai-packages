@@ -21,15 +21,21 @@ Grade each by reading `result.md`.
 
 ## Skill parts
 
-- `adversarial-code-review`: `SKILL.md` §Review areas, area *Intent and scope*; §Result
+- `adversarial-code-review`: `SKILL.md` §Choose the axes, the *Intent and scope* row (at 71027cea, §Review areas, area
+  *Intent and scope*); §Result. The `pipe-<n>` runs also test the text above *Read the request* (every section runs on
+  every change) and the last item of §Choose the platform path.
+
+The `base`, `draft`, and `cond` results stand for the skill at 71027cea, before the `medium` default. The `pipe` runs
+name no profile either, and run at `medium`.
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `repo`, `base`, `head` | The path of the bundle in the `final-review` case, relative to this directory, and the same two commits. |
-| `prompt.md` | The task, with `<skills>`, `<base>`, and `<head>` replaced by `run-review-case.sh`. |
-| `<model>/<label>/…` | The outputs of one run. `base-<n>` ran tree `27ba4f1b` (commit `925b910`); `draft-<n>` tree `775e67de`, the first wording of the condition; `cond-<n>` tree `5a29ff5e`, the committed wording. |
+| `prompt.md` | The task, with `<skills>`, `<base>`, and `<head>` replaced by `run-review-case.sh`. Before `pipe-<n>`, it had the session read `<skills>/adversarial-code-review/SKILL.md`; it now has it load the skill with the Skill tool. |
+| `skills` | The skills `run-review-case.sh` copies and loads, the same list as in `retrylint-retry-warning-terms`. |
+| `<model>/<label>/…` | The outputs of one run. `base-<n>` ran tree `27ba4f1b` (commit `925b910`); `draft-<n>` tree `775e67de`, the first wording of the condition; `cond-<n>` tree `5a29ff5e`, the committed wording; `pipe-<n>` tree `a866e653`, through the Skill tool. |
 
 ## How to run
 
@@ -66,3 +72,23 @@ Sonnet's output grew on this input although the typo finding is gone: 262 and 21
 (correctness, other paths, scope, tests, coverage) that the report template does not ask for when there are no findings.
 Opus fell from 221 and 196 to 165 and 161. The case covers a typo in prose, `README.md`, not one in a comment of a
 source file.
+
+## Results, Skill tool, 2026-11-28
+
+The runner and the arm `pipe` as in *Results, Skill tool* of `retrylint-retry-warning-terms`. The earlier runs kept no
+`tools.txt`; at 0.08 to 0.25 USD and four to seven turns each, they spawned no axis, Opus included.
+
+| Model | 1 typo | 2 result | 3 length | Words | Subagents, `review.json` | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- |
+| Sonnet | pass, pass | pass, pass | fail, fail | 232, 271 | 4 and yes, 7 and yes | 1.12, 1.23 |
+| Opus | pass, pass | pass, pass | fail, fail | 276, 328 | 7 and yes, 7 and yes | 3.55, 3.40 |
+
+Every run ran the axes and the verifier and returns `APPROVE`. No run has a finding on the typo; three of the four
+reports name it in their notes as outside the commit message's claim, and Opus `pipe-2` does not name it. Both Opus runs raise the same two `minor` findings: no test below
+one page or at another `per_page`, and a question whether a release shipped the rounded-down count.
+
+Check 3 fails in every run. The report is now `review-delivery`'s rendering of `review.json`, with a coverage section
+and notes that the inline report of the earlier runs did not have; the 200-word limit was measured on that inline
+report. No run of the skill before this change reached `review-delivery` on this case, so whether the growth comes from
+the delivery template or from this change is not measured, and the limit needs a run that renders a no-findings
+`review.json` through `review-delivery` alone.

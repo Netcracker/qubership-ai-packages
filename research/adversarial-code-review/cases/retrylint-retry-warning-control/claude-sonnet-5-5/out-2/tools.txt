@@ -1,0 +1,4 @@
+Read: /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.wslJFnjrqN/skills/adversarial-code-review/SKILL.md
+Bash: git show HEAD --stat | head -30; git show HEAD | head -400; ls
+Bash: cat README.md; ls -R retrylint tests | head -40; grep -rn "idempotent\|endpoint \"" --include=* . -I | grep -v "^./.git/" | head -20; python3 -m pytest -q 2>&1 | tail -5
+Bash: for f in tests/golden/p*_retry.txt; do head -1 $f | wc -c; done; git show HEAD~1:tests/golden/post_retry.txt | head -1 | wc -c

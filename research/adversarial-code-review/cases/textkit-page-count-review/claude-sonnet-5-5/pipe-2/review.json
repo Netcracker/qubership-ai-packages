@@ -1,0 +1,119 @@
+{
+ "schema_version": 1,
+ "target": {
+  "platform": "local",
+  "url": "local:repo@038a3d58",
+  "title": "fix off-by-one in page_count()"
+ },
+ "revision": {
+  "base": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
+  "head": "038a3d58e17a22a78d682b96627ba9f592f84eb4"
+ },
+ "result": "approve",
+ "scope_exclusions": [],
+ "axes": [
+  {
+   "axis": "measurements",
+   "status": "skipped",
+   "reason": "no coverage or mutation tool installed and no agent rules name one; plain test run passes (7 tests)"
+  },
+  {
+   "axis": "correctness",
+   "status": "ran",
+   "reason": "single, profile medium"
+  },
+  {
+   "axis": "tests",
+   "status": "ran",
+   "reason": "single, profile medium"
+  },
+  {
+   "axis": "change-description",
+   "status": "ran",
+   "reason": "single, profile medium"
+  },
+  {
+   "axis": "change-reach",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "architecture",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "docs-pages",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "intent-scope",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "least-surprise",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "compatibility",
+   "status": "ran",
+   "reason": "group-2, profile medium"
+  },
+  {
+   "axis": "simplicity",
+   "status": "ran",
+   "reason": "group-2, profile medium"
+  },
+  {
+   "axis": "security",
+   "status": "skipped",
+   "reason": "no trust boundary touched"
+  },
+  {
+   "axis": "reliability",
+   "status": "skipped",
+   "reason": "no timeouts, retries, or limits"
+  },
+  {
+   "axis": "telemetry",
+   "status": "skipped",
+   "reason": "no logs, metrics, or error text changed"
+  },
+  {
+   "axis": "performance",
+   "status": "skipped",
+   "reason": "constant-time arithmetic"
+  },
+  {
+   "axis": "formats",
+   "status": "skipped",
+   "reason": "no hand-written format"
+  },
+  {
+   "axis": "comments",
+   "status": "skipped",
+   "reason": "no comments changed"
+  },
+  {
+   "axis": "vocabulary",
+   "status": "skipped",
+   "reason": "no comments, names, or output text added"
+  },
+  {
+   "axis": "naive-reader",
+   "status": "skipped",
+   "reason": "no doc comments or output text changed"
+  }
+ ],
+ "open_questions": [],
+ "previous_findings": [],
+ "reviewer": {
+  "model": "claude-sonnet-5-5"
+ },
+ "findings": [],
+ "classes": [],
+ "families": []
+}

@@ -45,6 +45,10 @@ limit; the report then has no trace of it, and the check fails.
 - `adversarial-code-review`: `SKILL.md` §Review areas, areas *Intent and scope*, *Compatibility and evolution*, and
   *Verification and documentation*; §Finding model and §Report, for the limit on `non-blocking` findings
 
+The `medium` and `low` profiles of 2.2.0 do not reach this case: its prompt names no profile, so it runs at
+`high`, where the reworded wave, rerun, and failure rules of §Run the axes run one subagent per axis as before. Its
+results stand for the skill at 71027cea.
+
 ## Files
 
 | File | What it is |

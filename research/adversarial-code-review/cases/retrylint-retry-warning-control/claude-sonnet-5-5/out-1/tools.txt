@@ -1,0 +1,4 @@
+Read: /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.D0RBfsrXD6/skills/adversarial-code-review/SKILL.md
+Bash: git show --stat HEAD | head -30; git diff 8587e48..HEAD | head -400
+Bash: git ls-files; grep -rn "is retried\|not idempotent\|endpoint \"" --exclude-dir=.git . | grep -v "^./tests/golden"; cat retrylint/messages.py; ls tests; cat CLAUDE.md AGENTS.md 2>/dev/null
+Bash: cat README.md retrylint/policy.py retrylint/__main__.py tests/test_golden.py; python3 -m unittest 2>&1 | tail -5; awk '{print length}' tests/golden/*.txt

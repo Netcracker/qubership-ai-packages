@@ -1,26 +1,36 @@
 #!/usr/bin/env sh
 # Runs one review case of adversarial-code-review, as a consumer of the skill
 # would: the skill is copied out of this checkout, the repository is fetched at
-# the case's head commit into a temporary directory, and claude runs there in
-# safe mode, so no installed copy of a skill, no user CLAUDE.md or rule, and none of
-# this repository's AGENTS.md files reach the session. Safe mode drops the
-# repository's own instructions too, so the script appends its CLAUDE.md, or
-# its AGENTS.md where it has no CLAUDE.md, to the system prompt.
+# the case's head commit into a temporary directory, and claude runs there with
+# the copies as its skills, which the Skill tool loads as it loads an installed
+# skill, beside the built-in ones and any the reviewed repository ships
+# (init.txt lists them). Only the project's settings load, so no installed copy
+# of a skill, no user CLAUDE.md, rule, hook, or MCP server, and none of this
+# repository's AGENTS.md files reach the session. The reviewed repository's
+# CLAUDE.md loads as a project's does; where it has only an AGENTS.md, the
+# script appends that file to the system prompt.
 #
 # A case directory holds:
-#   repo        the URL to fetch from, or the path of a git bundle relative to
-#               the case directory
+#   repo        the URL to fetch from, or the path, relative to the case
+#               directory, of a git bundle or of a git fast-export stream
+#               (*.fast-export), which is plain text and imports with the
+#               same shas
 #   base        the full sha of the commit the change starts from
 #   head        the full sha of the last commit of the change
-#   prompt.md   the task; <skills> is replaced by the directory of the skill
-#               copy, <base> by the base sha, and <head> by the head sha
+#   prompt.md   the task; <skills> is replaced by the directory that holds
+#               the skill copies, <base> by the base sha, and <head> by the
+#               head sha
+#   skills      optional: the names of the skills to copy, one per line, as
+#               <package>/<skill> where the package has another name;
+#               adversarial-code-review when the file is absent
 #
 # Run from the repository root:
 #   research/adversarial-code-review/cases/run-review-case.sh <case directory> <model> <label> [<rev>]
 # With <rev>, the skill is taken from that commit; without it, from the
 # working copy. The output goes to <case directory>/<model>/<label>/, and only
 # after the session succeeds:
-#   result.md     the session's final message, the report
+#   result.md     the report: the last final message of a turn that has a
+#                 Result line, or the last final message when no turn has one
 #   run.txt       the session's cost, turns, duration, and tokens per model
 #   tools.txt     every tool call the session made, one per line
 #   access.txt    the tool calls to read first: a web tool, gh, curl, wget,
@@ -28,7 +38,11 @@
 #                 path outside the clone and the skill copy. It is a pointer
 #                 into tools.txt, not a verdict: a path is resolved against
 #                 the clone, so an empty file does not show a clean run
-#   skill-tree    the tree id of the skill that ran, see scripts/skill-tree.sh
+#   skill-tree    the tree id of each skill that ran, see scripts/skill-tree.sh
+#   init.txt      the skills, plugins, MCP servers, and memory paths the
+#                 session started with, which show what reached it beside
+#                 the copies: built-in skills and plugins, and any skill the
+#                 reviewed repository ships
 set -eu
 
 usage='usage: run-review-case.sh <case directory> <model> <label> [<rev>]'
@@ -40,25 +54,38 @@ base=$(cat "$case_dir/base")
 head=$(cat "$case_dir/head")
 
 work=$(mktemp -d)
-mkdir "$work/skills" "$work/out"
-name=adversarial-code-review
-skill=agent-packages/$name/.apm/skills/$name
-if [ $# -ge 4 ]; then
-  git archive "$4" "$skill" | tar -x -C "$work/skills" --strip-components=4
-  printf '%s %s\n' "$(scripts/skill-tree.sh "$skill" "$4")" "$name" > "$work/out/skill-tree"
-else
-  git ls-files -z --cached --others --exclude-standard -- "$skill" | xargs -0 tar -c |
-    tar -x -C "$work/skills" --strip-components=4
-  printf '%s %s\n' "$(scripts/skill-tree.sh "$skill")" "$name" > "$work/out/skill-tree"
-fi
-# A pipeline's status is its last command's, so a failed git archive shows
-# only as a missing copy.
-[ -f "$work/skills/$name/SKILL.md" ] || { echo "no $skill at ${4:-the working copy}" >&2; exit 1; }
+# A directory passed with --add-dir contributes its .claude/skills.
+skills=$work/cfg/.claude/skills
+mkdir -p "$skills" "$work/out"
+names=adversarial-code-review
+[ -f "$case_dir/skills" ] && names=$(cat "$case_dir/skills")
+for entry in $names; do
+  name=${entry#*/}
+  skill=agent-packages/${entry%/*}/.apm/skills/$name
+  if [ $# -ge 4 ]; then
+    git archive "$4" "$skill" | tar -x -C "$skills" --strip-components=4
+    printf '%s %s\n' "$(scripts/skill-tree.sh "$skill" "$4")" "$entry" >> "$work/out/skill-tree"
+  else
+    git ls-files -z --cached --others --exclude-standard -- "$skill" | xargs -0 tar -c |
+      tar -x -C "$skills" --strip-components=4
+    printf '%s %s\n' "$(scripts/skill-tree.sh "$skill")" "$entry" >> "$work/out/skill-tree"
+  fi
+  # A pipeline's status is its last command's, so a failed git archive shows
+  # only as a missing copy.
+  [ -f "$skills/$name/SKILL.md" ] || { echo "no $skill at ${4:-the working copy}" >&2; exit 1; }
+done
 
 repo=$work/repo
 git init -q "$repo"
 src=$(cat "$case_dir/repo")
 [ -f "$case_dir/$src" ] && src=$case_dir/$src
+case $src in
+*.fast-export)
+  git init -q --bare "$work/src.git"
+  git -C "$work/src.git" fast-import --quiet < "$src"
+  src=$work/src.git
+  ;;
+esac
 # Fetch deeper until base..HEAD is the whole change: base is reachable, and
 # no commit of the range sits on the shallow boundary, which a merge from the
 # main branch can leave on the first-parent chain after the other parent has
@@ -78,17 +105,16 @@ done
 git -C "$repo" checkout -q FETCH_HEAD
 
 : > "$work/instructions.md"
-for f in CLAUDE.md AGENTS.md; do
-  if [ -f "$repo/$f" ]; then cat "$repo/$f" >> "$work/instructions.md"; break; fi
-done
+[ -f "$repo/CLAUDE.md" ] || [ ! -f "$repo/AGENTS.md" ] || cat "$repo/AGENTS.md" > "$work/instructions.md"
 
-sed -e "s|<skills>|$work/skills|g" -e "s|<base>|$base|g" -e "s|<head>|$head|g" "$case_dir/prompt.md" > "$work/prompt.txt"
+sed -e "s|<skills>|$skills|g" -e "s|<base>|$base|g" -e "s|<head>|$head|g" "$case_dir/prompt.md" > "$work/prompt.txt"
 (cd "$repo" &&
-  claude -p --safe-mode --settings '{"language":"English"}' --model "$model" \
+  claude -p --setting-sources project --strict-mcp-config --add-dir "$work/cfg" \
+    --settings '{"language":"English"}' --model "$model" \
     --append-system-prompt-file "$work/instructions.md" --output-format stream-json --verbose \
     --permission-mode bypassPermissions --no-session-persistence < "$work/prompt.txt") > "$work/session.jsonl"
 
-python3 - "$work/session.jsonl" "$work/out" "$repo" "$work/skills" <<'PY'
+python3 - "$work/session.jsonl" "$work/out" "$repo" "$skills" <<'PY'
 import json, os, re, sys
 session, out, *inside = sys.argv[1:]
 inside = [os.path.realpath(p) for p in inside]
@@ -102,11 +128,14 @@ def outside(path):
     real = os.path.realpath(os.path.join(inside[0], os.path.expanduser(path)))
     return not any(real == p or real.startswith(p + os.sep) for p in inside) and not real.startswith('/dev/')
 
-calls, access, d = [], [], None
+calls, access, results = [], [], []
 for line in open(session):
     e = json.loads(line)
     if e['type'] == 'result':
-        d = e
+        results.append(e)
+    elif e['type'] == 'system' and e.get('subtype') == 'init':
+        open(f'{out}/init.txt', 'w').write(''.join(f"{k}: {json.dumps(e[k])}\n"
+            for k in ('skills', 'plugins', 'mcp_servers', 'memory_paths')))
     elif e['type'] == 'assistant':
         for c in e['message']['content']:
             if c['type'] != 'tool_use':
@@ -127,13 +156,19 @@ open(f'{out}/tools.txt', 'w').write(''.join(c + '\n' for c in calls))
 open(f'{out}/access.txt', 'w').write(''.join(c + '\n' for c in access))
 if access:
     print(f"{len(access)} tool calls to check first; see access.txt", file=sys.stderr)
-if d is None:
+if not results:
     sys.exit("session ended without a result")
+# A session that waits on background subagents ends one result per turn, and
+# may end one more after the report, when a wake-up it scheduled fires. The
+# report is the last result with a Result line; the cost is cumulative.
+d = results[-1]
 if d['is_error']:
     sys.exit(f"session failed: {d['result']}")
-open(f'{out}/result.md', 'w').write(d['result'].rstrip('\n') + '\n')
-lines = [f"cost_usd: {d['total_cost_usd']:.2f}", f"turns: {d['num_turns']}",
-         f"duration_s: {d['duration_ms'] // 1000}"]
+RESULT = re.compile(r"^\W*result\W*:", re.I | re.M)
+report = next((r for r in reversed(results) if RESULT.search(r['result'])), d)
+open(f'{out}/result.md', 'w').write(report['result'].rstrip('\n') + '\n')
+lines = [f"cost_usd: {d['total_cost_usd']:.2f}", f"turns: {sum(r['num_turns'] for r in results)}",
+         f"duration_s: {sum(r['duration_ms'] for r in results) // 1000}"]
 for m, u in d['modelUsage'].items():
     lines.append(f"{m}: cost_usd {u['costUSD']:.2f}, input {u['inputTokens']}, output {u['outputTokens']}, "
                  f"cache_read {u['cacheReadInputTokens']}, cache_write {u['cacheCreationInputTokens']}")
