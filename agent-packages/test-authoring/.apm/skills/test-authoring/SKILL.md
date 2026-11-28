@@ -205,9 +205,9 @@ cannot.
 
 | Change | First test | Second test | What the reviewer checks |
 | --- | --- | --- | --- |
-| A bug fix in a private helper | Small, through the caller that reaches the helper, on the input that triggered the bug | None, unless a larger test would establish wiring, a real dependency, or persistence the small test cannot | The test reaches the helper through its caller, not by reflection or widened visibility; the test was seen red on the base commit (§1) |
+| A bug fix in a private helper | Small, through the caller that reaches the helper, over the rule the bug broke (§4) | None, unless a larger test would establish wiring, a real dependency, or persistence the small test cannot | The cases cover the rule the bug broke as §4 asks; the test reaches the helper through its caller, not by reflection or widened visibility; the explicit case that shows the reported symptom was seen red on the base commit (§1) |
 | A new method on a unit's interface | Small, one case per partition and boundary of its inputs (§4), through the method itself | Medium only where the outcome depends on a real dependency a fake cannot reproduce | The partition list against the specification; no mock of a collaborator where a fake exists |
-| A change to an error or failure path | Small, on the input that triggers it, asserting the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
+| A change to an error or failure path | Small, one case per partition of the rule the change moved (§4): the rule that decides whether the operation fails, or the one that decides what a failure leaves behind. Each case asserts the type or the sentinel and the state left behind | None, unless the error crosses a boundary in a form a peer reads | The assertion is on error semantics, not on the message string (§7); the state after the failure is asserted, not only the throw |
 | A change to what crosses a process boundary: bytes on a wire, a schema, a message format, a serialized value | Small, feeding recorded or hand-built bytes or records to the reader with no socket or file | Medium, against the real peer or its wire-level fake, because the contract crossed a process boundary | The expected bytes are literals or captures, not produced by the writer under test; the medium test exists or is named |
 | A change in a configuration default | Small, asserting the behavior the code shows when nothing is set, through the accessor the rest of the code reads | Medium or large, where the default is read at deployment and the change altered the deployment path | The test asserts the behavior that depends on the default, not that the constant equals itself |
 | A change to how state an earlier version created is read or replaced: a file, a key, a schema, a cache, deployed objects | Where code reads the state: small, feeding the reader a copy recorded from the earlier version | Medium or large, installing the earlier version first and the change over it, where the replacement happens at deployment | The copy comes from the earlier version, not from the code under test; the promised outcome is asserted: keeps working, migrates, or fails naming the remedy |
@@ -222,15 +222,37 @@ the integration tests` with no test name is a claim, not an answer.
 
 Inputs come from the signature and the specification, never from the branches of the implementation: a partition read
 off an `if` in the code tests that the code does what the code does. **Partition the input whose handling the change
-touched, not every input the signature has.** The other arguments keep the value the existing tests already use,
-unless one of them can influence the changed behavior (another encoding, another mode, a prior state), and then it is
-varied too: one case per partition of it that the changed behavior distinguishes, and the reviewer checks that each
-such case would fail with the changed behavior wrong for that value alone. The decision table and the transition list
-below are scoped the same way, to the conditions and the states the change reached.
+touched, and for a bug fix the rule the bug broke, not every input the signature has.** The other arguments keep the
+value the existing tests already use, unless one of them can influence the changed behavior (another encoding, another
+mode, a prior state), and then it is varied too: one case per partition of it that the changed behavior distinguishes,
+and the reviewer checks that each such case would fail with the changed behavior wrong for that value alone. The
+decision table and the transition list below are scoped the same way, to the conditions and the states the change
+reached.
 
 This section counts cases, and §7 decides their form. A case is usually a test of its own. §7 says when cases are the
 rows of one table, and when a case stands beside its controls in one act. The counts of this section hold in every
 form.
+
+**A bug fix is tested over the rule the bug broke, not on the reported input alone.** This holds whoever found the bug:
+an issue, a reviewer, a production failure, the author's own run. Name the rule in the test names (§7), in words that
+hold for inputs other than the reported one. "A CSV field is quoted when it contains the delimiter, a quote, or a line
+break" is a rule; "the value `a,b` in the third column is written unquoted" is one input. The axes are what the rule's
+outcome depends on. One is the input the rule reads: each character that forces quoting. Another is an input that
+changes the outcome, such as the delimiter setting: `a;b` is quoted with `;` as the delimiter and not with `,`. A third
+is another path the specification requires to apply the same rule, such as the header row or the streaming writer. An
+axis is an input the test chooses; an interleaving that only the scheduler picks is not one, and §8 governs its test.
+Each partition of each axis gets one case, counted as this section counts them, and a case an existing test already
+holds counts. A combination of axes is owed only where the decision-table bullet asks for one. A case on another path
+that stays red after the fix is a second instance of the bug. The change fixes it too, or leaves that case out and names
+the path and its input in the pull request as an open defect. One case is an input that shows the reported symptom on
+the base commit, kept as an explicit example. It is the reported input, reduced where it is large or cannot enter the
+repository, or one built to show the symptom where none reproduces it. The other cases may pass on the base commit; each
+still names the production change that would fail it (§1). The explicit case alone is the test only where the rule's
+contract has one point, such as an accessor that must return one fixed protocol name. It is also the test where no
+oracle gives the outcome of any other input: no expected value can be derived for it, and no relation or reference
+answers it. Each bullet of this section is one form a test over the rule takes, under that bullet's own condition. A
+generated case fails with only the seed or the reproducer the property-based bullet describes; the explicit case fails
+under its own name and reruns by it.
 
 - **One case per equivalence partition.** Partition each input into classes the specification treats alike, valid and
   invalid; the classes do not overlap and none is empty. One value stands for its whole class. A second value from
@@ -261,6 +283,19 @@ form.
   prints, or a seed the test pins where the framework prints none. Each shrunk counterexample the tool ever found
   is added as an explicit example, so that the failure can be rerun by name. Ordinary runs explore fresh inputs; a
   pinned seed is for replaying a failure, not for every run.
+- **A relation between two acts where no expected value can be stated for each input.** A metamorphic relation
+  transforms the input in a way the specification says changes the output in a known way or not at all, such as
+  reordering the rows or adding a column no rule reads; `blackbox-test-design` §4 lists the relations over the shape of
+  an input. A comparison of two paths runs one input through two paths the specification requires to agree: a batch call
+  and the single calls it replaces, a streaming decoder and the buffered one, a fast path and the general path it
+  short-cuts. The relation is the oracle, so it passes when both sides are wrong in the same way. Where the
+  specification gives the value for some input, a case with that value as a literal stands beside the relation. A
+  relation consists of the second act, the transformation of the input, and the mapping from one output to the other.
+  None of them is logic in the test, so neither §5's row *Expected value computed by the code under test* nor §6's rule
+  on logic reaches them. The reviewer checks the transformation and the mapping against the specification. The reviewer
+  also checks that a violation of the relation fails the test. Either the relation was seen red on the base commit (§1),
+  or a step of the code under test gives the two sides different results. Such a step is one that only one path takes,
+  or one whose input the transformation changes; a step both sides run on the same input is wrong on both alike.
 - **A test on an open set when the change adds a member to one**: a constant to an enum, an implementation to an
   interface, an entry to a registry, a type to a mapping. The test enumerates the set from the code (`values()`, a
   class-path scan) and asserts the property every member has to satisfy, or compares the set with the second place
@@ -272,9 +307,10 @@ form.
 The partition set against the specification is a judgment no tool checks. Make it from the specification and the
 existing tests, and stop when every partition of the changed input has one case, every boundary of it has a case, every
 partition of a varied argument that the changed behavior distinguishes has one, and every feasible column and transition
-the change reached has one, counting the tests that already exist. Name a partition in the pull request only where the
-change leaves it untested, with the reason, or where the specification leaves its expected behavior open; ask about the
-second where the session has a user to ask.
+the change reached has one, counting the tests that already exist. For a bug fix, each axis of the rule the bug broke
+counts as a changed input. Name a partition in the pull request only where the change leaves it untested, with the
+reason, or where the specification leaves its expected behavior open; ask about the second where the session has a user
+to ask.
 
 ## 5. A test that cannot fail
 
@@ -284,7 +320,7 @@ them first; a mutation run confirms most of them.
 | Shape | How it shows in the diff | Repair |
 | --- | --- | --- |
 | No assertion, or a print of the result in its place | No `assert`, `expect`, or `verify` after the act; a `print` or `console.log` of the value | Assert the value the behavior defines |
-| Expected value computed by the code under test, or by a helper that repeats its arithmetic | The expected operand calls production code; a loop builds both sides | A literal or a hand-derived fixture, checked against the specification, not pasted from the code's output |
+| Expected value computed by the code under test, or by a helper that repeats its arithmetic | The expected operand calls production code; a loop builds both sides | A literal or a hand-derived fixture, checked against the specification, not pasted from the code's output. A relation of §4's relation bullet is not this shape |
 | Assertion on a value the test itself supplied | The operand is a test-local object also used in setup, with no call on the unit between | Read the value back through the unit's interface |
 | The unit under test, or the collaborator the test names, replaced by a mock | The mock target is the symbol the test name or the diff changed; a spy on the unit; a partial mock | Remove the double, or move it below the side effect the test depends on |
 | An assertion on the mock | The operand is a configured return value; a `was called` check is the only assertion | Assert the unit's output; delete the assertion on the double. Where the call is the behavior (a notification sent, a row written), verify the recipient and the payload, as §6 allows |
@@ -339,7 +375,9 @@ change detectors of §5 show themselves, so flag every test it touches and exami
   string that produces the expected value. A condition that *is* the comparison (`if got != want { t.Errorf(…) }`) is
   the assertion, and stays. A test with logic can be wrong in the same way as the code: an expected URL built by
   concatenation hides the double slash the literal would show. A loop that feeds a table of cases to `t.Run` or a
-  parameterized runner is the runner, not logic: each row still carries its expected value as a literal.
+  parameterized runner is the runner, not logic: each row still carries its expected value as a literal. A relation of
+  §4, made of its second act, the transformation of the input, and the mapping between the outputs, is not such logic
+  either.
 - **Test the contract your code makes at its boundary, not the framework's mechanics.** That a router invoked a
   registered handler is the framework's test. A constructor, a getter, or a forwarding method earns a test only where
   it validates, defaults, derives, or causes a side effect.
@@ -478,10 +516,11 @@ of each entry open (§8). The reference file names the runner option that prints
      run. Cases that differ in the structure of the input each write it out whole, or stand side by side in one act's
      input under principle 3; the copy is the price of an input the reader sees whole. An example-based case carries its
      input and its outcome as literals; a property-based test shows its generator and its property, and its failure
-     carries the reproducer (§4). The reviewer checks: no two cases have to be compared line by line to find what
-     differs; every line the expectation depends on is in the test body in one piece; every argument of a helper that
-     builds an input is a value, one key of a record, or the one whole fragment the helper wraps; no two helpers in the
-     file build the same thing with a few lines different.
+     carries the reproducer (§4). A relation test shows its input, its two acts, and the relation (§4). The reviewer
+     checks: no two cases have to be compared line by line to find what differs; every line the expectation depends on
+     is in the test body in one piece; every argument of a helper that builds an input is a value, one key of a record,
+     or the one whole fragment the helper wraps; no two helpers in the file build the same thing with a few lines
+     different.
   3. **A case that expects nothing stands with a control that expects something.** Silence establishes nothing on its
      own, since it may come from the setup rather than from the rule. A silent case (nothing rejected, nothing
      reported) has a nearest control that reports, and the two share one act's input where the unit evaluates several
@@ -529,42 +568,40 @@ before the test is. Each cause below has one fix, and every cause but the last i
 ## 9. Organization and test data
 
 - **DAMP over DRY.** The values an assertion depends on, the input that varies between cases and the expected value,
-  appear in the test body, where the reader can check the test by inspection, since tests have no tests of their own. A
-  property-based test shows its generator and its property there instead (§7). A value hidden in `setUp`, in a loop, or
-  in a file the test reads without showing is a mystery guest. Helpers and per-test fixtures construct value objects and
-  infrastructure, and the part that related cases share (a request skeleton, a fixture record, a document with one
-  varying value) is infrastructure. Where it is too long to repeat, it is written once, in one of the forms §7 lists:
-  one act's input that holds the cases, a helper that takes the varying value, a table, or the engine's fixture. What
-  varies between the cases stays in the body: the one value where the cases differ in a value, and the whole input where
-  they differ in its structure, whatever kind of text the input is (§7). A helper that hides the input or the
-  expectation is the mystery guest; one that hides the incidental part is not. A constant the expectation depends on is
-  not incidental: the balance of 5 that makes a withdrawal of 6 fail stays visible, as an argument or in the helper's
-  name, `accountWithBalance(5)`. A validation helper asserts one conceptual fact.
-- **A new test takes the shape of its neighbors.** Where the file writes one case per method, several cases in one
-  source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the
-  neighbors' shape breaks §7, the skill wins: the new test takes the form §7 asks for. The usual such shapes are several
-  cases in one act that stops at the first mismatch, a loop whose assertion stops at the first failing row or whose
-  report does not name the row, a long setup copied into every test, and a silent case kept apart from its control. The
-  neighbors' shape is not a stack line that accepts a form ahead of the harness (§7). The neighbors stay as they are
-  unless the task is to rewrite them, with one exception: the existing test of the same rule. The new case joins it
-  where §7's principle 3 lets the two share an act, or through a helper both now call, with the existing expectations
-  unchanged and the name restated for the rule; otherwise the new test stands beside it and shares its setup through
-  that helper. A reference file may name the ecosystem's idiom for a table and say which new cases join it; any other
-  case goes beside the table in the smallest form that asserts what §5 to §7 ask, and the table keeps its rows.
-- **A new test uses the helpers the file already has.** Read the helpers of the file, and of the package's shared test
-  utilities, before writing one. Where an existing helper builds the same setup except for some values, settings, or
-  return values, give it those as arguments or options and have the old callers keep calling it, so that the existing
-  tests stay as they are. An argument is a setting or a value, never a piece of a source or a document the expectation
-  depends on (§7). Two helpers that build the same thing with a few lines different are the copied setup of §7 one level
-  up, however many lines differ: the reader compares the bodies to learn which one a test needs. This holds for a helper
-  the change itself added beside an existing one. A helper that assembles an input from pieces of syntax (§7) is neither
-  called by the new test nor copied: the new test writes its input out whole, and leaves that helper and its callers as
-  they are.
-- **A new test goes beside the nearest existing test of the unit it exercises**, in the file or directory named for
-  the code under test, not in a file named for the ticket or the author. A test class splits when its fixture no
-  longer serves every test in it; a fixture with fields only some tests use is the signal.
-- **Arrange, act, assert**, in that order, once. The act is the call on the unit, or the sequence of calls whose
-  relation is the behavior (§7); §7's one-behavior rule follows from it.
+appear in the test body, where the reader can check the test by inspection, since tests have no tests of their own. A
+property-based test shows its generator and its property there instead, and a relation test its two acts and the
+relation (§7). A value hidden in `setUp`, in a loop, or in a file the test reads without showing is a mystery guest.
+Helpers and per-test fixtures construct value objects and infrastructure, and the part that related cases share (a
+request skeleton, a fixture record, a document with one varying value) is infrastructure. Where it is too long to
+repeat, it is written once, in one of the forms §7 lists: one act's input that holds the cases, a helper that takes the
+varying value, a table, or the engine's fixture. What varies between the cases stays in the body: the one value where
+the cases differ in a value, and the whole input where they differ in its structure, whatever kind of text the input is
+(§7). A helper that hides the input or the expectation is the mystery guest; one that hides the incidental part is not.
+A constant the expectation depends on is not incidental: the balance of 5 that makes a withdrawal of 6 fail stays
+visible, as an argument or in the helper's name, `accountWithBalance(5)`. A validation helper asserts one conceptual
+fact. - **A new test takes the shape of its neighbors.** Where the file writes one case per method, several cases in one
+source, or rows of a table, the new test does the same, since a file with two shapes is read twice. Where the neighbors'
+shape breaks §7, the skill wins: the new test takes the form §7 asks for. The usual such shapes are several cases in one
+act that stops at the first mismatch, a loop whose assertion stops at the first failing row or whose report does not
+name the row, a long setup copied into every test, and a silent case kept apart from its control. The neighbors' shape
+is not a stack line that accepts a form ahead of the harness (§7). The neighbors stay as they are unless the task is to
+rewrite them, with one exception: the existing test of the same rule. The new case joins it where §7's principle 3 lets
+the two share an act, or through a helper both now call, with the existing expectations unchanged and the name restated
+for the rule; otherwise the new test stands beside it and shares its setup through that helper. A reference file may
+name the ecosystem's idiom for a table and say which new cases join it; any other case goes beside the table in the
+smallest form that asserts what §5 to §7 ask, and the table keeps its rows. - **A new test uses the helpers the file
+already has.** Read the helpers of the file, and of the package's shared test utilities, before writing one. Where an
+existing helper builds the same setup except for some values, settings, or return values, give it those as arguments or
+options and have the old callers keep calling it, so that the existing tests stay as they are. An argument is a setting
+or a value, never a piece of a source or a document the expectation depends on (§7). Two helpers that build the same
+thing with a few lines different are the copied setup of §7 one level up, however many lines differ: the reader compares
+the bodies to learn which one a test needs. This holds for a helper the change itself added beside an existing one. A
+helper that assembles an input from pieces of syntax (§7) is neither called by the new test nor copied: the new test
+writes its input out whole, and leaves that helper and its callers as they are. - **A new test goes beside the nearest
+existing test of the unit it exercises**, in the file or directory named for the code under test, not in a file named
+for the ticket or the author. A test class splits when its fixture no longer serves every test in it; a fixture with
+fields only some tests use is the signal. - **Arrange, act, assert**, in that order, once. The act is the call on the
+unit, or the sequence of calls whose relation is the behavior (§7); §7's one-behavior rule follows from it.
 
 ## 10. What you can decide from the diff, and what needs a run
 
@@ -575,7 +612,7 @@ The rules above fall into four buckets, and a review says which bucket each find
 | **From the diff** | The shapes of §5; the robustness rules of §6; the report rules of §7; the file-visible causes of §8; placement and DAMP of §9; the boundary cases of §4 | Reading the test file and the diff |
 | **A run of the suite, or a citation of the harness** | Red on the base commit; the random-order run; the run that starts from the state an earlier version left behind, or the run of the documented remedy on it, where no test starts from it (§3); the runs of a replaced mechanism's failures on its replacement, with both durations and outputs (§3); for a setting that now reaches another consumer, the names that consumer shares with the old ones, each cited by the file and line that reads it, and its run with a value users pass for the old ones, where no test calls, renders, or parses it with that value (§3); the other limits on the work a changed limit bounds, each cited by the file and line that sets it (§4); the uniqueness of parameterized names; a property test's reproducer; which inputs of a test are cases and which are controls, settled on the base commit (§7); whether one act reports every mismatch and names each case by content, for each kind of mismatch, where no reference, stack line, or documentation of the harness records it: the run with two cases broken, or the harness's source cited by file and line | A run you make and whose output you paste, or the file and line you cite |
 | **A tool's verdict** | The mutation verdict, read as the tool defines it; coverage as the non-signal it is | The tool's own report, scoped to the diff |
-| **A judgment** | The partition set against the specification; the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each only where a reviewer reading the diff would decide otherwise. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
+| **A judgment** | The partition set against the specification; the rule a bug broke and the axes it depends on, or why it has one point or no oracle decides another input; the transformation and the mapping of a relation against the specification, and the step that gives its two sides different results (§4); the three reasons to leave the real dependency; whether a flaky fix belongs in the code; whether a surviving mutant is equivalent; the level choice of §3; whether the cases of one test belong to one rule, and whether one act evaluates each of its inputs on its own (§7) | Made from the specification, the code, and the repository's conventions, and stated in the pull request in a sentence each only where a reviewer reading the diff would decide otherwise. A question only where an unresolved ambiguity would change the expected behavior, the scope, or the test strategy. A surviving mutant is a candidate gap the writer settles: a missing or weak test where it changes behavior the specification defines, an equivalent mutant explained in the pull request where it does not, and an unresolved one reported as such |
 
 ## 11. Review checklist
 
@@ -583,6 +620,11 @@ Run this over a test you wrote or one you are reviewing.
 
 - Which production change would make this test fail, and is it a bug rather than a decision (§1)?
 - For a regression test: was it seen red on the base commit (§1)?
+- For a bug fix whose rule has more than one point and where an oracle decides other inputs, do the test names state
+  the rule the bug broke, do the cases cover it along the axes it depends on, with one explicit case that shows the
+  reported symptom on the base commit, and is each path left red named in the pull request with its input (§4)?
+- Does every relation between two acts fail when it is violated, as §4's relation bullet asks, with a literal case
+  beside it where the specification gives a value, and are its transformation and mapping the specification's (§4)?
 - Can the change alter behavior at all? If not, is no test written for it; if it is a dependency bump, a
   regeneration, or a build change, does the pull request name the surface the green suite covers (§3)?
 - For a change made for speed or memory, is the behavior preserved asserted, is the improvement measured where the
@@ -612,7 +654,7 @@ Run this over a test you wrote or one you are reviewing.
 - Does the change add a member to an open set, and does a test enumerate the set from the code (§4)?
 - Do the partitions come from the specification, or from the branches of the code, and does the pull request name only
   a partition left untested or one the specification leaves open (§4)?
-- Any expected value computed by the code under test, or pasted from its output (§5)?
+- Any expected value computed by the code under test, other than a relation of §4, or pasted from its output (§5)?
 - Any assertion on a value the test supplied, or on the mock where the call is not the behavior (§5)?
 - Is the unit under test, or the collaborator the test names, replaced by a double (§5)?
 - Any test whose only failure is an exception, where the contract defines a result, or whose assertion was weakened
@@ -620,7 +662,8 @@ Run this over a test you wrote or one you are reviewing.
 - Any verification of a query, of call order, or of `no more interactions` that the contract does not define (§6)?
 - Any private name reached by reflection, a test-only export, or widened visibility (§6)?
 - Any mock of a type the repository does not own (§6)?
-- Any loop or concatenation that produces the expected value, or condition that decides whether an assertion runs (§6)?
+- Any loop or concatenation that produces the expected value, other than a relation of §4, or condition that decides
+  whether an assertion runs (§6)?
 - Does the test name state the scenario and the outcome, or a location, or the outcomes of two inputs or scenarios
   joined by `and` or `but` (§7)?
 - Does the assertion print the operands, in the framework's order (§7)?
@@ -645,9 +688,9 @@ Run this over a test you wrote or one you are reviewing.
 - Does a silent case share an act, or a helper, with a control that reports, and does each expectation of a shared act
   hold with the other inputs removed (§7)?
 - Does the reader see each input whole and the difference on one line: no two cases compared line by line; every line
-  the expectation depends on in the body in one piece; every argument of a helper that builds an input a value, one
-  key of a record, or the one whole fragment it wraps; input and outcome as literals in an example-based case, and the
-  generator and the property in a property-based one (§7)?
+  the expectation depends on in the body in one piece; every argument of a helper that builds an input a value, one key
+  of a record, or the one whole fragment it wraps; input and outcome as literals in an example-based case, the generator
+  and the property in a property-based one, and the two acts and the relation in a relation test (§7)?
 - Does a row field or a flag select which assertion runs, or did a case join a table that asserts less than it needs
   (§7)?
 - Where the act names a case only by position, does each case carry a label where the harness offers one (§7)?
