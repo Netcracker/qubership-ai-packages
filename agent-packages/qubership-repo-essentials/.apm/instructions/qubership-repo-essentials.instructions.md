@@ -1,11 +1,12 @@
 ---
-description: Repository-wide commit-message conventions.
+description: Backward compatibility of released contracts.
 applyTo: "**"
 ---
 
-## Commit messages
+## Backward compatibility
 
-Write all commit messages in Conventional Commits format.
-
-Always end commit messages, including drafts, with `Assisted-by: <tool> (<model-id>)`, never `Co-Authored-By:`.
-Keep existing trailers and add yours when amending someone else's commit.
+A released contract keeps working for existing consumers: a public API, a CLI flag, a configuration key, a Helm value,
+a CR field, an environment variable, a default, stored data, a wire format. Released means present in a release tag;
+anything added after the last release may still change. Instead of renaming, removing, making an optional parameter
+required, or changing a default, add an optional parameter or keep the old name as a deprecated alias. A removal needs
+a deprecation at least 3 years old and a new major version.
