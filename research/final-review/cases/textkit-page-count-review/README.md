@@ -118,3 +118,11 @@ item 3 asked for the same (`result.md:37`). `vocab-1` ends on "and I did not run
 `cond-2` did. Sonnet `vocab-2`, at 810 words, is the shortest Sonnet report of the case; `vocab-1` is longer than both
 `cond` runs. The typo is no finding in any run; Opus `vocab-2` and both Sonnet runs still mention it in one clause,
 "needs no claim" (Opus `vocab-2`, `result.md:17`).
+
+## The `handover` arm, 2026-11-27: not run
+
+Final-review tree `f99ddfd4` (version 1.4.0) adds to §1 the title, the description, and the start commit of a pull
+request, as the caller hands them over, the paragraph *The pull request* to item *Claimed cases covered*, and a sentence
+to that item's analogue in §2a. The paragraph reads only text the caller hands over, and this case's prompt hands over
+none, so the input never reaches it. §1 also rewords the fallback for a missing task statement; with no pull request
+text, it asks for what it asked before. The results above stand for `f99ddfd4` as well.

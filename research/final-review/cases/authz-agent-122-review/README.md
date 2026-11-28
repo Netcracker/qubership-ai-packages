@@ -425,3 +425,11 @@ findings are:
 Both Sonnet runs check the one term they find, "default route", and report it as defined once in the package comment
 (`vocab-1` `result.md:24`, `vocab-2` `:26`). No run dumps the doc-comment checklist; Sonnet `vocab-2` answers it in
 one sentence per member (`result.md:11`).
+
+## The `handover` arm, 2026-11-27: not run
+
+Final-review tree `f99ddfd4` (version 1.4.0) adds to §1 the title, the description, and the start commit of a pull
+request, as the caller hands them over, the paragraph *The pull request* to item *Claimed cases covered*, and a sentence
+to that item's analogue in §2a. The paragraph reads only text the caller hands over, and this case's prompt hands over
+none, so the input never reaches it. §1 also rewords the fallback for a missing task statement; with no pull request
+text, it asks for what it asked before. The results above stand for `f99ddfd4` as well.

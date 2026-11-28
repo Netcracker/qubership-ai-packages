@@ -14,15 +14,22 @@
 #   head        the full sha of the last commit of the change
 #   prompt.md   the task; <skills> is replaced by the directory of the skill
 #               copies and <base> by the base sha
+# and, where the case needs them:
+#   worktree/   files copied over the checkout before the session starts, so
+#               that they show as unstaged edits or untracked files
+#   caller      an empty file: the session is the writer, not the reviewer,
+#               and gets final-review's trigger (its instructions file, from
+#               the same revision as the skills) in its system prompt
 #
 # Run from the repository root:
 #   research/final-review/cases/run-review-case.sh <case directory> <model> <label> [<rev>]
 # With <rev>, the skills are taken from that commit; without it, from the
 # working copy. The output goes to <case directory>/<model>/<label>/, and only
-# after the session succeeds:
+# after the session succeeds; a label that already has results is replaced:
 #   result.md     the session's final message, the report
 #   run.txt       the session's cost, turns, duration, and tokens per model
-#   skill-tree    the tree id of each skill that ran, see scripts/skill-tree.sh
+#   skill-tree    the tree id of each skill that ran, see scripts/skill-tree.sh,
+#                 and for a caller case the blob id of the trigger
 set -eu
 
 usage='usage: run-review-case.sh <case directory> <model> <label> [<rev>]'
@@ -60,11 +67,25 @@ src=$(cat "$case_dir/repo")
 git -C "$repo" fetch -q --depth 10 "$src" "$head"
 git -C "$repo" checkout -q FETCH_HEAD
 git -C "$repo" cat-file -e "$base^{commit}"
+if [ -d "$case_dir/worktree" ]; then cp -R "$case_dir/worktree/." "$repo/"; fi
 
 : > "$work/instructions.md"
 for f in CLAUDE.md AGENTS.md; do
   if [ -f "$repo/$f" ]; then cat "$repo/$f" >> "$work/instructions.md"; break; fi
 done
+if [ -f "$case_dir/caller" ]; then
+  # The trigger body, without its frontmatter, as apm compile merges it into a
+  # consumer's AGENTS.md or CLAUDE.md. skill-tree records the trigger's blob,
+  # since a trigger-only edit changes no skill tree.
+  trigger=agent-packages/final-review/.apm/instructions/final-review.instructions.md
+  if [ $# -ge 4 ]; then
+    git show "$4:$trigger" > "$work/trigger.md" || { echo "no $trigger at $4" >&2; exit 1; }
+  else
+    cp "$trigger" "$work/trigger.md"
+  fi
+  awk 'BEGIN { fm = 0 } /^---$/ && fm < 2 { fm++; next } fm >= 2' "$work/trigger.md" >> "$work/instructions.md"
+  printf '%s trigger\n' "$(git hash-object "$work/trigger.md")" >> "$work/out/skill-tree"
+fi
 
 sed -e "s|<skills>|$work/skills|g" -e "s|<base>|$base|g" "$case_dir/prompt.md" > "$work/prompt.txt"
 (cd "$repo" &&

@@ -16,7 +16,11 @@ demands an answer to every item can, and the form is short enough that the items
    including the test that separates the chosen design from its alternative, and every command the change adds or edits,
    or whose outcome depends on a configuration it creates, matched to a script or CI job that runs that exact form. In
    the other direction, every hunk that changes behavior, a version, or a dependency belongs to a sentence of the commit
-   message or the description.
+   message or the description. Where the caller hands over the title and the description of the open pull request the
+   change goes into, and the merge base its diff will start from once the change is pushed, they are read against that
+   diff: a title or a sentence that says the pull request makes a change that the diff does not make is a finding, and
+   so is a hunk that changes behavior, a version, or a dependency beyond what the title and the description claim, even
+   where a commit message claims it.
 3. Boundaries, invalid partitions, the empty value, the negative control that stays green on the base commit, and, where
    the change reads or replaces state an earlier version left behind, a test or run that starts from it. Where the
    change sets or exposes a limit, the other limits on the same work: none caps a documented setting, and the inner one

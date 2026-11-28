@@ -152,3 +152,11 @@ run created after the trigger event" as false, because the endpoint lists the ne
 Sonnet `vocab-1` writes one line for the terms, "Coined terms: none." (`result.md:15`), and Opus `vocab-1` one sentence
 (`result.md:11`). No run lists terms that have a source, files a dense sentence, or dumps a checklist; the change has
 only YAML comments.
+
+## The `handover` arm, 2026-11-27: not run
+
+Final-review tree `f99ddfd4` (version 1.4.0) adds to §1 the title, the description, and the start commit of a pull
+request, as the caller hands them over, the paragraph *The pull request* to item *Claimed cases covered*, and a sentence
+to that item's analogue in §2a. The paragraph reads only text the caller hands over, and this case's prompt hands over
+none, so the input never reaches it. §1 also rewords the fallback for a missing task statement; with no pull request
+text, it asks for what it asked before. The results above stand for `f99ddfd4` as well.
