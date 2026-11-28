@@ -1,7 +1,7 @@
 # qubership-global-essentials
 
 > **Deprecated:** Use [`qubership-user-essentials`](../qubership-user-essentials/) for new user-workspace installations.
-> This package remains available for existing consumers and keeps its original dependency set.
+> This package remains available for existing consumers. Version 2.0.0 drops `codex-review` from its dependencies.
 
 Umbrella APM package with Qubership agent skills and instructions that are useful in a global user workspace. Install
 it once per developer machine so your agent can use the same baseline across repositories.
@@ -35,7 +35,6 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 ## What it pulls in
 
 - [`apm-authoring`](../apm-authoring/) — guidelines for authoring APM packages.
-- [`codex-review`](../codex-review/) — Codex CLI code review with auto-fix, repeated until the review is clean.
 - [`english-us-developer-style`](../english-us-developer-style/) — American-English style for developer-facing text.
 - [`markdown-line-length-120`](../markdown-line-length-120/) — Markdown drafting rules for repositories that pin
   markdownlint `MD013.line_length` to 120.
@@ -45,6 +44,12 @@ global instructions reach targets that read files such as `~/.codex/AGENTS.md` o
 - [`enable-renovate-automerge`](../enable-renovate-automerge/) — enable Renovate automerge behind a real required
   check.
 - [`adr-authoring`](../adr-authoring/) — write Architecture Decision Records that follow the Qubership ADR contract.
+
+## What it leaves out
+
+The review skills, [`codex-review`](../codex-review/) and [`cross-review`](../cross-review/), are not part of the
+bundle. Both run the Codex CLI, which needs a Codex account of its own, and on a machine without one the skill fails
+when it reaches the Codex step. Install them directly on a machine that has `codex` on the `PATH`.
 
 ## Adding a package to the bundle
 

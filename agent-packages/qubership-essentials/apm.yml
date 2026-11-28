@@ -1,11 +1,10 @@
 name: qubership-essentials
-version: 1.1.0
-description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials. The dependency set is unchanged."
+version: 2.0.0
+description: "Deprecated repository baseline retained for existing consumers. New repositories should use qubership-repo-essentials."
 dependencies:
   apm:
     # Sibling packages in this repository, resolved from the same commit as this one.
     - ../apm-authoring
-    - ../codex-review
     - ../english-us-developer-style
     - ../markdown-line-length-120
     # Packages hosted in other repositories.

@@ -1,0 +1,3 @@
+name: cross-review
+version: 1.0.0
+description: Skill that reviews a change with two independent reviewers — the Codex CLI and a Claude subagent — merges their findings, and repeats rounds until the review converges.
