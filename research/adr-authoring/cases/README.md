@@ -52,6 +52,7 @@ should each give a rule.
 | [`writer-vague-notes`](writer-vague-notes/README.md) | writer | a placeholder and an open point for a value the notes leave open; the guide is asked about before it is added |
 | [`writer-structural`](writer-structural/README.md) | writer | a structural rule tagged with the code it constrains and its check named; records of another template; the guide and the paragraph for the agent that writes code |
 | [`writer-accepted-record`](writer-accepted-record/README.md) | writer | an added requirement goes into a new record; a broken link is fixed in place |
+| [`writer-proposed-precedence`](writer-proposed-precedence/README.md) | writer | a new rule that wins over rules of two `Proposed` records edits both in the same change, also the one the request does not name, and tells the user; a record that overrides nothing edits no other record |
 | [`writer-two-decisions`](writer-two-decisions/README.md) | writer | two decisions get a proposed split; one decision stays one record |
 | [`writer-defect-and-guarantee`](writer-defect-and-guarantee/README.md) | writer | a defect fix becomes a proposed Bug that the record does not name, not a rule or an open point; a base image's guarantee is a fact in Context; a decision stays a rule where the code does not meet it yet or a dependency already provides it |
 | [`coder-trailers`](coder-trailers/README.md) | agent that writes code | the paragraph in `AGENTS.md` leads to the trailers; a partial delivery is deferred |
