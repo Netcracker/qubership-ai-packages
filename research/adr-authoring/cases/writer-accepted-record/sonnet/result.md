@@ -11,25 +11,25 @@ Proposed
 
 ### Owner
 
-<GitHub account of the owner>
+<owner account>
 
 ### Participants and approvers
 
-- Security architect, @security-architect: approves the rules.
+- <role>, <account>: approves R1.
 
 ### Related ADRs
 
-- [ADR-0007: Verify every token in Authorization before policy evaluation](0007-verify-every-token.md): defines **token**, and gives the rules R4 and R5 that this record's R2 refers to.
+- [ADR-0007: Verify every token in Authorization before policy evaluation](0007-verify-every-token.md): this record adds
+  R1 to its rules, and takes precedence over R4 and R5 of ADR-0007.
 
 ## Context
 
-ADR-0007 requires every token to be verified before policy evaluation, and policy evaluation trusts the subject of the
-token it receives. A token whose header `alg` is `none` declares that it carries no signature, so there is nothing to
-verify, and any caller can name any subject in it.
+ADR-0007 requires that every token is verified before policy evaluation, and policy evaluation trusts the subject of the
+token it receives. A JWT header can name the algorithm `none`, which marks a token that has no signature.
 
 ## Decision
 
-We will refuse every token whose header `alg` is `none`, before the request reaches policy evaluation.
+We will refuse every token whose `alg` is `none`, with a reason code of its own.
 
 ### Terms
 
@@ -39,36 +39,38 @@ We will refuse every token whose header `alg` is `none`, before the request reac
 
 #### Unsigned tokens
 
-- **R1** (`verify`). A token whose header `alg` is `none`, in any letter case, is refused with HTTP 401 and the reason
-  code `TOKEN_ALG_NONE`.
-- **R2** (`verify`). A token that meets R1 and also meets ADR-0007 R4 or ADR-0007 R5 is refused with the reason code
-  `TOKEN_ALG_NONE`.
+- **R1** (`verify`). A token whose header field `alg` is the string `none` is refused with HTTP 401 and the reason code
+  `TOKEN_ALG_NONE`. Where such a token also meets ADR-0007 R4 or ADR-0007 R5, this rule takes precedence, and the reason
+  code is `TOKEN_ALG_NONE`.
 
 ### Justification
 
-A token with no signature binds its subject to nothing, so the service refuses it outright (R1). One reason code per
-refusal keeps the response predictable for a token that fails several rules (R2).
+A token with no signature binds its subject to nothing, so policy evaluation would trust a subject that no key source
+vouches for (R1). Refusing it before the expiry and `kid` checks gives the caller the cause that matters (R1).
 
 ## Open points
 
-- **O1.** Does R1 cover `alg` values such as `None` and `NONE`? R1 assumes it does. The security architect decides; the
-  answer affects R1.
-- **O2.** Which reason code does a token get when it is `alg: none` and also expired or without `kid`? R2 assumes
-  `TOKEN_ALG_NONE`. The security architect decides; the answer affects R2.
+- **O1.** Whether R1 also covers `alg` values that differ from `none` only in letter case, such as `None` and `NONE`.
+  R1 is written for the exact string `none`. The security architect decides.
+- **O2.** Whether `TOKEN_ALG_NONE` wins over `TOKEN_EXPIRED` and `TOKEN_KID_MISSING` for a token that meets more than
+  one rule. R1 is written as if it wins. The security architect decides.
 ````
 
 ### Message to the user
 
-ADR-0007 is `Accepted`, so I did not edit it. A new requirement goes into a new record, so I drafted ADR-0008 as `Proposed`. It links ADR-0007 under Related ADRs. When ADR-0008 is accepted, ADR-0007 gets a line under Related ADRs that names it. That is the only edit ADR-0007 takes, and it does not change a rule.
+ADR-0007 is `Accepted`, so I did not edit it. A new requirement goes into a new record, and I drafted `docs/adr/0008-refuse-token-alg-none.md` with the status `Proposed`. It links ADR-0007 under **Related ADRs**. When ADR-0008 is accepted, ADR-0007 gains one line under its own **Related ADRs** that names ADR-0008 and R1.
 
-- **Owner:** I left a placeholder, `<GitHub account of the owner>`. Who owns ADR-0008?
-- **Approver:** I assumed @security-architect approves, as in ADR-0007. Is that right?
-- **O1:** I assumed `alg` is matched in any letter case, so `None` and `NONE` are refused too. Should R1 match only the exact value `none`?
-- **O2:** I assumed a token that is `alg: none` and also expired, or without `kid`, gets `TOKEN_ALG_NONE` (R2). Should it get the reason code of ADR-0007 R4 or R5 instead?
+Questions:
 
-The status stays `Proposed` until O1 and O2 are settled. There is no Date heading until acceptance.
+1. Who owns ADR-0008, and who approves R1? I left `<owner account>` and a placeholder approver line. I would expect @security-architect, but I did not assume it.
+2. O1: should R1 also refuse `None` and `NONE`, or only the exact string `none`? I wrote the exact string.
+3. O2: should `TOKEN_ALG_NONE` win over `TOKEN_EXPIRED` and `TOKEN_KID_MISSING` when a token meets more than one rule? I wrote that it wins, because a token with no signature has no lifetime or key worth reporting.
 
-ADR-0007's link to ADR-0006 looks broken, because it points at `0006-key-sources.md`. I left it alone here.
+The record stays `Proposed` until O1 and O2 are settled. The `Date` heading is added on acceptance.
+
+The code change in `internal/verify` should end its commit message and pull request description with `Implements: ADR-0008 R1`. No test or build check for R1 exists yet, so I wrote no **Confirmation** section.
+
+ADR-0007 links `0006-key-sources.md`, which does not match the file `0006-trusted-key-sources.md`. I left it alone here. Request 2 fixes it.
 
 ## Request 2
 
@@ -139,4 +141,8 @@ Negative:
 
 ### Message to the user
 
-I changed the link target under Related ADRs from `0006-key-sources.md` to `0006-trusted-key-sources.md`. Nothing else changed. ADR-0007 is `Accepted`, and a broken-link fix is an editorial edit that changes no rule, so it can go in directly. I could not read ADR-0006, so I did not check that the link text, "Trust only listed key sources", matches its title. Please check that.
+I changed one thing: the link target under **Related ADRs** is now `0006-trusted-key-sources.md`. A broken link is an editorial fix that changes no rule, so the accepted record takes it in place, with no new record.
+
+I kept the link text `ADR-0006: Trust only listed key sources`. I could not read ADR-0006, so please check that it matches the title of that record.
+
+The change touches only `docs/adr/`, which maps to no layer, so it needs no `Implements` or `Defers` trailers.

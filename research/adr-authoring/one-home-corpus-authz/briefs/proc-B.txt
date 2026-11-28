@@ -1,0 +1,1 @@
+Apply the rule across the whole set of related records: for each rule, consequence, and reason of the record, decide whether another record already states it.

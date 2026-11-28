@@ -83,9 +83,11 @@ recording.
   editorial fix that changes no rule, such as a broken link.
 - **Superseding a whole record**: when the new record is accepted, set the old record's status to `Superseded`, and
   name the reason in the new record's **Consequences**.
-- **Superseding part of a record**: the old record stays `Accepted`. The new record names what it replaces under
-  **Related ADRs**, by rule number, or by section and a short quote where the old record has no numbers. When the new
-  record is accepted, the old record gains a line under **Related ADRs** that names the same statements.
+- **Superseding part of a record**: the old record stays `Accepted`. Under **Related ADRs**, the new record names each
+  statement of the old record that it replaces, by rule number, or by section and a short quote where the old record
+  has no numbers, and each requirement it adds, by its own rule number. When the new record is accepted, the old record
+  gains a line under **Related ADRs** that names the same. A `Proposed` record in the same repository is not superseded
+  in part: the change edits it in place (**Follow-ups**), and the new record names nothing of it as replaced or added.
 
 ## Template
 
@@ -112,7 +114,9 @@ Fill this structure. `references/structural-invariant.md` is a whole record writ
 
 ### Related ADRs
 
-- [ADR-NNNN: <title>](<link>): <what this link gives, by rule number where the target has them>.
+- [ADR-NNNN: <title>](<link>): <"replaces it whole" or "replaced whole by it". Otherwise, what this record replaces
+  in the linked one or adds to it, or what the linked one replaces in this record or adds to it, named as
+  **Superseding part of a record** says. Any other record gets the link alone.>
 
 ## Context
 
@@ -232,7 +236,11 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Result**: a constraint on a file or a setting names what happens when it is broken.
 - **Exceptions**: an exception sits inside the rule it limits, or the rule points at it by number. A rule that reads as
   unconditional gets checked as unconditional.
-- **Precedence**: where two rules can apply to one case, one of them says which wins.
+- **Precedence**: where two rules can apply to one case, one of them says which wins. Before numbering a rule, search
+  the other records for rules on the same case, by the status, the setting, or the subject they decide. Where the rule
+  that loses belongs to another record and reads as unconditional, it names the exception too, because a checker reads
+  it alone: a `Proposed` record in the same repository gains the exception in the same change, an accepted one is
+  handled as **Superseding part of a record** says, and one in another repository gets a follow-up.
 - **Layer**: `(<layer>)` names the code the rule constrains, and the checker looks there first, so read the code before
   you tag a rule. For a behavior rule, that is the component whose code produces the result; for a structural rule, it
   is the code the invariant ranges over, build files included. A rule over the whole repository carries the tag of every
@@ -241,14 +249,30 @@ A rule is one requirement that a checker can turn into a test with a definite re
 - **Numbers freeze**: number rules in reading order, and renumber them freely until the record merges or one of its
   rule numbers appears in an issue, a commit, or another pull request. After either, never renumber or reuse a
   number. A rule added before the record is accepted and merged takes the next free number, under whichever topic it
-  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`.
-- **One home**: a requirement is stated once. Every other mention cites it by number and does not restate its
-  conditions, because a restatement drifts. A table that summarizes rules holds rule numbers rather than conditions.
+  belongs to, and a removed rule leaves a gap. Outside its record, always cite a rule with its record, as `ADR-0091 R7`,
+  and a rule of a record in another repository as `owner/repo ADR-NNNN Rn`. Every record the text cites appears under
+  **Related ADRs**, and so does a record that this one replaces or adds a requirement to, or that replaces this one or
+  adds a requirement to it; no other record does.
+- **One home**: a requirement is stated once, in one rule. Everywhere else, in this record or another, cite it by
+  number (by section and a short quote where the record has no numbers) and by what it is about, not by what it
+  decides: "the retry limit of ADR-0031 R4", not "ADR-0031 R4 allows three retries". A restatement drifts. A table
+  that summarizes rules holds rule numbers.
+- **A citation changes the outcome**: a rule cites another rule only to make an exception to it, to take precedence
+  over it, or to use something it defines, such as its response. A rule that repeats a requirement, or says that
+  another rule applies, adds a number and no requirement. Leave it out; where an approver needs the link, give it in
+  the Justification.
+- **Cite only what the reader needs**: in any section, a citation earns its place where removing it would change what
+  a checker tests, or would leave an approver without the reason for a rule or the cost of a consequence. Leave out a
+  citation that only shows the writer knows the neighboring records: a "see also", a rule that shares a word or a
+  subject with this one, a rule the change must merely not break, a reminder that a rule still applies. A rule in
+  force applies to every change whether or not it is cited. Where a rule reads unclearly without a citation, fix the
+  rule rather than adding one.
+- **Fix a rule where it lives**: a case that another record's rule leaves unclear is settled in that rule. While its
+  record is `Proposed`, propose the edit to the user; once it is `Accepted`, replace the rule whole (**Superseding part
+  of a record**) instead of narrowing it from another record.
 - **Every requirement is a rule**: nothing outside **Rules** may add a requirement that a change can fail,
-  **Confirmation** and **Implementation notes** included. A reference such as "as ADR-0091 states" points at a rule that
-  says it.
+  **Confirmation** and **Implementation notes** included. Such a section cites the rule, not the record.
 - **No position words**: "the addresses above" and "the check below" stop working when the text moves. Cite the rule.
-- **No pointer rules**: a rule that only says that another rule applies adds a number and no requirement.
 
 Reasons belong in the Justification. Keep a reason inside a rule only where it limits how the rule reads.
 
@@ -285,8 +309,11 @@ decision accepts.
   existing callers get, name the case and the test that shows it. Where it changes a default, a required setting, or
   what the system trusts, a rule states what an existing installation gets on upgrade, and Negative cites it.
 
-- **Follow-ups** carries work outside the code the record governs, such as a record to update. A follow-up never holds a
-  requirement.
+- **Follow-ups** carries work outside the code the record governs that this change cannot do, such as an update to an
+  accepted record or to a record in another repository. A `Proposed` record in the same repository that the decision
+  changes is edited in the same change: a follow-up such as "when this rule is accepted" leaves the two records
+  contradicting each other on the main branch until then. Another open change that edits the same record is no reason
+  to defer the edit. A follow-up never holds a requirement.
 
 ## Open points
 
@@ -304,11 +331,11 @@ rule nor the open point: propose its issue (**What belongs in an ADR**).
 
 ## Delivery stays out of the record
 
-A record states what the code must do, not when it arrives. Delivery state goes stale, and an accepted record takes only
-the edits that **Immutability** lists. So in a repository whose guide asks for the trailers (**The reading guide**), a
-change to code that a binding record governs declares delivery itself. Two trailers at the end of its commit message and
-of its pull request description name the rules it brings and, under `Defers`, the change that will bring each rule it
-leaves out:
+A record states what the code must do, not when it arrives. No section of it tracks delivery, such as which open change
+brings, moves, or removes a rule. Delivery state goes stale, and an accepted record takes only the edits that
+**Immutability** lists. So in a repository whose guide asks for the trailers (**The reading guide**), a change to code
+that a binding record governs declares delivery itself. Two trailers at the end of its commit message and of its pull
+request description name the rules it brings and, under `Defers`, the change that will bring each rule it leaves out:
 
 ```text
 Implements: ADR-0092 R6, R8; ADR-0091 R54
@@ -347,7 +374,9 @@ The guide holds the following, and no copy of this skill's procedure:
   rule that replaces an accepted rule still binds nothing until its record is accepted, and the accepted rule governs
   until then;
 - what the agent that writes code reads in the records that govern it, **Terms**, **Rules**, **Confirmation**, and
-  **Implementation notes**, and that anything no rule states is its choice;
+  **Implementation notes**, and that anything no rule states is its choice. Where a rule cites a rule of another
+  record, the agent also reads that record's **Related ADRs**, where a line names any later record that replaces the
+  cited rule;
 - the two trailers;
 - a link to **Checking a change** in this skill: to a copy that `apm install` deploys into the repository, such as
   `.agents/skills/adr-authoring/SKILL.md`, or, where the repository does not commit deployed files, to the skill on
