@@ -1,0 +1,1 @@
+Bash: git show 8587e48:tests/golden/post_retry.txt | awk '{print length($0)}'; git show 8587e48:tests/golden/patch_retry.txt | awk '{print length($0)}'; cat tests/test_golden.py | head -30; python3 -m retrylint tests/golden/post_retry.conf | head -1 | sed 's/^[^ ]* //' | awk '{print length($0)}'; git grep -n "unsafe\|Idempotency\|safe" 7463fb4 -- README.md retrylint

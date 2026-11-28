@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "target": {
+    "platform": "local",
+    "url": "local:repo@038a3d58e17a22a78d682b96627ba9f592f84eb4",
+    "repository": "repo",
+    "title": "fix off-by-one in page_count()"
+  },
+  "revision": {
+    "base": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
+    "start": null,
+    "head": "038a3d58e17a22a78d682b96627ba9f592f84eb4"
+  },
+  "scope_exclusions": [],
+  "axes": [
+    {
+      "axis": "correctness",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "compatibility",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "tests",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "change-description",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "change-reach",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "architecture",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "docs-pages",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "intent-scope",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "vocabulary",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "least-surprise",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "simplicity",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "security",
+      "status": "skipped",
+      "reason": "no trust boundary, input handling, secrets, or dependencies changed"
+    },
+    {
+      "axis": "reliability",
+      "status": "skipped",
+      "reason": "no timeouts, retries, limits, or replaced mechanism"
+    },
+    {
+      "axis": "telemetry",
+      "status": "skipped",
+      "reason": "no logs, metrics, spans, or error text changed; no new failure branch"
+    },
+    {
+      "axis": "performance",
+      "status": "skipped",
+      "reason": "constant-time arithmetic, no per-item or loop path changed"
+    },
+    {
+      "axis": "formats",
+      "status": "skipped",
+      "reason": "no hand-written configuration format changed"
+    },
+    {
+      "axis": "comments",
+      "status": "skipped",
+      "reason": "no doc comments or inline comments added or changed"
+    },
+    {
+      "axis": "naive-reader",
+      "status": "skipped",
+      "reason": "no doc comments or output text added or changed"
+    },
+    {
+      "axis": "measurements",
+      "status": "skipped",
+      "reason": "no coverage or mutation tool installed for this Python project; nothing installed"
+    }
+  ],
+  "open_questions": [],
+  "previous_findings": [],
+  "reviewer": {
+    "model": "claude-opus-5-5"
+  },
+  "result": "approve",
+  "findings": [
+    {
+      "id": "F1",
+      "title": "The round-up is tested only at 5 items per page, and never with fewer items than one page, so a fix that rounds up by a fixed 4 still passes the suite.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "tests",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "tests/test_paginate.py",
+        "side": "new",
+        "start_line": 10,
+        "end_line": 11,
+        "symbol": "test_page_count_counts_partial_last_page",
+        "in_diff": true
+      },
+      "problem": "The `per_page - 1` term is exercised only at per_page=5, and no case has fewer items than one page (1 to per_page-1 items, the lone partial page of a short report), so a wrong rounding at another page size goes unnoticed.",
+      "reproducer": {
+        "language": "python",
+        "code": "def test_page_count_counts_a_lone_partial_page():\n    assert page_count(1, 10) == 1   # (total + 4) // per_page gives 0\n\ndef test_page_count_rounds_up_at_another_page_size():\n    assert page_count(3, 2) == 2    # (total + 4) // per_page gives 3"
+      },
+      "evidence": [
+        {
+          "text": "tests/test_paginate.py:7, :11, :15 call page_count with per_page 5 only: `page_count(10, 5) == 2`, `page_count(11, 5) == 3`, `page_count(0, 5) == 0`.",
+          "basis": "fact"
+        },
+        {
+          "text": "With src/textkit/paginate.py:13 replaced by `return (total + 4) // per_page`, the suite reports `7 passed`; that mutant returns page_count(1, 10) == 0 and page_count(3, 2) == 3, against 1 and 2 at the head.",
+          "basis": "fact"
+        },
+        {
+          "text": "The new test is red on the base commit: with paginate.py at 669de41 the run fails `assert page_count(11, 5) == 3` with `E assert 2 == 3`, so the test does catch the reported bug.",
+          "basis": "fact"
+        },
+        {
+          "text": "Rerun by the verifier: both mutants of paginate.py:13 (`(total + 4) // per_page` and `total // per_page + (1 if total > per_page and total % per_page else 0)`) leave the suite at `7 passed`; the first gives page_count(1, 10) == 0 and page_count(3, 2) == 3, the second page_count(1, 10) == 0.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "Add, each as its own test beside test_page_count_counts_partial_last_page, a case with fewer items than one page (page_count(1, 10) == 1) and a partial last page at a second page size (page_count(3, 2) == 2).",
+      "suggestion": null,
+      "retest": "With paginate.py:13 replaced by `return (total + 4) // per_page`, some page_count test fails; and with it replaced by `return total // per_page + (1 if total > per_page and total % per_page else 0)` (rounds up only after the first full page), some test fails too.",
+      "origin": "change",
+      "introduced_by": {
+        "commit": "038a3d58e17a22a78d682b96627ba9f592f84eb4",
+        "request": null
+      },
+      "disposition": null
+    },
+    {
+      "id": "F2",
+      "title": "Was textkit 0.3.1 published with the rounding-down page_count(), and if so, how will callers that compensated for it learn that the result now changes for every total that is not a multiple of per_page?",
+      "kind": "question",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "compatibility",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "src/textkit/paginate.py",
+        "side": "new",
+        "start_line": 13,
+        "end_line": 13,
+        "symbol": "page_count",
+        "in_diff": true
+      },
+      "problem": "textkit is installed with pip and used by the report renderer the README names. A caller that compensated for the old floor, as in the reproducer, now asks for one page past the last, and page() returns [] for it. The version stays 0.3.1 and the repository has no changelog, so only the commit message tells an upgrading user.",
+      "reproducer": {
+        "language": "python",
+        "code": "from textkit.paginate import page_count, page\nn, k = 11, 5\npages = page_count(n, k) + (n % k > 0)  # caller's workaround for the old floor\nprint(pages)               # 0.3.1 (base): 3; head: 4\nprint(page(list(range(n)), pages, k))  # base: [10]; head: []"
+      },
+      "evidence": [
+        {
+          "text": "Run at base 669de41: page_count(t, 5) for t in (0, 1, 5, 10, 11, 14) gives [0, 0, 1, 2, 2, 2]; at head 038a3d5 it gives [0, 1, 1, 2, 3, 3].",
+          "basis": "fact"
+        },
+        {
+          "text": "The docstring at src/textkit/paginate.py:5 promises \"the number of pages needed to show ``total`` items\", so the new result keeps the documented contract and the old one broke it.",
+          "basis": "fact"
+        },
+        {
+          "text": "pyproject.toml sets version = \"0.3.1\" at both base and head; the repository has no tags and no CHANGELOG file; README.md shows `pip install textkit`.",
+          "basis": "fact"
+        },
+        {
+          "text": "The only caller in the repository is tests/test_paginate.py, so callers outside it, such as the report renderer the README names, are the ones affected.",
+          "basis": "inference"
+        },
+        {
+          "text": "The repository history has two commits, the base 669de41 being the root that adds page_count with version 0.3.1 already set, so the history cannot show whether 0.3.1 was released with the floor; the author can.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "If 0.3.1 shipped with page_count(), release the fix under a new version whose release notes say that page_count() now rounds up and that callers that added the partial page themselves must stop. If it never shipped, nothing is owed.",
+      "suggestion": null,
+      "retest": "Settled by the author's answer: either 0.3.1 was never published with page_count(), or the release that carries this fix has a new version and a note that page_count() now rounds up.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "038a3d58e17a22a78d682b96627ba9f592f84eb4",
+        "request": null
+      },
+      "disposition": null
+    }
+  ],
+  "classes": [],
+  "families": []
+}

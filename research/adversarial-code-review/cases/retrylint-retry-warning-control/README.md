@@ -25,12 +25,13 @@ Grade each by reading `result.md`, and `review.json` where the run wrote one.
 
 ## Skill parts
 
-- `adversarial-code-review`: `SKILL.md` §Choose the axes (the *Vocabulary* and *Naive reader* rows and the paragraph on
+- `adversarial-code-review`: `SKILL.md`, the text above *Read the request* and the last item of §Choose the platform
+  path; `SKILL.md` §Choose the axes (the *Vocabulary* and *Naive reader* rows and the paragraph on
   output text); `references/finding-rules.md` §Output text; `references/axes/vocabulary.md` §Check, step 3 (*A defined
   term in another sense*, *Notation the output invents*), and §Not a finding;
   `references/axes/naive-reader.md` §Pass 1.
-- `english-developer-style` and `telemetry-authoring`, as in `retrylint-retry-warning-terms`: the installed copies under
-  `~/.claude/skills`, not recorded.
+- The skills `skills` lists, as in `retrylint-retry-warning-terms`. Runs before `pipe-<n>` read the installed copies
+  under `~/.claude/skills`, unrecorded.
 
 ## Files
 
@@ -39,7 +40,8 @@ Grade each by reading `result.md`, and `review.json` where the run wrote one.
 | `repo` | The path of the `git fast-export` stream in `retrylint-retry-warning-terms`, relative to this directory. |
 | `base`, `head` | The commits of the tags `base` and `control`. |
 | `prompt.md` | The task, the same as in `retrylint-retry-warning-terms`. |
-| `<model>/<label>/…` | The outputs of one run. `out-<n>` ran tree `228a14bd` (commit `26bab5ec`). `review.json` was copied by hand from the run's work directory. |
+| `skills` | The same as in `retrylint-retry-warning-terms`. |
+| `<model>/<label>/…` | The outputs of one run. `out-<n>` ran tree `228a14bd` (commit `26bab5ec`); `pipe-<n>` tree `a866e653`, through the Skill tool. `review.json` was copied by hand from the run's work directory. |
 
 ## How to run
 
@@ -60,3 +62,16 @@ may apply its effect twice" as a `minor` (the retry, not the request, owns "its 
 four times), and say that the Idempotency-Key remedy cannot clear the warning, since the policy file cannot record the
 header. Sonnet ran no subagent, as in the other case, and approved with one `minor` finding on the same commit-message
 claim.
+
+## Results, Skill tool, 2026-11-28
+
+The runner and the arm `pipe` as in *Results, Skill tool* of `retrylint-retry-warning-terms`.
+
+| Model | 1 no term or notation finding | 2 axes | Subagents, `review.json` | Result | Cost, USD |
+| --- | --- | --- | --- | --- | --- |
+| Sonnet | pass, pass | —, — | 1 and no, 2 and no | `request_changes`, `approve` | 0.30, 0.39 |
+| Opus | pass, pass | pass, pass | 7 and yes, 7 and yes | `request_changes`, both | 5.49, 5.37 |
+
+Neither Sonnet run ran the pipeline: each spawned one or two reviewers of its own and wrote the report itself (`pipe-1`:
+"The review ran at a reduced depth"). On the tree before the platform item and the reworded file list, the two Sonnet
+runs on this case did run it. No run calls a word or a symbol of the new warning a misused term or invented notation.

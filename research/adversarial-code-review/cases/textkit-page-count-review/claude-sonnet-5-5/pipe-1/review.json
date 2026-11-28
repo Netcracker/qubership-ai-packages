@@ -1,0 +1,121 @@
+{
+ "schema_version": 1,
+ "target": {
+  "platform": "local",
+  "url": "local:repo@038a3d58",
+  "repository": "repo",
+  "title": "fix off-by-one in page_count()"
+ },
+ "revision": {
+  "base": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
+  "start": null,
+  "head": "038a3d58e17a22a78d682b96627ba9f592f84eb4"
+ },
+ "scope_exclusions": [],
+ "axes": [
+  {
+   "axis": "intent-scope",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "correctness",
+   "status": "ran",
+   "reason": "group-2, profile medium"
+  },
+  {
+   "axis": "compatibility",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "architecture",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "simplicity",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "least-surprise",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "tests",
+   "status": "ran",
+   "reason": "group-2, profile medium"
+  },
+  {
+   "axis": "change-description",
+   "status": "ran",
+   "reason": "single, profile medium"
+  },
+  {
+   "axis": "docs-pages",
+   "status": "ran",
+   "reason": "group-1, profile medium"
+  },
+  {
+   "axis": "security",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "reliability",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "telemetry",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "performance",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "formats",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "change-reach",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "comments",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "vocabulary",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "naive-reader",
+   "status": "skipped",
+   "reason": "does not apply to this change (no trust boundary/timeouts/logging/hot path/format/comments/output text changed)"
+  },
+  {
+   "axis": "measurements",
+   "status": "skipped",
+   "reason": "no measurement tool for this Python repository"
+  }
+ ],
+ "open_questions": [],
+ "previous_findings": [],
+ "reviewer": {
+  "model": "claude-sonnet-5-5"
+ },
+ "result": "approve",
+ "findings": [],
+ "classes": [],
+ "families": []
+}

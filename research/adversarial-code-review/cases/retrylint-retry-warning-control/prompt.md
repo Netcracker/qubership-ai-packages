@@ -1,5 +1,4 @@
-The skill for this task is under <skills>: read `<skills>/adversarial-code-review/SKILL.md` in full and follow it. Do
-not load any other copy of it.
+Load the `adversarial-code-review` skill with the Skill tool and follow it.
 
 Review the pull request at head `<head>`, base `<base>`: the change `<base>..HEAD` of this repository, one commit. This
 directory is a disposable clone made for this review at that head; use it as the isolated workspace and do not remove

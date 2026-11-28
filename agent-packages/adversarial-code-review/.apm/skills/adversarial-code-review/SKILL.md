@@ -1,6 +1,6 @@
 ---
 name: adversarial-code-review
-description: Use when a user explicitly asks to review a GitHub pull request or GitLab merge request. Runs focused subagents per review axis (scope, correctness, compatibility, tests, comments, vocabulary, and others), splitting the most important axes across parts of a large change with a reviewer for the seams between them, verifies every finding in a fresh pass, groups them by root cause, and hands the result to review-delivery to report, draft, or publish.
+description: Use when a user explicitly asks to review a GitHub pull request or GitLab merge request. On every change, a one-line fix included, runs focused subagents per review axis (scope, correctness, compatibility, tests, comments, vocabulary, and others), splitting the most important axes across parts of a large change with a reviewer for the seams between them, verifies every finding in a fresh pass, groups them by root cause, and hands the result to review-delivery to report, draft, or publish.
 ---
 
 # Review a pull or merge request
@@ -9,6 +9,30 @@ The review has two halves. This skill finds and verifies: it writes `review.json
 follows the `review-delivery` schema, in English. `review-delivery` renders that file as a chat report, a ledger, an
 email, or a platform review. This skill never writes to GitHub or GitLab, never changes the code under review, and never
 pushes.
+
+Every change goes through every section below, a one-line fix included, unless the request says otherwise. A round
+is finished when its directory (*Collect the review input*) holds these files, or `axes` in `review.json` records why
+one is absent:
+
+1. `input.md` and `families.json`, by this context (*Collect the review input*, *Track defect families*);
+2. `shards/map.md`, by this context (*Plan the subagents*);
+3. `axes/<axis>.json` or `axes/<group>.json`, with its coverage file, by one subagent per axis or group of the profile,
+   with the briefs of *Run the axes* filled in;
+4. `measure/README.md`, by the measurement subagent, unless the user said not to run anything or neither the tests nor
+   the correctness axis applies;
+5. `review-head.json`, by this context, and `review.json`, by the verifier subagent, or by this context where *Verify
+   and group* records the verifier as failed.
+
+The chat report is what `review-delivery` renders from `review.json` (*Hand over*). A user who asks for this review asks
+for these subagents, and their cost is the cost of the review. Some harnesses advise doing a handful of tool calls
+inline rather than delegating them. The same advice says to spawn subagents for independent work that runs in parallel
+and for a read not anchored on the writer's: the axes are the first kind, and the verifier is the second. A review
+written in this context loads none of the skills the axes name, and its findings have no judge but their writer, however
+small the change. A small change costs less because fewer axes apply to it (*Choose the axes*) and the profile groups
+them (*Plan the subagents*), not because a step is left out: on a change of a few lines, the round is a few subagents
+and a few minutes. A report that says a step was skipped does not stand in for the step. Write `input.md` before
+reading the diff hunk by hunk: what the diff holds decides which axes apply, never whether the sections run. Where a
+subagent cannot be spawned, *Run the axes* says what the review records.
 
 ## Read the request
 
@@ -33,6 +57,11 @@ Identify the hosting platform before collecting data or creating a workspace. Fo
 - For a GitHub pull request, use `gh` to collect the review input below. Do not load the GitLab reference.
 - For a GitLab merge request, read [the GitLab reference](references/gitlab.md) completely before using `glab`. Follow
   its preflight and collection mechanics, then return here.
+- For a local branch or revision that is not a platform request, or a GitHub request that `gh` cannot reach, take from
+  `git` what it holds: the base and head SHAs are the revision, and the commits and the changed paths are the rest.
+  Record the platform material the review could not collect. The review's directory is
+  `local-<repository directory name>-<branch, or head:8>`, so that a later round finds this one. The other sections run
+  as written, with the `git` revision where they read the platform's.
 
 ## Collect the review input
 

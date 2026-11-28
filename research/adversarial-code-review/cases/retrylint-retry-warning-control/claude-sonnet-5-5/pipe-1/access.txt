@@ -1,0 +1,1 @@
+Bash: git log --format='%H%n%B' 8587e48..HEAD && git diff --stat 8587e48..HEAD && ls; ls ~/.cache/adversarial-code-review 2>/dev/null; ls /var/folders/hq/dhvxggnd1gv0fpmt8lg8xzkc0000gn/T/tmp.YlZFZEMCbj/cfg/.claude/skills/

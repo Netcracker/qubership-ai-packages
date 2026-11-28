@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "target": {
+    "platform": "local",
+    "url": "local:repo@038a3d58e17a22a78d682b96627ba9f592f84eb4",
+    "repository": "textkit",
+    "title": "fix off-by-one in page_count()"
+  },
+  "revision": {
+    "base": "669de41a8a448f4c8ad18155519c5c1782c3d9b5",
+    "start": null,
+    "head": "038a3d58e17a22a78d682b96627ba9f592f84eb4"
+  },
+  "result": "approve",
+  "coverage_gap": null,
+  "scope_exclusions": [],
+  "axes": [
+    {
+      "axis": "measurements",
+      "status": "skipped",
+      "reason": "no diff coverage or mutation tool for this Python/pytest project; plain pytest at head passed 7 of 7"
+    },
+    {
+      "axis": "correctness",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "compatibility",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "tests",
+      "status": "ran",
+      "reason": "single, profile medium"
+    },
+    {
+      "axis": "change-description",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "change-reach",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "architecture",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "docs-pages",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "intent-scope",
+      "status": "ran",
+      "reason": "group-1, profile medium"
+    },
+    {
+      "axis": "least-surprise",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "simplicity",
+      "status": "ran",
+      "reason": "group-2, profile medium"
+    },
+    {
+      "axis": "security",
+      "status": "skipped",
+      "reason": "no trust boundary, input handling, secrets, or dependencies touched"
+    },
+    {
+      "axis": "reliability",
+      "status": "skipped",
+      "reason": "no timeouts, retries, limits, or replaced mechanism"
+    },
+    {
+      "axis": "telemetry",
+      "status": "skipped",
+      "reason": "no logs, metrics, spans, or error text changed"
+    },
+    {
+      "axis": "performance",
+      "status": "skipped",
+      "reason": "no hot path; one constant-time expression"
+    },
+    {
+      "axis": "formats",
+      "status": "skipped",
+      "reason": "no hand-written configuration format touched"
+    },
+    {
+      "axis": "comments",
+      "status": "skipped",
+      "reason": "no doc comments or inline comments changed"
+    },
+    {
+      "axis": "vocabulary",
+      "status": "skipped",
+      "reason": "no comments, new member names, or output text changed"
+    },
+    {
+      "axis": "naive-reader",
+      "status": "skipped",
+      "reason": "no doc comments or output text changed"
+    }
+  ],
+  "open_questions": [],
+  "previous_findings": [],
+  "reviewer": {
+    "model": "claude-opus-5-5"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "title": "No test covers a total smaller than one page or a per_page other than 5, so page_count() can still drop a lone partial page and pass the suite.",
+      "kind": "defect",
+      "severity": "minor",
+      "confidence": "high",
+      "axis": "tests",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "tests/test_paginate.py",
+        "side": "new",
+        "start_line": 11,
+        "end_line": 11,
+        "symbol": "test_page_count_counts_partial_last_page",
+        "in_diff": true
+      },
+      "problem": "The commit claims a partial last page is counted, but its one partial-page case, 11 items at 5 per page, has full pages before the partial one. With 1 to 4 items the partial page is the only page, and the old code returned 0 there too; and the rounding depends on per_page, which every test fixes at 5. Implementations wrong in either case pass all seven tests.",
+      "evidence": [
+        {
+          "text": "Running the head's tests/test_paginate.py against the base src/textkit/paginate.py fails only test_page_count_counts_partial_last_page (`assert 2 == 3`), so the new test does fail without the fix.",
+          "basis": "fact"
+        },
+        {
+          "text": "With src/textkit/paginate.py:13 replaced by `return total // per_page + (1 if total > per_page and total % per_page else 0)`, pytest passes 7 of 7 and page_count(4, 5) returns 0 (run).",
+          "basis": "fact"
+        },
+        {
+          "text": "With src/textkit/paginate.py:13 replaced by `return (total + 4) // per_page`, pytest passes 7 of 7, page_count(3, 1) returns 7 and page_count(3, 2) returns 3 (run).",
+          "basis": "fact"
+        },
+        {
+          "text": "tests/test_paginate.py:7, :11, :15 all call page_count(_, 5); no test uses per_page=1, the minimum src/textkit/paginate.py:9 accepts.",
+          "basis": "fact"
+        }
+      ],
+      "proposed_solution": "",
+      "reproducer": {
+        "language": "python",
+        "code": "# src/textkit/paginate.py:13, either of:\nreturn total // per_page + (1 if total > per_page and total % per_page else 0)\n# pytest: 7 passed; page_count(4, 5) == 0, expected 1\nreturn (total + 4) // per_page\n# pytest: 7 passed; page_count(3, 1) == 7, expected 3"
+      },
+      "suggestion": "    assert page_count(11, 5) == 3\n\n\ndef test_page_count_counts_a_lone_partial_page():\n    assert page_count(4, 5) == 1\n\n\ndef test_page_count_with_one_item_per_page_is_the_total():\n    assert page_count(3, 1) == 3",
+      "retest": "The suite has a page_count case with 0 < total < per_page that expects 1, and a case with per_page other than 5 (such as page_count(3, 1) == 3 or page_count(3, 2) == 2). The first fails with line 13 replaced by `return total // per_page + (1 if total > per_page and total % per_page else 0)`, the second with `return (total + 4) // per_page`.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "038a3d58e17a22a78d682b96627ba9f592f84eb4",
+        "request": null
+      },
+      "disposition": null
+    },
+    {
+      "id": "F2",
+      "title": "Was a version with the rounded-down page_count() released, and does any caller, such as the report renderer, add its own page for a partial remainder?",
+      "kind": "question",
+      "severity": "minor",
+      "confidence": "medium",
+      "axis": "compatibility",
+      "class": null,
+      "family": null,
+      "gate": "none",
+      "location": {
+        "path": "src/textkit/paginate.py",
+        "side": "new",
+        "start_line": 13,
+        "end_line": 13,
+        "symbol": "page_count",
+        "in_diff": true
+      },
+      "problem": "For every total that is not a multiple of per_page, page_count() now returns one more page than at the base. A caller that corrected the old result itself would now show an empty last page, and with the version unchanged a consumer cannot tell the two behaviors apart.",
+      "evidence": [
+        {
+          "text": "src/textkit/paginate.py:13 changes `return total // per_page` to `return (total + per_page - 1) // per_page`: page_count(4, 5) was 0 and is 1, page_count(11, 5) was 2 and is 3; multiples of per_page and 0 are unchanged.",
+          "basis": "fact"
+        },
+        {
+          "text": "`git tag` prints nothing, there is no remote, and pyproject.toml:3 is `version = \"0.3.1\"` at base and head, set in 669de41, the commit that added page_count(); no changelog exists. Whether 0.3.1 was published could not be checked.",
+          "basis": "fact"
+        },
+        {
+          "text": "README.md:3 says the helpers are \"used by the report renderer\", a consumer outside this repository.",
+          "basis": "fact"
+        },
+        {
+          "text": "The docstring at src/textkit/paginate.py:5 (\"the number of pages needed to show ``total`` items\") matches the new result, so the change fixes the documented contract unless a consumer depended on the old one.",
+          "basis": "inference"
+        }
+      ],
+      "proposed_solution": "Where the old result was released and a caller corrects it, ship this change under a new version (0.3.2 or later), with a release note that page_count() now counts a partial last page, and remove the caller's correction with it.",
+      "reproducer": null,
+      "suggestion": null,
+      "retest": "Settled by an answer that no version with the rounded-down page_count() was published, or that no caller, the report renderer included, adds its own page for a partial remainder; otherwise by a version other than 0.3.1 for the release that carries this change.",
+      "prior_thread": null,
+      "origin": "change",
+      "introduced_by": {
+        "commit": "038a3d58e17a22a78d682b96627ba9f592f84eb4",
+        "request": null
+      },
+      "disposition": null
+    }
+  ],
+  "classes": [],
+  "families": []
+}

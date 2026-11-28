@@ -50,12 +50,15 @@ Grade each by reading `result.md`, and `review.json` where the run wrote one: th
 
 ## Skill parts
 
-- `adversarial-code-review`: `SKILL.md` §Choose the axes (the *Vocabulary* and *Naive reader* rows and the paragraph on
-  output text); `references/finding-rules.md` §Output text, and the `proposed_solution` rule of §Content on output text;
+- `adversarial-code-review`: `SKILL.md`, the text above *Read the request* (every section runs on every change, and
+  the files a finished round holds) and the last item of §Choose the platform path; `SKILL.md` §Choose the axes (the
+  *Vocabulary* and *Naive reader* rows and the paragraph on output text); `references/finding-rules.md` §Output text,
+  and the `proposed_solution` rule of §Content on output text;
   `references/axes/vocabulary.md` §Check, steps 1 and 3 (*A defined term in another sense*, *Notation the output
   invents*), and §Severity; `references/axes/naive-reader.md` §Pass 1; `references/verify.md` step 4.
-- `english-developer-style` and `telemetry-authoring`, which the vocabulary and telemetry axes load. The runner does not
-  copy them, so the runs read the copies installed under `~/.claude/skills`, and their trees are not recorded.
+- The skills `skills` lists: `review-delivery`, which holds the schema and renders the chat report, and the skills the
+  axes load on a Python change. Runs before `pipe-<n>` and `hbase-<n>` copied only `adversarial-code-review` and read
+  the others under `~/.claude/skills`, unrecorded.
 
 ## Files
 
@@ -63,8 +66,9 @@ Grade each by reading `result.md`, and `review.json` where the run wrote one: th
 | --- | --- |
 | `retrylint.fast-export` | The repository as a `git fast-export` stream: branch `main` at `base`, and the tags `base`, `bad`, and `control`. `run-review-case.sh` imports it with the same shas. The runs fetched a bundle of the same commits; a binary bundle trips the repository's pre-commit scanner. |
 | `repo`, `base`, `head` | The stream, and the commits of `base` and `bad`. |
-| `prompt.md` | The task, with `<skills>`, `<base>`, and `<head>` replaced by `run-review-case.sh`. |
-| `<model>/<label>/…` | The outputs of one run. `out-<n>` ran tree `228a14bd` (commit `26bab5ec`), `base-<n>` tree `f469844c` (commit `fc910a50`, before the output-text rules). `review.json` was copied by hand from the run's work directory. |
+| `prompt.md` | The task, with `<skills>`, `<base>`, and `<head>` replaced by `run-review-case.sh`. Before `pipe-<n>` and `hbase-<n>`, it had the session read `<skills>/adversarial-code-review/SKILL.md`; it now has it load the skill with the Skill tool. |
+| `skills` | The skills `run-review-case.sh` copies and loads: `adversarial-code-review`, `review-delivery`, and the skills the axes load on a Python change. |
+| `<model>/<label>/…` | The outputs of one run. `out-<n>` ran tree `228a14bd` (commit `26bab5ec`), `base-<n>` tree `f469844c` (commit `fc910a50`, before the output-text rules). `hbase-<n>` ran tree `228a14bd` and `pipe-<n>` tree `a866e653`, through the Skill tool; see *Results, Skill tool*. `review.json` was copied by hand from the run's work directory. |
 
 ## How to run
 
@@ -113,3 +117,31 @@ non-idempotent method; ...`). This happens at `base` too, so it is not caused by
 reviews a small change without its subagents.
 
 The Opus results stand for tree `228a14bd`, the skill at `26bab5ec`.
+
+## Results, Skill tool, 2026-11-28
+
+`run-review-case.sh` now loads the copied skills through the Skill tool, with only the project's settings, in place of
+safe mode and a prompt that had the session read `SKILL.md` as a file. `skills` lists `review-delivery`, which holds the
+schema and renders the chat report, and the skills the axes load on a Python change: `english-developer-style` (from
+`english-us-developer-style`), `telemetry-authoring`, `pythondoc-authoring`, `test-authoring`,
+`change-description-authoring`, and `docs-page-authoring`. Read as a file, the skill did not reach Sonnet: on every
+wording of the text above *Read the request* tried, Sonnet reviewed the diff itself (eight runs, not kept). `hbase-<n>`
+is the skill at `0d65b052` under the new runner; `pipe-<n>` is tree `a866e653`, with the text above *Read the request*
+that says every section runs on every change and lists the files a finished round holds, the frontmatter clause "on
+every change, a one-line fix included", and the local-branch item of §Choose the platform path.
+
+| Model | Arm | 1 term | 2 notation | 3 resulting text | 4 axes | Subagents, `review.json` | Result | Cost, USD |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Sonnet | `hbase` | pass, pass | partial, partial | fail, fail | —, — | 0 and no, 0 and no | `request_changes`, both | 0.14, 0.14 |
+| Sonnet | `pipe` | pass, pass | pass, partial | partial, fail | pass, — | 4 and yes, 1 and no | `request_changes`, both | 1.35, 0.33 |
+| Opus | `pipe` | pass, pass | pass, pass | partial, pass | pass, pass | 7 and yes, 7 and yes | `request_changes`, both | 5.14, 5.09 |
+
+Sonnet `pipe-1` ran the pipeline: its notation finding names `=>` and `retry x3` as notation RFC 9110 does not use, and
+quotes a clean message, while its term finding quotes one that keeps `=> retry x3`. Sonnet `pipe-2` spawned one reviewer
+over the whole diff and wrote the report itself. Neither `hbase` run, nor a third that was not kept, spawned an axis.
+Opus ran every axis in each run; `pipe-1` has the partial of `out-1`, each finding quoting the warning with only its own
+part fixed. Every `pipe` run that wrote `review.json` records the measurement as `skipped`, because the repository has
+no coverage or mutation tool, as *Measure the changed lines* allows.
+
+Across the three Skill-tool cases, Sonnet ran the pipeline in three of six runs at `a866e653`, and in about two of three
+runs of the earlier wordings of the same text, which are not kept; Opus ran it in every run.

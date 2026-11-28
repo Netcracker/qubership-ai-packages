@@ -1,0 +1,327 @@
+{
+ "schema_version": 1,
+ "target": {
+  "platform": "local",
+  "url": "local-repo-7463fb4b",
+  "repository": "repo",
+  "title": "Shorten the retry warning"
+ },
+ "revision": {
+  "base": "8587e4889ee71695aa734e9355ead5e8d75b64a0",
+  "start": null,
+  "head": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+ },
+ "result": "request_changes",
+ "coverage_gap": null,
+ "scope_exclusions": [],
+ "axes": [
+  {
+   "axis": "tests",
+   "status": "ran",
+   "reason": "group-1, profile low"
+  },
+  {
+   "axis": "change-description",
+   "status": "ran",
+   "reason": "group-1, profile low"
+  },
+  {
+   "axis": "correctness",
+   "status": "ran",
+   "reason": "group-1, profile low"
+  },
+  {
+   "axis": "naive-reader",
+   "status": "ran",
+   "reason": "group-1, profile low"
+  },
+  {
+   "axis": "intent-scope",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "vocabulary",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "telemetry",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "least-surprise",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "compatibility",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "docs-pages",
+   "status": "ran",
+   "reason": "group-2, profile low"
+  },
+  {
+   "axis": "change-reach",
+   "status": "skipped",
+   "reason": "nothing of its kind added"
+  },
+  {
+   "axis": "security",
+   "status": "skipped",
+   "reason": "no trust boundary touched"
+  },
+  {
+   "axis": "reliability",
+   "status": "skipped",
+   "reason": "message text only"
+  },
+  {
+   "axis": "performance",
+   "status": "skipped",
+   "reason": "no hot path"
+  },
+  {
+   "axis": "architecture",
+   "status": "skipped",
+   "reason": "message text only"
+  },
+  {
+   "axis": "simplicity",
+   "status": "skipped",
+   "reason": "message text only"
+  },
+  {
+   "axis": "formats",
+   "status": "skipped",
+   "reason": "no hand-written format"
+  },
+  {
+   "axis": "comments",
+   "status": "skipped",
+   "reason": "no comments changed"
+  },
+  {
+   "axis": "measurements",
+   "status": "skipped",
+   "reason": "no coverage or mutation tool installed"
+  }
+ ],
+ "open_questions": [],
+ "previous_findings": [],
+ "reviewer": {
+  "model": "claude-sonnet-5-5"
+ },
+ "findings": [
+  {
+   "gate": "none",
+   "family": null,
+   "prior_thread": null,
+   "origin": "change",
+   "introduced_by": {
+    "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+   },
+   "disposition": null,
+   "reproducer": null,
+   "suggestion": "        f\"{file}:{endpoint.line}: {endpoint.method} {endpoint.path} => retry x{endpoint.retries} on a non-idempotent method; \"\n        f\"a retry may apply its effect twice. Drop the retry policy.\"",
+   "id": "F1",
+   "title": "The warning calls the method \"unsafe\", but the check flags non-idempotent methods, and PUT and DELETE are unsafe yet never flagged",
+   "kind": "defect",
+   "severity": "major",
+   "confidence": "high",
+   "axis": "vocabulary",
+   "location": {
+    "path": "retrylint/messages.py",
+    "side": "new",
+    "start_line": 6,
+    "end_line": 7,
+    "symbol": "non_idempotent_retry",
+    "in_diff": true
+   },
+   "problem": "RFC 9110 section 9.2.1 defines safe methods as GET, HEAD, OPTIONS, and TRACE, and section 9.2.2 defines idempotency separately. A user who knows the RFC reads \"unsafe\" as a claim that would cover PUT and DELETE too, and cannot tell why the same file passes for them. The message is the product of this change, so the wrong term is a claim the code does not keep.",
+   "evidence": [
+    {
+     "text": "retrylint/messages.py:6: \"... on an unsafe method; \" (the old text said \"is not idempotent (RFC 9110, section 9.2.2)\")",
+     "basis": "fact"
+    },
+    {
+     "text": "retrylint/__main__.py:8 IDEMPOTENT includes PUT and DELETE, and lint() flags `endpoint.method not in IDEMPOTENT`; README.md says only POST and PATCH are not idempotent",
+     "basis": "fact"
+    },
+    {
+     "text": "tests/golden/put_delete_retry.conf retries PUT and DELETE and tests/golden/put_delete_retry.txt is empty",
+     "basis": "fact"
+    }
+   ],
+   "proposed_solution": "Use the word the check tests. Rendered for POST /orders: `tests/golden/post_retry.conf:3: POST /orders => retry x3 on a non-idempotent method; a retry may apply its effect twice. Drop the retry policy.` Update both golden files; F2 and F3 reword the rest of the line.",
+   "retest": "The warning printed for `POST /orders 3` says \"non-idempotent\" and not \"unsafe\"; neighbor: the same for `PATCH /orders/42 2`.",
+   "class": "C1"
+  },
+  {
+   "gate": "none",
+   "family": null,
+   "prior_thread": null,
+   "origin": "change",
+   "introduced_by": {
+    "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+   },
+   "disposition": null,
+   "reproducer": null,
+   "suggestion": null,
+   "id": "F2",
+   "title": "The new message invents notation (\"=>\" and \"retry x3\") that RFC 9110 and similar linters do not use",
+   "kind": "defect",
+   "severity": "minor",
+   "confidence": "high",
+   "axis": "vocabulary",
+   "location": {
+    "path": "retrylint/messages.py",
+    "side": "new",
+    "start_line": 6,
+    "end_line": 6,
+    "symbol": "non_idempotent_retry",
+    "in_diff": true
+   },
+   "problem": "A user cannot look up \"=>\" or \"x3\", and \"retry x3\" reads as 3 retries or 3 attempts. The old text said \"retried up to 3 times\", and the policy file's third field is retries.",
+   "evidence": [
+    {
+     "text": "retrylint/messages.py:6: f\"... {endpoint.path} => retry x{endpoint.retries} on an unsafe method; \"",
+     "basis": "fact"
+    },
+    {
+     "text": "tests/golden/post_retry.txt:1: \"tests/golden/post_retry.conf:3: POST /orders => retry x3 on an unsafe method; a retry may apply its effect twice. Drop the retry policy.\"",
+     "basis": "fact"
+    }
+   ],
+   "proposed_solution": "Say the relation in words, with F1's term. Rendered: `tests/golden/post_retry.conf:3: POST /orders is retried up to 3 times on a non-idempotent method; a retry may apply its effect twice. Drop the retry policy.` Update both golden files.",
+   "retest": "The warning for `POST /orders 3` states the count with the word \"times\" or \"retries\" and contains no \"=>\"; neighbor: the same for `PATCH /orders/42 2`.",
+   "class": "C1"
+  },
+  {
+   "gate": "none",
+   "family": null,
+   "prior_thread": null,
+   "origin": "change",
+   "introduced_by": {
+    "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+   },
+   "disposition": null,
+   "reproducer": null,
+   "suggestion": null,
+   "id": "F3",
+   "title": "The warning drops the Idempotency-Key remedy and the RFC reference, and \"Drop the retry policy\" does not say what to edit",
+   "kind": "defect",
+   "severity": "minor",
+   "confidence": "medium",
+   "axis": "telemetry",
+   "location": {
+    "path": "retrylint/messages.py",
+    "side": "new",
+    "start_line": 7,
+    "end_line": 7,
+    "symbol": "non_idempotent_retry",
+    "in_diff": true
+   },
+   "problem": "The old text offered two remedies and cited RFC 9110 section 9.2.2. The new one gives a single remedy, so a team that needs the retry has no way forward, and no definition to check the claim against. \"The retry policy\" is the whole file, which lists many endpoints; the input to change is the third field of one line.",
+   "evidence": [
+    {
+     "text": "Old: \"Remove the retry, or send an Idempotency-Key header that the server deduplicates.\" and \"(RFC 9110, section 9.2.2)\"; new (retrylint/messages.py:7): \"a retry may apply its effect twice. Drop the retry policy.\"",
+     "basis": "fact"
+    },
+    {
+     "text": "README.md:3-4 describes a policy file as one endpoint per line: method, path, retries",
+     "basis": "fact"
+    }
+   ],
+   "proposed_solution": "Keep the shortening, name the field, and keep both remedies and the reference. Rendered, with the wording of F1 and F2: `tests/golden/post_retry.conf:3: POST /orders is retried up to 3 times on a non-idempotent method (RFC 9110, section 9.2.2); a retry may apply its effect twice. Set retries to 0, or send an Idempotency-Key header that the server deduplicates.` Update both golden files.",
+   "retest": "The warning for `POST /orders 3` names the retries field, offers the Idempotency-Key option, and cites the RFC section; neighbor: the same for `PATCH /orders/42 2`.",
+   "class": "C1"
+  },
+  {
+   "gate": "none",
+   "family": null,
+   "prior_thread": null,
+   "origin": "change",
+   "introduced_by": {
+    "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+   },
+   "disposition": null,
+   "reproducer": null,
+   "suggestion": null,
+   "id": "F4",
+   "title": "The commit body says the warning wrapped in an 80-column terminal, but the new warning is 136 to 141 characters and still wraps",
+   "kind": "defect",
+   "severity": "minor",
+   "confidence": "high",
+   "axis": "change-description",
+   "location": {
+    "path": "tests/golden/post_retry.txt",
+    "side": "new",
+    "start_line": 1,
+    "end_line": 1,
+    "symbol": null,
+    "in_diff": true
+   },
+   "problem": "The stated goal, a message that fits an 80-column terminal, is not met: the new warning takes two lines at 80 columns, and more with a longer file or endpoint path. The old one took four lines, not three as the body says.",
+   "evidence": [
+    {
+     "text": "`wc -L tests/golden/*_retry.txt` prints 141 (patch_retry.txt) and 136 (post_retry.txt); `fold -s -w 80` gives 2 lines for each new warning and 4 for each old one",
+     "basis": "fact"
+    },
+    {
+     "text": "Commit body: \"The warning wrapped over three lines in an 80-column terminal ... keep the message short enough to scan in a CI log.\"",
+     "basis": "fact"
+    }
+   ],
+   "proposed_solution": "Reword the body to what the change achieves (the endpoint and the retry count now come first), or break the remedy onto a second output line so that each line fits 80 columns. F3 makes the warning longer, so with F3 applied the body states the narrower goal.",
+   "retest": "The body's claim about width matches the golden output: either no line of it exceeds 80 characters, or the body does not claim that.",
+   "class": "C2"
+  },
+  {
+   "gate": "none",
+   "family": null,
+   "prior_thread": null,
+   "origin": "change",
+   "introduced_by": {
+    "commit": "7463fb4b6fd22662df5a220d656fb5f5d0ca9b37"
+   },
+   "disposition": null,
+   "reproducer": null,
+   "suggestion": null,
+   "id": "F5",
+   "title": "The commit body does not say that the Idempotency-Key remedy and the RFC reference were removed, or that \"not idempotent\" became \"unsafe\"",
+   "kind": "defect",
+   "severity": "minor",
+   "confidence": "high",
+   "axis": "change-description",
+   "location": null,
+   "problem": "The body presents a reordering and shortening, but the advice a user gets changed. A reader of git log cannot learn it without the diff.",
+   "evidence": [
+    {
+     "text": "Body: \"Put them first and keep the message short enough to scan\"; the diff of retrylint/messages.py removes \"or send an Idempotency-Key header that the server deduplicates\" and \"(RFC 9110, section 9.2.2)\"",
+     "basis": "fact"
+    }
+   ],
+   "proposed_solution": "Restore the content (F3), or name in the body each piece of advice removed and why.",
+   "retest": "The body names every piece of advice removed from the message, or the message still carries it.",
+   "class": "C2"
+  }
+ ],
+ "classes": [
+  {
+   "id": "C1",
+   "title": "Rewritten warning text",
+   "root_cause": "The rewrite replaced the old wording with a shorter one without checking its terms, notation, and advice against the check and the RFC."
+  },
+  {
+   "id": "C2",
+   "title": "Commit body misdescribes the change",
+   "root_cause": "The body states a width goal the output does not meet and omits the advice the rewrite removed."
+  }
+ ],
+ "families": []
+}
